@@ -28,47 +28,46 @@
 
 #include <sys/cdefs.h>
 
-#include <IOKit/assert.h>
-#include <IOKit/system.h>
-#include <IOKit/IOLib.h>
-#include <IOKit/IOMemoryDescriptor.h>
-#include <IOKit/IOMapper.h>
+#include "Tests.h"
 #include <IOKit/IODMACommand.h>
 #include <IOKit/IOKitKeysPrivate.h>
-#include <Kernel/IOKitKernelInternal.h>
-#include <IOKit/IOUserClient.h>
+#include <IOKit/IOLib.h>
+#include <IOKit/IOMapper.h>
+#include <IOKit/IOMemoryDescriptor.h>
 #include <IOKit/IOService.h>
-#include "Tests.h"
+#include <IOKit/IOUserClient.h>
+#include <IOKit/assert.h>
+#include <IOKit/system.h>
+#include <Kernel/IOKitKernelInternal.h>
 
 #ifndef __LP64__
 #include <IOKit/IOSubMemoryDescriptor.h>
 #endif /* !__LP64__ */
-#include <IOKit/IOSubMemoryDescriptor.h>
-#include <IOKit/IOMultiMemoryDescriptor.h>
 #include <IOKit/IOBufferMemoryDescriptor.h>
 #include <IOKit/IOGuardPageMemoryDescriptor.h>
+#include <IOKit/IOMultiMemoryDescriptor.h>
+#include <IOKit/IOSubMemoryDescriptor.h>
 
 #include <IOKit/IOKitDebug.h>
 #include <libkern/OSDebug.h>
-#include <sys/uio.h>
 #include <libkern/sysctl.h>
 #include <sys/sysctl.h>
+#include <sys/uio.h>
 
 __BEGIN_DECLS
+#include <device/device_port.h>
+#include <mach/memory_object_types.h>
 #include <vm/pmap.h>
 #include <vm/vm_pageout.h>
-#include <mach/memory_object_types.h>
-#include <device/device_port.h>
 
-#include <mach/vm_prot.h>
 #include <mach/mach_vm.h>
 #include <mach/vm_param.h>
+#include <mach/vm_prot.h>
 #include <vm/vm_fault.h>
-#include <vm/vm_protos.h>
-#include <vm/vm_map_xnu.h>
 #include <vm/vm_kern_xnu.h>
+#include <vm/vm_map_xnu.h>
+#include <vm/vm_protos.h>
 __END_DECLS
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -76,719 +75,703 @@ __END_DECLS
 
 extern SInt32 gIOMemoryReferenceCount;
 
-static int
-IOMultMemoryDescriptorTest(int newValue)
-{
-	IOMemoryDescriptor * mds[3];
-	IOMultiMemoryDescriptor * mmd;
-	IOMemoryMap * map;
-	void * addr;
-	uint8_t * data;
-	uint32_t i;
-	IOAddressRange ranges[2];
+static int IOMultMemoryDescriptorTest(int newValue) {
+  IOMemoryDescriptor *mds[3];
+  IOMultiMemoryDescriptor *mmd;
+  IOMemoryMap *map;
+  void *addr;
+  uint8_t *data;
+  uint32_t i;
+  IOAddressRange ranges[2];
 
-	data = (typeof(data))IOMallocAligned(ptoa(8), page_size);
-	for (i = 0; i < ptoa(8); i++) {
-		data[i] = ((uint8_t) atop(i)) | 0xD0;
-	}
+  data = (typeof(data))IOMallocAligned(ptoa(8), page_size);
+  for (i = 0; i < ptoa(8); i++) {
+    data[i] = ((uint8_t)atop(i)) | 0xD0;
+  }
 
-	ranges[0].address = (IOVirtualAddress)(data + ptoa(4));
-	ranges[0].length  = ptoa(4);
-	ranges[1].address = (IOVirtualAddress)(data + ptoa(0));
-	ranges[1].length  = ptoa(4);
+  ranges[0].address = (IOVirtualAddress)(data + ptoa(4));
+  ranges[0].length = ptoa(4);
+  ranges[1].address = (IOVirtualAddress)(data + ptoa(0));
+  ranges[1].length = ptoa(4);
 
-	mds[0] = IOMemoryDescriptor::withAddressRange((mach_vm_address_t) data, 2, kIODirectionOutIn, kernel_task);
-	assert(mds[0]);
-	{
-		uint64_t dmaLen, dmaOffset;
-		dmaLen = mds[0]->getDMAMapLength(&dmaOffset);
-		assert(0 == dmaOffset);
-		assert(ptoa(1) == dmaLen);
-	}
-	mds[0]->release();
-	mds[0] = IOMemoryDescriptor::withAddressRange((mach_vm_address_t) (data + page_size - 2), 4, kIODirectionOutIn, kernel_task);
-	assert(mds[0]);
-	{
-		uint64_t dmaLen, dmaOffset;
-		dmaLen = mds[0]->getDMAMapLength(&dmaOffset);
-		assert((page_size - 2) == dmaOffset);
-		assert(ptoa(2) == dmaLen);
-	}
-	mds[0]->release();
+  mds[0] = IOMemoryDescriptor::withAddressRange((mach_vm_address_t)data, 2,
+                                                kIODirectionOutIn, kernel_task);
+  assert(mds[0]);
+  {
+    uint64_t dmaLen, dmaOffset;
+    dmaLen = mds[0]->getDMAMapLength(&dmaOffset);
+    assert(0 == dmaOffset);
+    assert(ptoa(1) == dmaLen);
+  }
+  mds[0]->release();
+  mds[0] = IOMemoryDescriptor::withAddressRange(
+      (mach_vm_address_t)(data + page_size - 2), 4, kIODirectionOutIn,
+      kernel_task);
+  assert(mds[0]);
+  {
+    uint64_t dmaLen, dmaOffset;
+    dmaLen = mds[0]->getDMAMapLength(&dmaOffset);
+    assert((page_size - 2) == dmaOffset);
+    assert(ptoa(2) == dmaLen);
+  }
+  mds[0]->release();
 
-	mds[0] = IOMemoryDescriptor::withAddressRanges(&ranges[0], 2, kIODirectionOutIn, kernel_task);
-	{
-		uint64_t dmaLen, dmaOffset;
-		dmaLen = mds[0]->getDMAMapLength(&dmaOffset);
-		assert(0 == dmaOffset);
-		assert(ptoa(8) == dmaLen);
-	}
-	mds[1] = IOSubMemoryDescriptor::withSubRange(mds[0], ptoa(3), ptoa(2), kIODirectionOutIn);
-	{
-		uint64_t dmaLen, dmaOffset;
-		dmaLen = mds[1]->getDMAMapLength(&dmaOffset);
-		assert(0 == dmaOffset);
-		assert(ptoa(2) == dmaLen);
-	}
-	mds[2] = IOSubMemoryDescriptor::withSubRange(mds[0], ptoa(7), ptoa(1), kIODirectionOutIn);
+  mds[0] = IOMemoryDescriptor::withAddressRanges(
+      &ranges[0], 2, kIODirectionOutIn, kernel_task);
+  {
+    uint64_t dmaLen, dmaOffset;
+    dmaLen = mds[0]->getDMAMapLength(&dmaOffset);
+    assert(0 == dmaOffset);
+    assert(ptoa(8) == dmaLen);
+  }
+  mds[1] = IOSubMemoryDescriptor::withSubRange(mds[0], ptoa(3), ptoa(2),
+                                               kIODirectionOutIn);
+  {
+    uint64_t dmaLen, dmaOffset;
+    dmaLen = mds[1]->getDMAMapLength(&dmaOffset);
+    assert(0 == dmaOffset);
+    assert(ptoa(2) == dmaLen);
+  }
+  mds[2] = IOSubMemoryDescriptor::withSubRange(mds[0], ptoa(7), ptoa(1),
+                                               kIODirectionOutIn);
 
-	mmd = IOMultiMemoryDescriptor::withDescriptors(&mds[0], sizeof(mds) / sizeof(mds[0]), kIODirectionOutIn, false);
-	{
-		uint64_t dmaLen, dmaOffset;
-		dmaLen = mmd->getDMAMapLength(&dmaOffset);
-		assert(0 == dmaOffset);
-		assert(ptoa(11) == dmaLen);
-	}
-	mds[2]->release();
-	mds[1]->release();
-	mds[0]->release();
-	map = mmd->createMappingInTask(kernel_task, 0, kIOMapAnywhere | kIOMapGuardedSmall, ptoa(7), mmd->getLength() - ptoa(7));
-	mmd->release();
-	assert(map);
+  mmd = IOMultiMemoryDescriptor::withDescriptors(
+      &mds[0], sizeof(mds) / sizeof(mds[0]), kIODirectionOutIn, false);
+  {
+    uint64_t dmaLen, dmaOffset;
+    dmaLen = mmd->getDMAMapLength(&dmaOffset);
+    assert(0 == dmaOffset);
+    assert(ptoa(11) == dmaLen);
+  }
+  mds[2]->release();
+  mds[1]->release();
+  mds[0]->release();
+  map = mmd->createMappingInTask(kernel_task, 0,
+                                 kIOMapAnywhere | kIOMapGuardedSmall, ptoa(7),
+                                 mmd->getLength() - ptoa(7));
+  mmd->release();
+  assert(map);
 
-	addr = (void *) map->getVirtualAddress();
-	assert(ptoa(4) == map->getLength());
-	assert(0xd3d3d3d3 == ((uint32_t *)addr)[ptoa(0) / sizeof(uint32_t)]);
-	assert(0xd7d7d7d7 == ((uint32_t *)addr)[ptoa(1) / sizeof(uint32_t)]);
-	assert(0xd0d0d0d0 == ((uint32_t *)addr)[ptoa(2) / sizeof(uint32_t)]);
-	assert(0xd3d3d3d3 == ((uint32_t *)addr)[ptoa(3) / sizeof(uint32_t)]);
-	map->release();
-	IOFreeAligned(data, ptoa(8));
+  addr = (void *)map->getVirtualAddress();
+  assert(ptoa(4) == map->getLength());
+  assert(0xd3d3d3d3 == ((uint32_t *)addr)[ptoa(0) / sizeof(uint32_t)]);
+  assert(0xd7d7d7d7 == ((uint32_t *)addr)[ptoa(1) / sizeof(uint32_t)]);
+  assert(0xd0d0d0d0 == ((uint32_t *)addr)[ptoa(2) / sizeof(uint32_t)]);
+  assert(0xd3d3d3d3 == ((uint32_t *)addr)[ptoa(3) / sizeof(uint32_t)]);
+  map->release();
+  IOFreeAligned(data, ptoa(8));
 
-	return 0;
+  return 0;
 }
 
-
-
 // <rdar://problem/30102458>
-static int
-IODMACommandForceDoubleBufferTest(int newValue)
-{
-	IOReturn                   ret;
-	IOBufferMemoryDescriptor * bmd;
-	IODMACommand             * dma;
-	uint32_t                   dir, data;
-	IODMACommand::SegmentOptions segOptions =
-	{
-		.fStructSize      = sizeof(segOptions),
-		.fNumAddressBits  = 64,
-		.fMaxSegmentSize  = 0x2000,
-		.fMaxTransferSize = 128 * 1024,
-		.fAlignment       = 1,
-		.fAlignmentLength = 1,
-		.fAlignmentInternalSegments = 1
-	};
-	IODMACommand::Segment64 segments[1];
-	UInt32                  numSegments;
-	UInt64                  dmaOffset;
+static int IODMACommandForceDoubleBufferTest(int newValue) {
+  IOReturn ret;
+  IOBufferMemoryDescriptor *bmd;
+  IODMACommand *dma;
+  uint32_t dir, data;
+  IODMACommand::SegmentOptions segOptions = {.fStructSize = sizeof(segOptions),
+                                             .fNumAddressBits = 64,
+                                             .fMaxSegmentSize = 0x2000,
+                                             .fMaxTransferSize = 128 * 1024,
+                                             .fAlignment = 1,
+                                             .fAlignmentLength = 1,
+                                             .fAlignmentInternalSegments = 1};
+  IODMACommand::Segment64 segments[1];
+  UInt32 numSegments;
+  UInt64 dmaOffset;
 
+  for (dir = kIODirectionIn;; dir++) {
+    bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+        kernel_task, dir | kIOMemoryPageable, ptoa(8));
+    assert(bmd);
+    {
+      uint64_t dmaLen, dmaOffset;
+      dmaLen = bmd->getDMAMapLength(&dmaOffset);
+      assert(0 == dmaOffset);
+      assert(ptoa(8) == dmaLen);
+    }
 
-	for (dir = kIODirectionIn;; dir++) {
-		bmd = IOBufferMemoryDescriptor::inTaskWithOptions(kernel_task,
-		    dir | kIOMemoryPageable, ptoa(8));
-		assert(bmd);
-		{
-			uint64_t dmaLen, dmaOffset;
-			dmaLen = bmd->getDMAMapLength(&dmaOffset);
-			assert(0 == dmaOffset);
-			assert(ptoa(8) == dmaLen);
-		}
+    ((uint32_t *)bmd->getBytesNoCopy())[0] = 0x53535300 | dir;
 
-		((uint32_t*) bmd->getBytesNoCopy())[0] = 0x53535300 | dir;
+    ret = bmd->prepare((IODirection)dir);
+    assert(kIOReturnSuccess == ret);
 
-		ret = bmd->prepare((IODirection) dir);
-		assert(kIOReturnSuccess == ret);
+    dma =
+        IODMACommand::withSpecification(kIODMACommandOutputHost64, &segOptions,
+                                        kIODMAMapOptionMapped, NULL, NULL);
+    assert(dma);
+    ret = dma->setMemoryDescriptor(bmd, true);
+    assert(kIOReturnSuccess == ret);
 
-		dma = IODMACommand::withSpecification(kIODMACommandOutputHost64, &segOptions,
-		    kIODMAMapOptionMapped,
-		    NULL, NULL);
-		assert(dma);
-		ret = dma->setMemoryDescriptor(bmd, true);
-		assert(kIOReturnSuccess == ret);
+    ret = dma->synchronize(IODMACommand::kForceDoubleBuffer | kIODirectionOut);
+    assert(kIOReturnSuccess == ret);
 
-		ret = dma->synchronize(IODMACommand::kForceDoubleBuffer | kIODirectionOut);
-		assert(kIOReturnSuccess == ret);
+    dmaOffset = 0;
+    numSegments = 1;
+    ret = dma->gen64IOVMSegments(&dmaOffset, &segments[0], &numSegments);
+    assert(kIOReturnSuccess == ret);
+    assert(1 == numSegments);
 
-		dmaOffset   = 0;
-		numSegments = 1;
-		ret = dma->gen64IOVMSegments(&dmaOffset, &segments[0], &numSegments);
-		assert(kIOReturnSuccess == ret);
-		assert(1 == numSegments);
+    if (kIODirectionOut & dir) {
+      data = ((uint32_t *)bmd->getBytesNoCopy())[0];
+      assertf((0x53535300 | dir) == data, "mismatch 0x%x", data);
+    }
+    if (kIODirectionIn & dir) {
+      IOMappedWrite32(segments[0].fIOVMAddr, 0x11223300 | dir);
+    }
 
-		if (kIODirectionOut & dir) {
-			data = ((uint32_t*) bmd->getBytesNoCopy())[0];
-			assertf((0x53535300 | dir) == data, "mismatch 0x%x", data);
-		}
-		if (kIODirectionIn & dir) {
-			IOMappedWrite32(segments[0].fIOVMAddr, 0x11223300 | dir);
-		}
+    ret = dma->clearMemoryDescriptor(true);
+    assert(kIOReturnSuccess == ret);
+    dma->release();
 
-		ret = dma->clearMemoryDescriptor(true);
-		assert(kIOReturnSuccess == ret);
-		dma->release();
+    bmd->complete((IODirection)dir);
 
-		bmd->complete((IODirection) dir);
+    if (kIODirectionIn & dir) {
+      data = ((uint32_t *)bmd->getBytesNoCopy())[0];
+      assertf((0x11223300 | dir) == data, "mismatch 0x%x", data);
+    }
 
-		if (kIODirectionIn & dir) {
-			data = ((uint32_t*) bmd->getBytesNoCopy())[0];
-			assertf((0x11223300 | dir) == data, "mismatch 0x%x", data);
-		}
+    bmd->release();
 
-		bmd->release();
+    if (dir == kIODirectionInOut) {
+      break;
+    }
+  }
 
-		if (dir == kIODirectionInOut) {
-			break;
-		}
-	}
-
-	return 0;
+  return 0;
 }
 
 // <rdar://problem/34322778>
-static int __unused
-IODMACommandLocalMappedNonContig(int newValue)
-{
-	IOReturn                   kr;
-	IOMemoryDescriptor       * md;
-	IODMACommand             * dma;
-	OSDictionary             * matching;
-	IOService                * device;
-	IOMapper                 * mapper;
-	IODMACommand::SegmentOptions segOptions =
-	{
-		.fStructSize      = sizeof(segOptions),
-		.fNumAddressBits  = 64,
-		.fMaxSegmentSize  = 128 * 1024,
-		.fMaxTransferSize = 128 * 1024,
-		.fAlignment       = 1,
-		.fAlignmentLength = 1,
-		.fAlignmentInternalSegments = 1
-	};
-	IODMACommand::Segment64 segments[1];
-	UInt32                  numSegments;
-	UInt64                  dmaOffset;
-	UInt64                  segPhys;
-	mach_vm_address_t       buffer;
-	vm_size_t               bufSize = ptoa(4);
+static int __unused IODMACommandLocalMappedNonContig(int newValue) {
+  IOReturn kr;
+  IOMemoryDescriptor *md;
+  IODMACommand *dma;
+  OSDictionary *matching;
+  IOService *device;
+  IOMapper *mapper;
+  IODMACommand::SegmentOptions segOptions = {.fStructSize = sizeof(segOptions),
+                                             .fNumAddressBits = 64,
+                                             .fMaxSegmentSize = 128 * 1024,
+                                             .fMaxTransferSize = 128 * 1024,
+                                             .fAlignment = 1,
+                                             .fAlignmentLength = 1,
+                                             .fAlignmentInternalSegments = 1};
+  IODMACommand::Segment64 segments[1];
+  UInt32 numSegments;
+  UInt64 dmaOffset;
+  UInt64 segPhys;
+  mach_vm_address_t buffer;
+  vm_size_t bufSize = ptoa(4);
 
-	if (!IOMapper::gSystem) {
-		return 0;
-	}
+  if (!IOMapper::gSystem) {
+    return 0;
+  }
 
-	buffer = 0;
-	kr = mach_vm_allocate_kernel(kernel_map, &buffer, bufSize,
-	    VM_MAP_KERNEL_FLAGS_ANYWHERE(.vm_tag = VM_KERN_MEMORY_IOKIT));
-	assert(KERN_SUCCESS == kr);
+  buffer = 0;
+  kr = mach_vm_allocate_kernel(
+      kernel_map, &buffer, bufSize,
+      VM_MAP_KERNEL_FLAGS_ANYWHERE(.vm_tag = VM_KERN_MEMORY_IOKIT));
+  assert(KERN_SUCCESS == kr);
 
-	// fragment the vmentries
-	kr = mach_vm_inherit(kernel_map, buffer + ptoa(1), ptoa(1), VM_INHERIT_NONE);
-	assert(KERN_SUCCESS == kr);
+  // fragment the vmentries
+  kr = mach_vm_inherit(kernel_map, buffer + ptoa(1), ptoa(1), VM_INHERIT_NONE);
+  assert(KERN_SUCCESS == kr);
 
-	md = IOMemoryDescriptor::withAddressRange(
-		buffer + 0xa00, 0x2000, kIODirectionOutIn, kernel_task);
-	assert(md);
-	kr = md->prepare(kIODirectionOutIn);
-	assert(kIOReturnSuccess == kr);
+  md = IOMemoryDescriptor::withAddressRange(buffer + 0xa00, 0x2000,
+                                            kIODirectionOutIn, kernel_task);
+  assert(md);
+  kr = md->prepare(kIODirectionOutIn);
+  assert(kIOReturnSuccess == kr);
 
-	segPhys = md->getPhysicalSegment(0, NULL, 0);
+  segPhys = md->getPhysicalSegment(0, NULL, 0);
 
-	matching = IOService::nameMatching("XHC1");
-	assert(matching);
-	device = IOService::copyMatchingService(matching);
-	matching->release();
-	mapper = device ? IOMapper::copyMapperForDeviceWithIndex(device, 0) : NULL;
-	OSSafeReleaseNULL(device);
+  matching = IOService::nameMatching("XHC1");
+  assert(matching);
+  device = IOService::copyMatchingService(matching);
+  matching->release();
+  mapper = device ? IOMapper::copyMapperForDeviceWithIndex(device, 0) : NULL;
+  OSSafeReleaseNULL(device);
 
-	dma = IODMACommand::withSpecification(kIODMACommandOutputHost64, &segOptions,
-	    kIODMAMapOptionMapped,
-	    mapper, NULL);
-	assert(dma);
-	kr = dma->setMemoryDescriptor(md, true);
-	assert(kIOReturnSuccess == kr);
+  dma = IODMACommand::withSpecification(kIODMACommandOutputHost64, &segOptions,
+                                        kIODMAMapOptionMapped, mapper, NULL);
+  assert(dma);
+  kr = dma->setMemoryDescriptor(md, true);
+  assert(kIOReturnSuccess == kr);
 
-	dmaOffset   = 0;
-	numSegments = 1;
-	kr = dma->gen64IOVMSegments(&dmaOffset, &segments[0], &numSegments);
-	assert(kIOReturnSuccess == kr);
-	assert(1 == numSegments);
+  dmaOffset = 0;
+  numSegments = 1;
+  kr = dma->gen64IOVMSegments(&dmaOffset, &segments[0], &numSegments);
+  assert(kIOReturnSuccess == kr);
+  assert(1 == numSegments);
 
-	if (mapper) {
-		assertf(segments[0].fIOVMAddr != segPhys, "phys !local 0x%qx, 0x%qx, %p", segments[0].fIOVMAddr, segPhys, dma);
-	}
+  if (mapper) {
+    assertf(segments[0].fIOVMAddr != segPhys, "phys !local 0x%qx, 0x%qx, %p",
+            segments[0].fIOVMAddr, segPhys, dma);
+  }
 
-	kr = dma->clearMemoryDescriptor(true);
-	assert(kIOReturnSuccess == kr);
-	dma->release();
+  kr = dma->clearMemoryDescriptor(true);
+  assert(kIOReturnSuccess == kr);
+  dma->release();
 
-	kr = md->complete(kIODirectionOutIn);
-	assert(kIOReturnSuccess == kr);
-	md->release();
+  kr = md->complete(kIODirectionOutIn);
+  assert(kIOReturnSuccess == kr);
+  md->release();
 
-	kr = mach_vm_deallocate(kernel_map, buffer, bufSize);
-	assert(KERN_SUCCESS == kr);
-	OSSafeReleaseNULL(mapper);
+  kr = mach_vm_deallocate(kernel_map, buffer, bufSize);
+  assert(KERN_SUCCESS == kr);
+  OSSafeReleaseNULL(mapper);
 
-	return 0;
+  return 0;
 }
 
 // <rdar://problem/30102458>
-static int
-IOMemoryRemoteTest(int newValue)
-{
-	IOReturn             ret;
-	IOMemoryDescriptor * md;
-	IOByteCount          offset, length;
-	addr64_t             addr;
-	uint32_t             idx;
+static int IOMemoryRemoteTest(int newValue) {
+  IOReturn ret;
+  IOMemoryDescriptor *md;
+  IOByteCount offset, length;
+  addr64_t addr;
+  uint32_t idx;
 
-	IODMACommand       * dma;
-	IODMACommand::SegmentOptions segOptions =
-	{
-		.fStructSize      = sizeof(segOptions),
-		.fNumAddressBits  = 64,
-		.fMaxSegmentSize  = 0x2000,
-		.fMaxTransferSize = 128 * 1024,
-		.fAlignment       = 1,
-		.fAlignmentLength = 1,
-		.fAlignmentInternalSegments = 1
-	};
-	IODMACommand::Segment64 segments[1];
-	UInt32                  numSegments;
-	UInt64                  dmaOffset;
+  IODMACommand *dma;
+  IODMACommand::SegmentOptions segOptions = {.fStructSize = sizeof(segOptions),
+                                             .fNumAddressBits = 64,
+                                             .fMaxSegmentSize = 0x2000,
+                                             .fMaxTransferSize = 128 * 1024,
+                                             .fAlignment = 1,
+                                             .fAlignmentLength = 1,
+                                             .fAlignmentInternalSegments = 1};
+  IODMACommand::Segment64 segments[1];
+  UInt32 numSegments;
+  UInt64 dmaOffset;
 
-	IOAddressRange ranges[2] = {
-		{ 0x1234567890123456ULL, 0x1000 }, { 0x5432109876543210, 0x2000 },
-	};
+  IOAddressRange ranges[2] = {
+      {0x1234567890123456ULL, 0x1000},
+      {0x5432109876543210, 0x2000},
+  };
 
-	md = IOMemoryDescriptor::withAddressRanges(&ranges[0], 2, kIODirectionOutIn | kIOMemoryRemote, TASK_NULL);
-	assert(md);
+  md = IOMemoryDescriptor::withAddressRanges(
+      &ranges[0], 2, kIODirectionOutIn | kIOMemoryRemote, TASK_NULL);
+  assert(md);
 
-//    md->map();
-//    md->readBytes(0, &idx, sizeof(idx));
+  //    md->map();
+  //    md->readBytes(0, &idx, sizeof(idx));
 
-	ret = md->prepare(kIODirectionOutIn);
-	assert(kIOReturnSuccess == ret);
+  ret = md->prepare(kIODirectionOutIn);
+  assert(kIOReturnSuccess == ret);
 
-	printf("remote md flags 0x%qx, r %d\n",
-	    md->getFlags(), (0 != (kIOMemoryRemote & md->getFlags())));
+  printf("remote md flags 0x%qx, r %d\n", md->getFlags(),
+         (0 != (kIOMemoryRemote & md->getFlags())));
 
-	for (offset = 0, idx = 0; true; offset += length, idx++) {
-		addr = md->getPhysicalSegment(offset, &length, 0);
-		if (!length) {
-			break;
-		}
-		assert(idx < 2);
-		assert(addr == ranges[idx].address);
-		assert(length == ranges[idx].length);
-	}
-	assert(offset == md->getLength());
+  for (offset = 0, idx = 0; true; offset += length, idx++) {
+    addr = md->getPhysicalSegment(offset, &length, 0);
+    if (!length) {
+      break;
+    }
+    assert(idx < 2);
+    assert(addr == ranges[idx].address);
+    assert(length == ranges[idx].length);
+  }
+  assert(offset == md->getLength());
 
-	dma = IODMACommand::withSpecification(kIODMACommandOutputHost64, &segOptions,
-	    kIODMAMapOptionUnmapped | kIODMAMapOptionIterateOnly,
-	    NULL, NULL);
-	assert(dma);
-	ret = dma->setMemoryDescriptor(md, true);
-	assert(kIOReturnSuccess == ret);
+  dma = IODMACommand::withSpecification(
+      kIODMACommandOutputHost64, &segOptions,
+      kIODMAMapOptionUnmapped | kIODMAMapOptionIterateOnly, NULL, NULL);
+  assert(dma);
+  ret = dma->setMemoryDescriptor(md, true);
+  assert(kIOReturnSuccess == ret);
 
-	for (dmaOffset = 0, idx = 0; dmaOffset < md->getLength(); idx++) {
-		numSegments = 1;
-		ret = dma->gen64IOVMSegments(&dmaOffset, &segments[0], &numSegments);
-		assert(kIOReturnSuccess == ret);
-		assert(1 == numSegments);
-		assert(idx < 2);
-		assert(segments[0].fIOVMAddr == ranges[idx].address);
-		assert(segments[0].fLength == ranges[idx].length);
-	}
-	assert(dmaOffset == md->getLength());
+  for (dmaOffset = 0, idx = 0; dmaOffset < md->getLength(); idx++) {
+    numSegments = 1;
+    ret = dma->gen64IOVMSegments(&dmaOffset, &segments[0], &numSegments);
+    assert(kIOReturnSuccess == ret);
+    assert(1 == numSegments);
+    assert(idx < 2);
+    assert(segments[0].fIOVMAddr == ranges[idx].address);
+    assert(segments[0].fLength == ranges[idx].length);
+  }
+  assert(dmaOffset == md->getLength());
 
-	ret = dma->clearMemoryDescriptor(true);
-	assert(kIOReturnSuccess == ret);
-	dma->release();
-	md->complete(kIODirectionOutIn);
-	md->release();
+  ret = dma->clearMemoryDescriptor(true);
+  assert(kIOReturnSuccess == ret);
+  dma->release();
+  md->complete(kIODirectionOutIn);
+  md->release();
 
-	return 0;
+  return 0;
 }
 
-static IOReturn
-IOMemoryPrefaultTest(uint32_t options)
-{
-	IOBufferMemoryDescriptor * bmd;
-	IOMemoryMap              * map;
-	IOReturn       kr;
-	uint32_t       data;
-	uint32_t *     p;
-	IOSimpleLock * lock;
+static IOReturn IOMemoryPrefaultTest(uint32_t options) {
+  IOBufferMemoryDescriptor *bmd;
+  IOMemoryMap *map;
+  IOReturn kr;
+  uint32_t data;
+  uint32_t *p;
+  IOSimpleLock *lock;
 
-	lock = IOSimpleLockAlloc();
-	assert(lock);
+  lock = IOSimpleLockAlloc();
+  assert(lock);
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithOptions(current_task(),
-	    kIODirectionOutIn | kIOMemoryPageable, ptoa(8));
-	assert(bmd);
-	kr = bmd->prepare();
-	assert(KERN_SUCCESS == kr);
+  bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      current_task(), kIODirectionOutIn | kIOMemoryPageable, ptoa(8));
+  assert(bmd);
+  kr = bmd->prepare();
+  assert(KERN_SUCCESS == kr);
 
-	map = bmd->map(kIOMapPrefault);
-	assert(map);
+  map = bmd->map(kIOMapPrefault);
+  assert(map);
 
-	p = (typeof(p))map->getVirtualAddress();
-	IOSimpleLockLock(lock);
-	data = p[0];
-	IOSimpleLockUnlock(lock);
+  p = (typeof(p))map->getVirtualAddress();
+  IOSimpleLockLock(lock);
+  data = p[0];
+  IOSimpleLockUnlock(lock);
 
-	IOLog("IOMemoryPrefaultTest %d\n", data);
+  IOLog("IOMemoryPrefaultTest %d\n", data);
 
-	map->release();
-	bmd->release();
-	IOSimpleLockFree(lock);
+  map->release();
+  bmd->release();
+  IOSimpleLockFree(lock);
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-static IOReturn
-IOBMDOverflowTest(uint32_t options)
-{
-	IOBufferMemoryDescriptor * bmd;
+static IOReturn IOBMDOverflowTest(uint32_t options) {
+  IOBufferMemoryDescriptor *bmd;
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithPhysicalMask(kernel_task, kIOMemoryPageable | kIODirectionOut,
-	    0xffffffffffffffff, 0);
-	assert(NULL == bmd);
+  bmd = IOBufferMemoryDescriptor::inTaskWithPhysicalMask(
+      kernel_task, kIOMemoryPageable | kIODirectionOut, 0xffffffffffffffff, 0);
+  assert(NULL == bmd);
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-static IOReturn
-IOBMDSetLengthMapTest(uint32_t options)
-{
-	IOBufferMemoryDescriptor * bmd;
-	IOMemoryMap * map;
+static IOReturn IOBMDSetLengthMapTest(uint32_t options) {
+  IOBufferMemoryDescriptor *bmd;
+  IOMemoryMap *map;
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
-		kernel_task, kIOMemoryDirectionOutIn | kIOMemoryKernelUserShared, 0x4000, 0x4000);
-	assert(bmd);
+  bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      kernel_task, kIOMemoryDirectionOutIn | kIOMemoryKernelUserShared, 0x4000,
+      0x4000);
+  assert(bmd);
 
-	bmd->setLength(0x100);
-	map = bmd->createMappingInTask(current_task(), 0, kIOMapAnywhere, 0, 0);
-	assert(map);
-	OSSafeReleaseNULL(map);
+  bmd->setLength(0x100);
+  map = bmd->createMappingInTask(current_task(), 0, kIOMapAnywhere, 0, 0);
+  assert(map);
+  OSSafeReleaseNULL(map);
 
-	bmd->setLength(0x200);
-	map = bmd->createMappingInTask(current_task(), 0, kIOMapAnywhere, 0, 0);
-	assert(map);
-	OSSafeReleaseNULL(map);
+  bmd->setLength(0x200);
+  map = bmd->createMappingInTask(current_task(), 0, kIOMapAnywhere, 0, 0);
+  assert(map);
+  OSSafeReleaseNULL(map);
 
-	bmd->release();
+  bmd->release();
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
 // <rdar://problem/26375234>
-static IOReturn
-ZeroLengthTest(int newValue)
-{
-	IOMemoryDescriptor * md;
+static IOReturn ZeroLengthTest(int newValue) {
+  IOMemoryDescriptor *md;
 
-	md = IOMemoryDescriptor::withAddressRange(
-		0, 0, kIODirectionNone, current_task());
-	assert(md);
-	md->prepare();
-	md->complete();
-	md->release();
-	return 0;
+  md = IOMemoryDescriptor::withAddressRange(0, 0, kIODirectionNone,
+                                            current_task());
+  assert(md);
+  md->prepare();
+  md->complete();
+  md->release();
+  return 0;
 }
 
 // <rdar://problem/27002624>
-static IOReturn
-BadFixedAllocTest(int newValue)
-{
-	IOBufferMemoryDescriptor * bmd;
-	IOMemoryMap              * map;
+static IOReturn BadFixedAllocTest(int newValue) {
+  IOBufferMemoryDescriptor *bmd;
+  IOMemoryMap *map;
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithOptions(NULL,
-	    kIODirectionIn | kIOMemoryPageable, ptoa(1));
-	assert(bmd);
-	map = bmd->createMappingInTask(kernel_task, 0x2000, 0);
-	assert(!map);
+  bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      NULL, kIODirectionIn | kIOMemoryPageable, ptoa(1));
+  assert(bmd);
+  map = bmd->createMappingInTask(kernel_task, 0x2000, 0);
+  assert(!map);
 
-	bmd->release();
-	return 0;
+  bmd->release();
+  return 0;
 }
 
 // <rdar://problem/26466423>
-static IOReturn
-IODirectionPrepareNoZeroFillTest(int newValue)
-{
-	IOBufferMemoryDescriptor * bmd;
+static IOReturn IODirectionPrepareNoZeroFillTest(int newValue) {
+  IOBufferMemoryDescriptor *bmd;
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithOptions(NULL,
-	    kIODirectionIn | kIOMemoryPageable, ptoa(24));
-	assert(bmd);
-	bmd->prepare((IODirection)(kIODirectionIn | kIODirectionPrepareNoZeroFill));
-	bmd->prepare(kIODirectionIn);
-	bmd->complete((IODirection)(kIODirectionIn | kIODirectionCompleteWithDataValid));
-	bmd->complete(kIODirectionIn);
-	bmd->release();
-	return 0;
+  bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      NULL, kIODirectionIn | kIOMemoryPageable, ptoa(24));
+  assert(bmd);
+  bmd->prepare((IODirection)(kIODirectionIn | kIODirectionPrepareNoZeroFill));
+  bmd->prepare(kIODirectionIn);
+  bmd->complete(
+      (IODirection)(kIODirectionIn | kIODirectionCompleteWithDataValid));
+  bmd->complete(kIODirectionIn);
+  bmd->release();
+  return 0;
 }
 
 // <rdar://problem/28190483>
-static IOReturn
-IOMemoryMapTest(uint32_t options)
-{
-	IOBufferMemoryDescriptor * bmd;
-	IOMemoryDescriptor       * md;
-	IOMemoryMap              * map;
-	uint32_t    data;
-	user_addr_t p;
-	uint8_t *   p2;
-	int         r;
-	uint64_t    time, nano;
+static IOReturn IOMemoryMapTest(uint32_t options) {
+  IOBufferMemoryDescriptor *bmd;
+  IOMemoryDescriptor *md;
+  IOMemoryMap *map;
+  uint32_t data;
+  user_addr_t p;
+  uint8_t *p2;
+  int r;
+  uint64_t time, nano;
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithOptions(current_task(),
-	    kIODirectionOutIn | kIOMemoryPageable, 0x4018 + 0x800);
-	assert(bmd);
-	p = (typeof(p))bmd->getBytesNoCopy();
-	p += 0x800;
-	data = 0x11111111;
-	r = copyout(&data, p, sizeof(data));
-	assert(r == 0);
-	data = 0x22222222;
-	r = copyout(&data, p + 0x1000, sizeof(data));
-	assert(r == 0);
-	data = 0x33333333;
-	r = copyout(&data, p + 0x2000, sizeof(data));
-	assert(r == 0);
-	data = 0x44444444;
-	r = copyout(&data, p + 0x3000, sizeof(data));
-	assert(r == 0);
+  bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      current_task(), kIODirectionOutIn | kIOMemoryPageable, 0x4018 + 0x800);
+  assert(bmd);
+  p = (typeof(p))bmd->getBytesNoCopy();
+  p += 0x800;
+  data = 0x11111111;
+  r = copyout(&data, p, sizeof(data));
+  assert(r == 0);
+  data = 0x22222222;
+  r = copyout(&data, p + 0x1000, sizeof(data));
+  assert(r == 0);
+  data = 0x33333333;
+  r = copyout(&data, p + 0x2000, sizeof(data));
+  assert(r == 0);
+  data = 0x44444444;
+  r = copyout(&data, p + 0x3000, sizeof(data));
+  assert(r == 0);
 
-	md = IOMemoryDescriptor::withAddressRange(p, 0x4018,
-	    kIODirectionOut | options,
-	    current_task());
-	assert(md);
-	time = mach_absolute_time();
-	map = md->map(kIOMapReadOnly);
-	time = mach_absolute_time() - time;
-	assert(map);
-	absolutetime_to_nanoseconds(time, &nano);
+  md = IOMemoryDescriptor::withAddressRange(
+      p, 0x4018, kIODirectionOut | options, current_task());
+  assert(md);
+  time = mach_absolute_time();
+  map = md->map(kIOMapReadOnly);
+  time = mach_absolute_time() - time;
+  assert(map);
+  absolutetime_to_nanoseconds(time, &nano);
 
-	p2 = (typeof(p2))map->getVirtualAddress();
-	assert(0x11 == p2[0]);
-	assert(0x22 == p2[0x1000]);
-	assert(0x33 == p2[0x2000]);
-	assert(0x44 == p2[0x3000]);
+  p2 = (typeof(p2))map->getVirtualAddress();
+  assert(0x11 == p2[0]);
+  assert(0x22 == p2[0x1000]);
+  assert(0x33 == p2[0x2000]);
+  assert(0x44 == p2[0x3000]);
 
-	data = 0x99999999;
-	r = copyout(&data, p + 0x2000, sizeof(data));
-	assert(r == 0);
+  data = 0x99999999;
+  r = copyout(&data, p + 0x2000, sizeof(data));
+  assert(r == 0);
 
-	assert(0x11 == p2[0]);
-	assert(0x22 == p2[0x1000]);
-	assert(0x44 == p2[0x3000]);
-	if (kIOMemoryMapCopyOnWrite & options) {
-		assert(0x33 == p2[0x2000]);
-	} else {
-		assert(0x99 == p2[0x2000]);
-	}
+  assert(0x11 == p2[0]);
+  assert(0x22 == p2[0x1000]);
+  assert(0x44 == p2[0x3000]);
+  if (kIOMemoryMapCopyOnWrite & options) {
+    assert(0x33 == p2[0x2000]);
+  } else {
+    assert(0x99 == p2[0x2000]);
+  }
 
-	IOLog("IOMemoryMapCopyOnWriteTest map(%s) %lld ns\n",
-	    kIOMemoryMapCopyOnWrite & options ? "kIOMemoryMapCopyOnWrite" : "",
-	    nano);
+  IOLog("IOMemoryMapCopyOnWriteTest map(%s) %lld ns\n",
+        kIOMemoryMapCopyOnWrite & options ? "kIOMemoryMapCopyOnWrite" : "",
+        nano);
 
-	map->release();
-	md->release();
-	bmd->release();
+  map->release();
+  md->release();
+  bmd->release();
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-static int
-IOMemoryMapCopyOnWriteTest(int newValue)
-{
-	IOMemoryMapTest(0);
-	IOMemoryMapTest(kIOMemoryMapCopyOnWrite);
-	return 0;
+static int IOMemoryMapCopyOnWriteTest(int newValue) {
+  IOMemoryMapTest(0);
+  IOMemoryMapTest(kIOMemoryMapCopyOnWrite);
+  return 0;
 }
 
-static int
-AllocationNameTest(int newValue)
-{
-	IOMemoryDescriptor * bmd;
-	kern_allocation_name_t name, prior;
+static int AllocationNameTest(int newValue) {
+  IOMemoryDescriptor *bmd;
+  kern_allocation_name_t name, prior;
 
-	name = kern_allocation_name_allocate("com.apple.iokit.test", 0);
-	assert(name);
+  name = kern_allocation_name_allocate("com.apple.iokit.test", 0);
+  assert(name);
 
-	prior = thread_set_allocation_name(name);
+  prior = thread_set_allocation_name(name);
 
-	bmd = IOBufferMemoryDescriptor::inTaskWithOptions(TASK_NULL,
-	    kIODirectionOutIn | kIOMemoryPageable | kIOMemoryKernelUserShared,
-	    ptoa(13));
-	assert(bmd);
-	bmd->prepare();
+  bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      TASK_NULL,
+      kIODirectionOutIn | kIOMemoryPageable | kIOMemoryKernelUserShared,
+      ptoa(13));
+  assert(bmd);
+  bmd->prepare();
 
-	thread_set_allocation_name(prior);
-	kern_allocation_name_release(name);
+  thread_set_allocation_name(prior);
+  kern_allocation_name_release(name);
 
-	if (newValue != 7) {
-		bmd->release();
-	}
+  if (newValue != 7) {
+    bmd->release();
+  }
 
-	return 0;
+  return 0;
 }
 
-static IOReturn
-IOGuardPageMDTest(int newValue)
-{
-	constexpr size_t MAX_LEFT_GUARD_PAGES = 5;
-	constexpr size_t MAX_RIGHT_GUARD_PAGES = 5;
+static IOReturn IOGuardPageMDTest(int newValue) {
+  constexpr size_t MAX_LEFT_GUARD_PAGES = 5;
+  constexpr size_t MAX_RIGHT_GUARD_PAGES = 5;
 
-	IOMemoryDescriptor * mds[3];
-	IOMemoryDescriptor * dataMD;
-	IOMultiMemoryDescriptor * mmd;
-	IOBufferMemoryDescriptor * iobmd;
-	IOMemoryMap * map;
-	void * addr;
-	uint8_t * data;
-	uint32_t i;
+  IOMemoryDescriptor *mds[3];
+  IOMemoryDescriptor *dataMD;
+  IOMultiMemoryDescriptor *mmd;
+  IOBufferMemoryDescriptor *iobmd;
+  IOMemoryMap *map;
+  void *addr;
+  uint8_t *data;
+  uint32_t i;
 
-	data = (typeof(data))IOMallocAligned(page_size, page_size);
-	for (i = 0; i < page_size; i++) {
-		data[i] = (uint8_t)(i & 0xFF);
-	}
+  data = (typeof(data))IOMallocAligned(page_size, page_size);
+  for (i = 0; i < page_size; i++) {
+    data[i] = (uint8_t)(i & 0xFF);
+  }
 
-	dataMD = IOMemoryDescriptor::withAddressRange((mach_vm_address_t) data, page_size, kIODirectionOutIn, kernel_task);
-	assert(dataMD);
+  dataMD = IOMemoryDescriptor::withAddressRange(
+      (mach_vm_address_t)data, page_size, kIODirectionOutIn, kernel_task);
+  assert(dataMD);
 
+  for (size_t leftGuardSize = 1; leftGuardSize < MAX_LEFT_GUARD_PAGES;
+       leftGuardSize++) {
+    for (size_t rightGuardSize = 1; rightGuardSize < MAX_RIGHT_GUARD_PAGES;
+         rightGuardSize++) {
+      mds[0] = IOGuardPageMemoryDescriptor::withSize(page_size * leftGuardSize);
+      assert(mds[0]);
 
-	for (size_t leftGuardSize = 1; leftGuardSize < MAX_LEFT_GUARD_PAGES; leftGuardSize++) {
-		for (size_t rightGuardSize = 1; rightGuardSize < MAX_RIGHT_GUARD_PAGES; rightGuardSize++) {
-			mds[0] = IOGuardPageMemoryDescriptor::withSize(page_size * leftGuardSize);
-			assert(mds[0]);
+      mds[1] = dataMD;
+      mds[1]->retain();
 
-			mds[1] = dataMD;
-			mds[1]->retain();
+      mds[2] =
+          IOGuardPageMemoryDescriptor::withSize(page_size * rightGuardSize);
+      assert(mds[2]);
 
-			mds[2] = IOGuardPageMemoryDescriptor::withSize(page_size * rightGuardSize);
-			assert(mds[2]);
+      mmd = IOMultiMemoryDescriptor::withDescriptors(
+          &mds[0], sizeof(mds) / sizeof(mds[0]), kIODirectionOutIn, false);
 
-			mmd = IOMultiMemoryDescriptor::withDescriptors(&mds[0], sizeof(mds) / sizeof(mds[0]), kIODirectionOutIn, false);
+      OSSafeReleaseNULL(mds[2]);
+      OSSafeReleaseNULL(mds[1]);
+      OSSafeReleaseNULL(mds[0]);
 
-			OSSafeReleaseNULL(mds[2]);
-			OSSafeReleaseNULL(mds[1]);
-			OSSafeReleaseNULL(mds[0]);
+      map = mmd->createMappingInTask(kernel_task, 0, kIOMapAnywhere, 0,
+                                     mmd->getLength());
 
-			map = mmd->createMappingInTask(kernel_task, 0, kIOMapAnywhere, 0, mmd->getLength());
+      OSSafeReleaseNULL(mmd);
+      assert(map);
+      addr = (void *)map->getAddress();
 
-			OSSafeReleaseNULL(mmd);
-			assert(map);
-			addr = (void *)map->getAddress();
+      // check data
+      for (i = 0; i < page_size; i++) {
+        assert(*(uint8_t *)((uintptr_t)addr + page_size * leftGuardSize + i) ==
+               (uint8_t)(i & 0xFF));
+      }
 
-			// check data
-			for (i = 0; i < page_size; i++) {
-				assert(*(uint8_t *)((uintptr_t)addr + page_size * leftGuardSize + i) == (uint8_t)(i & 0xFF));
-			}
+      // check map length
+      assert(page_size * leftGuardSize + page_size +
+                 page_size * rightGuardSize ==
+             map->getLength());
 
-			// check map length
-			assert(page_size * leftGuardSize + page_size + page_size * rightGuardSize == map->getLength());
+      // check page protections
+      for (i = 0; i < leftGuardSize + 1 + rightGuardSize; i++) {
+        mach_vm_address_t regionAddr = (vm_address_t)addr + i * page_size;
+        mach_vm_size_t regionSize;
+        vm_region_extended_info regionInfo;
+        mach_msg_type_number_t count = VM_REGION_EXTENDED_INFO_COUNT;
+        mach_port_t unused;
+        kern_return_t kr = mach_vm_region(
+            kernel_map, &regionAddr, &regionSize, VM_REGION_EXTENDED_INFO,
+            (vm_region_info_t)&regionInfo, &count, &unused);
+        assert(kr == KERN_SUCCESS);
+        if (i < leftGuardSize || i > leftGuardSize + 1) {
+          assert(regionInfo.protection == VM_PROT_NONE);
+        }
+      }
+      OSSafeReleaseNULL(map);
+    }
+  }
 
-			// check page protections
-			for (i = 0; i < leftGuardSize + 1 + rightGuardSize; i++) {
-				mach_vm_address_t regionAddr = (vm_address_t)addr + i * page_size;
-				mach_vm_size_t regionSize;
-				vm_region_extended_info regionInfo;
-				mach_msg_type_number_t count = VM_REGION_EXTENDED_INFO_COUNT;
-				mach_port_t unused;
-				kern_return_t kr = mach_vm_region(kernel_map, &regionAddr, &regionSize, VM_REGION_EXTENDED_INFO, (vm_region_info_t)&regionInfo, &count, &unused);
-				assert(kr == KERN_SUCCESS);
-				if (i < leftGuardSize || i > leftGuardSize + 1) {
-					assert(regionInfo.protection == VM_PROT_NONE);
-				}
-			}
-			OSSafeReleaseNULL(map);
-		}
-	}
+  OSSafeReleaseNULL(dataMD);
+  IOFreeAligned(data, page_size);
 
-	OSSafeReleaseNULL(dataMD);
-	IOFreeAligned(data, page_size);
+  for (size_t iobmdCapacity = page_size / 8; iobmdCapacity < page_size * 10;
+       iobmdCapacity += page_size / 8) {
+    iobmd = IOBufferMemoryDescriptor::inTaskWithGuardPages(
+        kernel_task, kIODirectionOutIn, iobmdCapacity);
 
-	for (size_t iobmdCapacity = page_size / 8; iobmdCapacity < page_size * 10; iobmdCapacity += page_size / 8) {
-		iobmd = IOBufferMemoryDescriptor::inTaskWithGuardPages(kernel_task, kIODirectionOutIn, iobmdCapacity);
+    // Capacity should be rounded up to page size
+    assert(iobmd->getLength() == round_page(iobmdCapacity));
 
-		// Capacity should be rounded up to page size
-		assert(iobmd->getLength() == round_page(iobmdCapacity));
+    // Buffer should be page aligned
+    addr = iobmd->getBytesNoCopy();
+    assert((vm_offset_t)addr == round_page((vm_offset_t)addr));
 
-		// Buffer should be page aligned
-		addr = iobmd->getBytesNoCopy();
-		assert((vm_offset_t)addr == round_page((vm_offset_t)addr));
+    // fill buffer
+    for (size_t i = 0; i < iobmdCapacity; i++) {
+      *((char *)addr + i) = (char)(i & 0xFF);
+    }
 
-		// fill buffer
-		for (size_t i = 0; i < iobmdCapacity; i++) {
-			*((char *)addr + i) = (char)(i & 0xFF);
-		}
+    map = iobmd->createMappingInTask(
+        kernel_task, 0, kIOMapAnywhere | kIOMapUnique, 0, iobmd->getLength());
+    assert(map->getLength() == iobmd->getLength());
 
-		map = iobmd->createMappingInTask(kernel_task, 0, kIOMapAnywhere | kIOMapUnique, 0, iobmd->getLength());
-		assert(map->getLength() == iobmd->getLength());
+    // check buffer
+    for (size_t i = 0; i < iobmdCapacity; i++) {
+      assert(*((char *)map->getAddress() + i) == (char)(i & 0xFF));
+    }
 
-		// check buffer
-		for (size_t i = 0; i < iobmdCapacity; i++) {
-			assert(*((char *)map->getAddress() + i) == (char)(i & 0xFF));
-		}
+    OSSafeReleaseNULL(map);
+    OSSafeReleaseNULL(iobmd);
+  }
 
-		OSSafeReleaseNULL(map);
-		OSSafeReleaseNULL(iobmd);
-	}
-
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-static IOReturn
-IOMDContextTest(int newValue)
-{
-	IOBufferMemoryDescriptor * bmd = IOBufferMemoryDescriptor::inTaskWithOptions(TASK_NULL,
-	    kIODirectionOutIn | kIOMemoryPageable | kIOMemoryKernelUserShared,
-	    ptoa(13));
+static IOReturn IOMDContextTest(int newValue) {
+  IOBufferMemoryDescriptor *bmd = IOBufferMemoryDescriptor::inTaskWithOptions(
+      TASK_NULL,
+      kIODirectionOutIn | kIOMemoryPageable | kIOMemoryKernelUserShared,
+      ptoa(13));
 
-	OSObject * current = NULL;
-	OSString * firstString = OSString::withCStringNoCopy("firstString");
-	OSString * secondString = OSString::withCStringNoCopy("secondString");
+  OSObject *current = NULL;
+  OSString *firstString = OSString::withCStringNoCopy("firstString");
+  OSString *secondString = OSString::withCStringNoCopy("secondString");
 
-	assert(bmd->copyContext() == NULL);
+  assert(bmd->copyContext() == NULL);
 
-	bmd->setContext(NULL);
-	assert(bmd->copyContext() == NULL);
+  bmd->setContext(NULL);
+  assert(bmd->copyContext() == NULL);
 
-	bmd->setContext(firstString);
-	current = bmd->copyContext();
-	assert(current == firstString);
-	OSSafeReleaseNULL(current);
+  bmd->setContext(firstString);
+  current = bmd->copyContext();
+  assert(current == firstString);
+  OSSafeReleaseNULL(current);
 
-	bmd->setContext(NULL);
-	assert(bmd->copyContext() == NULL);
+  bmd->setContext(NULL);
+  assert(bmd->copyContext() == NULL);
 
-	bmd->setContext(secondString);
-	current = bmd->copyContext();
-	assert(current == secondString);
-	OSSafeReleaseNULL(current);
+  bmd->setContext(secondString);
+  current = bmd->copyContext();
+  assert(current == secondString);
+  OSSafeReleaseNULL(current);
 
-	bmd->release();
+  bmd->release();
 
-	assert(firstString->getRetainCount() == 1);
-	assert(secondString->getRetainCount() == 1);
+  assert(firstString->getRetainCount() == 1);
+  assert(secondString->getRetainCount() == 1);
 
-	firstString->release();
-	secondString->release();
+  firstString->release();
+  secondString->release();
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-int
-IOMemoryDescriptorTest(int newValue)
-{
-	int result;
+int IOMemoryDescriptorTest(int newValue) {
+  int result;
 
-	IOLog("/IOMemoryDescriptorTest %d\n", (int) gIOMemoryReferenceCount);
+  IOLog("/IOMemoryDescriptorTest %d\n", (int)gIOMemoryReferenceCount);
 
 #if 0
 	if (6 == newValue) {
@@ -1004,226 +987,242 @@ IOMemoryDescriptorTest(int newValue)
 	}
 #endif
 
-//    result = IODMACommandLocalMappedNonContig(newValue);
-//    if (result) return (result);
+  //    result = IODMACommandLocalMappedNonContig(newValue);
+  //    if (result) return (result);
 
-	result = IODMACommandForceDoubleBufferTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IODMACommandForceDoubleBufferTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = AllocationNameTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = AllocationNameTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOMemoryMapCopyOnWriteTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOMemoryMapCopyOnWriteTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOMultMemoryDescriptorTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOMultMemoryDescriptorTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOBMDOverflowTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOBMDOverflowTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOBMDSetLengthMapTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOBMDSetLengthMapTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = ZeroLengthTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = ZeroLengthTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IODirectionPrepareNoZeroFillTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IODirectionPrepareNoZeroFillTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = BadFixedAllocTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = BadFixedAllocTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOMemoryRemoteTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOMemoryRemoteTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOMemoryPrefaultTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOMemoryPrefaultTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOGuardPageMDTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOGuardPageMDTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	result = IOMDContextTest(newValue);
-	if (result) {
-		return result;
-	}
+  result = IOMDContextTest(newValue);
+  if (result) {
+    return result;
+  }
 
-	IOGeneralMemoryDescriptor * md;
-	mach_vm_offset_t data[2];
-	vm_size_t  bsize = 16 * 1024 * 1024;
-	vm_size_t  srcsize, srcoffset, mapoffset, size;
-	kern_return_t kr;
+  IOGeneralMemoryDescriptor *md;
+  mach_vm_offset_t data[2];
+  vm_size_t bsize = 16 * 1024 * 1024;
+  vm_size_t srcsize, srcoffset, mapoffset, size;
+  kern_return_t kr;
 
-	data[0] = data[1] = 0;
-	kr = mach_vm_allocate_kernel(kernel_map, &data[0], bsize,
-	    VM_MAP_KERNEL_FLAGS_ANYWHERE(.vm_tag = VM_KERN_MEMORY_IOKIT));
-	assert(KERN_SUCCESS == kr);
+  data[0] = data[1] = 0;
+  kr = mach_vm_allocate_kernel(
+      kernel_map, &data[0], bsize,
+      VM_MAP_KERNEL_FLAGS_ANYWHERE(.vm_tag = VM_KERN_MEMORY_IOKIT));
+  assert(KERN_SUCCESS == kr);
 
-	mach_vm_inherit(kernel_map, data[0] + ptoa(1), ptoa(1), VM_INHERIT_NONE);
-	mach_vm_inherit(kernel_map, data[0] + ptoa(16), ptoa(4), VM_INHERIT_NONE);
+  mach_vm_inherit(kernel_map, data[0] + ptoa(1), ptoa(1), VM_INHERIT_NONE);
+  mach_vm_inherit(kernel_map, data[0] + ptoa(16), ptoa(4), VM_INHERIT_NONE);
 
-	IOLog("data 0x%lx, 0x%lx\n", (long)data[0], (long)data[1]);
+  IOLog("data 0x%lx, 0x%lx\n", (long)data[0], (long)data[1]);
 
-	uint32_t idx, offidx;
-	for (idx = 0; idx < (bsize / sizeof(uint32_t)); idx++) {
-		((uint32_t*)data[0])[idx] = idx;
-	}
+  uint32_t idx, offidx;
+  for (idx = 0; idx < (bsize / sizeof(uint32_t)); idx++) {
+    ((uint32_t *)data[0])[idx] = idx;
+  }
 
-	for (srcoffset = 0; srcoffset < bsize; srcoffset = ((srcoffset << 2) + 0x40c)) {
-		for (srcsize = 4; srcsize < (bsize - srcoffset - 1); srcsize = ((srcsize << 2) + 0x3fc)) {
-			IOAddressRange ranges[3];
-			uint32_t rangeCount = 1;
+  for (srcoffset = 0; srcoffset < bsize;
+       srcoffset = ((srcoffset << 2) + 0x40c)) {
+    for (srcsize = 4; srcsize < (bsize - srcoffset - 1);
+         srcsize = ((srcsize << 2) + 0x3fc)) {
+      IOAddressRange ranges[3];
+      uint32_t rangeCount = 1;
 
-			bzero(&ranges[0], sizeof(ranges));
-			ranges[0].address = data[0] + srcoffset;
-			ranges[0].length  = srcsize;
-			ranges[1].address = ranges[2].address = data[0];
+      bzero(&ranges[0], sizeof(ranges));
+      ranges[0].address = data[0] + srcoffset;
+      ranges[0].length = srcsize;
+      ranges[1].address = ranges[2].address = data[0];
 
-			if (srcsize > ptoa(5)) {
-				ranges[0].length  = 7634;
-				ranges[1].length  = 9870;
-				ranges[2].length  = srcsize - ranges[0].length - ranges[1].length;
-				ranges[1].address = ranges[0].address + ranges[0].length;
-				ranges[2].address = ranges[1].address + ranges[1].length;
-				rangeCount = 3;
-			} else if ((srcsize > ptoa(2)) && !(page_mask & srcoffset)) {
-				ranges[0].length  = ptoa(1);
-				ranges[1].length  = ptoa(1);
-				ranges[2].length  = srcsize - ranges[0].length - ranges[1].length;
-				ranges[0].address = data[0] + srcoffset + ptoa(1);
-				ranges[1].address = data[0] + srcoffset;
-				ranges[2].address = ranges[0].address + ranges[0].length;
-				rangeCount = 3;
-			}
+      if (srcsize > ptoa(5)) {
+        ranges[0].length = 7634;
+        ranges[1].length = 9870;
+        ranges[2].length = srcsize - ranges[0].length - ranges[1].length;
+        ranges[1].address = ranges[0].address + ranges[0].length;
+        ranges[2].address = ranges[1].address + ranges[1].length;
+        rangeCount = 3;
+      } else if ((srcsize > ptoa(2)) && !(page_mask & srcoffset)) {
+        ranges[0].length = ptoa(1);
+        ranges[1].length = ptoa(1);
+        ranges[2].length = srcsize - ranges[0].length - ranges[1].length;
+        ranges[0].address = data[0] + srcoffset + ptoa(1);
+        ranges[1].address = data[0] + srcoffset;
+        ranges[2].address = ranges[0].address + ranges[0].length;
+        rangeCount = 3;
+      }
 
-			md = OSDynamicCast(IOGeneralMemoryDescriptor,
-			    IOMemoryDescriptor::withAddressRanges(&ranges[0], rangeCount, kIODirectionInOut, kernel_task));
-			assert(md);
+      md = OSDynamicCast(
+          IOGeneralMemoryDescriptor,
+          IOMemoryDescriptor::withAddressRanges(
+              &ranges[0], rangeCount, kIODirectionInOut, kernel_task));
+      assert(md);
 
-			IOLog("IOMemoryDescriptor::withAddressRanges [0x%lx @ 0x%lx]\n[0x%llx, 0x%llx],\n[0x%llx, 0x%llx],\n[0x%llx, 0x%llx]\n",
-			    (long) srcsize, (long) srcoffset,
-			    (long long) ranges[0].address - data[0], (long long) ranges[0].length,
-			    (long long) ranges[1].address - data[0], (long long) ranges[1].length,
-			    (long long) ranges[2].address - data[0], (long long) ranges[2].length);
+      IOLog("IOMemoryDescriptor::withAddressRanges [0x%lx @ 0x%lx]\n[0x%llx, "
+            "0x%llx],\n[0x%llx, 0x%llx],\n[0x%llx, 0x%llx]\n",
+            (long)srcsize, (long)srcoffset,
+            (long long)ranges[0].address - data[0], (long long)ranges[0].length,
+            (long long)ranges[1].address - data[0], (long long)ranges[1].length,
+            (long long)ranges[2].address - data[0],
+            (long long)ranges[2].length);
 
-			if (kIOReturnSuccess == kr) {
-				for (mapoffset = 0; mapoffset < srcsize; mapoffset = ((mapoffset << 1) + 0xf00)) {
-					for (size = 4; size < (srcsize - mapoffset - 1); size = ((size << 2) + 0x200)) {
-						IOMemoryMap     * map;
-						mach_vm_address_t addr = 0;
-						uint32_t          data;
+      if (kIOReturnSuccess == kr) {
+        for (mapoffset = 0; mapoffset < srcsize;
+             mapoffset = ((mapoffset << 1) + 0xf00)) {
+          for (size = 4; size < (srcsize - mapoffset - 1);
+               size = ((size << 2) + 0x200)) {
+            IOMemoryMap *map;
+            mach_vm_address_t addr = 0;
+            uint32_t data;
 
-//			IOLog("<mapRef [0x%lx @ 0x%lx]\n", (long) size, (long) mapoffset);
+            //			IOLog("<mapRef [0x%lx @ 0x%lx]\n", (long) size,
+            //(long) mapoffset);
 
-						map = md->createMappingInTask(kernel_task, 0, kIOMapAnywhere | kIOMapGuardedSmall, mapoffset, size);
-						if (map) {
-							addr = map->getAddress();
-						} else {
-							kr = kIOReturnError;
-						}
+            map = md->createMappingInTask(kernel_task, 0,
+                                          kIOMapAnywhere | kIOMapGuardedSmall,
+                                          mapoffset, size);
+            if (map) {
+              addr = map->getAddress();
+            } else {
+              kr = kIOReturnError;
+            }
 
-//			IOLog(">mapRef 0x%x %llx\n", kr, addr);
+            //			IOLog(">mapRef 0x%x %llx\n", kr, addr);
 
-						if (kIOReturnSuccess != kr) {
-							break;
-						}
-						kr = md->prepare();
-						if (kIOReturnSuccess != kr) {
-							panic("prepare() fail 0x%x", kr);
-							break;
-						}
+            if (kIOReturnSuccess != kr) {
+              break;
+            }
+            kr = md->prepare();
+            if (kIOReturnSuccess != kr) {
+              panic("prepare() fail 0x%x", kr);
+              break;
+            }
 
-						IOByteCount resident, dirty, swapped;
-						kr = md->getPageCounts(&resident, &dirty, &swapped);
-						if (kIOReturnSuccess != kr) {
-							panic("unable to getExtendedPageCounts");
-							break;
-						}
-						IOLog("Page Counts: %llu resident, %llu dirty, %llu swapped\n",
-						    resident, dirty, swapped);
-						if (swapped != 0) {
-							panic("Swapped page count is not 0 for prepared descriptor %llu", swapped);
-						}
+            IOByteCount resident, dirty, swapped;
+            kr = md->getPageCounts(&resident, &dirty, &swapped);
+            if (kIOReturnSuccess != kr) {
+              panic("unable to getExtendedPageCounts");
+              break;
+            }
+            IOLog("Page Counts: %llu resident, %llu dirty, %llu swapped\n",
+                  resident, dirty, swapped);
+            if (swapped != 0) {
+              panic("Swapped page count is not 0 for prepared descriptor %llu",
+                    swapped);
+            }
 
-						for (idx = 0; idx < size; idx += sizeof(uint32_t)) {
-							offidx = (typeof(offidx))(idx + mapoffset + srcoffset);
-							if ((srcsize <= ptoa(5)) && (srcsize > ptoa(2)) && !(page_mask & srcoffset)) {
-								if (offidx < ptoa(2)) {
-									offidx ^= ptoa(1);
-								}
-							}
-							offidx /= sizeof(uint32_t);
+            for (idx = 0; idx < size; idx += sizeof(uint32_t)) {
+              offidx = (typeof(offidx))(idx + mapoffset + srcoffset);
+              if ((srcsize <= ptoa(5)) && (srcsize > ptoa(2)) &&
+                  !(page_mask & srcoffset)) {
+                if (offidx < ptoa(2)) {
+                  offidx ^= ptoa(1);
+                }
+              }
+              offidx /= sizeof(uint32_t);
 
-							if (offidx != ((uint32_t*)addr)[idx / sizeof(uint32_t)]) {
-								panic("vm mismatch md %p map %p, @ 0x%x, 0x%lx, 0x%lx,", md, map, idx, (long) srcoffset, (long) mapoffset);
-								kr = kIOReturnBadMedia;
-							} else {
-								if (sizeof(data) != md->readBytes(mapoffset + idx, &data, sizeof(data))) {
-									data = 0;
-								}
-								if (offidx != data) {
-									panic("phys mismatch md %p map %p, @ 0x%x, 0x%lx, 0x%lx,", md, map, idx, (long) srcoffset, (long) mapoffset);
-									kr = kIOReturnBadMedia;
-								}
-							}
-						}
-						md->complete();
-						map->release();
-//			IOLog("unmapRef %llx\n", addr);
-					}
-					if (kIOReturnSuccess != kr) {
-						break;
-					}
-				}
-			}
-			md->release();
-			if (kIOReturnSuccess != kr) {
-				break;
-			}
-		}
-		if (kIOReturnSuccess != kr) {
-			break;
-		}
-	}
+              if (offidx != ((uint32_t *)addr)[idx / sizeof(uint32_t)]) {
+                panic("vm mismatch md %p map %p, @ 0x%x, 0x%lx, 0x%lx,", md,
+                      map, idx, (long)srcoffset, (long)mapoffset);
+                kr = kIOReturnBadMedia;
+              } else {
+                if (sizeof(data) !=
+                    md->readBytes(mapoffset + idx, &data, sizeof(data))) {
+                  data = 0;
+                }
+                if (offidx != data) {
+                  panic("phys mismatch md %p map %p, @ 0x%x, 0x%lx, 0x%lx,", md,
+                        map, idx, (long)srcoffset, (long)mapoffset);
+                  kr = kIOReturnBadMedia;
+                }
+              }
+            }
+            md->complete();
+            map->release();
+            //			IOLog("unmapRef %llx\n", addr);
+          }
+          if (kIOReturnSuccess != kr) {
+            break;
+          }
+        }
+      }
+      md->release();
+      if (kIOReturnSuccess != kr) {
+        break;
+      }
+    }
+    if (kIOReturnSuccess != kr) {
+      break;
+    }
+  }
 
-	if (kIOReturnSuccess != kr) {
-		IOLog("FAIL: src 0x%lx @ 0x%lx, map 0x%lx @ 0x%lx\n",
-		    (long) srcsize, (long) srcoffset, (long) size, (long) mapoffset);
-	}
+  if (kIOReturnSuccess != kr) {
+    IOLog("FAIL: src 0x%lx @ 0x%lx, map 0x%lx @ 0x%lx\n", (long)srcsize,
+          (long)srcoffset, (long)size, (long)mapoffset);
+  }
 
-	assert(kr == kIOReturnSuccess);
+  assert(kr == kIOReturnSuccess);
 
-	mach_vm_deallocate(kernel_map, data[0], bsize);
-	//mach_vm_deallocate(kernel_map, data[1], size);
+  mach_vm_deallocate(kernel_map, data[0], bsize);
+  // mach_vm_deallocate(kernel_map, data[1], size);
 
-	IOLog("IOMemoryDescriptorTest/ %d\n", (int) gIOMemoryReferenceCount);
+  IOLog("IOMemoryDescriptorTest/ %d\n", (int)gIOMemoryReferenceCount);
 
-	return 0;
+  return 0;
 }
 
-
-#endif  /* DEVELOPMENT || DEBUG */
+#endif /* DEVELOPMENT || DEBUG */

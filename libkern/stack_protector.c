@@ -26,13 +26,11 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <libkern/stack_protector.h>
 #include <kern/debug.h>
+#include <libkern/stack_protector.h>
 
 unsigned long __stack_chk_guard = 0UL;
 
-void
-__stack_chk_fail(void)
-{
-	panic("Kernel stack memory corruption detected");
+void __stack_chk_fail(void) {
+  panic("Kernel stack memory corruption detected");
 }

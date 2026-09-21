@@ -26,19 +26,19 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/errno.h>
-#include <sys/types.h>
 #include <kern/kalloc.h>
 #include <sys/buf.h>
-#include <sys/time.h>
+#include <sys/errno.h>
+#include <sys/fslog.h>
 #include <sys/kauth.h>
 #include <sys/mount.h>
-#include <sys/vnode.h>
-#include <sys/syslog.h>
-#include <sys/vnode_internal.h>
-#include <sys/fslog.h>
 #include <sys/mount_internal.h>
-#if 0   /* see rdar://81514225 */
+#include <sys/syslog.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/vnode.h>
+#include <sys/vnode_internal.h>
+#if 0 /* see rdar://81514225 */
 #include <sys/kasl.h>
 #endif
 
@@ -57,10 +57,8 @@
  *  3. Target process name (truncated to 16 characters)
  *  4. Target process Mach-O UUID
  */
-void
-fslog_extmod_msgtracer(__unused proc_t caller, __unused proc_t target)
-{
-#if 0   /* see rdar://81514225 */
+void fslog_extmod_msgtracer(__unused proc_t caller, __unused proc_t target) {
+#if 0 /* see rdar://81514225 */
 	if ((caller != PROC_NULL) && (target != PROC_NULL)) {
 		/*
 		 * Print into buffer large enough for "ThisIsAnApplicat(BC223DD7-B314-42E0-B6B0-C5D2E6638337)",

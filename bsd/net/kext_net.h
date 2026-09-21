@@ -35,8 +35,8 @@
 
 #include <sys/appleapiopts.h>
 
-#include <sys/queue.h>
 #include <sys/cdefs.h>
+#include <sys/queue.h>
 #include <sys/types.h>
 
 #ifdef BSD_KERNEL_PRIVATE
@@ -50,36 +50,36 @@ struct sockopt;
 struct inpcb;
 
 /* Private, internal implementation functions */
-extern int      sflt_permission_check(struct inpcb *inp);
-extern void     sflt_initsock(struct socket *so);
-extern void     sflt_termsock(struct socket *so);
-extern errno_t  sflt_attach_internal(struct socket *so, sflt_handle     handle);
-extern void     sflt_notify(struct socket *so, sflt_event_t event, void *param);
-extern int      sflt_ioctl(struct socket *so, u_long cmd, caddr_t __sized_by(IOCPARM_LEN(cmd)) data);
-extern int      sflt_bind(struct socket *so, const struct sockaddr *nam);
-extern int      sflt_listen(struct socket *so);
-extern int      sflt_accept(struct socket *head, struct socket *so,
-    const struct sockaddr *local,
-    const struct sockaddr *remote);
-extern int      sflt_getsockname(struct socket *so, struct sockaddr **local);
-extern int      sflt_getpeername(struct socket *so, struct sockaddr **remote);
-extern int      sflt_connectin(struct socket *head,
-    const struct sockaddr *remote);
-extern int      sflt_connectout(struct socket *so, const struct sockaddr *nam);
-extern int      sflt_setsockopt(struct socket *so, struct sockopt *sopt);
-extern int      sflt_getsockopt(struct socket *so, struct sockopt *sopt);
-extern int      sflt_data_out(struct socket *so, const struct sockaddr  *to,
-    mbuf_t *data, mbuf_t *control, sflt_data_flag_t flags);
-extern int      sflt_data_in(struct socket *so, const struct sockaddr *from,
-    mbuf_t *data, mbuf_t *control, sflt_data_flag_t flags);
+extern int sflt_permission_check(struct inpcb *inp);
+extern void sflt_initsock(struct socket *so);
+extern void sflt_termsock(struct socket *so);
+extern errno_t sflt_attach_internal(struct socket *so, sflt_handle handle);
+extern void sflt_notify(struct socket *so, sflt_event_t event, void *param);
+extern int sflt_ioctl(struct socket *so, u_long cmd,
+                      caddr_t __sized_by(IOCPARM_LEN(cmd)) data);
+extern int sflt_bind(struct socket *so, const struct sockaddr *nam);
+extern int sflt_listen(struct socket *so);
+extern int sflt_accept(struct socket *head, struct socket *so,
+                       const struct sockaddr *local,
+                       const struct sockaddr *remote);
+extern int sflt_getsockname(struct socket *so, struct sockaddr **local);
+extern int sflt_getpeername(struct socket *so, struct sockaddr **remote);
+extern int sflt_connectin(struct socket *head, const struct sockaddr *remote);
+extern int sflt_connectout(struct socket *so, const struct sockaddr *nam);
+extern int sflt_setsockopt(struct socket *so, struct sockopt *sopt);
+extern int sflt_getsockopt(struct socket *so, struct sockopt *sopt);
+extern int sflt_data_out(struct socket *so, const struct sockaddr *to,
+                         mbuf_t *data, mbuf_t *control, sflt_data_flag_t flags);
+extern int sflt_data_in(struct socket *so, const struct sockaddr *from,
+                        mbuf_t *data, mbuf_t *control, sflt_data_flag_t flags);
 
 #endif /* BSD_KERNEL_PRIVATE */
 
-#define NFF_BEFORE              0x01
-#define NFF_AFTER               0x02
+#define NFF_BEFORE 0x01
+#define NFF_AFTER 0x02
 
-#define NKE_OK                  0
-#define NKE_REMOVE              (-1)
+#define NKE_OK 0
+#define NKE_REMOVE (-1)
 
 /*
  * Interface structure for inserting an installed socket NKE into an
@@ -92,10 +92,10 @@ extern int      sflt_data_in(struct socket *so, const struct sockaddr *from,
 #pragma pack(4)
 
 struct so_nke {
-	unsigned int nke_handle;
-	unsigned int nke_where;
-	int nke_flags; /* NFF_BEFORE, NFF_AFTER: net/kext_net.h */
-	u_int32_t reserved[4];  /* for future use */
+  unsigned int nke_handle;
+  unsigned int nke_where;
+  int nke_flags;         /* NFF_BEFORE, NFF_AFTER: net/kext_net.h */
+  u_int32_t reserved[4]; /* for future use */
 };
 
 #pragma pack()

@@ -29,12 +29,12 @@
 #ifndef _LIBKERN_CRC_H_
 #define _LIBKERN_CRC_H_
 
-#include <sys/cdefs.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
-uint32_t        crc32(uint32_t crc, const void *bufp, size_t len);
+uint32_t crc32(uint32_t crc, const void *bufp, size_t len);
 
 __END_DECLS
 

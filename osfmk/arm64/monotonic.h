@@ -78,34 +78,32 @@ __BEGIN_DECLS
 
 #endif /* HAS_UNCORE_CTRS */
 
-static inline bool
-mt_pmi_pending(uint64_t * restrict pmcr0_out,
-    uint64_t * restrict upmsr_out)
-{
-	uint64_t pmcr0 = __builtin_arm_rsr64("S3_1_C15_C0_0");
-	bool pmi = PMCR0_PMI(pmcr0);
-	if (pmi) {
-		/*
-		 * Acknowledge the PMI by clearing the pmai bit.
-		 */
-		__builtin_arm_wsr64("S3_1_C15_C0_0", pmcr0 & ~PMCR0_PMAI);
-	}
-	*pmcr0_out = pmcr0;
+static inline bool mt_pmi_pending(uint64_t *restrict pmcr0_out,
+                                  uint64_t *restrict upmsr_out) {
+  uint64_t pmcr0 = __builtin_arm_rsr64("S3_1_C15_C0_0");
+  bool pmi = PMCR0_PMI(pmcr0);
+  if (pmi) {
+    /*
+     * Acknowledge the PMI by clearing the pmai bit.
+     */
+    __builtin_arm_wsr64("S3_1_C15_C0_0", pmcr0 & ~PMCR0_PMAI);
+  }
+  *pmcr0_out = pmcr0;
 
 #if HAS_UNCORE_CTRS
-	extern bool mt_uncore_enabled;
-	if (mt_uncore_enabled) {
-		uint64_t upmsr = __builtin_arm_rsr64("S3_7_C15_C6_4");
-		if (UPMSR_PMI(upmsr)) {
-			pmi = true;
-		}
-		*upmsr_out = upmsr;
-	}
+  extern bool mt_uncore_enabled;
+  if (mt_uncore_enabled) {
+    uint64_t upmsr = __builtin_arm_rsr64("S3_7_C15_C6_4");
+    if (UPMSR_PMI(upmsr)) {
+      pmi = true;
+    }
+    *upmsr_out = upmsr;
+  }
 #else /* HAS_UNCORE_CTRS */
 #pragma unused(upmsr_out)
 #endif /* !HAS_UNCORE_CTRS */
 
-	return pmi;
+  return pmi;
 }
 
 void mt_fiq(void *cpu, uint64_t pmcr0, uint64_t upmsr);

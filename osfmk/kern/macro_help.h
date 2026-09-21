@@ -66,26 +66,29 @@
 #define _KERN_MACRO_HELP_H_
 
 #if DRIVERKIT_FRAMEWORK_INCLUDE
-#define         NEVER           false
-#define         ALWAYS          true
+#define NEVER false
+#define ALWAYS true
 #else
 
 #include <mach/boolean.h>
 
-#ifdef  lint
-boolean_t       NEVER;
-boolean_t       ALWAYS;
-#else   /* lint */
-#define         NEVER           FALSE
-#define         ALWAYS          TRUE
-#endif  /* lint */
+#ifdef lint
+boolean_t NEVER;
+boolean_t ALWAYS;
+#else /* lint */
+#define NEVER FALSE
+#define ALWAYS TRUE
+#endif /* lint */
 
 #endif /* DRIVERKIT_FRAMEWORK_INCLUDE */
 
+#define MACRO_BEGIN do {
+#define MACRO_END                                                              \
+  }                                                                            \
+  while (NEVER)
 
-#define         MACRO_BEGIN     do {
-#define         MACRO_END       } while (NEVER)
+#define MACRO_RETURN                                                           \
+  if (ALWAYS)                                                                  \
+  return
 
-#define         MACRO_RETURN    if (ALWAYS) return
-
-#endif  /* _KERN_MACRO_HELP_H_ */
+#endif /* _KERN_MACRO_HELP_H_ */

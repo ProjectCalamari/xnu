@@ -63,93 +63,93 @@
 #define _NET_PKTSCHED_PKTSCHED_CBQ_H_
 
 #ifdef PRIVATE
-#include <net/pktsched/pktsched_rmclass.h>
 #include <net/classq/classq.h>
+#include <net/classq/classq_blue.h>
 #include <net/classq/classq_red.h>
 #include <net/classq/classq_rio.h>
-#include <net/classq/classq_blue.h>
 #include <net/classq/classq_sfb.h>
+#include <net/pktsched/pktsched_rmclass.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* class flags should be same as class flags in rm_class.h */
-#define CBQCLF_RED              RMCF_RED        /* use RED */
-#define CBQCLF_ECN              RMCF_ECN        /* use ECN with RED/BLUE/SFB */
-#define CBQCLF_RIO              RMCF_RIO        /* use RIO */
-#define CBQCLF_FLOWVALVE        RMCF_FLOWVALVE  /* use flowvalve/penalty-box */
-#define CBQCLF_CLEARDSCP        RMCF_CLEARDSCP  /* clear diffserv codepoint */
-#define CBQCLF_BORROW           0x0020          /* borrow from parent */
+#define CBQCLF_RED RMCF_RED             /* use RED */
+#define CBQCLF_ECN RMCF_ECN             /* use ECN with RED/BLUE/SFB */
+#define CBQCLF_RIO RMCF_RIO             /* use RIO */
+#define CBQCLF_FLOWVALVE RMCF_FLOWVALVE /* use flowvalve/penalty-box */
+#define CBQCLF_CLEARDSCP RMCF_CLEARDSCP /* clear diffserv codepoint */
+#define CBQCLF_BORROW 0x0020            /* borrow from parent */
 
 /* class flags only for root class */
-#define CBQCLF_WRR              RMCF_WRR        /* weighted-round robin */
-#define CBQCLF_EFFICIENT        RMCF_EFFICIENT  /* work-conserving */
+#define CBQCLF_WRR RMCF_WRR             /* weighted-round robin */
+#define CBQCLF_EFFICIENT RMCF_EFFICIENT /* work-conserving */
 
 /* class flags for special classes */
-#define CBQCLF_ROOTCLASS        0x1000          /* root class */
-#define CBQCLF_DEFCLASS         0x2000          /* default class */
-#define CBQCLF_CLASSMASK        0xf000          /* class mask */
+#define CBQCLF_ROOTCLASS 0x1000 /* root class */
+#define CBQCLF_DEFCLASS 0x2000  /* default class */
+#define CBQCLF_CLASSMASK 0xf000 /* class mask */
 
-#define CBQCLF_BLUE             RMCF_BLUE       /* use BLUE */
-#define CBQCLF_SFB              RMCF_SFB        /* use SFB */
-#define CBQCLF_FLOWCTL          RMCF_FLOWCTL    /* enable flow ctl advisories */
-
-#ifdef BSD_KERNEL_PRIVATE
-#define CBQCLF_LAZY             0x10000000 /* on-demand resource allocation */
-#endif /* BSD_KERNEL_PRIVATE */
-
-#define CBQCLF_USERFLAGS                                                   \
-	(CBQCLF_RED | CBQCLF_ECN | CBQCLF_RIO | CBQCLF_FLOWVALVE |         \
-	CBQCLF_CLEARDSCP | CBQCLF_BORROW | CBQCLF_WRR | CBQCLF_EFFICIENT | \
-	CBQCLF_ROOTCLASS | CBQCLF_DEFCLASS | CBQCLF_BLUE | CBQCLF_SFB |    \
-	CBQCLF_FLOWCTL)
+#define CBQCLF_BLUE RMCF_BLUE       /* use BLUE */
+#define CBQCLF_SFB RMCF_SFB         /* use SFB */
+#define CBQCLF_FLOWCTL RMCF_FLOWCTL /* enable flow ctl advisories */
 
 #ifdef BSD_KERNEL_PRIVATE
-#define CBQCLF_BITS \
-	"\020\1RED\2ECN\3RIO\4FLOWVALVE\5CLEARDSCP\6BORROW" \
-	"\11WRR\12EFFICIENT\15ROOT\16DEFAULT\21BLUE\22SFB\23FLOWCTL\35LAZY"
+#define CBQCLF_LAZY 0x10000000 /* on-demand resource allocation */
+#endif                         /* BSD_KERNEL_PRIVATE */
+
+#define CBQCLF_USERFLAGS                                                       \
+  (CBQCLF_RED | CBQCLF_ECN | CBQCLF_RIO | CBQCLF_FLOWVALVE |                   \
+   CBQCLF_CLEARDSCP | CBQCLF_BORROW | CBQCLF_WRR | CBQCLF_EFFICIENT |          \
+   CBQCLF_ROOTCLASS | CBQCLF_DEFCLASS | CBQCLF_BLUE | CBQCLF_SFB |             \
+   CBQCLF_FLOWCTL)
+
+#ifdef BSD_KERNEL_PRIVATE
+#define CBQCLF_BITS                                                            \
+  "\020\1RED\2ECN\3RIO\4FLOWVALVE\5CLEARDSCP\6BORROW"                          \
+  "\11WRR\12EFFICIENT\15ROOT\16DEFAULT\21BLUE\22SFB\23FLOWCTL\35LAZY"
 #else
-#define CBQCLF_BITS \
-	"\020\1RED\2ECN\3RIO\4FLOWVALVE\5CLEARDSCP\6BORROW" \
-	"\11WRR\12EFFICIENT\15ROOT\16DEFAULT\21BLUE\22SFB\23FLOWCTL"
+#define CBQCLF_BITS                                                            \
+  "\020\1RED\2ECN\3RIO\4FLOWVALVE\5CLEARDSCP\6BORROW"                          \
+  "\11WRR\12EFFICIENT\15ROOT\16DEFAULT\21BLUE\22SFB\23FLOWCTL"
 #endif /* !BSD_KERNEL_PRIVATE */
 
-#define CBQ_MAXQSIZE            200
-#define CBQ_MAXPRI              RM_MAXPRIO
+#define CBQ_MAXQSIZE 200
+#define CBQ_MAXPRI RM_MAXPRIO
 
 typedef struct cbq_classstats {
-	u_int32_t       handle;
-	u_int32_t       depth;
+  u_int32_t handle;
+  u_int32_t depth;
 
-	struct pktcntr  xmit_cnt;       /* packets sent in this class */
-	struct pktcntr  drop_cnt;       /* dropped packets */
-	u_int32_t       over;           /* # times went over limit */
-	u_int32_t       borrows;        /* # times tried to borrow */
-	u_int32_t       overactions;    /* # times invoked overlimit action */
-	u_int32_t       delays;         /* # times invoked delay actions */
+  struct pktcntr xmit_cnt; /* packets sent in this class */
+  struct pktcntr drop_cnt; /* dropped packets */
+  u_int32_t over;          /* # times went over limit */
+  u_int32_t borrows;       /* # times tried to borrow */
+  u_int32_t overactions;   /* # times invoked overlimit action */
+  u_int32_t delays;        /* # times invoked delay actions */
 
-	/* other static class parameters useful for debugging */
-	int             priority;
-	int             maxidle;
-	int             minidle;
-	int             offtime;
-	int             qmax;
-	int             ns_per_byte;
-	int             wrr_allot;
+  /* other static class parameters useful for debugging */
+  int priority;
+  int maxidle;
+  int minidle;
+  int offtime;
+  int qmax;
+  int ns_per_byte;
+  int wrr_allot;
 
-	int             qcnt;           /* # packets in queue */
-	int             avgidle;
+  int qcnt; /* # packets in queue */
+  int avgidle;
 
-	/* RED, RIO, BLUE, SFB related info */
-	classq_type_t   qtype;
-	union {
-		/* RIO has 3 red stats */
-		struct red_stats        red[RIO_NDROPPREC];
-		struct blue_stats       blue;
-		struct sfb_stats        sfb;
-	};
-	classq_state_t  qstate;
+  /* RED, RIO, BLUE, SFB related info */
+  classq_type_t qtype;
+  union {
+    /* RIO has 3 red stats */
+    struct red_stats red[RIO_NDROPPREC];
+    struct blue_stats blue;
+    struct sfb_stats sfb;
+  };
+  classq_state_t qstate;
 } class_stats_t;
 
 #ifdef __cplusplus

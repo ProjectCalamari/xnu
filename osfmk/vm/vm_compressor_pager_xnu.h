@@ -26,32 +26,34 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #ifndef _VM_VM_COMPRESSOR_PAGER_XNU_H_
 #define _VM_VM_COMPRESSOR_PAGER_XNU_H_
 
-#include <mach/mach_types.h>
 #include <kern/kern_types.h>
+#include <mach/mach_types.h>
 #include <vm/vm_compressor_xnu.h>
 #include <vm/vm_external.h>
 
-__options_decl(vm_compressor_options_t, uint32_t, {
-	C_DONT_BLOCK            = 0x00000001, /* vm_fault tells the compressor not to read from swap file */
-	C_KEEP                  = 0x00000002, /* vm_fault tells the compressor to not remove the data from the segment after decompress*/
-	C_KDP                   = 0x00000004, /* kdp fault tells the compressor to not do locking */
-	C_PAGE_UNMODIFIED       = 0x00000008,
-	C_KDP_MULTICPU          = 0x00000010,
-});
+__options_decl(
+    vm_compressor_options_t, uint32_t,
+    {
+        C_DONT_BLOCK = 0x00000001, /* vm_fault tells the compressor not to read
+                                      from swap file */
+        C_KEEP = 0x00000002, /* vm_fault tells the compressor to not remove the
+                                data from the segment after decompress*/
+        C_KDP =
+            0x00000004, /* kdp fault tells the compressor to not do locking */
+        C_PAGE_UNMODIFIED = 0x00000008,
+        C_KDP_MULTICPU = 0x00000010,
+    });
 
-extern kern_return_t vm_compressor_pager_get(
-	memory_object_t         mem_obj,
-	memory_object_offset_t  offset,
-	ppnum_t                 ppnum,
-	int                     *my_fault_type,
-	vm_compressor_options_t flags,
-	int                     *compressed_count_delta_p);
-
+extern kern_return_t vm_compressor_pager_get(memory_object_t mem_obj,
+                                             memory_object_offset_t offset,
+                                             ppnum_t ppnum, int *my_fault_type,
+                                             vm_compressor_options_t flags,
+                                             int *compressed_count_delta_p);
 
 #if CONFIG_TRACK_UNMODIFIED_ANON_PAGES
 extern uint64_t compressor_ro_uncompressed;
@@ -64,6 +66,6 @@ extern uint64_t compressor_ro_uncompressed_swap_usage;
 
 extern unsigned int vm_compressor_pager_get_count(memory_object_t mem_obj);
 
-#endif  /* _VM_VM_COMPRESSOR_PAGER_XNU_H_ */
+#endif /* _VM_VM_COMPRESSOR_PAGER_XNU_H_ */
 
-#endif  /* XNU_KERNEL_PRIVATE */
+#endif /* XNU_KERNEL_PRIVATE */

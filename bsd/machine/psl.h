@@ -28,9 +28,9 @@
 #ifndef _BSD_MACHINE_PSL_H_
 #define _BSD_MACHINE_PSL_H_
 
-#if defined (__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/psl.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm/psl.h"
 #else
 #error architecture not supported

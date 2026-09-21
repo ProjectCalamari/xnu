@@ -72,40 +72,41 @@
  *	vm_prot_t		VM protection values.
  */
 
-typedef int             vm_prot_t;
+typedef int vm_prot_t;
 
 /*
  *	Protection values, defined as bits within the vm_prot_t type
  *
- *  When making a new VM_PROT_*, update tests vm_parameter_validation_[user|kern]
- *  and their expected results; they deliberately call VM functions with invalid
- *  vm_prot values and you may be turning one of those invalid protections valid.
+ *  When making a new VM_PROT_*, update tests
+ * vm_parameter_validation_[user|kern] and their expected results; they
+ * deliberately call VM functions with invalid vm_prot values and you may be
+ * turning one of those invalid protections valid.
  */
 
-#define VM_PROT_NONE    ((vm_prot_t) 0x00)
+#define VM_PROT_NONE ((vm_prot_t)0x00)
 
-#define VM_PROT_READ    ((vm_prot_t) 0x01)      /* read permission */
-#define VM_PROT_WRITE   ((vm_prot_t) 0x02)      /* write permission */
-#define VM_PROT_EXECUTE ((vm_prot_t) 0x04)      /* execute permission */
+#define VM_PROT_READ ((vm_prot_t)0x01)    /* read permission */
+#define VM_PROT_WRITE ((vm_prot_t)0x02)   /* write permission */
+#define VM_PROT_EXECUTE ((vm_prot_t)0x04) /* execute permission */
 
 /*
  *	The default protection for newly-created virtual memory
  */
 
-#define VM_PROT_DEFAULT (VM_PROT_READ|VM_PROT_WRITE)
+#define VM_PROT_DEFAULT (VM_PROT_READ | VM_PROT_WRITE)
 
 /*
  *	The maximum privileges possible, for parameter checking.
  */
 
-#define VM_PROT_ALL     (VM_PROT_READ|VM_PROT_WRITE|VM_PROT_EXECUTE)
+#define VM_PROT_ALL (VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE)
 
 /*
  *	This is an alias to VM_PROT_EXECUTE to identify callers that
  *	want to allocate an hardware assisted Read-only/read-write
  *	trusted path in userland.
  */
-#define        VM_PROT_RORW_TP                 (VM_PROT_EXECUTE)
+#define VM_PROT_RORW_TP (VM_PROT_EXECUTE)
 
 /*
  *	An invalid protection value.
@@ -114,8 +115,8 @@ typedef int             vm_prot_t;
  *	looks like VM_PROT_ALL and then some.
  */
 
-#define VM_PROT_NO_CHANGE_LEGACY       ((vm_prot_t) 0x08)
-#define VM_PROT_NO_CHANGE              ((vm_prot_t) 0x01000000)
+#define VM_PROT_NO_CHANGE_LEGACY ((vm_prot_t)0x08)
+#define VM_PROT_NO_CHANGE ((vm_prot_t)0x01000000)
 
 /*
  *      When a caller finds that he cannot obtain write permission on a
@@ -125,8 +126,7 @@ typedef int             vm_prot_t;
  *      for the associated entry.
  */
 
-#define VM_PROT_COPY            ((vm_prot_t) 0x10)
-
+#define VM_PROT_COPY ((vm_prot_t)0x10)
 
 /*
  *	Another invalid protection value.
@@ -139,7 +139,7 @@ typedef int             vm_prot_t;
  *	walking down the shadow chain.
  */
 
-#define VM_PROT_WANTS_COPY      ((vm_prot_t) 0x10)
+#define VM_PROT_WANTS_COPY ((vm_prot_t)0x10)
 
 #ifdef PRIVATE
 /*
@@ -147,7 +147,7 @@ typedef int             vm_prot_t;
  *	code signature.
  */
 
-#define VM_PROT_TRUSTED         ((vm_prot_t) 0x20)
+#define VM_PROT_TRUSTED ((vm_prot_t)0x20)
 #endif /* PRIVATE */
 
 /*
@@ -155,7 +155,7 @@ typedef int             vm_prot_t;
  *	Indicates that the other protection bits are to be applied as a mask
  *	against the actual protection bits of the map entry.
  */
-#define VM_PROT_IS_MASK         ((vm_prot_t) 0x40)
+#define VM_PROT_IS_MASK ((vm_prot_t)0x40)
 
 /*
  * Another invalid protection value to support execute-only protection.
@@ -166,8 +166,8 @@ typedef int             vm_prot_t;
  * the memory should be executable and explicitly not readable. It will
  * be ignored on platforms that do not support this type of protection.
  */
-#define VM_PROT_STRIP_READ              ((vm_prot_t) 0x80)
-#define VM_PROT_EXECUTE_ONLY    (VM_PROT_EXECUTE|VM_PROT_STRIP_READ)
+#define VM_PROT_STRIP_READ ((vm_prot_t)0x80)
+#define VM_PROT_EXECUTE_ONLY (VM_PROT_EXECUTE | VM_PROT_STRIP_READ)
 
 #ifdef PRIVATE
 /*
@@ -185,7 +185,7 @@ typedef int             vm_prot_t;
  * this flag in lieue of specifying explicit VM flags, allowing us to handle
  * the final permissions internally.
  */
-#define VM_PROT_TPRO                    ((vm_prot_t) 0x200)
+#define VM_PROT_TPRO ((vm_prot_t)0x200)
 
 #if defined(__x86_64__)
 /*
@@ -196,12 +196,11 @@ typedef int             vm_prot_t;
  * user-mode execute permission.  Currently only used by the
  * x86 Hypervisor kext.
  */
-#define VM_PROT_UEXEC                   ((vm_prot_t) 0x8)     /* User-mode Execute Permission */
+#define VM_PROT_UEXEC ((vm_prot_t)0x8) /* User-mode Execute Permission */
 
-#define VM_PROT_ALLEXEC                 (VM_PROT_EXECUTE | VM_PROT_UEXEC)
+#define VM_PROT_ALLEXEC (VM_PROT_EXECUTE | VM_PROT_UEXEC)
 #else
-#define VM_PROT_ALLEXEC                 (VM_PROT_EXECUTE)
+#define VM_PROT_ALLEXEC (VM_PROT_EXECUTE)
 #endif /* defined(__x86_64__) */
 
-
-#endif  /* _MACH_VM_PROT_H_ */
+#endif /* _MACH_VM_PROT_H_ */

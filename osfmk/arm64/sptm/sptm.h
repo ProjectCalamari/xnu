@@ -32,9 +32,9 @@
  * of the exported SPTM types, declarations, and function prototypes. Wrappers
  * around some of the SPTM library functions are also located in here.
  */
+#include <kern/debug.h>
 #include <sptm/debug_header.h>
 #include <sptm/sptm_xnu.h>
-#include <kern/debug.h>
 
 #include <stdbool.h>
 
@@ -42,8 +42,8 @@
 extern const sptm_bootstrap_args_xnu_t *SPTMArgs;
 
 typedef struct arm_physrange {
-	uint64_t        start_phys;     /* Starting physical address */
-	uint64_t        end_phys;       /* Ending physical address (EXCLUSIVE) */
+  uint64_t start_phys; /* Starting physical address */
+  uint64_t end_phys;   /* Ending physical address (EXCLUSIVE) */
 } arm_physrange_t;
 
 /**
@@ -57,16 +57,14 @@ typedef struct arm_physrange {
  *
  * @return True if an operation is in-flight, false otherwise.
  */
-static inline bool
-sptm_paddr_is_inflight(sptm_paddr_t paddr)
-{
-	bool is_inflight = false;
-	if (sptm_check_inflight(paddr, &is_inflight) != LIBSPTM_SUCCESS) {
-		panic("%s: sptm_check_inflight returned failure for paddr 0x%llx",
-		    __func__, (uint64_t)paddr);
-	}
+static inline bool sptm_paddr_is_inflight(sptm_paddr_t paddr) {
+  bool is_inflight = false;
+  if (sptm_check_inflight(paddr, &is_inflight) != LIBSPTM_SUCCESS) {
+    panic("%s: sptm_check_inflight returned failure for paddr 0x%llx", __func__,
+          (uint64_t)paddr);
+  }
 
-	return is_inflight;
+  return is_inflight;
 }
 
 /**
@@ -80,16 +78,14 @@ sptm_paddr_is_inflight(sptm_paddr_t paddr)
  * @return The SPTM type for the given frame. If the page passed in is not an
  *         SPTM-managed page, then a panic will get triggered.
  */
-static inline sptm_frame_type_t
-sptm_get_frame_type(sptm_paddr_t paddr)
-{
-	sptm_frame_type_t frame_type;
-	if (sptm_get_paddr_type(paddr, &frame_type) != LIBSPTM_SUCCESS) {
-		panic("%s: sptm_get_paddr_type returned failure for paddr 0x%llx",
-		    __func__, (uint64_t)paddr);
-	}
+static inline sptm_frame_type_t sptm_get_frame_type(sptm_paddr_t paddr) {
+  sptm_frame_type_t frame_type;
+  if (sptm_get_paddr_type(paddr, &frame_type) != LIBSPTM_SUCCESS) {
+    panic("%s: sptm_get_paddr_type returned failure for paddr 0x%llx", __func__,
+          (uint64_t)paddr);
+  }
 
-	return frame_type;
+  return frame_type;
 }
 
 /**
@@ -102,15 +98,16 @@ sptm_get_frame_type(sptm_paddr_t paddr)
  *
  */
 static inline bool
-sptm_frame_is_last_mapping(sptm_paddr_t paddr, libsptm_refcnt_type_t refcnt_type)
-{
-	bool is_last;
-	if (sptm_paddr_is_last_mapping(paddr, refcnt_type, &is_last) != LIBSPTM_SUCCESS) {
-		panic("%s: sptm_paddr_is_last_mapping returned failure for paddr 0x%llx",
-		    __func__, (uint64_t)paddr);
-	}
+sptm_frame_is_last_mapping(sptm_paddr_t paddr,
+                           libsptm_refcnt_type_t refcnt_type) {
+  bool is_last;
+  if (sptm_paddr_is_last_mapping(paddr, refcnt_type, &is_last) !=
+      LIBSPTM_SUCCESS) {
+    panic("%s: sptm_paddr_is_last_mapping returned failure for paddr 0x%llx",
+          __func__, (uint64_t)paddr);
+  }
 
-	return is_last;
+  return is_last;
 }
 
 /**
@@ -122,20 +119,18 @@ sptm_frame_is_last_mapping(sptm_paddr_t paddr, libsptm_refcnt_type_t refcnt_type
  * @param table_paddr The physical address of the page table page for which to
  *                    obtain the mapping reference count.
  *
- * @return The SPTM mapping reference count for the page table page.  If the page
- *         passed in is not an SPTM-managed page table page, then a panic will be
+ * @return The SPTM mapping reference count for the page table page.  If the
+ * page passed in is not an SPTM-managed page table page, then a panic will be
  *         triggered.
  */
-static inline uint16_t
-sptm_get_page_table_refcnt(sptm_paddr_t table_paddr)
-{
-	uint16_t refcnt;
-	if (sptm_get_table_mapping_count(table_paddr, &refcnt) != LIBSPTM_SUCCESS) {
-		panic("%s: sptm_get_table_mapping_count returned failure for paddr 0x%llx",
-		    __func__, (uint64_t)table_paddr);
-	}
+static inline uint16_t sptm_get_page_table_refcnt(sptm_paddr_t table_paddr) {
+  uint16_t refcnt;
+  if (sptm_get_table_mapping_count(table_paddr, &refcnt) != LIBSPTM_SUCCESS) {
+    panic("%s: sptm_get_table_mapping_count returned failure for paddr 0x%llx",
+          __func__, (uint64_t)table_paddr);
+  }
 
-	return refcnt;
+  return refcnt;
 }
 
 /**
@@ -147,8 +142,7 @@ sptm_get_page_table_refcnt(sptm_paddr_t table_paddr)
  * @return True If [frame_type] allows userspace mappings with executable
  *         privileges, false otherwise.
  */
-static inline bool
-sptm_type_is_user_executable(sptm_frame_type_t frame_type)
-{
-	return (frame_type == XNU_USER_EXEC) || (frame_type == XNU_USER_DEBUG) || (frame_type == XNU_USER_JIT);
+static inline bool sptm_type_is_user_executable(sptm_frame_type_t frame_type) {
+  return (frame_type == XNU_USER_EXEC) || (frame_type == XNU_USER_DEBUG) ||
+         (frame_type == XNU_USER_JIT);
 }

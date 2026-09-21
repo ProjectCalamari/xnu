@@ -1,0 +1,258 @@
+diff --git a/MachO/Config.h b/MachO/Config.h
+index a01e60ef..6055a625 100644
+--- a/MachO/Config.h
++++ b/MachO/Config.h
+@@ -155,6 +155,7 @@ struct Configuration {
+   uint32_t timeTraceGranularity = 500;
+   unsigned optimize;
+   std::string progName;
++  uint64_t imageBase = 0;
+ 
+   // For `clang -arch arm64 -arch x86_64`, clang will:
+   // 1. invoke the linker twice, to write one temporary output per arch
+@@ -214,6 +215,8 @@ struct Configuration {
+   // so use a vector instead of a map.
+   std::vector<SectionAlign> sectionAlignments;
+   std::vector<SegmentProtection> segmentProtections;
++  llvm::DenseMap<llvm::StringRef, uint64_t> segmentAddresses;
++  llvm::SmallVector<llvm::StringRef, 0> segmentOrder;
+   bool ltoDebugPassManager = false;
+   llvm::StringRef codegenDataGeneratePath;
+   bool csProfileGenerate = false;
+diff --git a/MachO/Options.td b/MachO/Options.td
+index bcd98587ca08..aa5521ebbb00 100644
+--- a/MachO/Options.td
++++ b/MachO/Options.td
+@@ -240,7 +240,6 @@ def dynamic : Flag<["-"], "dynamic">,
+     Group<grp_kind>;
+ def static : Flag<["-"], "static">,
+     HelpText<"Link statically">,
+-    Flags<[HelpHidden]>,
+     Group<grp_kind>;
+ def preload : Flag<["-"], "preload">,
+     HelpText<"Produce an unsegmented binary for embedded systems">,
+@@ -411,7 +410,6 @@ def no_order_data : Flag<["-"], "no_order_data">,
+ def image_base : Separate<["-"], "image_base">,
+     MetaVarName<"<address>">,
+     HelpText<"Preferred hex load address for a dylib or bundle.">,
+-    Flags<[HelpHidden]>,
+     Group<grp_opts>;
+ def seg1addr : Separate<["-"], "seg1addr">,
+     MetaVarName<"<address>">,
+@@ -818,7 +816,6 @@ def section_order : MultiArg<["-"], "section_order", 2>,
+ def segment_order : Separate<["-"], "segment_order">,
+     MetaVarName<"<colon_separated_segment_list>">,
+     HelpText<"With -preload, specify layout sequence of colon-separated <segments>">,
+-    Flags<[HelpHidden]>,
+     Group<grp_rare>;
+ def allow_heap_execute : Flag<["-"], "allow_heap_execute">,
+     HelpText<"On i386, allow any page to execute code">,
+@@ -955,7 +952,6 @@ def segs_read_only_addr : Separate<["-"], "segs_read_only_addr">,
+ def segaddr : MultiArg<["-"], "segaddr", 2>,
+     MetaVarName<"<segment> <address>">,
+     HelpText<"Specify the starting hex <address> at a 4KiB page boundary for <segment>">,
+-    Flags<[HelpHidden]>,
+     Group<grp_rare>;
+ def seg_page_size : MultiArg<["-"], "seg_page_size", 2>,
+     MetaVarName<"<segment> <size>">,
+diff --git a/MachO/Driver.cpp b/MachO/Driver.cpp
+index 36a596df13d6..949f4922a012 100644
+--- a/MachO/Driver.cpp
++++ b/MachO/Driver.cpp
+@@ -1930,6 +1930,10 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
+ 
+   if (const Arg *arg = args.getLastArg(OPT_static, OPT_dynamic))
+     config->staticLink = (arg->getOption().getID() == OPT_static);
++  if (config->staticLink) {
++    config->emitChainedFixups = false;
++    config->emitInitOffsets = false;
++  }
+ 
+   if (const Arg *arg =
+           args.getLastArg(OPT_flat_namespace, OPT_twolevel_namespace))
+@@ -1980,6 +1984,45 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
+         validName(arg->getValue(1));
+   }
+ 
++  auto parseAddress = [&](const Arg *arg, unsigned valueIndex) {
++    uint64_t address = 0;
++    StringRef value = arg->getValue(valueIndex);
++    if (!llvm::to_integer(value, address, 0))
++      error(arg->getSpelling() + ": failed to parse '" + value +
++            "' as an address");
++    return address;
++  };
++
++  if (const Arg *arg = args.getLastArg(OPT_image_base)) {
++    config->imageBase = parseAddress(arg, 0);
++    uint64_t aligned = alignTo(config->imageBase, target->getPageSize());
++    if (aligned != config->imageBase) {
++      warn("-image_base: address is not page aligned; rounding up to 0x" +
++           Twine::utohexstr(aligned));
++      config->imageBase = aligned;
++    }
++  }
++
++  for (const Arg *arg : args.filtered(OPT_segaddr)) {
++    StringRef segName = validName(arg->getValue(0));
++    uint64_t address = parseAddress(arg, 1);
++    if (!isAligned(Align(4096), address))
++      error("-segaddr: address for segment " + segName +
++            " is not 4KiB aligned");
++    config->segmentAddresses[segName] = address;
++  }
++
++  if (const Arg *arg = args.getLastArg(OPT_segment_order)) {
++    StringRef(arg->getValue()).split(config->segmentOrder, ':', -1,
++                                     /*KeepEmpty=*/false);
++    DenseSet<StringRef> seen;
++    for (StringRef segName : config->segmentOrder) {
++      validName(segName);
++      if (!seen.insert(segName).second)
++        error("-segment_order: duplicate segment " + segName);
++    }
++  }
++
+   config->sectionAlignments = parseSectAlign(args);
+ 
+   for (const Arg *arg : args.filtered(OPT_segprot)) {
+@@ -2077,7 +2081,8 @@ bool link(ArrayRef<const char *> argsArr, llvm::raw_ostream &stdoutOS,
+ 
+   config->adhocCodesign = args.hasFlag(
+       OPT_adhoc_codesign, OPT_no_adhoc_codesign,
+-      shouldAdhocSignByDefault(config->arch(), config->platform()));
++      !config->staticLink &&
++          shouldAdhocSignByDefault(config->arch(), config->platform()));
+ 
+   if (args.hasArg(OPT_v)) {
+     message(getLLDVersion(), ctx->e.errs());
+diff --git a/MachO/OutputSegment.cpp b/MachO/OutputSegment.cpp
+index 5824b5c7..b72c1849 100644
+--- a/MachO/OutputSegment.cpp
++++ b/MachO/OutputSegment.cpp
+@@ -79,6 +79,21 @@ template <typename T, typename F> static auto compareByOrder(F ord) {
+ }
+ 
+ static int segmentOrder(OutputSegment *seg) {
++  // __LINKEDIT contents are finalized after all regular sections, so it must
++  // remain last in file and VM order for now. Honor the requested order for
++  // every other segment; stable_sort preserves input order for names omitted
++  // from the list.
++  if (!config->segmentOrder.empty()) {
++    if (seg->name == segment_names::pageZero)
++      return -1;
++    if (seg->name == segment_names::linkEdit)
++      return std::numeric_limits<int>::max();
++    auto it = llvm::find(config->segmentOrder, seg->name);
++    if (it != config->segmentOrder.end())
++      return std::distance(config->segmentOrder.begin(), it);
++    return config->segmentOrder.size();
++  }
++
+   return StringSwitch<int>(seg->name)
+       .Case(segment_names::pageZero, -4)
+       .Case(segment_names::text, -3)
+diff --git a/MachO/SyntheticSections.cpp b/MachO/SyntheticSections.cpp
+index 439ca64c531f..cd3bf8b67e3b 100644
+--- a/MachO/SyntheticSections.cpp
++++ b/MachO/SyntheticSections.cpp
+@@ -122,10 +122,13 @@ void MachHeaderSection::writeTo(uint8_t *buf) const {
+   hdr->filetype = config->outputType;
+   hdr->ncmds = loadCommands.size();
+   hdr->sizeofcmds = sizeOfCmds;
+-  hdr->flags = MH_DYLDLINK;
++  hdr->flags = config->staticLink ? 0 : MH_DYLDLINK;
+ 
+-  if (config->namespaceKind == NamespaceKind::twolevel)
+-    hdr->flags |= MH_NOUNDEFS | MH_TWOLEVEL;
++  if (config->namespaceKind == NamespaceKind::twolevel) {
++    hdr->flags |= MH_NOUNDEFS;
++    if (!config->staticLink)
++      hdr->flags |= MH_TWOLEVEL;
++  }
+ 
+   if (config->outputType == MH_DYLIB && !config->hasReexports)
+     hdr->flags |= MH_NO_REEXPORTED_DYLIBS;
+diff --git a/MachO/Writer.cpp b/MachO/Writer.cpp
+index d299f3693ead..7cac0ccf0d93 100644
+--- a/MachO/Writer.cpp
++++ b/MachO/Writer.cpp
+@@ -44,7 +44,7 @@ class LCUuid;
+ 
+ class Writer {
+ public:
+-  Writer() : buffer(errorHandler().outputBuffer) {}
++  Writer() : buffer(errorHandler().outputBuffer), addr(config->imageBase) {}
+ 
+   void treatSpecialUndefineds();
+   void scanRelocations();
+@@ -821,13 +821,15 @@ template <class LP> void Writer::createLoadCommands() {
+     in.header->addLoadCommand(make<LCSegment<LP>>(seg->name, seg));
+     seg->index = segIndex++;
+   }
+ 
+-  if (config->emitChainedFixups) {
+-    in.header->addLoadCommand(make<LCChainedFixups>(in.chainedFixups));
+-    in.header->addLoadCommand(make<LCExportsTrie>(in.exports));
+-  } else {
+-    in.header->addLoadCommand(make<LCDyldInfo>(
+-        in.rebase, in.binding, in.weakBinding, in.lazyBinding, in.exports));
++  if (!config->staticLink) {
++    if (config->emitChainedFixups) {
++      in.header->addLoadCommand(make<LCChainedFixups>(in.chainedFixups));
++      in.header->addLoadCommand(make<LCExportsTrie>(in.exports));
++    } else {
++      in.header->addLoadCommand(make<LCDyldInfo>(
++          in.rebase, in.binding, in.weakBinding, in.lazyBinding, in.exports));
++    }
+   }
+   in.header->addLoadCommand(make<LCSymtab>(symtabSection, stringTableSection));
+   in.header->addLoadCommand(
+@@ -839,7 +841,8 @@ template <class LP> void Writer::createLoadCommands() {
+ 
+   switch (config->outputType) {
+   case MH_EXECUTE:
+-    in.header->addLoadCommand(make<LCLoadDylinker>());
++    if (!config->staticLink)
++      in.header->addLoadCommand(make<LCLoadDylinker>());
+     break;
+   case MH_DYLIB:
+     in.header->addLoadCommand(make<LCDylib>(LC_ID_DYLIB, config->installName,
+@@ -1121,9 +1124,19 @@ void Writer::finalizeAddresses() {
+   // Note that at this point, __LINKEDIT sections are empty, but we need to
+   // determine addresses of other segments/sections before generating its
+   // contents.
++  uint64_t floatingAddr = addr;
+   for (OutputSegment *seg : outputSegments) {
+     if (seg == linkEditSegment)
+       continue;
++    auto fixedAddr = config->segmentAddresses.find(seg->name);
++    bool isPageZero = seg->name == segment_names::pageZero;
++    bool hasFixedAddr = fixedAddr != config->segmentAddresses.end();
++    if (hasFixedAddr)
++      addr = fixedAddr->second;
++    else if (isPageZero && config->imageBase != 0)
++      addr = 0;
++    else
++      addr = floatingAddr;
+     seg->addr = addr;
+     assignAddresses(seg);
+     // codesign / libstuff checks for segment ordering by verifying that
+@@ -1136,7 +1149,17 @@ void Writer::finalizeAddresses() {
+     seg->vmSize = addr - seg->addr;
+     seg->fileSize = fileOff - seg->fileOff;
+     seg->assignAddressesToStartEndSymbols();
++
++    // A fixed segment that is named in -segment_order anchors subsequent
++    // ordered segments, matching ld64. Independently placed fixed segments do
++    // not disturb the normal layout that starts at -image_base.
++    if (!hasFixedAddr && !isPageZero)
++      floatingAddr = addr;
++    else if (hasFixedAddr &&
++             llvm::is_contained(config->segmentOrder, seg->name))
++      floatingAddr = addr;
+   }
++  addr = floatingAddr;
+ }
+ 
+ void Writer::finalizeLinkEditSegment() {

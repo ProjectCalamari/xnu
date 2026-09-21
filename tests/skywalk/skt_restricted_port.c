@@ -28,50 +28,52 @@
 
 /* <rdar://problem/58673168> Restricted port used by non-entitled process */
 
-#include <assert.h>
-#include <errno.h>
-#include <stdio.h>
-#include <spawn.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
+#include "skywalk_test_common.h"
 #include "skywalk_test_driver.h"
 #include "skywalk_test_utils.h"
-#include "skywalk_test_common.h"
+#include <assert.h>
+#include <errno.h>
+#include <spawn.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-static int
-skt_reserve_restricted_port()
-{
-	int error;
-	int restricted_port = 55555; // restricted for lights_out_management
+static int skt_reserve_restricted_port() {
+  int error;
+  int restricted_port = 55555; // restricted for lights_out_management
 
-	struct sktc_nexus_handles handles;
-	sktc_create_flowswitch(&handles, 0);
+  struct sktc_nexus_handles handles;
+  sktc_create_flowswitch(&handles, 0);
 
-	/* try reserve one of the restricted ephemeral ports */
-	uuid_t flow;
-	uuid_generate_random(flow);
-	error = sktc_bind_tcp4_flow(handles.controller, handles.fsw_nx_uuid,
-	    restricted_port, NEXUS_PORT_FLOW_SWITCH_CLIENT, flow);
-	SKTC_ASSERT_ERR(error == -1);
-	SKTC_ASSERT_ERR(errno == EADDRINUSE);
-	uuid_clear(flow);
+  /* try reserve one of the restricted ephemeral ports */
+  uuid_t flow;
+  uuid_generate_random(flow);
+  error =
+      sktc_bind_tcp4_flow(handles.controller, handles.fsw_nx_uuid,
+                          restricted_port, NEXUS_PORT_FLOW_SWITCH_CLIENT, flow);
+  SKTC_ASSERT_ERR(error == -1);
+  SKTC_ASSERT_ERR(errno == EADDRINUSE);
+  uuid_clear(flow);
 
-	sktc_cleanup_flowswitch(&handles);
+  sktc_cleanup_flowswitch(&handles);
 
-	return 0;
+  return 0;
 }
 
-int
-skt_reserve_restricted_port_main(int argc, char *argv[])
-{
-	return skt_reserve_restricted_port();
+int skt_reserve_restricted_port_main(int argc, char *argv[]) {
+  return skt_reserve_restricted_port();
 }
 
 struct skywalk_test skt_restricted_port = {
-	"restricted_port", "test reserve a restricted ephemeral port",
-	SK_FEATURE_SKYWALK | SK_FEATURE_NEXUS_NETIF | SK_FEATURE_NEXUS_FLOWSWITCH | SK_FEATURE_NETNS,
-	skt_reserve_restricted_port_main, { NULL }, sktc_ifnet_feth0_create, sktc_ifnet_feth0_destroy,
+    "restricted_port",
+    "test reserve a restricted ephemeral port",
+    SK_FEATURE_SKYWALK | SK_FEATURE_NEXUS_NETIF | SK_FEATURE_NEXUS_FLOWSWITCH |
+        SK_FEATURE_NETNS,
+    skt_reserve_restricted_port_main,
+    {NULL},
+    sktc_ifnet_feth0_create,
+    sktc_ifnet_feth0_destroy,
 };

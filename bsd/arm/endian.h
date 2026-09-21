@@ -42,7 +42,7 @@
 #ifndef _ARM__ENDIAN_H_
 #define _ARM__ENDIAN_H_
 
-#if defined (__arm__) || defined (__arm64__)
+#if defined(__arm__) || defined(__arm64__)
 
 #include <sys/cdefs.h>
 /*
@@ -56,10 +56,11 @@
 #define _QUAD_HIGHWORD 1
 #define _QUAD_LOWWORD 0
 
-#if     defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#if defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 
 #include <sys/_endian.h>
 
-#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) */
+#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) ||                     \
+          defined(_DARWIN_C_SOURCE)) */
 #endif /* defined (__arm__) || defined (__arm64__) */
 #endif /* !_ARM__ENDIAN_H_ */

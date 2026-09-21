@@ -59,13 +59,13 @@
  * the rights to redistribute these changes.
  */
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _ARM_LOCK_H_
 #define _ARM_LOCK_H_
 
 #warning This header is deprecated. Use <kern/locks.h> instead.
 
-#endif  /* _ARM_LOCK_H_ */
+#endif /* _ARM_LOCK_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

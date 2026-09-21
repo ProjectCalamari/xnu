@@ -26,11 +26,11 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/fcntl.h>
-#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/udp.h>
-#include <arpa/inet.h>
+#include <sys/fcntl.h>
+#include <sys/socket.h>
 
 #include <stdbool.h>
 #include <string.h>
@@ -40,103 +40,103 @@
 
 static in_port_t listener_port;
 
-static void
-tcp_listen(void)
-{
-	int s = -1;
+static void tcp_listen(void) {
+  int s = -1;
 
-	T_ASSERT_POSIX_SUCCESS(s = socket(AF_INET6, SOCK_STREAM, 0), NULL);
+  T_ASSERT_POSIX_SUCCESS(s = socket(AF_INET6, SOCK_STREAM, 0), NULL);
 
-	struct sockaddr_in6 sin6 = {};
-	sin6.sin6_len = sizeof(struct sockaddr_in6);
-	sin6.sin6_family = AF_INET6;
-	T_ASSERT_POSIX_SUCCESS(bind(s, (struct sockaddr *)&sin6, sizeof(sin6)), NULL);
+  struct sockaddr_in6 sin6 = {};
+  sin6.sin6_len = sizeof(struct sockaddr_in6);
+  sin6.sin6_family = AF_INET6;
+  T_ASSERT_POSIX_SUCCESS(bind(s, (struct sockaddr *)&sin6, sizeof(sin6)), NULL);
 
-	socklen_t solen = sizeof(sin6);
-	T_ASSERT_POSIX_SUCCESS(getsockname(s, (struct sockaddr *)&sin6, &solen), NULL);
+  socklen_t solen = sizeof(sin6);
+  T_ASSERT_POSIX_SUCCESS(getsockname(s, (struct sockaddr *)&sin6, &solen),
+                         NULL);
 
-	listener_port = sin6.sin6_port;
+  listener_port = sin6.sin6_port;
 
-	T_ASSERT_POSIX_SUCCESS(listen(s, 128), NULL);
+  T_ASSERT_POSIX_SUCCESS(listen(s, 128), NULL);
 }
 
-static void
-set_udp_kao_opt(int expected_errno, int domain, const char *domain_str,
-    int type, const char *type_str,
-    int proto, const char *proto_str)
-{
-	T_LOG("expect error %d for socket domain: %s type: %s protocol: %s",
-	    expected_errno, domain_str, type_str, proto_str);
+static void set_udp_kao_opt(int expected_errno, int domain,
+                            const char *domain_str, int type,
+                            const char *type_str, int proto,
+                            const char *proto_str) {
+  T_LOG("expect error %d for socket domain: %s type: %s protocol: %s",
+        expected_errno, domain_str, type_str, proto_str);
 
-	int s = -1;
-	T_ASSERT_POSIX_SUCCESS(s = socket(domain, type, proto), NULL);
+  int s = -1;
+  T_ASSERT_POSIX_SUCCESS(s = socket(domain, type, proto), NULL);
 
-	union sockaddr_in_4_6 sa = {};
+  union sockaddr_in_4_6 sa = {};
 
-	if (domain == PF_INET) {
-		sa.sin.sin_len = sizeof(struct sockaddr_in);
-		sa.sin.sin_family = AF_INET;
-		sa.sin.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);
-		sa.sin.sin_port = listener_port;
-	} else {
-		sa.sin6.sin6_len = sizeof(struct sockaddr_in6);
-		sa.sin6.sin6_family = AF_INET6;
-		sa.sin6.sin6_addr = in6addr_loopback;
-		sa.sin6.sin6_port = listener_port;
-	}
+  if (domain == PF_INET) {
+    sa.sin.sin_len = sizeof(struct sockaddr_in);
+    sa.sin.sin_family = AF_INET;
+    sa.sin.sin_addr.s_addr = ntohl(INADDR_LOOPBACK);
+    sa.sin.sin_port = listener_port;
+  } else {
+    sa.sin6.sin6_len = sizeof(struct sockaddr_in6);
+    sa.sin6.sin6_family = AF_INET6;
+    sa.sin6.sin6_addr = in6addr_loopback;
+    sa.sin6.sin6_port = listener_port;
+  }
 
-	/*
-	 * Keep alive option needs a connected flow
-	 */
-	T_ASSERT_POSIX_SUCCESS(connect(s, &sa.sa, sa.sa.sa_len), NULL);
+  /*
+   * Keep alive option needs a connected flow
+   */
+  T_ASSERT_POSIX_SUCCESS(connect(s, &sa.sa, sa.sa.sa_len), NULL);
 
-	/*
-	 * UDP_KEEPALIVE_OFFLOAD should only succeed for UDP sockets
-	 */
-	struct udp_keepalive_offload keepAliveInfo = {};
-	keepAliveInfo.ka_interval = 1;
-	keepAliveInfo.ka_data_len = 1;
-	keepAliveInfo.ka_type = UDP_KEEPALIVE_OFFLOAD_TYPE_AIRPLAY;
+  /*
+   * UDP_KEEPALIVE_OFFLOAD should only succeed for UDP sockets
+   */
+  struct udp_keepalive_offload keepAliveInfo = {};
+  keepAliveInfo.ka_interval = 1;
+  keepAliveInfo.ka_data_len = 1;
+  keepAliveInfo.ka_type = UDP_KEEPALIVE_OFFLOAD_TYPE_AIRPLAY;
 
-	if (expected_errno == 0) {
-		T_ASSERT_POSIX_SUCCESS(setsockopt(s, IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD,
-		    &keepAliveInfo, sizeof(keepAliveInfo)),
-		    "setsockopt IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD");
-	} else {
-		T_ASSERT_POSIX_FAILURE(setsockopt(s, IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD,
-		    &keepAliveInfo, sizeof(keepAliveInfo)), expected_errno,
-		    "setsockopt IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD");
-	}
+  if (expected_errno == 0) {
+    T_ASSERT_POSIX_SUCCESS(setsockopt(s, IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD,
+                                      &keepAliveInfo, sizeof(keepAliveInfo)),
+                           "setsockopt IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD");
+  } else {
+    T_ASSERT_POSIX_FAILURE(setsockopt(s, IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD,
+                                      &keepAliveInfo, sizeof(keepAliveInfo)),
+                           expected_errno,
+                           "setsockopt IPPROTO_UDP, UDP_KEEPALIVE_OFFLOAD");
+  }
 
-	/*
-	 * Verify that network layer options can be set
-	 */
-	int optval = 10;
-	if (domain == PF_INET) {
-		T_ASSERT_POSIX_SUCCESS(setsockopt(s, IPPROTO_IP, IP_TTL,
-		    &optval, sizeof(optval)), "setsockopt IPPROTO_IP, IP_TTL");
-	} else {
-		T_ASSERT_POSIX_SUCCESS(setsockopt(s, IPPROTO_IPV6, IPV6_UNICAST_HOPS,
-		    &optval, sizeof(optval)), "setsockopt IPPROTO_IPV6, IPV6_UNICAST_HOPS");
-	}
+  /*
+   * Verify that network layer options can be set
+   */
+  int optval = 10;
+  if (domain == PF_INET) {
+    T_ASSERT_POSIX_SUCCESS(
+        setsockopt(s, IPPROTO_IP, IP_TTL, &optval, sizeof(optval)),
+        "setsockopt IPPROTO_IP, IP_TTL");
+  } else {
+    T_ASSERT_POSIX_SUCCESS(
+        setsockopt(s, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &optval, sizeof(optval)),
+        "setsockopt IPPROTO_IPV6, IPV6_UNICAST_HOPS");
+  }
 
-	T_ASSERT_POSIX_SUCCESS(close(s), NULL);
+  T_ASSERT_POSIX_SUCCESS(close(s), NULL);
 }
 
 #define SET_UDP_KAO_OPT(e, d, t, p) set_udp_kao_opt(e, d, #d, t, #t, p, #p)
 
 T_DECL(test_udp_keep_alive_option, "TCP bind with a IPv6 multicast address",
-    T_META_ENABLED(false) /* rdar://134506000 */)
-{
-	tcp_listen();
+       T_META_ENABLED(false) /* rdar://134506000 */) {
+  tcp_listen();
 
-	SET_UDP_KAO_OPT(0, PF_INET6, SOCK_DGRAM, 0);
-	SET_UDP_KAO_OPT(0, PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-	SET_UDP_KAO_OPT(EINVAL, PF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6);
-	SET_UDP_KAO_OPT(EINVAL, PF_INET6, SOCK_STREAM, 0);
+  SET_UDP_KAO_OPT(0, PF_INET6, SOCK_DGRAM, 0);
+  SET_UDP_KAO_OPT(0, PF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+  SET_UDP_KAO_OPT(EINVAL, PF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6);
+  SET_UDP_KAO_OPT(EINVAL, PF_INET6, SOCK_STREAM, 0);
 
-	SET_UDP_KAO_OPT(0, PF_INET, SOCK_DGRAM, 0);
-	SET_UDP_KAO_OPT(0, PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	SET_UDP_KAO_OPT(EINVAL, PF_INET, SOCK_DGRAM, IPPROTO_ICMP);
-	SET_UDP_KAO_OPT(EINVAL, PF_INET, SOCK_STREAM, 0);
+  SET_UDP_KAO_OPT(0, PF_INET, SOCK_DGRAM, 0);
+  SET_UDP_KAO_OPT(0, PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  SET_UDP_KAO_OPT(EINVAL, PF_INET, SOCK_DGRAM, IPPROTO_ICMP);
+  SET_UDP_KAO_OPT(EINVAL, PF_INET, SOCK_STREAM, 0);
 }

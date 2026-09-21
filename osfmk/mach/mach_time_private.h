@@ -29,22 +29,24 @@
 #ifndef _MACH_MACH_TIME_PRIVATE_H_
 #define _MACH_MACH_TIME_PRIVATE_H_
 
+#include <Availability.h>
 #include <mach/mach_types.h>
 #include <sys/cdefs.h>
-#include <Availability.h>
 
 __BEGIN_DECLS
 #ifndef KERNEL
 // Forward definition because this is a BSD value
 struct timespec;
 
-__OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0)
-kern_return_t           mach_get_times(uint64_t* absolute_time,
-    uint64_t* continuous_time,
-    struct timespec *tp);
+__OSX_AVAILABLE(10.12)
+__IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0)
+    __WATCHOS_AVAILABLE(3.0) kern_return_t
+    mach_get_times(uint64_t *absolute_time, uint64_t *continuous_time,
+                   struct timespec *tp);
 
-__OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0)
-uint64_t                mach_boottime_usec(void);
+__OSX_AVAILABLE(10.12)
+__IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0) uint64_t
+    mach_boottime_usec(void);
 
 #endif /* KERNEL */
 

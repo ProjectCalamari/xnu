@@ -65,7 +65,6 @@
  * FreeBSD-Id: nfsrvcache.h,v 1.9 1997/06/03 17:22:47 dfr Exp $
  */
 
-
 #ifndef _NFS_NFSRVCACHE_H_
 #define _NFS_NFSRVCACHE_H_
 
@@ -78,52 +77,52 @@
 
 /* Network address hash list element */
 union nethostaddr {
-	in_addr_t had_inetaddr;
-	struct in6_addr had_inet6addr;
-	mbuf_t had_nam;
+  in_addr_t had_inetaddr;
+  struct in6_addr had_inet6addr;
+  mbuf_t had_nam;
 };
 
-#define NFSRVCACHESIZ   64
+#define NFSRVCACHESIZ 64
 
 struct nfsrvcache {
-	TAILQ_ENTRY(nfsrvcache) rc_lru;         /* LRU chain */
-	LIST_ENTRY(nfsrvcache) rc_hash;         /* Hash chain */
-	u_int32_t       rc_xid;                         /* rpc id number */
-	union {
-		mbuf_t ru_repmb;                /* Reply mbuf list OR */
-		int ru_repstat;                 /* Reply status */
-	} rc_un;
-	sa_family_t rc_family;                  /* address family */
-	union nethostaddr rc_haddr;             /* Host address */
-	u_int32_t rc_proc;                      /* rpc proc number */
-	u_char  rc_state;               /* Current state of request */
-	u_char  rc_flag;                /* Flag bits */
+  TAILQ_ENTRY(nfsrvcache) rc_lru; /* LRU chain */
+  LIST_ENTRY(nfsrvcache) rc_hash; /* Hash chain */
+  u_int32_t rc_xid;               /* rpc id number */
+  union {
+    mbuf_t ru_repmb; /* Reply mbuf list OR */
+    int ru_repstat;  /* Reply status */
+  } rc_un;
+  sa_family_t rc_family;      /* address family */
+  union nethostaddr rc_haddr; /* Host address */
+  u_int32_t rc_proc;          /* rpc proc number */
+  u_char rc_state;            /* Current state of request */
+  u_char rc_flag;             /* Flag bits */
 };
 
-#define rc_reply        rc_un.ru_repmb
-#define rc_status       rc_un.ru_repstat
-#define rc_inetaddr     rc_haddr.had_inetaddr
-#define rc_inet6addr    rc_haddr.had_inet6addr
-#define rc_nam          rc_haddr.had_nam
+#define rc_reply rc_un.ru_repmb
+#define rc_status rc_un.ru_repstat
+#define rc_inetaddr rc_haddr.had_inetaddr
+#define rc_inet6addr rc_haddr.had_inet6addr
+#define rc_nam rc_haddr.had_nam
 
 /* Cache entry states */
-#define RC_UNUSED       0
-#define RC_INPROG       1
-#define RC_DONE         2
+#define RC_UNUSED 0
+#define RC_INPROG 1
+#define RC_DONE 2
 
 /* Return values */
-#define RC_DROPIT       0
-#define RC_REPLY        1
-#define RC_DOIT         2
-#define RC_CHECKIT      3
+#define RC_DROPIT 0
+#define RC_REPLY 1
+#define RC_DOIT 2
+#define RC_CHECKIT 3
 
 /* Flag bits */
-#define RC_LOCKED       0x01
-#define RC_WANTED       0x02
-#define RC_REPSTATUS    0x04
-#define RC_REPMBUF      0x08
-#define RC_INETADDR     0x20
-#define RC_NAM          0x40
+#define RC_LOCKED 0x01
+#define RC_WANTED 0x02
+#define RC_REPSTATUS 0x04
+#define RC_REPMBUF 0x08
+#define RC_INETADDR 0x20
+#define RC_NAM 0x40
 
 #endif /* __APPLE_API_PRIVATE */
 #endif /* _NFS_NFSRVCACHE_H_ */

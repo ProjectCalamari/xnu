@@ -26,7 +26,7 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #ifndef _MACH_MEMORY_ENTRY_
 #define _MACH_MEMORY_ENTRY_
@@ -34,19 +34,15 @@
 __BEGIN_DECLS
 
 #if XNU_PLATFORM_MacOSX
-extern kern_return_t mach_memory_entry_page_op(
-	ipc_port_t              entry_port,
-	vm_object_offset_ut     offset,
-	int                     ops,
-	ppnum_t                 *phys_entry,
-	int                     *flags);
+extern kern_return_t mach_memory_entry_page_op(ipc_port_t entry_port,
+                                               vm_object_offset_ut offset,
+                                               int ops, ppnum_t *phys_entry,
+                                               int *flags);
 
-extern kern_return_t mach_memory_entry_range_op(
-	ipc_port_t              entry_port,
-	vm_object_offset_ut     offset_beg,
-	vm_object_offset_ut     offset_end,
-	int                     ops,
-	int                     *range);
+extern kern_return_t mach_memory_entry_range_op(ipc_port_t entry_port,
+                                                vm_object_offset_ut offset_beg,
+                                                vm_object_offset_ut offset_end,
+                                                int ops, int *range);
 #endif /* XNU_PLATFORM_MacOSX */
 
 /*
@@ -58,20 +54,17 @@ extern kern_return_t mach_memory_entry_range_op(
  *	Conditions:
  *		Nothing locked.
  */
-extern vm_named_entry_t vm_convert_port_to_named_entry(
-	ipc_port_t      port);
+extern vm_named_entry_t vm_convert_port_to_named_entry(ipc_port_t port);
 
 /*
  *	Routine:	vm_convert_port_to_copy_object
  *	Purpose:
  *		Convert from a port specifying a named entry
  *              backed by a copy map to the VM object itself.
- *              Returns NULL if the port does not refer to an copy map-backed named entry.
- *	Conditions:
- *		Nothing locked.
+ *              Returns NULL if the port does not refer to an copy map-backed
+ * named entry. Conditions: Nothing locked.
  */
-extern vm_object_t vm_convert_port_to_copy_object(
-	ipc_port_t      port);
+extern vm_object_t vm_convert_port_to_copy_object(ipc_port_t port);
 
 __END_DECLS
 

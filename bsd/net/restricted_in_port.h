@@ -35,25 +35,29 @@
 
 #define PORT_FLAGS_LISTENER 0x00
 #if SKYWALK
-#define PORT_FLAGS_SKYWALK      0x01
+#define PORT_FLAGS_SKYWALK 0x01
 #endif /* SKYWALK */
-#define PORT_FLAGS_BSD      0x02
-#define PORT_FLAGS_PF       0x03
-#define PORT_FLAGS_MAX      0x03
+#define PORT_FLAGS_BSD 0x02
+#define PORT_FLAGS_PF 0x03
+#define PORT_FLAGS_MAX 0x03
 
 /*
  * the port in network byte order
  */
-#define IS_RESTRICTED_IN_PORT(x) (bitmap_test(restricted_port_bitmap, ntohs((uint16_t)(x))))
+#define IS_RESTRICTED_IN_PORT(x)                                               \
+  (bitmap_test(restricted_port_bitmap, ntohs((uint16_t)(x))))
 
-extern bitmap_t *__sized_by_or_null(BITMAP_SIZE(UINT16_MAX)) restricted_port_bitmap;
+extern bitmap_t *
+    __sized_by_or_null(BITMAP_SIZE(UINT16_MAX)) restricted_port_bitmap;
 
 extern void restricted_in_port_init(void);
 
 /*
  * The port must be in network byte order
  */
-extern bool current_task_can_use_restricted_in_port(in_port_t port, uint8_t protocol, uint32_t port_flags);
+extern bool current_task_can_use_restricted_in_port(in_port_t port,
+                                                    uint8_t protocol,
+                                                    uint32_t port_flags);
 
 #endif /* BSD_KERNEL_PRIVATE */
 

@@ -31,11 +31,10 @@
 #include <sys/proc.h>
 #include <sys/sysproto.h>
 
-int
-sys_crossarch_trap(__unused struct proc *p, struct crossarch_trap_args *uap, __unused int *retval)
-{
-	if (uap->name > CROSSARCH_MAX_VALID_NAMESPACE) {
-		return EINVAL;
-	}
-	return ENOTSUP;
+int sys_crossarch_trap(__unused struct proc *p, struct crossarch_trap_args *uap,
+                       __unused int *retval) {
+  if (uap->name > CROSSARCH_MAX_VALID_NAMESPACE) {
+    return EINVAL;
+  }
+  return ENOTSUP;
 }

@@ -38,12 +38,12 @@
 
 #if !__has_feature(ptrauth_calls)
 ptrauth_generic_signature_t
-ptrauth_utils_sign_blob_generic(__unused const void * ptr, __unused size_t len_bytes, __unused uint64_t data, __unused int flags)
-{
-	return 0;
+ptrauth_utils_sign_blob_generic(__unused const void *ptr,
+                                __unused size_t len_bytes,
+                                __unused uint64_t data, __unused int flags) {
+  return 0;
 }
 #endif // __has_feature(ptrauth_calls)
-
 
 /*
  * ptrauth_utils_auth_blob_generic
@@ -52,33 +52,32 @@ ptrauth_utils_sign_blob_generic(__unused const void * ptr, __unused size_t len_b
  */
 
 #if __has_feature(ptrauth_calls)
-__attribute__((noinline))
-void
-ptrauth_utils_auth_blob_generic(const void * ptr, size_t len_bytes, uint64_t data, int flags, ptrauth_generic_signature_t signature)
-{
-	ptrauth_generic_signature_t calculated_signature = 0;
+__attribute__((noinline)) void
+ptrauth_utils_auth_blob_generic(const void *ptr, size_t len_bytes,
+                                uint64_t data, int flags,
+                                ptrauth_generic_signature_t signature) {
+  ptrauth_generic_signature_t calculated_signature = 0;
 
-	if (ptr == NULL) {
-		if (flags & PTRAUTH_NON_NULL) {
-			panic("ptrauth_utils_auth_blob_generic: ptr must not be NULL");
-		} else {
-			return;
-		}
-	}
+  if (ptr == NULL) {
+    if (flags & PTRAUTH_NON_NULL) {
+      panic("ptrauth_utils_auth_blob_generic: ptr must not be NULL");
+    } else {
+      return;
+    }
+  }
 
-	if ((calculated_signature = ptrauth_utils_sign_blob_generic(ptr, len_bytes, data, flags)) == signature) {
-		return;
-	} else {
-		panic("signature mismatch for %lu bytes at %p, calculated %lx vs %lx", len_bytes,
-		    ptr,
-		    calculated_signature,
-		    signature);
-	}
+  if ((calculated_signature = ptrauth_utils_sign_blob_generic(
+           ptr, len_bytes, data, flags)) == signature) {
+    return;
+  } else {
+    panic("signature mismatch for %lu bytes at %p, calculated %lx vs %lx",
+          len_bytes, ptr, calculated_signature, signature);
+  }
 }
 #else
-void
-ptrauth_utils_auth_blob_generic(__unused const void * ptr, __unused size_t len_bytes, __unused uint64_t data, __unused int flags, __unused ptrauth_generic_signature_t signature)
-{
-	return;
+void ptrauth_utils_auth_blob_generic(
+    __unused const void *ptr, __unused size_t len_bytes, __unused uint64_t data,
+    __unused int flags, __unused ptrauth_generic_signature_t signature) {
+  return;
 }
 #endif // __has_feature(ptrauth_calls)

@@ -36,20 +36,26 @@ extern os_log_t vm_log_handle;
 extern bool vm_log_debug_enabled;
 extern bool vm_log_to_serial;
 
-#define _vm_log_with_type(type, format, ...) MACRO_BEGIN \
-	if (os_unlikely(vm_log_to_serial)) { \
-	        printf("vm: " format, ##__VA_ARGS__); \
-	} else { \
-	        os_log_with_startup_serial_and_type(vm_log_handle, type, "vm: " format, ##__VA_ARGS__); \
-	} \
-MACRO_END
-#define vm_log(format, ...) _vm_log_with_type(OS_LOG_TYPE_DEFAULT, format, ##__VA_ARGS__)
-#define vm_log_info(format, ...) _vm_log_with_type(OS_LOG_TYPE_INFO, format, ##__VA_ARGS__)
-#define vm_log_debug(format, ...) \
-MACRO_BEGIN \
-	if (os_unlikely(vm_log_debug_enabled)) { \
-	        _vm_log_with_type(OS_LOG_TYPE_DEBUG, format, ##__VA_ARGS__); \
-	} \
-MACRO_END
-#define vm_log_error(format, ...) _vm_log_with_type(OS_LOG_TYPE_ERROR, format, ##__VA_ARGS__)
-#define vm_log_fault(format, ...) _vm_log_with_type(OS_LOG_TYPE_FAULT, format, ##__VA_ARGS__)
+#define _vm_log_with_type(type, format, ...)                                   \
+  MACRO_BEGIN                                                                  \
+  if (os_unlikely(vm_log_to_serial)) {                                         \
+    printf("vm: " format, ##__VA_ARGS__);                                      \
+  } else {                                                                     \
+    os_log_with_startup_serial_and_type(vm_log_handle, type, "vm: " format,    \
+                                        ##__VA_ARGS__);                        \
+  }                                                                            \
+  MACRO_END
+#define vm_log(format, ...)                                                    \
+  _vm_log_with_type(OS_LOG_TYPE_DEFAULT, format, ##__VA_ARGS__)
+#define vm_log_info(format, ...)                                               \
+  _vm_log_with_type(OS_LOG_TYPE_INFO, format, ##__VA_ARGS__)
+#define vm_log_debug(format, ...)                                              \
+  MACRO_BEGIN                                                                  \
+  if (os_unlikely(vm_log_debug_enabled)) {                                     \
+    _vm_log_with_type(OS_LOG_TYPE_DEBUG, format, ##__VA_ARGS__);               \
+  }                                                                            \
+  MACRO_END
+#define vm_log_error(format, ...)                                              \
+  _vm_log_with_type(OS_LOG_TYPE_ERROR, format, ##__VA_ARGS__)
+#define vm_log_fault(format, ...)                                              \
+  _vm_log_with_type(OS_LOG_TYPE_FAULT, format, ##__VA_ARGS__)

@@ -28,26 +28,26 @@
 
 #include <vm/vm_page.h>
 
-#define         VM_GHOST_OFFSET_BITS    39
-#define         VM_GHOST_OFFSET_MASK    0x7FFFFFFFFF
-#define         VM_GHOST_PAGES_PER_ENTRY 4
-#define         VM_GHOST_PAGE_MASK      0x3
-#define         VM_GHOST_PAGE_SHIFT     2
-#define         VM_GHOST_INDEX_BITS     (64 - VM_GHOST_OFFSET_BITS - VM_GHOST_PAGES_PER_ENTRY)
+#define VM_GHOST_OFFSET_BITS 39
+#define VM_GHOST_OFFSET_MASK 0x7FFFFFFFFF
+#define VM_GHOST_PAGES_PER_ENTRY 4
+#define VM_GHOST_PAGE_MASK 0x3
+#define VM_GHOST_PAGE_SHIFT 2
+#define VM_GHOST_INDEX_BITS                                                    \
+  (64 - VM_GHOST_OFFSET_BITS - VM_GHOST_PAGES_PER_ENTRY)
 
-struct  vm_ghost {
-	uint64_t        g_next_index:VM_GHOST_INDEX_BITS,
-	    g_pages_held:VM_GHOST_PAGES_PER_ENTRY,
-	    g_obj_offset:VM_GHOST_OFFSET_BITS;
-	uint32_t        g_obj_id;
+struct vm_ghost {
+  uint64_t g_next_index : VM_GHOST_INDEX_BITS,
+      g_pages_held : VM_GHOST_PAGES_PER_ENTRY,
+                     g_obj_offset : VM_GHOST_OFFSET_BITS;
+  uint32_t g_obj_id;
 } __attribute__((packed));
 
 typedef struct vm_ghost *vm_ghost_t;
 
-
-extern  void            vm_phantom_cache_init(void);
-extern  void            vm_phantom_cache_add_ghost(vm_page_t);
-extern  vm_ghost_t      vm_phantom_cache_lookup_ghost(vm_page_t, uint32_t);
-extern  void            vm_phantom_cache_update(vm_page_t);
-extern  boolean_t       vm_phantom_cache_check_pressure(void);
-extern  void            vm_phantom_cache_restart_sample(void);
+extern void vm_phantom_cache_init(void);
+extern void vm_phantom_cache_add_ghost(vm_page_t);
+extern vm_ghost_t vm_phantom_cache_lookup_ghost(vm_page_t, uint32_t);
+extern void vm_phantom_cache_update(vm_page_t);
+extern boolean_t vm_phantom_cache_check_pressure(void);
+extern void vm_phantom_cache_restart_sample(void);

@@ -56,15 +56,15 @@
 #ifndef _NETNAME_DEFS_
 #define _NETNAME_DEFS_
 
-#define NETNAME_SUCCESS         (0)
-#define NETNAME_PENDING         (-1)
-#define NETNAME_NOT_YOURS       (1000)
-#define NAME_NOT_YOURS          (1000)
-#define NETNAME_NOT_CHECKED_IN  (1001)
-#define NAME_NOT_CHECKED_IN     (1001)
-#define NETNAME_NO_SUCH_HOST    (1002)
-#define NETNAME_HOST_NOT_FOUND  (1003)
-#define NETNAME_INVALID_PORT    (1004)
+#define NETNAME_SUCCESS (0)
+#define NETNAME_PENDING (-1)
+#define NETNAME_NOT_YOURS (1000)
+#define NAME_NOT_YOURS (1000)
+#define NETNAME_NOT_CHECKED_IN (1001)
+#define NAME_NOT_CHECKED_IN (1001)
+#define NETNAME_NO_SUCH_HOST (1002)
+#define NETNAME_HOST_NOT_FOUND (1003)
+#define NETNAME_INVALID_PORT (1004)
 
 typedef char netname_name_t[80];
 

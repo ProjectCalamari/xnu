@@ -69,8 +69,8 @@
 #define _SYS_LOCK_H_
 
 #include <sys/appleapiopts.h>
-#include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/types.h>
 
 #ifdef KERNEL
 
@@ -78,4 +78,4 @@
 
 #endif /* KERNEL */
 
-#endif  /* _SYS_LOCK_H_ */
+#endif /* _SYS_LOCK_H_ */

@@ -30,9 +30,9 @@
 
 #include <sys/types.h>
 #if KERNEL
-    #include <libkern/kxld_types.h>
+#include <libkern/kxld_types.h>
 #else
-    #include "kxld_types.h"
+#include "kxld_types.h"
 #endif
 
 #include "kxld_array.h"
@@ -51,57 +51,60 @@ typedef struct kxld_vtable KXLDVTable;
 typedef union kxld_vtable_entry KXLDVTableEntry;
 
 struct kxld_vtable {
-	u_char *vtable;
-	const char *name;
-	KXLDArray entries;
-	boolean_t is_patched;
+  u_char *vtable;
+  const char *name;
+  KXLDArray entries;
+  boolean_t is_patched;
 };
 
 struct kxld_vtable_patched_entry {
-	char *name;
-	kxld_addr_t addr;
+  char *name;
+  kxld_addr_t addr;
 };
 
 struct kxld_vtable_unpatched_entry {
-	const struct kxld_sym *sym;
-	struct kxld_reloc *reloc;
+  const struct kxld_sym *sym;
+  struct kxld_reloc *reloc;
 };
 
 union kxld_vtable_entry {
-	struct kxld_vtable_patched_entry patched;
-	struct kxld_vtable_unpatched_entry unpatched;
+  struct kxld_vtable_patched_entry patched;
+  struct kxld_vtable_unpatched_entry unpatched;
 };
 
 /*******************************************************************************
-* Constructors and destructors
-*******************************************************************************/
+ * Constructors and destructors
+ *******************************************************************************/
 
 kern_return_t kxld_vtable_init(KXLDVTable *vtable,
-    const struct kxld_sym *vtable_sym, const struct kxld_object *object,
-    const struct kxld_dict *defined_cxx_symbols)
-__attribute__((nonnull, visibility("hidden")));
+                               const struct kxld_sym *vtable_sym,
+                               const struct kxld_object *object,
+                               const struct kxld_dict *defined_cxx_symbols)
+    __attribute__((nonnull, visibility("hidden")));
 
 void kxld_vtable_clear(KXLDVTable *vtable)
-__attribute__((visibility("hidden")));
+    __attribute__((visibility("hidden")));
 
 void kxld_vtable_deinit(KXLDVTable *vtable)
-__attribute__((visibility("hidden")));
+    __attribute__((visibility("hidden")));
 
 /*******************************************************************************
-* Accessors
-*******************************************************************************/
+ * Accessors
+ *******************************************************************************/
 
-KXLDVTableEntry * kxld_vtable_get_entry_for_offset(const KXLDVTable *vtable,
-    u_long offset, boolean_t is_32_bit)
-__attribute__((pure, nonnull, visibility("hidden")));
+KXLDVTableEntry *kxld_vtable_get_entry_for_offset(const KXLDVTable *vtable,
+                                                  u_long offset,
+                                                  boolean_t is_32_bit)
+    __attribute__((pure, nonnull, visibility("hidden")));
 
 /*******************************************************************************
-* Modifiers
-*******************************************************************************/
+ * Modifiers
+ *******************************************************************************/
 
 /* With strict patching, the vtable patcher with only patch pad slots */
-kern_return_t kxld_vtable_patch(KXLDVTable *vtable, const KXLDVTable *super_vtable,
-    struct kxld_object *object)
-__attribute__((nonnull, visibility("hidden")));
+kern_return_t kxld_vtable_patch(KXLDVTable *vtable,
+                                const KXLDVTable *super_vtable,
+                                struct kxld_object *object)
+    __attribute__((nonnull, visibility("hidden")));
 
 #endif /* _KXLD_VTABLE_H_ */

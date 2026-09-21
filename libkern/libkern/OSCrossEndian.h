@@ -60,19 +60,13 @@
 
 #include <sys/sysctl.h>
 
-static __inline__ int
-_OSRosettaCheck(void)
-{
-	return 0;
-}
+static __inline__ int _OSRosettaCheck(void) { return 0; }
 
-#define IF_ROSETTA() if (__builtin_expect(_OSRosettaCheck(), 0) )
+#define IF_ROSETTA() if (__builtin_expect(_OSRosettaCheck(), 0))
 
-#define ROSETTA_ONLY(exprs)     \
-do {                            \
-    IF_ROSETTA() {              \
-	exprs                   \
-    }                           \
-} while(0)
+#define ROSETTA_ONLY(exprs)                                                    \
+  do {                                                                         \
+    IF_ROSETTA() { exprs }                                                     \
+  } while (0)
 
 #endif /*  _LIBKERN_OSCROSSENDIAN_H */

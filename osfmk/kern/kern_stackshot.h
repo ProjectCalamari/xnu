@@ -29,36 +29,43 @@
 #ifndef _KERN_STACKSHOT_H_
 #define _KERN_STACKSHOT_H_
 
-#include <stdint.h>
-#include <kern/kern_types.h>
 #include <kern/kern_cdata.h>
+#include <kern/kern_types.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 
 #ifdef XNU_KERNEL_PRIVATE
 
-extern void                   kdp_snapshot_preflight(int pid, void * tracebuf, uint32_t tracebuf_size,
-    uint64_t flags, kcdata_descriptor_t data_p, uint64_t since_timestamp, uint32_t pagetable_mask);
-extern uint32_t               kdp_stack_snapshot_bytes_traced(void);
-extern uint32_t               kdp_stack_snapshot_bytes_uncompressed(void);
-extern boolean_t              stackshot_thread_is_idle_worker_unsafe(thread_t thread);
-extern void                   stackshot_cpu_preflight(void);
-extern void                   stackshot_aux_cpu_entry(void);
-extern void                   stackshot_cpu_signal_panic(void);
-extern kern_return_t          kern_stack_snapshot_internal(int stackshot_config_version, void *stackshot_config,
+extern void kdp_snapshot_preflight(int pid, void *tracebuf,
+                                   uint32_t tracebuf_size, uint64_t flags,
+                                   kcdata_descriptor_t data_p,
+                                   uint64_t since_timestamp,
+                                   uint32_t pagetable_mask);
+extern uint32_t kdp_stack_snapshot_bytes_traced(void);
+extern uint32_t kdp_stack_snapshot_bytes_uncompressed(void);
+extern boolean_t stackshot_thread_is_idle_worker_unsafe(thread_t thread);
+extern void stackshot_cpu_preflight(void);
+extern void stackshot_aux_cpu_entry(void);
+extern void stackshot_cpu_signal_panic(void);
+extern kern_return_t kern_stack_snapshot_internal(
+    int stackshot_config_version, void *stackshot_config,
     size_t stackshot_config_size, boolean_t stackshot_from_user);
-extern kern_return_t          do_stackshot(void* context);
-extern boolean_t              stackshot_active(void);
-extern boolean_t              panic_stackshot_active(void);
+extern kern_return_t do_stackshot(void *context);
+extern boolean_t stackshot_active(void);
+extern boolean_t panic_stackshot_active(void);
 extern kern_return_t do_panic_stackshot(void *context);
-extern void *                 stackshot_alloc_with_size(size_t size, kern_return_t *err);
+extern void *stackshot_alloc_with_size(size_t size, kern_return_t *err);
 
 extern uint64_t kcdata_get_task_ss_flags(task_t task, bool from_stackshot);
 
-/* Allocates an array of elements of a type from the stackshot buffer. Works in regular & panic stackshots. */
-#define stackshot_alloc_arr(type, count, err) stackshot_alloc_with_size(sizeof(type) * (count), err)
+/* Allocates an array of elements of a type from the stackshot buffer. Works in
+ * regular & panic stackshots. */
+#define stackshot_alloc_arr(type, count, err)                                  \
+  stackshot_alloc_with_size(sizeof(type) * (count), err)
 
-/* Allocates an element with a type from the stackshot buffer. Works in regular & panic stackshot. */
+/* Allocates an element with a type from the stackshot buffer. Works in regular
+ * & panic stackshot. */
 #define stackshot_alloc(type, err) stackshot_alloc_with_size(sizeof(type), err)
 
 #endif /* XNU_KERNEL_PRIVATE */

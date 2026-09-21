@@ -29,33 +29,42 @@
 #ifndef _DOUBLEAGENT_TYPES_H_
 #define _DOUBLEAGENT_TYPES_H_
 
-#define DA_XATTR_MAXNAMELEN 127 // Must match the 'XATTR_MAXNAMELEN' in <sys/xattr.h>.
-#define DA_XATTR_FINDERINFO_NAME "com.apple.FinderInfo" // Copy of XATTR_FINDERINFO_NAME in <sys/xattr.h>.
-#define DA_XATTR_RESOURCEFORK_NAME "com.apple.ResourceFork" // Copy of DA_XATTR_RESOURCEFORK_NAME in <sys/xattr.h>.
+#define DA_XATTR_MAXNAMELEN                                                    \
+  127 // Must match the 'XATTR_MAXNAMELEN' in <sys/xattr.h>.
+#define DA_XATTR_FINDERINFO_NAME                                               \
+  "com.apple.FinderInfo" // Copy of XATTR_FINDERINFO_NAME in <sys/xattr.h>.
+#define DA_XATTR_RESOURCEFORK_NAME                                             \
+  "com.apple.ResourceFork" // Copy of DA_XATTR_RESOURCEFORK_NAME in
+                           // <sys/xattr.h>.
 
 #define MAX_NUM_OF_XATTRS 256
-#define LISTXATTR_RESULT_MAX_NAMES_LEN (sizeof(DA_XATTR_RESOURCEFORK_NAME) + sizeof(DA_XATTR_FINDERINFO_NAME) + (MAX_NUM_OF_XATTRS * ((DA_XATTR_MAXNAMELEN + 1))))
-#define LISTXATTR_RESULT_MAX_HINTS_LEN (MAX_NUM_OF_XATTRS * 2 * sizeof(uint32_t)) // hint = offset + length (per xattr).
-#define LISTXATTR_RESULT_MAX_SIZE (LISTXATTR_RESULT_MAX_NAMES_LEN + LISTXATTR_RESULT_MAX_HINTS_LEN)
+#define LISTXATTR_RESULT_MAX_NAMES_LEN                                         \
+  (sizeof(DA_XATTR_RESOURCEFORK_NAME) + sizeof(DA_XATTR_FINDERINFO_NAME) +     \
+   (MAX_NUM_OF_XATTRS * ((DA_XATTR_MAXNAMELEN + 1))))
+#define LISTXATTR_RESULT_MAX_HINTS_LEN                                         \
+  (MAX_NUM_OF_XATTRS * 2 *                                                     \
+   sizeof(uint32_t)) // hint = offset + length (per xattr).
+#define LISTXATTR_RESULT_MAX_SIZE                                              \
+  (LISTXATTR_RESULT_MAX_NAMES_LEN + LISTXATTR_RESULT_MAX_HINTS_LEN)
 
 typedef char xattrname[DA_XATTR_MAXNAMELEN + 1];
 
 typedef struct list_xattrs_result {
-	/* header */
-	uint64_t finderInfoOffset; // =0 if not present
-	uint64_t resourceForkOffset; // =0 if not present
-	uint64_t resourceForkLength; // Don't care if resourceForkOffset = 0
-	uint64_t numOfXattrs;
+  /* header */
+  uint64_t finderInfoOffset;   // =0 if not present
+  uint64_t resourceForkOffset; // =0 if not present
+  uint64_t resourceForkLength; // Don't care if resourceForkOffset = 0
+  uint64_t numOfXattrs;
 
-	/* data:
-	 * (1) names (separated with '\0')
-	 * (2) ranges: offset + lengths (for caching)
-	 * (dataLength = namesLength + rangesLength)
-	 */
-	uint64_t dataLength;
-	uint64_t namesLength;
-	uint64_t rangesLength;
-	uint8_t  data[LISTXATTR_RESULT_MAX_SIZE];
+  /* data:
+   * (1) names (separated with '\0')
+   * (2) ranges: offset + lengths (for caching)
+   * (dataLength = namesLength + rangesLength)
+   */
+  uint64_t dataLength;
+  uint64_t namesLength;
+  uint64_t rangesLength;
+  uint8_t data[LISTXATTR_RESULT_MAX_SIZE];
 } listxattrs_result_t;
 
 #endif /* _DOUBLEAGENT_TYPES_H_ */

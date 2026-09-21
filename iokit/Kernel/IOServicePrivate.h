@@ -32,254 +32,242 @@
  *
  */
 
-
 #ifndef _IOKIT_IOSERVICEPRIVATE_H
 #define _IOKIT_IOSERVICEPRIVATE_H
 
 // options for getExistingServices()
 enum {
-	kIONotifyOnce             = 0x00000001,
-	kIOServiceExistingSet     = 0x00000002,
-	kIOServiceChangesOK       = 0x00000004,
-	kIOServiceInternalDone    = 0x00000008,
-	kIOServiceClassDone       = 0x00000010,
+  kIONotifyOnce = 0x00000001,
+  kIOServiceExistingSet = 0x00000002,
+  kIOServiceChangesOK = 0x00000004,
+  kIOServiceInternalDone = 0x00000008,
+  kIOServiceClassDone = 0x00000010,
 };
 
 // masks for __state[1]
 enum {
-	kIOServiceBusyStateMask     = 0x000003ff,
-	kIOServiceBusyMax           = 1023,
-	kIOServiceNeedConfigState   = 0x80000000,
-	kIOServiceSynchronousState  = 0x40000000,
-	kIOServiceModuleStallState  = 0x20000000,
-	kIOServiceBusyWaiterState   = 0x10000000,
+  kIOServiceBusyStateMask = 0x000003ff,
+  kIOServiceBusyMax = 1023,
+  kIOServiceNeedConfigState = 0x80000000,
+  kIOServiceSynchronousState = 0x40000000,
+  kIOServiceModuleStallState = 0x20000000,
+  kIOServiceBusyWaiterState = 0x10000000,
 
-	kIOServiceSyncPubState      = 0x08000000,
-	kIOServiceConfigState       = 0x04000000,
-	kIOServiceStartState        = 0x02000000,
-	kIOServiceTermPhase2State   = 0x01000000,
-	kIOServiceTermPhase3State   = 0x00800000,
-	kIOServiceTermPhase1State   = 0x00400000,
-	kIOServiceTerm1WaiterState  = 0x00200000,
-	kIOServiceRecursing         = 0x00100000,
-	kIOServiceNeedWillTerminate = 0x00080000,
-	kIOServiceWaitDetachState   = 0x00040000,
-	kIOServiceConfigRunning     = 0x00020000,
-	kIOServiceFinalized         = 0x00010000,
+  kIOServiceSyncPubState = 0x08000000,
+  kIOServiceConfigState = 0x04000000,
+  kIOServiceStartState = 0x02000000,
+  kIOServiceTermPhase2State = 0x01000000,
+  kIOServiceTermPhase3State = 0x00800000,
+  kIOServiceTermPhase1State = 0x00400000,
+  kIOServiceTerm1WaiterState = 0x00200000,
+  kIOServiceRecursing = 0x00100000,
+  kIOServiceNeedWillTerminate = 0x00080000,
+  kIOServiceWaitDetachState = 0x00040000,
+  kIOServiceConfigRunning = 0x00020000,
+  kIOServiceFinalized = 0x00010000,
 
-	kIOServiceRematchOnDetach   = 0x00008000,
-	kIOServiceUserUnhidden      = 0x00004000,
-	kIOServiceTermPhase2ReadyState = 0x00002000,
-//	kIOServiceX3                = 0x00001000,
-//	kIOServiceX4                = 0x00000800,
-//	kIOServiceX5                = 0x00000400,
+  kIOServiceRematchOnDetach = 0x00008000,
+  kIOServiceUserUnhidden = 0x00004000,
+  kIOServiceTermPhase2ReadyState = 0x00002000,
+  //	kIOServiceX3                = 0x00001000,
+  //	kIOServiceX4                = 0x00000800,
+  //	kIOServiceX5                = 0x00000400,
 };
 
-extern const OSSymbol * gIOServiceNotificationUserKey;
-
+extern const OSSymbol *gIOServiceNotificationUserKey;
 
 // notify state
 enum {
-	kIOServiceNotifyEnable      = 0x00000001,
-	kIOServiceNotifyWaiter      = 0x00000002,
-	kIOServiceNotifyBlock       = 0x00000004
+  kIOServiceNotifyEnable = 0x00000001,
+  kIOServiceNotifyWaiter = 0x00000002,
+  kIOServiceNotifyBlock = 0x00000004
 };
 
 struct _IOServiceNotifierInvocation {
-	IOThread            thread;
-	queue_chain_t       link;
+  IOThread thread;
+  queue_chain_t link;
 };
 
-class _IOServiceNotifier : public IONotifier
-{
-	friend class IOService;
+class _IOServiceNotifier : public IONotifier {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(_IOServiceNotifier);
+  OSDeclareDefaultStructors(_IOServiceNotifier);
 
 public:
-	OSOrderedSet *                      whence;
+  OSOrderedSet *whence;
 
-	OSDictionary *                      matching;
-	const OSSymbol *                    type;
-	IOServiceMatchingNotificationHandler handler;
-	IOServiceNotificationHandler        compatHandler;
-	void *                              target;
-	void *                              ref;
-	SInt32                              priority;
-	queue_head_t                        handlerInvocations;
-	IOOptionBits                        state;
+  OSDictionary *matching;
+  const OSSymbol *type;
+  IOServiceMatchingNotificationHandler handler;
+  IOServiceNotificationHandler compatHandler;
+  void *target;
+  void *ref;
+  SInt32 priority;
+  queue_head_t handlerInvocations;
+  IOOptionBits state;
 
-	virtual void free() APPLE_KEXT_OVERRIDE;
-	virtual void remove() APPLE_KEXT_OVERRIDE;
-	virtual bool disable() APPLE_KEXT_OVERRIDE;
-	virtual void enable( bool was ) APPLE_KEXT_OVERRIDE;
-	virtual void wait();
+  virtual void free() APPLE_KEXT_OVERRIDE;
+  virtual void remove() APPLE_KEXT_OVERRIDE;
+  virtual bool disable() APPLE_KEXT_OVERRIDE;
+  virtual void enable(bool was) APPLE_KEXT_OVERRIDE;
+  virtual void wait();
 };
 
-class _IOServiceInterestNotifier : public IONotifier
-{
-	friend class IOService;
+class _IOServiceInterestNotifier : public IONotifier {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(_IOServiceInterestNotifier);
+  OSDeclareDefaultStructors(_IOServiceInterestNotifier);
 
 public:
-	queue_chain_t               chain;
+  queue_chain_t chain;
 
-	IOServiceInterestHandler    handler;
-	void *                      target;
-	void *                      ref;
-	queue_head_t                handlerInvocations;
-	IOOptionBits                state;
+  IOServiceInterestHandler handler;
+  void *target;
+  void *ref;
+  queue_head_t handlerInvocations;
+  IOOptionBits state;
 
-	virtual void free() APPLE_KEXT_OVERRIDE;
-	virtual void remove() APPLE_KEXT_OVERRIDE;
-	virtual bool disable() APPLE_KEXT_OVERRIDE;
-	virtual void enable( bool was ) APPLE_KEXT_OVERRIDE;
-	virtual void wait();
-	virtual bool init() APPLE_KEXT_OVERRIDE;
+  virtual void free() APPLE_KEXT_OVERRIDE;
+  virtual void remove() APPLE_KEXT_OVERRIDE;
+  virtual bool disable() APPLE_KEXT_OVERRIDE;
+  virtual void enable(bool was) APPLE_KEXT_OVERRIDE;
+  virtual void wait();
+  virtual bool init() APPLE_KEXT_OVERRIDE;
 };
 
-class _IOServiceNullNotifier : public IONotifier
-{
-	OSDeclareDefaultStructors(_IOServiceNullNotifier);
+class _IOServiceNullNotifier : public IONotifier {
+  OSDeclareDefaultStructors(_IOServiceNullNotifier);
 
 public:
-	virtual void taggedRetain(const void *tag) const APPLE_KEXT_OVERRIDE;
-	virtual void taggedRelease(const void *tag, const int when) const APPLE_KEXT_OVERRIDE;
-	virtual void free() APPLE_KEXT_OVERRIDE;
-	virtual void remove() APPLE_KEXT_OVERRIDE;
-	virtual bool disable() APPLE_KEXT_OVERRIDE;
-	virtual void enable( bool was ) APPLE_KEXT_OVERRIDE;
-	virtual void wait();
+  virtual void taggedRetain(const void *tag) const APPLE_KEXT_OVERRIDE;
+  virtual void taggedRelease(const void *tag,
+                             const int when) const APPLE_KEXT_OVERRIDE;
+  virtual void free() APPLE_KEXT_OVERRIDE;
+  virtual void remove() APPLE_KEXT_OVERRIDE;
+  virtual bool disable() APPLE_KEXT_OVERRIDE;
+  virtual void enable(bool was) APPLE_KEXT_OVERRIDE;
+  virtual void wait();
 };
 
-class _IOConfigThread : public OSObject
-{
-	friend class IOService;
+class _IOConfigThread : public OSObject {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(_IOConfigThread);
+  OSDeclareDefaultStructors(_IOConfigThread);
 
 public:
-	static void configThread( const char * name );
-	static void main( void * arg, wait_result_t result );
+  static void configThread(const char *name);
+  static void main(void *arg, wait_result_t result);
 };
 
 enum {
-	kMaxConfigThreads       = CONFIG_MAX_THREADS,
+  kMaxConfigThreads = CONFIG_MAX_THREADS,
 };
 
 enum {
-	kMatchNubJob        = 10,
+  kMatchNubJob = 10,
 };
 
-class _IOServiceJob : public OSObject
-{
-	friend class IOService;
+class _IOServiceJob : public OSObject {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(_IOServiceJob);
+  OSDeclareDefaultStructors(_IOServiceJob);
 
 public:
-	int                 type;
-	IOService *         nub;
-	IOOptionBits        options;
+  int type;
+  IOService *nub;
+  IOOptionBits options;
 
-	static LIBKERN_RETURNS_NOT_RETAINED _IOServiceJob * startJob( IOService * nub, int type,
-	    IOOptionBits options = 0 );
-	static void pingConfig( LIBKERN_CONSUMED class _IOServiceJob * job );
+  static LIBKERN_RETURNS_NOT_RETAINED _IOServiceJob *
+  startJob(IOService *nub, int type, IOOptionBits options = 0);
+  static void pingConfig(LIBKERN_CONSUMED class _IOServiceJob *job);
 };
 
-class IOResources : public IOService
-{
-	friend class IOService;
+class IOResources : public IOService {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(IOResources);
+  OSDeclareDefaultStructors(IOResources);
 
 public:
-	static IOService * resources( void );
-	virtual bool init( OSDictionary * dictionary = NULL ) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn newUserClient(task_t owningTask, void * securityID,
-	    UInt32 type, OSDictionary * properties,
-	    IOUserClient ** handler) APPLE_KEXT_OVERRIDE;
-	virtual IOWorkLoop * getWorkLoop() const APPLE_KEXT_OVERRIDE;
-	virtual bool matchPropertyTable( OSDictionary * table ) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn setProperties( OSObject * properties ) APPLE_KEXT_OVERRIDE;
+  static IOService *resources(void);
+  virtual bool init(OSDictionary *dictionary = NULL) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn newUserClient(task_t owningTask, void *securityID,
+                                 UInt32 type, OSDictionary *properties,
+                                 IOUserClient **handler) APPLE_KEXT_OVERRIDE;
+  virtual IOWorkLoop *getWorkLoop() const APPLE_KEXT_OVERRIDE;
+  virtual bool matchPropertyTable(OSDictionary *table) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn setProperties(OSObject *properties) APPLE_KEXT_OVERRIDE;
 };
 
-class IOUserResources : public IOService
-{
-	friend class IOService;
+class IOUserResources : public IOService {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(IOUserResources);
+  OSDeclareDefaultStructors(IOUserResources);
 
 public:
-	static IOService * resources( void );
-	virtual bool init( OSDictionary * dictionary = NULL ) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn newUserClient(task_t owningTask, void * securityID,
-	    UInt32 type, OSDictionary * properties,
-	    IOUserClient ** handler) APPLE_KEXT_OVERRIDE;
-	virtual IOWorkLoop * getWorkLoop() const APPLE_KEXT_OVERRIDE;
-	virtual bool matchPropertyTable( OSDictionary * table ) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn powerStateWillChangeTo(IOPMPowerFlags flags, unsigned long state, IOService * service) APPLE_KEXT_OVERRIDE;
+  static IOService *resources(void);
+  virtual bool init(OSDictionary *dictionary = NULL) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn newUserClient(task_t owningTask, void *securityID,
+                                 UInt32 type, OSDictionary *properties,
+                                 IOUserClient **handler) APPLE_KEXT_OVERRIDE;
+  virtual IOWorkLoop *getWorkLoop() const APPLE_KEXT_OVERRIDE;
+  virtual bool matchPropertyTable(OSDictionary *table) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn
+  powerStateWillChangeTo(IOPMPowerFlags flags, unsigned long state,
+                         IOService *service) APPLE_KEXT_OVERRIDE;
 };
 
-class _IOOpenServiceIterator : public OSIterator
-{
-	friend class IOService;
+class _IOOpenServiceIterator : public OSIterator {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(_IOOpenServiceIterator);
+  OSDeclareDefaultStructors(_IOOpenServiceIterator);
 
-	OSIterator *        iter;
-	const IOService *   client;
-	const IOService *   provider;
-	IOService *         last;
+  OSIterator *iter;
+  const IOService *client;
+  const IOService *provider;
+  IOService *last;
 
 public:
-	static OSIterator * iterator(LIBKERN_CONSUMED OSIterator * _iter,
-	    const IOService * client,
-	    const IOService * provider );
-	virtual void free() APPLE_KEXT_OVERRIDE;
-	virtual void reset() APPLE_KEXT_OVERRIDE;
-	virtual bool isValid() APPLE_KEXT_OVERRIDE;
-	virtual OSObject * getNextObject() APPLE_KEXT_OVERRIDE;
+  static OSIterator *iterator(LIBKERN_CONSUMED OSIterator *_iter,
+                              const IOService *client,
+                              const IOService *provider);
+  virtual void free() APPLE_KEXT_OVERRIDE;
+  virtual void reset() APPLE_KEXT_OVERRIDE;
+  virtual bool isValid() APPLE_KEXT_OVERRIDE;
+  virtual OSObject *getNextObject() APPLE_KEXT_OVERRIDE;
 };
 
-class IOExclaveProxy : public IOService
-{
-	OSDeclareDefaultStructors(IOExclaveProxy);
+class IOExclaveProxy : public IOService {
+  OSDeclareDefaultStructors(IOExclaveProxy);
 
-	IOExclaveProxyState * exclaveState;
+  IOExclaveProxyState *exclaveState;
 
-	bool start(IOService * provider) APPLE_KEXT_OVERRIDE;
+  bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
 };
 
-class _IOServiceStateNotification : public IOService
-{
-	friend class IOService;
+class _IOServiceStateNotification : public IOService {
+  friend class IOService;
 
-	IOLock * fLock;
-	OSDictionary * fItems;
+  IOLock *fLock;
+  OSDictionary *fItems;
 
-	OSDeclareDefaultStructors(_IOServiceStateNotification);
+  OSDeclareDefaultStructors(_IOServiceStateNotification);
 
 public:
 };
 
+extern const OSSymbol *gIOConsoleUsersKey;
+extern const OSSymbol *gIOConsoleSessionUIDKey;
+extern const OSSymbol *gIOConsoleSessionAuditIDKey;
+extern const OSSymbol *gIOConsoleSessionOnConsoleKey;
+extern const OSSymbol *gIOConsoleSessionSecureInputPIDKey;
 
-
-extern const OSSymbol * gIOConsoleUsersKey;
-extern const OSSymbol * gIOConsoleSessionUIDKey;
-extern const OSSymbol * gIOConsoleSessionAuditIDKey;
-extern const OSSymbol * gIOConsoleSessionOnConsoleKey;
-extern const OSSymbol * gIOConsoleSessionSecureInputPIDKey;
-
-extern "C" bool
-IOSystemStateAOT(void);
+extern "C" bool IOSystemStateAOT(void);
 
 enum {
-	kIOServiceSystemStateOffPhase1 = (1U << 4) | 1,
-	kIOServiceSystemStateOffPhase2 = (1U << 4) | 2,
-	kIOServiceSystemStateAOT = (2U << 4),
-	kIOServiceSystemStateOn  = (3U << 4)
+  kIOServiceSystemStateOffPhase1 = (1U << 4) | 1,
+  kIOServiceSystemStateOffPhase2 = (1U << 4) | 2,
+  kIOServiceSystemStateAOT = (2U << 4),
+  kIOServiceSystemStateOn = (3U << 4)
 #define IsIOServiceSystemStateOff(state) ((state) < kIOServiceSystemStateAOT)
 };
 

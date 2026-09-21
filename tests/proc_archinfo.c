@@ -28,34 +28,34 @@
 #include <darwintest.h>
 #include <libproc.h>
 
-T_GLOBAL_META(
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("libsyscall"),
-	T_META_OWNER("m_staveleytaylor"),
-	T_META_RUN_CONCURRENTLY(true)
-	);
+T_GLOBAL_META(T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("libsyscall"),
+              T_META_OWNER("m_staveleytaylor"), T_META_RUN_CONCURRENTLY(true));
 
-T_DECL(proc_archinfo, "Check proc_archinfo is exposed in public headers")
-{
-	struct proc_archinfo pai = {0};
-	pid_t pid = getpid();
+T_DECL(proc_archinfo, "Check proc_archinfo is exposed in public headers") {
+  struct proc_archinfo pai = {0};
+  pid_t pid = getpid();
 
-	T_EXPECT_POSIX_SUCCESS(proc_pidinfo(pid, PROC_PIDARCHINFO, 0, &pai, sizeof(pai)), "proc_pidinfo(PROC_PIDARCHINFO)");
+  T_EXPECT_POSIX_SUCCESS(
+      proc_pidinfo(pid, PROC_PIDARCHINFO, 0, &pai, sizeof(pai)),
+      "proc_pidinfo(PROC_PIDARCHINFO)");
 
-	/* checks from tests/proc_info.c */
+  /* checks from tests/proc_info.c */
 #if defined(__arm__) || defined(__arm64__)
-	bool arm = (pai.p_cputype & CPU_TYPE_ARM) == CPU_TYPE_ARM;
-	bool arm64 = (pai.p_cputype & CPU_TYPE_ARM64) == CPU_TYPE_ARM64;
-	if (!arm && !arm64) {
-		T_EXPECT_EQ_INT(pai.p_cputype, CPU_TYPE_ARM, "PROC_PIDARCHINFO returned valid value for p_cputype");
-	}
-	T_EXPECT_EQ_INT((pai.p_cpusubtype & CPU_SUBTYPE_ARM_ALL), CPU_SUBTYPE_ARM_ALL,
-	    "PROC_PIDARCHINFO returned valid value for p_cpusubtype");
+  bool arm = (pai.p_cputype & CPU_TYPE_ARM) == CPU_TYPE_ARM;
+  bool arm64 = (pai.p_cputype & CPU_TYPE_ARM64) == CPU_TYPE_ARM64;
+  if (!arm && !arm64) {
+    T_EXPECT_EQ_INT(pai.p_cputype, CPU_TYPE_ARM,
+                    "PROC_PIDARCHINFO returned valid value for p_cputype");
+  }
+  T_EXPECT_EQ_INT((pai.p_cpusubtype & CPU_SUBTYPE_ARM_ALL), CPU_SUBTYPE_ARM_ALL,
+                  "PROC_PIDARCHINFO returned valid value for p_cpusubtype");
 #else
-	bool x86 = (pai.p_cputype & CPU_TYPE_X86) == CPU_TYPE_X86;
-	bool x86_64 = (pai.p_cputype & CPU_TYPE_X86_64) == CPU_TYPE_X86_64;
-	if (!x86 && !x86_64) {
-		T_EXPECT_EQ_INT(pai.p_cputype, CPU_TYPE_X86, "PROC_PIDARCHINFO returned valid value for p_cputype");
-	}
+  bool x86 = (pai.p_cputype & CPU_TYPE_X86) == CPU_TYPE_X86;
+  bool x86_64 = (pai.p_cputype & CPU_TYPE_X86_64) == CPU_TYPE_X86_64;
+  if (!x86 && !x86_64) {
+    T_EXPECT_EQ_INT(pai.p_cputype, CPU_TYPE_X86,
+                    "PROC_PIDARCHINFO returned valid value for p_cputype");
+  }
 #endif
 }

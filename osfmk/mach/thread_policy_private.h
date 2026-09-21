@@ -35,48 +35,49 @@
 /*
  * THREAD_POLICY_STATE:
  */
-#define THREAD_POLICY_STATE             6
+#define THREAD_POLICY_STATE 6
 
-#define THREAD_POLICY_STATE_FLAG_STATIC_PARAM   0x1
+#define THREAD_POLICY_STATE_FLAG_STATIC_PARAM 0x1
 
 struct thread_policy_state {
-	integer_t requested;
-	integer_t effective;
-	integer_t pending;
-	integer_t flags;
-	uint64_t thps_requested_policy;
-	uint64_t thps_effective_policy;
-	uint32_t thps_user_promotions;
-	uint32_t thps_user_promotion_basepri;
-	uint32_t thps_ipc_overrides;
-	uint32_t reserved32;
-	uint64_t reserved[2];
+  integer_t requested;
+  integer_t effective;
+  integer_t pending;
+  integer_t flags;
+  uint64_t thps_requested_policy;
+  uint64_t thps_effective_policy;
+  uint32_t thps_user_promotions;
+  uint32_t thps_user_promotion_basepri;
+  uint32_t thps_ipc_overrides;
+  uint32_t reserved32;
+  uint64_t reserved[2];
 };
 
-typedef struct thread_policy_state              thread_policy_state_data_t;
-typedef struct thread_policy_state              *thread_policy_state_t;
+typedef struct thread_policy_state thread_policy_state_data_t;
+typedef struct thread_policy_state *thread_policy_state_t;
 
-#define THREAD_POLICY_STATE_COUNT       ((mach_msg_type_number_t) \
-	(sizeof (thread_policy_state_data_t) / sizeof (integer_t)))
+#define THREAD_POLICY_STATE_COUNT                                              \
+  ((mach_msg_type_number_t)(sizeof(thread_policy_state_data_t) /               \
+                            sizeof(integer_t)))
 
 /*
  * THREAD_QOS_POLICY:
  */
-#define THREAD_QOS_POLICY               9
+#define THREAD_QOS_POLICY 9
 
 typedef uint8_t thread_qos_t;
-#define THREAD_QOS_UNSPECIFIED          0
-#define THREAD_QOS_DEFAULT              THREAD_QOS_UNSPECIFIED  /* Temporary rename */
-#define THREAD_QOS_MAINTENANCE          1
-#define THREAD_QOS_BACKGROUND           2
-#define THREAD_QOS_UTILITY              3
-#define THREAD_QOS_LEGACY               4       /* i.e. default workq threads */
-#define THREAD_QOS_USER_INITIATED       5
-#define THREAD_QOS_USER_INTERACTIVE     6
+#define THREAD_QOS_UNSPECIFIED 0
+#define THREAD_QOS_DEFAULT THREAD_QOS_UNSPECIFIED /* Temporary rename */
+#define THREAD_QOS_MAINTENANCE 1
+#define THREAD_QOS_BACKGROUND 2
+#define THREAD_QOS_UTILITY 3
+#define THREAD_QOS_LEGACY 4 /* i.e. default workq threads */
+#define THREAD_QOS_USER_INITIATED 5
+#define THREAD_QOS_USER_INTERACTIVE 6
 
-#define THREAD_QOS_LAST                 7
+#define THREAD_QOS_LAST 7
 
-#define THREAD_QOS_MIN_TIER_IMPORTANCE  (-15)
+#define THREAD_QOS_MIN_TIER_IMPORTANCE (-15)
 
 /*
  * Overrides are inputs to the task/thread policy engine that
@@ -111,25 +112,26 @@ typedef uint8_t thread_qos_t;
  * THREAD_QOS_OVERRIDE_RESOURCE_WILDCARD as well will reset everything.
  */
 
-#define THREAD_QOS_OVERRIDE_TYPE_UNKNOWN                        (0)
-#define THREAD_QOS_OVERRIDE_TYPE_PTHREAD_MUTEX                  (1)
-#define THREAD_QOS_OVERRIDE_TYPE_PTHREAD_RWLOCK                 (2)
-#define THREAD_QOS_OVERRIDE_TYPE_PTHREAD_EXPLICIT_OVERRIDE      (3)
-#define THREAD_QOS_OVERRIDE_TYPE_WILDCARD                       (5)
+#define THREAD_QOS_OVERRIDE_TYPE_UNKNOWN (0)
+#define THREAD_QOS_OVERRIDE_TYPE_PTHREAD_MUTEX (1)
+#define THREAD_QOS_OVERRIDE_TYPE_PTHREAD_RWLOCK (2)
+#define THREAD_QOS_OVERRIDE_TYPE_PTHREAD_EXPLICIT_OVERRIDE (3)
+#define THREAD_QOS_OVERRIDE_TYPE_WILDCARD (5)
 
 /* A special resource value to indicate a resource wildcard */
 #define THREAD_QOS_OVERRIDE_RESOURCE_WILDCARD (~((user_addr_t)0))
 
 struct thread_qos_policy {
-	integer_t qos_tier;
-	integer_t tier_importance;
+  integer_t qos_tier;
+  integer_t tier_importance;
 };
 
-typedef struct thread_qos_policy       thread_qos_policy_data_t;
-typedef struct thread_qos_policy      *thread_qos_policy_t;
+typedef struct thread_qos_policy thread_qos_policy_data_t;
+typedef struct thread_qos_policy *thread_qos_policy_t;
 
-#define THREAD_QOS_POLICY_COUNT    ((mach_msg_type_number_t) \
-	(sizeof (thread_qos_policy_data_t) / sizeof (integer_t)))
+#define THREAD_QOS_POLICY_COUNT                                                \
+  ((mach_msg_type_number_t)(sizeof(thread_qos_policy_data_t) /                 \
+                            sizeof(integer_t)))
 
 /*
  * THREAD_TIME_CONSTRAINT_WITH_PRIORITY_POLICY:
@@ -176,47 +178,51 @@ typedef struct thread_qos_policy      *thread_qos_policy_t;
  * for system use and attempts to set them will fail.
  */
 
-#define THREAD_TIME_CONSTRAINT_WITH_PRIORITY_POLICY     10
+#define THREAD_TIME_CONSTRAINT_WITH_PRIORITY_POLICY 10
 
 struct thread_time_constraint_with_priority_policy {
-	uint32_t                period;
-	uint32_t                computation;
-	uint32_t                constraint;
-	boolean_t               preemptible;
-	uint32_t                priority;
+  uint32_t period;
+  uint32_t computation;
+  uint32_t constraint;
+  boolean_t preemptible;
+  uint32_t priority;
 };
 
-typedef struct thread_time_constraint_with_priority_policy    \
-        thread_time_constraint_with_priority_policy_data_t;
-typedef struct thread_time_constraint_with_priority_policy    \
-        *thread_time_constraint_with_priority_policy_t;
+typedef struct thread_time_constraint_with_priority_policy
+    thread_time_constraint_with_priority_policy_data_t;
+typedef struct thread_time_constraint_with_priority_policy
+    *thread_time_constraint_with_priority_policy_t;
 
-#define THREAD_TIME_CONSTRAINT_WITH_PRIORITY_POLICY_COUNT     ((mach_msg_type_number_t) \
-	(sizeof (thread_time_constraint_with_priority_policy_data_t) / sizeof (integer_t)))
+#define THREAD_TIME_CONSTRAINT_WITH_PRIORITY_POLICY_COUNT                             \
+  ((mach_msg_type_number_t)(sizeof(                                                   \
+                                thread_time_constraint_with_priority_policy_data_t) / \
+                            sizeof(integer_t)))
 
-#define TIME_CONSTRAINT_POLICY_DEFAULT_PRIORITY          97
-#define TIME_CONSTRAINT_POLICY_MAXIMUM_PRIORITY         127
+#define TIME_CONSTRAINT_POLICY_DEFAULT_PRIORITY 97
+#define TIME_CONSTRAINT_POLICY_MAXIMUM_PRIORITY 127
 
 /*
- * THREAD_REQUESTED_STATE_POLICY: Retrieves just the thread's requested qos policy
+ * THREAD_REQUESTED_STATE_POLICY: Retrieves just the thread's requested qos
+ * policy
  */
 #define THREAD_REQUESTED_STATE_POLICY 11
 
 struct thread_requested_qos_policy {
-	integer_t  thrq_base_qos;
-	integer_t  thrq_qos_relprio;
-	integer_t  thrq_qos_override;
-	integer_t  thrq_qos_promote;
-	integer_t  thrq_qos_kevent_override;
-	integer_t  thrq_qos_workq_override;
-	integer_t  thrq_qos_wlsvc_override;
+  integer_t thrq_base_qos;
+  integer_t thrq_qos_relprio;
+  integer_t thrq_qos_override;
+  integer_t thrq_qos_promote;
+  integer_t thrq_qos_kevent_override;
+  integer_t thrq_qos_workq_override;
+  integer_t thrq_qos_wlsvc_override;
 };
 
 typedef struct thread_requested_qos_policy thread_requested_qos_policy_data_t;
 typedef struct thread_requested_qos_policy *thread_requested_qos_policy_t;
 
-#define THREAD_REQUESTED_STATE_POLICY_COUNT ((mach_msg_type_number_t) \
-	(sizeof(thread_requested_qos_policy_data_t) / sizeof (integer_t)))
+#define THREAD_REQUESTED_STATE_POLICY_COUNT                                    \
+  ((mach_msg_type_number_t)(sizeof(thread_requested_qos_policy_data_t) /       \
+                            sizeof(integer_t)))
 
 /*
  * Internal bitfields are privately exported for revlocked tracing tools like
@@ -229,48 +235,54 @@ typedef struct thread_requested_qos_policy *thread_requested_qos_policy_t;
 #define THREAD_POLICY_INTERNAL_STRUCT_VERSION 7
 
 struct thread_requested_policy {
-	uint64_t        thrp_int_darwinbg       :1,     /* marked as darwinbg via setpriority */
-	    thrp_ext_darwinbg       :1,
-	    thrp_int_iotier         :2,                 /* IO throttle tier */
-	    thrp_ext_iotier         :2,
-	    thrp_int_iopassive      :1,                 /* should IOs cause lower tiers to be throttled */
-	    thrp_ext_iopassive      :1,
-	    thrp_latency_qos        :3,                 /* Timer latency QoS */
-	    thrp_through_qos        :3,                 /* Computation throughput QoS */
+  uint64_t thrp_int_darwinbg : 1, /* marked as darwinbg via setpriority */
+      thrp_ext_darwinbg : 1, thrp_int_iotier : 2, /* IO throttle tier */
+      thrp_ext_iotier : 2,
+      thrp_int_iopassive : 1, /* should IOs cause lower tiers to be throttled */
+      thrp_ext_iopassive : 1, thrp_latency_qos : 3, /* Timer latency QoS */
+      thrp_through_qos : 3, /* Computation throughput QoS */
 
-	    thrp_pidbind_bg         :1,                 /* task i'm bound to is marked 'watchbg' */
-	    thrp_qos                :3,                 /* thread qos class */
-	    thrp_qos_relprio        :4,                 /* thread qos relative priority (store as inverse, -10 -> 0xA) */
-	    thrp_qos_override       :3,                 /* thread qos class override */
-	    thrp_qos_promote        :3,                 /* thread qos class from promotion */
-	    thrp_qos_kevent_override:3,                 /* thread qos class from kevent override */
-	    thrp_terminated         :1,                 /* heading for termination */
-	    thrp_qos_workq_override :3,                 /* thread qos class override (workq) */
-	    thrp_qos_wlsvc_override :3,                 /* workloop servicer qos class override */
-	    thrp_iotier_kevent_override :2,             /* thread iotier from kevent override */
-	    thrp_wi_driven          :1,                 /* thread priority from work interval */
+      thrp_pidbind_bg : 1, /* task i'm bound to is marked 'watchbg' */
+      thrp_qos : 3,        /* thread qos class */
+      thrp_qos_relprio
+      : 4, /* thread qos relative priority (store as inverse, -10 -> 0xA) */
+      thrp_qos_override : 3,        /* thread qos class override */
+      thrp_qos_promote : 3,         /* thread qos class from promotion */
+      thrp_qos_kevent_override : 3, /* thread qos class from kevent override */
+      thrp_terminated : 1,          /* heading for termination */
+      thrp_qos_workq_override : 3,  /* thread qos class override (workq) */
+      thrp_qos_wlsvc_override : 3,  /* workloop servicer qos class override */
+      thrp_iotier_kevent_override : 2, /* thread iotier from kevent override */
+      thrp_wi_driven : 1,              /* thread priority from work interval */
 
-	    thrp_reserved           :23;
+      thrp_reserved : 23;
 };
 
 struct thread_effective_policy {
-	uint64_t        thep_darwinbg           :1,     /* marked as 'background', and sockets are marked bg when created */
-	    thep_io_tier            :2,                 /* effective throttle tier */
-	    thep_io_passive         :1,                 /* should IOs cause lower tiers to be throttled */
-	    thep_all_sockets_bg     :1,                 /* All existing sockets in process are marked as bg (thread: all created by thread) */
-	    thep_new_sockets_bg     :1,                 /* Newly created sockets should be marked as bg */
-	    thep_terminated         :1,                 /* all throttles have been removed for quick exit or SIGTERM handling */
-	    thep_qos_ui_is_urgent   :1,                 /* bump UI-Interactive QoS up to the urgent preemption band */
-	    thep_latency_qos        :3,                 /* Timer latency QoS level */
-	    thep_through_qos        :3,                 /* Computation throughput QoS level */
+  uint64_t thep_darwinbg
+      : 1, /* marked as 'background', and sockets are marked bg when created */
+      thep_io_tier : 2,    /* effective throttle tier */
+      thep_io_passive : 1, /* should IOs cause lower tiers to be throttled */
+      thep_all_sockets_bg : 1, /* All existing sockets in process are marked as
+                                  bg (thread: all created by thread) */
+      thep_new_sockets_bg
+      : 1,                 /* Newly created sockets should be marked as bg */
+      thep_terminated : 1, /* all throttles have been removed for quick exit or
+                              SIGTERM handling */
+      thep_qos_ui_is_urgent
+      : 1, /* bump UI-Interactive QoS up to the urgent preemption band */
+      thep_latency_qos : 3, /* Timer latency QoS level */
+      thep_through_qos : 3, /* Computation throughput QoS level */
 
-	    thep_qos                :3,                 /* thread qos class */
-	    thep_qos_relprio        :4,                 /* thread qos relative priority (store as inverse, -10 -> 0xA) */
-	    thep_qos_promote        :3,                 /* thread qos class used for promotion */
-	    thep_promote_above_task :1,                 /* thread is promoted above task-level clamp */
-	    thep_wi_driven          :1,                 /* thread priority is driven by work interval */
+      thep_qos : 3, /* thread qos class */
+      thep_qos_relprio
+      : 4, /* thread qos relative priority (store as inverse, -10 -> 0xA) */
+      thep_qos_promote : 3, /* thread qos class used for promotion */
+      thep_promote_above_task
+      : 1,                /* thread is promoted above task-level clamp */
+      thep_wi_driven : 1, /* thread priority is driven by work interval */
 
-	    thep_reserved           :38;
+      thep_reserved : 38;
 };
 
 #endif

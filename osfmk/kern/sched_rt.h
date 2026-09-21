@@ -30,8 +30,8 @@
 #define _KERN_SCHED_RT_H_
 
 #include <kern/kern_types.h>
-#include <kern/sched_common.h>
 #include <kern/processor.h>
+#include <kern/sched_common.h>
 #include <kern/sched_prim.h>
 
 __BEGIN_DECLS
@@ -73,7 +73,8 @@ void sched_rt_init_completed(void);
  * computed from the matrix.
  */
 
-void              sched_rt_config_set(pset_id_t src_pset, pset_id_t dst_pset, sched_clutch_edge edge_config);
+void sched_rt_config_set(pset_id_t src_pset, pset_id_t dst_pset,
+                         sched_clutch_edge edge_config);
 sched_clutch_edge sched_rt_config_get(pset_id_t src_pset, pset_id_t dst_pset);
 
 /*
@@ -88,8 +89,10 @@ sched_clutch_edge sched_rt_config_get(pset_id_t src_pset, pset_id_t dst_pset);
  * first by source pset (major), then by destination pset (minor).
  */
 
-void sched_rt_matrix_get(sched_clutch_edge *rt_matrix, bool *edge_requests, uint64_t num_psets);
-void sched_rt_matrix_set(sched_clutch_edge *rt_matrix, bool *edge_changes, uint64_t num_psets);
+void sched_rt_matrix_get(sched_clutch_edge *rt_matrix, bool *edge_requests,
+                         uint64_t num_psets);
+void sched_rt_matrix_set(sched_clutch_edge *rt_matrix, bool *edge_changes,
+                         uint64_t num_psets);
 
 #endif /* CONFIG_SCHED_EDGE */
 
@@ -97,9 +100,12 @@ void sched_rt_matrix_set(sched_clutch_edge *rt_matrix, bool *edge_changes, uint6
 
 #if CONFIG_SCHED_SMT
 /* SMT-aware callout for rt_choose_processor. */
-processor_t sched_rtlocal_choose_processor_smt(processor_set_t starting_pset, processor_t processor, thread_t thread);
-#else /* !CONFIG_SCHED_SMT */
-processor_t sched_rt_choose_processor(processor_set_t starting_pset, processor_t processor, thread_t thread);
+processor_t sched_rtlocal_choose_processor_smt(processor_set_t starting_pset,
+                                               processor_t processor,
+                                               thread_t thread);
+#else  /* !CONFIG_SCHED_SMT */
+processor_t sched_rt_choose_processor(processor_set_t starting_pset,
+                                      processor_t processor, thread_t thread);
 #endif /* !CONFIG_SCHED_SMT */
 
 #if CONFIG_SCHED_EDGE
@@ -127,40 +133,39 @@ uint64_t rt_deadline_add(uint64_t d, uint64_t e);
 
 cpumap_t pset_available_but_not_running_rt_threads_cpumap(processor_set_t pset);
 
-processor_t
-pset_choose_furthest_deadline_processor_for_realtime_thread(
-	processor_set_t pset,
-	int             max_pri,
-	uint64_t        minimum_deadline,
-	processor_t     skip_processor,
-	bool            skip_spills,
-	bool            include_ast_urgent_pending_cpus);
+processor_t pset_choose_furthest_deadline_processor_for_realtime_thread(
+    processor_set_t pset, int max_pri, uint64_t minimum_deadline,
+    processor_t skip_processor, bool skip_spills,
+    bool include_ast_urgent_pending_cpus);
 
 #if CONFIG_SCHED_SMT
 processor_t pset_choose_processor_for_realtime_thread_smt(
-	processor_set_t pset,
-	processor_t     skip_processor,
-	bool            consider_secondaries,
-	bool            skip_spills);
-#else /* !CONFIG_SCHED_SMT */
-processor_t
-pset_choose_processor_for_realtime_thread(
-	processor_set_t pset,
-	processor_t     skip_processor,
-	bool            skip_spills);
+    processor_set_t pset, processor_t skip_processor, bool consider_secondaries,
+    bool skip_spills);
+#else  /* !CONFIG_SCHED_SMT */
+processor_t pset_choose_processor_for_realtime_thread(
+    processor_set_t pset, processor_t skip_processor, bool skip_spills);
 #endif /* !CONFIG_SCHED_SMT */
 
 #if CONFIG_SCHED_EDGE
-bool     rt_pset_has_stealable_threads(processor_set_t pset);
-void     pset_update_rt_stealable_state(processor_set_t pset);
+bool rt_pset_has_stealable_threads(processor_set_t pset);
+void pset_update_rt_stealable_state(processor_set_t pset);
 /* Realtime spill is only supported on platforms with the edge scheduler. */
-bool rt_choose_next_processor_for_spill_IPI(processor_set_t starting_pset, processor_t chosen_processor, processor_t *result_processor, sched_ipi_type_t *result_ipi_type);
+bool rt_choose_next_processor_for_spill_IPI(processor_set_t starting_pset,
+                                            processor_t chosen_processor,
+                                            processor_t *result_processor,
+                                            sched_ipi_type_t *result_ipi_type);
 #else /* !CONFIG_SCHED_EDGE */
-#define pset_update_rt_stealable_state(x) do {(void) x;} while (0)
+#define pset_update_rt_stealable_state(x)                                      \
+  do {                                                                         \
+    (void)x;                                                                   \
+  } while (0)
 #endif /* !CONFIG_SCHED_EDGE */
 
 bool rt_pset_needs_a_followup_IPI(processor_set_t pset);
-void rt_choose_next_processor_for_followup_IPI(processor_set_t pset, processor_t chosen_processor, processor_t *result_processor, sched_ipi_type_t *result_ipi_type);
+void rt_choose_next_processor_for_followup_IPI(
+    processor_set_t pset, processor_t chosen_processor,
+    processor_t *result_processor, sched_ipi_type_t *result_ipi_type);
 
 bool rt_clear_pending_spill(processor_t processor, int reason);
 
@@ -168,19 +173,22 @@ bool rt_clear_pending_spill(processor_t processor, int reason);
 
 #if DEBUG || SCHED_TEST_HARNESS
 void check_rt_runq_consistency(rt_queue_t rt_run_queue, thread_t thread);
-#define CHECK_RT_RUNQ_CONSISTENCY(q, th)    check_rt_runq_consistency(q, th)
+#define CHECK_RT_RUNQ_CONSISTENCY(q, th) check_rt_runq_consistency(q, th)
 #else /* !(DEBUG || SCHED_TEST_HARNESS) */
-#define CHECK_RT_RUNQ_CONSISTENCY(q, th)    do {} while (0)
+#define CHECK_RT_RUNQ_CONSISTENCY(q, th)                                       \
+  do {                                                                         \
+  } while (0)
 #endif /* !(DEBUG || SCHED_TEST_HARNESS) */
 
-int      rt_runq_count(processor_set_t);
+int rt_runq_count(processor_set_t);
 thread_t rt_runq_dequeue(rt_queue_t rt_run_queue);
 uint64_t rt_runq_earliest_deadline(processor_set_t);
 thread_t rt_runq_first(rt_queue_t rt_run_queue);
-bool     rt_runq_insert(processor_t processor, processor_set_t pset, thread_t thread);
-bool     rt_runq_is_low_latency(processor_set_t pset);
-int      rt_runq_priority(processor_set_t pset);
-void     rt_runq_remove(rt_queue_t rt_run_queue, thread_t thread);
+bool rt_runq_insert(processor_t processor, processor_set_t pset,
+                    thread_t thread);
+bool rt_runq_is_low_latency(processor_set_t pset);
+int rt_runq_priority(processor_set_t pset);
+void rt_runq_remove(rt_queue_t rt_run_queue, thread_t thread);
 
 __END_DECLS
 

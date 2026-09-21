@@ -48,10 +48,11 @@
 
 #if XNU_TARGET_OS_OSX && defined(__arm64__)
 /*
- * These control whether the compressor thread is filling more than one segment at time. It's enabled only in macOS
- * since the goal is to better handle multiple processes that do page-outs at the same time. Processes in
- * embedded platforms are less likely to run more than one app at a time so this optimization is less likely
- * to be helpful.
+ * These control whether the compressor thread is filling more than one segment
+ * at time. It's enabled only in macOS since the goal is to better handle
+ * multiple processes that do page-outs at the same time. Processes in embedded
+ * platforms are less likely to run more than one app at a time so this
+ * optimization is less likely to be helpful.
  */
 #define COMPRESSOR_PAGEOUT_CHEADS_MAX_COUNT 16
 #define COMPRESSOR_PAGEOUT_CHEADS_BITS 4

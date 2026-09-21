@@ -30,11 +30,11 @@
  *      Includes Unicode 3.2 decomposition code derived from Core Foundation
  */
 
-#include <sys/param.h>
-#include <sys/utfconv.h>
+#include <libkern/OSByteOrder.h>
 #include <sys/errno.h>
 #include <sys/malloc.h>
-#include <libkern/OSByteOrder.h>
+#include <sys/param.h>
+#include <sys/utfconv.h>
 
 #if defined(KERNEL) && !defined(VFS_UTF8_UNIT_TEST)
 #include <kern/assert.h>
@@ -60,25 +60,22 @@
  * -----------------------------------------------------------------------------
  */
 
+#define UNICODE_TO_UTF8_LEN(c)                                                 \
+  ((c) < 0x0080 ? 1 : ((c) < 0x0800 ? 2 : (((c) & 0xf800) == 0xd800 ? 2 : 3)))
 
-#define UNICODE_TO_UTF8_LEN(c)  \
-	((c) < 0x0080 ? 1 : ((c) < 0x0800 ? 2 : (((c) & 0xf800) == 0xd800 ? 2 : 3)))
-
-#define UCS_ALT_NULL    0x2400
+#define UCS_ALT_NULL 0x2400
 
 /* Surrogate Pair Constants */
-#define SP_HALF_SHIFT   10
-#define SP_HALF_BASE    0x0010000u
-#define SP_HALF_MASK    0x3FFu
+#define SP_HALF_SHIFT 10
+#define SP_HALF_BASE 0x0010000u
+#define SP_HALF_MASK 0x3FFu
 
-#define SP_HIGH_FIRST   0xD800u
-#define SP_HIGH_LAST    0xDBFFu
-#define SP_LOW_FIRST    0xDC00u
-#define SP_LOW_LAST             0xDFFFu
-
+#define SP_HIGH_FIRST 0xD800u
+#define SP_HIGH_LAST 0xDBFFu
+#define SP_LOW_FIRST 0xDC00u
+#define SP_LOW_LAST 0xDFFFu
 
 #include "vfs_utfconvdata.h"
-
 
 /*
  * Test for a combining character.
@@ -86,25 +83,23 @@
  * Similar to __CFUniCharIsNonBaseCharacter except that
  * unicode_combinable also includes Hangul Jamo characters.
  */
-int
-unicode_combinable(u_int16_t character)
-{
-	const u_int8_t *bitmap = __CFUniCharCombiningBitmap;
-	u_int8_t value;
+int unicode_combinable(u_int16_t character) {
+  const u_int8_t *bitmap = __CFUniCharCombiningBitmap;
+  u_int8_t value;
 
-	if (character < 0x0300) {
-		return 0;
-	}
+  if (character < 0x0300) {
+    return 0;
+  }
 
-	value = bitmap[(character >> 8) & 0xFF];
+  value = bitmap[(character >> 8) & 0xFF];
 
-	if (value == 0xFF) {
-		return 1;
-	} else if (value) {
-		bitmap = bitmap + ((value - 1) * 32) + 256;
-		return bitmap[(character & 0xFF) / 8] & (1 << (character % 8)) ? 1 : 0;
-	}
-	return 0;
+  if (value == 0xFF) {
+    return 1;
+  } else if (value) {
+    bitmap = bitmap + ((value - 1) * 32) + 256;
+    return bitmap[(character & 0xFF) / 8] & (1 << (character % 8)) ? 1 : 0;
+  }
+  return 0;
 }
 
 /*
@@ -112,68 +107,58 @@ unicode_combinable(u_int16_t character)
  *
  * Similar to __CFUniCharIsDecomposableCharacter.
  */
-int
-unicode_decomposeable(u_int16_t character)
-{
-	const u_int8_t *bitmap = __CFUniCharDecomposableBitmap;
-	u_int8_t value;
+int unicode_decomposeable(u_int16_t character) {
+  const u_int8_t *bitmap = __CFUniCharDecomposableBitmap;
+  u_int8_t value;
 
-	if (character < 0x00C0) {
-		return 0;
-	}
+  if (character < 0x00C0) {
+    return 0;
+  }
 
-	value = bitmap[(character >> 8) & 0xFF];
+  value = bitmap[(character >> 8) & 0xFF];
 
-	if (value == 0xFF) {
-		return 1;
-	} else if (value) {
-		bitmap = bitmap + ((value - 1) * 32) + 256;
-		return bitmap[(character & 0xFF) / 8] & (1 << (character % 8)) ? 1 : 0;
-	}
-	return 0;
+  if (value == 0xFF) {
+    return 1;
+  } else if (value) {
+    bitmap = bitmap + ((value - 1) * 32) + 256;
+    return bitmap[(character & 0xFF) / 8] & (1 << (character % 8)) ? 1 : 0;
+  }
+  return 0;
 }
-
 
 /*
  * Get the combing class.
  *
  * Similar to CFUniCharGetCombiningPropertyForCharacter.
  */
-static inline u_int8_t
-get_combining_class(u_int16_t character)
-{
-	const u_int8_t *bitmap = __CFUniCharCombiningPropertyBitmap;
+static inline u_int8_t get_combining_class(u_int16_t character) {
+  const u_int8_t *bitmap = __CFUniCharCombiningPropertyBitmap;
 
-	u_int8_t value = bitmap[(character >> 8)];
+  u_int8_t value = bitmap[(character >> 8)];
 
-	if (value) {
-		bitmap = bitmap + (value * 256);
-		return bitmap[character % 256];
-	}
-	return 0;
+  if (value) {
+    bitmap = bitmap + (value * 256);
+    return bitmap[character % 256];
+  }
+  return 0;
 }
-
 
 static int unicode_decompose(u_int16_t character, u_int16_t *convertedChars);
 
 static u_int16_t unicode_combine(u_int16_t base, u_int16_t combining);
 
-static void prioritysort(u_int16_t* characters, int count);
+static void prioritysort(u_int16_t *characters, int count);
 
-static u_int16_t  ucs_to_sfm(u_int16_t ucs_ch, int lastchar);
+static u_int16_t ucs_to_sfm(u_int16_t ucs_ch, int lastchar);
 
-static u_int16_t  sfm_to_ucs(u_int16_t ucs_ch);
+static u_int16_t sfm_to_ucs(u_int16_t ucs_ch);
 
+char utf_extrabytes[32] = {0,  0,  0, 0, 0, 0,  0,  0,  0,  0,  0,
+                           0,  0,  0, 0, 0, -1, -1, -1, -1, -1, -1,
+                           -1, -1, 1, 1, 1, 1,  2,  2,  3,  -1};
 
-char utf_extrabytes[32] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	-1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 2, 2, 3, -1
-};
-
-const char hexdigits[16] = {
-	'0', '1', '2', '3', '4', '5', '6', '7',
-	'8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-};
+const char hexdigits[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 /*
  * utf8_encodelen - Calculate the UTF-8 encoding length
@@ -199,47 +184,45 @@ const char hexdigits[16] = {
  * ERRORS
  *    None
  */
-size_t
-utf8_encodelen(const u_int16_t * ucsp, size_t ucslen, u_int16_t altslash, int flags)
-{
-	u_int16_t ucs_ch;
-	u_int16_t * chp = NULL;
-	u_int16_t sequence[8];
-	int extra = 0;
-	size_t charcnt;
-	int swapbytes = (flags & UTF_REVERSE_ENDIAN);
-	int decompose = (flags & UTF_DECOMPOSED);
-	size_t len;
+size_t utf8_encodelen(const u_int16_t *ucsp, size_t ucslen, u_int16_t altslash,
+                      int flags) {
+  u_int16_t ucs_ch;
+  u_int16_t *chp = NULL;
+  u_int16_t sequence[8];
+  int extra = 0;
+  size_t charcnt;
+  int swapbytes = (flags & UTF_REVERSE_ENDIAN);
+  int decompose = (flags & UTF_DECOMPOSED);
+  size_t len;
 
-	charcnt = ucslen / 2;
-	len = 0;
+  charcnt = ucslen / 2;
+  len = 0;
 
-	while (charcnt-- > 0) {
-		if (extra > 0) {
-			--extra;
-			ucs_ch = *chp++;
-		} else {
-			ucs_ch = *ucsp++;
-			if (swapbytes) {
-				ucs_ch = OSSwapInt16(ucs_ch);
-			}
-			if (ucs_ch == '/') {
-				ucs_ch = altslash ? altslash : '_';
-			} else if (ucs_ch == '\0') {
-				ucs_ch = UCS_ALT_NULL;
-			} else if (decompose && unicode_decomposeable(ucs_ch)) {
-				extra = unicode_decompose(ucs_ch, sequence) - 1;
-				charcnt += extra;
-				ucs_ch = sequence[0];
-				chp = &sequence[1];
-			}
-		}
-		len += UNICODE_TO_UTF8_LEN(ucs_ch);
-	}
+  while (charcnt-- > 0) {
+    if (extra > 0) {
+      --extra;
+      ucs_ch = *chp++;
+    } else {
+      ucs_ch = *ucsp++;
+      if (swapbytes) {
+        ucs_ch = OSSwapInt16(ucs_ch);
+      }
+      if (ucs_ch == '/') {
+        ucs_ch = altslash ? altslash : '_';
+      } else if (ucs_ch == '\0') {
+        ucs_ch = UCS_ALT_NULL;
+      } else if (decompose && unicode_decomposeable(ucs_ch)) {
+        extra = unicode_decompose(ucs_ch, sequence) - 1;
+        charcnt += extra;
+        ucs_ch = sequence[0];
+        chp = &sequence[1];
+      }
+    }
+    len += UNICODE_TO_UTF8_LEN(ucs_ch);
+  }
 
-	return len;
+  return len;
 }
-
 
 /*
  * utf8_encodestr - Encodes a Unicode string to UTF-8
@@ -266,145 +249,141 @@ utf8_encodelen(const u_int16_t * ucsp, size_t ucslen, u_int16_t altslash, int fl
  *
  *    EINVAL: Illegal char found; char was replaced by an '_'.
  */
-int
-utf8_encodestr(const u_int16_t * ucsp, size_t ucslen, u_int8_t * utf8p,
-    size_t * utf8len, size_t buflen, u_int16_t altslash, int flags)
-{
-	u_int8_t * bufstart;
-	u_int8_t * bufend;
-	u_int16_t ucs_ch;
-	u_int16_t * chp = NULL;
-	u_int16_t sequence[8];
-	int extra = 0;
-	size_t charcnt;
-	int swapbytes = (flags & UTF_REVERSE_ENDIAN);
-	int nullterm  = ((flags & UTF_NO_NULL_TERM) == 0);
-	int decompose = (flags & UTF_DECOMPOSED);
-	int sfmconv = (flags & UTF_SFM_CONVERSIONS);
-	int result = 0;
+int utf8_encodestr(const u_int16_t *ucsp, size_t ucslen, u_int8_t *utf8p,
+                   size_t *utf8len, size_t buflen, u_int16_t altslash,
+                   int flags) {
+  u_int8_t *bufstart;
+  u_int8_t *bufend;
+  u_int16_t ucs_ch;
+  u_int16_t *chp = NULL;
+  u_int16_t sequence[8];
+  int extra = 0;
+  size_t charcnt;
+  int swapbytes = (flags & UTF_REVERSE_ENDIAN);
+  int nullterm = ((flags & UTF_NO_NULL_TERM) == 0);
+  int decompose = (flags & UTF_DECOMPOSED);
+  int sfmconv = (flags & UTF_SFM_CONVERSIONS);
+  int result = 0;
 
-	bufstart = utf8p;
-	bufend = bufstart + buflen;
-	if (nullterm) {
-		--bufend;
-	}
-	charcnt = ucslen / 2;
+  bufstart = utf8p;
+  bufend = bufstart + buflen;
+  if (nullterm) {
+    --bufend;
+  }
+  charcnt = ucslen / 2;
 
-	while (charcnt-- > 0) {
-		if (extra > 0) {
-			--extra;
-			ucs_ch = *chp++;
-		} else {
-			ucs_ch = swapbytes ? OSSwapInt16(*ucsp++) : *ucsp++;
+  while (charcnt-- > 0) {
+    if (extra > 0) {
+      --extra;
+      ucs_ch = *chp++;
+    } else {
+      ucs_ch = swapbytes ? OSSwapInt16(*ucsp++) : *ucsp++;
 
-			if (decompose && unicode_decomposeable(ucs_ch)) {
-				extra = unicode_decompose(ucs_ch, sequence) - 1;
-				charcnt += extra;
-				ucs_ch = sequence[0];
-				chp = &sequence[1];
-			}
-		}
+      if (decompose && unicode_decomposeable(ucs_ch)) {
+        extra = unicode_decompose(ucs_ch, sequence) - 1;
+        charcnt += extra;
+        ucs_ch = sequence[0];
+        chp = &sequence[1];
+      }
+    }
 
-		/* Slash and NULL are not permitted */
-		if (ucs_ch == '/') {
-			if (altslash) {
-				ucs_ch = altslash;
-			} else {
-				ucs_ch = '_';
-				result = EINVAL;
-			}
-		} else if (ucs_ch == '\0') {
-			ucs_ch = UCS_ALT_NULL;
-		}
+    /* Slash and NULL are not permitted */
+    if (ucs_ch == '/') {
+      if (altslash) {
+        ucs_ch = altslash;
+      } else {
+        ucs_ch = '_';
+        result = EINVAL;
+      }
+    } else if (ucs_ch == '\0') {
+      ucs_ch = UCS_ALT_NULL;
+    }
 
-		if (ucs_ch < 0x0080) {
-			if (utf8p >= bufend) {
-				result = ENAMETOOLONG;
-				break;
-			}
-			*utf8p++ = (u_int8_t)ucs_ch;
-		} else if (ucs_ch < 0x800) {
-			if ((utf8p + 1) >= bufend) {
-				result = ENAMETOOLONG;
-				break;
-			}
-			*utf8p++ = 0xc0 | (u_int8_t)(ucs_ch >> 6);
-			*utf8p++ = 0x80 | (0x3f & ucs_ch);
-		} else {
-			/* These chars never valid Unicode. */
-			if (ucs_ch == 0xFFFE || ucs_ch == 0xFFFF) {
-				result = EINVAL;
-				break;
-			}
+    if (ucs_ch < 0x0080) {
+      if (utf8p >= bufend) {
+        result = ENAMETOOLONG;
+        break;
+      }
+      *utf8p++ = (u_int8_t)ucs_ch;
+    } else if (ucs_ch < 0x800) {
+      if ((utf8p + 1) >= bufend) {
+        result = ENAMETOOLONG;
+        break;
+      }
+      *utf8p++ = 0xc0 | (u_int8_t)(ucs_ch >> 6);
+      *utf8p++ = 0x80 | (0x3f & ucs_ch);
+    } else {
+      /* These chars never valid Unicode. */
+      if (ucs_ch == 0xFFFE || ucs_ch == 0xFFFF) {
+        result = EINVAL;
+        break;
+      }
 
-			/* Combine valid surrogate pairs */
-			if (ucs_ch >= SP_HIGH_FIRST && ucs_ch <= SP_HIGH_LAST
-			    && charcnt > 0) {
-				u_int16_t ch2;
-				u_int32_t pair;
+      /* Combine valid surrogate pairs */
+      if (ucs_ch >= SP_HIGH_FIRST && ucs_ch <= SP_HIGH_LAST && charcnt > 0) {
+        u_int16_t ch2;
+        u_int32_t pair;
 
-				ch2 = swapbytes ? OSSwapInt16(*ucsp) : *ucsp;
-				if (ch2 >= SP_LOW_FIRST && ch2 <= SP_LOW_LAST) {
-					pair = ((ucs_ch - SP_HIGH_FIRST) << SP_HALF_SHIFT)
-					    + (ch2 - SP_LOW_FIRST) + SP_HALF_BASE;
-					if ((utf8p + 3) >= bufend) {
-						result = ENAMETOOLONG;
-						break;
-					}
-					--charcnt;
-					++ucsp;
-					*utf8p++ = 0xf0 | (u_int8_t)(pair >> 18);
-					*utf8p++ = 0x80 | (0x3f & (pair >> 12));
-					*utf8p++ = 0x80 | (0x3f & (pair >> 6));
-					*utf8p++ = 0x80 | (0x3f & pair);
-					continue;
-				}
-			} else if (sfmconv) {
-				ucs_ch = sfm_to_ucs(ucs_ch);
-				if (ucs_ch < 0x0080) {
-					if (utf8p >= bufend) {
-						result = ENAMETOOLONG;
-						break;
-					}
-					*utf8p++ = (u_int8_t)ucs_ch;
-					continue;
-				}
-			}
-			if ((utf8p + 2) >= bufend) {
-				result = ENAMETOOLONG;
-				break;
-			}
-			*utf8p++ = 0xe0 | (ucs_ch >> 12);
-			*utf8p++ = 0x80 | (0x3f & (ucs_ch >> 6));
-			*utf8p++ = 0x80 | (0x3f & ucs_ch);
-		}
-	}
+        ch2 = swapbytes ? OSSwapInt16(*ucsp) : *ucsp;
+        if (ch2 >= SP_LOW_FIRST && ch2 <= SP_LOW_LAST) {
+          pair = ((ucs_ch - SP_HIGH_FIRST) << SP_HALF_SHIFT) +
+                 (ch2 - SP_LOW_FIRST) + SP_HALF_BASE;
+          if ((utf8p + 3) >= bufend) {
+            result = ENAMETOOLONG;
+            break;
+          }
+          --charcnt;
+          ++ucsp;
+          *utf8p++ = 0xf0 | (u_int8_t)(pair >> 18);
+          *utf8p++ = 0x80 | (0x3f & (pair >> 12));
+          *utf8p++ = 0x80 | (0x3f & (pair >> 6));
+          *utf8p++ = 0x80 | (0x3f & pair);
+          continue;
+        }
+      } else if (sfmconv) {
+        ucs_ch = sfm_to_ucs(ucs_ch);
+        if (ucs_ch < 0x0080) {
+          if (utf8p >= bufend) {
+            result = ENAMETOOLONG;
+            break;
+          }
+          *utf8p++ = (u_int8_t)ucs_ch;
+          continue;
+        }
+      }
+      if ((utf8p + 2) >= bufend) {
+        result = ENAMETOOLONG;
+        break;
+      }
+      *utf8p++ = 0xe0 | (ucs_ch >> 12);
+      *utf8p++ = 0x80 | (0x3f & (ucs_ch >> 6));
+      *utf8p++ = 0x80 | (0x3f & ucs_ch);
+    }
+  }
 
-	*utf8len = utf8p - bufstart;
-	if (nullterm) {
-		*utf8p++ = '\0';
-	}
+  *utf8len = utf8p - bufstart;
+  if (nullterm) {
+    *utf8p++ = '\0';
+  }
 
-	return result;
+  return result;
 }
 
 // Pushes a character taking account of combining character sequences
-static void
-push(uint16_t ucs_ch, int *combcharcnt, uint16_t **ucsp)
-{
-	/*
-	 * Make multiple combining character sequences canonical
-	 */
-	if (unicode_combinable(ucs_ch)) {
-		++*combcharcnt;         /* start tracking a run */
-	} else if (*combcharcnt) {
-		if (*combcharcnt > 1) {
-			prioritysort(*ucsp - *combcharcnt, *combcharcnt);
-		}
-		*combcharcnt = 0;       /* start over */
-	}
+static void push(uint16_t ucs_ch, int *combcharcnt, uint16_t **ucsp) {
+  /*
+   * Make multiple combining character sequences canonical
+   */
+  if (unicode_combinable(ucs_ch)) {
+    ++*combcharcnt; /* start tracking a run */
+  } else if (*combcharcnt) {
+    if (*combcharcnt > 1) {
+      prioritysort(*ucsp - *combcharcnt, *combcharcnt);
+    }
+    *combcharcnt = 0; /* start over */
+  }
 
-	*(*ucsp)++ = ucs_ch;
+  *(*ucsp)++ = ucs_ch;
 }
 
 /*
@@ -435,320 +414,328 @@ push(uint16_t ucs_ch, int *combcharcnt, uint16_t **ucsp)
  *
  *    EINVAL: Illegal UTF-8 sequence found.
  */
-int
-utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
-    size_t *ucslen, size_t buflen, u_int16_t altslash, int flags)
-{
-	u_int16_t* bufstart;
-	u_int16_t* bufend;
-	unsigned int ucs_ch;
-	unsigned int byte;
-	int combcharcnt = 0;
-	int result = 0;
-	int decompose, precompose, escaping;
-	int sfmconv;
-	int extrabytes;
+int utf8_decodestr(const u_int8_t *utf8p, size_t utf8len, u_int16_t *ucsp,
+                   size_t *ucslen, size_t buflen, u_int16_t altslash,
+                   int flags) {
+  u_int16_t *bufstart;
+  u_int16_t *bufend;
+  unsigned int ucs_ch;
+  unsigned int byte;
+  int combcharcnt = 0;
+  int result = 0;
+  int decompose, precompose, escaping;
+  int sfmconv;
+  int extrabytes;
 
-	decompose  = (flags & UTF_DECOMPOSED);
-	precompose = (flags & UTF_PRECOMPOSED);
-	escaping   = (flags & UTF_ESCAPE_ILLEGAL);
-	sfmconv    = (flags & UTF_SFM_CONVERSIONS);
+  decompose = (flags & UTF_DECOMPOSED);
+  precompose = (flags & UTF_PRECOMPOSED);
+  escaping = (flags & UTF_ESCAPE_ILLEGAL);
+  sfmconv = (flags & UTF_SFM_CONVERSIONS);
 
-	bufstart = ucsp;
-	bufend = (u_int16_t *)((u_int8_t *)ucsp + buflen);
+  bufstart = ucsp;
+  bufend = (u_int16_t *)((u_int8_t *)ucsp + buflen);
 
-	while (utf8len-- > 0 && (byte = *utf8p++) != '\0') {
-		if ((ucsp + 1) > bufend) {
-			goto toolong;
-		}
+  while (utf8len-- > 0 && (byte = *utf8p++) != '\0') {
+    if ((ucsp + 1) > bufend) {
+      goto toolong;
+    }
 
-		/* check for ascii */
-		if (byte < 0x80) {
-			ucs_ch = sfmconv ? ucs_to_sfm((u_int16_t)byte, utf8len == 0) : byte;
-		} else {
-			u_int32_t ch;
+    /* check for ascii */
+    if (byte < 0x80) {
+      ucs_ch = sfmconv ? ucs_to_sfm((u_int16_t)byte, utf8len == 0) : byte;
+    } else {
+      u_int32_t ch;
 
-			extrabytes = utf_extrabytes[byte >> 3];
-			if ((extrabytes < 0) || ((int)utf8len < extrabytes)) {
-				goto escape;
-			}
-			utf8len -= extrabytes;
+      extrabytes = utf_extrabytes[byte >> 3];
+      if ((extrabytes < 0) || ((int)utf8len < extrabytes)) {
+        goto escape;
+      }
+      utf8len -= extrabytes;
 
-			switch (extrabytes) {
-			case 1:
-				ch = byte; ch <<= 6;   /* 1st byte */
-				byte = *utf8p++;       /* 2nd byte */
-				if ((byte >> 6) != 2) {
-					goto escape2;
-				}
-				ch += byte;
-				ch -= 0x00003080UL;
-				if (ch < 0x0080) {
-					goto escape2;
-				}
-				ucs_ch = ch;
-				break;
-			case 2:
-				ch = byte; ch <<= 6;   /* 1st byte */
-				byte = *utf8p++;       /* 2nd byte */
-				if ((byte >> 6) != 2) {
-					goto escape2;
-				}
-				ch += byte; ch <<= 6;
-				byte = *utf8p++;       /* 3rd byte */
-				if ((byte >> 6) != 2) {
-					goto escape3;
-				}
-				ch += byte;
-				ch -= 0x000E2080UL;
-				if (ch < 0x0800) {
-					goto escape3;
-				}
-				if (ch >= 0xD800) {
-					if (ch <= 0xDFFF) {
-						goto escape3;
-					}
-					if (ch == 0xFFFE || ch == 0xFFFF) {
-						goto escape3;
-					}
-				}
-				ucs_ch = ch;
-				break;
-			case 3:
-				ch = byte; ch <<= 6;   /* 1st byte */
-				byte = *utf8p++;       /* 2nd byte */
-				if ((byte >> 6) != 2) {
-					goto escape2;
-				}
-				ch += byte; ch <<= 6;
-				byte = *utf8p++;       /* 3rd byte */
-				if ((byte >> 6) != 2) {
-					goto escape3;
-				}
-				ch += byte; ch <<= 6;
-				byte = *utf8p++;       /* 4th byte */
-				if ((byte >> 6) != 2) {
-					goto escape4;
-				}
-				ch += byte;
-				ch -= 0x03C82080UL + SP_HALF_BASE;
-				ucs_ch = (ch >> SP_HALF_SHIFT) + SP_HIGH_FIRST;
-				if (ucs_ch < SP_HIGH_FIRST || ucs_ch > SP_HIGH_LAST) {
-					goto escape4;
-				}
-				push((uint16_t)ucs_ch, &combcharcnt, &ucsp);
-				if (ucsp >= bufend) {
-					goto toolong;
-				}
-				ucs_ch = (ch & SP_HALF_MASK) + SP_LOW_FIRST;
-				if (ucs_ch < SP_LOW_FIRST || ucs_ch > SP_LOW_LAST) {
-					--ucsp;
-					goto escape4;
-				}
-				*ucsp++ = (u_int16_t)ucs_ch;
-				continue;
-			default:
-				result = EINVAL;
-				goto exit;
-			}
-			if (decompose) {
-				if (unicode_decomposeable((u_int16_t)ucs_ch)) {
-					u_int16_t sequence[8] = {0};
-					int count, i;
+      switch (extrabytes) {
+      case 1:
+        ch = byte;
+        ch <<= 6;        /* 1st byte */
+        byte = *utf8p++; /* 2nd byte */
+        if ((byte >> 6) != 2) {
+          goto escape2;
+        }
+        ch += byte;
+        ch -= 0x00003080UL;
+        if (ch < 0x0080) {
+          goto escape2;
+        }
+        ucs_ch = ch;
+        break;
+      case 2:
+        ch = byte;
+        ch <<= 6;        /* 1st byte */
+        byte = *utf8p++; /* 2nd byte */
+        if ((byte >> 6) != 2) {
+          goto escape2;
+        }
+        ch += byte;
+        ch <<= 6;
+        byte = *utf8p++; /* 3rd byte */
+        if ((byte >> 6) != 2) {
+          goto escape3;
+        }
+        ch += byte;
+        ch -= 0x000E2080UL;
+        if (ch < 0x0800) {
+          goto escape3;
+        }
+        if (ch >= 0xD800) {
+          if (ch <= 0xDFFF) {
+            goto escape3;
+          }
+          if (ch == 0xFFFE || ch == 0xFFFF) {
+            goto escape3;
+          }
+        }
+        ucs_ch = ch;
+        break;
+      case 3:
+        ch = byte;
+        ch <<= 6;        /* 1st byte */
+        byte = *utf8p++; /* 2nd byte */
+        if ((byte >> 6) != 2) {
+          goto escape2;
+        }
+        ch += byte;
+        ch <<= 6;
+        byte = *utf8p++; /* 3rd byte */
+        if ((byte >> 6) != 2) {
+          goto escape3;
+        }
+        ch += byte;
+        ch <<= 6;
+        byte = *utf8p++; /* 4th byte */
+        if ((byte >> 6) != 2) {
+          goto escape4;
+        }
+        ch += byte;
+        ch -= 0x03C82080UL + SP_HALF_BASE;
+        ucs_ch = (ch >> SP_HALF_SHIFT) + SP_HIGH_FIRST;
+        if (ucs_ch < SP_HIGH_FIRST || ucs_ch > SP_HIGH_LAST) {
+          goto escape4;
+        }
+        push((uint16_t)ucs_ch, &combcharcnt, &ucsp);
+        if (ucsp >= bufend) {
+          goto toolong;
+        }
+        ucs_ch = (ch & SP_HALF_MASK) + SP_LOW_FIRST;
+        if (ucs_ch < SP_LOW_FIRST || ucs_ch > SP_LOW_LAST) {
+          --ucsp;
+          goto escape4;
+        }
+        *ucsp++ = (u_int16_t)ucs_ch;
+        continue;
+      default:
+        result = EINVAL;
+        goto exit;
+      }
+      if (decompose) {
+        if (unicode_decomposeable((u_int16_t)ucs_ch)) {
+          u_int16_t sequence[8] = {0};
+          int count, i;
 
-					count = unicode_decompose((u_int16_t)ucs_ch, sequence);
+          count = unicode_decompose((u_int16_t)ucs_ch, sequence);
 
-					for (i = 0; i < count; ++i) {
-						if (ucsp >= bufend) {
-							goto toolong;
-						}
+          for (i = 0; i < count; ++i) {
+            if (ucsp >= bufend) {
+              goto toolong;
+            }
 
-						push(sequence[i], &combcharcnt, &ucsp);
-					}
+            push(sequence[i], &combcharcnt, &ucsp);
+          }
 
-					continue;
-				}
-			} else if (precompose && (ucsp != bufstart)) {
-				u_int16_t composite, base;
+          continue;
+        }
+      } else if (precompose && (ucsp != bufstart)) {
+        u_int16_t composite, base;
 
-				if (unicode_combinable((u_int16_t)ucs_ch)) {
-					base = ucsp[-1];
-					composite = unicode_combine(base, (u_int16_t)ucs_ch);
-					if (composite) {
-						--ucsp;
-						ucs_ch = composite;
-					}
-				}
-			}
-			if (ucs_ch == UCS_ALT_NULL) {
-				ucs_ch = '\0';
-			}
-		}
-		if (ucs_ch == altslash) {
-			ucs_ch = '/';
-		}
+        if (unicode_combinable((u_int16_t)ucs_ch)) {
+          base = ucsp[-1];
+          composite = unicode_combine(base, (u_int16_t)ucs_ch);
+          if (composite) {
+            --ucsp;
+            ucs_ch = composite;
+          }
+        }
+      }
+      if (ucs_ch == UCS_ALT_NULL) {
+        ucs_ch = '\0';
+      }
+    }
+    if (ucs_ch == altslash) {
+      ucs_ch = '/';
+    }
 
-		push((u_int16_t)ucs_ch, &combcharcnt, &ucsp);
-		continue;
+    push((u_int16_t)ucs_ch, &combcharcnt, &ucsp);
+    continue;
 
-		/*
-		 * Escape illegal UTF-8 into something legal.
-		 */
-escape4:
-		utf8p -= 3;
-		goto escape;
-escape3:
-		utf8p -= 2;
-		goto escape;
-escape2:
-		utf8p -= 1;
-escape:
-		if (!escaping) {
-			result = EINVAL;
-			goto exit;
-		}
-		if (extrabytes > 0) {
-			utf8len += extrabytes;
-		}
-		byte = *(utf8p - 1);
+    /*
+     * Escape illegal UTF-8 into something legal.
+     */
+  escape4:
+    utf8p -= 3;
+    goto escape;
+  escape3:
+    utf8p -= 2;
+    goto escape;
+  escape2:
+    utf8p -= 1;
+  escape:
+    if (!escaping) {
+      result = EINVAL;
+      goto exit;
+    }
+    if (extrabytes > 0) {
+      utf8len += extrabytes;
+    }
+    byte = *(utf8p - 1);
 
-		if ((ucsp + 2) >= bufend) {
-			goto toolong;
-		}
+    if ((ucsp + 2) >= bufend) {
+      goto toolong;
+    }
 
-		/* Make a previous combining sequence canonical. */
-		if (combcharcnt > 1) {
-			prioritysort(ucsp - combcharcnt, combcharcnt);
-		}
-		combcharcnt = 0;
+    /* Make a previous combining sequence canonical. */
+    if (combcharcnt > 1) {
+      prioritysort(ucsp - combcharcnt, combcharcnt);
+    }
+    combcharcnt = 0;
 
-		ucs_ch = '%';
-		*ucsp++ = (u_int16_t)ucs_ch;
-		ucs_ch =  hexdigits[byte >> 4];
-		*ucsp++ = (u_int16_t)ucs_ch;
-		ucs_ch =  hexdigits[byte & 0x0F];
-		*ucsp++ = (u_int16_t)ucs_ch;
-	}
-	/*
-	 * Make a previous combining sequence canonical
-	 */
-	if (combcharcnt > 1) {
-		prioritysort(ucsp - combcharcnt, combcharcnt);
-	}
+    ucs_ch = '%';
+    *ucsp++ = (u_int16_t)ucs_ch;
+    ucs_ch = hexdigits[byte >> 4];
+    *ucsp++ = (u_int16_t)ucs_ch;
+    ucs_ch = hexdigits[byte & 0x0F];
+    *ucsp++ = (u_int16_t)ucs_ch;
+  }
+  /*
+   * Make a previous combining sequence canonical
+   */
+  if (combcharcnt > 1) {
+    prioritysort(ucsp - combcharcnt, combcharcnt);
+  }
 
-	if (flags & UTF_REVERSE_ENDIAN) {
-		uint16_t *p = bufstart;
-		while (p < ucsp) {
-			*p = OSSwapInt16(*p);
-			++p;
-		}
-	}
+  if (flags & UTF_REVERSE_ENDIAN) {
+    uint16_t *p = bufstart;
+    while (p < ucsp) {
+      *p = OSSwapInt16(*p);
+      ++p;
+    }
+  }
 
 exit:
-	*ucslen = (u_int8_t*)ucsp - (u_int8_t*)bufstart;
+  *ucslen = (u_int8_t *)ucsp - (u_int8_t *)bufstart;
 
-	return result;
+  return result;
 
 toolong:
-	result = ENAMETOOLONG;
-	goto exit;
+  result = ENAMETOOLONG;
+  goto exit;
 }
-
 
 /*
  * utf8_validatestr - Check for a valid UTF-8 string.
  */
-int
-utf8_validatestr(const u_int8_t* utf8p, size_t utf8len)
-{
-	unsigned int byte;
-	u_int32_t ch;
-	unsigned int ucs_ch;
-	size_t extrabytes;
+int utf8_validatestr(const u_int8_t *utf8p, size_t utf8len) {
+  unsigned int byte;
+  u_int32_t ch;
+  unsigned int ucs_ch;
+  size_t extrabytes;
 
-	while (utf8len-- > 0 && (byte = *utf8p++) != '\0') {
-		if (byte < 0x80) {
-			continue;  /* plain ascii */
-		}
-		extrabytes = utf_extrabytes[byte >> 3];
+  while (utf8len-- > 0 && (byte = *utf8p++) != '\0') {
+    if (byte < 0x80) {
+      continue; /* plain ascii */
+    }
+    extrabytes = utf_extrabytes[byte >> 3];
 
-		if (utf8len < extrabytes) {
-			goto invalid;
-		}
-		utf8len -= extrabytes;
+    if (utf8len < extrabytes) {
+      goto invalid;
+    }
+    utf8len -= extrabytes;
 
-		switch (extrabytes) {
-		case 1:
-			ch = byte; ch <<= 6;   /* 1st byte */
-			byte = *utf8p++;       /* 2nd byte */
-			if ((byte >> 6) != 2) {
-				goto invalid;
-			}
-			ch += byte;
-			ch -= 0x00003080UL;
-			if (ch < 0x0080) {
-				goto invalid;
-			}
-			break;
-		case 2:
-			ch = byte; ch <<= 6;   /* 1st byte */
-			byte = *utf8p++;       /* 2nd byte */
-			if ((byte >> 6) != 2) {
-				goto invalid;
-			}
-			ch += byte; ch <<= 6;
-			byte = *utf8p++;       /* 3rd byte */
-			if ((byte >> 6) != 2) {
-				goto invalid;
-			}
-			ch += byte;
-			ch -= 0x000E2080UL;
-			if (ch < 0x0800) {
-				goto invalid;
-			}
-			if (ch >= 0xD800) {
-				if (ch <= 0xDFFF) {
-					goto invalid;
-				}
-				if (ch == 0xFFFE || ch == 0xFFFF) {
-					goto invalid;
-				}
-			}
-			break;
-		case 3:
-			ch = byte; ch <<= 6;   /* 1st byte */
-			byte = *utf8p++;       /* 2nd byte */
-			if ((byte >> 6) != 2) {
-				goto invalid;
-			}
-			ch += byte; ch <<= 6;
-			byte = *utf8p++;       /* 3rd byte */
-			if ((byte >> 6) != 2) {
-				goto invalid;
-			}
-			ch += byte; ch <<= 6;
-			byte = *utf8p++;       /* 4th byte */
-			if ((byte >> 6) != 2) {
-				goto invalid;
-			}
-			ch += byte;
-			ch -= 0x03C82080UL + SP_HALF_BASE;
-			ucs_ch = (ch >> SP_HALF_SHIFT) + SP_HIGH_FIRST;
-			if (ucs_ch < SP_HIGH_FIRST || ucs_ch > SP_HIGH_LAST) {
-				goto invalid;
-			}
-			ucs_ch = (ch & SP_HALF_MASK) + SP_LOW_FIRST;
-			if (ucs_ch < SP_LOW_FIRST || ucs_ch > SP_LOW_LAST) {
-				goto invalid;
-			}
-			break;
-		default:
-			goto invalid;
-		}
-	}
-	return 0;
+    switch (extrabytes) {
+    case 1:
+      ch = byte;
+      ch <<= 6;        /* 1st byte */
+      byte = *utf8p++; /* 2nd byte */
+      if ((byte >> 6) != 2) {
+        goto invalid;
+      }
+      ch += byte;
+      ch -= 0x00003080UL;
+      if (ch < 0x0080) {
+        goto invalid;
+      }
+      break;
+    case 2:
+      ch = byte;
+      ch <<= 6;        /* 1st byte */
+      byte = *utf8p++; /* 2nd byte */
+      if ((byte >> 6) != 2) {
+        goto invalid;
+      }
+      ch += byte;
+      ch <<= 6;
+      byte = *utf8p++; /* 3rd byte */
+      if ((byte >> 6) != 2) {
+        goto invalid;
+      }
+      ch += byte;
+      ch -= 0x000E2080UL;
+      if (ch < 0x0800) {
+        goto invalid;
+      }
+      if (ch >= 0xD800) {
+        if (ch <= 0xDFFF) {
+          goto invalid;
+        }
+        if (ch == 0xFFFE || ch == 0xFFFF) {
+          goto invalid;
+        }
+      }
+      break;
+    case 3:
+      ch = byte;
+      ch <<= 6;        /* 1st byte */
+      byte = *utf8p++; /* 2nd byte */
+      if ((byte >> 6) != 2) {
+        goto invalid;
+      }
+      ch += byte;
+      ch <<= 6;
+      byte = *utf8p++; /* 3rd byte */
+      if ((byte >> 6) != 2) {
+        goto invalid;
+      }
+      ch += byte;
+      ch <<= 6;
+      byte = *utf8p++; /* 4th byte */
+      if ((byte >> 6) != 2) {
+        goto invalid;
+      }
+      ch += byte;
+      ch -= 0x03C82080UL + SP_HALF_BASE;
+      ucs_ch = (ch >> SP_HALF_SHIFT) + SP_HIGH_FIRST;
+      if (ucs_ch < SP_HIGH_FIRST || ucs_ch > SP_HIGH_LAST) {
+        goto invalid;
+      }
+      ucs_ch = (ch & SP_HALF_MASK) + SP_LOW_FIRST;
+      if (ucs_ch < SP_LOW_FIRST || ucs_ch > SP_LOW_LAST) {
+        goto invalid;
+      }
+      break;
+    default:
+      goto invalid;
+    }
+  }
+  return 0;
 invalid:
-	return EINVAL;
+  return EINVAL;
 }
 
 /*
@@ -774,207 +761,205 @@ invalid:
  *
  *    EINVAL:  illegal UTF-8 sequence encountered or invalid flags
  */
-int
-utf8_normalizestr(const u_int8_t* instr, size_t inlen, u_int8_t* outstr,
-    size_t *outlen, size_t buflen, int flags)
-{
-	u_int16_t unicodebuf[32];
-	u_int16_t* unistr = NULL;
-	size_t unicode_bytes;
-	size_t uft8_bytes;
-	size_t inbuflen;
-	u_int8_t *outbufstart, *outbufend;
-	const u_int8_t *inbufstart;
-	unsigned int byte;
-	int decompose, precompose;
-	int result = 0;
+int utf8_normalizestr(const u_int8_t *instr, size_t inlen, u_int8_t *outstr,
+                      size_t *outlen, size_t buflen, int flags) {
+  u_int16_t unicodebuf[32];
+  u_int16_t *unistr = NULL;
+  size_t unicode_bytes;
+  size_t uft8_bytes;
+  size_t inbuflen;
+  u_int8_t *outbufstart, *outbufend;
+  const u_int8_t *inbufstart;
+  unsigned int byte;
+  int decompose, precompose;
+  int result = 0;
 
-	if (flags & ~(UTF_DECOMPOSED | UTF_PRECOMPOSED | UTF_NO_NULL_TERM | UTF_ESCAPE_ILLEGAL)) {
-		return EINVAL;
-	}
-	decompose = (flags & UTF_DECOMPOSED);
-	precompose = (flags & UTF_PRECOMPOSED);
-	if ((decompose && precompose) || (!decompose && !precompose)) {
-		return EINVAL;
-	}
-	outbufstart = outstr;
-	outbufend = outbufstart + buflen;
-	inbufstart = instr;
-	inbuflen = inlen;
+  if (flags & ~(UTF_DECOMPOSED | UTF_PRECOMPOSED | UTF_NO_NULL_TERM |
+                UTF_ESCAPE_ILLEGAL)) {
+    return EINVAL;
+  }
+  decompose = (flags & UTF_DECOMPOSED);
+  precompose = (flags & UTF_PRECOMPOSED);
+  if ((decompose && precompose) || (!decompose && !precompose)) {
+    return EINVAL;
+  }
+  outbufstart = outstr;
+  outbufend = outbufstart + buflen;
+  inbufstart = instr;
+  inbuflen = inlen;
 
-	while (inlen-- > 0 && (byte = *instr++) != '\0') {
-		if (outstr >= outbufend) {
-			result = ENAMETOOLONG;
-			goto exit;
-		}
-		if (byte >= 0x80) {
-			goto nonASCII;
-		}
-		/* ASCII is already normalized. */
-		*outstr++ = (u_int8_t)byte;
-	}
+  while (inlen-- > 0 && (byte = *instr++) != '\0') {
+    if (outstr >= outbufend) {
+      result = ENAMETOOLONG;
+      goto exit;
+    }
+    if (byte >= 0x80) {
+      goto nonASCII;
+    }
+    /* ASCII is already normalized. */
+    *outstr++ = (u_int8_t)byte;
+  }
 exit:
-	*outlen = outstr - outbufstart;
-	if (((flags & UTF_NO_NULL_TERM) == 0)) {
-		if (outstr < outbufend) {
-			*outstr++ = '\0';
-		} else {
-			result = ENAMETOOLONG;
-		}
-	}
-	return result;
+  *outlen = outstr - outbufstart;
+  if (((flags & UTF_NO_NULL_TERM) == 0)) {
+    if (outstr < outbufend) {
+      *outstr++ = '\0';
+    } else {
+      result = ENAMETOOLONG;
+    }
+  }
+  return result;
 
-
-	/*
-	 * Non-ASCII uses the existing utf8_encodestr/utf8_decodestr
-	 * functions to perform the normalization.  Since this will
-	 * presumably be used to normalize filenames in the back-end
-	 * (on disk or over-the-wire), it should be fast enough.
-	 */
+  /*
+   * Non-ASCII uses the existing utf8_encodestr/utf8_decodestr
+   * functions to perform the normalization.  Since this will
+   * presumably be used to normalize filenames in the back-end
+   * (on disk or over-the-wire), it should be fast enough.
+   */
 nonASCII:
 
-	/* Make sure the input size is reasonable. */
-	if (inbuflen > MAXPATHLEN) {
-		result = ENAMETOOLONG;
-		goto exit;
-	}
-	/*
-	 * Compute worst case Unicode buffer size.
-	 *
-	 * For pre-composed output, every UTF-8 input byte will be at
-	 * most 2 Unicode bytes.  For decomposed output, 2 UTF-8 bytes
-	 * (smallest composite char sequence) may yield 6 Unicode bytes
-	 * (1 base char + 2 combining chars).
-	 */
-	unicode_bytes = precompose ? (inbuflen * 2) : (inbuflen * 3);
+  /* Make sure the input size is reasonable. */
+  if (inbuflen > MAXPATHLEN) {
+    result = ENAMETOOLONG;
+    goto exit;
+  }
+  /*
+   * Compute worst case Unicode buffer size.
+   *
+   * For pre-composed output, every UTF-8 input byte will be at
+   * most 2 Unicode bytes.  For decomposed output, 2 UTF-8 bytes
+   * (smallest composite char sequence) may yield 6 Unicode bytes
+   * (1 base char + 2 combining chars).
+   */
+  unicode_bytes = precompose ? (inbuflen * 2) : (inbuflen * 3);
 
-	if (unicode_bytes <= sizeof(unicodebuf)) {
-		unistr = &unicodebuf[0];
-	} else {
-		unistr = kalloc_data(unicode_bytes, Z_WAITOK);
-	}
+  if (unicode_bytes <= sizeof(unicodebuf)) {
+    unistr = &unicodebuf[0];
+  } else {
+    unistr = kalloc_data(unicode_bytes, Z_WAITOK);
+  }
 
-	/* Normalize the string. */
-	result = utf8_decodestr(inbufstart, inbuflen, unistr, &unicode_bytes,
-	    unicode_bytes, 0, flags & ~UTF_NO_NULL_TERM);
-	if (result == 0) {
-		/* Put results back into UTF-8. */
-		result = utf8_encodestr(unistr, unicode_bytes, outbufstart,
-		    &uft8_bytes, buflen, 0, UTF_NO_NULL_TERM);
-		outstr = outbufstart + uft8_bytes;
-	}
-	if (unistr && unistr != &unicodebuf[0]) {
-		kfree_data(unistr, unicode_bytes);
-	}
-	goto exit;
+  /* Normalize the string. */
+  result = utf8_decodestr(inbufstart, inbuflen, unistr, &unicode_bytes,
+                          unicode_bytes, 0, flags & ~UTF_NO_NULL_TERM);
+  if (result == 0) {
+    /* Put results back into UTF-8. */
+    result = utf8_encodestr(unistr, unicode_bytes, outbufstart, &uft8_bytes,
+                            buflen, 0, UTF_NO_NULL_TERM);
+    outstr = outbufstart + uft8_bytes;
+  }
+  if (unistr && unistr != &unicodebuf[0]) {
+    kfree_data(unistr, unicode_bytes);
+  }
+  goto exit;
 }
-
 
 /*
  * Unicode 3.2 decomposition code (derived from Core Foundation)
  */
 
 typedef struct {
-	u_int32_t _key;
-	u_int32_t _value;
+  u_int32_t _key;
+  u_int32_t _value;
 } unicode_mappings32;
 
-static inline u_int32_t
-getmappedvalue32(const unicode_mappings32 *theTable, u_int32_t numElem,
-    u_int16_t character)
-{
-	const unicode_mappings32 *p, *q, *divider;
+static inline u_int32_t getmappedvalue32(const unicode_mappings32 *theTable,
+                                         u_int32_t numElem,
+                                         u_int16_t character) {
+  const unicode_mappings32 *p, *q, *divider;
 
-	if ((character < theTable[0]._key) || (character > theTable[numElem - 1]._key)) {
-		return 0;
-	}
+  if ((character < theTable[0]._key) ||
+      (character > theTable[numElem - 1]._key)) {
+    return 0;
+  }
 
-	p = theTable;
-	q = p + (numElem - 1);
-	while (p <= q) {
-		divider = p + ((q - p) >> 1);   /* divide by 2 */
-		if (character < divider->_key) {
-			q = divider - 1;
-		} else if (character > divider->_key) {
-			p = divider + 1;
-		} else {
-			return divider->_value;
-		}
-	}
-	return 0;
+  p = theTable;
+  q = p + (numElem - 1);
+  while (p <= q) {
+    divider = p + ((q - p) >> 1); /* divide by 2 */
+    if (character < divider->_key) {
+      q = divider - 1;
+    } else if (character > divider->_key) {
+      p = divider + 1;
+    } else {
+      return divider->_value;
+    }
+  }
+  return 0;
 }
 
 #define RECURSIVE_DECOMPOSITION (1 << 15)
-#define EXTRACT_COUNT(value)    (((value) >> 12) & 0x0007)
+#define EXTRACT_COUNT(value) (((value) >> 12) & 0x0007)
 
 typedef struct {
-	u_int16_t _key;
-	u_int16_t _value;
+  u_int16_t _key;
+  u_int16_t _value;
 } unicode_mappings16;
 
-static inline u_int16_t
-getmappedvalue16(const unicode_mappings16 *theTable, u_int32_t numElem,
-    u_int16_t character)
-{
-	const unicode_mappings16 *p, *q, *divider;
+static inline u_int16_t getmappedvalue16(const unicode_mappings16 *theTable,
+                                         u_int32_t numElem,
+                                         u_int16_t character) {
+  const unicode_mappings16 *p, *q, *divider;
 
-	if ((character < theTable[0]._key) || (character > theTable[numElem - 1]._key)) {
-		return 0;
-	}
+  if ((character < theTable[0]._key) ||
+      (character > theTable[numElem - 1]._key)) {
+    return 0;
+  }
 
-	p = theTable;
-	q = p + (numElem - 1);
-	while (p <= q) {
-		divider = p + ((q - p) >> 1);   /* divide by 2 */
-		if (character < divider->_key) {
-			q = divider - 1;
-		} else if (character > divider->_key) {
-			p = divider + 1;
-		} else {
-			return divider->_value;
-		}
-	}
-	return 0;
+  p = theTable;
+  q = p + (numElem - 1);
+  while (p <= q) {
+    divider = p + ((q - p) >> 1); /* divide by 2 */
+    if (character < divider->_key) {
+      q = divider - 1;
+    } else if (character > divider->_key) {
+      p = divider + 1;
+    } else {
+      return divider->_value;
+    }
+  }
+  return 0;
 }
 
+static u_int32_t unicode_recursive_decompose(u_int16_t character,
+                                             u_int16_t *convertedChars) {
+  u_int16_t value;
+  u_int32_t length;
+  u_int16_t firstChar;
+  u_int16_t theChar;
+  const u_int16_t *bmpMappings;
+  u_int32_t usedLength;
 
-static u_int32_t
-unicode_recursive_decompose(u_int16_t character, u_int16_t *convertedChars)
-{
-	u_int16_t value;
-	u_int32_t length;
-	u_int16_t firstChar;
-	u_int16_t theChar;
-	const u_int16_t *bmpMappings;
-	u_int32_t usedLength;
+  value = getmappedvalue16(
+      (const unicode_mappings16 *)__CFUniCharDecompositionTable,
+      __UniCharDecompositionTableLength, character);
+  length = EXTRACT_COUNT(value);
+  firstChar = value & 0x0FFF;
+  theChar = firstChar;
+  bmpMappings =
+      (length == 1 ? &theChar
+                   : __CFUniCharMultipleDecompositionTable + firstChar);
+  usedLength = 0;
 
-	value = getmappedvalue16(
-		(const unicode_mappings16 *)__CFUniCharDecompositionTable,
-		__UniCharDecompositionTableLength, character);
-	length = EXTRACT_COUNT(value);
-	firstChar = value & 0x0FFF;
-	theChar = firstChar;
-	bmpMappings = (length == 1 ? &theChar : __CFUniCharMultipleDecompositionTable + firstChar);
-	usedLength = 0;
+  if (value & RECURSIVE_DECOMPOSITION) {
+    usedLength =
+        unicode_recursive_decompose((u_int16_t)*bmpMappings, convertedChars);
 
-	if (value & RECURSIVE_DECOMPOSITION) {
-		usedLength = unicode_recursive_decompose((u_int16_t)*bmpMappings, convertedChars);
+    --length; /* Decrement for the first char */
+    if (!usedLength) {
+      return 0;
+    }
+    ++bmpMappings;
+    convertedChars += usedLength;
+  }
 
-		--length; /* Decrement for the first char */
-		if (!usedLength) {
-			return 0;
-		}
-		++bmpMappings;
-		convertedChars += usedLength;
-	}
+  usedLength += length;
 
-	usedLength += length;
+  while (length--) {
+    *(convertedChars++) = *(bmpMappings++);
+  }
 
-	while (length--) {
-		*(convertedChars++) = *(bmpMappings++);
-	}
-
-	return usedLength;
+  return usedLength;
 }
 
 #define HANGUL_SBASE 0xAC00
@@ -998,27 +983,24 @@ unicode_recursive_decompose(u_int16_t character, u_int16_t *convertedChars)
  *
  * Similar to CFUniCharDecomposeCharacter
  */
-static int
-unicode_decompose(u_int16_t character, u_int16_t *convertedChars)
-{
-	if ((character >= HANGUL_SBASE) &&
-	    (character <= (HANGUL_SBASE + HANGUL_SCOUNT))) {
-		u_int32_t length;
+static int unicode_decompose(u_int16_t character, u_int16_t *convertedChars) {
+  if ((character >= HANGUL_SBASE) &&
+      (character <= (HANGUL_SBASE + HANGUL_SCOUNT))) {
+    u_int32_t length;
 
-		character -= HANGUL_SBASE;
-		length = (character % HANGUL_TCOUNT ? 3 : 2);
+    character -= HANGUL_SBASE;
+    length = (character % HANGUL_TCOUNT ? 3 : 2);
 
-		*(convertedChars++) =
-		    character / HANGUL_NCOUNT + HANGUL_LBASE;
-		*(convertedChars++) =
-		    (character % HANGUL_NCOUNT) / HANGUL_TCOUNT + HANGUL_VBASE;
-		if (length > 2) {
-			*convertedChars = (character % HANGUL_TCOUNT) + HANGUL_TBASE;
-		}
-		return length;
-	} else {
-		return unicode_recursive_decompose(character, convertedChars);
-	}
+    *(convertedChars++) = character / HANGUL_NCOUNT + HANGUL_LBASE;
+    *(convertedChars++) =
+        (character % HANGUL_NCOUNT) / HANGUL_TCOUNT + HANGUL_VBASE;
+    if (length > 2) {
+      *convertedChars = (character % HANGUL_TCOUNT) + HANGUL_TBASE;
+    }
+    return length;
+  } else {
+    return unicode_recursive_decompose(character, convertedChars);
+  }
 }
 
 /*
@@ -1032,91 +1014,87 @@ unicode_decompose(u_int16_t character, u_int16_t *convertedChars)
  * Similar toCFUniCharPrecomposeCharacter but unicode_combine
  * also handles Hangul Jamo characters.
  */
-static u_int16_t
-unicode_combine(u_int16_t base, u_int16_t combining)
-{
-	u_int32_t value;
+static u_int16_t unicode_combine(u_int16_t base, u_int16_t combining) {
+  u_int32_t value;
 
-	/* Check HANGUL */
-	if ((combining >= HANGUL_VBASE) && (combining < (HANGUL_TBASE + HANGUL_TCOUNT))) {
-		/* 2 char Hangul sequences */
-		if ((combining < (HANGUL_VBASE + HANGUL_VCOUNT)) &&
-		    (base >= HANGUL_LBASE && base < (HANGUL_LBASE + HANGUL_LCOUNT))) {
-			return HANGUL_SBASE +
-			       ((base - HANGUL_LBASE) * (HANGUL_VCOUNT * HANGUL_TCOUNT)) +
-			       ((combining  - HANGUL_VBASE) * HANGUL_TCOUNT);
-		}
+  /* Check HANGUL */
+  if ((combining >= HANGUL_VBASE) &&
+      (combining < (HANGUL_TBASE + HANGUL_TCOUNT))) {
+    /* 2 char Hangul sequences */
+    if ((combining < (HANGUL_VBASE + HANGUL_VCOUNT)) &&
+        (base >= HANGUL_LBASE && base < (HANGUL_LBASE + HANGUL_LCOUNT))) {
+      return HANGUL_SBASE +
+             ((base - HANGUL_LBASE) * (HANGUL_VCOUNT * HANGUL_TCOUNT)) +
+             ((combining - HANGUL_VBASE) * HANGUL_TCOUNT);
+    }
 
-		/* 3 char Hangul sequences */
-		if ((combining > HANGUL_TBASE) &&
-		    (base >= HANGUL_SBASE && base < (HANGUL_SBASE + HANGUL_SCOUNT))) {
-			if ((base - HANGUL_SBASE) % HANGUL_TCOUNT) {
-				return 0;
-			} else {
-				return base + (combining - HANGUL_TBASE);
-			}
-		}
-	}
+    /* 3 char Hangul sequences */
+    if ((combining > HANGUL_TBASE) &&
+        (base >= HANGUL_SBASE && base < (HANGUL_SBASE + HANGUL_SCOUNT))) {
+      if ((base - HANGUL_SBASE) % HANGUL_TCOUNT) {
+        return 0;
+      } else {
+        return base + (combining - HANGUL_TBASE);
+      }
+    }
+  }
 
-	value = getmappedvalue32(
-		(const unicode_mappings32 *)__CFUniCharPrecompSourceTable,
-		__CFUniCharPrecompositionTableLength, combining);
+  value = getmappedvalue32(
+      (const unicode_mappings32 *)__CFUniCharPrecompSourceTable,
+      __CFUniCharPrecompositionTableLength, combining);
 
-	if (value) {
-		value = getmappedvalue16(
-			(const unicode_mappings16 *)
-			((const u_int32_t *)__CFUniCharBMPPrecompDestinationTable + (value & 0xFFFF)),
-			(value >> 16), base);
-	}
-	return (u_int16_t)value;
+  if (value) {
+    value = getmappedvalue16(
+        (const unicode_mappings16 *)((const u_int32_t *)
+                                         __CFUniCharBMPPrecompDestinationTable +
+                                     (value & 0xFFFF)),
+        (value >> 16), base);
+  }
+  return (u_int16_t)value;
 }
-
 
 /*
  * prioritysort - order combining chars into canonical order
  *
  * Similar to CFUniCharPrioritySort
  */
-static void
-prioritysort(u_int16_t* characters, int count)
-{
-	u_int32_t p1, p2;
-	u_int16_t *ch1, *ch2;
-	u_int16_t *end;
-	int changes = 0;
+static void prioritysort(u_int16_t *characters, int count) {
+  u_int32_t p1, p2;
+  u_int16_t *ch1, *ch2;
+  u_int16_t *end;
+  int changes = 0;
 
-	end = characters + count;
-	do {
-		changes = 0;
-		ch1 = characters;
-		ch2 = characters + 1;
-		p2 = get_combining_class(*ch1);
-		while (ch2 < end) {
-			p1 = p2;
-			p2 = get_combining_class(*ch2);
-			if (p1 > p2 && p2 != 0) {
-				u_int16_t tmp;
+  end = characters + count;
+  do {
+    changes = 0;
+    ch1 = characters;
+    ch2 = characters + 1;
+    p2 = get_combining_class(*ch1);
+    while (ch2 < end) {
+      p1 = p2;
+      p2 = get_combining_class(*ch2);
+      if (p1 > p2 && p2 != 0) {
+        u_int16_t tmp;
 
-				tmp = *ch1;
-				*ch1 = *ch2;
-				*ch2 = tmp;
-				changes = 1;
+        tmp = *ch1;
+        *ch1 = *ch2;
+        *ch2 = tmp;
+        changes = 1;
 
-				/*
-				 * Make sure that p2 contains the combining class for the
-				 * character now stored at *ch2.  This isn't required for
-				 * correctness, but it will be more efficient if a character
-				 * with a large combining class has to "bubble past" several
-				 * characters with lower combining classes.
-				 */
-				p2 = p1;
-			}
-			++ch1;
-			++ch2;
-		}
-	} while (changes);
+        /*
+         * Make sure that p2 contains the combining class for the
+         * character now stored at *ch2.  This isn't required for
+         * correctness, but it will be more efficient if a character
+         * with a large combining class has to "bubble past" several
+         * characters with lower combining classes.
+         */
+        p2 = p1;
+      }
+      ++ch1;
+      ++ch2;
+    }
+  } while (changes);
 }
-
 
 /*
  * Invalid NTFS filename characters are encodeded using the
@@ -1142,8 +1120,8 @@ prioritysort(u_int16_t* characters, int count)
  *  Reference: http://support.microsoft.com/kb/q117258/
  */
 
-#define MAX_SFM2MAC           0x29
-#define SFMCODE_PREFIX_MASK   0xf000
+#define MAX_SFM2MAC 0x29
+#define SFMCODE_PREFIX_MASK 0xf000
 
 /*
  * In the Mac OS 9 days the colon was illegal in a file name. For that reason
@@ -1152,76 +1130,69 @@ prioritysort(u_int16_t* characters, int count)
  * is a slash and a slash is a colon. So we can just replace the slash with the
  * colon in our tables and everything will just work.
  */
-static u_int8_t
-    sfm2mac[] = {
-	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,   /* 00 - 07 */
-	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,   /* 08 - 0F */
-	0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,   /* 10 - 17 */
-	0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,   /* 18 - 1F */
-	0x22, 0x2a, 0x3a, 0x3c, 0x3e, 0x3f, 0x5c, 0x7c,   /* 20 - 27 */
-	0x20, 0x2e                                        /* 28 - 29 */
+static u_int8_t sfm2mac[] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, /* 00 - 07 */
+    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, /* 08 - 0F */
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, /* 10 - 17 */
+    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, /* 18 - 1F */
+    0x22, 0x2a, 0x3a, 0x3c, 0x3e, 0x3f, 0x5c, 0x7c, /* 20 - 27 */
+    0x20, 0x2e                                      /* 28 - 29 */
 };
-#define SFM2MAC_LEN     ((sizeof(sfm2mac))/sizeof(sfm2mac[0]))
+#define SFM2MAC_LEN ((sizeof(sfm2mac)) / sizeof(sfm2mac[0]))
 
-static u_int8_t
-    mac2sfm[] = {
-	0x20, 0x21, 0x20, 0x23, 0x24, 0x25, 0x26, 0x27,   /* 20 - 27 */
-	0x28, 0x29, 0x21, 0x2b, 0x2c, 0x2d, 0x2e, 0x22,   /* 28 - 2f */
-	0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,   /* 30 - 37 */
-	0x38, 0x39, 0x22, 0x3b, 0x23, 0x3d, 0x24, 0x25,   /* 38 - 3f */
-	0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,   /* 40 - 47 */
-	0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,   /* 48 - 4f */
-	0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57,   /* 50 - 57 */
-	0x58, 0x59, 0x5a, 0x5b, 0x26, 0x5d, 0x5e, 0x5f,   /* 58 - 5f */
-	0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67,   /* 60 - 67 */
-	0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,   /* 68 - 6f */
-	0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,   /* 70 - 77 */
-	0x78, 0x79, 0x7a, 0x7b, 0x27, 0x7d, 0x7e, 0x7f    /* 78 - 7f */
+static u_int8_t mac2sfm[] = {
+    0x20, 0x21, 0x20, 0x23, 0x24, 0x25, 0x26, 0x27, /* 20 - 27 */
+    0x28, 0x29, 0x21, 0x2b, 0x2c, 0x2d, 0x2e, 0x22, /* 28 - 2f */
+    0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, /* 30 - 37 */
+    0x38, 0x39, 0x22, 0x3b, 0x23, 0x3d, 0x24, 0x25, /* 38 - 3f */
+    0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, /* 40 - 47 */
+    0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, /* 48 - 4f */
+    0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, /* 50 - 57 */
+    0x58, 0x59, 0x5a, 0x5b, 0x26, 0x5d, 0x5e, 0x5f, /* 58 - 5f */
+    0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, /* 60 - 67 */
+    0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f, /* 68 - 6f */
+    0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, /* 70 - 77 */
+    0x78, 0x79, 0x7a, 0x7b, 0x27, 0x7d, 0x7e, 0x7f  /* 78 - 7f */
 };
-#define MAC2SFM_LEN     ((sizeof(mac2sfm))/sizeof(mac2sfm[0]))
-
+#define MAC2SFM_LEN ((sizeof(mac2sfm)) / sizeof(mac2sfm[0]))
 
 /*
  * Encode illegal NTFS filename characters into SFM Private Unicode characters
  *
  * Assumes non-zero ASCII input.
  */
-static u_int16_t
-ucs_to_sfm(u_int16_t ucs_ch, int lastchar)
-{
-	/* The last character of filename cannot be a space or period. */
-	if (lastchar) {
-		if (ucs_ch == 0x20) {
-			return 0xf028;
-		} else if (ucs_ch == 0x2e) {
-			return 0xf029;
-		}
-	}
-	/* 0x01 - 0x1f is simple transformation. */
-	if (ucs_ch <= 0x1f) {
-		return ucs_ch | 0xf000;
-	} else { /* 0x20 - 0x7f */
-		u_int16_t lsb;
+static u_int16_t ucs_to_sfm(u_int16_t ucs_ch, int lastchar) {
+  /* The last character of filename cannot be a space or period. */
+  if (lastchar) {
+    if (ucs_ch == 0x20) {
+      return 0xf028;
+    } else if (ucs_ch == 0x2e) {
+      return 0xf029;
+    }
+  }
+  /* 0x01 - 0x1f is simple transformation. */
+  if (ucs_ch <= 0x1f) {
+    return ucs_ch | 0xf000;
+  } else { /* 0x20 - 0x7f */
+    u_int16_t lsb;
 
-		assert((ucs_ch - 0x0020) < MAC2SFM_LEN);
-		lsb = mac2sfm[ucs_ch - 0x0020];
-		if (lsb != ucs_ch) {
-			return 0xf000 | lsb;
-		}
-	}
-	return ucs_ch;
+    assert((ucs_ch - 0x0020) < MAC2SFM_LEN);
+    lsb = mac2sfm[ucs_ch - 0x0020];
+    if (lsb != ucs_ch) {
+      return 0xf000 | lsb;
+    }
+  }
+  return ucs_ch;
 }
 
 /*
  * Decode any SFM Private Unicode characters
  */
-static u_int16_t
-sfm_to_ucs(u_int16_t ucs_ch)
-{
-	if (((ucs_ch & 0xffC0) == SFMCODE_PREFIX_MASK) &&
-	    ((ucs_ch & 0x003f) <= MAX_SFM2MAC)) {
-		assert((ucs_ch & 0x003f) < SFM2MAC_LEN);
-		ucs_ch = sfm2mac[ucs_ch & 0x003f];
-	}
-	return ucs_ch;
+static u_int16_t sfm_to_ucs(u_int16_t ucs_ch) {
+  if (((ucs_ch & 0xffC0) == SFMCODE_PREFIX_MASK) &&
+      ((ucs_ch & 0x003f) <= MAX_SFM2MAC)) {
+    assert((ucs_ch & 0x003f) < SFM2MAC_LEN);
+    ucs_ch = sfm2mac[ucs_ch & 0x003f];
+  }
+  return ucs_ch;
 }

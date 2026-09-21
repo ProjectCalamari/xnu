@@ -28,30 +28,28 @@
 
 #include <stdbool.h>
 
-#include <sys/types.h>
 #include <sys/eventhandler.h>
+#include <sys/types.h>
 
 enum net_filter_event_subsystems : uint32_t {
-	NET_FILTER_EVENT_PF = (1 << 0),
-	NET_FILTER_EVENT_SOCKET = (1 << 1),
-	NET_FILTER_EVENT_INTERFACE = (1 << 2),
-	NET_FILTER_EVENT_IP = (1 << 3),
-	NET_FILTER_EVENT_ALF = (1 << 4),
-	NET_FILTER_EVENT_PARENTAL_CONTROLS = (1 << 5),
-	NET_FILTER_EVENT_PF_PRIVATE_PROXY = (1 << 6),
+  NET_FILTER_EVENT_PF = (1 << 0),
+  NET_FILTER_EVENT_SOCKET = (1 << 1),
+  NET_FILTER_EVENT_INTERFACE = (1 << 2),
+  NET_FILTER_EVENT_IP = (1 << 3),
+  NET_FILTER_EVENT_ALF = (1 << 4),
+  NET_FILTER_EVENT_PARENTAL_CONTROLS = (1 << 5),
+  NET_FILTER_EVENT_PF_PRIVATE_PROXY = (1 << 6),
 };
 
 /* Marks subsystem filtering state. */
-void
-net_filter_event_mark(enum net_filter_event_subsystems subsystem, bool compatible);
+void net_filter_event_mark(enum net_filter_event_subsystems subsystem,
+                           bool compatible);
 
-typedef void (*net_filter_event_callback_t) (struct eventhandler_entry_arg,
-    enum net_filter_event_subsystems);
+typedef void (*net_filter_event_callback_t)(struct eventhandler_entry_arg,
+                                            enum net_filter_event_subsystems);
 
 /* Registers a function to be called when state changes. */
-void
-net_filter_event_register(net_filter_event_callback_t callback);
+void net_filter_event_register(net_filter_event_callback_t callback);
 
 /* Gets the state of the filters. */
-enum net_filter_event_subsystems
-net_filter_event_get_state(void);
+enum net_filter_event_subsystems net_filter_event_get_state(void);

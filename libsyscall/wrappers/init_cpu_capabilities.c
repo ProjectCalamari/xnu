@@ -23,19 +23,17 @@
 
 #define __APPLE_API_PRIVATE
 #include <machine/cpu_capabilities.h>
-#undef  __APPLE_API_PRIVATE
+#undef __APPLE_API_PRIVATE
 
 #if defined(__i386__) || defined(__x86_64__)
 
 /* Initialize the "_cpu_capabilities" vector on x86 processors. */
 
-int _cpu_has_altivec = 0;     // DEPRECATED
+int _cpu_has_altivec = 0; // DEPRECATED
 int _cpu_capabilities = 0;
 
-void
-_init_cpu_capabilities( void )
-{
-	_cpu_capabilities = (int)_get_cpu_capabilities();
+void _init_cpu_capabilities(void) {
+  _cpu_capabilities = (int)_get_cpu_capabilities();
 }
 
 #elif defined(__arm__) || defined(__arm64__)
@@ -43,11 +41,8 @@ _init_cpu_capabilities( void )
 extern uint64_t _get_cpu_capabilities(void);
 
 int _cpu_capabilities = 0;
-int _cpu_has_altivec = 0;               // DEPRECATED: use _cpu_capabilities instead
+int _cpu_has_altivec = 0; // DEPRECATED: use _cpu_capabilities instead
 
-void
-_init_cpu_capabilities( void )
-{
-}
+void _init_cpu_capabilities(void) {}
 
 #endif

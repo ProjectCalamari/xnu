@@ -29,10 +29,10 @@
 #ifndef _SYS_PROC_UUID_POLICY_H
 #define _SYS_PROC_UUID_POLICY_H
 
+#include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/types.h>
-#include <stdint.h>
 #include <uuid/uuid.h>
 
 __BEGIN_DECLS
@@ -47,19 +47,19 @@ __BEGIN_DECLS
  * have a specified behavior for.
  */
 
-#define PROC_UUID_POLICY_OPERATION_CLEAR        0x00000000
-#define PROC_UUID_POLICY_OPERATION_ADD          0x00000001
-#define PROC_UUID_POLICY_OPERATION_REMOVE       0x00000002
+#define PROC_UUID_POLICY_OPERATION_CLEAR 0x00000000
+#define PROC_UUID_POLICY_OPERATION_ADD 0x00000001
+#define PROC_UUID_POLICY_OPERATION_REMOVE 0x00000002
 
 /* The namespace of flags are managed by in-kernel clients */
-#define PROC_UUID_POLICY_FLAGS_NONE                     0x00000000
-#define PROC_UUID_NO_CELLULAR                           0x00000001
-#define PROC_UUID_NECP_APP_POLICY                       0x00000002
-#define PROC_UUID_ALT_DYLD_POLICY                       0x00000004
-#define PROC_UUID_ALT_ROSETTA_POLICY                    0x00000008
+#define PROC_UUID_POLICY_FLAGS_NONE 0x00000000
+#define PROC_UUID_NO_CELLULAR 0x00000001
+#define PROC_UUID_NECP_APP_POLICY 0x00000002
+#define PROC_UUID_ALT_DYLD_POLICY 0x00000004
+#define PROC_UUID_ALT_ROSETTA_POLICY 0x00000008
 
 /* To be removed, replaced by PROC_UUID_NECP_APP_POLICY */
-#define PROC_UUID_FLOW_DIVERT                           0x00000002
+#define PROC_UUID_FLOW_DIVERT 0x00000002
 
 #ifdef BSD_KERNEL_PRIVATE
 /*
@@ -69,11 +69,13 @@ __BEGIN_DECLS
  *     uuid          UUID to look up, must be not the zero-uuid
  *     flags         Flags that have been associated with the UUID on successful
  *                   lookup.
- *     gencount      The generation count of the internal policy table representation.
+ *     gencount      The generation count of the internal policy table
+ * representation.
  *
- *     Initial lookups by an in-kernel subsystem should pass 0 for flags/gencount.
- *     Subsequent lookups for the same UUID with the same flags and gencount passed
- *     in can short-circuit the lookup if the generation count has not changed.
+ *     Initial lookups by an in-kernel subsystem should pass 0 for
+ * flags/gencount. Subsequent lookups for the same UUID with the same flags and
+ * gencount passed in can short-circuit the lookup if the generation count has
+ * not changed.
  *
  * Return:
  *     0        Success, UUID was found, flags and gencount are returned
@@ -81,11 +83,13 @@ __BEGIN_DECLS
  *     ENOENT   UUID not found
  *
  */
-extern int proc_uuid_policy_lookup(uuid_t uuid, uint32_t *flags, int32_t *gencount);
+extern int proc_uuid_policy_lookup(uuid_t uuid, uint32_t *flags,
+                                   int32_t *gencount);
 
 extern void proc_uuid_policy_init(void);
 
-extern int proc_uuid_policy_kernel(uint32_t operation, uuid_t uuid, uint32_t flags);
+extern int proc_uuid_policy_kernel(uint32_t operation, uuid_t uuid,
+                                   uint32_t flags);
 #endif /* BSD_KERNEL_PRIVATE */
 
 #ifndef KERNEL
@@ -94,14 +98,14 @@ extern int proc_uuid_policy_kernel(uint32_t operation, uuid_t uuid, uint32_t fla
  *
  * Parameters:
  *     operation     CLEAR    Clear specified flags for all entries.
- *                            Entries are removed if they have no remaining flags.
- *                   ADD      Add the specified UUID and flags to the policy table.
- *                            Flags are ORed  with existing entries for the UUID.
- *                   REMOVE   Mask out flags in the entry for the specified UUID.
- *                            Entry is removed if it has no remaining flags.
+ *                            Entries are removed if they have no remaining
+ * flags. ADD      Add the specified UUID and flags to the policy table. Flags
+ * are ORed  with existing entries for the UUID. REMOVE   Mask out flags in the
+ * entry for the specified UUID. Entry is removed if it has no remaining flags.
  *     uuid          Pointer to UUID for Mach-O executable
  *     uuidlen       sizeof(uuid_t)
- *     flags         Flags to be stored in the policy table. See operation notes above.
+ *     flags         Flags to be stored in the policy table. See operation notes
+ * above.
  *
  * Return:
  *     0        Success, operation completed without error.
@@ -112,7 +116,8 @@ extern int proc_uuid_policy_kernel(uint32_t operation, uuid_t uuid, uint32_t fla
  *         ERANGE   Invalid uuidlen
  *         ENOMEM   Too many entries exist
  */
-extern int proc_uuid_policy(uint32_t operation, uuid_t uuid, size_t uuidlen, uint32_t flags);
+extern int proc_uuid_policy(uint32_t operation, uuid_t uuid, size_t uuidlen,
+                            uint32_t flags);
 #endif /* !KERNEL */
 
 __END_DECLS

@@ -29,9 +29,9 @@
 #ifndef _MACHINE_SMP_H
 #define _MACHINE_SMP_H
 
-#if defined (__x86_64__)
+#if defined(__x86_64__)
 #include "i386/smp.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #ifdef KERNEL_PRIVATE
 /* arm/smp.h isn't installed into the public SDK. */
 #include "arm/smp.h"

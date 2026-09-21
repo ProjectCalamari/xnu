@@ -36,9 +36,7 @@
 
 #include <mach/vm_types.h>
 
-extern void kmem_init(
-	vm_offset_t     start,
-	vm_offset_t     end);
+extern void kmem_init(vm_offset_t start, vm_offset_t end);
 
 extern void vm_mem_bootstrap(void);
 

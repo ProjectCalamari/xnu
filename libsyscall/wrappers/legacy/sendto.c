@@ -33,25 +33,25 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/types.h>
-#include <sys/socket.h>
 #include "_errno.h"
+#include <sys/socket.h>
+#include <sys/types.h>
 
-ssize_t __sendto_nocancel(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+ssize_t __sendto_nocancel(int, const void *, size_t, int,
+                          const struct sockaddr *, socklen_t);
 
 /*
  * sendto stub, legacy version
  */
-ssize_t
-sendto(int s, const void *msg, size_t len, int flags, const struct sockaddr *to, socklen_t tolen)
-{
-	int ret = __sendto_nocancel(s, msg, len, flags, to, tolen);
+ssize_t sendto(int s, const void *msg, size_t len, int flags,
+               const struct sockaddr *to, socklen_t tolen) {
+  int ret = __sendto_nocancel(s, msg, len, flags, to, tolen);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif

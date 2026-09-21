@@ -29,4 +29,4 @@
 #ifndef _I386_SMP_H_
 #define _I386_SMP_H_
 
-#endif  /* _I386_SMP_H_ */
+#endif /* _I386_SMP_H_ */

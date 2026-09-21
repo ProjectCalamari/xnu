@@ -25,23 +25,23 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <sys/time.h>
+#include <kern/assert.h>
 #include <kern/task.h>
 #include <kern/thread.h>
 #include <mach/mach_types.h>
 #include <mach/vm_prot.h>
-#include <vm/vm_kern.h>
-#include <sys/stat.h>
-#include <vm/vm_map.h>
-#include <sys/systm.h>
-#include <kern/assert.h>
-#include <sys/conf.h>
-#include <sys/proc_internal.h>
 #include <sys/buf.h> /* for SET */
+#include <sys/conf.h>
 #include <sys/kernel.h>
-#include <sys/user.h>
+#include <sys/proc_internal.h>
+#include <sys/stat.h>
 #include <sys/sysent.h>
 #include <sys/sysproto.h>
+#include <sys/systm.h>
+#include <sys/time.h>
+#include <sys/user.h>
+#include <vm/vm_kern.h>
+#include <vm/vm_map.h>
 
 /* XXX these should be in a common header somwhere, but aren't */
 extern int chrtoblk_set(int, int);
@@ -50,16 +50,17 @@ extern int chrtoblk_set(int, int);
 void pcb_synch(void);
 
 typedef struct devsw_lock {
-	TAILQ_ENTRY(devsw_lock) dl_list;
-	thread_t                dl_thread;
-	dev_t                   dl_dev;
-	int                     dl_mode;
-	int                     dl_waiters;
+  TAILQ_ENTRY(devsw_lock) dl_list;
+  thread_t dl_thread;
+  dev_t dl_dev;
+  int dl_mode;
+  int dl_waiters;
 } *devsw_lock_t;
 
 static LCK_GRP_DECLARE(devsw_lock_grp, "devsw");
 static LCK_MTX_DECLARE(devsw_lock_list_mtx, &devsw_lock_grp);
-static TAILQ_HEAD(, devsw_lock) devsw_locks = TAILQ_HEAD_INITIALIZER(devsw_locks);
+static TAILQ_HEAD(,
+                  devsw_lock) devsw_locks = TAILQ_HEAD_INITIALIZER(devsw_locks);
 
 /* Just to satisfy pstat command */
 int dmmin, dmmax, dmtext;
@@ -67,20 +68,15 @@ int dmmin, dmmax, dmtext;
 /*
  * XXX this function only exists to be exported and do nothing.
  */
-void
-pcb_synch(void)
-{
-}
+void pcb_synch(void) {}
 
-struct proc *
-current_proc(void)
-{
-	/* Never returns a NULL */
-	proc_t p = current_thread_ro()->tro_proc;
-	if (__improbable(p == PROC_NULL)) {
-		return kernproc;
-	}
-	return p;
+struct proc *current_proc(void) {
+  /* Never returns a NULL */
+  proc_t p = current_thread_ro()->tro_proc;
+  if (__improbable(p == PROC_NULL)) {
+    return kernproc;
+  }
+  return p;
 }
 
 /* Device switch add delete routines */
@@ -96,34 +92,34 @@ const struct cdevsw nocdev = NO_CDEVICE;
  *	looking for a free slot at the absolute value of index,
  *	instead of starting at 0
  */
-int
-bdevsw_isfree(int index)
-{
-	struct bdevsw * devsw;
+int bdevsw_isfree(int index) {
+  struct bdevsw *devsw;
 
-	if (index < 0) {
-		if (index == -1) {
-			index = 1; /* start at 1 to avoid collision with volfs (Radar 2842228) */
-		} else {
-			index = -index; /* start at least this far up in the table */
-		}
-		devsw = &bdevsw[index];
-		for (; index < nblkdev; index++, devsw++) {
-			if (memcmp((const char *)devsw, (const char *)&nobdev, sizeof(struct bdevsw)) == 0) {
-				break;
-			}
-		}
-	}
+  if (index < 0) {
+    if (index == -1) {
+      index = 1; /* start at 1 to avoid collision with volfs (Radar 2842228) */
+    } else {
+      index = -index; /* start at least this far up in the table */
+    }
+    devsw = &bdevsw[index];
+    for (; index < nblkdev; index++, devsw++) {
+      if (memcmp((const char *)devsw, (const char *)&nobdev,
+                 sizeof(struct bdevsw)) == 0) {
+        break;
+      }
+    }
+  }
 
-	if (index < 0 || index >= nblkdev) {
-		return -1;
-	}
+  if (index < 0 || index >= nblkdev) {
+    return -1;
+  }
 
-	devsw = &bdevsw[index];
-	if ((memcmp((const char *)devsw, (const char *)&nobdev, sizeof(struct bdevsw)) != 0)) {
-		return -1;
-	}
-	return index;
+  devsw = &bdevsw[index];
+  if ((memcmp((const char *)devsw, (const char *)&nobdev,
+              sizeof(struct bdevsw)) != 0)) {
+    return -1;
+  }
+  return index;
 }
 
 /*
@@ -135,41 +131,38 @@ bdevsw_isfree(int index)
  *	looking for a free slot at the absolute value of index,
  *	instead of starting at 0
  */
-int
-bdevsw_add(int index, const struct bdevsw * bsw)
-{
-	lck_mtx_lock_spin(&devsw_lock_list_mtx);
-	index = bdevsw_isfree(index);
-	if (index < 0) {
-		index = -1;
-	} else {
-		bdevsw[index] = *bsw;
-	}
-	lck_mtx_unlock(&devsw_lock_list_mtx);
-	return index;
+int bdevsw_add(int index, const struct bdevsw *bsw) {
+  lck_mtx_lock_spin(&devsw_lock_list_mtx);
+  index = bdevsw_isfree(index);
+  if (index < 0) {
+    index = -1;
+  } else {
+    bdevsw[index] = *bsw;
+  }
+  lck_mtx_unlock(&devsw_lock_list_mtx);
+  return index;
 }
 /*
  *	if the slot has the same bsw, then remove
  *	else -1
  */
-int
-bdevsw_remove(int index, const struct bdevsw * bsw)
-{
-	struct bdevsw * devsw;
+int bdevsw_remove(int index, const struct bdevsw *bsw) {
+  struct bdevsw *devsw;
 
-	if (index < 0 || index >= nblkdev) {
-		return -1;
-	}
+  if (index < 0 || index >= nblkdev) {
+    return -1;
+  }
 
-	devsw = &bdevsw[index];
-	lck_mtx_lock_spin(&devsw_lock_list_mtx);
-	if ((memcmp((const char *)devsw, (const char *)bsw, sizeof(struct bdevsw)) != 0)) {
-		index = -1;
-	} else {
-		bdevsw[index] = nobdev;
-	}
-	lck_mtx_unlock(&devsw_lock_list_mtx);
-	return index;
+  devsw = &bdevsw[index];
+  lck_mtx_lock_spin(&devsw_lock_list_mtx);
+  if ((memcmp((const char *)devsw, (const char *)bsw, sizeof(struct bdevsw)) !=
+       0)) {
+    index = -1;
+  } else {
+    bdevsw[index] = nobdev;
+  }
+  lck_mtx_unlock(&devsw_lock_list_mtx);
+  return index;
 }
 
 /*
@@ -181,34 +174,34 @@ bdevsw_remove(int index, const struct bdevsw * bsw)
  *	looking for a free slot at the absolute value of index,
  *	instead of starting at 0
  */
-int
-cdevsw_isfree(int index)
-{
-	struct cdevsw * devsw;
+int cdevsw_isfree(int index) {
+  struct cdevsw *devsw;
 
-	if (index < 0) {
-		if (index == -1) {
-			index = 0;
-		} else {
-			index = -index; /* start at least this far up in the table */
-		}
-		devsw = &cdevsw[index];
-		for (; index < nchrdev; index++, devsw++) {
-			if (memcmp((const char *)devsw, (const char *)&nocdev, sizeof(struct cdevsw)) == 0) {
-				break;
-			}
-		}
-	}
+  if (index < 0) {
+    if (index == -1) {
+      index = 0;
+    } else {
+      index = -index; /* start at least this far up in the table */
+    }
+    devsw = &cdevsw[index];
+    for (; index < nchrdev; index++, devsw++) {
+      if (memcmp((const char *)devsw, (const char *)&nocdev,
+                 sizeof(struct cdevsw)) == 0) {
+        break;
+      }
+    }
+  }
 
-	if (index < 0 || index >= nchrdev) {
-		return -1;
-	}
+  if (index < 0 || index >= nchrdev) {
+    return -1;
+  }
 
-	devsw = &cdevsw[index];
-	if ((memcmp((const char *)devsw, (const char *)&nocdev, sizeof(struct cdevsw)) != 0)) {
-		return -1;
-	}
-	return index;
+  devsw = &cdevsw[index];
+  if ((memcmp((const char *)devsw, (const char *)&nocdev,
+              sizeof(struct cdevsw)) != 0)) {
+    return -1;
+  }
+  return index;
 }
 
 /*
@@ -225,83 +218,75 @@ cdevsw_isfree(int index)
  *		which will stomp on free-slot based assignments that happen
  *		before them.  -24 is currently a safe starting point.
  */
-int
-cdevsw_add(int index, const struct cdevsw * csw)
-{
-	lck_mtx_lock_spin(&devsw_lock_list_mtx);
-	index = cdevsw_isfree(index);
-	if (index < 0) {
-		index = -1;
-	} else {
-		cdevsw[index] = *csw;
-	}
-	lck_mtx_unlock(&devsw_lock_list_mtx);
-	return index;
+int cdevsw_add(int index, const struct cdevsw *csw) {
+  lck_mtx_lock_spin(&devsw_lock_list_mtx);
+  index = cdevsw_isfree(index);
+  if (index < 0) {
+    index = -1;
+  } else {
+    cdevsw[index] = *csw;
+  }
+  lck_mtx_unlock(&devsw_lock_list_mtx);
+  return index;
 }
 /*
  *	if the slot has the same csw, then remove
  *	else -1
  */
-int
-cdevsw_remove(int index, const struct cdevsw * csw)
-{
-	struct cdevsw * devsw;
+int cdevsw_remove(int index, const struct cdevsw *csw) {
+  struct cdevsw *devsw;
 
-	if (index < 0 || index >= nchrdev) {
-		return -1;
-	}
+  if (index < 0 || index >= nchrdev) {
+    return -1;
+  }
 
-	devsw = &cdevsw[index];
-	lck_mtx_lock_spin(&devsw_lock_list_mtx);
-	if ((memcmp((const char *)devsw, (const char *)csw, sizeof(struct cdevsw)) != 0)) {
-		index = -1;
-	} else {
-		cdevsw[index] = nocdev;
-		cdevsw_flags[index] = 0;
-	}
-	lck_mtx_unlock(&devsw_lock_list_mtx);
-	return index;
+  devsw = &cdevsw[index];
+  lck_mtx_lock_spin(&devsw_lock_list_mtx);
+  if ((memcmp((const char *)devsw, (const char *)csw, sizeof(struct cdevsw)) !=
+       0)) {
+    index = -1;
+  } else {
+    cdevsw[index] = nocdev;
+    cdevsw_flags[index] = 0;
+  }
+  lck_mtx_unlock(&devsw_lock_list_mtx);
+  return index;
 }
 
-static int
-cdev_set_bdev(int cdev, int bdev)
-{
-	return chrtoblk_set(cdev, bdev);
+static int cdev_set_bdev(int cdev, int bdev) {
+  return chrtoblk_set(cdev, bdev);
 }
 
-int
-cdevsw_add_with_bdev(int index, const struct cdevsw * csw, int bdev)
-{
-	index = cdevsw_add(index, csw);
-	if (index < 0) {
-		return index;
-	}
-	if (cdev_set_bdev(index, bdev) < 0) {
-		cdevsw_remove(index, csw);
-		return -1;
-	}
-	return index;
+int cdevsw_add_with_bdev(int index, const struct cdevsw *csw, int bdev) {
+  index = cdevsw_add(index, csw);
+  if (index < 0) {
+    return index;
+  }
+  if (cdev_set_bdev(index, bdev) < 0) {
+    cdevsw_remove(index, csw);
+    return -1;
+  }
+  return index;
 }
 
-int
-cdevsw_setkqueueok(int maj, const struct cdevsw * csw, int extra_flags)
-{
-	struct cdevsw * devsw;
-	uint64_t flags = CDEVSW_SELECT_KQUEUE;
+int cdevsw_setkqueueok(int maj, const struct cdevsw *csw, int extra_flags) {
+  struct cdevsw *devsw;
+  uint64_t flags = CDEVSW_SELECT_KQUEUE;
 
-	if (maj < 0 || maj >= nchrdev) {
-		return -1;
-	}
+  if (maj < 0 || maj >= nchrdev) {
+    return -1;
+  }
 
-	devsw = &cdevsw[maj];
-	if ((memcmp((const char *)devsw, (const char *)csw, sizeof(struct cdevsw)) != 0)) {
-		return -1;
-	}
+  devsw = &cdevsw[maj];
+  if ((memcmp((const char *)devsw, (const char *)csw, sizeof(struct cdevsw)) !=
+       0)) {
+    return -1;
+  }
 
-	flags |= extra_flags;
+  flags |= extra_flags;
 
-	cdevsw_flags[maj] = flags;
-	return 0;
+  cdevsw_flags[maj] = flags;
+  return 0;
 }
 
 /*
@@ -310,105 +295,96 @@ cdevsw_setkqueueok(int maj, const struct cdevsw * csw, int extra_flags)
  * On success, "len" will be set to the number of characters preceding
  * the NULL character in the hostname.
  */
-int
-bsd_hostname(char *buf, size_t bufsize, size_t *len)
-{
-	int ret;
-	size_t hnlen;
-	/*
-	 * "hostname" is null-terminated
-	 */
-	lck_mtx_lock(&hostname_lock);
-	hnlen = strlen(hostname);
-	if (hnlen < bufsize) {
-		strlcpy(buf, hostname, bufsize);
-		*len = hnlen;
-		ret = 0;
-	} else {
-		ret = ENAMETOOLONG;
-	}
-	lck_mtx_unlock(&hostname_lock);
-	return ret;
+int bsd_hostname(char *buf, size_t bufsize, size_t *len) {
+  int ret;
+  size_t hnlen;
+  /*
+   * "hostname" is null-terminated
+   */
+  lck_mtx_lock(&hostname_lock);
+  hnlen = strlen(hostname);
+  if (hnlen < bufsize) {
+    strlcpy(buf, hostname, bufsize);
+    *len = hnlen;
+    ret = 0;
+  } else {
+    ret = ENAMETOOLONG;
+  }
+  lck_mtx_unlock(&hostname_lock);
+  return ret;
 }
 
-static devsw_lock_t
-devsw_lock_find_locked(dev_t dev, int mode)
-{
-	devsw_lock_t lock;
+static devsw_lock_t devsw_lock_find_locked(dev_t dev, int mode) {
+  devsw_lock_t lock;
 
-	TAILQ_FOREACH(lock, &devsw_locks, dl_list) {
-		if (lock->dl_dev == dev && lock->dl_mode == mode) {
-			return lock;
-		}
-	}
+  TAILQ_FOREACH(lock, &devsw_locks, dl_list) {
+    if (lock->dl_dev == dev && lock->dl_mode == mode) {
+      return lock;
+    }
+  }
 
-	return NULL;
+  return NULL;
 }
 
-void
-devsw_lock(dev_t dev, int mode)
-{
-	devsw_lock_t newlock, curlock;
+void devsw_lock(dev_t dev, int mode) {
+  devsw_lock_t newlock, curlock;
 
-	assert(0 <= major(dev) && major(dev) < nchrdev);
-	assert(mode == S_IFCHR || mode == S_IFBLK);
+  assert(0 <= major(dev) && major(dev) < nchrdev);
+  assert(mode == S_IFCHR || mode == S_IFBLK);
 
-	newlock = kalloc_type(struct devsw_lock, Z_WAITOK | Z_ZERO);
-	newlock->dl_dev = dev;
-	newlock->dl_thread = current_thread();
-	newlock->dl_mode = mode;
+  newlock = kalloc_type(struct devsw_lock, Z_WAITOK | Z_ZERO);
+  newlock->dl_dev = dev;
+  newlock->dl_thread = current_thread();
+  newlock->dl_mode = mode;
 
-	lck_mtx_lock_spin(&devsw_lock_list_mtx);
+  lck_mtx_lock_spin(&devsw_lock_list_mtx);
 
-	curlock = devsw_lock_find_locked(dev, mode);
-	if (curlock == NULL) {
-		TAILQ_INSERT_TAIL(&devsw_locks, newlock, dl_list);
-	} else {
-		curlock->dl_waiters++;
-		lck_mtx_sleep_with_inheritor(&devsw_lock_list_mtx,
-		    LCK_SLEEP_SPIN, curlock, curlock->dl_thread,
-		    THREAD_UNINT | THREAD_WAIT_NOREPORT,
-		    TIMEOUT_WAIT_FOREVER);
-		assert(curlock->dl_thread == current_thread());
-		curlock->dl_waiters--;
-	}
+  curlock = devsw_lock_find_locked(dev, mode);
+  if (curlock == NULL) {
+    TAILQ_INSERT_TAIL(&devsw_locks, newlock, dl_list);
+  } else {
+    curlock->dl_waiters++;
+    lck_mtx_sleep_with_inheritor(
+        &devsw_lock_list_mtx, LCK_SLEEP_SPIN, curlock, curlock->dl_thread,
+        THREAD_UNINT | THREAD_WAIT_NOREPORT, TIMEOUT_WAIT_FOREVER);
+    assert(curlock->dl_thread == current_thread());
+    curlock->dl_waiters--;
+  }
 
-	lck_mtx_unlock(&devsw_lock_list_mtx);
+  lck_mtx_unlock(&devsw_lock_list_mtx);
 
-	if (curlock != NULL) {
-		kfree_type(struct devsw_lock, newlock);
-	}
+  if (curlock != NULL) {
+    kfree_type(struct devsw_lock, newlock);
+  }
 }
 
-void
-devsw_unlock(dev_t dev, int mode)
-{
-	devsw_lock_t lock;
-	thread_t inheritor_thread = NULL;
+void devsw_unlock(dev_t dev, int mode) {
+  devsw_lock_t lock;
+  thread_t inheritor_thread = NULL;
 
-	assert(0 <= major(dev) && major(dev) < nchrdev);
+  assert(0 <= major(dev) && major(dev) < nchrdev);
 
-	lck_mtx_lock_spin(&devsw_lock_list_mtx);
+  lck_mtx_lock_spin(&devsw_lock_list_mtx);
 
-	lock = devsw_lock_find_locked(dev, mode);
+  lock = devsw_lock_find_locked(dev, mode);
 
-	if (lock == NULL || lock->dl_thread != current_thread()) {
-		panic("current thread doesn't own the lock (%p)", lock);
-	}
+  if (lock == NULL || lock->dl_thread != current_thread()) {
+    panic("current thread doesn't own the lock (%p)", lock);
+  }
 
-	if (lock->dl_waiters) {
-		wakeup_one_with_inheritor(lock, THREAD_AWAKENED,
-		    LCK_WAKE_DEFAULT, &lock->dl_thread);
-		inheritor_thread = lock->dl_thread;
-		lock = NULL;
-	} else {
-		TAILQ_REMOVE(&devsw_locks, lock, dl_list);
-	}
+  if (lock->dl_waiters) {
+    wakeup_one_with_inheritor(lock, THREAD_AWAKENED, LCK_WAKE_DEFAULT,
+                              &lock->dl_thread);
+    inheritor_thread = lock->dl_thread;
+    lock = NULL;
+  } else {
+    TAILQ_REMOVE(&devsw_locks, lock, dl_list);
+  }
 
-	lck_mtx_unlock(&devsw_lock_list_mtx);
+  lck_mtx_unlock(&devsw_lock_list_mtx);
 
-	if (inheritor_thread) {
-		thread_deallocate(inheritor_thread);
-	}
-	kfree_type(struct devsw_lock, lock);
+  if (inheritor_thread) {
+    thread_deallocate(inheritor_thread);
+  }
+  kfree_type(struct devsw_lock, lock);
 }

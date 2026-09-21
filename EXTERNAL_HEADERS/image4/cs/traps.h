@@ -35,10 +35,10 @@
 #ifndef __IMAGE4_CS_TRAPS_H
 #define __IMAGE4_CS_TRAPS_H
 
+#include <image4/image4.h>
 #include <os/base.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <image4/image4.h>
 
 #if XNU_KERNEL_PRIVATE
 #include <sys/_types/_ssize_t.h>
@@ -134,16 +134,11 @@ typedef uintptr_t image4_cs_addr_t;
  * @const IMAGE4_CS_TRAP_SET_BOOT_UUID
  * Set the boot session UUID to inform nonce choices for MobileAsset.
  */
-OS_CLOSED_ENUM(image4_cs_trap, uint64_t,
-	IMAGE4_CS_TRAP_KMOD_SET_RELEASE_TYPE,
-	IMAGE4_CS_TRAP_RESERVED_0,
-	IMAGE4_CS_TRAP_RESERVED_1,
-	IMAGE4_CS_TRAP_NONCE_SET,
-	IMAGE4_CS_TRAP_NONCE_ROLL,
-	IMAGE4_CS_TRAP_IMAGE_ACTIVATE,
-	IMAGE4_CS_TRAP_KMOD_SET_BOOT_UUID,
-	_IMAGE4_CS_TRAP_CNT,
-);
+OS_CLOSED_ENUM(image4_cs_trap, uint64_t, IMAGE4_CS_TRAP_KMOD_SET_RELEASE_TYPE,
+               IMAGE4_CS_TRAP_RESERVED_0, IMAGE4_CS_TRAP_RESERVED_1,
+               IMAGE4_CS_TRAP_NONCE_SET, IMAGE4_CS_TRAP_NONCE_ROLL,
+               IMAGE4_CS_TRAP_IMAGE_ACTIVATE, IMAGE4_CS_TRAP_KMOD_SET_BOOT_UUID,
+               _IMAGE4_CS_TRAP_CNT, );
 
 /*!
  * @typedef image4_cs_trap_handler_t
@@ -169,13 +164,10 @@ OS_CLOSED_ENUM(image4_cs_trap, uint64_t,
  * Upon success, zero is returned. Upon failure, a POSIX error code describing
  * the failure condition.
  */
-typedef errno_t (*image4_cs_trap_handler_t)(
-	image4_cs_trap_t csmx,
-	const void *argv,
-	size_t argv_len,
-	void *_Nullable argv_out,
-	size_t *_Nullable argv_out_len
-);
+typedef errno_t (*image4_cs_trap_handler_t)(image4_cs_trap_t csmx,
+                                            const void *argv, size_t argv_len,
+                                            void *_Nullable argv_out,
+                                            size_t *_Nullable argv_out_len);
 
 /*!
  * @function image4_cs_trap_handler
@@ -190,45 +182,39 @@ typedef errno_t (*image4_cs_trap_handler_t)(
  * @param _which
  * The name of the trap.
  */
-#define image4_cs_trap_handler(_el, _where, _which) \
-	_image4_ ## _el ## _cs_trap_ ## _where ## _ ## _which
+#define image4_cs_trap_handler(_el, _where, _which)                            \
+  _image4_##_el##_cs_trap_##_where##_##_which
 
 #pragma mark Trap Arguments
-#define image4_cs_trap_argv(_which) \
-	image4_cs_trap_argv_ ## _which ## _t
+#define image4_cs_trap_argv(_which) image4_cs_trap_argv_##_which##_t
 
-#define image4_cs_trap_argv_decl(_which) \
-	typedef struct _image4_cs_trap_argv_ ## _which \
-			image4_cs_trap_argv(_which); \
-	struct __attribute__((packed)) _image4_cs_trap_argv_ ## _which
+#define image4_cs_trap_argv_decl(_which)                                       \
+  typedef struct _image4_cs_trap_argv_##_which image4_cs_trap_argv(_which);    \
+  struct __attribute__((packed)) _image4_cs_trap_argv_##_which
 
 image4_cs_trap_argv_decl(kmod_set_release_type) {
-	char __cs_copy csmx_release_type[64];
+  char __cs_copy csmx_release_type[64];
 };
 
 image4_cs_trap_argv_decl(kmod_set_boot_uuid) {
-	uint8_t __cs_copy csmx_uuid[16];
+  uint8_t __cs_copy csmx_uuid[16];
 };
-
-
 
 image4_cs_trap_argv_decl(nonce_set) {
-	uint64_t csmx_handle;
-	uint32_t csmx_flags;
-	uint8_t __cs_copy csmx_clear[16];
-	uint8_t __cs_copy csmx_cipher[16];
+  uint64_t csmx_handle;
+  uint32_t csmx_flags;
+  uint8_t __cs_copy csmx_clear[16];
+  uint8_t __cs_copy csmx_cipher[16];
 };
 
-image4_cs_trap_argv_decl(nonce_roll) {
-	uint64_t csmx_handle;
-};
+image4_cs_trap_argv_decl(nonce_roll) { uint64_t csmx_handle; };
 
 image4_cs_trap_argv_decl(image_activate) {
-	uint64_t csmx_handle;
-	image4_cs_addr_t __cs_xfer csmx_payload;
-	uint32_t csmx_payload_len;
-	image4_cs_addr_t __cs_xfer csmx_manifest;
-	uint32_t csmx_manifest_len;
+  uint64_t csmx_handle;
+  image4_cs_addr_t __cs_xfer csmx_payload;
+  uint32_t csmx_payload_len;
+  image4_cs_addr_t __cs_xfer csmx_manifest;
+  uint32_t csmx_manifest_len;
 };
 
 #pragma mark API
@@ -244,8 +230,8 @@ image4_cs_trap_argv_decl(image_activate) {
  * If the given trap is not implemented, NULL is returned.
  */
 OS_EXPORT OS_WARN_RESULT
-image4_cs_trap_handler_t _Nullable
-image4_cs_trap_resolve_handler(image4_cs_trap_t trap);
+    image4_cs_trap_handler_t _Nullable image4_cs_trap_resolve_handler(
+        image4_cs_trap_t trap);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_cs_trap_resolve_handler);
 
 /*!
@@ -259,8 +245,7 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_cs_trap_resolve_handler);
  * The size of the argument vector in bytes of the provided trap. If the trap
  * number is invalid or not supported by the implementation, -1 is returned.
  */
-OS_EXPORT OS_WARN_RESULT
-ssize_t
+OS_EXPORT OS_WARN_RESULT ssize_t
 image4_cs_trap_vector_size(image4_cs_trap_t trap);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_cs_trap_vector_size);
 

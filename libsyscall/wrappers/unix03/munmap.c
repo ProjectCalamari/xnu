@@ -25,9 +25,9 @@
 
 #if __DARWIN_UNIX03
 
-#include <sys/mman.h>
-#include <mach/mach_init.h>
 #include "stack_logging_internal.h"
+#include <mach/mach_init.h>
+#include <sys/mman.h>
 
 /*
  * munmap stub, for stack logging of VM allocations.
@@ -36,16 +36,15 @@
  */
 extern int __munmap(void *, size_t);
 
-int
-munmap(void *addr, size_t len)
-{
-	if (__syscall_logger) {
-		__syscall_logger(stack_logging_type_vm_deallocate, (uintptr_t)mach_task_self(), (uintptr_t)addr, len, 0, 0);
-	}
+int munmap(void *addr, size_t len) {
+  if (__syscall_logger) {
+    __syscall_logger(stack_logging_type_vm_deallocate,
+                     (uintptr_t)mach_task_self(), (uintptr_t)addr, len, 0, 0);
+  }
 
-	int result = __munmap(addr, len);
+  int result = __munmap(addr, len);
 
-	return result;
+  return result;
 }
 
 #endif /* __DARWIN_UNIX03 */

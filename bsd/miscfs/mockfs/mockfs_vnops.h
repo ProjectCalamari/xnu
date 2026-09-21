@@ -31,7 +31,7 @@
 
 #if MOCKFS
 
-extern int(**mockfs_vnodeop_p)(void *);
+extern int (**mockfs_vnodeop_p)(void *);
 
 #endif /* MOCKFS */
 

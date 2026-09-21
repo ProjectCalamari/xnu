@@ -18,10 +18,10 @@
  * @APPLE_APACHE_LICENSE_HEADER_END@
  */
 
-#include <stdbool.h>
+#include <kern/assert.h>
 #include <os/base.h>
 #include <os/object.h>
-#include <kern/assert.h>
+#include <stdbool.h>
 
 /*
  * Lifecycle of OSLog handles, tracked by os_retain() and os_release(), is that
@@ -29,13 +29,6 @@
  * reference counting.
  */
 
-void*
-os_retain(void *obj)
-{
-	return obj;
-}
+void *os_retain(void *obj) { return obj; }
 
-void
-os_release(void *obj __unused)
-{
-}
+void os_release(void *obj __unused) {}

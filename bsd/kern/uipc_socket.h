@@ -32,45 +32,37 @@
 
 extern struct mem_acct *socket_memacct;
 
-static inline void
-socket_memacct_add(unsigned int size)
-{
-	mem_acct_add(socket_memacct, size);
+static inline void socket_memacct_add(unsigned int size) {
+  mem_acct_add(socket_memacct, size);
 }
 
-static inline void
-socket_memacct_sub(unsigned int size)
-{
-	mem_acct_sub(socket_memacct, size);
+static inline void socket_memacct_sub(unsigned int size) {
+  mem_acct_sub(socket_memacct, size);
 }
 
-static inline bool
-socket_memacct_hardlimit()
-{
-	return mem_acct_limited(socket_memacct) == MEMACCT_HARDLIMIT;
+static inline bool socket_memacct_hardlimit() {
+  return mem_acct_limited(socket_memacct) == MEMACCT_HARDLIMIT;
 }
 
-static inline bool
-socket_memacct_limited()
-{
-	return mem_acct_limited(socket_memacct) != 0;
+static inline bool socket_memacct_limited() {
+  return mem_acct_limited(socket_memacct) != 0;
 }
 
 struct sock_cm_info {
-	int sotc;
-	int netsvctype;
-	uint64_t tx_time;
+  int sotc;
+  int netsvctype;
+  uint64_t tx_time;
 };
 
-static inline void
-sock_init_cm_info(struct sock_cm_info *sockcminfo, const struct socket *so)
-{
-	sockcminfo->sotc = so->so_traffic_class;
-	sockcminfo->netsvctype = so->so_netsvctype;
-	sockcminfo->tx_time = 0;
+static inline void sock_init_cm_info(struct sock_cm_info *sockcminfo,
+                                     const struct socket *so) {
+  sockcminfo->sotc = so->so_traffic_class;
+  sockcminfo->netsvctype = so->so_netsvctype;
+  sockcminfo->tx_time = 0;
 }
 
-extern void sock_parse_cm_info(struct mbuf *control, struct sock_cm_info *sockcminfo);
+extern void sock_parse_cm_info(struct mbuf *control,
+                               struct sock_cm_info *sockcminfo);
 
 #endif /*_KERN_UIPC_SOCKET_H */
 

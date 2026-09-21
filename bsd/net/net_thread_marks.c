@@ -31,114 +31,106 @@
 
 #include <net/dlil.h>
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <sys/domain.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
+#include <sys/param.h>
 #include <sys/socket.h>
-#include <sys/domain.h>
+#include <sys/systm.h>
 #include <sys/user.h>
 
 #include <kern/assert.h>
+#include <kern/locks.h>
+#include <kern/sched_prim.h>
 #include <kern/task.h>
 #include <kern/thread.h>
-#include <kern/sched_prim.h>
-#include <kern/locks.h>
 #include <kern/zalloc.h>
 
-struct net_thread_marks { };
-static const struct net_thread_marks net_thread_marks_base = { };
+struct net_thread_marks {};
+static const struct net_thread_marks net_thread_marks_base = {};
 
 __private_extern__ const net_thread_marks_t net_thread_marks_none =
     &net_thread_marks_base;
 
-__private_extern__ net_thread_marks_t
-net_thread_marks_push(u_int32_t push)
-{
-	static const char *__unsafe_indexable const base = (const void*__single)&net_thread_marks_base;
-	u_int32_t pop = 0;
+__private_extern__ net_thread_marks_t net_thread_marks_push(u_int32_t push) {
+  static const char *__unsafe_indexable const base =
+      (const void *__single) & net_thread_marks_base;
+  u_int32_t pop = 0;
 
-	if (push != 0) {
-		struct uthread *uth = current_uthread();
+  if (push != 0) {
+    struct uthread *uth = current_uthread();
 
-		pop = push & ~uth->uu_network_marks;
-		if (pop != 0) {
-			uth->uu_network_marks |= pop;
-		}
-	}
+    pop = push & ~uth->uu_network_marks;
+    if (pop != 0) {
+      uth->uu_network_marks |= pop;
+    }
+  }
 
-	return __unsafe_forge_single(net_thread_marks_t, (base + pop));
+  return __unsafe_forge_single(net_thread_marks_t, (base + pop));
 }
 
 __private_extern__ net_thread_marks_t
-net_thread_unmarks_push(u_int32_t unpush)
-{
-	static const char *__unsafe_indexable const base = (const void*__single)&net_thread_marks_base;
-	u_int32_t unpop = 0;
+net_thread_unmarks_push(u_int32_t unpush) {
+  static const char *__unsafe_indexable const base =
+      (const void *__single) & net_thread_marks_base;
+  u_int32_t unpop = 0;
 
-	if (unpush != 0) {
-		struct uthread *uth = current_uthread();
+  if (unpush != 0) {
+    struct uthread *uth = current_uthread();
 
-		unpop = unpush & uth->uu_network_marks;
-		if (unpop != 0) {
-			uth->uu_network_marks &= ~unpop;
-		}
-	}
+    unpop = unpush & uth->uu_network_marks;
+    if (unpop != 0) {
+      uth->uu_network_marks &= ~unpop;
+    }
+  }
 
-	return __unsafe_forge_single(net_thread_marks_t, (base + unpop));
+  return __unsafe_forge_single(net_thread_marks_t, (base + unpop));
 }
 
-__private_extern__ void
-net_thread_marks_pop(net_thread_marks_t popx)
-{
-	static const char *__unsafe_indexable const base = (const void*__single)&net_thread_marks_base;
-	const ptrdiff_t pop = (const char *)popx - (const char *)base;
-	if (pop != 0) {
-		static const ptrdiff_t ones = (ptrdiff_t)(u_int32_t)~0U;
-		struct uthread *uth = current_uthread();
+__private_extern__ void net_thread_marks_pop(net_thread_marks_t popx) {
+  static const char *__unsafe_indexable const base =
+      (const void *__single) & net_thread_marks_base;
+  const ptrdiff_t pop = (const char *)popx - (const char *)base;
+  if (pop != 0) {
+    static const ptrdiff_t ones = (ptrdiff_t)(u_int32_t)~0U;
+    struct uthread *uth = current_uthread();
 
-		VERIFY((pop & ones) == pop);
-		VERIFY((ptrdiff_t)(uth->uu_network_marks & pop) == pop);
-		uth->uu_network_marks &= ~pop;
-	}
+    VERIFY((pop & ones) == pop);
+    VERIFY((ptrdiff_t)(uth->uu_network_marks & pop) == pop);
+    uth->uu_network_marks &= ~pop;
+  }
 }
 
-__private_extern__ void
-net_thread_unmarks_pop(net_thread_marks_t unpopx)
-{
-	static const char *__unsafe_indexable const base = (const void*__single)&net_thread_marks_base;
-	ptrdiff_t unpop = (const char *)unpopx - (const char *)base;
+__private_extern__ void net_thread_unmarks_pop(net_thread_marks_t unpopx) {
+  static const char *__unsafe_indexable const base =
+      (const void *__single) & net_thread_marks_base;
+  ptrdiff_t unpop = (const char *)unpopx - (const char *)base;
 
-	if (unpop != 0) {
-		static const ptrdiff_t ones = (ptrdiff_t)(u_int32_t)~0U;
-		struct uthread *uth = current_uthread();
+  if (unpop != 0) {
+    static const ptrdiff_t ones = (ptrdiff_t)(u_int32_t)~0U;
+    struct uthread *uth = current_uthread();
 
-		VERIFY((unpop & ones) == unpop);
-		VERIFY((ptrdiff_t)(uth->uu_network_marks & unpop) == 0);
-		uth->uu_network_marks |= (u_int32_t)unpop;
-	}
+    VERIFY((unpop & ones) == unpop);
+    VERIFY((ptrdiff_t)(uth->uu_network_marks & unpop) == 0);
+    uth->uu_network_marks |= (u_int32_t)unpop;
+  }
 }
 
-
-__private_extern__ u_int32_t
-net_thread_is_marked(u_int32_t check)
-{
-	if (check != 0) {
-		struct uthread *uth = current_uthread();
-		return uth->uu_network_marks & check;
-	} else {
-		return 0;
-	}
+__private_extern__ u_int32_t net_thread_is_marked(u_int32_t check) {
+  if (check != 0) {
+    struct uthread *uth = current_uthread();
+    return uth->uu_network_marks & check;
+  } else {
+    return 0;
+  }
 }
 
-__private_extern__ u_int32_t
-net_thread_is_unmarked(u_int32_t check)
-{
-	if (check != 0) {
-		struct uthread *uth = current_uthread();
-		return ~uth->uu_network_marks & check;
-	} else {
-		return 0;
-	}
+__private_extern__ u_int32_t net_thread_is_unmarked(u_int32_t check) {
+  if (check != 0) {
+    struct uthread *uth = current_uthread();
+    return ~uth->uu_network_marks & check;
+  } else {
+    return 0;
+  }
 }

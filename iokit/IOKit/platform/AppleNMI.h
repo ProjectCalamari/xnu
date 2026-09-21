@@ -35,41 +35,41 @@
 #ifndef _IOKIT_APPLENMI_H
 #define _IOKIT_APPLENMI_H
 
-#include <IOKit/IOService.h>
 #include <IOKit/IOInterrupts.h>
+#include <IOKit/IOService.h>
 
 // NMI Interrupt Constants
-enum{
-	kExtInt9_NMIIntSource      = 0x800506E0,
-	kNMIIntLevelMask           = 0x00004000,
-	kNMIIntMask                = 0x00000080
+enum {
+  kExtInt9_NMIIntSource = 0x800506E0,
+  kNMIIntLevelMask = 0x00004000,
+  kNMIIntMask = 0x00000080
 };
 
-
-class AppleNMI : public IOService
-{
-	OSDeclareDefaultStructors(AppleNMI);
+class AppleNMI : public IOService {
+  OSDeclareDefaultStructors(AppleNMI);
 
 private:
-	bool enable_debugger;
-	bool mask_NMI;
+  bool enable_debugger;
+  bool mask_NMI;
 
-	struct ExpansionData { };
-	ExpansionData * reserved; // Reserved for future use
+  struct ExpansionData {};
+  ExpansionData *reserved; // Reserved for future use
 
 public:
-	IOService *rootDomain;
-	virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn initNMI(IOInterruptController *parentController, OSData *parentSource);
-	virtual IOReturn handleInterrupt(void *refCon, IOService *nub, int source);
+  IOService *rootDomain;
+  virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn initNMI(IOInterruptController *parentController,
+                           OSData *parentSource);
+  virtual IOReturn handleInterrupt(void *refCon, IOService *nub, int source);
 
-// Power handling methods:
-	virtual IOReturn powerStateWillChangeTo(IOPMPowerFlags, unsigned long, IOService*) APPLE_KEXT_OVERRIDE;
+  // Power handling methods:
+  virtual IOReturn powerStateWillChangeTo(IOPMPowerFlags, unsigned long,
+                                          IOService *) APPLE_KEXT_OVERRIDE;
 
-	OSMetaClassDeclareReservedUnused(AppleNMI, 0);
-	OSMetaClassDeclareReservedUnused(AppleNMI, 1);
-	OSMetaClassDeclareReservedUnused(AppleNMI, 2);
-	OSMetaClassDeclareReservedUnused(AppleNMI, 3);
+  OSMetaClassDeclareReservedUnused(AppleNMI, 0);
+  OSMetaClassDeclareReservedUnused(AppleNMI, 1);
+  OSMetaClassDeclareReservedUnused(AppleNMI, 2);
+  OSMetaClassDeclareReservedUnused(AppleNMI, 3);
 };
 
 #endif /* ! _IOKIT_APPLENMI_H */

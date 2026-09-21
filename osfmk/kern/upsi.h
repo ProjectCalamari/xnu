@@ -37,16 +37,18 @@
 #endif
 
 #if HAS_UPSI_FAILURE_INJECTION
-/* Enumeration of the injectable failure locations/stages - Must be kept in sync with iBoot's "power_boot_stages.h"
- * The "stage" macros specify points where failure injection is possible
+/* Enumeration of the injectable failure locations/stages - Must be kept in sync
+ * with iBoot's "power_boot_stages.h" The "stage" macros specify points where
+ * failure injection is possible
  */
-__enum_decl(failure_injection_stage_t, uint64_t, {
-	XNU_STAGE_ARM_INIT              = 0x31,
-	XNU_STAGE_BOOTSTRAP_START       = 0x32,
-	XNU_STAGE_SCHEDULER_START       = 0x33,
-	XNU_STAGE_BSD_INIT_START        = 0x34,
-	XNU_STAGE_BSD_INIT_END          = 0x35,
-});
+__enum_decl(failure_injection_stage_t, uint64_t,
+            {
+                XNU_STAGE_ARM_INIT = 0x31,
+                XNU_STAGE_BOOTSTRAP_START = 0x32,
+                XNU_STAGE_SCHEDULER_START = 0x33,
+                XNU_STAGE_BSD_INIT_START = 0x34,
+                XNU_STAGE_BSD_INIT_END = 0x35,
+            });
 
 /* Enumeration of the injectable failure actions
  *
@@ -55,13 +57,15 @@ __enum_decl(failure_injection_stage_t, uint64_t, {
  *
  * ACTION_WATCHDOG_TIMEOUT -> Deadloops with the system watchdog enabled
  * ACTION_DEADLOOP         -> Deadloops with the system watchdog disabled
- * The watchdog behavior is configured by iBoot. Convey'd to XNU through the wdt=-1 boot-arg
+ * The watchdog behavior is configured by iBoot. Convey'd to XNU through the
+ * wdt=-1 boot-arg
  */
-__enum_decl(failure_injection_action_t, uint64_t, {
-	INJECTION_ACTION_PANIC                    = 0x01,
-	INJECTION_ACTION_WATCHDOG_TIMEOUT         = 0x02,
-	INJECTION_ACTION_DEADLOOP                 = 0x03,
-});
+__enum_decl(failure_injection_action_t, uint64_t,
+            {
+                INJECTION_ACTION_PANIC = 0x01,
+                INJECTION_ACTION_WATCHDOG_TIMEOUT = 0x02,
+                INJECTION_ACTION_DEADLOOP = 0x03,
+            });
 
 extern uint64_t xnu_upsi_injection_stage;
 extern uint64_t xnu_upsi_injection_action;

@@ -26,23 +26,21 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <libkern/libkern.h>
-#include <libkern/crypto/register_crypto.h>
 #include <libkern/crypto/crypto_internal.h>
+#include <libkern/crypto/register_crypto.h>
+#include <libkern/libkern.h>
 #include <libkern/section_keywords.h>
 
 SECURITY_READ_ONLY_LATE(bool) crypto_init = false;
 SECURITY_READ_ONLY_LATE(crypto_functions_t) g_crypto_funcs = NULL;
 
-int
-register_crypto_functions(const crypto_functions_t funcs)
-{
-	if (g_crypto_funcs) {
-		return -1;
-	}
+int register_crypto_functions(const crypto_functions_t funcs) {
+  if (g_crypto_funcs) {
+    return -1;
+  }
 
-	g_crypto_funcs = funcs;
-	crypto_init = true;
+  g_crypto_funcs = funcs;
+  crypto_init = true;
 
-	return 0;
+  return 0;
 }

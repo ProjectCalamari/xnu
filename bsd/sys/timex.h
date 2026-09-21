@@ -65,7 +65,7 @@
 
 #include <sys/time.h>
 
-#define NTP_API         4               /* NTP API version */
+#define NTP_API 4 /* NTP API version */
 
 /*
  * The following defines establish the performance envelope of the
@@ -77,79 +77,81 @@
  * STA_FLL bit in the status word.
  */
 
-#define MAXPHASE        500000000L      /* max phase error (ns) */
-#define MAXFREQ         500000L         /* max freq error (ns/s) */
-#define MINSEC          256             /* min FLL update interval (s) */
-#define MAXSEC          2048            /* max PLL update interval (s) */
-#define NANOSECOND      1000000000L     /* nanoseconds in one second */
-#define SCALE_PPM       (65536 / 1000)  /* crude ns/s to scaled PPM */
-#define MAXTC           10              /* max time constant */
+#define MAXPHASE 500000000L      /* max phase error (ns) */
+#define MAXFREQ 500000L          /* max freq error (ns/s) */
+#define MINSEC 256               /* min FLL update interval (s) */
+#define MAXSEC 2048              /* max PLL update interval (s) */
+#define NANOSECOND 1000000000L   /* nanoseconds in one second */
+#define SCALE_PPM (65536 / 1000) /* crude ns/s to scaled PPM */
+#define MAXTC 10                 /* max time constant */
 
-/* Codes for PPS (pulse-per-second) signals or leap seconds are not used but kept
- * unchanged and commented for future compatibility.
+/* Codes for PPS (pulse-per-second) signals or leap seconds are not used but
+ * kept unchanged and commented for future compatibility.
  */
 
 /*
  * Control mode codes (timex.modes)
  */
-#define MOD_OFFSET      0x0001          /* set time offset */
-#define MOD_FREQUENCY   0x0002          /* set frequency offset */
-#define MOD_MAXERROR    0x0004          /* set maximum time error */
-#define MOD_ESTERROR    0x0008          /* set estimated time error */
-#define MOD_STATUS      0x0010          /* set clock status bits */
-#define MOD_TIMECONST   0x0020          /* set PLL time constant */
-#define MOD_PPSMAX      0x0040          /* set PPS maximum averaging time */
-#define MOD_TAI         0x0080          /* set TAI offset */
-#define MOD_MICRO       0x1000          /* select microsecond resolution */
-#define MOD_NANO        0x2000          /* select nanosecond resolution */
-#define MOD_CLKB        0x4000          /* select clock B */
-#define MOD_CLKA        0x8000          /* select clock A */
+#define MOD_OFFSET 0x0001    /* set time offset */
+#define MOD_FREQUENCY 0x0002 /* set frequency offset */
+#define MOD_MAXERROR 0x0004  /* set maximum time error */
+#define MOD_ESTERROR 0x0008  /* set estimated time error */
+#define MOD_STATUS 0x0010    /* set clock status bits */
+#define MOD_TIMECONST 0x0020 /* set PLL time constant */
+#define MOD_PPSMAX 0x0040    /* set PPS maximum averaging time */
+#define MOD_TAI 0x0080       /* set TAI offset */
+#define MOD_MICRO 0x1000     /* select microsecond resolution */
+#define MOD_NANO 0x2000      /* select nanosecond resolution */
+#define MOD_CLKB 0x4000      /* select clock B */
+#define MOD_CLKA 0x8000      /* select clock A */
 
 /*
  * Status codes (timex.status)
  */
-#define STA_PLL         0x0001          /* enable PLL updates (rw) */
-#define STA_PPSFREQ     0x0002          /* enable PPS freq discipline (rw) */
-#define STA_PPSTIME     0x0004          /* enable PPS time discipline (rw) */
-#define STA_FLL         0x0008          /* enable FLL mode (rw) */
-#define STA_INS         0x0010          /* insert leap (rw) */
-#define STA_DEL         0x0020          /* delete leap (rw) */
-#define STA_UNSYNC      0x0040          /* clock unsynchronized (rw) */
-#define STA_FREQHOLD    0x0080          /* hold frequency (rw) */
-#define STA_PPSSIGNAL   0x0100          /* PPS signal present (ro) */
-#define STA_PPSJITTER   0x0200          /* PPS signal jitter exceeded (ro) */
-#define STA_PPSWANDER   0x0400          /* PPS signal wander exceeded (ro) */
-#define STA_PPSERROR    0x0800          /* PPS signal calibration error (ro) */
-#define STA_CLOCKERR    0x1000          /* clock hardware fault (ro) */
-#define STA_NANO        0x2000          /* resolution (0 = us, 1 = ns) (ro) */
-#define STA_MODE        0x4000          /* mode (0 = PLL, 1 = FLL) (ro) */
-#define STA_CLK         0x8000          /* clock source (0 = A, 1 = B) (ro) */
+#define STA_PLL 0x0001       /* enable PLL updates (rw) */
+#define STA_PPSFREQ 0x0002   /* enable PPS freq discipline (rw) */
+#define STA_PPSTIME 0x0004   /* enable PPS time discipline (rw) */
+#define STA_FLL 0x0008       /* enable FLL mode (rw) */
+#define STA_INS 0x0010       /* insert leap (rw) */
+#define STA_DEL 0x0020       /* delete leap (rw) */
+#define STA_UNSYNC 0x0040    /* clock unsynchronized (rw) */
+#define STA_FREQHOLD 0x0080  /* hold frequency (rw) */
+#define STA_PPSSIGNAL 0x0100 /* PPS signal present (ro) */
+#define STA_PPSJITTER 0x0200 /* PPS signal jitter exceeded (ro) */
+#define STA_PPSWANDER 0x0400 /* PPS signal wander exceeded (ro) */
+#define STA_PPSERROR 0x0800  /* PPS signal calibration error (ro) */
+#define STA_CLOCKERR 0x1000  /* clock hardware fault (ro) */
+#define STA_NANO 0x2000      /* resolution (0 = us, 1 = ns) (ro) */
+#define STA_MODE 0x4000      /* mode (0 = PLL, 1 = FLL) (ro) */
+#define STA_CLK 0x8000       /* clock source (0 = A, 1 = B) (ro) */
 
-#define STA_RONLY (STA_PPSSIGNAL | STA_PPSJITTER | STA_PPSWANDER | \
-    STA_PPSERROR | STA_CLOCKERR | STA_NANO | STA_MODE | STA_CLK)
+#define STA_RONLY                                                              \
+  (STA_PPSSIGNAL | STA_PPSJITTER | STA_PPSWANDER | STA_PPSERROR |              \
+   STA_CLOCKERR | STA_NANO | STA_MODE | STA_CLK)
 
-#define STA_SUPPORTED (STA_PLL | STA_FLL | STA_UNSYNC | STA_FREQHOLD | \
-    STA_CLOCKERR | STA_NANO | STA_MODE | STA_CLK)
+#define STA_SUPPORTED                                                          \
+  (STA_PLL | STA_FLL | STA_UNSYNC | STA_FREQHOLD | STA_CLOCKERR | STA_NANO |   \
+   STA_MODE | STA_CLK)
 
 /*
  * Clock states (ntptimeval.time_state)
  */
-#define TIME_OK         0               /* no leap second warning */
-#define TIME_INS        1               /* insert leap second warning */
-#define TIME_DEL        2               /* delete leap second warning */
-#define TIME_OOP        3               /* leap second in progress */
-#define TIME_WAIT       4               /* leap second has occurred */
-#define TIME_ERROR      5               /* error (see status word) */
+#define TIME_OK 0    /* no leap second warning */
+#define TIME_INS 1   /* insert leap second warning */
+#define TIME_DEL 2   /* delete leap second warning */
+#define TIME_OOP 3   /* leap second in progress */
+#define TIME_WAIT 4  /* leap second has occurred */
+#define TIME_ERROR 5 /* error (see status word) */
 
 /*
  * NTP user interface -- ntp_gettime - used to read kernel clock values
  */
 struct ntptimeval {
-	struct timespec time;           /* current time (ns) (ro) */
-	long maxerror;                  /* maximum error (us) (ro) */
-	long esterror;                  /* estimated error (us) (ro) */
-	long tai;                       /* TAI offset */
-	int time_state;                 /* time status */
+  struct timespec time; /* current time (ns) (ro) */
+  long maxerror;        /* maximum error (us) (ro) */
+  long esterror;        /* estimated error (us) (ro) */
+  long tai;             /* TAI offset */
+  int time_state;       /* time status */
 };
 
 /*
@@ -160,53 +162,52 @@ struct ntptimeval {
  * STA_NANO is zero and nanoseconds if not.
  */
 struct timex {
-	unsigned int modes;             /* clock mode bits (wo) */
-	long    offset;                 /* time offset (ns/us) (rw) */
-	long    freq;                   /* frequency offset (scaled PPM) (rw) */
-	long    maxerror;               /* maximum error (us) (rw) */
-	long    esterror;               /* estimated error (us) (rw) */
-	int     status;                 /* clock status bits (rw) */
-	long    constant;               /* poll interval (log2 s) (rw) */
-	long    precision;              /* clock precision (ns/us) (ro) */
-	long    tolerance;              /* clock frequency tolerance (scaled
-	                                 * PPM) (ro) */
-	/*
-	 * The following read-only structure members are used by
-	 * the PPS signal discipline that is currently not supported.
-	 * They are included for compatibility.
-	 */
-	long    ppsfreq;                /* PPS frequency (scaled PPM) (ro) */
-	long    jitter;                 /* PPS jitter (ns/us) (ro) */
-	int     shift;                  /* interval duration (s) (shift) (ro) */
-	long    stabil;                 /* PPS stability (scaled PPM) (ro) */
-	long    jitcnt;                 /* jitter limit exceeded (ro) */
-	long    calcnt;                 /* calibration intervals (ro) */
-	long    errcnt;                 /* calibration errors (ro) */
-	long    stbcnt;                 /* stability limit exceeded (ro) */
+  unsigned int modes; /* clock mode bits (wo) */
+  long offset;        /* time offset (ns/us) (rw) */
+  long freq;          /* frequency offset (scaled PPM) (rw) */
+  long maxerror;      /* maximum error (us) (rw) */
+  long esterror;      /* estimated error (us) (rw) */
+  int status;         /* clock status bits (rw) */
+  long constant;      /* poll interval (log2 s) (rw) */
+  long precision;     /* clock precision (ns/us) (ro) */
+  long tolerance;     /* clock frequency tolerance (scaled
+                       * PPM) (ro) */
+  /*
+   * The following read-only structure members are used by
+   * the PPS signal discipline that is currently not supported.
+   * They are included for compatibility.
+   */
+  long ppsfreq; /* PPS frequency (scaled PPM) (ro) */
+  long jitter;  /* PPS jitter (ns/us) (ro) */
+  int shift;    /* interval duration (s) (shift) (ro) */
+  long stabil;  /* PPS stability (scaled PPM) (ro) */
+  long jitcnt;  /* jitter limit exceeded (ro) */
+  long calcnt;  /* calibration intervals (ro) */
+  long errcnt;  /* calibration errors (ro) */
+  long stbcnt;  /* stability limit exceeded (ro) */
 };
 
 #ifdef KERNEL
 #ifdef XNU_KERNEL_PRIVATE
-#include <sys/_types/_user32_timex.h>
-#include <sys/_types/_user64_timex.h>
-#include <sys/_types/_user32_ntptimeval.h>
-#include <sys/_types/_user64_ntptimeval.h>
 #include <kern/clock.h>
+#include <sys/_types/_user32_ntptimeval.h>
+#include <sys/_types/_user32_timex.h>
+#include <sys/_types/_user64_ntptimeval.h>
+#include <sys/_types/_user64_timex.h>
 
 int64_t ntp_get_freq(void);
-void    ntp_update_second(int64_t *adjustment, clock_sec_t secs);
-void    ntp_init(void);
+void ntp_update_second(int64_t *adjustment, clock_sec_t secs);
+void ntp_init(void);
 #endif
 #else /* !_KERNEL */
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-int     ntp_adjtime(struct timex *);
-int     ntp_gettime(struct ntptimeval *);
+int ntp_adjtime(struct timex *);
+int ntp_gettime(struct ntptimeval *);
 #endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 __END_DECLS
 #endif /* KERNEL */
-
 
 #endif /* !_SYS_TIMEX_H_ */

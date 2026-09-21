@@ -65,19 +65,16 @@
 #include <arm64/proc_reg.h>
 #endif
 
-
 #if defined(HAS_APPLE_PAC)
-#define TASK_ADDITIONS_PAC \
-	uint64_t rop_pid; \
-	uint64_t jop_pid; \
-	uint8_t disable_user_jop;
+#define TASK_ADDITIONS_PAC                                                     \
+  uint64_t rop_pid;                                                            \
+  uint64_t jop_pid;                                                            \
+  uint8_t disable_user_jop;
 #else
 #define TASK_ADDITIONS_PAC
 #endif
 
 #define TASK_ADDITIONS_HW_AND_EMULATION
-
-
 
 #define TASK_ADDITIONS_UEXC uint64_t uexc[4];
 
@@ -89,12 +86,12 @@
 
 #define TASK_ADDITIONS_APT
 
-#define MACHINE_TASK \
-	void * XNU_PTRAUTH_SIGNED_PTR("task.task_debug") task_debug; \
-	TASK_ADDITIONS_PAC \
-	TASK_ADDITIONS_HW_AND_EMULATION \
-\
-	TASK_ADDITIONS_UEXC \
-	TASK_ADDITIONS_X18 \
-	TASK_ADDITIONS_APT \
-	bool uses_1ghz_timebase;
+#define MACHINE_TASK                                                           \
+  void *XNU_PTRAUTH_SIGNED_PTR("task.task_debug") task_debug;                  \
+  TASK_ADDITIONS_PAC                                                           \
+  TASK_ADDITIONS_HW_AND_EMULATION                                              \
+                                                                               \
+  TASK_ADDITIONS_UEXC                                                          \
+  TASK_ADDITIONS_X18                                                           \
+  TASK_ADDITIONS_APT                                                           \
+  bool uses_1ghz_timebase;

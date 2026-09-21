@@ -27,29 +27,30 @@
  */
 
 #include <arm/cpu_data_internal.h>
-#include <mach/mach_types.h>
 #include <mach/mach_traps.h>
+#include <mach/mach_types.h>
 #include <mach/mach_vm.h>
-#include <vm/vm_map_xnu.h>
-#include <vm/vm_map_internal.h>
-#include <vm/vm_pageout_internal.h>
 #include <vm/vm_kern_xnu.h>
+#include <vm/vm_map_internal.h>
+#include <vm/vm_map_xnu.h>
 #include <vm/vm_object_internal.h>
+#include <vm/vm_pageout_internal.h>
 
-// fixme: rdar://114299113 tracks resolving the supportlib issue with hwtrace features
+// fixme: rdar://114299113 tracks resolving the supportlib issue with hwtrace
+// features
 
-
-bool
-apt_allocate_va_buffer(__unused size_t allocation_size, vm_map_offset_t *__unused ret_mapped_addr, upl_t *__unused ret_upl);
-bool
-apt_allocate_va_buffer(__unused size_t allocation_size, vm_map_offset_t *__unused ret_mapped_addr, upl_t *__unused ret_upl)
-{
-	return false;
+bool apt_allocate_va_buffer(__unused size_t allocation_size,
+                            vm_map_offset_t *__unused ret_mapped_addr,
+                            upl_t *__unused ret_upl);
+bool apt_allocate_va_buffer(__unused size_t allocation_size,
+                            vm_map_offset_t *__unused ret_mapped_addr,
+                            upl_t *__unused ret_upl) {
+  return false;
 }
 
-void
-apt_free_va_buffer(__unused size_t allocation_size, __unused vm_map_offset_t mapped_addr, __unused upl_t upl);
-void
-apt_free_va_buffer(__unused size_t allocation_size, __unused vm_map_offset_t mapped_addr, __unused upl_t upl)
-{
-}
+void apt_free_va_buffer(__unused size_t allocation_size,
+                        __unused vm_map_offset_t mapped_addr,
+                        __unused upl_t upl);
+void apt_free_va_buffer(__unused size_t allocation_size,
+                        __unused vm_map_offset_t mapped_addr,
+                        __unused upl_t upl) {}

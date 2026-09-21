@@ -36,39 +36,39 @@
 
 #include <mach/mach_types.h>
 
-#define LOCKGROUP_MAX_NAME      64
+#define LOCKGROUP_MAX_NAME 64
 
-#define LOCKGROUP_ATTR_STAT     0x01ULL
+#define LOCKGROUP_ATTR_STAT 0x01ULL
 
 typedef struct lockgroup_info {
-	char            lockgroup_name[LOCKGROUP_MAX_NAME];
-	uint64_t        lockgroup_attr;
-	uint64_t        lock_spin_cnt;
-	uint64_t        lock_spin_util_cnt;
-	uint64_t        lock_spin_held_cnt;
-	uint64_t        lock_spin_miss_cnt;
-	uint64_t        lock_spin_held_max;
-	uint64_t        lock_spin_held_cum;
-	uint64_t        lock_mtx_cnt;
-	uint64_t        lock_mtx_util_cnt;
-	uint64_t        lock_mtx_held_cnt;
-	uint64_t        lock_mtx_miss_cnt;
-	uint64_t        lock_mtx_wait_cnt;
-	uint64_t        lock_mtx_held_max;
-	uint64_t        lock_mtx_held_cum;
-	uint64_t        lock_mtx_wait_max;
-	uint64_t        lock_mtx_wait_cum;
-	uint64_t        lock_rw_cnt;
-	uint64_t        lock_rw_util_cnt;
-	uint64_t        lock_rw_held_cnt;
-	uint64_t        lock_rw_miss_cnt;
-	uint64_t        lock_rw_wait_cnt;
-	uint64_t        lock_rw_held_max;
-	uint64_t        lock_rw_held_cum;
-	uint64_t        lock_rw_wait_max;
-	uint64_t        lock_rw_wait_cum;
+  char lockgroup_name[LOCKGROUP_MAX_NAME];
+  uint64_t lockgroup_attr;
+  uint64_t lock_spin_cnt;
+  uint64_t lock_spin_util_cnt;
+  uint64_t lock_spin_held_cnt;
+  uint64_t lock_spin_miss_cnt;
+  uint64_t lock_spin_held_max;
+  uint64_t lock_spin_held_cum;
+  uint64_t lock_mtx_cnt;
+  uint64_t lock_mtx_util_cnt;
+  uint64_t lock_mtx_held_cnt;
+  uint64_t lock_mtx_miss_cnt;
+  uint64_t lock_mtx_wait_cnt;
+  uint64_t lock_mtx_held_max;
+  uint64_t lock_mtx_held_cum;
+  uint64_t lock_mtx_wait_max;
+  uint64_t lock_mtx_wait_cum;
+  uint64_t lock_rw_cnt;
+  uint64_t lock_rw_util_cnt;
+  uint64_t lock_rw_held_cnt;
+  uint64_t lock_rw_miss_cnt;
+  uint64_t lock_rw_wait_cnt;
+  uint64_t lock_rw_held_max;
+  uint64_t lock_rw_held_cum;
+  uint64_t lock_rw_wait_max;
+  uint64_t lock_rw_wait_cum;
 } lockgroup_info_t;
 
 typedef lockgroup_info_t *lockgroup_info_array_t;
 
-#endif  /* _MACH_DEBUG_LOCKGROUP_INFO_H_ */
+#endif /* _MACH_DEBUG_LOCKGROUP_INFO_H_ */

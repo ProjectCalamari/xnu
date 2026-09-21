@@ -39,293 +39,274 @@
 
 OSDefineMetaClassAndStructors(OSCollectionIterator, OSIterator)
 
-bool
-OSCollectionIterator::initWithCollection(const OSCollection *inColl)
-{
-	if (!super::init() || !inColl) {
-		return false;
-	}
+    bool OSCollectionIterator::initWithCollection(const OSCollection *inColl) {
+  if (!super::init() || !inColl) {
+    return false;
+  }
 
-	collection.reset(inColl, OSRetain);
-	collIterator = NULL;
-	initialUpdateStamp = 0;
-	valid = false;
+  collection.reset(inColl, OSRetain);
+  collIterator = NULL;
+  initialUpdateStamp = 0;
+  valid = false;
 
-	return true;
+  return true;
 }
 
 OSSharedPtr<OSCollectionIterator>
-OSCollectionIterator::withCollection(const OSCollection *inColl)
-{
-	OSSharedPtr<OSCollectionIterator> me = OSMakeShared<OSCollectionIterator>();
+OSCollectionIterator::withCollection(const OSCollection *inColl) {
+  OSSharedPtr<OSCollectionIterator> me = OSMakeShared<OSCollectionIterator>();
 
-	if (me && !me->initWithCollection(inColl)) {
-		return nullptr;
-	}
+  if (me && !me->initWithCollection(inColl)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-void
-OSCollectionIterator::free()
-{
-	freeIteratorStorage();
+void OSCollectionIterator::free() {
+  freeIteratorStorage();
 
-	collection.reset();
+  collection.reset();
 
-	super::free();
+  super::free();
 }
 
-void
-OSCollectionIterator::reset()
-{
-	valid = false;
-	bool initialized = initializeIteratorStorage();
+void OSCollectionIterator::reset() {
+  valid = false;
+  bool initialized = initializeIteratorStorage();
 
-	if (!initialized) {
-		// reusing existing storage
-		void * storage = getIteratorStorage();
-		bzero(storage, collection->iteratorSize());
+  if (!initialized) {
+    // reusing existing storage
+    void *storage = getIteratorStorage();
+    bzero(storage, collection->iteratorSize());
 
-		if (!collection->initIterator(storage)) {
-			return;
-		}
+    if (!collection->initIterator(storage)) {
+      return;
+    }
 
-		initialUpdateStamp = collection->updateStamp;
-		valid = true;
-	}
+    initialUpdateStamp = collection->updateStamp;
+    valid = true;
+  }
 }
 
-bool
-OSCollectionIterator::isValid()
-{
-	initializeIteratorStorage();
+bool OSCollectionIterator::isValid() {
+  initializeIteratorStorage();
 
-	if (!valid || collection->updateStamp != initialUpdateStamp) {
-		return false;
-	}
+  if (!valid || collection->updateStamp != initialUpdateStamp) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-bool
-OSCollectionIterator::initializeIteratorStorage()
-{
-	void * result = NULL;
-	bool initialized = false;
+bool OSCollectionIterator::initializeIteratorStorage() {
+  void *result = NULL;
+  bool initialized = false;
 
 #if __LP64__
-	OSCollectionIteratorStorageType storageType = getStorageType();
-	switch (storageType) {
-	case OSCollectionIteratorStorageUnallocated:
-		if (collection->iteratorSize() > sizeof(inlineStorage) || isSubclassed()) {
-			collIterator = (void *)kalloc_data(collection->iteratorSize(), Z_WAITOK);
-			OSCONTAINER_ACCUMSIZE(collection->iteratorSize());
-			if (!collection->initIterator(collIterator)) {
-				kfree_data(collIterator, collection->iteratorSize());
-				OSCONTAINER_ACCUMSIZE(-((size_t) collection->iteratorSize()));
-				collIterator = NULL;
-				initialized = false;
-				setStorageType(OSCollectionIteratorStorageUnallocated);
-			} else {
-				setStorageType(OSCollectionIteratorStoragePointer);
-				result = collIterator;
-				initialized = true;
-			}
-		} else {
-			bzero(&inlineStorage[0], collection->iteratorSize());
-			if (!collection->initIterator(&inlineStorage[0])) {
-				bzero(&inlineStorage[0], collection->iteratorSize());
-				initialized = false;
-				setStorageType(OSCollectionIteratorStorageUnallocated);
-			} else {
-				setStorageType(OSCollectionIteratorStorageInline);
-				result = &inlineStorage[0];
-				initialized = true;
-			}
-		}
-		break;
-	case OSCollectionIteratorStoragePointer:
-		// already initialized
-		initialized = false;
-		break;
-	case OSCollectionIteratorStorageInline:
-		// already initialized
-		initialized = false;
-		break;
-	default:
-		panic("unexpected storage type %u", storageType);
-	}
+  OSCollectionIteratorStorageType storageType = getStorageType();
+  switch (storageType) {
+  case OSCollectionIteratorStorageUnallocated:
+    if (collection->iteratorSize() > sizeof(inlineStorage) || isSubclassed()) {
+      collIterator = (void *)kalloc_data(collection->iteratorSize(), Z_WAITOK);
+      OSCONTAINER_ACCUMSIZE(collection->iteratorSize());
+      if (!collection->initIterator(collIterator)) {
+        kfree_data(collIterator, collection->iteratorSize());
+        OSCONTAINER_ACCUMSIZE(-((size_t)collection->iteratorSize()));
+        collIterator = NULL;
+        initialized = false;
+        setStorageType(OSCollectionIteratorStorageUnallocated);
+      } else {
+        setStorageType(OSCollectionIteratorStoragePointer);
+        result = collIterator;
+        initialized = true;
+      }
+    } else {
+      bzero(&inlineStorage[0], collection->iteratorSize());
+      if (!collection->initIterator(&inlineStorage[0])) {
+        bzero(&inlineStorage[0], collection->iteratorSize());
+        initialized = false;
+        setStorageType(OSCollectionIteratorStorageUnallocated);
+      } else {
+        setStorageType(OSCollectionIteratorStorageInline);
+        result = &inlineStorage[0];
+        initialized = true;
+      }
+    }
+    break;
+  case OSCollectionIteratorStoragePointer:
+    // already initialized
+    initialized = false;
+    break;
+  case OSCollectionIteratorStorageInline:
+    // already initialized
+    initialized = false;
+    break;
+  default:
+    panic("unexpected storage type %u", storageType);
+  }
 #else
-	if (!collIterator) {
-		collIterator = (void *)kalloc_data(collection->iteratorSize(), Z_WAITOK);
-		OSCONTAINER_ACCUMSIZE(collection->iteratorSize());
-		if (!collection->initIterator(collIterator)) {
-			kfree_data(collIterator, collection->iteratorSize());
-			OSCONTAINER_ACCUMSIZE(-((size_t) collection->iteratorSize()));
-			collIterator = NULL;
-			initialized = false;
-			setStorageType(OSCollectionIteratorStorageUnallocated);
-		} else {
-			setStorageType(OSCollectionIteratorStoragePointer);
-			result = collIterator;
-			initialized = true;
-		}
-	}
+  if (!collIterator) {
+    collIterator = (void *)kalloc_data(collection->iteratorSize(), Z_WAITOK);
+    OSCONTAINER_ACCUMSIZE(collection->iteratorSize());
+    if (!collection->initIterator(collIterator)) {
+      kfree_data(collIterator, collection->iteratorSize());
+      OSCONTAINER_ACCUMSIZE(-((size_t)collection->iteratorSize()));
+      collIterator = NULL;
+      initialized = false;
+      setStorageType(OSCollectionIteratorStorageUnallocated);
+    } else {
+      setStorageType(OSCollectionIteratorStoragePointer);
+      result = collIterator;
+      initialized = true;
+    }
+  }
 #endif /* __LP64__ */
 
-	if (initialized) {
-		valid = true;
-		initialUpdateStamp = collection->updateStamp;
-	}
+  if (initialized) {
+    valid = true;
+    initialUpdateStamp = collection->updateStamp;
+  }
 
-	return initialized;
+  return initialized;
 }
 
-void *
-OSCollectionIterator::getIteratorStorage()
-{
-	void * result = NULL;
+void *OSCollectionIterator::getIteratorStorage() {
+  void *result = NULL;
 
 #if __LP64__
-	OSCollectionIteratorStorageType storageType = getStorageType();
+  OSCollectionIteratorStorageType storageType = getStorageType();
 
-	switch (storageType) {
-	case OSCollectionIteratorStorageUnallocated:
-		result = NULL;
-		break;
-	case OSCollectionIteratorStoragePointer:
-		result = collIterator;
-		break;
-	case OSCollectionIteratorStorageInline:
-		result = &inlineStorage[0];
-		break;
-	default:
-		panic("unexpected storage type %u", storageType);
-	}
+  switch (storageType) {
+  case OSCollectionIteratorStorageUnallocated:
+    result = NULL;
+    break;
+  case OSCollectionIteratorStoragePointer:
+    result = collIterator;
+    break;
+  case OSCollectionIteratorStorageInline:
+    result = &inlineStorage[0];
+    break;
+  default:
+    panic("unexpected storage type %u", storageType);
+  }
 #else
-	OSCollectionIteratorStorageType storageType __assert_only = getStorageType();
-	assert(storageType == OSCollectionIteratorStoragePointer || storageType == OSCollectionIteratorStorageUnallocated);
-	result = collIterator;
+  OSCollectionIteratorStorageType storageType __assert_only = getStorageType();
+  assert(storageType == OSCollectionIteratorStoragePointer ||
+         storageType == OSCollectionIteratorStorageUnallocated);
+  result = collIterator;
 #endif /* __LP64__ */
 
-	return result;
+  return result;
 }
 
-void
-OSCollectionIterator::freeIteratorStorage()
-{
+void OSCollectionIterator::freeIteratorStorage() {
 #if __LP64__
-	OSCollectionIteratorStorageType storageType = getStorageType();
+  OSCollectionIteratorStorageType storageType = getStorageType();
 
-	switch (storageType) {
-	case OSCollectionIteratorStorageUnallocated:
-		break;
-	case OSCollectionIteratorStoragePointer:
-		kfree_data(collIterator, collection->iteratorSize());
-		OSCONTAINER_ACCUMSIZE(-((size_t) collection->iteratorSize()));
-		collIterator = NULL;
-		setStorageType(OSCollectionIteratorStorageUnallocated);
-		break;
-	case OSCollectionIteratorStorageInline:
-		bzero(&inlineStorage[0], collection->iteratorSize());
-		setStorageType(OSCollectionIteratorStorageUnallocated);
-		break;
-	default:
-		panic("unexpected storage type %u", storageType);
-	}
+  switch (storageType) {
+  case OSCollectionIteratorStorageUnallocated:
+    break;
+  case OSCollectionIteratorStoragePointer:
+    kfree_data(collIterator, collection->iteratorSize());
+    OSCONTAINER_ACCUMSIZE(-((size_t)collection->iteratorSize()));
+    collIterator = NULL;
+    setStorageType(OSCollectionIteratorStorageUnallocated);
+    break;
+  case OSCollectionIteratorStorageInline:
+    bzero(&inlineStorage[0], collection->iteratorSize());
+    setStorageType(OSCollectionIteratorStorageUnallocated);
+    break;
+  default:
+    panic("unexpected storage type %u", storageType);
+  }
 #else
-	if (collIterator != NULL) {
-		assert(getStorageType() == OSCollectionIteratorStoragePointer);
-		kfree_data(collIterator, collection->iteratorSize());
-		OSCONTAINER_ACCUMSIZE(-((size_t) collection->iteratorSize()));
-		collIterator = NULL;
-		setStorageType(OSCollectionIteratorStorageUnallocated);
-	} else {
-		assert(getStorageType() == OSCollectionIteratorStorageUnallocated);
-	}
+  if (collIterator != NULL) {
+    assert(getStorageType() == OSCollectionIteratorStoragePointer);
+    kfree_data(collIterator, collection->iteratorSize());
+    OSCONTAINER_ACCUMSIZE(-((size_t)collection->iteratorSize()));
+    collIterator = NULL;
+    setStorageType(OSCollectionIteratorStorageUnallocated);
+  } else {
+    assert(getStorageType() == OSCollectionIteratorStorageUnallocated);
+  }
 #endif /* __LP64__ */
 }
 
-bool
-OSCollectionIterator::isSubclassed()
-{
-	return getMetaClass() != OSCollectionIterator::metaClass;
+bool OSCollectionIterator::isSubclassed() {
+  return getMetaClass() != OSCollectionIterator::metaClass;
 }
 
-OSCollectionIteratorStorageType
-OSCollectionIterator::getStorageType()
-{
+OSCollectionIteratorStorageType OSCollectionIterator::getStorageType() {
 #if __LP64__
-	// Storage type is in the most significant 2 bits of collIterator
-	return (OSCollectionIteratorStorageType)((uintptr_t)(collIterator) >> 62);
+  // Storage type is in the most significant 2 bits of collIterator
+  return (OSCollectionIteratorStorageType)((uintptr_t)(collIterator) >> 62);
 #else
-	if (collIterator != NULL) {
-		return OSCollectionIteratorStoragePointer;
-	} else {
-		return OSCollectionIteratorStorageUnallocated;
-	}
+  if (collIterator != NULL) {
+    return OSCollectionIteratorStoragePointer;
+  } else {
+    return OSCollectionIteratorStorageUnallocated;
+  }
 #endif /* __LP64__ */
 }
 
-void
-OSCollectionIterator::setStorageType(OSCollectionIteratorStorageType storageType)
-{
+void OSCollectionIterator::setStorageType(
+    OSCollectionIteratorStorageType storageType) {
 #if __LP64__
-	switch (storageType) {
-	case OSCollectionIteratorStorageUnallocated:
-		if (collIterator != NULL) {
-			assert(getStorageType() == OSCollectionIteratorStorageInline);
-			collIterator = NULL;
-		}
-		break;
-	case OSCollectionIteratorStoragePointer:
-		// Should already be set
-		assert(collIterator != NULL);
-		assert(getStorageType() == OSCollectionIteratorStoragePointer);
-		break;
-	case OSCollectionIteratorStorageInline:
-		// Set the two most sigificant bits of collIterator to 10b
-		collIterator = (void *)(((uintptr_t)collIterator & ~0xC000000000000000) | ((uintptr_t)OSCollectionIteratorStorageInline << 62));
-		break;
-	default:
-		panic("unexpected storage type %u", storageType);
-	}
+  switch (storageType) {
+  case OSCollectionIteratorStorageUnallocated:
+    if (collIterator != NULL) {
+      assert(getStorageType() == OSCollectionIteratorStorageInline);
+      collIterator = NULL;
+    }
+    break;
+  case OSCollectionIteratorStoragePointer:
+    // Should already be set
+    assert(collIterator != NULL);
+    assert(getStorageType() == OSCollectionIteratorStoragePointer);
+    break;
+  case OSCollectionIteratorStorageInline:
+    // Set the two most sigificant bits of collIterator to 10b
+    collIterator =
+        (void *)(((uintptr_t)collIterator & ~0xC000000000000000) |
+                 ((uintptr_t)OSCollectionIteratorStorageInline << 62));
+    break;
+  default:
+    panic("unexpected storage type %u", storageType);
+  }
 #else
-	switch (storageType) {
-	case OSCollectionIteratorStorageUnallocated:
-		// Should already be set
-		assert(collIterator == NULL);
-		assert(getStorageType() == OSCollectionIteratorStorageUnallocated);
-		break;
-	case OSCollectionIteratorStoragePointer:
-		// Should already be set
-		assert(collIterator != NULL);
-		assert(getStorageType() == OSCollectionIteratorStoragePointer);
-		break;
-	case OSCollectionIteratorStorageInline:
-		panic("cannot use inline storage on LP32");
-		break;
-	default:
-		panic("unexpected storage type %u", storageType);
-	}
+  switch (storageType) {
+  case OSCollectionIteratorStorageUnallocated:
+    // Should already be set
+    assert(collIterator == NULL);
+    assert(getStorageType() == OSCollectionIteratorStorageUnallocated);
+    break;
+  case OSCollectionIteratorStoragePointer:
+    // Should already be set
+    assert(collIterator != NULL);
+    assert(getStorageType() == OSCollectionIteratorStoragePointer);
+    break;
+  case OSCollectionIteratorStorageInline:
+    panic("cannot use inline storage on LP32");
+    break;
+  default:
+    panic("unexpected storage type %u", storageType);
+  }
 #endif /* __LP64__ */
 }
 
-OSObject *
-OSCollectionIterator::getNextObject()
-{
-	OSObject *retObj;
-	bool retVal;
-	void * storage;
+OSObject *OSCollectionIterator::getNextObject() {
+  OSObject *retObj;
+  bool retVal;
+  void *storage;
 
-	if (!isValid()) {
-		return NULL;
-	}
+  if (!isValid()) {
+    return NULL;
+  }
 
-	storage = getIteratorStorage();
-	assert(storage != NULL);
+  storage = getIteratorStorage();
+  assert(storage != NULL);
 
-	retVal = collection->getNextObjectForIterator(storage, &retObj);
-	return (retVal)? retObj : NULL;
+  retVal = collection->getNextObjectForIterator(storage, &retObj);
+  return (retVal) ? retObj : NULL;
 }

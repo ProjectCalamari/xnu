@@ -36,34 +36,34 @@
 #include <mach/boolean.h>
 
 // Parameter for __builtin_arm_dmb
-#define DMB_OSHLD       0x1
-#define DMB_OSHST       0x2
-#define DMB_OSH         0x3
-#define DMB_NSHLD       0x5
-#define DMB_NSHST       0x6
-#define DMB_NSH         0x7
-#define DMB_ISHLD       0x9
-#define DMB_ISHST       0xa
-#define DMB_ISH         0xb
-#define DMB_LD          0xd
-#define DMB_ST          0xe
-#define DMB_SY          0xf
+#define DMB_OSHLD 0x1
+#define DMB_OSHST 0x2
+#define DMB_OSH 0x3
+#define DMB_NSHLD 0x5
+#define DMB_NSHST 0x6
+#define DMB_NSH 0x7
+#define DMB_ISHLD 0x9
+#define DMB_ISHST 0xa
+#define DMB_ISH 0xb
+#define DMB_LD 0xd
+#define DMB_ST 0xe
+#define DMB_SY 0xf
 
 // Parameter for __builtin_arm_dsb
-#define DSB_OSHLD       0x1
-#define DSB_OSHST       0x2
-#define DSB_OSH         0x3
-#define DSB_NSHLD       0x5
-#define DSB_NSHST       0x6
-#define DSB_NSH         0x7
-#define DSB_ISHLD       0x9
-#define DSB_ISHST       0xa
-#define DSB_ISH         0xb
-#define DSB_LD          0xd
-#define DSB_ST          0xe
-#define DSB_SY          0xf
+#define DSB_OSHLD 0x1
+#define DSB_OSHST 0x2
+#define DSB_OSH 0x3
+#define DSB_NSHLD 0x5
+#define DSB_NSHST 0x6
+#define DSB_NSH 0x7
+#define DSB_ISHLD 0x9
+#define DSB_ISHST 0xa
+#define DSB_ISH 0xb
+#define DSB_LD 0xd
+#define DSB_ST 0xe
+#define DSB_SY 0xf
 
 // Parameter for __builtin_arm_isb
-#define ISB_SY          0xf
+#define ISB_SY 0xf
 
 #endif // _ARM_ATOMIC_H_

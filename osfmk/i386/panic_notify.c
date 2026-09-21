@@ -48,30 +48,28 @@ static uint16_t panic_io_port = 0;
  */
 static uint16_t pvpanic_io_port = 0;
 
-void
-panic_notify_init(void)
-{
-	(void) PE_parse_boot_argn("panic_io_port", &panic_io_port, sizeof(panic_io_port));
+void panic_notify_init(void) {
+  (void)PE_parse_boot_argn("panic_io_port", &panic_io_port,
+                           sizeof(panic_io_port));
 
-	/*
-	 * XXX
-	 * Defer reading the notifcation bit until panic time. This maintains
-	 * backwards compatibility with Apple's QEMU. Once backwards
-	 * compatibilty is no longer needed the check should be performed here
-	 * before setting pvpanic_io_port.
-	 */
-	(void) PE_parse_boot_argn("pvpanic_io_port", &pvpanic_io_port, sizeof(pvpanic_io_port));
+  /*
+   * XXX
+   * Defer reading the notifcation bit until panic time. This maintains
+   * backwards compatibility with Apple's QEMU. Once backwards
+   * compatibilty is no longer needed the check should be performed here
+   * before setting pvpanic_io_port.
+   */
+  (void)PE_parse_boot_argn("pvpanic_io_port", &pvpanic_io_port,
+                           sizeof(pvpanic_io_port));
 }
 
-void
-panic_notify(void)
-{
-	if (panic_io_port != 0) {
-		(void) inb(panic_io_port);
-	}
+void panic_notify(void) {
+  if (panic_io_port != 0) {
+    (void)inb(panic_io_port);
+  }
 
-	if (pvpanic_io_port != 0 &&
-	    (inb(pvpanic_io_port) & PVPANIC_NOTIFICATION_BIT) != 0) {
-		outb(pvpanic_io_port, PVPANIC_NOTIFICATION_BIT);
-	}
+  if (pvpanic_io_port != 0 &&
+      (inb(pvpanic_io_port) & PVPANIC_NOTIFICATION_BIT) != 0) {
+    outb(pvpanic_io_port, PVPANIC_NOTIFICATION_BIT);
+  }
 }

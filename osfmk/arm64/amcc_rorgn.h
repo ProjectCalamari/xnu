@@ -29,13 +29,14 @@
 #ifndef _ARM64_AMCC_RORGN_H_
 #define _ARM64_AMCC_RORGN_H_
 
-#include <sys/cdefs.h>
-#include <stdbool.h>
 #include <libkern/section_keywords.h>
+#include <stdbool.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
-#if defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR)
+#if defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||        \
+    defined(KERNEL_INTEGRITY_PV_CTRR)
 
 extern vm_offset_t ctrr_begin, ctrr_end;
 
@@ -44,7 +45,8 @@ void rorgn_lockdown(void);
 bool rorgn_contains(vm_offset_t addr, vm_size_t size, bool defval);
 void rorgn_validate_core(void);
 
-#endif /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR) */
+#endif /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||  \
+          defined(KERNEL_INTEGRITY_PV_CTRR) */
 
 __END_DECLS
 

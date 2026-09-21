@@ -35,19 +35,20 @@
  * Supported coverage modes.
  */
 typedef enum {
-	KS_MODE_NONE,
-	KS_MODE_TRACE,
-	KS_MODE_COUNTERS,
-	KS_MODE_STKSIZE,
-	KS_MODE_MAX
+  KS_MODE_NONE,
+  KS_MODE_TRACE,
+  KS_MODE_COUNTERS,
+  KS_MODE_STKSIZE,
+  KS_MODE_MAX
 } ksancov_mode_t;
 
 /*
- * A header that is always present in every ksancov mode shared memory structure.
+ * A header that is always present in every ksancov mode shared memory
+ * structure.
  */
 typedef struct ksancov_header {
-	uint32_t         kh_magic;
-	_Atomic uint32_t kh_enabled;
+  uint32_t kh_magic;
+  _Atomic uint32_t kh_enabled;
 } ksancov_header_t;
 
 /*
@@ -58,10 +59,10 @@ typedef struct ksancov_header {
  * All trace based tools share this structure.
  */
 typedef struct ksancov_trace {
-	ksancov_header_t kt_hdr;         /* header (must be always first) */
-	uint32_t         kt_maxent;      /* Maximum entries in this shared buffer. */
-	_Atomic uint32_t kt_head;        /* Pointer to the first unused element. */
-	uint64_t         kt_entries[];   /* Trace entries in this buffer. */
+  ksancov_header_t kt_hdr;  /* header (must be always first) */
+  uint32_t kt_maxent;       /* Maximum entries in this shared buffer. */
+  _Atomic uint32_t kt_head; /* Pointer to the first unused element. */
+  uint64_t kt_entries[];    /* Trace entries in this buffer. */
 } ksancov_trace_t;
 
 /* PC tracing only records PCs */
@@ -69,110 +70,112 @@ typedef uintptr_t ksancov_trace_pc_ent_t;
 
 /* STKSIZE tracing records PCs and stack size. */
 typedef struct ksancov_trace_stksize_entry {
-	uintptr_t pc;                      /* PC */
-	uint32_t  stksize;                 /* associated stack size */
+  uintptr_t pc;     /* PC */
+  uint32_t stksize; /* associated stack size */
 } ksancov_trace_stksize_ent_t;
 
 /*
  * COUNTERS mode data structure.
  */
 typedef struct ksancov_counters {
-	ksancov_header_t kc_hdr;
-	uint32_t         kc_nedges;       /* total number of edges */
-	uint8_t          kc_hits[];       /* hits on each edge (8bit saturating) */
+  ksancov_header_t kc_hdr;
+  uint32_t kc_nedges; /* total number of edges */
+  uint8_t kc_hits[];  /* hits on each edge (8bit saturating) */
 } ksancov_counters_t;
 
 /*
  * Edge to PC mapping.
  */
 typedef struct ksancov_edgemap {
-	uint32_t  ke_magic;
-	uint32_t  ke_nedges;
-	uintptr_t ke_addrs[];             /* address of each edge relative to 'offset' */
+  uint32_t ke_magic;
+  uint32_t ke_nedges;
+  uintptr_t ke_addrs[]; /* address of each edge relative to 'offset' */
 } ksancov_edgemap_t;
 
 /*
  * Supported comparison logging modes.
  */
 typedef enum {
-	KS_CMPS_MODE_NONE,
-	KS_CMPS_MODE_TRACE,
-	KS_CMPS_MODE_TRACE_FUNC,
-	KS_CMPS_MODE_MAX
+  KS_CMPS_MODE_NONE,
+  KS_CMPS_MODE_TRACE,
+  KS_CMPS_MODE_TRACE_FUNC,
+  KS_CMPS_MODE_MAX
 } ksancov_cmps_mode_t;
 
 #define KSANCOV_CMPS_TRACE_FUNC_MAX_BYTES 512
 
 /* CMPS TRACE mode tracks comparison values */
 typedef struct __attribute__((__packed__)) ksancov_cmps_trace_entry {
-	uint64_t pc;
-	uint32_t type;
-	uint16_t len1_func;
-	uint16_t len2_func;
-	union {
-		uint64_t args[2];              /* cmp instruction arguments */
-		uint8_t args_func[0];          /* cmp function arguments (variadic) */
-	};
+  uint64_t pc;
+  uint32_t type;
+  uint16_t len1_func;
+  uint16_t len2_func;
+  union {
+    uint64_t args[2];     /* cmp instruction arguments */
+    uint8_t args_func[0]; /* cmp function arguments (variadic) */
+  };
 } ksancov_cmps_trace_ent_t;
 
-/* Calculate the total space that a ksancov_cmps_trace_ent_t tracing a function takes */
-static inline size_t
-ksancov_cmps_trace_func_space(size_t len1_func, size_t len2_func)
-{
-	static_assert(sizeof(ksancov_cmps_trace_ent_t) == sizeof(uint64_t) * 3 + sizeof(uint32_t) + sizeof(uint16_t) * 2, "ksancov_cmps_trace_ent_t invalid size");
+/* Calculate the total space that a ksancov_cmps_trace_ent_t tracing a function
+ * takes */
+static inline size_t ksancov_cmps_trace_func_space(size_t len1_func,
+                                                   size_t len2_func) {
+  static_assert(sizeof(ksancov_cmps_trace_ent_t) == sizeof(uint64_t) * 3 +
+                                                        sizeof(uint32_t) +
+                                                        sizeof(uint16_t) * 2,
+                "ksancov_cmps_trace_ent_t invalid size");
 
-	size_t size = sizeof(uint64_t) + sizeof(uint32_t) + sizeof(uint16_t) * 2; // header
-	size += len1_func + len2_func;
-	size_t rem = size % sizeof(ksancov_cmps_trace_ent_t);
-	if (rem == 0) {
-		return size;
-	}
-	return size + sizeof(ksancov_cmps_trace_ent_t) - rem;
+  size_t size =
+      sizeof(uint64_t) + sizeof(uint32_t) + sizeof(uint16_t) * 2; // header
+  size += len1_func + len2_func;
+  size_t rem = size % sizeof(ksancov_cmps_trace_ent_t);
+  if (rem == 0) {
+    return size;
+  }
+  return size + sizeof(ksancov_cmps_trace_ent_t) - rem;
 }
 
 static inline uint8_t *
-ksancov_cmps_trace_func_arg1(ksancov_cmps_trace_ent_t *entry)
-{
-	return entry->args_func;
+ksancov_cmps_trace_func_arg1(ksancov_cmps_trace_ent_t *entry) {
+  return entry->args_func;
 }
 
 static inline uint8_t *
-ksancov_cmps_trace_func_arg2(ksancov_cmps_trace_ent_t *entry)
-{
-	uint8_t* func_args = entry->args_func;
-	return &func_args[entry->len1_func];
+ksancov_cmps_trace_func_arg2(ksancov_cmps_trace_ent_t *entry) {
+  uint8_t *func_args = entry->args_func;
+  return &func_args[entry->len1_func];
 }
 
 /*
- * Represents state of a ksancov device when userspace asks for coverage data recording.
+ * Represents state of a ksancov device when userspace asks for coverage data
+ * recording.
  */
 
 struct ksancov_dev {
-	ksancov_mode_t mode;
+  ksancov_mode_t mode;
 
-	union {
-		ksancov_header_t       *hdr;
-		ksancov_trace_t        *trace;
-		ksancov_counters_t     *counters;
-	};
-	size_t sz;     /* size of allocated trace/counters buffer */
+  union {
+    ksancov_header_t *hdr;
+    ksancov_trace_t *trace;
+    ksancov_counters_t *counters;
+  };
+  size_t sz; /* size of allocated trace/counters buffer */
 
-	size_t maxpcs;
+  size_t maxpcs;
 
-	ksancov_cmps_mode_t cmps_mode;
+  ksancov_cmps_mode_t cmps_mode;
 
-	union {
-		ksancov_header_t       *cmps_hdr;
-		ksancov_trace_t        *cmps_trace;
-	};
-	size_t cmps_sz;     /* size of allocated cmps trace buffer */
+  union {
+    ksancov_header_t *cmps_hdr;
+    ksancov_trace_t *cmps_trace;
+  };
+  size_t cmps_sz; /* size of allocated cmps trace buffer */
 
-	thread_t thread;
-	dev_t dev;
-	lck_mtx_t lock;
+  thread_t thread;
+  dev_t dev;
+  lck_mtx_t lock;
 };
-typedef struct ksancov_dev * ksancov_dev_t;
-
+typedef struct ksancov_dev *ksancov_dev_t;
 
 #endif /* CONFIG_KSANCOV */
 

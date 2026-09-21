@@ -69,97 +69,97 @@
  * Data structure to collect and display congestion control debug information
  */
 struct tcp_cc_debug_state {
-	u_int64_t ccd_tsns;
-	char ccd_srcaddr[INET6_ADDRSTRLEN];
-	uint16_t ccd_srcport;
-	char ccd_destaddr[INET6_ADDRSTRLEN];
-	uint16_t ccd_destport;
-	uint32_t ccd_snd_cwnd;
-	uint32_t ccd_snd_wnd;
-	uint32_t ccd_snd_ssthresh;
-	uint32_t ccd_pipeack;
-	uint32_t ccd_rttcur;
-	uint32_t ccd_rxtcur;
-	uint32_t ccd_srtt;
-	uint32_t ccd_event;
-	uint32_t ccd_sndcc;
-	uint32_t ccd_sndhiwat;
-	uint32_t ccd_bytes_acked;
-	u_int8_t ccd_cc_index;
-	u_int8_t ccd_unused_1__;
-	u_int16_t ccd_unused_2__;
-	union {
-		struct {
-			uint32_t ccd_last_max;
-			uint32_t ccd_tcp_win;
-			uint32_t ccd_target_win;
-			uint32_t ccd_avg_lastmax;
-			uint32_t ccd_mean_deviation;
-		} cubic_state;
-		struct {
-			u_int32_t led_base_rtt;
-		} ledbat_state;
-	} u;
+  u_int64_t ccd_tsns;
+  char ccd_srcaddr[INET6_ADDRSTRLEN];
+  uint16_t ccd_srcport;
+  char ccd_destaddr[INET6_ADDRSTRLEN];
+  uint16_t ccd_destport;
+  uint32_t ccd_snd_cwnd;
+  uint32_t ccd_snd_wnd;
+  uint32_t ccd_snd_ssthresh;
+  uint32_t ccd_pipeack;
+  uint32_t ccd_rttcur;
+  uint32_t ccd_rxtcur;
+  uint32_t ccd_srtt;
+  uint32_t ccd_event;
+  uint32_t ccd_sndcc;
+  uint32_t ccd_sndhiwat;
+  uint32_t ccd_bytes_acked;
+  u_int8_t ccd_cc_index;
+  u_int8_t ccd_unused_1__;
+  u_int16_t ccd_unused_2__;
+  union {
+    struct {
+      uint32_t ccd_last_max;
+      uint32_t ccd_tcp_win;
+      uint32_t ccd_target_win;
+      uint32_t ccd_avg_lastmax;
+      uint32_t ccd_mean_deviation;
+    } cubic_state;
+    struct {
+      u_int32_t led_base_rtt;
+    } ledbat_state;
+  } u;
 };
 
 /*
  * Values of ccd_cc_index
  */
-#define TCP_CC_ALGO_NONE                0
-#define TCP_CC_ALGO_NEWRENO_INDEX       1
-#define TCP_CC_ALGO_BACKGROUND_INDEX    2 /* CC for background transport */
-#define TCP_CC_ALGO_CUBIC_INDEX         3 /* default CC algorithm */
-#define TCP_CC_ALGO_PRAGUE_INDEX        4 /* L4S CC algorithm */
-#define TCP_CC_ALGO_COUNT               5 /* Count of CC algorithms */
+#define TCP_CC_ALGO_NONE 0
+#define TCP_CC_ALGO_NEWRENO_INDEX 1
+#define TCP_CC_ALGO_BACKGROUND_INDEX 2 /* CC for background transport */
+#define TCP_CC_ALGO_CUBIC_INDEX 3      /* default CC algorithm */
+#define TCP_CC_ALGO_PRAGUE_INDEX 4     /* L4S CC algorithm */
+#define TCP_CC_ALGO_COUNT 5            /* Count of CC algorithms */
 
 /*
  * Values of ccd_event
  */
-#define TCP_CC_EVENT_LIST                       \
-	X(TCP_CC_CWND_INIT)                     \
-	X(TCP_CC_INSEQ_ACK_RCVD)                \
-	X(TCP_CC_ACK_RCVD)                      \
-	X(TCP_CC_ENTER_FASTRECOVERY)            \
-	X(TCP_CC_IN_FASTRECOVERY)               \
-	X(TCP_CC_EXIT_FASTRECOVERY)             \
-	X(TCP_CC_PARTIAL_ACK)                   \
-	X(TCP_CC_IDLE_TIMEOUT)                  \
-	X(TCP_CC_REXMT_TIMEOUT)                 \
-	X(TCP_CC_ECN_RCVD)                      \
-	X(TCP_CC_BAD_REXMT_RECOVERY)            \
-	X(TCP_CC_OUTPUT_ERROR)                  \
-	X(TCP_CC_CHANGE_ALGO)                   \
-	X(TCP_CC_FLOW_CONTROL)                  \
-	X(TCP_CC_SUSPEND)                       \
-	X(TCP_CC_LIMITED_TRANSMIT)              \
-	X(TCP_CC_EARLY_RETRANSMIT)              \
-	X(TCP_CC_TLP_RECOVERY)                  \
-	X(TCP_CC_TLP_RECOVER_LASTPACKET)        \
-	X(TCP_CC_DELAY_FASTRECOVERY)            \
-	X(TCP_CC_TLP_IN_FASTRECOVERY)           \
-	X(TCP_CC_DSACK_BAD_REXMT)               \
-	X(TCP_CC_FIRST_REXMT)                   \
-	X(TCP_CC_FLOW_CONGESTION_NOTIFIED)      \
-	X(MAX_TCP_CC_EVENTS)
+#define TCP_CC_EVENT_LIST                                                      \
+  X(TCP_CC_CWND_INIT)                                                          \
+  X(TCP_CC_INSEQ_ACK_RCVD)                                                     \
+  X(TCP_CC_ACK_RCVD)                                                           \
+  X(TCP_CC_ENTER_FASTRECOVERY)                                                 \
+  X(TCP_CC_IN_FASTRECOVERY)                                                    \
+  X(TCP_CC_EXIT_FASTRECOVERY)                                                  \
+  X(TCP_CC_PARTIAL_ACK)                                                        \
+  X(TCP_CC_IDLE_TIMEOUT)                                                       \
+  X(TCP_CC_REXMT_TIMEOUT)                                                      \
+  X(TCP_CC_ECN_RCVD)                                                           \
+  X(TCP_CC_BAD_REXMT_RECOVERY)                                                 \
+  X(TCP_CC_OUTPUT_ERROR)                                                       \
+  X(TCP_CC_CHANGE_ALGO)                                                        \
+  X(TCP_CC_FLOW_CONTROL)                                                       \
+  X(TCP_CC_SUSPEND)                                                            \
+  X(TCP_CC_LIMITED_TRANSMIT)                                                   \
+  X(TCP_CC_EARLY_RETRANSMIT)                                                   \
+  X(TCP_CC_TLP_RECOVERY)                                                       \
+  X(TCP_CC_TLP_RECOVER_LASTPACKET)                                             \
+  X(TCP_CC_DELAY_FASTRECOVERY)                                                 \
+  X(TCP_CC_TLP_IN_FASTRECOVERY)                                                \
+  X(TCP_CC_DSACK_BAD_REXMT)                                                    \
+  X(TCP_CC_FIRST_REXMT)                                                        \
+  X(TCP_CC_FLOW_CONGESTION_NOTIFIED)                                           \
+  X(MAX_TCP_CC_EVENTS)
 
 enum tcp_cc_event {
 #define X(name, ...) name,
-	TCP_CC_EVENT_LIST
+  TCP_CC_EVENT_LIST
 #undef X
 };
 
 /*
  * Kernel control ID
  */
-#define TCP_CC_CONTROL_NAME     "com.apple.network.tcp_ccdebug"
+#define TCP_CC_CONTROL_NAME "com.apple.network.tcp_ccdebug"
 
 #endif /* PRIVATE */
 
 #ifdef KERNEL_PRIVATE
 
+#include <kern/zalloc.h>
 #include <netinet/tcp.h>
 #include <netinet/tcp_var.h>
-#include <kern/zalloc.h>
 
 /*
  * Maximum characters in the name of a CC algorithm
@@ -176,61 +176,64 @@ extern uint32_t bg_ss_fltsz;
  * connection.
  */
 struct tcp_cc_algo {
-	char name[TCP_CA_NAME_MAX];
-	_Atomic uint32_t num_sockets;
-	uint32_t flags;
+  char name[TCP_CA_NAME_MAX];
+  _Atomic uint32_t num_sockets;
+  uint32_t flags;
 
-	/* init the congestion algorithm for the specified control block */
-	int (*init) (struct tcpcb *tp);
+  /* init the congestion algorithm for the specified control block */
+  int (*init)(struct tcpcb *tp);
 
-	/*
-	 * cleanup any state that is stored in the connection
-	 * related to the algorithm
-	 */
-	int (*cleanup) (struct tcpcb *tp);
+  /*
+   * cleanup any state that is stored in the connection
+   * related to the algorithm
+   */
+  int (*cleanup)(struct tcpcb *tp);
 
-	/* initialize cwnd at the start of a connection */
-	void (*cwnd_init) (struct tcpcb *tp);
+  /* initialize cwnd at the start of a connection */
+  void (*cwnd_init)(struct tcpcb *tp);
 
-	/*
-	 * called on the receipt of in-sequence ack during congestion
-	 * avoidance phase
-	 */
-	void (*congestion_avd) (struct tcpcb *tp, struct tcphdr *th);
+  /*
+   * called on the receipt of in-sequence ack during congestion
+   * avoidance phase
+   */
+  void (*congestion_avd)(struct tcpcb *tp, struct tcphdr *th);
 
-	/* called on the receipt of a valid ack */
-	void (*ack_rcvd) (struct tcpcb *tp, struct tcphdr *th);
+  /* called on the receipt of a valid ack */
+  void (*ack_rcvd)(struct tcpcb *tp, struct tcphdr *th);
 
-	/* called before entering FR */
-	void (*pre_fr) (struct tcpcb *tp);
+  /* called before entering FR */
+  void (*pre_fr)(struct tcpcb *tp);
 
-	/*  after exiting FR */
-	void (*post_fr) (struct tcpcb *tp, struct tcphdr *th);
+  /*  after exiting FR */
+  void (*post_fr)(struct tcpcb *tp, struct tcphdr *th);
 
-	/* perform tasks when data transfer resumes after an idle period */
-	void (*after_idle) (struct tcpcb *tp);
+  /* perform tasks when data transfer resumes after an idle period */
+  void (*after_idle)(struct tcpcb *tp);
 
-	/* perform tasks when the connection's retransmit timer expires */
-	void (*after_timeout) (struct tcpcb *tp);
+  /* perform tasks when the connection's retransmit timer expires */
+  void (*after_timeout)(struct tcpcb *tp);
 
-	/* Whether or not to delay the ack */
-	int (*delay_ack)(struct tcpcb *tp, struct tcphdr *th);
+  /* Whether or not to delay the ack */
+  int (*delay_ack)(struct tcpcb *tp, struct tcphdr *th);
 
-	/* called to process ECN markings, used by Prague only */
-	void (*process_ecn) (struct tcpcb *tp, struct tcphdr *th, uint32_t new_bytes_marked, uint32_t packets_marked, uint32_t packets_acked);
+  /* called to process ECN markings, used by Prague only */
+  void (*process_ecn)(struct tcpcb *tp, struct tcphdr *th,
+                      uint32_t new_bytes_marked, uint32_t packets_marked,
+                      uint32_t packets_acked);
 
-	/* called to set bytes acked in this ACK which are later update to exclude CE marked bytes */
-	void (*set_bytes_acked) (struct tcpcb *tp, uint32_t acked);
+  /* called to set bytes acked in this ACK which are later update to exclude CE
+   * marked bytes */
+  void (*set_bytes_acked)(struct tcpcb *tp, uint32_t acked);
 
-	/* Switch a connection to this CC algorithm after sending some packets */
-	void (*switch_to)(struct tcpcb *tp);
+  /* Switch a connection to this CC algorithm after sending some packets */
+  void (*switch_to)(struct tcpcb *tp);
 } __attribute__((aligned(4)));
 
-extern struct tcp_cc_algo* tcp_cc_algo_list[TCP_CC_ALGO_COUNT];
+extern struct tcp_cc_algo *tcp_cc_algo_list[TCP_CC_ALGO_COUNT];
 
 #define CC_ALGO(tp) (tcp_cc_algo_list[tp->tcp_cc_index])
 #define TCP_CC_CWND_INIT_PKTS 10
-#define TCP_CC_CWND_INIT_BYTES  4380
+#define TCP_CC_CWND_INIT_BYTES 4380
 /*
  * The congestion window will have to be reset after a
  * non-validated period -- currently set to 3 minutes
@@ -239,33 +242,33 @@ extern struct tcp_cc_algo* tcp_cc_algo_list[TCP_CC_ALGO_COUNT];
 
 /* Less than BE congestion control algo for receive window */
 struct tcp_rcv_cc_algo {
-	char name[TCP_CA_NAME_MAX];
-	_Atomic uint32_t num_sockets;
-	uint32_t flags;
+  char name[TCP_CA_NAME_MAX];
+  _Atomic uint32_t num_sockets;
+  uint32_t flags;
 
-	/* init the congestion algorithm for the specified control block */
-	void (*init) (struct tcpcb *tp);
+  /* init the congestion algorithm for the specified control block */
+  void (*init)(struct tcpcb *tp);
 
-	/*
-	 * cleanup any state that is stored in the connection
-	 * related to the algorithm
-	 */
-	void (*cleanup) (struct tcpcb *tp);
+  /*
+   * cleanup any state that is stored in the connection
+   * related to the algorithm
+   */
+  void (*cleanup)(struct tcpcb *tp);
 
-	/* initialize rwnd at the start of a connection */
-	void (*rwnd_init) (struct tcpcb *tp);
+  /* initialize rwnd at the start of a connection */
+  void (*rwnd_init)(struct tcpcb *tp);
 
-	/* called on the receipt of valid data */
-	void (*data_rcvd) (struct tcpcb *tp, struct tcphdr *th,
-	    struct tcpopt *to, uint32_t segment_len);
+  /* called on the receipt of valid data */
+  void (*data_rcvd)(struct tcpcb *tp, struct tcphdr *th, struct tcpopt *to,
+                    uint32_t segment_len);
 
-	uint32_t (*get_rlwin) (struct tcpcb *tp);
+  uint32_t (*get_rlwin)(struct tcpcb *tp);
 
-	/* perform tasks when data transfer resumes after an idle period */
-	void (*after_idle) (struct tcpcb *tp);
+  /* perform tasks when data transfer resumes after an idle period */
+  void (*after_idle)(struct tcpcb *tp);
 
-	/* called when we switch from foreground to background */
-	void (*switch_to) (struct tcpcb *tp);
+  /* called when we switch from foreground to background */
+  void (*switch_to)(struct tcpcb *tp);
 } __attribute__((aligned(4)));
 
 extern struct tcp_rcv_cc_algo tcp_cc_rledbat;
@@ -281,10 +284,8 @@ extern void tcp_cc_adjust_nonvalidated_cwnd(struct tcpcb *tp);
 extern u_int32_t tcp_get_max_pipeack(struct tcpcb *tp);
 extern void tcp_clear_pipeack_state(struct tcpcb *tp);
 
-static inline uint32_t
-tcp_initial_cwnd(struct tcpcb *tp)
-{
-	return TCP_CC_CWND_INIT_PKTS * tp->t_maxseg;
+static inline uint32_t tcp_initial_cwnd(struct tcpcb *tp) {
+  return TCP_CC_CWND_INIT_PKTS * tp->t_maxseg;
 }
 
 #endif /* KERNEL_PRIVATE */

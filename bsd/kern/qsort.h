@@ -43,9 +43,8 @@ __BEGIN_DECLS
  */
 typedef int (*cmpfunc_t)(const void *a, const void *b);
 
-__private_extern__
-void
-qsort(void *array, size_t num_elements, size_t element_size, cmpfunc_t compare);
+__private_extern__ void qsort(void *array, size_t num_elements,
+                              size_t element_size, cmpfunc_t compare);
 
 __END_DECLS
 

@@ -72,46 +72,51 @@
 #ifndef _IPC_IPC_OBJECT_H_
 #define _IPC_IPC_OBJECT_H_
 
-#include <stdbool.h>
-#include <os/atomic_private.h>
-#include <mach/kern_return.h>
-#include <mach/message.h>
+#include <ipc/ipc_types.h>
+#include <kern/assert.h>
 #include <kern/locks.h>
 #include <kern/macro_help.h>
-#include <kern/assert.h>
 #include <kern/waitq.h>
 #include <kern/zalloc.h>
-#include <ipc/ipc_types.h>
 #include <libkern/OSAtomic.h>
+#include <mach/kern_return.h>
+#include <mach/message.h>
+#include <os/atomic_private.h>
+#include <stdbool.h>
 
 __BEGIN_DECLS __ASSUME_PTR_ABI_SINGLE_BEGIN
 #pragma GCC visibility push(hidden)
 
-typedef natural_t ipc_object_bits_t;
+    typedef natural_t ipc_object_bits_t;
 
-__options_closed_decl(ipc_object_copyout_flags_t, uint32_t, {
-	IPC_OBJECT_COPYOUT_FLAGS_NONE                 = 0x0,
-	IPC_OBJECT_COPYOUT_FLAGS_PINNED               = 0x1,
-});
+__options_closed_decl(ipc_object_copyout_flags_t, uint32_t,
+                      {
+                          IPC_OBJECT_COPYOUT_FLAGS_NONE = 0x0,
+                          IPC_OBJECT_COPYOUT_FLAGS_PINNED = 0x1,
+                      });
 
-__options_closed_decl(ipc_object_copyin_flags_t, uint16_t, {
-	IPC_OBJECT_COPYIN_FLAGS_NONE                          = 0x0,
-	IPC_OBJECT_COPYIN_FLAGS_ALLOW_IMMOVABLE_SEND          = 0x1, /* Dest port contains an immovable send right */
-	IPC_OBJECT_COPYIN_FLAGS_DEADOK                        = 0x2,
-	IPC_OBJECT_COPYIN_FLAGS_DEST_EXTRA_COPY               = 0x4,
-	IPC_OBJECT_COPYIN_FLAGS_DEST_EXTRA_MOVE               = 0x8,
-});
+__options_closed_decl(
+    ipc_object_copyin_flags_t, uint16_t,
+    {
+        IPC_OBJECT_COPYIN_FLAGS_NONE = 0x0,
+        IPC_OBJECT_COPYIN_FLAGS_ALLOW_IMMOVABLE_SEND =
+            0x1, /* Dest port contains an immovable send right */
+        IPC_OBJECT_COPYIN_FLAGS_DEADOK = 0x2,
+        IPC_OBJECT_COPYIN_FLAGS_DEST_EXTRA_COPY = 0x4,
+        IPC_OBJECT_COPYIN_FLAGS_DEST_EXTRA_MOVE = 0x8,
+    });
 
-__enum_decl(ipc_copyin_op_t, uint16_t, {
-	IPC_COPYIN_REASON_NONE,
-	IPC_COPYIN_KMSG_DESTINATION,
-	IPC_COPYIN_KMSG_REPLY,
-	IPC_COPYIN_KMSG_VOUCHER,
-	IPC_COPYIN_KMSG_PORT_DESCRIPTOR,
-	IPC_COPYIN_KMSG_GUARDED_PORT_DESCRIPTOR,
-	IPC_COPYIN_KMSG_OOL_PORT_ARRAY_DESCRIPTOR,
-	IPC_COPYIN_KERNEL_DESTINATION,
-});
+__enum_decl(ipc_copyin_op_t, uint16_t,
+            {
+                IPC_COPYIN_REASON_NONE,
+                IPC_COPYIN_KMSG_DESTINATION,
+                IPC_COPYIN_KMSG_REPLY,
+                IPC_COPYIN_KMSG_VOUCHER,
+                IPC_COPYIN_KMSG_PORT_DESCRIPTOR,
+                IPC_COPYIN_KMSG_GUARDED_PORT_DESCRIPTOR,
+                IPC_COPYIN_KMSG_OOL_PORT_ARRAY_DESCRIPTOR,
+                IPC_COPYIN_KERNEL_DESTINATION,
+            });
 
 /*!
  * @typedef ipc_object_state_t
@@ -171,15 +176,16 @@ __enum_decl(ipc_copyin_op_t, uint16_t, {
  *
  *   @see IO_STATE_IN_TRANSIT for details on the receiver fields.
  */
-__enum_closed_decl(ipc_object_state_t, uint8_t, {
-	IO_STATE_INACTIVE,
-	IO_STATE_IN_SPACE,
-	IO_STATE_IN_SPACE_IMMOVABLE,
-	IO_STATE_IN_LIMBO,
-	IO_STATE_IN_LIMBO_PD,
-	IO_STATE_IN_TRANSIT,
-	IO_STATE_IN_TRANSIT_PD,
-});
+__enum_closed_decl(ipc_object_state_t, uint8_t,
+                   {
+                       IO_STATE_INACTIVE,
+                       IO_STATE_IN_SPACE,
+                       IO_STATE_IN_SPACE_IMMOVABLE,
+                       IO_STATE_IN_LIMBO,
+                       IO_STATE_IN_LIMBO_PD,
+                       IO_STATE_IN_TRANSIT,
+                       IO_STATE_IN_TRANSIT_PD,
+                   });
 
 /*!
  * @brief
@@ -218,33 +224,33 @@ __enum_closed_decl(ipc_object_state_t, uint8_t, {
  * is not stable during the lifecycle of the object.
  */
 struct ipc_object {
-	union {
-		struct {
-			ipc_object_type_t       io_type;
-			ipc_object_state_t      io_state     : 3;
-			uint8_t                 io_filtered  : 1;
-			uint8_t                 __io_unused1 : 4;
-			/* dPAC modifier boundary */
-			/*
-			 * the io_label_lock supports io_label_get/put,
-			 * it could be a single bit, but a full byte
-			 * yields much better codegen, and the bits are unused.
-			 */
-			bool                    io_label_lock;
-			uint8_t                 __io_unused2;
-		};
-		ipc_object_bits_t               io_bits;
-	};
-	os_ref_atomic_t                         io_references;
-	union {
-		/* these are dPACed when on a port header */
-		const void                     *iol_pointer;
-		unsigned long                   iol_value;
-		struct ipc_service_port_label  *iol_service;
-		struct ipc_conn_port_label     *iol_connection;
-		struct ipc_kobject_label       *iol_kobject;
-		struct mk_timer                *iol_mktimer;
-	};
+  union {
+    struct {
+      ipc_object_type_t io_type;
+      ipc_object_state_t io_state : 3;
+      uint8_t io_filtered : 1;
+      uint8_t __io_unused1 : 4;
+      /* dPAC modifier boundary */
+      /*
+       * the io_label_lock supports io_label_get/put,
+       * it could be a single bit, but a full byte
+       * yields much better codegen, and the bits are unused.
+       */
+      bool io_label_lock;
+      uint8_t __io_unused2;
+    };
+    ipc_object_bits_t io_bits;
+  };
+  os_ref_atomic_t io_references;
+  union {
+    /* these are dPACed when on a port header */
+    const void *iol_pointer;
+    unsigned long iol_value;
+    struct ipc_service_port_label *iol_service;
+    struct ipc_conn_port_label *iol_connection;
+    struct ipc_kobject_label *iol_kobject;
+    struct mk_timer *iol_mktimer;
+  };
 };
 
 /*!
@@ -268,29 +274,29 @@ struct ipc_object {
  * @c ip_label_put() or release the port lock is a valid and even encouraged
  * practice, as this is a much better calling convention.
  */
-typedef struct ipc_object       ipc_object_label_t;
+typedef struct ipc_object ipc_object_label_t;
 
-#define IPC_OBJECT_LABEL(otype, ...) \
-	((ipc_object_label_t){ \
-	        .io_type = otype, \
-	        .io_state = IO_STATE_IN_SPACE, \
-	        ## __VA_ARGS__, \
-	})
+#define IPC_OBJECT_LABEL(otype, ...)                                           \
+  ((ipc_object_label_t){                                                       \
+      .io_type = otype,                                                        \
+      .io_state = IO_STATE_IN_SPACE,                                           \
+      ##__VA_ARGS__,                                                           \
+  })
 
-#define IPC_OBJECT_LABEL_INVALID \
-	((ipc_object_label_t){ \
-	        .io_bits = ~0u, \
-	        .io_references = ~0u, \
-	        .iol_value = ~0ul, \
-	})
+#define IPC_OBJECT_LABEL_INVALID                                               \
+  ((ipc_object_label_t){                                                       \
+      .io_bits = ~0u,                                                          \
+      .io_references = ~0u,                                                    \
+      .iol_value = ~0ul,                                                       \
+  })
 
-#define io_type(io)             ((io)->io_type)
-#define io_is_pset_type(t)      ((t) == IOT_PORT_SET)
-#define io_is_any_port_type(t)  (!io_is_pset_type(t))
-#define io_is_kobject_type(t)   ((t) >= __IKOT_FIRST)
-#define io_is_any_port(io)      io_is_any_port_type(io_type(io))
-#define io_is_pset(io)          io_is_pset_type(io_type(io))
-#define io_is_kobject(io)       io_is_kobject_type(io_type(io))
+#define io_type(io) ((io)->io_type)
+#define io_is_pset_type(t) ((t) == IOT_PORT_SET)
+#define io_is_any_port_type(t) (!io_is_pset_type(t))
+#define io_is_kobject_type(t) ((t) >= __IKOT_FIRST)
+#define io_is_any_port(io) io_is_any_port_type(io_type(io))
+#define io_is_pset(io) io_is_pset_type(io_type(io))
+#define io_is_kobject(io) io_is_kobject_type(io_type(io))
 
 ZONE_DECLARE_ID(ZONE_ID_IPC_PORT, struct ipc_port);
 ZONE_DECLARE_ID(ZONE_ID_IPC_PORT_SET, struct ipc_pset);
@@ -301,303 +307,252 @@ ZONE_DECLARE_ID(ZONE_ID_IPC_PORT_SET, struct ipc_pset);
  * this type doesn't exist and is only used to do math
  */
 struct ipc_object_waitq {
-	struct ipc_object       iowq_object;
-	struct waitq            iowq_waitq;
+  struct ipc_object iowq_object;
+  struct waitq iowq_waitq;
 };
-#define io_waitq(io) \
-	(&__container_of(io, struct ipc_object_waitq, iowq_object)->iowq_waitq)
-#define io_from_waitq(waitq) \
-	(&__container_of(waitq, struct ipc_object_waitq, iowq_waitq)->iowq_object)
+#define io_waitq(io)                                                           \
+  (&__container_of(io, struct ipc_object_waitq, iowq_object)->iowq_waitq)
+#define io_from_waitq(waitq)                                                   \
+  (&__container_of(waitq, struct ipc_object_waitq, iowq_waitq)->iowq_object)
 
-#define io_unlock(io)                   ipc_object_unlock(io)
-#define io_unlock_nocheck(io)           waitq_unlock(io_waitq(io))
-#define io_lock_held(io)                assert(waitq_held(io_waitq(io)))
-#define io_lock_held_kdp(io)            waitq_held(io_waitq(io))
-#define io_lock_allow_invalid(io)       ipc_object_lock_allow_invalid(io)
+#define io_unlock(io) ipc_object_unlock(io)
+#define io_unlock_nocheck(io) waitq_unlock(io_waitq(io))
+#define io_lock_held(io) assert(waitq_held(io_waitq(io)))
+#define io_lock_held_kdp(io) waitq_held(io_waitq(io))
+#define io_lock_allow_invalid(io) ipc_object_lock_allow_invalid(io)
 
-#define io_reference(io)                ipc_object_reference(io)
-#define io_release(io)                  ipc_object_release(io)
-#define io_release_safe(io)             ipc_object_release_safe(io)
-#define io_release_live(io)             ipc_object_release_live(io)
+#define io_reference(io) ipc_object_reference(io)
+#define io_release(io) ipc_object_release(io)
+#define io_release_safe(io) ipc_object_release_safe(io)
+#define io_release_live(io) ipc_object_release_live(io)
 
-static inline bool
-io_state_active(ipc_object_state_t state)
-{
-	return state != IO_STATE_INACTIVE;
+static inline bool io_state_active(ipc_object_state_t state) {
+  return state != IO_STATE_INACTIVE;
 }
 
-static inline bool
-io_state_in_space(ipc_object_state_t state)
-{
-	switch (state) {
-	case IO_STATE_IN_SPACE:
-	case IO_STATE_IN_SPACE_IMMOVABLE:
-		return true;
-	default:
-		return false;
-	}
+static inline bool io_state_in_space(ipc_object_state_t state) {
+  switch (state) {
+  case IO_STATE_IN_SPACE:
+  case IO_STATE_IN_SPACE_IMMOVABLE:
+    return true;
+  default:
+    return false;
+  }
 }
 
-static inline bool
-io_state_in_limbo(ipc_object_state_t state)
-{
-	switch (state) {
-	case IO_STATE_IN_LIMBO:
-	case IO_STATE_IN_LIMBO_PD:
-		return true;
-	default:
-		return false;
-	}
+static inline bool io_state_in_limbo(ipc_object_state_t state) {
+  switch (state) {
+  case IO_STATE_IN_LIMBO:
+  case IO_STATE_IN_LIMBO_PD:
+    return true;
+  default:
+    return false;
+  }
 }
 
-static inline bool
-io_state_in_transit(ipc_object_state_t state)
-{
-	switch (state) {
-	case IO_STATE_IN_TRANSIT:
-	case IO_STATE_IN_TRANSIT_PD:
-		return true;
-	default:
-		return false;
-	}
+static inline bool io_state_in_transit(ipc_object_state_t state) {
+  switch (state) {
+  case IO_STATE_IN_TRANSIT:
+  case IO_STATE_IN_TRANSIT_PD:
+    return true;
+  default:
+    return false;
+  }
 }
 
-static inline bool
-io_state_is_moving(ipc_object_state_t state)
-{
-	switch (state) {
-	case IO_STATE_IN_LIMBO:
-	case IO_STATE_IN_LIMBO_PD:
-	case IO_STATE_IN_TRANSIT:
-	case IO_STATE_IN_TRANSIT_PD:
-		return true;
-	default:
-		return false;
-	}
+static inline bool io_state_is_moving(ipc_object_state_t state) {
+  switch (state) {
+  case IO_STATE_IN_LIMBO:
+  case IO_STATE_IN_LIMBO_PD:
+  case IO_STATE_IN_TRANSIT:
+  case IO_STATE_IN_TRANSIT_PD:
+    return true;
+  default:
+    return false;
+  }
 }
 
 __result_use_check
-__attribute__((always_inline))
-static inline ipc_object_label_t
-__io_label_validate(ipc_object_t io, ipc_object_label_t label, bool lock)
-{
-	if (lock) {
-		io_lock_held(io);
-		release_assert(!io->io_label_lock);
-		io->io_label_lock = true;
-	}
+    __attribute__((always_inline)) static inline ipc_object_label_t
+    __io_label_validate(ipc_object_t io, ipc_object_label_t label, bool lock) {
+  if (lock) {
+    io_lock_held(io);
+    release_assert(!io->io_label_lock);
+    io->io_label_lock = true;
+  }
 
-	label.iol_pointer = ptrauth_auth_data(label.iol_pointer,
-	    ptrauth_key_process_independent_data,
-	    ptrauth_blend_discriminator(io, (uint32_t)(label.io_bits +
-	    ptrauth_string_discriminator("ipc_object.iol_pointer"))));
+  label.iol_pointer = ptrauth_auth_data(
+      label.iol_pointer, ptrauth_key_process_independent_data,
+      ptrauth_blend_discriminator(
+          io, (uint32_t)(label.io_bits + ptrauth_string_discriminator(
+                                             "ipc_object.iol_pointer"))));
 
 #if __has_feature(ptrauth_calls)
-	/*
-	 * io_label() must guarantee that we always do the PAC evaluation,
-	 * as callers even if they do not use bits or the pointer value,
-	 * expect this validation to take place.
-	 */
-	__compiler_materialize_and_prevent_reordering_on(label.iol_pointer);
+  /*
+   * io_label() must guarantee that we always do the PAC evaluation,
+   * as callers even if they do not use bits or the pointer value,
+   * expect this validation to take place.
+   */
+  __compiler_materialize_and_prevent_reordering_on(label.iol_pointer);
 #endif
 
-	return label;
+  return label;
 }
 
 __result_use_check
-__attribute__((always_inline, overloadable))
-static inline ipc_object_label_t
-io_label_get(ipc_object_t io, ipc_object_type_t otype)
-{
-	ipc_object_label_t label;
+    __attribute__((always_inline,
+                   overloadable)) static inline ipc_object_label_t
+    io_label_get(ipc_object_t io, ipc_object_type_t otype) {
+  ipc_object_label_t label;
 
-	label = *io;
-	label.io_type = otype;
+  label = *io;
+  label.io_type = otype;
 
-	return __io_label_validate(io, label, true);
+  return __io_label_validate(io, label, true);
 }
 
 __result_use_check
-__attribute__((always_inline, overloadable))
-static inline ipc_object_label_t
-io_label_get(ipc_object_t io)
-{
-	return __io_label_validate(io, *io, true);
+    __attribute__((always_inline,
+                   overloadable)) static inline ipc_object_label_t
+    io_label_get(ipc_object_t io) {
+  return __io_label_validate(io, *io, true);
 }
 
-__attribute__((always_inline, overloadable))
-static inline ipc_object_label_t
-io_label_peek_kdp(ipc_object_t io)
-{
-	assert(!io_lock_held_kdp(io));
-	return __io_label_validate(io, *io, false);
+__attribute__((always_inline, overloadable)) static inline ipc_object_label_t
+io_label_peek_kdp(ipc_object_t io) {
+  assert(!io_lock_held_kdp(io));
+  return __io_label_validate(io, *io, false);
 }
 
-__attribute__((always_inline))
-static inline void
-io_label_init(ipc_object_t io, ipc_object_label_t label)
-{
-	atomic_store_explicit(os_cast_to_atomic_pointer(&io->io_bits),
-	    label.io_bits, memory_order_relaxed);
+__attribute__((always_inline)) static inline void
+io_label_init(ipc_object_t io, ipc_object_label_t label) {
+  atomic_store_explicit(os_cast_to_atomic_pointer(&io->io_bits), label.io_bits,
+                        memory_order_relaxed);
 
-	io->iol_pointer = ptrauth_sign_unauthenticated(label.iol_pointer,
-	    ptrauth_key_process_independent_data,
-	    ptrauth_blend_discriminator(io, (uint32_t)(label.io_bits +
-	    ptrauth_string_discriminator("ipc_object.iol_pointer"))));
+  io->iol_pointer = ptrauth_sign_unauthenticated(
+      label.iol_pointer, ptrauth_key_process_independent_data,
+      ptrauth_blend_discriminator(
+          io, (uint32_t)(label.io_bits + ptrauth_string_discriminator(
+                                             "ipc_object.iol_pointer"))));
 }
 
-__attribute__((always_inline))
-static inline void
-io_label_set_and_put(ipc_object_t io, ipc_object_label_t *label)
-{
-	release_assert(io->io_label_lock);
-	io_lock_held(io);
+__attribute__((always_inline)) static inline void
+io_label_set_and_put(ipc_object_t io, ipc_object_label_t *label) {
+  release_assert(io->io_label_lock);
+  io_lock_held(io);
 
-	io_label_init(io, *label);
-	*label = IPC_OBJECT_LABEL_INVALID;
+  io_label_init(io, *label);
+  *label = IPC_OBJECT_LABEL_INVALID;
 }
 
-__attribute__((always_inline))
-static inline void
-io_label_put(ipc_object_t io, ipc_object_label_t *label)
-{
-	assert(io->io_type == label->io_type &&
-	    io->io_state == label->io_state);
-	release_assert(io->io_label_lock);
+__attribute__((always_inline)) static inline void
+io_label_put(ipc_object_t io, ipc_object_label_t *label) {
+  assert(io->io_type == label->io_type && io->io_state == label->io_state);
+  release_assert(io->io_label_lock);
 
-	io->io_label_lock = false;
-	*label = IPC_OBJECT_LABEL_INVALID;
+  io->io_label_lock = false;
+  *label = IPC_OBJECT_LABEL_INVALID;
 }
 
 /*
  * Exported interfaces
  */
 
-extern bool ipc_object_lock_allow_invalid(
-	ipc_object_t            object) __result_use_check;
+extern bool
+ipc_object_lock_allow_invalid(ipc_object_t object) __result_use_check;
 
-extern void ipc_object_unlock(
-	ipc_object_t            object);
+extern void ipc_object_unlock(ipc_object_t object);
 
 extern void ipc_object_deallocate_register_queue(void);
 
 /* Take a reference to an object */
-extern void ipc_object_reference(
-	ipc_object_t            object);
+extern void ipc_object_reference(ipc_object_t object);
 
 /* Release a reference to an object */
-extern void ipc_object_release(
-	ipc_object_t            object);
+extern void ipc_object_release(ipc_object_t object);
 
-extern void ipc_object_release_safe(
-	ipc_object_t            object);
+extern void ipc_object_release_safe(ipc_object_t object);
 
 /* Release a reference to an object that isn't the last one */
-extern void ipc_object_release_live(
-	ipc_object_t            object);
+extern void ipc_object_release_live(ipc_object_t object);
 
 /* Look up an object in a space */
-extern kern_return_t ipc_object_translate(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_right_t       right,
-	ipc_object_t           *objectp);
+extern kern_return_t ipc_object_translate(ipc_space_t space,
+                                          mach_port_name_t name,
+                                          mach_port_right_t right,
+                                          ipc_object_t *objectp);
 
 /* Look up two objects in a space, locking them in the order described */
-extern kern_return_t ipc_object_translate_port_pset(
-	ipc_space_t             space,
-	mach_port_name_t        port_name,
-	ipc_port_t             *port,
-	mach_port_name_t        pset_name,
-	ipc_pset_t             *pset);
+extern kern_return_t ipc_object_translate_port_pset(ipc_space_t space,
+                                                    mach_port_name_t port_name,
+                                                    ipc_port_t *port,
+                                                    mach_port_name_t pset_name,
+                                                    ipc_pset_t *pset);
 
 /* Validate an object as belonging to the correct zone */
-extern void ipc_object_validate(
-	ipc_object_t            object,
-	ipc_object_type_t       type);
+extern void ipc_object_validate(ipc_object_t object, ipc_object_type_t type);
 
 /* Allocate a dead-name entry */
-extern kern_return_t ipc_object_alloc_dead(
-	ipc_space_t         space,
-	mach_port_name_t    *namep);
+extern kern_return_t ipc_object_alloc_dead(ipc_space_t space,
+                                           mach_port_name_t *namep);
 
 /* Allocate an object */
-extern kern_return_t ipc_object_alloc_entry(
-	ipc_space_t         space,
-	ipc_object_t        object,
-	mach_port_name_t    *namep,
-	ipc_entry_t         *entry);
+extern kern_return_t ipc_object_alloc_entry(ipc_space_t space,
+                                            ipc_object_t object,
+                                            mach_port_name_t *namep,
+                                            ipc_entry_t *entry);
 
 /* Allocate an object, with a specific name */
-extern kern_return_t ipc_object_alloc_entry_with_name(
-	ipc_space_t         space,
-	mach_port_name_t    name,
-	ipc_entry_t         *entry);
+extern kern_return_t ipc_object_alloc_entry_with_name(ipc_space_t space,
+                                                      mach_port_name_t name,
+                                                      ipc_entry_t *entry);
 
 /* Convert a send type name to a received type name */
-extern mach_msg_type_name_t ipc_object_copyin_type(
-	mach_msg_type_name_t    msgt_name);
+extern mach_msg_type_name_t
+ipc_object_copyin_type(mach_msg_type_name_t msgt_name);
 
 /* Copyin a capability from a space */
 extern kern_return_t ipc_object_copyin(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_msg_type_name_t    msgt_name,
-	ipc_object_copyin_flags_t copyin_flags,
-	ipc_copyin_op_t         copyin_reason,
-	mach_msg_guarded_port_descriptor_t *gdesc,
-	ipc_port_t             *portp);
+    ipc_space_t space, mach_port_name_t name, mach_msg_type_name_t msgt_name,
+    ipc_object_copyin_flags_t copyin_flags, ipc_copyin_op_t copyin_reason,
+    mach_msg_guarded_port_descriptor_t *gdesc, ipc_port_t *portp);
 
 /* Copyin a naked capability from the kernel */
-extern void ipc_object_copyin_from_kernel(
-	ipc_port_t              port,
-	mach_msg_type_name_t    msgt_name);
+extern void ipc_object_copyin_from_kernel(ipc_port_t port,
+                                          mach_msg_type_name_t msgt_name);
 
 /* Destroy a naked capability */
-extern void ipc_object_destroy(
-	ipc_port_t              port,
-	mach_msg_type_name_t    msgt_name);
+extern void ipc_object_destroy(ipc_port_t port, mach_msg_type_name_t msgt_name);
 
 /* Destroy a naked destination capability */
-extern void ipc_object_destroy_dest(
-	ipc_port_t              port,
-	mach_msg_type_name_t    msgt_name);
+extern void ipc_object_destroy_dest(ipc_port_t port,
+                                    mach_msg_type_name_t msgt_name);
 
 /* Insert a send right into an object already in the current space */
-extern kern_return_t ipc_object_insert_send_right(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_msg_type_name_t    msgt_name);
+extern kern_return_t
+ipc_object_insert_send_right(ipc_space_t space, mach_port_name_t name,
+                             mach_msg_type_name_t msgt_name);
 
 /* Copyout a capability, placing it into a space */
 extern kern_return_t ipc_object_copyout(
-	ipc_space_t             space,
-	ipc_port_t              port,
-	mach_msg_type_name_t    msgt_name,
-	ipc_object_copyout_flags_t flags,
-	mach_msg_guarded_port_descriptor_t *gdesc,
-	mach_port_name_t        *namep);
+    ipc_space_t space, ipc_port_t port, mach_msg_type_name_t msgt_name,
+    ipc_object_copyout_flags_t flags, mach_msg_guarded_port_descriptor_t *gdesc,
+    mach_port_name_t *namep);
 
 /* Copyout a capability with a name, placing it into a space */
-extern kern_return_t ipc_object_copyout_name(
-	ipc_space_t             space,
-	ipc_port_t              port,
-	mach_msg_type_name_t    msgt_name,
-	mach_port_name_t        name);
+extern kern_return_t ipc_object_copyout_name(ipc_space_t space, ipc_port_t port,
+                                             mach_msg_type_name_t msgt_name,
+                                             mach_port_name_t name);
 
 /* Translate/consume the destination right of a message */
-extern void ipc_object_copyout_dest(
-	ipc_space_t             space,
-	ipc_port_t              port,
-	mach_msg_type_name_t    msgt_name,
-	mach_port_name_t        *namep);
+extern void ipc_object_copyout_dest(ipc_space_t space, ipc_port_t port,
+                                    mach_msg_type_name_t msgt_name,
+                                    mach_port_name_t *namep);
 
 /* Unpin the entry for a send right pointing to "object" */
-extern void ipc_object_unpin(
-	ipc_space_t             space,
-	ipc_port_t              port);
+extern void ipc_object_unpin(ipc_space_t space, ipc_port_t port);
 
 #pragma GCC visibility pop
 __ASSUME_PTR_ABI_SINGLE_END __END_DECLS
 
-#endif  /* _IPC_IPC_OBJECT_H_ */
+#endif /* _IPC_IPC_OBJECT_H_ */

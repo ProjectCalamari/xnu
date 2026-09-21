@@ -20,26 +20,24 @@
  *
  * @APPLE_LICENSE_HEADER_END@
  */
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <stdarg.h>
+#include <sys/cdefs.h>
 #include <sys/fcntl.h>
 #include <sys/guarded.h>
+#include <sys/types.h>
 
-int __guarded_open_np(const char *path,
-    const guardid_t *guard, u_int guardflags, int flags, int mode);
+int __guarded_open_np(const char *path, const guardid_t *guard,
+                      u_int guardflags, int flags, int mode);
 
-int
-guarded_open_np(const char *path,
-    const guardid_t *guard, u_int guardflags, int flags, ...)
-{
-	int mode = 0;
+int guarded_open_np(const char *path, const guardid_t *guard, u_int guardflags,
+                    int flags, ...) {
+  int mode = 0;
 
-	if (flags & O_CREAT) {
-		va_list ap;
-		va_start(ap, flags);
-		mode = va_arg(ap, int);
-		va_end(ap);
-	}
-	return __guarded_open_np(path, guard, guardflags, flags, mode);
+  if (flags & O_CREAT) {
+    va_list ap;
+    va_start(ap, flags);
+    mode = va_arg(ap, int);
+    va_end(ap);
+  }
+  return __guarded_open_np(path, guard, guardflags, flags, mode);
 }

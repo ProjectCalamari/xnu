@@ -34,9 +34,9 @@
  * Data Sequence Numbers and Data ACKs. Implies
  * 2**63 space is available for sending data.
  */
-#define MPTCP_SEQ_LT(a, b)      ((int64_t)((a) - (b)) < 0)
-#define MPTCP_SEQ_LEQ(a, b)     ((int64_t)((a) - (b)) <= 0)
-#define MPTCP_SEQ_GT(a, b)      ((int64_t)((a) - (b)) > 0)
-#define MPTCP_SEQ_GEQ(a, b)     ((int64_t)((a) - (b)) >= 0)
+#define MPTCP_SEQ_LT(a, b) ((int64_t)((a) - (b)) < 0)
+#define MPTCP_SEQ_LEQ(a, b) ((int64_t)((a) - (b)) <= 0)
+#define MPTCP_SEQ_GT(a, b) ((int64_t)((a) - (b)) > 0)
+#define MPTCP_SEQ_GEQ(a, b) ((int64_t)((a) - (b)) >= 0)
 
-#endif  /* _NETINET_MPTCP_SEQ_H_ */
+#endif /* _NETINET_MPTCP_SEQ_H_ */

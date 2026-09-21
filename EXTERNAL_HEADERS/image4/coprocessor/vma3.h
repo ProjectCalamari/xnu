@@ -71,9 +71,8 @@ IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_coprocessor_vma3);
  * The personalized VMA3 environment.
  */
 OS_CLOSED_ENUM(image4_coprocessor_handle_vma3, image4_coprocessor_handle_t,
-	IMAGE4_COPROCESSOR_HANDLE_VMA3 = 0,
-	_IMAGE4_COPROCESSOR_HANDLE_VMA3_CNT,
-);
+               IMAGE4_COPROCESSOR_HANDLE_VMA3 = 0,
+               _IMAGE4_COPROCESSOR_HANDLE_VMA3_CNT, );
 
 OS_ASSUME_PTR_ABI_SINGLE_END
 OS_ASSUME_NONNULL_END

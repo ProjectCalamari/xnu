@@ -38,15 +38,17 @@
  * data library.
  *
  * @discussion
- * Each type object has a name and a method to parse and populate data in memory to
- * a dictionary. The dictionary will have keys as NSStrings and values could be NSObject
+ * Each type object has a name and a method to parse and populate data in memory
+ * to a dictionary. The dictionary will have keys as NSStrings and values could
+ * be NSObject
  *
  */
 @interface KCDataType : NSObject
-- (NSDictionary * _Nullable)parseData:(void * _Nonnull)dataBuffer ofLength:(uint32_t)length NS_RETURNS_RETAINED;
-- (NSString * _Nonnull)name;
+- (NSDictionary *_Nullable)parseData:(void *_Nonnull)dataBuffer
+                            ofLength:(uint32_t)length NS_RETURNS_RETAINED;
+- (NSString *_Nonnull)name;
 - (unsigned int)typeID;
-- (BOOL) shouldMergeData;
+- (BOOL)shouldMergeData;
 @end
 
 /*!
@@ -59,10 +61,11 @@
  * A unsinged int type specified by the KCDATA.
  *
  * @discussion
- * This routine queries the system for a give type. If a known type description is found it will be used to
- * initialize a KCDataType object. If no known type is found it assumes the data is uint8_t[].
+ * This routine queries the system for a give type. If a known type description
+ * is found it will be used to initialize a KCDataType object. If no known type
+ * is found it assumes the data is uint8_t[].
  */
-KCDataType * _Nullable getKCDataTypeForID(uint32_t typeID);
+KCDataType *_Nullable getKCDataTypeForID(uint32_t typeID);
 
 /*!
  * @function KCDataTypeNameForID
@@ -77,14 +80,14 @@ KCDataType * _Nullable getKCDataTypeForID(uint32_t typeID);
  * Returns name of the type. If a type is not found the return
  * value will be string object of the passed value.
  */
-NSString * _Nonnull KCDataTypeNameForID(uint32_t typeID) NS_RETURNS_NOT_RETAINED;
+NSString *_Nonnull KCDataTypeNameForID(uint32_t typeID) NS_RETURNS_NOT_RETAINED;
 
 /*!
  * @function parseKCDataArray
  *
  * @abstract
- * Parse the given KCDATA buffer as an Array of element. The buffer should begin with header
- * of type KCDATA_TYPE_ARRAY.
+ * Parse the given KCDATA buffer as an Array of element. The buffer should begin
+ * with header of type KCDATA_TYPE_ARRAY.
  *
  * @param iter
  * An iterator into the input buffer
@@ -93,17 +96,21 @@ NSString * _Nonnull KCDataTypeNameForID(uint32_t typeID) NS_RETURNS_NOT_RETAINED
  * Error return.
  *
  * @return
- * A dictionary with  key specifying name of the type of each elements and value is an Array of data.
+ * A dictionary with  key specifying name of the type of each elements and value
+ * is an Array of data.
  *
  */
 
-NSMutableDictionary * _Nullable parseKCDataArray(kcdata_iter_t iter, NSError * _Nullable * _Nullable error) NS_RETURNS_RETAINED;
+NSMutableDictionary *_Nullable parseKCDataArray(
+    kcdata_iter_t iter,
+    NSError *_Nullable *_Nullable error) NS_RETURNS_RETAINED;
 
 /*!
  * @function parseKCDataContainer
  *
  * @abstract
- * Parse the given KCDATA buffer as a container and convert each sub structures as fields in a dictionary.
+ * Parse the given KCDATA buffer as a container and convert each sub structures
+ * as fields in a dictionary.
  *
  * @param iter
  * A pointer to an iterator into the input buffer.  The iterator will be updated
@@ -113,7 +120,8 @@ NSMutableDictionary * _Nullable parseKCDataArray(kcdata_iter_t iter, NSError * _
  * Error return.
  *
  * @return NSDictionary *
- * containing each field and potentially sub containers within the provided container.
+ * containing each field and potentially sub containers within the provided
+ * container.
  *
  * @discussion
  * This function tries to parse one container. If it encounters sub containers
@@ -122,14 +130,17 @@ NSMutableDictionary * _Nullable parseKCDataArray(kcdata_iter_t iter, NSError * _
  *
  */
 
-NSMutableDictionary * _Nullable parseKCDataContainer(kcdata_iter_t * _Nonnull iter, NSError * _Nullable * _Nullable error) NS_RETURNS_RETAINED;
+NSMutableDictionary *_Nullable parseKCDataContainer(
+    kcdata_iter_t *_Nonnull iter,
+    NSError *_Nullable *_Nullable error) NS_RETURNS_RETAINED;
 
 /*!
  * @function parseKCDataBuffer
  *
  * @abstract
- * Parse complete KCDATA buffer into NSMutableDictionary. Depending on the size of buffer and elements
- * this routine makes allocations for objects and strings.
+ * Parse complete KCDATA buffer into NSMutableDictionary. Depending on the size
+ * of buffer and elements this routine makes allocations for objects and
+ * strings.
  *
  * @param dataBuffer
  * A pointer in memory where KCDATA is allocated. The data should be of type
@@ -139,19 +150,21 @@ NSMutableDictionary * _Nullable parseKCDataContainer(kcdata_iter_t * _Nonnull it
  * Size of the buffer as provided by kernel api.
  *
  * @return NSDictionary *
- * Dictionary with key:value pairs for each data item. KCDATA_TYPE_ARRAY and KCDATA_TYPE_CONTAINERS will
- * grouped and recursed as much possible. For unknown types NSData object is returned with "Type_0x123"
- * as keys.
+ * Dictionary with key:value pairs for each data item. KCDATA_TYPE_ARRAY and
+ * KCDATA_TYPE_CONTAINERS will grouped and recursed as much possible. For
+ * unknown types NSData object is returned with "Type_0x123" as keys.
  *
  * @discussion
- * This function tries to parse KCDATA buffer with known type description. If an error occurs,
- * NULL is returned, and error (if not NULL) will have the error string.
+ * This function tries to parse KCDATA buffer with known type description. If an
+ * error occurs, NULL is returned, and error (if not NULL) will have the error
+ * string.
  *
  * Iff the buffer does begin with a known kcdata magic number, the error code
  * will be KERN_INVALID_VALUE.
  *
  */
-NSDictionary * _Nullable parseKCDataBuffer(void * _Nonnull dataBuffer, uint32_t size, NSError * _Nullable * _Nullable error) NS_RETURNS_RETAINED;
-
+NSDictionary *_Nullable parseKCDataBuffer(
+    void *_Nonnull dataBuffer, uint32_t size,
+    NSError *_Nullable *_Nullable error) NS_RETURNS_RETAINED;
 
 #endif /* _KDD_H_ */

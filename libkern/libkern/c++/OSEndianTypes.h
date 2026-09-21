@@ -31,7 +31,6 @@
 
 // xx-review: are these even used anywhere? Grep turns up squat.
 
-
 /*!
  * @header OSEndianTypes
  *
@@ -127,47 +126,51 @@ typedef class LittleSInt64 LittleSInt64;
 
 #if __cplusplus
 
-#include <libkern/OSTypes.h>
 #include <libkern/OSByteOrder.h>
+#include <libkern/OSTypes.h>
 
 // Probably should really be using templates, this is one of the few cases
 // where they do make sense.  But as the kernel is not allowed to export
 // template based C++ APIs we have to use sophisticated macros instead
-#define __OSEndianSignIntSizeDEF(argname, argend, argtype, argsize) {  \
-public:                                                                \
-    typedef argtype ## argsize        Value;                           \
-                                                                       \
-private:                                                               \
-    typedef UInt ## argsize        UValue;                             \
-    UValue mValue;                                                     \
-                                                                       \
-    void writeValue(Value v) {                                         \
-    if (__builtin_constant_p(v))                                       \
-	mValue = OSSwapHostTo ## argend ## ConstInt ## argsize(v);     \
-    else                                                               \
-	OSWrite ## argend ## Int ## argsize(&mValue, 0, (UValue) v);   \
-    };                                                                 \
-                                                                       \
-    Value readValue() const {                                          \
-    return (Value) OSRead ## argend ## Int ## argsize(&mValue, 0);     \
-    };                                                                 \
-                                                                       \
-public:                                                                \
-    argname() { };                                                     \
-                                                                       \
-    argname (Value v) { writeValue(v); };                              \
-    argname  &operator = (Value v) { writeValue(v); return *this; }    \
-                                                                       \
-    Value get() const { return readValue(); };                         \
-    operator Value () const { return readValue(); };                   \
-}
+#define __OSEndianSignIntSizeDEF(argname, argend, argtype, argsize)            \
+  {                                                                            \
+  public:                                                                      \
+    typedef argtype##argsize Value;                                            \
+                                                                               \
+  private:                                                                     \
+    typedef UInt##argsize UValue;                                              \
+    UValue mValue;                                                             \
+                                                                               \
+    void writeValue(Value v) {                                                 \
+      if (__builtin_constant_p(v))                                             \
+        mValue = OSSwapHostTo##argend##ConstInt##argsize(v);                   \
+      else                                                                     \
+        OSWrite##argend##Int##argsize(&mValue, 0, (UValue)v);                  \
+    };                                                                         \
+                                                                               \
+    Value readValue() const {                                                  \
+      return (Value)OSRead##argend##Int##argsize(&mValue, 0);                  \
+    };                                                                         \
+                                                                               \
+  public:                                                                      \
+    argname(){};                                                               \
+                                                                               \
+    argname(Value v) { writeValue(v); };                                       \
+    argname &operator=(Value v) {                                              \
+      writeValue(v);                                                           \
+      return *this;                                                            \
+    }                                                                          \
+                                                                               \
+    Value get() const { return readValue(); };                                 \
+    operator Value() const { return readValue(); };                            \
+  }
 
-class BigUInt16    __OSEndianSignIntSizeDEF(BigUInt16, Big, UInt, 16);
-class BigSInt16    __OSEndianSignIntSizeDEF(BigSInt16, Big, SInt, 16);
-class BigUInt32    __OSEndianSignIntSizeDEF(BigUInt32, Big, UInt, 32);
-class BigSInt32    __OSEndianSignIntSizeDEF(BigSInt32, Big, SInt, 32);
-class BigUInt64    __OSEndianSignIntSizeDEF(BigUInt64, Big, UInt, 64);
-class BigSInt64    __OSEndianSignIntSizeDEF(BigSInt64, Big, SInt, 64);
+class BigUInt16 __OSEndianSignIntSizeDEF(BigUInt16, Big, UInt, 16);
+class BigSInt16 __OSEndianSignIntSizeDEF(BigSInt16, Big, SInt, 16);
+class BigUInt32 __OSEndianSignIntSizeDEF(BigUInt32, Big, UInt, 32);
+class BigSInt32 __OSEndianSignIntSizeDEF(BigSInt32, Big, SInt, 32);
+class BigUInt64 __OSEndianSignIntSizeDEF(BigUInt64, Big, UInt, 64);
+class BigSInt64 __OSEndianSignIntSizeDEF(BigSInt64, Big, SInt, 64);
 class LittleUInt16 __OSEndianSignIntSizeDEF(LittleUInt16, Little, UInt, 16);
 class LittleSInt16 __OSEndianSignIntSizeDEF(LittleSInt16, Little, SInt, 16);
 class LittleUInt32 __OSEndianSignIntSizeDEF(LittleUInt32, Little, UInt, 32);
@@ -177,8 +180,8 @@ class LittleSInt64 __OSEndianSignIntSizeDEF(LittleSInt64, Little, SInt, 64);
 
 #undef __OSEndianSignIntSizeDEF
 
-#endif /* __cplusplus
+#endif /* __cplusplus                                                          \
         */
 
-#endif /* ! _OS_OSENDIANHELPER_H
+#endif /* ! _OS_OSENDIANHELPER_H                                               \
         */

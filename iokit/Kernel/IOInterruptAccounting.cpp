@@ -41,61 +41,58 @@ uint32_t gInterruptAccountingStatisticBitmask =
     IA_GET_ENABLE_BIT(kInterruptAccountingFirstLevelCountIndex) |
     IA_GET_ENABLE_BIT(kInterruptAccountingSecondLevelCountIndex);
 
-IOLock * gInterruptAccountingDataListLock = NULL;
+IOLock *gInterruptAccountingDataListLock = NULL;
 queue_head_t gInterruptAccountingDataList;
 
-void
-interruptAccountingInit(void)
-{
-	int bootArgValue = 0;
+void interruptAccountingInit(void) {
+  int bootArgValue = 0;
 
-	if (PE_parse_boot_argn("interrupt_accounting", &bootArgValue, sizeof(bootArgValue))) {
-		gInterruptAccountingStatisticBitmask = bootArgValue;
-	}
+  if (PE_parse_boot_argn("interrupt_accounting", &bootArgValue,
+                         sizeof(bootArgValue))) {
+    gInterruptAccountingStatisticBitmask = bootArgValue;
+  }
 
-	gInterruptAccountingDataListLock = IOLockAlloc();
+  gInterruptAccountingDataListLock = IOLockAlloc();
 
-	assert(gInterruptAccountingDataListLock);
+  assert(gInterruptAccountingDataListLock);
 
-	queue_init(&gInterruptAccountingDataList);
+  queue_init(&gInterruptAccountingDataList);
 }
 
-void
-interruptAccountingDataAddToList(IOInterruptAccountingData * data)
-{
-	IOLockLock(gInterruptAccountingDataListLock);
-	queue_enter(&gInterruptAccountingDataList, data, IOInterruptAccountingData *, chain);
-	IOLockUnlock(gInterruptAccountingDataListLock);
+void interruptAccountingDataAddToList(IOInterruptAccountingData *data) {
+  IOLockLock(gInterruptAccountingDataListLock);
+  queue_enter(&gInterruptAccountingDataList, data, IOInterruptAccountingData *,
+              chain);
+  IOLockUnlock(gInterruptAccountingDataListLock);
 }
 
-void
-interruptAccountingDataRemoveFromList(IOInterruptAccountingData * data)
-{
-	IOLockLock(gInterruptAccountingDataListLock);
-	queue_remove(&gInterruptAccountingDataList, data, IOInterruptAccountingData *, chain);
-	IOLockUnlock(gInterruptAccountingDataListLock);
+void interruptAccountingDataRemoveFromList(IOInterruptAccountingData *data) {
+  IOLockLock(gInterruptAccountingDataListLock);
+  queue_remove(&gInterruptAccountingDataList, data, IOInterruptAccountingData *,
+               chain);
+  IOLockUnlock(gInterruptAccountingDataListLock);
 }
 
-void
-interruptAccountingDataUpdateChannels(IOInterruptAccountingData * data, IOSimpleReporter * reporter)
-{
-	uint64_t i = 0;
+void interruptAccountingDataUpdateChannels(IOInterruptAccountingData *data,
+                                           IOSimpleReporter *reporter) {
+  uint64_t i = 0;
 
-	for (i = 0; i < IA_NUM_INTERRUPT_ACCOUNTING_STATISTICS; i++) {
-		if (IA_GET_STATISTIC_ENABLED(i)) {
-			reporter->setValue(IA_GET_CHANNEL_ID(data->interruptIndex, i), data->interruptStatistics[i]);
-		}
-	}
+  for (i = 0; i < IA_NUM_INTERRUPT_ACCOUNTING_STATISTICS; i++) {
+    if (IA_GET_STATISTIC_ENABLED(i)) {
+      reporter->setValue(IA_GET_CHANNEL_ID(data->interruptIndex, i),
+                         data->interruptStatistics[i]);
+    }
+  }
 }
 
-void
-interruptAccountingDataInheritChannels(IOInterruptAccountingData * data, IOSimpleReporter * reporter)
-{
-	uint64_t i = 0;
+void interruptAccountingDataInheritChannels(IOInterruptAccountingData *data,
+                                            IOSimpleReporter *reporter) {
+  uint64_t i = 0;
 
-	for (i = 0; i < IA_NUM_INTERRUPT_ACCOUNTING_STATISTICS; i++) {
-		if (IA_GET_STATISTIC_ENABLED(i)) {
-			data->interruptStatistics[i] = reporter->getValue(IA_GET_CHANNEL_ID(data->interruptIndex, i));
-		}
-	}
+  for (i = 0; i < IA_NUM_INTERRUPT_ACCOUNTING_STATISTICS; i++) {
+    if (IA_GET_STATISTIC_ENABLED(i)) {
+      data->interruptStatistics[i] =
+          reporter->getValue(IA_GET_CHANNEL_ID(data->interruptIndex, i));
+    }
+  }
 }

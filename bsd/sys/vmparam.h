@@ -45,4 +45,4 @@
 
 #include <machine/vmparam.h>
 
-#endif  /* _SYS_VMPARAM_H_ */
+#endif /* _SYS_VMPARAM_H_ */

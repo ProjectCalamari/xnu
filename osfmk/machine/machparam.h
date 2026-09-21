@@ -28,9 +28,9 @@
 #ifndef _MACHINE_MACHPARAM_H
 #define _MACHINE_MACHPARAM_H
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/machparam.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm/machparam.h"
 #else
 #error architecture not supported

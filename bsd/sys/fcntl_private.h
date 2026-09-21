@@ -66,17 +66,18 @@
  *	@(#)fcntl.h	8.3 (Berkeley) 1/21/94
  */
 
-
 #ifndef _SYS_FCNTL_PRIVATE_H_
 #define _SYS_FCNTL_PRIVATE_H_
 
-#include <sys/cdefs.h>
 #include <sys/_types/_mode_t.h>
+#include <sys/cdefs.h>
 
 #if __DARWIN_C_LEVEL >= 200809L
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
-#define AT_REMOVEDIR_DATALESS   0x0100  /* Remove a dataless directory without materializing first */
-#define AT_SYSTEM_DISCARDED     0x1000  /* Indicated file/folder was discarded by system */
+#define AT_REMOVEDIR_DATALESS                                                  \
+  0x0100 /* Remove a dataless directory without materializing first */
+#define AT_SYSTEM_DISCARDED                                                    \
+  0x1000 /* Indicated file/folder was discarded by system */
 #endif
 #endif
 
@@ -86,46 +87,56 @@
 
 /* command values */
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-#define F_OPENFROM      56              /* SPI: open a file relative to fd (must be a dir) */
-#define F_UNLINKFROM    57              /* SPI: open a file relative to fd (must be a dir) */
-#define F_CHECK_OPENEVT 58              /* SPI: if a process is marked OPENEVT, or in O_EVTONLY on opens of this vnode */
+#define F_OPENFROM 56   /* SPI: open a file relative to fd (must be a dir) */
+#define F_UNLINKFROM 57 /* SPI: open a file relative to fd (must be a dir) */
+#define F_CHECK_OPENEVT                                                        \
+  58 /* SPI: if a process is marked OPENEVT, or in O_EVTONLY on opens of this  \
+        vnode */
 
 /* Deprecated/Removed in 10.9 */
-#define F_MARKDEPENDENCY 60             /* this process hosts the device supporting the fs backing this fd */
+#define F_MARKDEPENDENCY                                                       \
+  60 /* this process hosts the device supporting the fs backing this fd */
 
-#define F_SETSTATICCONTENT              68              /*
-	                                                 * indicate to the filesystem/storage driver that the content to be
-	                                                 * written is usually static.  a nonzero value enables it, 0 disables it.
-	                                                 */
-#define F_MOVEDATAEXTENTS       69              /* Swap only the data associated with two files */
+#define F_SETSTATICCONTENT                                                                             \
+  68                         /*                                                                        \
+                              * indicate to the filesystem/storage driver that the content to be       \
+                              * written is usually static.  a nonzero value enables it, 0 disables it. \
+                              */
+#define F_MOVEDATAEXTENTS 69 /* Swap only the data associated with two files   \
+                              */
 
-#define F_GETDEFAULTPROTLEVEL   79 /* Get the default protection level for the filesystem */
-#define F_MAKECOMPRESSED                80 /* Make the file compressed; truncate & toggle BSD bits */
-#define F_SET_GREEDY_MODE               81      /*
-	                                         * indicate to the filesystem/storage driver that the content to be
-	                                         * written should be written in greedy mode for additional speed at
-	                                         * the cost of storage efficiency. A nonzero value enables it, 0 disables it.
-	                                         */
+#define F_GETDEFAULTPROTLEVEL                                                  \
+  79 /* Get the default protection level for the filesystem */
+#define F_MAKECOMPRESSED                                                       \
+  80 /* Make the file compressed; truncate & toggle BSD bits */
+#define F_SET_GREEDY_MODE                                                      \
+  81 /*                                                                        \
+      * indicate to the filesystem/storage driver that the content to be       \
+      * written should be written in greedy mode for additional speed at       \
+      * the cost of storage efficiency. A nonzero value enables it, 0 disables \
+      * it.                                                                    \
+      */
 
-#define F_SETIOTYPE             82  /*
-	                             * Use parameters to describe content being written to the FD. See
-	                             * flag definitions below for argument bits.
-	                             */
+#define F_SETIOTYPE                                                            \
+  82 /*                                                                        \
+      * Use parameters to describe content being written to the FD. See        \
+      * flag definitions below for argument bits.                              \
+      */
 
-#define F_RECYCLE                       84      /* Recycle vnode; debug/development builds only */
+#define F_RECYCLE 84 /* Recycle vnode; debug/development builds only */
 
-#define F_OFD_GETLKPID          94      /* get record locking information */
+#define F_OFD_GETLKPID 94 /* get record locking information */
 
-#define F_SETCONFINED           95      /* "confine" OFD to process */
-#define F_GETCONFINED           96      /* is-fd-confined? */
+#define F_SETCONFINED 95 /* "confine" OFD to process */
+#define F_GETCONFINED 96 /* is-fd-confined? */
 
-#define F_ASSERT_BG_ACCESS      108      /* Assert background access to a file */
-#define F_RELEASE_BG_ACCESS     109      /* Release background access to a file */
+#define F_ASSERT_BG_ACCESS 108  /* Assert background access to a file */
+#define F_RELEASE_BG_ACCESS 109 /* Release background access to a file */
 
 #endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
 
 /* file descriptor flags (F_GETFD, F_SETFD) */
-#define FD_CLOFORK      2               /* close-on-fork flag */
+#define FD_CLOFORK 2 /* close-on-fork flag */
 
 /*
  * ISOCHRONOUS attempts to sustain a minimum platform-dependent throughput
@@ -136,18 +147,19 @@
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 /* fassertbgaccess_t used by F_ASSERT_BG_ACCESS */
 typedef struct fassertbgaccess {
-	unsigned int       fbga_flags;   /* unused */
-	unsigned int       reserved;     /* (to maintain 8-byte alignment) */
-	unsigned long long ttl;          /* IN: time to live for the assertion (nanoseconds; continuous) */
+  unsigned int fbga_flags; /* unused */
+  unsigned int reserved;   /* (to maintain 8-byte alignment) */
+  unsigned long long
+      ttl; /* IN: time to live for the assertion (nanoseconds; continuous) */
 } fassertbgaccess_t;
 
 /*
  * SPI: Argument data for F_OPENFROM
  */
 struct fopenfrom {
-	unsigned int    o_flags;        /* same as open(2) */
-	mode_t          o_mode;         /* same as open(2) */
-	char *          o_pathname;     /* relative pathname */
+  unsigned int o_flags; /* same as open(2) */
+  mode_t o_mode;        /* same as open(2) */
+  char *o_pathname;     /* relative pathname */
 };
 
 #ifdef KERNEL
@@ -158,18 +170,17 @@ struct fopenfrom {
  * WARNING - keep in sync with fopenfrom (above)
  */
 struct user32_fopenfrom {
-	unsigned int    o_flags;
-	mode_t          o_mode;
-	user32_addr_t   o_pathname;
+  unsigned int o_flags;
+  mode_t o_mode;
+  user32_addr_t o_pathname;
 };
 
 struct user_fopenfrom {
-	unsigned int    o_flags;
-	mode_t          o_mode;
-	user_addr_t     o_pathname;
+  unsigned int o_flags;
+  mode_t o_mode;
+  user_addr_t o_pathname;
 };
 #endif /* KERNEL */
-
 
 #endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
 

@@ -25,12 +25,9 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <pexpert/pexpert.h>
 #include <pexpert/boot.h>
+#include <pexpert/pexpert.h>
 
-char *
-PE_boot_args(
-	void)
-{
-	return ((boot_args *)PE_state.bootArgs)->CommandLine;
+char *PE_boot_args(void) {
+  return ((boot_args *)PE_state.bootArgs)->CommandLine;
 }

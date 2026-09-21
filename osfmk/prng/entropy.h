@@ -29,8 +29,8 @@
 #ifndef _PRNG_ENTROPY_H_
 #define _PRNG_ENTROPY_H_
 
-#include <kern/kern_types.h>
 #include <kern/bits.h>
+#include <kern/kern_types.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -73,7 +73,8 @@ int32_t entropy_provide(size_t *entropy_size, void *entropy, void *arg);
 // is kept (when the bit is set) or filtered (when the bit is not set).
 // In other words, "bitmap_test(filter, n)" indicates whether
 // "sample[n]" is kept.
-uint32_t entropy_filter(uint32_t sample_count, entropy_sample_t *samples, uint32_t filter_count, bitmap_t *filter);
+uint32_t entropy_filter(uint32_t sample_count, entropy_sample_t *samples,
+                        uint32_t filter_count, bitmap_t *filter);
 
 #if (DEVELOPMENT || DEBUG)
 #define ENTROPY_ANALYSIS_SUPPORTED 1
@@ -99,23 +100,23 @@ extern uint32_t entropy_analysis_max_sample_count;
 extern uint32_t entropy_analysis_sample_count;
 
 extern entropy_sample_t *entropy_analysis_buffer;
-#endif  // ENTROPY_ANALYSIS_SUPPORTED
+#endif // ENTROPY_ANALYSIS_SUPPORTED
 
 typedef struct entropy_health_stats {
-	// A total count of times the test has been reset with a new
-	// initial observation. This can be thought of as the number of
-	// tests, but note that a single "test" can theoretically accrue
-	// multiple failures.
-	uint32_t reset_count;
+  // A total count of times the test has been reset with a new
+  // initial observation. This can be thought of as the number of
+  // tests, but note that a single "test" can theoretically accrue
+  // multiple failures.
+  uint32_t reset_count;
 
-	// A total count of failures of this test instance since
-	// boot. Since we do not expect any test failures (ever) in
-	// practice, this counter should always be zero.
-	uint32_t failure_count;
+  // A total count of failures of this test instance since
+  // boot. Since we do not expect any test failures (ever) in
+  // practice, this counter should always be zero.
+  uint32_t failure_count;
 
-	// The maximum count of times an initial observation has recurred
-	// across all instances of this test.
-	uint32_t max_observation_count;
+  // The maximum count of times an initial observation has recurred
+  // across all instances of this test.
+  uint32_t max_observation_count;
 } entropy_health_stats_t;
 
 extern int entropy_health_startup_done;
@@ -128,7 +129,6 @@ extern uint64_t entropy_filter_total_sample_count;
 extern uint64_t entropy_filter_accepted_sample_count;
 // The number of samples that were rejected by the filters
 extern uint64_t entropy_filter_rejected_sample_count;
-
 
 __END_DECLS
 

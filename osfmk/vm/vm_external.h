@@ -60,16 +60,16 @@
 #define VM_VM_EXTERNAL_H_
 
 #include <mach/boolean.h>
-#include <mach/vm_types.h>
 #include <mach/machine/vm_types.h>
+#include <mach/vm_types.h>
 
 /*
  *	The states that may be recorded for a page of external storage.
  */
 
-typedef int     vm_external_state_t;
-#define VM_EXTERNAL_STATE_EXISTS                1
-#define VM_EXTERNAL_STATE_UNKNOWN               2
-#define VM_EXTERNAL_STATE_ABSENT                3
+typedef int vm_external_state_t;
+#define VM_EXTERNAL_STATE_EXISTS 1
+#define VM_EXTERNAL_STATE_UNKNOWN 2
+#define VM_EXTERNAL_STATE_ABSENT 3
 
-#endif  /* VM_VM_EXTERNAL_H_ */
+#endif /* VM_VM_EXTERNAL_H_ */

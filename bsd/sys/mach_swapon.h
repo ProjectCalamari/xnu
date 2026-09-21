@@ -38,7 +38,7 @@
 #warning obsolete header file! Please delete the include from your sources.
 
 #ifdef __APPLE_API_OBSOLETE
-#define MS_PREFER       0x1     /* This device/file is preferred */
-#endif /* __APPLE_API_OBSOLETE */
+#define MS_PREFER 0x1 /* This device/file is preferred */
+#endif                /* __APPLE_API_OBSOLETE */
 
-#endif  /* _MACH_SWAPON_H */
+#endif /* _MACH_SWAPON_H */

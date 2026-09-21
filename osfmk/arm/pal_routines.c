@@ -31,32 +31,15 @@
  *       Platform Abstraction Layer routines for ARM
  */
 
-
-#include <machine/pal_routines.h>
 #include <mach/mach_types.h>
+#include <machine/pal_routines.h>
 #include <pexpert/arm/protos.h>
 
 /* Serial routines */
-int
-pal_serial_init(void)
-{
-	return serial_init();
-}
+int pal_serial_init(void) { return serial_init(); }
 
-void
-pal_serial_putc_nocr(char c)
-{
-	serial_putc(c);
-}
+void pal_serial_putc_nocr(char c) { serial_putc(c); }
 
-void
-pal_serial_putc(char c)
-{
-	serial_putc(c);
-}
+void pal_serial_putc(char c) { serial_putc(c); }
 
-int
-pal_serial_getc(void)
-{
-	return serial_getc();
-}
+int pal_serial_getc(void) { return serial_getc(); }

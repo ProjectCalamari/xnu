@@ -72,10 +72,10 @@
 #ifndef _SYS_SOCKET_PRIVATE_H_
 #define _SYS_SOCKET_PRIVATE_H_
 
-#include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/constrained_ctypes.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 #include <sys/param.h>
 #include <uuid/uuid.h>
@@ -90,22 +90,25 @@
  */
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 #ifdef __APPLE__
-#define SO_NOWAKEFROMSLEEP      0x10000 /* Don't wake for traffic to this socket */
-#define SO_NOAPNFALLBK          0x20000 /* Don't attempt APN fallback for the socket */
-#define SO_TIMESTAMP_CONTINUOUS 0x40000 /* Continuous monotonic timestamp on rcvd dgram */
+#define SO_NOWAKEFROMSLEEP 0x10000 /* Don't wake for traffic to this socket */
+#define SO_NOAPNFALLBK 0x20000 /* Don't attempt APN fallback for the socket */
+#define SO_TIMESTAMP_CONTINUOUS                                                \
+  0x40000 /* Continuous monotonic timestamp on rcvd dgram */
 
 /*
  * Additional options, not kept in so_options.
  */
-#define SO_RESTRICTIONS 0x1081          /* APPLE: deny flag set */
-#define  SO_RESTRICT_DENY_IN    0x1     /* deny inbound (trapdoor) */
-#define  SO_RESTRICT_DENY_OUT   0x2     /* deny outbound (trapdoor) */
-#define  SO_RESTRICT_DENY_CELLULAR 0x4  /* deny use of cellular (trapdoor) */
-#define  SO_RESTRICT_DENY_EXPENSIVE 0x8 /* deny use of expensive if (trapdoor) */
-#define  SO_RESTRICT_DENY_CONSTRAINED 0x10 /* deny use of expensive if (trapdoor) */
+#define SO_RESTRICTIONS 0x1081         /* APPLE: deny flag set */
+#define SO_RESTRICT_DENY_IN 0x1        /* deny inbound (trapdoor) */
+#define SO_RESTRICT_DENY_OUT 0x2       /* deny outbound (trapdoor) */
+#define SO_RESTRICT_DENY_CELLULAR 0x4  /* deny use of cellular (trapdoor) */
+#define SO_RESTRICT_DENY_EXPENSIVE 0x8 /* deny use of expensive if (trapdoor)  \
+                                        */
+#define SO_RESTRICT_DENY_CONSTRAINED                                           \
+  0x10 /* deny use of expensive if (trapdoor) */
 #endif
 
-#define SO_EXECPATH     0x1085          /* Application Firewall Socket option */
+#define SO_EXECPATH 0x1085 /* Application Firewall Socket option */
 
 /*
  * Traffic service class definitions (lowest to highest):
@@ -163,120 +166,137 @@
  *	certain types of locally-originated ICMP, ICMPv6; IGMP/MLD join/leave,
  *	ARP.
  */
-#define SO_TRAFFIC_CLASS        0x1086  /* Traffic service class (int) */
-#define SO_TC_BK_SYS    100             /* lowest class */
-#define SO_TC_BK        200
-#define SO_TC_BE        0
-#define SO_TC_RD        300
-#define SO_TC_OAM       400
-#define SO_TC_AV        500
-#define SO_TC_RV        600
-#define SO_TC_VI        700
-#define SO_TC_VO        800
-#define SO_TC_CTL       900             /* highest class */
-#define SO_TC_MAX       10              /* Total # of traffic classes */
+#define SO_TRAFFIC_CLASS 0x1086 /* Traffic service class (int) */
+#define SO_TC_BK_SYS 100        /* lowest class */
+#define SO_TC_BK 200
+#define SO_TC_BE 0
+#define SO_TC_RD 300
+#define SO_TC_OAM 400
+#define SO_TC_AV 500
+#define SO_TC_RV 600
+#define SO_TC_VI 700
+#define SO_TC_VO 800
+#define SO_TC_CTL 900 /* highest class */
+#define SO_TC_MAX 10  /* Total # of traffic classes */
 #ifdef XNU_KERNEL_PRIVATE
-#define _SO_TC_BK       1               /* deprecated */
-#define _SO_TC_VI       2               /* deprecated */
-#define _SO_TC_VO       3               /* deprecated */
-#define _SO_TC_MAX      4               /* deprecated */
+#define _SO_TC_BK 1  /* deprecated */
+#define _SO_TC_VI 2  /* deprecated */
+#define _SO_TC_VO 3  /* deprecated */
+#define _SO_TC_MAX 4 /* deprecated */
 
-#define SO_VALID_TC(c)                                                  \
-	(c == SO_TC_BK_SYS || c == SO_TC_BK || c == SO_TC_BE ||         \
-	c == SO_TC_RD || c == SO_TC_OAM || c == SO_TC_AV ||             \
-	c == SO_TC_RV || c == SO_TC_VI || c == SO_TC_VO ||              \
-	c == SO_TC_CTL || c == SO_TC_NETSVC_SIG)
+#define SO_VALID_TC(c)                                                         \
+  (c == SO_TC_BK_SYS || c == SO_TC_BK || c == SO_TC_BE || c == SO_TC_RD ||     \
+   c == SO_TC_OAM || c == SO_TC_AV || c == SO_TC_RV || c == SO_TC_VI ||        \
+   c == SO_TC_VO || c == SO_TC_CTL || c == SO_TC_NETSVC_SIG)
 
-#define SO_TC_UNSPEC    ((int)-1)               /* Traffic class not specified */
+#define SO_TC_UNSPEC ((int)-1) /* Traffic class not specified */
 
-#define SO_TC_SIG       SO_TC_VI                /* to be removed XXX */
+#define SO_TC_SIG SO_TC_VI /* to be removed XXX */
 
-#define SOTCIX_BK_SYS   0
-#define SOTCIX_BK       1
-#define SOTCIX_BE       2
-#define SOTCIX_RD       3
-#define SOTCIX_OAM      4
-#define SOTCIX_AV       5
-#define SOTCIX_RV       6
-#define SOTCIX_VI       7
-#define SOTCIX_VO       8
-#define SOTCIX_CTL      9
+#define SOTCIX_BK_SYS 0
+#define SOTCIX_BK 1
+#define SOTCIX_BE 2
+#define SOTCIX_RD 3
+#define SOTCIX_OAM 4
+#define SOTCIX_AV 5
+#define SOTCIX_RV 6
+#define SOTCIX_VI 7
+#define SOTCIX_VO 8
+#define SOTCIX_CTL 9
 #endif /* XNU_KERNEL_PRIVATE */
 
 /* Background socket configuration flags  */
-#define TRAFFIC_MGT_SO_BACKGROUND       0x0001  /* background socket */
-#define TRAFFIC_MGT_TCP_RECVBG          0x0002  /* Only TCP sockets, receiver throttling */
+#define TRAFFIC_MGT_SO_BACKGROUND 0x0001 /* background socket */
+#define TRAFFIC_MGT_TCP_RECVBG                                                 \
+  0x0002 /* Only TCP sockets, receiver throttling */
 
-#define SO_RECV_TRAFFIC_CLASS   0x1087          /* Receive traffic class (bool) */
-#define SO_TRAFFIC_CLASS_DBG    0x1088          /* Debug traffic class (struct so_tcdbg) */
-#define SO_OPTION_UNUSED_0      0x1089          /* Traffic class statistics */
-#define SO_PRIVILEGED_TRAFFIC_CLASS 0x1090      /* Privileged traffic class (bool) */
-#define SO_DEFUNCTIT    0x1091          /* Defunct a socket (only in internal builds) */
-#define SO_DEFUNCTOK    0x1100          /* can be defunct'd */
-#define SO_ISDEFUNCT    0x1101          /* get defunct status */
+#define SO_RECV_TRAFFIC_CLASS 0x1087 /* Receive traffic class (bool) */
+#define SO_TRAFFIC_CLASS_DBG 0x1088  /* Debug traffic class (struct so_tcdbg)  \
+                                      */
+#define SO_OPTION_UNUSED_0 0x1089    /* Traffic class statistics */
+#define SO_PRIVILEGED_TRAFFIC_CLASS 0x1090 /* Privileged traffic class (bool)  \
+                                            */
+#define SO_DEFUNCTIT 0x1091 /* Defunct a socket (only in internal builds) */
+#define SO_DEFUNCTOK 0x1100 /* can be defunct'd */
+#define SO_ISDEFUNCT 0x1101 /* get defunct status */
 
-#define SO_OPPORTUNISTIC        0x1102  /* deprecated; use SO_TRAFFIC_CLASS */
+#define SO_OPPORTUNISTIC 0x1102 /* deprecated; use SO_TRAFFIC_CLASS */
 
 /*
  * SO_FLUSH flushes any unsent data generated by a given socket.  It takes
  * an integer parameter, which can be any of the SO_TC traffic class values,
  * or the special SO_TC_ALL value.
  */
-#define SO_FLUSH        0x1103          /* flush unsent data (int) */
-#define  SO_TC_ALL      (-1)
+#define SO_FLUSH 0x1103 /* flush unsent data (int) */
+#define SO_TC_ALL (-1)
 
-#define SO_RECV_ANYIF   0x1104          /* unrestricted inbound processing */
-#define SO_TRAFFIC_MGT_BACKGROUND       0x1105  /* Background traffic management */
+#define SO_RECV_ANYIF 0x1104             /* unrestricted inbound processing */
+#define SO_TRAFFIC_MGT_BACKGROUND 0x1105 /* Background traffic management */
 
-#define SO_FLOW_DIVERT_TOKEN    0x1106  /* flow divert token */
+#define SO_FLOW_DIVERT_TOKEN 0x1106 /* flow divert token */
 
-#define SO_DELEGATED            0x1107  /* set socket as delegate (pid_t) */
-#define SO_DELEGATED_UUID       0x1108  /* set socket as delegate (uuid_t) */
-#define SO_NECP_ATTRIBUTES      0x1109  /* NECP socket attributes (domain, account, etc.) */
-#define SO_CFIL_SOCK_ID         0x1110  /* get content filter socket ID (cfil_sock_id_t) */
-#define SO_NECP_CLIENTUUID      0x1111  /* NECP Client uuid */
+#define SO_DELEGATED 0x1107      /* set socket as delegate (pid_t) */
+#define SO_DELEGATED_UUID 0x1108 /* set socket as delegate (uuid_t) */
+#define SO_NECP_ATTRIBUTES                                                     \
+  0x1109 /* NECP socket attributes (domain, account, etc.) */
+#define SO_CFIL_SOCK_ID                                                        \
+  0x1110 /* get content filter socket ID (cfil_sock_id_t) */
+#define SO_NECP_CLIENTUUID 0x1111 /* NECP Client uuid */
 
-#define SO_AWDL_UNRESTRICTED    0x1113  /* try to use AWDL in restricted mode */
-#define SO_EXTENDED_BK_IDLE     0x1114  /* extended time to keep socket idle after app is suspended (int) */
-#define SO_MARK_CELLFALLBACK    0x1115  /* Mark as initiated by cell fallback */
+#define SO_AWDL_UNRESTRICTED 0x1113 /* try to use AWDL in restricted mode */
+#define SO_EXTENDED_BK_IDLE                                                    \
+  0x1114 /* extended time to keep socket idle after app is suspended (int) */
+#define SO_MARK_CELLFALLBACK 0x1115 /* Mark as initiated by cell fallback */
 
-#define SO_QOSMARKING_POLICY_OVERRIDE   0x1117  /* int */
-#define SO_INTCOPROC_ALLOW              0x1118  /* Try to use internal co-processor interfaces. */
+#define SO_QOSMARKING_POLICY_OVERRIDE 0x1117 /* int */
+#define SO_INTCOPROC_ALLOW                                                     \
+  0x1118 /* Try to use internal co-processor interfaces. */
 
-#define SO_NECP_LISTENUUID         0x1120  /* NECP client UUID for listener */
-#define SO_MPKL_SEND_INFO          0x1122  /* (struct so_mpkl_send_info) */
-#define SO_STATISTICS_EVENT        0x1123  /* int64 argument, an event in statistics collection */
-#define SO_WANT_KEV_SOCKET_CLOSED  0x1124  /* want delivery of KEV_SOCKET_CLOSED (int) */
-#define SO_MARK_KNOWN_TRACKER      0x1125  /* Mark as a connection to a known tracker */
-#define SO_MARK_KNOWN_TRACKER_NON_APP_INITIATED 0x1126  /* Mark tracker connection to be non-app initiated */
-#define SO_MARK_WAKE_PKT           0x1127  /* Mark next packet as a wake packet, one shot (int) */
-#define SO_RECV_WAKE_PKT           0x1128  /* Receive wake packet indication as ancillary data (int) */
-#define SO_MARK_APPROVED_APP_DOMAIN 0x1129 /* Mark connection as being for an approved associated app domain */
-#define SO_FALLBACK_MODE           0x1130  /* Indicates the mode of fallback used */
+#define SO_NECP_LISTENUUID 0x1120 /* NECP client UUID for listener */
+#define SO_MPKL_SEND_INFO 0x1122  /* (struct so_mpkl_send_info) */
+#define SO_STATISTICS_EVENT                                                    \
+  0x1123 /* int64 argument, an event in statistics collection */
+#define SO_WANT_KEV_SOCKET_CLOSED                                              \
+  0x1124 /* want delivery of KEV_SOCKET_CLOSED (int) */
+#define SO_MARK_KNOWN_TRACKER                                                  \
+  0x1125 /* Mark as a connection to a known tracker */
+#define SO_MARK_KNOWN_TRACKER_NON_APP_INITIATED                                \
+  0x1126 /* Mark tracker connection to be non-app initiated */
+#define SO_MARK_WAKE_PKT                                                       \
+  0x1127 /* Mark next packet as a wake packet, one shot (int) */
+#define SO_RECV_WAKE_PKT                                                       \
+  0x1128 /* Receive wake packet indication as ancillary data (int) */
+#define SO_MARK_APPROVED_APP_DOMAIN                                            \
+  0x1129 /* Mark connection as being for an approved associated app domain */
+#define SO_FALLBACK_MODE 0x1130 /* Indicates the mode of fallback used */
 
-#define SO_MARK_CELLFALLBACK_UUID  0x1132  /* Mark as initiated by cell fallback using UUID of the connection */
-#define SO_APPLICATION_ID          0x1133  /* ID of attributing app - so_application_id_t */
-                                           /* 0x1134 is SO_BINDTODEVICE, see socket.h */
-#define SO_MARK_DOMAIN_INFO_SILENT 0x1135  /* Domain information should be silently withheld */
-#define SO_MAX_PACING_RATE         0x1136  /* Define per-socket maximum pacing rate in bytes/sec */
-#define SO_CONNECTION_IDLE         0x1137  /* Connection is idle (int) */
+#define SO_MARK_CELLFALLBACK_UUID                                              \
+  0x1132 /* Mark as initiated by cell fallback using UUID of the connection */
+#define SO_APPLICATION_ID                                                      \
+  0x1133 /* ID of attributing app - so_application_id_t */
+         /* 0x1134 is SO_BINDTODEVICE, see socket.h */
+#define SO_MARK_DOMAIN_INFO_SILENT                                             \
+  0x1135 /* Domain information should be silently withheld */
+#define SO_MAX_PACING_RATE                                                     \
+  0x1136 /* Define per-socket maximum pacing rate in bytes/sec */
+#define SO_CONNECTION_IDLE 0x1137 /* Connection is idle (int) */
 
 struct so_mark_cellfallback_uuid_args {
-	uuid_t flow_uuid;
-	int flow_cellfallback;
+  uuid_t flow_uuid;
+  int flow_cellfallback;
 };
 
 typedef struct {
-	uid_t               uid;
-	uuid_t              effective_uuid;
-	uid_t               persona_id;
+  uid_t uid;
+  uuid_t effective_uuid;
+  uid_t persona_id;
 } so_application_id_t;
 
 #define _NET_SERVICE_TYPE_COUNT 9
-#define _NET_SERVICE_TYPE_UNSPEC        ((int)-1)
+#define _NET_SERVICE_TYPE_UNSPEC ((int)-1)
 
-#define IS_VALID_NET_SERVICE_TYPE(c)                            \
-	(c >= NET_SERVICE_TYPE_BE && c <= NET_SERVICE_TYPE_RD)
+#define IS_VALID_NET_SERVICE_TYPE(c)                                           \
+  (c >= NET_SERVICE_TYPE_BE && c <= NET_SERVICE_TYPE_RD)
 
 extern const int sotc_by_netservicetype[_NET_SERVICE_TYPE_COUNT];
 
@@ -285,13 +305,13 @@ extern const int sotc_by_netservicetype[_NET_SERVICE_TYPE_COUNT];
  * Mostly useful to simplify implementation of frameworks to adopt the new
  * Network Service Type values for Signaling.
  */
-#define SO_TC_NET_SERVICE_OFFSET        10000
-#define SO_TC_NETSVC_SIG        (SO_TC_NET_SERVICE_OFFSET + NET_SERVICE_TYPE_SIG)
+#define SO_TC_NET_SERVICE_OFFSET 10000
+#define SO_TC_NETSVC_SIG (SO_TC_NET_SERVICE_OFFSET + NET_SERVICE_TYPE_SIG)
 
 #ifdef __APPLE__
 
 #ifdef KERNEL_PRIVATE
-#define SONPX_MASK_VALID                (SONPX_SETOPTSHUT)
+#define SONPX_MASK_VALID (SONPX_SETOPTSHUT)
 #define IS_SO_TC_BACKGROUND(_tc_) ((_tc_) == SO_TC_BK || (_tc_) == SO_TC_BK_SYS)
 #define IS_SO_TC_BACKGROUNDSYSTEM(_tc_) ((_tc_) == SO_TC_BK_SYS)
 #endif /* KERNEL_PRIVATE */
@@ -301,59 +321,60 @@ extern const int sotc_by_netservicetype[_NET_SERVICE_TYPE_COUNT];
 /*
  * Address families.
  */
-#define AF_AFP  36                      /* Used by AFP */
-#define AF_MULTIPATH    39
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+#define AF_AFP 36 /* Used by AFP */
+#define AF_MULTIPATH 39
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
 /*
  * Protocol families, same as address families for now.
  */
-#define PF_AFP          AF_AFP
-#define PF_MULTIPATH    AF_MULTIPATH
+#define PF_AFP AF_AFP
+#define PF_MULTIPATH AF_MULTIPATH
 
 #ifdef KERNEL_PRIVATE
-#define PF_BRIDGE       ((uint32_t)0x62726467)  /* 'brdg' */
-#define PF_NULL         ((uint32_t)0x6e756c6c)  /* 'null' */
+#define PF_BRIDGE ((uint32_t)0x62726467) /* 'brdg' */
+#define PF_NULL ((uint32_t)0x6e756c6c)   /* 'null' */
 
-#define CTL_NET_NAMES { \
-	{ 0, 0 }, \
-	{ "local", CTLTYPE_NODE }, \
-	{ "inet", CTLTYPE_NODE }, \
-	{ "implink", CTLTYPE_NODE }, \
-	{ "pup", CTLTYPE_NODE }, \
-	{ "chaos", CTLTYPE_NODE }, \
-	{ "xerox_ns", CTLTYPE_NODE }, \
-	{ "iso", CTLTYPE_NODE }, \
-	{ "emca", CTLTYPE_NODE }, \
-	{ "datakit", CTLTYPE_NODE }, \
-	{ "ccitt", CTLTYPE_NODE }, \
-	{ "ibm_sna", CTLTYPE_NODE }, \
-	{ "decnet", CTLTYPE_NODE }, \
-	{ "dec_dli", CTLTYPE_NODE }, \
-	{ "lat", CTLTYPE_NODE }, \
-	{ "hylink", CTLTYPE_NODE }, \
-	{ "appletalk", CTLTYPE_NODE }, \
-	{ "route", CTLTYPE_NODE }, \
-	{ "link_layer", CTLTYPE_NODE }, \
-	{ "xtp", CTLTYPE_NODE }, \
-	{ "coip", CTLTYPE_NODE }, \
-	{ "cnt", CTLTYPE_NODE }, \
-	{ "rtip", CTLTYPE_NODE }, \
-	{ "ipx", CTLTYPE_NODE }, \
-	{ "sip", CTLTYPE_NODE }, \
-	{ "pip", CTLTYPE_NODE }, \
-	{ 0, 0 }, \
-	{ "ndrv", CTLTYPE_NODE }, \
-	{ "isdn", CTLTYPE_NODE }, \
-	{ "key", CTLTYPE_NODE }, \
-	{ "inet6", CTLTYPE_NODE }, \
-	{ "natm", CTLTYPE_NODE }, \
-	{ "sys", CTLTYPE_NODE }, \
-	{ "netbios", CTLTYPE_NODE }, \
-	{ "ppp", CTLTYPE_NODE }, \
-	{ "hdrcomplete", CTLTYPE_NODE }, \
-	{ "vsock", CTLTYPE_NODE }, \
-}
+#define CTL_NET_NAMES                                                          \
+  {                                                                            \
+      {0, 0},                                                                  \
+      {"local", CTLTYPE_NODE},                                                 \
+      {"inet", CTLTYPE_NODE},                                                  \
+      {"implink", CTLTYPE_NODE},                                               \
+      {"pup", CTLTYPE_NODE},                                                   \
+      {"chaos", CTLTYPE_NODE},                                                 \
+      {"xerox_ns", CTLTYPE_NODE},                                              \
+      {"iso", CTLTYPE_NODE},                                                   \
+      {"emca", CTLTYPE_NODE},                                                  \
+      {"datakit", CTLTYPE_NODE},                                               \
+      {"ccitt", CTLTYPE_NODE},                                                 \
+      {"ibm_sna", CTLTYPE_NODE},                                               \
+      {"decnet", CTLTYPE_NODE},                                                \
+      {"dec_dli", CTLTYPE_NODE},                                               \
+      {"lat", CTLTYPE_NODE},                                                   \
+      {"hylink", CTLTYPE_NODE},                                                \
+      {"appletalk", CTLTYPE_NODE},                                             \
+      {"route", CTLTYPE_NODE},                                                 \
+      {"link_layer", CTLTYPE_NODE},                                            \
+      {"xtp", CTLTYPE_NODE},                                                   \
+      {"coip", CTLTYPE_NODE},                                                  \
+      {"cnt", CTLTYPE_NODE},                                                   \
+      {"rtip", CTLTYPE_NODE},                                                  \
+      {"ipx", CTLTYPE_NODE},                                                   \
+      {"sip", CTLTYPE_NODE},                                                   \
+      {"pip", CTLTYPE_NODE},                                                   \
+      {0, 0},                                                                  \
+      {"ndrv", CTLTYPE_NODE},                                                  \
+      {"isdn", CTLTYPE_NODE},                                                  \
+      {"key", CTLTYPE_NODE},                                                   \
+      {"inet6", CTLTYPE_NODE},                                                 \
+      {"natm", CTLTYPE_NODE},                                                  \
+      {"sys", CTLTYPE_NODE},                                                   \
+      {"netbios", CTLTYPE_NODE},                                               \
+      {"ppp", CTLTYPE_NODE},                                                   \
+      {"hdrcomplete", CTLTYPE_NODE},                                           \
+      {"vsock", CTLTYPE_NODE},                                                 \
+  }
 #endif /* KERNEL_PRIVATE */
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
@@ -365,31 +386,31 @@ extern const int sotc_by_netservicetype[_NET_SERVICE_TYPE_COUNT];
  *	Fifth: type of info, defined below
  *	Sixth: flag(s) to mask with for NET_RT_FLAGS
  */
-#define NET_RT_DUMPX            8       /* private */
-#define NET_RT_DUMPX_FLAGS      9       /* private */
-#define NET_RT_STAT_64          11      /* private */
-#endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
+#define NET_RT_DUMPX 8       /* private */
+#define NET_RT_DUMPX_FLAGS 9 /* private */
+#define NET_RT_STAT_64 11    /* private */
+#endif                       /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
 
 /* These are supported values for SO_STATISTICS_EVENT */
 #define SO_STATISTICS_EVENT_ENTER_CELLFALLBACK (1 << 0)
-#define SO_STATISTICS_EVENT_EXIT_CELLFALLBACK  (1 << 1)
-#define SO_STATISTICS_EVENT_RESERVED_1         (1 << 2)
-#define SO_STATISTICS_EVENT_RESERVED_2         (1 << 3)
-
+#define SO_STATISTICS_EVENT_EXIT_CELLFALLBACK (1 << 1)
+#define SO_STATISTICS_EVENT_RESERVED_1 (1 << 2)
+#define SO_STATISTICS_EVENT_RESERVED_2 (1 << 3)
 
 #ifdef KERNEL_PRIVATE
-#define CTL_NET_RT_NAMES { \
-	{ 0, 0 }, \
-	{ "dump", CTLTYPE_STRUCT }, \
-	{ "flags", CTLTYPE_STRUCT }, \
-	{ "iflist", CTLTYPE_STRUCT }, \
-	{ "stat", CTLTYPE_STRUCT }, \
-	{ "trash", CTLTYPE_INT }, \
-	{ "iflist2", CTLTYPE_STRUCT }, \
-	{ "dump2", CTLTYPE_STRUCT }, \
-	{ "dumpx", CTLTYPE_STRUCT }, \
-	{ "dumpx_flags", CTLTYPE_STRUCT }, \
-}
+#define CTL_NET_RT_NAMES                                                       \
+  {                                                                            \
+      {0, 0},                                                                  \
+      {"dump", CTLTYPE_STRUCT},                                                \
+      {"flags", CTLTYPE_STRUCT},                                               \
+      {"iflist", CTLTYPE_STRUCT},                                              \
+      {"stat", CTLTYPE_STRUCT},                                                \
+      {"trash", CTLTYPE_INT},                                                  \
+      {"iflist2", CTLTYPE_STRUCT},                                             \
+      {"dump2", CTLTYPE_STRUCT},                                               \
+      {"dumpx", CTLTYPE_STRUCT},                                               \
+      {"dumpx_flags", CTLTYPE_STRUCT},                                         \
+  }
 
 #endif /* KERNEL_PRIVATE */
 
@@ -403,14 +424,14 @@ extern const int sotc_by_netservicetype[_NET_SERVICE_TYPE_COUNT];
  * the iovec array -- like sendmsg(). The field msg_datalen is ignored.
  */
 struct msghdr_x {
-	void            *__sized_by(msg_namelen) msg_name; /* optional address */
-	socklen_t       msg_namelen;    /* size of address */
-	struct iovec    *msg_iov;       /* scatter/gather array */
-	int             msg_iovlen;     /* # elements in msg_iov */
-	void            *__sized_by(msg_controllen) msg_control; /* ancillary data, see below */
-	socklen_t       msg_controllen; /* ancillary data buffer len */
-	int             msg_flags;      /* flags on received message */
-	size_t          msg_datalen;    /* byte length of buffer in msg_iov */
+  void *__sized_by(msg_namelen) msg_name;       /* optional address */
+  socklen_t msg_namelen;                        /* size of address */
+  struct iovec *msg_iov;                        /* scatter/gather array */
+  int msg_iovlen;                               /* # elements in msg_iov */
+  void *__sized_by(msg_controllen) msg_control; /* ancillary data, see below */
+  socklen_t msg_controllen;                     /* ancillary data buffer len */
+  int msg_flags;                                /* flags on received message */
+  size_t msg_datalen; /* byte length of buffer in msg_iov */
 };
 
 #ifdef XNU_KERNEL_PRIVATE
@@ -421,13 +442,13 @@ struct msghdr_x {
  */
 
 struct user_msghdr {
-	user_addr_t     msg_name;               /* optional address */
-	socklen_t       msg_namelen;            /* size of address */
-	vm_address_t    msg_iov;                /* scatter/gather array */
-	int             msg_iovlen;             /* # elements in msg_iov */
-	user_addr_t     msg_control;            /* ancillary data, see below */
-	socklen_t       msg_controllen;         /* ancillary data buffer len */
-	int             msg_flags;              /* flags on received message */
+  user_addr_t msg_name;     /* optional address */
+  socklen_t msg_namelen;    /* size of address */
+  vm_address_t msg_iov;     /* scatter/gather array */
+  int msg_iovlen;           /* # elements in msg_iov */
+  user_addr_t msg_control;  /* ancillary data, see below */
+  socklen_t msg_controllen; /* ancillary data buffer len */
+  int msg_flags;            /* flags on received message */
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user_msghdr, user_msghdr);
 
@@ -437,13 +458,13 @@ __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user_msghdr, user_msghdr);
  */
 
 struct user64_msghdr {
-	user64_addr_t   msg_name;               /* optional address */
-	socklen_t       msg_namelen;            /* size of address */
-	user64_addr_t   msg_iov;                /* scatter/gather array */
-	int             msg_iovlen;             /* # elements in msg_iov */
-	user64_addr_t   msg_control;            /* ancillary data, see below */
-	socklen_t       msg_controllen;         /* ancillary data buffer len */
-	int             msg_flags;              /* flags on received message */
+  user64_addr_t msg_name;    /* optional address */
+  socklen_t msg_namelen;     /* size of address */
+  user64_addr_t msg_iov;     /* scatter/gather array */
+  int msg_iovlen;            /* # elements in msg_iov */
+  user64_addr_t msg_control; /* ancillary data, see below */
+  socklen_t msg_controllen;  /* ancillary data buffer len */
+  int msg_flags;             /* flags on received message */
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user64_msghdr, user64_msghdr);
 
@@ -453,13 +474,13 @@ __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user64_msghdr, user64_msghdr);
  */
 
 struct user32_msghdr {
-	user32_addr_t   msg_name;       /* optional address */
-	socklen_t       msg_namelen;    /* size of address */
-	user32_addr_t   msg_iov;        /* scatter/gather array */
-	int             msg_iovlen;     /* # elements in msg_iov */
-	user32_addr_t   msg_control;    /* ancillary data, see below */
-	socklen_t       msg_controllen; /* ancillary data buffer len */
-	int             msg_flags;      /* flags on received message */
+  user32_addr_t msg_name;    /* optional address */
+  socklen_t msg_namelen;     /* size of address */
+  user32_addr_t msg_iov;     /* scatter/gather array */
+  int msg_iovlen;            /* # elements in msg_iov */
+  user32_addr_t msg_control; /* ancillary data, see below */
+  socklen_t msg_controllen;  /* ancillary data buffer len */
+  int msg_flags;             /* flags on received message */
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user32_msghdr, user32_msghdr);
 
@@ -470,17 +491,16 @@ __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user32_msghdr, user32_msghdr);
  */
 
 struct user_msghdr_x {
-	user_addr_t     msg_name;       /* optional address */
-	socklen_t       msg_namelen;    /* size of address */
-	vm_address_t    msg_iov;        /* scatter/gather array */
-	int             msg_iovlen;     /* # elements in msg_iov */
-	user_addr_t     msg_control;    /* ancillary data, see below */
-	socklen_t       msg_controllen; /* ancillary data buffer len */
-	int             msg_flags;      /* flags on received message */
-	size_t          msg_datalen;    /* byte length of buffer in msg_iov */
+  user_addr_t msg_name;     /* optional address */
+  socklen_t msg_namelen;    /* size of address */
+  vm_address_t msg_iov;     /* scatter/gather array */
+  int msg_iovlen;           /* # elements in msg_iov */
+  user_addr_t msg_control;  /* ancillary data, see below */
+  socklen_t msg_controllen; /* ancillary data buffer len */
+  int msg_flags;            /* flags on received message */
+  size_t msg_datalen;       /* byte length of buffer in msg_iov */
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user_msghdr_x, user_msghdr_x);
-
 
 /*
  * LP64 user version of struct msghdr_x
@@ -488,14 +508,14 @@ __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user_msghdr_x, user_msghdr_x);
  */
 
 struct user64_msghdr_x {
-	user64_addr_t   msg_name;       /* optional address */
-	socklen_t       msg_namelen;    /* size of address */
-	user64_addr_t   msg_iov;        /* scatter/gather array */
-	int             msg_iovlen;     /* # elements in msg_iov */
-	user64_addr_t   msg_control;    /* ancillary data, see below */
-	socklen_t       msg_controllen; /* ancillary data buffer len */
-	int             msg_flags;      /* flags on received message */
-	user64_size_t   msg_datalen;    /* byte length of buffer in msg_iov */
+  user64_addr_t msg_name;    /* optional address */
+  socklen_t msg_namelen;     /* size of address */
+  user64_addr_t msg_iov;     /* scatter/gather array */
+  int msg_iovlen;            /* # elements in msg_iov */
+  user64_addr_t msg_control; /* ancillary data, see below */
+  socklen_t msg_controllen;  /* ancillary data buffer len */
+  int msg_flags;             /* flags on received message */
+  user64_size_t msg_datalen; /* byte length of buffer in msg_iov */
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user64_msghdr_x, user64_msghdr_x);
 
@@ -505,14 +525,14 @@ __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user64_msghdr_x, user64_msghdr_x);
  */
 
 struct user32_msghdr_x {
-	user32_addr_t   msg_name;       /* optional address */
-	socklen_t       msg_namelen;    /* size of address */
-	user32_addr_t   msg_iov;        /* scatter/gather array */
-	int             msg_iovlen;     /* # elements in msg_iov */
-	user32_addr_t   msg_control;    /* ancillary data, see below */
-	socklen_t       msg_controllen; /* ancillary data buffer len */
-	int             msg_flags;      /* flags on received message */
-	user32_size_t   msg_datalen;    /* byte length of buffer in msg_iov */
+  user32_addr_t msg_name;    /* optional address */
+  socklen_t msg_namelen;     /* size of address */
+  user32_addr_t msg_iov;     /* scatter/gather array */
+  int msg_iovlen;            /* # elements in msg_iov */
+  user32_addr_t msg_control; /* ancillary data, see below */
+  socklen_t msg_controllen;  /* ancillary data buffer len */
+  int msg_flags;             /* flags on received message */
+  user32_size_t msg_datalen; /* byte length of buffer in msg_iov */
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user32_msghdr_x, user32_msghdr_x);
 
@@ -523,11 +543,11 @@ __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct user32_msghdr_x, user32_msghdr_x);
  */
 
 struct user_sa_endpoints {
-	unsigned int    sae_srcif;      /* optional source interface */
-	user_addr_t     sae_srcaddr;    /* optional source address */
-	socklen_t       sae_srcaddrlen; /* size of source address */
-	user_addr_t     sae_dstaddr;    /* destination address */
-	socklen_t       sae_dstaddrlen; /* size of destination address */
+  unsigned int sae_srcif;   /* optional source interface */
+  user_addr_t sae_srcaddr;  /* optional source address */
+  socklen_t sae_srcaddrlen; /* size of source address */
+  user_addr_t sae_dstaddr;  /* destination address */
+  socklen_t sae_dstaddrlen; /* size of destination address */
 };
 
 /*
@@ -536,11 +556,11 @@ struct user_sa_endpoints {
  */
 
 struct user64_sa_endpoints {
-	unsigned int    sae_srcif;      /* optional source interface */
-	user64_addr_t   sae_srcaddr;    /* optional source address */
-	socklen_t       sae_srcaddrlen; /* size of source address */
-	user64_addr_t   sae_dstaddr;    /* destination address */
-	socklen_t       sae_dstaddrlen; /* size of destination address */
+  unsigned int sae_srcif;    /* optional source interface */
+  user64_addr_t sae_srcaddr; /* optional source address */
+  socklen_t sae_srcaddrlen;  /* size of source address */
+  user64_addr_t sae_dstaddr; /* destination address */
+  socklen_t sae_dstaddrlen;  /* size of destination address */
 };
 
 /*
@@ -549,11 +569,11 @@ struct user64_sa_endpoints {
  */
 
 struct user32_sa_endpoints {
-	unsigned int    sae_srcif;      /* optional source interface */
-	user32_addr_t   sae_srcaddr;    /* optional source address */
-	socklen_t       sae_srcaddrlen; /* size of source address */
-	user32_addr_t   sae_dstaddr;    /* destination address */
-	socklen_t       sae_dstaddrlen; /* size of destination address */
+  unsigned int sae_srcif;    /* optional source interface */
+  user32_addr_t sae_srcaddr; /* optional source address */
+  socklen_t sae_srcaddrlen;  /* size of source address */
+  user32_addr_t sae_dstaddr; /* destination address */
+  socklen_t sae_dstaddrlen;  /* size of destination address */
 };
 
 #endif /* XNU_KERNEL_PRIVATE */
@@ -561,62 +581,67 @@ struct user32_sa_endpoints {
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 #ifdef __APPLE__
 #ifndef __APPLE_API_OBSOLETE
-#define MSG_WAITSTREAM  0x200           /* wait up to full request.. may return partial */
+#define MSG_WAITSTREAM 0x200 /* wait up to full request.. may return partial   \
+                              */
 #endif
 #endif
 #ifdef KERNEL_PRIVATE
-#define MSG_COMPAT      0x8000          /* deprecated */
-#define MSG_NBIO        0x20000         /* FIONBIO mode, used by fifofs */
-#define MSG_SKIPCFIL    0x40000         /* skip pass content filter */
+#define MSG_COMPAT 0x8000    /* deprecated */
+#define MSG_NBIO 0x20000     /* FIONBIO mode, used by fifofs */
+#define MSG_SKIPCFIL 0x40000 /* skip pass content filter */
 #endif
 
-#define SCM_TIMESTAMP_CONTINUOUS        0x07    /* timestamp (uint64_t) */
-#define SCM_MPKL_SEND_INFO              0x08    /* send info for multi-layer packet logging (struct so_mpkl_send_info) */
-#define SCM_MPKL_RECV_INFO              0x09    /* receive info for multi-layer packet logging (struct so_mpkl_recv_info */
-#define SCM_TXTIME                      0x10    /* Set expected transmit time in absolute-time nanoseconds */
+#define SCM_TIMESTAMP_CONTINUOUS 0x07 /* timestamp (uint64_t) */
+#define SCM_MPKL_SEND_INFO                                                     \
+  0x08 /* send info for multi-layer packet logging (struct so_mpkl_send_info)  \
+        */
+#define SCM_MPKL_RECV_INFO                                                     \
+  0x09 /* receive info for multi-layer packet logging (struct                  \
+          so_mpkl_recv_info */
+#define SCM_TXTIME                                                             \
+  0x10 /* Set expected transmit time in absolute-time nanoseconds */
 
 #ifdef KERNEL_PRIVATE
 /*
  * 4.3 compat sockaddr (deprecated)
  */
 struct osockaddr {
-	__uint16_t      sa_family;      /* address family */
-	char    sa_data[14];            /* up to 14 bytes of direct address */
+  __uint16_t sa_family; /* address family */
+  char sa_data[14];     /* up to 14 bytes of direct address */
 };
 
 /*
  * 4.3-compat message header (deprecated)
  */
 struct omsghdr {
-	void            *msg_name;              /* optional address */
-	socklen_t       msg_namelen;            /* size of address */
-	struct  iovec   *msg_iov;               /* scatter/gather array */
-	int             msg_iovlen;             /* # elements in msg_iov */
-	void            *msg_accrights;         /* access rights sent/rcvd */
-	int             msg_accrightslen;
+  void *msg_name;        /* optional address */
+  socklen_t msg_namelen; /* size of address */
+  struct iovec *msg_iov; /* scatter/gather array */
+  int msg_iovlen;        /* # elements in msg_iov */
+  void *msg_accrights;   /* access rights sent/rcvd */
+  int msg_accrightslen;
 };
 
-#define SA(s)   ((struct sockaddr *)(void *)(s))
+#define SA(s) ((struct sockaddr *)(void *)(s))
 #endif /* KERNEL_PRIVATE */
-
 
 /*
  * Structure for SIOCGASSOCIDS
  */
 struct so_aidreq {
-	__uint32_t      sar_cnt;        /* number of associations */
-	sae_associd_t   *sar_aidp;      /* array of association IDs */
+  __uint32_t sar_cnt;      /* number of associations */
+  sae_associd_t *sar_aidp; /* array of association IDs */
 };
 
 #ifdef BSD_KERNEL_PRIVATE
 struct so_aidreq32 {
-	__uint32_t      sar_cnt;
-	user32_addr_t   sar_aidp;
+  __uint32_t sar_cnt;
+  user32_addr_t sar_aidp;
 };
 
 struct so_aidreq64 {
-	__uint32_t      sar_cnt;
-	user64_addr_t   sar_aidp __attribute__((aligned(8)));
+  __uint32_t sar_cnt;
+  user64_addr_t sar_aidp __attribute__((aligned(8)));
 };
 #endif /* BSD_KERNEL_PRIVATE */
 
@@ -624,22 +649,22 @@ struct so_aidreq64 {
  * Structure for SIOCGCONNIDS
  */
 struct so_cidreq {
-	sae_associd_t   scr_aid;        /* association ID */
-	__uint32_t      scr_cnt;        /* number of connections */
-	sae_connid_t    *scr_cidp;      /* array of connection IDs */
+  sae_associd_t scr_aid;  /* association ID */
+  __uint32_t scr_cnt;     /* number of connections */
+  sae_connid_t *scr_cidp; /* array of connection IDs */
 };
 
 #ifdef BSD_KERNEL_PRIVATE
 struct so_cidreq32 {
-	sae_associd_t   scr_aid;
-	__uint32_t      scr_cnt;
-	user32_addr_t   scr_cidp;
+  sae_associd_t scr_aid;
+  __uint32_t scr_cnt;
+  user32_addr_t scr_cidp;
 };
 
 struct so_cidreq64 {
-	sae_associd_t   scr_aid;
-	__uint32_t      scr_cnt;
-	user64_addr_t   scr_cidp __attribute__((aligned(8)));
+  sae_associd_t scr_aid;
+  __uint32_t scr_cnt;
+  user64_addr_t scr_cidp __attribute__((aligned(8)));
 };
 #endif /* BSD_KERNEL_PRIVATE */
 
@@ -647,121 +672,121 @@ struct so_cidreq64 {
  * Structure for SIOCGCONNINFO
  */
 struct so_cinforeq {
-	sae_connid_t    scir_cid;               /* connection ID */
-	__uint32_t      scir_flags;             /* see flags below */
-	__uint32_t      scir_ifindex;           /* (last) outbound interface */
-	__int32_t       scir_error;             /* most recent error */
-	struct sockaddr *scir_src;              /* source address */
-	socklen_t       scir_src_len;           /* source address len */
-	struct sockaddr *scir_dst;              /* destination address */
-	socklen_t       scir_dst_len;           /* destination address len */
-	__uint32_t      scir_aux_type;          /* aux data type (CIAUX) */
-	void            *scir_aux_data;         /* aux data */
-	__uint32_t      scir_aux_len;           /* aux data len */
+  sae_connid_t scir_cid;     /* connection ID */
+  __uint32_t scir_flags;     /* see flags below */
+  __uint32_t scir_ifindex;   /* (last) outbound interface */
+  __int32_t scir_error;      /* most recent error */
+  struct sockaddr *scir_src; /* source address */
+  socklen_t scir_src_len;    /* source address len */
+  struct sockaddr *scir_dst; /* destination address */
+  socklen_t scir_dst_len;    /* destination address len */
+  __uint32_t scir_aux_type;  /* aux data type (CIAUX) */
+  void *scir_aux_data;       /* aux data */
+  __uint32_t scir_aux_len;   /* aux data len */
 };
 
 #ifdef BSD_KERNEL_PRIVATE
 struct so_cinforeq32 {
-	sae_connid_t    scir_cid;
-	__uint32_t      scir_flags;
-	__uint32_t      scir_ifindex;
-	__int32_t       scir_error;
-	user32_addr_t   scir_src;
-	socklen_t       scir_src_len;
-	user32_addr_t   scir_dst;
-	socklen_t       scir_dst_len;
-	__uint32_t      scir_aux_type;
-	user32_addr_t   scir_aux_data;
-	__uint32_t      scir_aux_len;
+  sae_connid_t scir_cid;
+  __uint32_t scir_flags;
+  __uint32_t scir_ifindex;
+  __int32_t scir_error;
+  user32_addr_t scir_src;
+  socklen_t scir_src_len;
+  user32_addr_t scir_dst;
+  socklen_t scir_dst_len;
+  __uint32_t scir_aux_type;
+  user32_addr_t scir_aux_data;
+  __uint32_t scir_aux_len;
 };
 
 struct so_cinforeq64 {
-	sae_connid_t    scir_cid;
-	__uint32_t      scir_flags;
-	__uint32_t      scir_ifindex;
-	__int32_t       scir_error;
-	user64_addr_t   scir_src        __attribute__((aligned(8)));
-	socklen_t       scir_src_len;
-	user64_addr_t   scir_dst        __attribute__((aligned(8)));
-	socklen_t       scir_dst_len;
-	__uint32_t      scir_aux_type;
-	user64_addr_t   scir_aux_data   __attribute__((aligned(8)));
-	__uint32_t      scir_aux_len;
+  sae_connid_t scir_cid;
+  __uint32_t scir_flags;
+  __uint32_t scir_ifindex;
+  __int32_t scir_error;
+  user64_addr_t scir_src __attribute__((aligned(8)));
+  socklen_t scir_src_len;
+  user64_addr_t scir_dst __attribute__((aligned(8)));
+  socklen_t scir_dst_len;
+  __uint32_t scir_aux_type;
+  user64_addr_t scir_aux_data __attribute__((aligned(8)));
+  __uint32_t scir_aux_len;
 };
 
 #endif /* BSD_KERNEL_PRIVATE */
 
 /* valid connection info flags */
-#define CIF_CONNECTING          0x1     /* connection was attempted */
-#define CIF_CONNECTED           0x2     /* connection is established */
-#define CIF_DISCONNECTING       0x4     /* disconnection was attempted */
-#define CIF_DISCONNECTED        0x8     /* has been disconnected */
-#define CIF_BOUND_IF            0x10    /* bound to an interface */
-#define CIF_BOUND_IP            0x20    /* bound to a src address */
-#define CIF_BOUND_PORT          0x40    /* bound to a src port */
-#define CIF_PREFERRED           0x80    /* connection is primary/preferred */
-#define CIF_MP_CAPABLE          0x100   /* supports multipath protocol */
-#define CIF_MP_READY            0x200   /* multipath protocol confirmed */
-#define CIF_MP_DEGRADED         0x400   /* has lost its multipath capability */
-#define CIF_MP_ACTIVE           0x800   /* this is the active subflow */
-#define CIF_MP_V1               0x1000  /* MPTCP v1 is used */
+#define CIF_CONNECTING 0x1    /* connection was attempted */
+#define CIF_CONNECTED 0x2     /* connection is established */
+#define CIF_DISCONNECTING 0x4 /* disconnection was attempted */
+#define CIF_DISCONNECTED 0x8  /* has been disconnected */
+#define CIF_BOUND_IF 0x10     /* bound to an interface */
+#define CIF_BOUND_IP 0x20     /* bound to a src address */
+#define CIF_BOUND_PORT 0x40   /* bound to a src port */
+#define CIF_PREFERRED 0x80    /* connection is primary/preferred */
+#define CIF_MP_CAPABLE 0x100  /* supports multipath protocol */
+#define CIF_MP_READY 0x200    /* multipath protocol confirmed */
+#define CIF_MP_DEGRADED 0x400 /* has lost its multipath capability */
+#define CIF_MP_ACTIVE 0x800   /* this is the active subflow */
+#define CIF_MP_V1 0x1000      /* MPTCP v1 is used */
 
 /* valid connection info auxiliary data types */
-#define CIAUX_TCP       0x1     /* TCP auxiliary data (conninfo_tcp_t) */
-#define CIAUX_MPTCP     0x2     /* MPTCP auxiliary data (conninfo_multipathtcp) */
+#define CIAUX_TCP 0x1   /* TCP auxiliary data (conninfo_tcp_t) */
+#define CIAUX_MPTCP 0x2 /* MPTCP auxiliary data (conninfo_multipathtcp) */
 
 /*
  * Structure for SIOC{S,G}CONNORDER
  */
 struct so_cordreq {
-	sae_connid_t    sco_cid;                /* connection ID */
-	__uint32_t      sco_rank;               /* rank (0 means unspecified) */
+  sae_connid_t sco_cid; /* connection ID */
+  __uint32_t sco_rank;  /* rank (0 means unspecified) */
 };
 
 /*
  * Common structure for KEV_NETPOLICY_SUBCLASS
  */
 struct netpolicy_event_data {
-	__uint64_t      eupid;          /* effective unique PID */
-	__uint64_t      epid;           /* effective PID */
-	uuid_t          euuid;          /* effective UUID */
+  __uint64_t eupid; /* effective unique PID */
+  __uint64_t epid;  /* effective PID */
+  uuid_t euuid;     /* effective UUID */
 };
 
 /*
  * NETPOLICY_IFDENIED event structure
  */
 struct kev_netpolicy_ifdenied {
-	struct netpolicy_event_data     ev_data;
-	__uint32_t ev_if_functional_type;
+  struct netpolicy_event_data ev_data;
+  __uint32_t ev_if_functional_type;
 };
 
 /*
  * KEV_NETPOLICY_NETDENIED event structure
  */
 struct kev_netpolicy_netdenied {
-	struct netpolicy_event_data     ev_data;
-	__uint32_t ev_network_type;
+  struct netpolicy_event_data ev_data;
+  __uint32_t ev_network_type;
 };
 
 /*
  * Network Service Type to DiffServ Code Point mapping
  */
 struct netsvctype_dscp_map {
-	int             netsvctype;
-	u_int8_t        dscp; /* 6 bits diffserv code point */
+  int netsvctype;
+  u_int8_t dscp; /* 6 bits diffserv code point */
 };
 
 /*
  * Multi-layer packet logging require SO_MPK_LOG to be set
  */
 struct so_mpkl_send_info {
-	uuid_t          mpkl_uuid;
-	__uint8_t       mpkl_proto;     /* see net/multi_layer_pkt_log.h */
+  uuid_t mpkl_uuid;
+  __uint8_t mpkl_proto; /* see net/multi_layer_pkt_log.h */
 };
 
 struct so_mpkl_recv_info {
-	__uint32_t      mpkl_seq;
-	__uint8_t       mpkl_proto;     /* see net/multi_layer_pkt_log.h */
+  __uint32_t mpkl_seq;
+  __uint8_t mpkl_proto; /* see net/multi_layer_pkt_log.h */
 };
 
 #ifndef KERNEL
@@ -835,6 +860,6 @@ ssize_t recvmsg_x(int s, const struct msghdr_x *msgp, u_int cnt, int flags);
 ssize_t sendmsg_x(int s, const struct msghdr_x *msgp, u_int cnt, int flags);
 __END_DECLS
 #endif /* !KERNEL */
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
 #endif /* !_SYS_SOCKET_PRIVATE_H_ */

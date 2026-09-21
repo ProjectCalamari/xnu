@@ -55,71 +55,70 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/mcache.h>
-#include <sys/mbuf.h>
-#include <sys/socket.h>
-#include <sys/queue.h>
 #include <kern/debug.h>
 #include <string.h>
+#include <sys/mbuf.h>
+#include <sys/mcache.h>
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/socket.h>
 
 #include <net/if.h>
 #include <net/route.h>
 
 #include <netinet/in.h>
-#include <netinet6/in6_var.h>
 #include <netinet/ip6.h>
+#include <netinet6/in6_var.h>
 #include <netinet6/ip6_var.h>
 
 #include <netinet/icmp6.h>
 
-int
-route6_input(struct mbuf **mp, int *offp, int proto)
-{
+int route6_input(struct mbuf **mp, int *offp, int proto) {
 #pragma unused(proto)
-	struct ip6_hdr *ip6 = NULL;
-	mbuf_ref_t m = *mp;
-	struct ip6_rthdr *__single rh = NULL;
-	int off = *offp, rhlen = 0;
+  struct ip6_hdr *ip6 = NULL;
+  mbuf_ref_t m = *mp;
+  struct ip6_rthdr *__single rh = NULL;
+  int off = *offp, rhlen = 0;
 #ifdef notyet
-	struct ip6aux *__single ip6a = NULL;
+  struct ip6aux *__single ip6a = NULL;
 
-	ip6a = ip6_findaux(m);
-	if (ip6a) {
-		/* XXX reject home-address option before rthdr */
-		if (ip6a->ip6a_flags & IP6A_SWAP) {
-			ip6stat.ip6s_badoptions++;
-			*mp = NULL;
-			m_drop(m, DROPTAP_FLAG_DIR_IN | DROPTAP_FLAG_L2_MISSING, DROP_REASON_IP6_BAD_OPTION, NULL, 0);
+  ip6a = ip6_findaux(m);
+  if (ip6a) {
+    /* XXX reject home-address option before rthdr */
+    if (ip6a->ip6a_flags & IP6A_SWAP) {
+      ip6stat.ip6s_badoptions++;
+      *mp = NULL;
+      m_drop(m, DROPTAP_FLAG_DIR_IN | DROPTAP_FLAG_L2_MISSING,
+             DROP_REASON_IP6_BAD_OPTION, NULL, 0);
 
-			return IPPROTO_DONE;
-		}
-	}
-	ip6a = NULL;
+      return IPPROTO_DONE;
+    }
+  }
+  ip6a = NULL;
 #endif /* notyet */
 
-	IP6_EXTHDR_CHECK(m, off, sizeof(*rh), return IPPROTO_DONE);
+  IP6_EXTHDR_CHECK(m, off, sizeof(*rh), return IPPROTO_DONE);
 
-	/* Expect 32-bit aligned data pointer on strict-align platforms */
-	MBUF_STRICT_DATA_ALIGNMENT_CHECK_32(m);
+  /* Expect 32-bit aligned data pointer on strict-align platforms */
+  MBUF_STRICT_DATA_ALIGNMENT_CHECK_32(m);
 
-	ip6 = mtod(m, struct ip6_hdr *);
-	rh = (struct ip6_rthdr *)((caddr_t)ip6 + off);
+  ip6 = mtod(m, struct ip6_hdr *);
+  rh = (struct ip6_rthdr *)((caddr_t)ip6 + off);
 
-	switch (rh->ip6r_type) {
-	default:
-		/* unknown routing type */
-		if (rh->ip6r_segleft == 0) {
-			rhlen = (rh->ip6r_len + 1) << 3;
-			break;  /* Final dst. Just ignore the header. */
-		}
-		ip6stat.ip6s_badoptions++;
-		icmp6_error(m, ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER,
-		    (int)((caddr_t)&rh->ip6r_type - (caddr_t)ip6));
-		return IPPROTO_DONE;
-	}
+  switch (rh->ip6r_type) {
+  default:
+    /* unknown routing type */
+    if (rh->ip6r_segleft == 0) {
+      rhlen = (rh->ip6r_len + 1) << 3;
+      break; /* Final dst. Just ignore the header. */
+    }
+    ip6stat.ip6s_badoptions++;
+    icmp6_error(m, ICMP6_PARAM_PROB, ICMP6_PARAMPROB_HEADER,
+                (int)((caddr_t)&rh->ip6r_type - (caddr_t)ip6));
+    return IPPROTO_DONE;
+  }
 
-	*mp = m;
-	*offp += rhlen;
-	return rh->ip6r_nxt;
+  *mp = m;
+  *offp += rhlen;
+  return rh->ip6r_nxt;
 }

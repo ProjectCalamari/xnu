@@ -61,17 +61,17 @@
  *	@(#)subr_xxx.c	8.1 (Berkeley) 6/10/93
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/kernel.h>
 #include <sys/conf.h>
+#include <sys/kernel.h>
+#include <sys/param.h>
 #include <sys/proc_internal.h>
-#include <sys/vnode.h>
-#include <sys/uio.h>
 #include <sys/sysproto.h>
+#include <sys/systm.h>
+#include <sys/uio.h>
+#include <sys/vnode.h>
 
-#include <sys/signalvar.h>              /* for psignal() */
 #include <kern/debug.h>
+#include <sys/signalvar.h> /* for psignal() */
 
 #if DEVELOPMENT || DEBUG
 TUNABLE(bool, no_sigsys, "-no_sigsys", false);
@@ -80,50 +80,29 @@ TUNABLE(bool, no_sigsys, "-no_sigsys", false);
 /*
  * Unsupported device function (e.g. writing to read-only device).
  */
-int
-enodev(void)
-{
-	return ENODEV;
-}
+int enodev(void) { return ENODEV; }
 
 /*
  * Unsupported strategy function.
  */
-void
-enodev_strat(void)
-{
-	return;
-}
+void enodev_strat(void) { return; }
 
 /*
  * Unconfigured device function; driver not configured.
  */
-int
-enxio(void)
-{
-	return ENXIO;
-}
+int enxio(void) { return ENXIO; }
 
 /*
  * Unsupported ioctl function.
  */
-int
-enoioctl(void)
-{
-	return ENOTTY;
-}
-
+int enoioctl(void) { return ENOTTY; }
 
 /*
  * Unsupported system function.
  * This is used for an otherwise-reasonable operation
  * that is not supported by the current system binary.
  */
-int
-enosys(void)
-{
-	return ENOSYS;
-}
+int enosys(void) { return ENOSYS; }
 
 /*
  * Return error for operation not supported
@@ -131,45 +110,25 @@ enosys(void)
  *
  * XXX Name of this routine is wrong.
  */
-int
-eopnotsupp(void)
-{
-	return ENOTSUP;
-}
+int eopnotsupp(void) { return ENOTSUP; }
 
 /*
  * Generic null operation, always returns success.
  */
-int
-nullop(void)
-{
-	return 0;
-}
-
+int nullop(void) { return 0; }
 
 /*
  * Null routine; placed in insignificant entries
  * in the bdevsw and cdevsw tables.
  */
-int
-nulldev(void)
-{
-	return 0;
-}
+int nulldev(void) { return 0; }
 
 /*
  * Null system calls. Not invalid, just not configured.
  */
-int
-errsys(void)
-{
-	return EINVAL;
-}
+int errsys(void) { return EINVAL; }
 
-void
-nullsys(void)
-{
-}
+void nullsys(void) {}
 
 /*
  * nonexistent system call-- signal process (may want to handle it)
@@ -177,11 +136,10 @@ nullsys(void)
  * Q: should we do that all the time ??
  */
 /* ARGSUSED */
-int
-nosys(__unused struct proc *p, __unused struct nosys_args *args, __unused int32_t *retval)
-{
-	if (send_sigsys) {
-		psignal_uthread(current_thread(), SIGSYS);
-	}
-	return ENOSYS;
+int nosys(__unused struct proc *p, __unused struct nosys_args *args,
+          __unused int32_t *retval) {
+  if (send_sigsys) {
+    psignal_uthread(current_thread(), SIGSYS);
+  }
+  return ENOSYS;
 }

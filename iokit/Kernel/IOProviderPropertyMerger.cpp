@@ -32,35 +32,35 @@
 #define super IOService
 OSDefineMetaClassAndStructors(IOProviderPropertyMerger, IOService);
 
-bool
-IOProviderPropertyMerger::init(OSDictionary * dictionary)
-{
-	OSDictionary *mergeProperties = OSDynamicCast(OSDictionary, dictionary->getObject(kIOProviderMergePropertiesKey));
-	OSDictionary *parentMergeProperties = OSDynamicCast(OSDictionary, dictionary->getObject(kIOProviderParentMergePropertiesKey));
+bool IOProviderPropertyMerger::init(OSDictionary *dictionary) {
+  OSDictionary *mergeProperties = OSDynamicCast(
+      OSDictionary, dictionary->getObject(kIOProviderMergePropertiesKey));
+  OSDictionary *parentMergeProperties = OSDynamicCast(
+      OSDictionary, dictionary->getObject(kIOProviderParentMergePropertiesKey));
 
-	// remove security-sensitive properties from the dictionary used to merge properties to provider
-	if (mergeProperties) {
-		mergeProperties->removeObject(gIOServiceDEXTEntitlementsKey);
-	}
-	if (parentMergeProperties) {
-		parentMergeProperties->removeObject(gIOServiceDEXTEntitlementsKey);
-	}
+  // remove security-sensitive properties from the dictionary used to merge
+  // properties to provider
+  if (mergeProperties) {
+    mergeProperties->removeObject(gIOServiceDEXTEntitlementsKey);
+  }
+  if (parentMergeProperties) {
+    parentMergeProperties->removeObject(gIOServiceDEXTEntitlementsKey);
+  }
 
-	return super::init(dictionary);
+  return super::init(dictionary);
 }
 
-bool
-IOProviderPropertyMerger::setProperty(const OSSymbol * aKey, OSObject * anObject)
-{
-	// Disallow modifying security-sensitive properties
-	if (aKey->isEqualTo(kIOProviderMergePropertiesKey) || aKey->isEqualTo(kIOProviderParentMergePropertiesKey)) {
-		return false;
-	}
-	return super::setProperty(aKey, anObject);
+bool IOProviderPropertyMerger::setProperty(const OSSymbol *aKey,
+                                           OSObject *anObject) {
+  // Disallow modifying security-sensitive properties
+  if (aKey->isEqualTo(kIOProviderMergePropertiesKey) ||
+      aKey->isEqualTo(kIOProviderParentMergePropertiesKey)) {
+    return false;
+  }
+  return super::setProperty(aKey, anObject);
 }
 
-void
-IOProviderPropertyMerger::setPropertyTable(OSDictionary * dict __unused)
-{
-	// Disallow changing the entire property table since that can change security-sensitive properties
+void IOProviderPropertyMerger::setPropertyTable(OSDictionary *dict __unused) {
+  // Disallow changing the entire property table since that can change
+  // security-sensitive properties
 }

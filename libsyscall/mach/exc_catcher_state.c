@@ -32,38 +32,38 @@
  */
 
 #include <mach/boolean.h>
-#include <mach/message.h>
 #include <mach/exception.h>
+#include <mach/message.h>
 #include <mach/mig_errors.h>
 
 #include "abort.h"
 #include "exc_catcher.h"
 
-__private_extern__ kern_return_t
-internal_catch_exception_raise_state(
-	mach_port_t exception_port,
-	exception_type_t exception,
-	exception_data_t code,
-	mach_msg_type_number_t codeCnt,
-	int *flavor,
-	thread_state_t old_state,
-	mach_msg_type_number_t old_stateCnt,
-	thread_state_t new_state,
-	mach_msg_type_number_t *new_stateCnt)
-{
+__private_extern__ kern_return_t internal_catch_exception_raise_state(
+    mach_port_t exception_port, exception_type_t exception,
+    exception_data_t code, mach_msg_type_number_t codeCnt, int *flavor,
+    thread_state_t old_state, mach_msg_type_number_t old_stateCnt,
+    thread_state_t new_state, mach_msg_type_number_t *new_stateCnt) {
 #if defined(__DYNAMIC__)
-	static _libkernel_exc_raise_state_func_t exc_raise_state_func = (void*)-1;
+  static _libkernel_exc_raise_state_func_t exc_raise_state_func = (void *)-1;
 
-	if (exc_raise_state_func == ((void*)-1) && _dlsym) {
-		exc_raise_state_func = _dlsym(RTLD_DEFAULT, "catch_exception_raise_state");
-	}
-	if (exc_raise_state_func == 0) {
-		/* The user hasn't defined catch_exception_raise in their binary */
-		abort();
-	}
-	return (*exc_raise_state_func)(exception_port, exception, code, codeCnt, flavor, old_state, old_stateCnt, new_state, new_stateCnt);
+  if (exc_raise_state_func == ((void *)-1) && _dlsym) {
+    exc_raise_state_func = _dlsym(RTLD_DEFAULT, "catch_exception_raise_state");
+  }
+  if (exc_raise_state_func == 0) {
+    /* The user hasn't defined catch_exception_raise in their binary */
+    abort();
+  }
+  return (*exc_raise_state_func)(exception_port, exception, code, codeCnt,
+                                 flavor, old_state, old_stateCnt, new_state,
+                                 new_stateCnt);
 #else
-	extern kern_return_t catch_exception_raise_state(mach_port_t, exception_type_t, exception_data_t, mach_msg_type_number_t, int *, thread_state_t, mach_msg_type_number_t, thread_state_t, mach_msg_type_number_t *);
-	return catch_exception_raise_state(exception_port, exception, code, codeCnt, flavor, old_state, old_stateCnt, new_state, new_stateCnt);
+  extern kern_return_t catch_exception_raise_state(
+      mach_port_t, exception_type_t, exception_data_t, mach_msg_type_number_t,
+      int *, thread_state_t, mach_msg_type_number_t, thread_state_t,
+      mach_msg_type_number_t *);
+  return catch_exception_raise_state(exception_port, exception, code, codeCnt,
+                                     flavor, old_state, old_stateCnt, new_state,
+                                     new_stateCnt);
 #endif
 }

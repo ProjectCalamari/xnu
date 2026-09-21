@@ -34,8 +34,7 @@
 
 __BEGIN_DECLS
 
-extern kern_return_t
-exclaves_frame_mint_populate(void);
+extern kern_return_t exclaves_frame_mint_populate(void);
 
 __END_DECLS
 

@@ -26,23 +26,18 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <darwintest.h>
 #include "mocks/unit_test_utils.h"
+#include <darwintest.h>
 #include <vm/vm_object_internal.h>
 
 #define UT_MODULE osfmk
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.unit.example_test_in_dir"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_OWNER("s_shalom"),
-	T_META_RUN_CONCURRENTLY(false)
-	);
-
+T_GLOBAL_META(T_META_NAMESPACE("xnu.unit.example_test_in_dir"),
+              T_META_RADAR_COMPONENT_NAME("xnu"), T_META_OWNER("s_shalom"),
+              T_META_RUN_CONCURRENTLY(false));
 
 // If this test fails to build or run to success it means that something broke
 // with the unit-test harness.
 
-T_DECL(xnu_example_test_in_dir, "an example test in a directory")
-{
-	T_EXPECT_MACH_SUCCESS(0, "hello");
+T_DECL(xnu_example_test_in_dir, "an example test in a directory") {
+  T_EXPECT_MACH_SUCCESS(0, "hello");
 }

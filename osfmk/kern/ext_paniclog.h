@@ -29,19 +29,19 @@
 #ifndef _KERN_EXT_PANICLOG_H_
 #define _KERN_EXT_PANICLOG_H_
 
+#include <os/base.h>
 #include <sys/queue.h>
 #include <uuid/uuid.h>
-#include <os/base.h>
 
-#define EXT_PANICLOG_ENABLE     1
+#define EXT_PANICLOG_ENABLE 1
 
-#define EXT_PANICLOG_VERSION    2
+#define EXT_PANICLOG_VERSION 2
 
-#define MAX_DATA_ID_SIZE    32
+#define MAX_DATA_ID_SIZE 32
 
-#define MAX_EXT_PANICLOG_SIZE   32 * 1024
+#define MAX_EXT_PANICLOG_SIZE 32 * 1024
 
-#define MAX_EXT_PANICLOG_LOGS   100
+#define MAX_EXT_PANICLOG_LOGS 100
 
 /*
  * From the panic log metrics, we estimate that the paniclog takes up
@@ -54,18 +54,17 @@
 #define PANIC_WITH_DATA_MAX_LEN 2048
 #define PANIC_WITH_DATA_DATA_ID "Panic with Data Buffer"
 
-#define EXTPANICLOG_ENTITLEMENT         "com.apple.private.allow-ext_paniclog"
+#define EXTPANICLOG_ENTITLEMENT "com.apple.private.allow-ext_paniclog"
 
 /*
  * These flags are set internally and are passed along with each handle in
  * the extensible paniclog to be processed by DumpPanic.
  */
-OS_CLOSED_OPTIONS(ext_paniclog_flags, uint32_t,
-    EXT_PANICLOG_FLAGS_NONE = 0x0,
-    EXT_PANICLOG_FLAGS_ADD_SEPARATE_KEY = 0x1);
+OS_CLOSED_OPTIONS(ext_paniclog_flags, uint32_t, EXT_PANICLOG_FLAGS_NONE = 0x0,
+                  EXT_PANICLOG_FLAGS_ADD_SEPARATE_KEY = 0x1);
 
-OS_CLOSED_OPTIONS(ext_paniclog_create_options, uint32_t,
-    EXT_PANICLOG_OPTIONS_NONE = 0x0,
+OS_CLOSED_OPTIONS(
+    ext_paniclog_create_options, uint32_t, EXT_PANICLOG_OPTIONS_NONE = 0x0,
     EXT_PANICLOG_OPTIONS_WITH_BUFFER = 0x1,
     /* Adds the 'data ID' as a key and handle data as its value directly
      * in the paniclog instead of within the 'ExtensiblePaniclog' field
@@ -75,44 +74,52 @@ OS_CLOSED_OPTIONS(ext_paniclog_create_options, uint32_t,
 #if KERNEL_PRIVATE
 
 enum ext_paniclog_test_options {
-	EXT_PANICLOG_TEST_HANDLE_CREATE = 1,
-	EXT_PANICLOG_TEST_SET_ACTIVE_INACTIVE,
-	EXT_PANICLOG_TEST_INSERT_DATA,
-	EXT_PANICLOG_TEST_WRITE_PANIC_DATA,
-	EXT_PANICLOG_TEST_MULTIPLE_HANDLES,
-	EXT_PANICLOG_TEST_MULTIPLE_HANDLES_PANIC,
-	EXT_PANICLOG_TEST_INSERT_DUMMY_HANDLES,
-	EXT_PANICLOG_TEST_INSERT_STRUCT_HANDLES,
-	EXT_PANICLOG_TEST_INSERT_DUMMY_HANDLES_AS_SEPARATE_FIELDS,
-	EXT_PANICLOG_TEST_END,
+  EXT_PANICLOG_TEST_HANDLE_CREATE = 1,
+  EXT_PANICLOG_TEST_SET_ACTIVE_INACTIVE,
+  EXT_PANICLOG_TEST_INSERT_DATA,
+  EXT_PANICLOG_TEST_WRITE_PANIC_DATA,
+  EXT_PANICLOG_TEST_MULTIPLE_HANDLES,
+  EXT_PANICLOG_TEST_MULTIPLE_HANDLES_PANIC,
+  EXT_PANICLOG_TEST_INSERT_DUMMY_HANDLES,
+  EXT_PANICLOG_TEST_INSERT_STRUCT_HANDLES,
+  EXT_PANICLOG_TEST_INSERT_DUMMY_HANDLES_AS_SEPARATE_FIELDS,
+  EXT_PANICLOG_TEST_END,
 };
 
 typedef struct ext_paniclog_handle {
-	LIST_ENTRY(ext_paniclog_handle) handles;
-	uuid_t uuid;
-	char data_id[MAX_DATA_ID_SIZE];
-	void * XNU_PTRAUTH_SIGNED_PTR("ext_paniclog_handle.buf_addr") buf_addr;
-	uint32_t max_len;
-	uint32_t used_len;
-	ext_paniclog_create_options_t options;
-	ext_paniclog_flags_t flags;
-	uint8_t active;
+  LIST_ENTRY(ext_paniclog_handle) handles;
+  uuid_t uuid;
+  char data_id[MAX_DATA_ID_SIZE];
+  void *XNU_PTRAUTH_SIGNED_PTR("ext_paniclog_handle.buf_addr") buf_addr;
+  uint32_t max_len;
+  uint32_t used_len;
+  ext_paniclog_create_options_t options;
+  ext_paniclog_flags_t flags;
+  uint8_t active;
 } ext_paniclog_handle_t;
 
 typedef struct ext_paniclog_header {
-	uint32_t len;
-	uuid_t uuid;
-	ext_paniclog_flags_t flags;
+  uint32_t len;
+  uuid_t uuid;
+  ext_paniclog_flags_t flags;
 } ext_paniclog_header_t;
 
 void ext_paniclog_init(void);
 int ext_paniclog_handle_set_active(ext_paniclog_handle_t *handle);
 int ext_paniclog_handle_set_inactive(ext_paniclog_handle_t *handle);
-ext_paniclog_handle_t *ext_paniclog_handle_alloc_with_uuid(uuid_t uuid, const char *data_id, uint32_t max_len, ext_paniclog_create_options_t options);
-ext_paniclog_handle_t *ext_paniclog_handle_alloc_with_buffer(uuid_t uuid, const char *data_id, uint32_t max_len, void * buff, ext_paniclog_create_options_t options);
+ext_paniclog_handle_t *
+ext_paniclog_handle_alloc_with_uuid(uuid_t uuid, const char *data_id,
+                                    uint32_t max_len,
+                                    ext_paniclog_create_options_t options);
+ext_paniclog_handle_t *
+ext_paniclog_handle_alloc_with_buffer(uuid_t uuid, const char *data_id,
+                                      uint32_t max_len, void *buff,
+                                      ext_paniclog_create_options_t options);
 void ext_paniclog_handle_free(ext_paniclog_handle_t *handle);
-int ext_paniclog_insert_data(ext_paniclog_handle_t *handle, void *addr, uint32_t len);
-int ext_paniclog_append_data(ext_paniclog_handle_t *handle, void *addr, uint32_t len);
+int ext_paniclog_insert_data(ext_paniclog_handle_t *handle, void *addr,
+                             uint32_t len);
+int ext_paniclog_append_data(ext_paniclog_handle_t *handle, void *addr,
+                             uint32_t len);
 void *ext_paniclog_get_buffer(ext_paniclog_handle_t *handle);
 uint32_t ext_paniclog_write_panicdata(void);
 void *ext_paniclog_claim_buffer(ext_paniclog_handle_t *handle);
@@ -121,11 +128,14 @@ int ext_paniclog_set_used_len(ext_paniclog_handle_t *handle, uint32_t used_len);
 bool is_debug_ptr_in_ext_paniclog(void);
 
 /*
- * This function is used to panic and add a buffer data to the extensible paniclog.
- * uuid here is used to decode the data.
+ * This function is used to panic and add a buffer data to the extensible
+ * paniclog. uuid here is used to decode the data.
  */
-__abortlike __printflike(5, 6)
-void panic_with_data(uuid_t uuid, void *addr, uint32_t len, uint64_t debugger_options_mask, const char *format, ...);
+__abortlike __printflike(5,
+                         6) void panic_with_data(uuid_t uuid, void *addr,
+                                                 uint32_t len,
+                                                 uint64_t debugger_options_mask,
+                                                 const char *format, ...);
 int ext_paniclog_test_hook(uint32_t option);
 void ext_paniclog_panic_with_data(uuid_t uuid, void *addr, uint32_t len);
 #endif // KERNEL_PRIVATE

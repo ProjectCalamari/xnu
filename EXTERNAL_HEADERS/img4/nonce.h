@@ -41,7 +41,6 @@
  * itself is a non-reversible representation of the seed.
  */
 
-
 #ifndef __IMG4_NONCE_H
 #define __IMG4_NONCE_H
 
@@ -124,19 +123,16 @@ typedef struct _img4_nonce_domain img4_nonce_domain_t;
  */
 IMG4_API_AVAILABLE_20210521
 OS_CLOSED_ENUM(img4_nonce_domain_index, uint64_t,
-	IMG4_NONCE_DOMAIN_INDEX_TEST = 0,
-	IMG4_NONCE_DOMAIN_INDEX_TRUST_CACHE,
-	IMG4_NONCE_DOMAIN_INDEX_PDI,
-	IMG4_NONCE_DOMAIN_INDEX_CRYPTEX,
-	IMG4_NONCE_DOMAIN_INDEX_DDI,
-	IMG4_NONCE_DOMAIN_INDEX_EPHEMERAL_CRYPTEX,
-	IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_SNUF_STUB,
-	IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_BOOT,
-	IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_ASSET,
-	IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_GENERIC,
-	IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_SIMULATOR,
-	_IMG4_NONCE_DOMAIN_INDEX_CNT,
-);
+               IMG4_NONCE_DOMAIN_INDEX_TEST = 0,
+               IMG4_NONCE_DOMAIN_INDEX_TRUST_CACHE, IMG4_NONCE_DOMAIN_INDEX_PDI,
+               IMG4_NONCE_DOMAIN_INDEX_CRYPTEX, IMG4_NONCE_DOMAIN_INDEX_DDI,
+               IMG4_NONCE_DOMAIN_INDEX_EPHEMERAL_CRYPTEX,
+               IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_SNUF_STUB,
+               IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_BOOT,
+               IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_ASSET,
+               IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_GENERIC,
+               IMG4_NONCE_DOMAIN_INDEX_CRYPTEX1_SIMULATOR,
+               _IMG4_NONCE_DOMAIN_INDEX_CNT, );
 
 /*!
  * @typedef img4_nonce_t
@@ -159,9 +155,9 @@ OS_CLOSED_ENUM(img4_nonce_domain_index, uint64_t,
  */
 IMG4_API_AVAILABLE_20181106
 typedef struct _img4_nonce {
-	img4_struct_version_t i4n_version;
-	uint8_t i4n_nonce[IMG4_NONCE_MAX_LENGTH];
-	uint32_t i4n_length;
+  img4_struct_version_t i4n_version;
+  uint8_t i4n_nonce[IMG4_NONCE_MAX_LENGTH];
+  uint32_t i4n_length;
 } img4_nonce_t;
 
 /*!
@@ -170,12 +166,13 @@ typedef struct _img4_nonce {
  * {@link i4n_version} field is properly initialized.
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define IMG4_NONCE_INIT (img4_nonce_t){.i4n_version = IMG4_NONCE_STRUCT_VERSION}
+#define IMG4_NONCE_INIT                                                        \
+  (img4_nonce_t) { .i4n_version = IMG4_NONCE_STRUCT_VERSION }
 #elif defined(__cplusplus) && __cplusplus >= 201103L
 #define IMG4_NONCE_INIT (img4_nonce_t{IMG4_NONCE_STRUCT_VERSION})
 #elif defined(__cplusplus)
-#define IMG4_NONCE_INIT \
-		(img4_nonce_t((img4_nonce_t){IMG4_NONCE_STRUCT_VERSION}))
+#define IMG4_NONCE_INIT                                                        \
+  (img4_nonce_t((img4_nonce_t){IMG4_NONCE_STRUCT_VERSION}))
 #else
 #define IMG4_NONCE_INIT {IMG4_NONCE_STRUCT_VERSION}
 #endif
@@ -186,11 +183,11 @@ typedef struct _img4_nonce {
  * byte nonce of all zeroes.
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define IMG4_NONCE_ZERO (img4_nonce_t){ \
-	.i4n_version = IMG4_NONCE_STRUCT_VERSION, \
-	.i4n_nonce = {0}, \
-	.i4n_length = IMG4_NONCE_MAX_LENGTH, \
-}
+#define IMG4_NONCE_ZERO                                                        \
+  (img4_nonce_t) {                                                             \
+    .i4n_version = IMG4_NONCE_STRUCT_VERSION, .i4n_nonce = {0},                \
+    .i4n_length = IMG4_NONCE_MAX_LENGTH,                                       \
+  }
 #endif
 
 /*!
@@ -278,11 +275,11 @@ const struct _img4_nonce_domain _img4_nonce_domain_ddi;
 IMG4_API_AVAILABLE_20210305
 OS_EXPORT
 const struct _img4_nonce_domain _img4_nonce_domain_ephemeral_cryptex;
-#define IMG4_NONCE_DOMAIN_EPHEMERAL_CRYPTEX \
-		(&_img4_nonce_domain_ephemeral_cryptex)
+#define IMG4_NONCE_DOMAIN_EPHEMERAL_CRYPTEX                                    \
+  (&_img4_nonce_domain_ephemeral_cryptex)
 #else
-#define IMG4_NONCE_DOMAIN_EPHEMERAL_CRYPTEX \
-		(img4if->i4if_v12.nonce_domain_ephemeral_cryptex)
+#define IMG4_NONCE_DOMAIN_EPHEMERAL_CRYPTEX                                    \
+  (img4if->i4if_v12.nonce_domain_ephemeral_cryptex)
 #endif
 
 /*!
@@ -299,11 +296,11 @@ const struct _img4_nonce_domain _img4_nonce_domain_ephemeral_cryptex;
 IMG4_API_AVAILABLE_20220322
 OS_EXPORT
 const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_snuf_stub;
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_SNUF_STUB \
-		(&_img4_nonce_domain_cryptex1_snuf_stub)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_SNUF_STUB                                   \
+  (&_img4_nonce_domain_cryptex1_snuf_stub)
 #else
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_SNUF_STUB \
-		(img4if->i4if_v18.nonce_domain_cryptex1_snuf_stub)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_SNUF_STUB                                   \
+  (img4if->i4if_v18.nonce_domain_cryptex1_snuf_stub)
 #endif
 
 /*!
@@ -320,11 +317,10 @@ const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_snuf_stub;
 IMG4_API_AVAILABLE_20211112
 OS_EXPORT
 const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_boot;
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_BOOT \
-		(&_img4_nonce_domain_cryptex1_boot)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_BOOT (&_img4_nonce_domain_cryptex1_boot)
 #else
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_BOOT \
-		(img4if->i4if_v16.nonce_domain_cryptex1_boot)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_BOOT                                        \
+  (img4if->i4if_v16.nonce_domain_cryptex1_boot)
 #endif
 
 /*!
@@ -341,11 +337,10 @@ const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_boot;
 IMG4_API_AVAILABLE_20211112
 OS_EXPORT
 const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_asset;
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_ASSET \
-		(&_img4_nonce_domain_cryptex1_asset)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_ASSET (&_img4_nonce_domain_cryptex1_asset)
 #else
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_ASSET \
-		(img4if->i4if_v16.nonce_domain_cryptex1_asset)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_ASSET                                       \
+  (img4if->i4if_v16.nonce_domain_cryptex1_asset)
 #endif
 
 /*!
@@ -362,11 +357,11 @@ const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_asset;
 IMG4_API_AVAILABLE_20221202
 OS_EXPORT
 const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_generic;
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_GENERIC \
-		(&_img4_nonce_domain_cryptex1_generic)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_GENERIC                                     \
+  (&_img4_nonce_domain_cryptex1_generic)
 #else
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_GENERIC \
-		(img4if->i4if_v20.nonce_domain_cryptex1_generic)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_GENERIC                                     \
+  (img4if->i4if_v20.nonce_domain_cryptex1_generic)
 #endif
 
 /*!
@@ -383,11 +378,11 @@ const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_generic;
 IMG4_API_AVAILABLE_20221202
 OS_EXPORT
 const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_simulator;
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_SIMULATOR \
-		(&_img4_nonce_domain_cryptex1_simulator)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_SIMULATOR                                   \
+  (&_img4_nonce_domain_cryptex1_simulator)
 #else
-#define IMG4_NONCE_DOMAIN_CRYPTEX1_SIMULATOR \
-		(img4if->i4if_v20.nonce_domain_cryptex1_simulator)
+#define IMG4_NONCE_DOMAIN_CRYPTEX1_SIMULATOR                                   \
+  (img4if->i4if_v20.nonce_domain_cryptex1_simulator)
 #endif
 
 /*!
@@ -415,12 +410,11 @@ const struct _img4_nonce_domain _img4_nonce_domain_cryptex1_simulator;
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20210305
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
 img4_nonce_domain_copy_nonce(const img4_nonce_domain_t *nd, img4_nonce_t *n);
 #else
-#define img4_nonce_domain_copy_nonce(...) \
-		(img4if->i4if_v1.nonce_domain_copy_nonce(__VA_ARGS__))
+#define img4_nonce_domain_copy_nonce(...)                                      \
+  (img4if->i4if_v1.nonce_domain_copy_nonce(__VA_ARGS__))
 #endif
 
 /*!
@@ -438,18 +432,17 @@ img4_nonce_domain_copy_nonce(const img4_nonce_domain_t *nd, img4_nonce_t *n);
  *
  *     [EPERM]      The caller lacked the entitlement necessary to roll the
  *                  given nonce
- *     [EROFS]      The boot mode didn't allow committing to non-volatile storage
- *     [ENOTSUP]    Nonce management is not available on the host
- *     [EACCES]     The nonce requested is not accessible in this environment
+ *     [EROFS]      The boot mode didn't allow committing to non-volatile
+ * storage [ENOTSUP]    Nonce management is not available on the host [EACCES]
+ * The nonce requested is not accessible in this environment
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20181106
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 errno_t
 img4_nonce_domain_roll_nonce(const img4_nonce_domain_t *nd);
 #else
-#define img4_nonce_domain_roll_nonce(...) \
-		(img4if->i4if_v1.nonce_domain_roll_nonce(__VA_ARGS__))
+#define img4_nonce_domain_roll_nonce(...)                                      \
+  (img4if->i4if_v1.nonce_domain_roll_nonce(__VA_ARGS__))
 #endif
 
 /*!
@@ -474,18 +467,17 @@ img4_nonce_domain_roll_nonce(const img4_nonce_domain_t *nd);
  *
  *     [EPERM]      The caller lacked the entitlement necessary to roll the
  *                  given nonce
- *     [EROFS]      The boot mode didn't allow committing to non-volatile storage
- *     [ENOTSUP]    Nonce management is not available on the host
- *     [EACCES]     The nonce requested is not accessible in this environment
+ *     [EROFS]      The boot mode didn't allow committing to non-volatile
+ * storage [ENOTSUP]    Nonce management is not available on the host [EACCES]
+ * The nonce requested is not accessible in this environment
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_FALL_2021_B
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
 img4_nonce_domain_preroll_nonce(const img4_nonce_domain_t *nd, img4_nonce_t *n);
 #else
-#define img4_nonce_domain_preroll_nonce(...) \
-		(img4if->i4if_v14.nonce_domain_preroll_nonce(__VA_ARGS__))
+#define img4_nonce_domain_preroll_nonce(...)                                   \
+  (img4if->i4if_v14.nonce_domain_preroll_nonce(__VA_ARGS__))
 #endif
 
 /*!
@@ -512,12 +504,11 @@ img4_nonce_domain_preroll_nonce(const img4_nonce_domain_t *nd, img4_nonce_t *n);
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20220714
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
 img4_nonce_domain_peek_nonce(const img4_nonce_domain_t *nd, img4_nonce_t *n);
 #else
-#define img4_nonce_domain_peek_nonce(...) \
-		(img4if->i4if_v19.nonce_domain_peek_nonce(__VA_ARGS__))
+#define img4_nonce_domain_peek_nonce(...)                                      \
+  (img4if->i4if_v19.nonce_domain_peek_nonce(__VA_ARGS__))
 #endif
 
 /*!
@@ -533,12 +524,11 @@ img4_nonce_domain_peek_nonce(const img4_nonce_domain_t *nd, img4_nonce_t *n);
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20221202
-OS_EXPORT OS_WARN_RESULT
-const img4_nonce_domain_t *_Nullable
-img4_nonce_domain_get_from_handle(uint32_t handle);
+OS_EXPORT OS_WARN_RESULT const img4_nonce_domain_t
+    *_Nullable img4_nonce_domain_get_from_handle(uint32_t handle);
 #else
-#define img4_nonce_domain_get_from_handle(...) \
-		(img4if->i4if_v20.nonce_domain_get_from_handle(__VA_ARGS__))
+#define img4_nonce_domain_get_from_handle(...)                                 \
+  (img4if->i4if_v20.nonce_domain_get_from_handle(__VA_ARGS__))
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

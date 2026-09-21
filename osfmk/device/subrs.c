@@ -135,21 +135,21 @@
 
 #if KERNEL
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/string.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/string.h"
 #else
 #error architecture not supported
 #endif
 
-#include <vm/vm_kern.h>
 #include <kern/misc_protos.h>
 #include <kern/telemetry.h>
-#include <libsa/stdlib.h>
-#include <sys/malloc.h>
 #include <libkern/section_keywords.h>
+#include <libsa/stdlib.h>
 #include <machine/string.h> /* __arch_* defines */
+#include <sys/malloc.h>
+#include <vm/vm_kern.h>
 
 /*
  * Note to implementers, when adding new string/memory functions
@@ -174,92 +174,86 @@ static_assert(__arch_memset, "architecture must provide memset");
 #endif /* KERNEL */
 
 #ifndef __arch_bcmp
-int
-bcmp_impl(const void *pa, const void *pb, size_t len)
-{
-	const char *a = (const char *)pa;
-	const char *b = (const char *)pb;
+int bcmp_impl(const void *pa, const void *pb, size_t len) {
+  const char *a = (const char *)pa;
+  const char *b = (const char *)pb;
 
-	if (len == 0) {
-		return 0;
-	}
+  if (len == 0) {
+    return 0;
+  }
 
-	do{
-		if (*a++ != *b++) {
-			break;
-		}
-	} while (--len);
+  do {
+    if (*a++ != *b++) {
+      break;
+    }
+  } while (--len);
 
-	/*
-	 * Check for the overflow case but continue to handle the non-overflow
-	 * case the same way just in case someone is using the return value
-	 * as more than zero/non-zero
-	 */
-	if ((len & 0xFFFFFFFF00000000ULL) && !(len & 0x00000000FFFFFFFFULL)) {
-		return ~0;
-	} else {
-		return (int)len;
-	}
+  /*
+   * Check for the overflow case but continue to handle the non-overflow
+   * case the same way just in case someone is using the return value
+   * as more than zero/non-zero
+   */
+  if ((len & 0xFFFFFFFF00000000ULL) && !(len & 0x00000000FFFFFFFFULL)) {
+    return ~0;
+  } else {
+    return (int)len;
+  }
 }
 #endif /* __arch_bcmp */
 
 #ifndef __arch_memcmp
 MARK_AS_HIBERNATE_TEXT
-int
-memcmp_impl(const void *s1, const void *s2, size_t n)
-{
-	if (n != 0) {
-		const unsigned char *p1 = s1, *p2 = s2;
+int memcmp_impl(const void *s1, const void *s2, size_t n) {
+  if (n != 0) {
+    const unsigned char *p1 = s1, *p2 = s2;
 
-		do {
-			if (*p1++ != *p2++) {
-				return *--p1 - *--p2;
-			}
-		} while (--n != 0);
-	}
-	return 0;
+    do {
+      if (*p1++ != *p2++) {
+        return *--p1 - *--p2;
+      }
+    } while (--n != 0);
+  }
+  return 0;
 }
 #endif /* __arch_memcmp */
 
 #ifndef __arch_memcmp_zero_ptr_aligned
-unsigned long
-memcmp_zero_ptr_aligned_impl(const void *addr, size_t size)
-{
-	const uint64_t *p = (const uint64_t *)addr;
-	uint64_t a = p[0];
+unsigned long memcmp_zero_ptr_aligned_impl(const void *addr, size_t size) {
+  const uint64_t *p = (const uint64_t *)addr;
+  uint64_t a = p[0];
 
-	static_assert(sizeof(unsigned long) == sizeof(uint64_t),
-	    "uint64_t is not the same size as unsigned long");
+  static_assert(sizeof(unsigned long) == sizeof(uint64_t),
+                "uint64_t is not the same size as unsigned long");
 
-	if (size < 4 * sizeof(uint64_t)) {
-		if (size > 1 * sizeof(uint64_t)) {
-			a |= p[1];
-			if (size > 2 * sizeof(uint64_t)) {
-				a |= p[2];
-			}
-		}
-	} else {
-		size_t count = size / sizeof(uint64_t);
-		uint64_t b = p[1];
-		uint64_t c = p[2];
-		uint64_t d = p[3];
+  if (size < 4 * sizeof(uint64_t)) {
+    if (size > 1 * sizeof(uint64_t)) {
+      a |= p[1];
+      if (size > 2 * sizeof(uint64_t)) {
+        a |= p[2];
+      }
+    }
+  } else {
+    size_t count = size / sizeof(uint64_t);
+    uint64_t b = p[1];
+    uint64_t c = p[2];
+    uint64_t d = p[3];
 
-		/*
-		 * note: for sizes not a multiple of 32 bytes, this will load
-		 * the bytes [size % 32 .. 32) twice which is ok
-		 */
-		while (count > 4) {
-			count -= 4;
-			a |= p[count + 0];
-			b |= p[count + 1];
-			c |= p[count + 2];
-			d |= p[count + 3];
-		}
+    /*
+     * note: for sizes not a multiple of 32 bytes, this will load
+     * the bytes [size % 32 .. 32) twice which is ok
+     */
+    while (count > 4) {
+      count -= 4;
+      a |= p[count + 0];
+      b |= p[count + 1];
+      c |= p[count + 2];
+      d |= p[count + 3];
+    }
 
-		a |= b | c | d;
-	}
+    a |= b | c | d;
+  }
 
-	return a;
+  return a;
 }
 #endif /* __arch_memcmp_zero_ptr_aligned */
 
@@ -269,15 +263,13 @@ memcmp_zero_ptr_aligned_impl(const void *addr, size_t size)
  * the terminating null character.
  */
 #ifndef __arch_strlen
-size_t
-strlen_impl(const char *string)
-{
-	const char *ret = string;
+size_t strlen_impl(const char *string) {
+  const char *ret = string;
 
-	while (*string++ != '\0') {
-		continue;
-	}
-	return (size_t)(string - 1 - ret);
+  while (*string++ != '\0') {
+    continue;
+  }
+  return (size_t)(string - 1 - ret);
 }
 #endif /* __arch_strlen */
 
@@ -293,15 +285,13 @@ strlen_impl(const char *string)
  *	length of s or max; whichever is smaller
  */
 #ifndef __arch_strnlen
-size_t
-strnlen_impl(const char *s, size_t max)
-{
-	const char *es = s + max, *p = s;
-	while (p != es && *p) {
-		p++;
-	}
+size_t strnlen_impl(const char *s, size_t max) {
+  const char *es = s + max, *p = s;
+  while (p != es && *p) {
+    p++;
+  }
 
-	return (size_t)(p - s);
+  return (size_t)(p - s);
 }
 #endif /* __arch_strlen */
 
@@ -319,22 +309,20 @@ strnlen_impl(const char *s, size_t max)
  *	strcmp() is being deprecated. Please use strncmp() instead.
  */
 #ifndef __arch_strcmp
-int
-strcmp_impl(const char *s1, const char *s2)
-{
-	int a, b;
+int strcmp_impl(const char *s1, const char *s2) {
+  int a, b;
 
-	do {
-		a = *s1++;
-		b = *s2++;
-		if (a != b) {
-			return a - b;     /* includes case when
-			                   *  'a' is zero and 'b' is not zero
-			                   *  or vice versa */
-		}
-	} while (a != '\0');
+  do {
+    a = *s1++;
+    b = *s2++;
+    if (a != b) {
+      return a - b; /* includes case when
+                     *  'a' is zero and 'b' is not zero
+                     *  or vice versa */
+    }
+  } while (a != '\0');
 
-	return 0;       /* both are zero */
+  return 0; /* both are zero */
 }
 #endif /* __arch_strcmp */
 
@@ -346,55 +334,46 @@ strcmp_impl(const char *s1, const char *s2)
  */
 
 #ifndef __arch_strncmp
-int
-strncmp_impl(const char *s1, const char *s2, size_t n)
-{
-	return strbufcmp_impl(s1, n, s2, n);
+int strncmp_impl(const char *s1, const char *s2, size_t n) {
+  return strbufcmp_impl(s1, n, s2, n);
 }
 #endif /* __arch_strncmp */
 
 #ifndef __arch_strlcmp
-int
-strlcmp_impl(const char *s1, const char *s2, size_t n)
-{
-	return strbufcmp_impl(s1, n, s2, strlen(s2));
+int strlcmp_impl(const char *s1, const char *s2, size_t n) {
+  return strbufcmp_impl(s1, n, s2, strlen(s2));
 }
 #endif
 
 #ifndef __arch_strbufcmp
-int
-strbufcmp_impl(
-	const char *__counted_by(alen)a,
-	size_t alen,
-	const char *__counted_by(blen)b,
-	size_t blen)
-{
-	int ca, cb;
-	size_t i, len;
+int strbufcmp_impl(const char *__counted_by(alen) a, size_t alen,
+                   const char *__counted_by(blen) b, size_t blen) {
+  int ca, cb;
+  size_t i, len;
 
-	len = alen < blen ? alen : blen;
-	for (i = 0; i < len; ++i) {
-		ca = a[i];
-		cb = b[i];
-		if (ca != cb) {
-			return ca - cb;   /* includes case when
-			                   *  'a' is zero and 'b' is not zero
-			                   *  or vice versa */
-		}
-		if (ca == '\0') {
-			return 0;       /* both are zero */
-		}
-	}
+  len = alen < blen ? alen : blen;
+  for (i = 0; i < len; ++i) {
+    ca = a[i];
+    cb = b[i];
+    if (ca != cb) {
+      return ca - cb; /* includes case when
+                       *  'a' is zero and 'b' is not zero
+                       *  or vice versa */
+    }
+    if (ca == '\0') {
+      return 0; /* both are zero */
+    }
+  }
 
-	/* if either string is not NUL-terminated, pretend the next character is a
-	 * NUL */
-	if (alen < blen) {
-		return 0 - b[len];
-	}
-	if (blen < alen) {
-		return a[len] - 0;
-	}
-	return 0;
+  /* if either string is not NUL-terminated, pretend the next character is a
+   * NUL */
+  if (alen < blen) {
+    return 0 - b[len];
+  }
+  if (blen < alen) {
+    return a[len] - 0;
+  }
+  return 0;
 }
 #endif /* __arch_strbufcmp */
 
@@ -402,138 +381,117 @@ strbufcmp_impl(
 /*
  * Return TRUE(1) if string 2 is a prefix of string 1.
  */
-int
-strprefix_impl(const char *s1, const char *s2)
-{
-	int c;
+int strprefix_impl(const char *s1, const char *s2) {
+  int c;
 
-	while ((c = *s2++) != '\0') {
-		if (c != *s1++) {
-			return 0;
-		}
-	}
-	return 1;
+  while ((c = *s2++) != '\0') {
+    if (c != *s1++) {
+      return 0;
+    }
+  }
+  return 1;
 }
 #endif /* __arch_strprefix */
-
 
 //
 // Lame implementation just for use by strcasecmp/strncasecmp
 //
-__header_always_inline int
-tolower(int ch)
-{
-	if (ch >= 'A' && ch <= 'Z') {
-		ch = 'a' + (ch - 'A');
-	}
+__header_always_inline int tolower(int ch) {
+  if (ch >= 'A' && ch <= 'Z') {
+    ch = 'a' + (ch - 'A');
+  }
 
-	return ch;
+  return ch;
 }
 
 #ifndef __arch_strcasecmp
-int
-strcasecmp_impl(const char *s1, const char *s2)
-{
-	const unsigned char *us1 = (const u_char *)s1,
-	    *us2 = (const u_char *)s2;
+int strcasecmp_impl(const char *s1, const char *s2) {
+  const unsigned char *us1 = (const u_char *)s1, *us2 = (const u_char *)s2;
 
-	while (tolower(*us1) == tolower(*us2++)) {
-		if (*us1++ == '\0') {
-			return 0;
-		}
-	}
-	return tolower(*us1) - tolower(*--us2);
+  while (tolower(*us1) == tolower(*us2++)) {
+    if (*us1++ == '\0') {
+      return 0;
+    }
+  }
+  return tolower(*us1) - tolower(*--us2);
 }
 #endif /* __arch_strcasecmp */
 
 #ifndef __arch_strncasecmp
-int
-strncasecmp_impl(const char *s1, const char *s2, size_t n)
-{
-	return strbufcasecmp_impl(s1, n, s2, n);
+int strncasecmp_impl(const char *s1, const char *s2, size_t n) {
+  return strbufcasecmp_impl(s1, n, s2, n);
 }
 #endif /* __arch_strncasecmp */
 
 #ifndef __arch_strlcasecmp
-int
-strlcasecmp_impl(const char *s1, const char *s2, size_t n)
-{
-	return strbufcasecmp_impl(s1, n, s2, strlen(s2));
+int strlcasecmp_impl(const char *s1, const char *s2, size_t n) {
+  return strbufcasecmp_impl(s1, n, s2, strlen(s2));
 }
 #endif
 
 #ifndef __arch_strbufcasecmp
-int
-strbufcasecmp_impl(
-	const char *__counted_by(alen)a,
-	size_t alen,
-	const char *__counted_by(blen)b,
-	size_t blen)
-{
-	int ca, cb;
-	size_t i, len;
+int strbufcasecmp_impl(const char *__counted_by(alen) a, size_t alen,
+                       const char *__counted_by(blen) b, size_t blen) {
+  int ca, cb;
+  size_t i, len;
 
-	len = alen < blen ? alen : blen;
-	for (i = 0; i < len; ++i) {
-		ca = tolower(a[i]);
-		cb = tolower(b[i]);
-		if (ca != cb) {
-			return ca - cb; /* includes case when
-			                 *  'a' is zero and 'b' is not zero
-			                 *  or vice versa */
-		}
-		if (ca == '\0') {
-			return 0;       /* both are zero */
-		}
-	}
+  len = alen < blen ? alen : blen;
+  for (i = 0; i < len; ++i) {
+    ca = tolower(a[i]);
+    cb = tolower(b[i]);
+    if (ca != cb) {
+      return ca - cb; /* includes case when
+                       *  'a' is zero and 'b' is not zero
+                       *  or vice versa */
+    }
+    if (ca == '\0') {
+      return 0; /* both are zero */
+    }
+  }
 
-	/* if either string is not NUL-terminated, pretend the next character is a
-	 * NUL */
-	if (alen < blen) {
-		return 0 - tolower(b[len]);
-	}
-	if (blen < alen) {
-		return tolower(a[len]) - 0;
-	}
-	return 0;
+  /* if either string is not NUL-terminated, pretend the next character is a
+   * NUL */
+  if (alen < blen) {
+    return 0 - tolower(b[len]);
+  }
+  if (blen < alen) {
+    return tolower(a[len]) - 0;
+  }
+  return 0;
 }
 #endif /* __arch_strbufcasecmp */
 
 #ifndef __arch_strchr
-char *
-strchr_impl(const char *s, int c)
-{
-	if (!s) {
-		return NULL;
-	}
+char *strchr_impl(const char *s, int c) {
+  if (!s) {
+    return NULL;
+  }
 
-	do {
-		if (*s == c) {
-			return __CAST_AWAY_QUALIFIER(s, const, char *);
-		}
-	} while (*s++);
+  do {
+    if (*s == c) {
+      return __CAST_AWAY_QUALIFIER(s, const, char *);
+    }
+  } while (*s++);
 
-	return NULL;
+  return NULL;
 }
 #endif /* __arch_strchr */
 
 #ifndef __arch_strrchr
-char *
-strrchr_impl(const char *s, int c)
-{
-	const char *found = NULL;
+char *strrchr_impl(const char *s, int c) {
+  const char *found = NULL;
 
-	if (!s) {
-		return NULL;
-	}
+  if (!s) {
+    return NULL;
+  }
 
-	do {
-		if (*s == c) {
-			found = s;
-		}
-	} while (*s++);
+  do {
+    if (*s == c) {
+      found = s;
+    }
+  } while (*s++);
 
-	return __CAST_AWAY_QUALIFIER(found, const, char *);
+  return __CAST_AWAY_QUALIFIER(found, const, char *);
 }
 #endif /* __arch_strchr */
 
@@ -546,16 +504,14 @@ strrchr_impl(const char *s, int c)
  * Deprecation Warning:
  *	strcpy() is being deprecated. Please use strlcpy() instead.
  */
-char *
-strcpy_impl(char *to, const char *from)
-{
-	char *ret = to;
+char *strcpy_impl(char *to, const char *from) {
+  char *ret = to;
 
-	while ((*to++ = *from++) != '\0') {
-		continue;
-	}
+  while ((*to++ = *from++) != '\0') {
+    continue;
+  }
 
-	return ret;
+  return ret;
 }
 #endif
 
@@ -568,17 +524,15 @@ strcpy_impl(char *to, const char *from)
  *      to the "to" string.
  */
 #ifndef __arch_strncpy
-char *
-strncpy_impl(char * dst, const char * src, size_t maxlen)
-{
-	const size_t srclen = strnlen_impl(src, maxlen);
-	if (srclen < maxlen) {
-		memcpy_impl(dst, src, srclen);
-		memset_impl(dst + srclen, 0, maxlen - srclen);
-	} else {
-		memcpy_impl(dst, src, maxlen);
-	}
-	return dst;
+char *strncpy_impl(char *dst, const char *src, size_t maxlen) {
+  const size_t srclen = strnlen_impl(src, maxlen);
+  if (srclen < maxlen) {
+    memcpy_impl(dst, src, srclen);
+    memset_impl(dst + srclen, 0, maxlen - srclen);
+  } else {
+    memcpy_impl(dst, src, maxlen);
+  }
+  return dst;
 }
 #endif /* __arch_strncpy */
 
@@ -591,16 +545,14 @@ strncpy_impl(char * dst, const char * src, size_t maxlen)
  * output       : a number
  */
 
-int
-atoi(const char *cp)
-{
-	int     number;
+int atoi(const char *cp) {
+  int number;
 
-	for (number = 0; ('0' <= *cp) && (*cp <= '9'); cp++) {
-		number = (number * 10) + (*cp - '0');
-	}
+  for (number = 0; ('0' <= *cp) && (*cp <= '9'); cp++) {
+    number = (number * 10) + (*cp - '0');
+  }
 
-	return number;
+  return number;
 }
 
 /*
@@ -613,28 +565,26 @@ atoi(const char *cp)
  *	pointer to string start.
  */
 
-char *
-itoa(int num, char *str)
-{
-	char    digits[11];
-	char *dp;
-	char *cp = str;
+char *itoa(int num, char *str) {
+  char digits[11];
+  char *dp;
+  char *cp = str;
 
-	if (num == 0) {
-		*cp++ = '0';
-	} else {
-		dp = digits;
-		while (num) {
-			*dp++ = '0' + num % 10;
-			num /= 10;
-		}
-		while (dp != digits) {
-			*cp++ = *--dp;
-		}
-	}
-	*cp++ = '\0';
+  if (num == 0) {
+    *cp++ = '0';
+  } else {
+    dp = digits;
+    while (num) {
+      *dp++ = '0' + num % 10;
+      num /= 10;
+    }
+    while (dp != digits) {
+      *cp++ = *--dp;
+    }
+  }
+  *cp++ = '\0';
 
-	return str;
+  return str;
 }
 
 #if CONFIG_VSPRINTF
@@ -642,18 +592,16 @@ itoa(int num, char *str)
  * Deprecation Warning:
  *	strcat() is being deprecated. Please use strlcat() instead.
  */
-char *
-strcat_impl(char *dest, const char *src)
-{
-	char *old = dest;
+char *strcat_impl(char *dest, const char *src) {
+  char *old = dest;
 
-	while (*dest) {
-		++dest;
-	}
-	while ((*dest++ = *src++)) {
-		;
-	}
-	return old;
+  while (*dest) {
+    ++dest;
+  }
+  while ((*dest++ = *src++)) {
+    ;
+  }
+  return old;
 }
 #endif
 
@@ -665,34 +613,32 @@ strcat_impl(char *dest, const char *src)
  * If retval >= siz, truncation occurred.
  */
 #ifndef __arch_strlcat
-size_t
-strlcat_impl(char *dst, const char *src, size_t siz)
-{
-	char *d = dst;
-	const char *s = src;
-	size_t n = siz;
-	size_t dlen;
+size_t strlcat_impl(char *dst, const char *src, size_t siz) {
+  char *d = dst;
+  const char *s = src;
+  size_t n = siz;
+  size_t dlen;
 
-	/* Find the end of dst and adjust bytes left but don't go past end */
-	while (n-- != 0 && *d != '\0') {
-		d++;
-	}
-	dlen = (size_t)(d - dst);
-	n = siz - dlen;
+  /* Find the end of dst and adjust bytes left but don't go past end */
+  while (n-- != 0 && *d != '\0') {
+    d++;
+  }
+  dlen = (size_t)(d - dst);
+  n = siz - dlen;
 
-	if (n == 0) {
-		return dlen + strlen_impl(s);
-	}
-	while (*s != '\0') {
-		if (n != 1) {
-			*d++ = *s;
-			n--;
-		}
-		s++;
-	}
-	*d = '\0';
+  if (n == 0) {
+    return dlen + strlen_impl(s);
+  }
+  while (*s != '\0') {
+    if (n != 1) {
+      *d++ = *s;
+      n--;
+    }
+    s++;
+  }
+  *d = '\0';
 
-	return dlen + (size_t)(s - src);       /* count does not include NUL */
+  return dlen + (size_t)(s - src); /* count does not include NUL */
 }
 #endif /* __arch_strlcat */
 
@@ -708,21 +654,19 @@ strlcat_impl(char *dst, const char *src, size_t siz)
  * This function is most useful to concatenate a fixed-size string to another.
  */
 #ifndef __arch_strbufcat
-const char *__null_terminated
-strbufcat_impl(
-	char *__counted_by(dstsz)dst,
-	size_t dstsz,
-	const char *__counted_by(srcsz)src,
-	size_t srcsz)
-{
-	size_t len;
-	if (dstsz == 0) {
-		return NULL;
-	}
+const char *__null_terminated strbufcat_impl(char *__counted_by(dstsz) dst,
+                                             size_t dstsz,
+                                             const char *__counted_by(srcsz)
+                                                 src,
+                                             size_t srcsz) {
+  size_t len;
+  if (dstsz == 0) {
+    return NULL;
+  }
 
-	len = strnlen_impl(dst, dstsz);
-	strbufcpy_impl(dst + len, dstsz - len, src, srcsz);
-	return dst;
+  len = strnlen_impl(dst, dstsz);
+  strbufcpy_impl(dst + len, dstsz - len, src, srcsz);
+  return dst;
 }
 #endif /* __arch_strbufcat */
 
@@ -732,17 +676,15 @@ strbufcat_impl(
  * Returns strlen(src); if retval >= siz, truncation occurred.
  */
 #ifndef __arch_strlcpy
-size_t
-strlcpy_impl(char * dst, const char * src, size_t maxlen)
-{
-	const size_t srclen = strlen_impl(src);
-	if (srclen + 1 < maxlen) {
-		memcpy_impl(dst, src, srclen + 1);
-	} else if (maxlen != 0) {
-		memcpy_impl(dst, src, maxlen - 1);
-		dst[maxlen - 1] = '\0';
-	}
-	return srclen;
+size_t strlcpy_impl(char *dst, const char *src, size_t maxlen) {
+  const size_t srclen = strlen_impl(src);
+  if (srclen + 1 < maxlen) {
+    memcpy_impl(dst, src, srclen + 1);
+  } else if (maxlen != 0) {
+    memcpy_impl(dst, src, maxlen - 1);
+    dst[maxlen - 1] = '\0';
+  }
+  return srclen;
 }
 #endif /* __arch_strlcpy */
 
@@ -758,178 +700,172 @@ strlcpy_impl(char * dst, const char * src, size_t maxlen)
  * another.
  */
 #ifndef __arch_strbufcpy
-const char *__null_terminated
-strbufcpy_impl(
-	char *__counted_by(dstsz)dst,
-	size_t dstsz,
-	const char *__counted_by(srcsz)src,
-	size_t srcsz)
-{
-	size_t copymax;
+const char *__null_terminated strbufcpy_impl(char *__counted_by(dstsz) dst,
+                                             size_t dstsz,
+                                             const char *__counted_by(srcsz)
+                                                 src,
+                                             size_t srcsz) {
+  size_t copymax;
 
-	if (dstsz == 0) {
-		return NULL;
-	}
+  if (dstsz == 0) {
+    return NULL;
+  }
 
-	copymax = strnlen_impl(src, srcsz);
-	if (copymax < dstsz) {
-		memmove_impl(dst, src, copymax);
-		dst[copymax] = 0;
-	} else {
-		memmove_impl(dst, src, dstsz);
-		dst[dstsz - 1] = 0;
-	}
-	return __unsafe_forge_null_terminated(const char *__null_terminated, dst);
+  copymax = strnlen_impl(src, srcsz);
+  if (copymax < dstsz) {
+    memmove_impl(dst, src, copymax);
+    dst[copymax] = 0;
+  } else {
+    memmove_impl(dst, src, dstsz);
+    dst[dstsz - 1] = 0;
+  }
+  return __unsafe_forge_null_terminated(const char *__null_terminated, dst);
 }
 #endif /* __arch_strbufcpy */
 
 #ifndef __arch_strncat
-char *
-strncat_impl(char *s1, const char *s2, size_t n)
-{
-	if (n != 0) {
-		char *d = s1;
-		const char *s = s2;
+char *strncat_impl(char *s1, const char *s2, size_t n) {
+  if (n != 0) {
+    char *d = s1;
+    const char *s = s2;
 
-		while (*d != 0) {
-			d++;
-		}
-		do {
-			if ((*d = *s++) == '\0') {
-				break;
-			}
-			d++;
-		} while (--n != 0);
-		*d = '\0';
-	}
+    while (*d != 0) {
+      d++;
+    }
+    do {
+      if ((*d = *s++) == '\0') {
+        break;
+      }
+      d++;
+    } while (--n != 0);
+    *d = '\0';
+  }
 
-	return __CAST_AWAY_QUALIFIER(s1, const, char *);
+  return __CAST_AWAY_QUALIFIER(s1, const, char *);
 }
 #endif /* __arch_strncat */
 
 #ifndef __arch_strnstr
-char *
-strnstr_impl(const char *s, const char *find, size_t slen)
-{
-	char c, sc;
-	size_t len;
+char *strnstr_impl(const char *s, const char *find, size_t slen) {
+  char c, sc;
+  size_t len;
 
-	if ((c = *find++) != '\0') {
-		len = strlen_impl(find);
-		do {
-			do {
-				if ((sc = *s++) == '\0' || slen-- < 1) {
-					return NULL;
-				}
-			} while (sc != c);
-			if (len > slen) {
-				return NULL;
-			}
-		} while (strncmp_impl(s, find, len) != 0);
-		s--;
-	}
+  if ((c = *find++) != '\0') {
+    len = strlen_impl(find);
+    do {
+      do {
+        if ((sc = *s++) == '\0' || slen-- < 1) {
+          return NULL;
+        }
+      } while (sc != c);
+      if (len > slen) {
+        return NULL;
+      }
+    } while (strncmp_impl(s, find, len) != 0);
+    s--;
+  }
 
-	return __CAST_AWAY_QUALIFIER(s, const, char *);
+  return __CAST_AWAY_QUALIFIER(s, const, char *);
 }
 #endif /* __arch_strnstr */
 
-void * __memcpy_chk(void *dst, void const *src, size_t s, size_t chk_size);
-void * __memmove_chk(void *dst, void const *src, size_t s, size_t chk_size);
-void * __memset_chk(void *dst, int c, size_t s, size_t chk_size);
+void *__memcpy_chk(void *dst, void const *src, size_t s, size_t chk_size);
+void *__memmove_chk(void *dst, void const *src, size_t s, size_t chk_size);
+void *__memset_chk(void *dst, int c, size_t s, size_t chk_size);
 size_t __strlcpy_chk(char *dst, char const *src, size_t s, size_t chk_size);
 size_t __strlcat_chk(char *dst, char const *src, size_t s, size_t chk_size);
-char * __strncpy_chk(char *restrict dst, char *restrict src, size_t len, size_t chk_size);
-char * __strncat_chk(char *restrict dst, const char *restrict src, size_t len, size_t chk_size);
-char * __strcpy_chk(char *restrict dst, const char *restrict src, size_t chk_size);
-char * __strcat_chk(char *restrict dst, const char *restrict src, size_t chk_size);
+char *__strncpy_chk(char *restrict dst, char *restrict src, size_t len,
+                    size_t chk_size);
+char *__strncat_chk(char *restrict dst, const char *restrict src, size_t len,
+                    size_t chk_size);
+char *__strcpy_chk(char *restrict dst, const char *restrict src,
+                   size_t chk_size);
+char *__strcat_chk(char *restrict dst, const char *restrict src,
+                   size_t chk_size);
 
-void *
-__memcpy_chk(void *dst, void const *src, size_t s, size_t chk_size)
-{
-	if (__improbable(chk_size < s)) {
-		panic("__memcpy_chk object size check failed: dst %p, src %p, (%zu < %zu)", dst, src, chk_size, s);
-	}
-	return memcpy_impl(dst, src, s);
+void *__memcpy_chk(void *dst, void const *src, size_t s, size_t chk_size) {
+  if (__improbable(chk_size < s)) {
+    panic("__memcpy_chk object size check failed: dst %p, src %p, (%zu < %zu)",
+          dst, src, chk_size, s);
+  }
+  return memcpy_impl(dst, src, s);
 }
 
-void *
-__memmove_chk(void *dst, void const *src, size_t s, size_t chk_size)
-{
-	if (__improbable(chk_size < s)) {
-		panic("__memmove_chk object size check failed: dst %p, src %p, (%zu < %zu)", dst, src, chk_size, s);
-	}
-	return memmove_impl(dst, src, s);
+void *__memmove_chk(void *dst, void const *src, size_t s, size_t chk_size) {
+  if (__improbable(chk_size < s)) {
+    panic("__memmove_chk object size check failed: dst %p, src %p, (%zu < %zu)",
+          dst, src, chk_size, s);
+  }
+  return memmove_impl(dst, src, s);
 }
 
-void *
-__memset_chk(void *dst, int c, size_t s, size_t chk_size)
-{
-	if (__improbable(chk_size < s)) {
-		panic("__memset_chk object size check failed: dst %p, c %c, (%zu < %zu)", dst, c, chk_size, s);
-	}
-	return memset_impl(dst, c, s);
+void *__memset_chk(void *dst, int c, size_t s, size_t chk_size) {
+  if (__improbable(chk_size < s)) {
+    panic("__memset_chk object size check failed: dst %p, c %c, (%zu < %zu)",
+          dst, c, chk_size, s);
+  }
+  return memset_impl(dst, c, s);
 }
 
-size_t
-__strlcat_chk(char *dst, char const *src, size_t s, size_t chk_size)
-{
-	if (__improbable(chk_size < s)) {
-		panic("__strlcat_chk object size check failed: dst %p, src %p, (%zu < %zu)", dst, src, chk_size, s);
-	}
-	return strlcat_impl(dst, src, s);
+size_t __strlcat_chk(char *dst, char const *src, size_t s, size_t chk_size) {
+  if (__improbable(chk_size < s)) {
+    panic("__strlcat_chk object size check failed: dst %p, src %p, (%zu < %zu)",
+          dst, src, chk_size, s);
+  }
+  return strlcat_impl(dst, src, s);
 }
 
-size_t
-__strlcpy_chk(char *dst, char const *src, size_t s, size_t chk_size)
-{
-	if (__improbable(chk_size < s)) {
-		panic("__strlcpy_chk object size check failed: dst %p, src %p, (%zu < %zu)", dst, src, chk_size, s);
-	}
-	return strlcpy_impl(dst, src, s);
+size_t __strlcpy_chk(char *dst, char const *src, size_t s, size_t chk_size) {
+  if (__improbable(chk_size < s)) {
+    panic("__strlcpy_chk object size check failed: dst %p, src %p, (%zu < %zu)",
+          dst, src, chk_size, s);
+  }
+  return strlcpy_impl(dst, src, s);
 }
 
-char *
-__strncpy_chk(char *restrict dst, char *restrict src,
-    size_t len, size_t chk_size)
-{
-	if (__improbable(chk_size < len)) {
-		panic("__strncpy_chk object size check failed: dst %p, src %p, (%zu < %zu)", dst, src, chk_size, len);
-	}
-	return strncpy_impl(dst, src, len);
+char *__strncpy_chk(char *restrict dst, char *restrict src, size_t len,
+                    size_t chk_size) {
+  if (__improbable(chk_size < len)) {
+    panic("__strncpy_chk object size check failed: dst %p, src %p, (%zu < %zu)",
+          dst, src, chk_size, len);
+  }
+  return strncpy_impl(dst, src, len);
 }
 
-char *
-__strncat_chk(char *restrict dst, const char *restrict src,
-    size_t len, size_t chk_size)
-{
-	size_t len1 = strlen_impl(dst);
-	size_t len2 = strnlen_impl(src, len);
-	if (__improbable(chk_size < len1 + len2 + 1)) {
-		panic("__strncat_chk object size check failed: dst %p, src %p, (%zu < %zu + %zu + 1)", dst, src, chk_size, len1, len2);
-	}
-	return strncat_impl(dst, src, len);
+char *__strncat_chk(char *restrict dst, const char *restrict src, size_t len,
+                    size_t chk_size) {
+  size_t len1 = strlen_impl(dst);
+  size_t len2 = strnlen_impl(src, len);
+  if (__improbable(chk_size < len1 + len2 + 1)) {
+    panic("__strncat_chk object size check failed: dst %p, src %p, (%zu < %zu "
+          "+ %zu + 1)",
+          dst, src, chk_size, len1, len2);
+  }
+  return strncat_impl(dst, src, len);
 }
 
-char *
-__strcpy_chk(char *restrict dst, const char *restrict src, size_t chk_size)
-{
-	size_t len = strlen_impl(src);
-	if (__improbable(chk_size < len + 1)) {
-		panic("__strcpy_chk object size check failed: dst %p, src %p, (%zu < %zu + 1)", dst, src, chk_size, len);
-	}
-	memcpy_impl(dst, src, len + 1);
-	return dst;
+char *__strcpy_chk(char *restrict dst, const char *restrict src,
+                   size_t chk_size) {
+  size_t len = strlen_impl(src);
+  if (__improbable(chk_size < len + 1)) {
+    panic("__strcpy_chk object size check failed: dst %p, src %p, (%zu < %zu + "
+          "1)",
+          dst, src, chk_size, len);
+  }
+  memcpy_impl(dst, src, len + 1);
+  return dst;
 }
 
-char *
-__strcat_chk(char *restrict dst, const char *restrict src, size_t chk_size)
-{
-	size_t len1 = strlen_impl(dst);
-	size_t len2 = strlen_impl(src);
-	size_t required_len = len1 + len2 + 1;
-	if (__improbable(chk_size < required_len)) {
-		panic("__strcat_chk object size check failed: dst %p, src %p, (%zu < %zu + %zu + 1)", dst, src, chk_size, len1, len2);
-	}
-	memcpy_impl(dst + len1, src, len2 + 1);
-	return dst;
+char *__strcat_chk(char *restrict dst, const char *restrict src,
+                   size_t chk_size) {
+  size_t len1 = strlen_impl(dst);
+  size_t len2 = strlen_impl(src);
+  size_t required_len = len1 + len2 + 1;
+  if (__improbable(chk_size < required_len)) {
+    panic("__strcat_chk object size check failed: dst %p, src %p, (%zu < %zu + "
+          "%zu + 1)",
+          dst, src, chk_size, len1, len2);
+  }
+  memcpy_impl(dst + len1, src, len2 + 1);
+  return dst;
 }

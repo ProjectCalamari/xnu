@@ -28,38 +28,41 @@
 
 #pragma once
 
+#include <kdp/processor_core.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/queue.h>
-#include <kdp/processor_core.h>
 
 struct kdp_output_stage;
 
 struct kdp_core_out_state {
-	STAILQ_HEAD(, kdp_output_stage) kcos_out_stage;
-	struct kdp_output_stage *       kcos_encryption_stage;
-	bool                            kcos_enforce_encryption;
-	uint64_t                        kcos_totalbytes;
-	uint64_t                        kcos_bytes_written;
-	uint64_t                        kcos_lastpercent;
-	kern_return_t                   kcos_error;
+  STAILQ_HEAD(, kdp_output_stage) kcos_out_stage;
+  struct kdp_output_stage *kcos_encryption_stage;
+  bool kcos_enforce_encryption;
+  uint64_t kcos_totalbytes;
+  uint64_t kcos_bytes_written;
+  uint64_t kcos_lastpercent;
+  kern_return_t kcos_error;
 };
 
 struct kdp_output_stage_funcs {
-	kern_return_t (*kosf_reset)(struct kdp_output_stage *stage, const char *corename, kern_coredump_type_t coretype);
-	kern_return_t (*kosf_outproc)(struct kdp_output_stage *stage, unsigned int request,
-	    char *corename, uint64_t length, void *panic_data);
-	void (*kosf_free)(struct kdp_output_stage *stage);
+  kern_return_t (*kosf_reset)(struct kdp_output_stage *stage,
+                              const char *corename,
+                              kern_coredump_type_t coretype);
+  kern_return_t (*kosf_outproc)(struct kdp_output_stage *stage,
+                                unsigned int request, char *corename,
+                                uint64_t length, void *panic_data);
+  void (*kosf_free)(struct kdp_output_stage *stage);
 };
 
 struct kdp_output_stage {
-	STAILQ_ENTRY(kdp_output_stage) kos_next;
-	bool                           kos_initialized;
-	struct kdp_core_out_state *    kos_outstate;
-	struct kdp_output_stage_funcs  kos_funcs;
-	uint64_t                       kos_bytes_written; // bytes written since the last call to reset()
-	bool                           kos_bypass;
-	void *                         kos_data;
-	size_t                         kos_data_size;
+  STAILQ_ENTRY(kdp_output_stage) kos_next;
+  bool kos_initialized;
+  struct kdp_core_out_state *kos_outstate;
+  struct kdp_output_stage_funcs kos_funcs;
+  uint64_t kos_bytes_written; // bytes written since the last call to reset()
+  bool kos_bypass;
+  void *kos_data;
+  size_t kos_data_size;
 };

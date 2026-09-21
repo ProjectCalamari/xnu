@@ -65,17 +65,15 @@
 #include <mach/message.h>
 #include <mach/mig_errors.h>
 
-void
-mig_reply_setup(mach_msg_header_t *request, mach_msg_header_t *reply)
-{
-#define InP     (request)
-#define OutP    ((mig_reply_error_t *) reply)
+void mig_reply_setup(mach_msg_header_t *request, mach_msg_header_t *reply) {
+#define InP (request)
+#define OutP ((mig_reply_error_t *)reply)
 
-	OutP->Head.msgh_bits =
-	    MACH_MSGH_BITS(MACH_MSGH_BITS_LOCAL(InP->msgh_bits), 0);
-	OutP->Head.msgh_size = sizeof(mig_reply_error_t);
-	OutP->Head.msgh_remote_port = InP->msgh_local_port;
-	OutP->Head.msgh_local_port  = MACH_PORT_NULL;
-	OutP->Head.msgh_id = InP->msgh_id + 100;
-	OutP->NDR = NDR_record;
+  OutP->Head.msgh_bits =
+      MACH_MSGH_BITS(MACH_MSGH_BITS_LOCAL(InP->msgh_bits), 0);
+  OutP->Head.msgh_size = sizeof(mig_reply_error_t);
+  OutP->Head.msgh_remote_port = InP->msgh_local_port;
+  OutP->Head.msgh_local_port = MACH_PORT_NULL;
+  OutP->Head.msgh_id = InP->msgh_id + 100;
+  OutP->NDR = NDR_record;
 }

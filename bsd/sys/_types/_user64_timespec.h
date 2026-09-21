@@ -28,10 +28,9 @@
 #ifdef KERNEL
 #ifndef _STRUCT_USER64_TIMESPEC
 #define _STRUCT_USER64_TIMESPEC struct user64_timespec
-_STRUCT_USER64_TIMESPEC
-{
-	user64_time_t   tv_sec;         /* seconds */
-	user64_long_t   tv_nsec;        /* and nanoseconds */
+_STRUCT_USER64_TIMESPEC {
+  user64_time_t tv_sec;  /* seconds */
+  user64_long_t tv_nsec; /* and nanoseconds */
 };
 #endif /* _STRUCT_USER64_TIMESPEC */
 #endif /* KERNEL */

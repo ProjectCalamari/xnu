@@ -24,6 +24,6 @@
 #undef __DARWIN_NON_CANCELABLE
 #define __DARWIN_NON_CANCELABLE 1
 
-#define __SIGSUSPEND    __sigsuspend_nocancel
+#define __SIGSUSPEND __sigsuspend_nocancel
 
 #include "../sigsuspend-base.c"

@@ -46,7 +46,7 @@ extern "C++" {
  */
 #if __has_ptrcheck
 #define os_is_ptr_like(P) (__builtin_classify_type(P) == 5)
-#else  /* __has_ptrcheck */
+#else /* __has_ptrcheck */
 #define os_is_ptr_like(P) (sizeof(P) == sizeof(void *))
 #endif /* __has_ptrcheck */
 
@@ -60,17 +60,16 @@ extern "C++" {
  * @param elem          the pointer whose value will be taken, and which will
  *                      be set to NULL.
  */
-#define os_ptr_load_and_erase(elem) ({                        \
-	_Static_assert(os_is_ptr_like(elem),                      \
-	    "elem isn't pointer sized");                          \
-	__auto_type *__single __eptr = &(elem);                   \
-	__auto_type __elem = *__eptr;                             \
-	_Pragma("clang diagnostic push")                          \
-	_Pragma("clang diagnostic ignored \"-Wold-style-cast\"")  \
-	*__eptr = (__typeof__(__elem))NULL;                       \
-	_Pragma("clang diagnostic pop")                           \
-	__elem;                                                   \
-})
+#define os_ptr_load_and_erase(elem)                                            \
+  ({                                                                           \
+    _Static_assert(os_is_ptr_like(elem), "elem isn't pointer sized");          \
+    __auto_type *__single __eptr = &(elem);                                    \
+    __auto_type __elem = *__eptr;                                              \
+    _Pragma("clang diagnostic push")                                           \
+        _Pragma("clang diagnostic ignored \"-Wold-style-cast\"") *__eptr =     \
+            (__typeof__(__elem))NULL;                                          \
+    _Pragma("clang diagnostic pop") __elem;                                    \
+  })
 
 /*!
  * @macro os_get_pointee_type
@@ -86,8 +85,8 @@ extern "C++" {
  * @param ptr           the pointer we want to get the pointee's type for
  */
 
-#if defined(__cplusplus) && __has_builtin(__remove_pointer) && \
-        __has_builtin(__remove_reference_t)
+#if defined(__cplusplus) && __has_builtin(__remove_pointer) &&                 \
+    __has_builtin(__remove_reference_t)
 /*
  * The reason we're using the compiler builtins is that those are able to
  * properly deal with __ptrauth-qualified pointers, unlike template
@@ -99,14 +98,29 @@ extern "C++" {
  * it also does not implement D150875, and we can therefore safely dereference
  * void pointers.
  */
-#define os_get_pointee_type(ptr)                               \
-	__remove_pointer(__remove_reference_t(__typeof__(ptr)))
+#define os_get_pointee_type(ptr)                                               \
+  __remove_pointer(__remove_reference_t(__typeof__(ptr)))
 #else
-#define os_get_pointee_type(ptr)                                      \
-	_Pragma("clang diagnostic push")                               \
-	_Pragma("clang diagnostic ignored \"-Wvoid-ptr-dereference\"") \
-	__typeof__(*(ptr))                                             \
-	_Pragma("clang diagnostic pop")
+#define os_get_pointee_type(ptr)                                               \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored "                                      \
+              "\"-Wvoid-ptr-dereference\"") __typeof__(*(ptr)) _Pragma(        \
+          "clang diagnostic pop")
+#endif
+
+/*
+ * Apple Clang accepts types as operands to __builtin_xnu_types_compatible
+ * and compares their XNU allocator signatures.  Upstream Clang does not
+ * provide that builtin, but it can still enforce exact type compatibility.
+ */
+#if __has_builtin(__builtin_xnu_types_compatible)
+#define os_xnu_types_compatible(type1, type2)                                  \
+  __builtin_xnu_types_compatible(type1, type2)
+#elif defined(__cplusplus)
+#define os_xnu_types_compatible(type1, type2) __is_same(type1, type2)
+#else
+#define os_xnu_types_compatible(type1, type2)                                  \
+  __builtin_types_compatible_p(type1, type2)
 #endif
 
 #endif /* _OS_ALLOC_UTIL_H */

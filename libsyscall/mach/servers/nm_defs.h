@@ -64,20 +64,20 @@
  * netaddr_t is declared with the kernel files,
  * in <sys/netport.h>.
  */
-#include        <sys/netport.h>
+#include <sys/netport.h>
 
-#ifdef  notdef
-typedef unsigned long   netaddr_t;
-#endif  /* notdef */
+#ifdef notdef
+typedef unsigned long netaddr_t;
+#endif /* notdef */
 
 typedef union {
-	struct {
-		unsigned char ia_net_owner;
-		unsigned char ia_net_node_type;
-		unsigned char ia_host_high;
-		unsigned char ia_host_low;
-	} ia_bytes;
-	netaddr_t ia_netaddr;
+  struct {
+    unsigned char ia_net_owner;
+    unsigned char ia_net_node_type;
+    unsigned char ia_host_high;
+    unsigned char ia_host_low;
+  } ia_bytes;
+  netaddr_t ia_netaddr;
 } ip_addr_t;
 
-#endif  /* _NM_DEFS_ */
+#endif /* _NM_DEFS_ */

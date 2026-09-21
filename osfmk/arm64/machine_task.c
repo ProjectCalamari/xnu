@@ -54,201 +54,190 @@
  * the rights to redistribute these changes.
  */
 
+#include <arm/misc_protos.h>
 #include <kern/task.h>
 #include <kern/thread.h>
-#include <arm/misc_protos.h>
 
 #include <IOKit/IOBSD.h>
 
-
 extern zone_t ads_zone;
 
-kern_return_t
-machine_task_set_state(
-	task_t task,
-	int flavor,
-	thread_state_t state,
-	mach_msg_type_number_t state_count)
-{
-	switch (flavor) {
-	case ARM_DEBUG_STATE:
-	{
-		arm_legacy_debug_state_t *tstate = (arm_legacy_debug_state_t *) state;
-		if (task_has_64Bit_data(task) ||
-		    (state_count != ARM_LEGACY_DEBUG_STATE_COUNT) ||
-		    (!debug_legacy_state_is_valid(tstate))) {
-			return KERN_INVALID_ARGUMENT;
-		}
+kern_return_t machine_task_set_state(task_t task, int flavor,
+                                     thread_state_t state,
+                                     mach_msg_type_number_t state_count) {
+  switch (flavor) {
+  case ARM_DEBUG_STATE: {
+    arm_legacy_debug_state_t *tstate = (arm_legacy_debug_state_t *)state;
+    if (task_has_64Bit_data(task) ||
+        (state_count != ARM_LEGACY_DEBUG_STATE_COUNT) ||
+        (!debug_legacy_state_is_valid(tstate))) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			task->task_debug = zalloc_flags(ads_zone,
-			    Z_WAITOK | Z_NOFAIL);
-		}
+    if (task->task_debug == NULL) {
+      task->task_debug = zalloc_flags(ads_zone, Z_WAITOK | Z_NOFAIL);
+    }
 
-		copy_legacy_debug_state(tstate, (arm_legacy_debug_state_t *) task->task_debug, FALSE); /* FALSE OR TRUE doesn't matter since we are ignoring it for arm */
+    copy_legacy_debug_state(tstate,
+                            (arm_legacy_debug_state_t *)task->task_debug,
+                            FALSE); /* FALSE OR TRUE doesn't matter since we are
+                                       ignoring it for arm */
 
-		return KERN_SUCCESS;
-	}
-	case ARM_DEBUG_STATE32:
-	{
-		arm_debug_state32_t *tstate = (arm_debug_state32_t *) state;
-		if (task_has_64Bit_data(task) ||
-		    (state_count != ARM_DEBUG_STATE32_COUNT) ||
-		    (!debug_state_is_valid32(tstate))) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    return KERN_SUCCESS;
+  }
+  case ARM_DEBUG_STATE32: {
+    arm_debug_state32_t *tstate = (arm_debug_state32_t *)state;
+    if (task_has_64Bit_data(task) || (state_count != ARM_DEBUG_STATE32_COUNT) ||
+        (!debug_state_is_valid32(tstate))) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			task->task_debug = zalloc_flags(ads_zone,
-			    Z_WAITOK | Z_NOFAIL);
-		}
+    if (task->task_debug == NULL) {
+      task->task_debug = zalloc_flags(ads_zone, Z_WAITOK | Z_NOFAIL);
+    }
 
-		copy_debug_state32(tstate, (arm_debug_state32_t *) task->task_debug, FALSE); /* FALSE OR TRUE doesn't matter since we are ignoring it for arm */
+    copy_debug_state32(tstate, (arm_debug_state32_t *)task->task_debug,
+                       FALSE); /* FALSE OR TRUE doesn't matter since we are
+                                  ignoring it for arm */
 
-		return KERN_SUCCESS;
-	}
-	case ARM_DEBUG_STATE64:
-	{
-		arm_debug_state64_t *tstate = (arm_debug_state64_t *) state;
+    return KERN_SUCCESS;
+  }
+  case ARM_DEBUG_STATE64: {
+    arm_debug_state64_t *tstate = (arm_debug_state64_t *)state;
 
-		if ((!task_has_64Bit_data(task)) ||
-		    (state_count != ARM_DEBUG_STATE64_COUNT) ||
-		    (!debug_state_is_valid64(tstate))) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if ((!task_has_64Bit_data(task)) ||
+        (state_count != ARM_DEBUG_STATE64_COUNT) ||
+        (!debug_state_is_valid64(tstate))) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			task->task_debug = zalloc_flags(ads_zone,
-			    Z_WAITOK | Z_NOFAIL);
-		}
+    if (task->task_debug == NULL) {
+      task->task_debug = zalloc_flags(ads_zone, Z_WAITOK | Z_NOFAIL);
+    }
 
-		copy_debug_state64(tstate, (arm_debug_state64_t *) task->task_debug, FALSE); /* FALSE OR TRUE doesn't matter since we are ignoring it for arm */
+    copy_debug_state64(tstate, (arm_debug_state64_t *)task->task_debug,
+                       FALSE); /* FALSE OR TRUE doesn't matter since we are
+                                  ignoring it for arm */
 
-		return KERN_SUCCESS;
-	}
-	case THREAD_STATE_NONE:         /* Using this flavor to clear task_debug */
-	{
-		if (task->task_debug != NULL) {
-			zfree(ads_zone, task->task_debug);
-			task->task_debug = NULL;
+    return KERN_SUCCESS;
+  }
+  case THREAD_STATE_NONE: /* Using this flavor to clear task_debug */
+  {
+    if (task->task_debug != NULL) {
+      zfree(ads_zone, task->task_debug);
+      task->task_debug = NULL;
 
-			return KERN_SUCCESS;
-		}
-		return KERN_FAILURE;
-	}
-	default:
-	{
-		return KERN_INVALID_ARGUMENT;
-	}
-	}
+      return KERN_SUCCESS;
+    }
+    return KERN_FAILURE;
+  }
+  default: {
+    return KERN_INVALID_ARGUMENT;
+  }
+  }
 
-	return KERN_FAILURE;
+  return KERN_FAILURE;
 }
 
-kern_return_t
-machine_task_get_state(task_t task,
-    int flavor,
-    thread_state_t state,
-    mach_msg_type_number_t *state_count)
-{
-	switch (flavor) {
-	case ARM_DEBUG_STATE:
-	{
-		arm_legacy_debug_state_t *tstate = (arm_legacy_debug_state_t *) state;
+kern_return_t machine_task_get_state(task_t task, int flavor,
+                                     thread_state_t state,
+                                     mach_msg_type_number_t *state_count) {
+  switch (flavor) {
+  case ARM_DEBUG_STATE: {
+    arm_legacy_debug_state_t *tstate = (arm_legacy_debug_state_t *)state;
 
-		if (task_has_64Bit_data(task) || (*state_count != ARM_LEGACY_DEBUG_STATE_COUNT)) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if (task_has_64Bit_data(task) ||
+        (*state_count != ARM_LEGACY_DEBUG_STATE_COUNT)) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			bzero(state, sizeof(*tstate));
-		} else {
-			copy_legacy_debug_state((arm_legacy_debug_state_t*) task->task_debug, tstate, FALSE); /* FALSE OR TRUE doesn't matter since we are ignoring it for arm */
-		}
+    if (task->task_debug == NULL) {
+      bzero(state, sizeof(*tstate));
+    } else {
+      copy_legacy_debug_state((arm_legacy_debug_state_t *)task->task_debug,
+                              tstate,
+                              FALSE); /* FALSE OR TRUE doesn't matter since we
+                                         are ignoring it for arm */
+    }
 
-		return KERN_SUCCESS;
-	}
-	case ARM_DEBUG_STATE32:
-	{
-		arm_debug_state32_t *tstate = (arm_debug_state32_t *) state;
+    return KERN_SUCCESS;
+  }
+  case ARM_DEBUG_STATE32: {
+    arm_debug_state32_t *tstate = (arm_debug_state32_t *)state;
 
-		if (task_has_64Bit_data(task) || (*state_count != ARM_DEBUG_STATE32_COUNT)) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if (task_has_64Bit_data(task) ||
+        (*state_count != ARM_DEBUG_STATE32_COUNT)) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			bzero(state, sizeof(*tstate));
-		} else {
-			copy_debug_state32((arm_debug_state32_t*) task->task_debug, tstate, FALSE); /* FALSE OR TRUE doesn't matter since we are ignoring it for arm */
-		}
+    if (task->task_debug == NULL) {
+      bzero(state, sizeof(*tstate));
+    } else {
+      copy_debug_state32((arm_debug_state32_t *)task->task_debug, tstate,
+                         FALSE); /* FALSE OR TRUE doesn't matter since we are
+                                    ignoring it for arm */
+    }
 
-		return KERN_SUCCESS;
-	}
-	case ARM_DEBUG_STATE64:
-	{
-		arm_debug_state64_t *tstate = (arm_debug_state64_t *) state;
+    return KERN_SUCCESS;
+  }
+  case ARM_DEBUG_STATE64: {
+    arm_debug_state64_t *tstate = (arm_debug_state64_t *)state;
 
-		if ((!task_has_64Bit_data(task)) || (*state_count != ARM_DEBUG_STATE64_COUNT)) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if ((!task_has_64Bit_data(task)) ||
+        (*state_count != ARM_DEBUG_STATE64_COUNT)) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			bzero(state, sizeof(*tstate));
-		} else {
-			copy_debug_state64((arm_debug_state64_t*) task->task_debug, tstate, FALSE); /* FALSE OR TRUE doesn't matter since we are ignoring it for arm */
-		}
+    if (task->task_debug == NULL) {
+      bzero(state, sizeof(*tstate));
+    } else {
+      copy_debug_state64((arm_debug_state64_t *)task->task_debug, tstate,
+                         FALSE); /* FALSE OR TRUE doesn't matter since we are
+                                    ignoring it for arm */
+    }
 
-		return KERN_SUCCESS;
-	}
-	default:
-	{
-		return KERN_INVALID_ARGUMENT;
-	}
-	}
-	return KERN_FAILURE;
+    return KERN_SUCCESS;
+  }
+  default: {
+    return KERN_INVALID_ARGUMENT;
+  }
+  }
+  return KERN_FAILURE;
 }
 
-void
-machine_task_terminate(task_t task)
-{
-	if (task) {
-		void *task_debug;
-		task_debug = task->task_debug;
-		if (task_debug != NULL) {
-			task->task_debug = NULL;
-			zfree(ads_zone, task_debug);
-		}
-	}
+void machine_task_terminate(task_t task) {
+  if (task) {
+    void *task_debug;
+    task_debug = task->task_debug;
+    if (task_debug != NULL) {
+      task->task_debug = NULL;
+      zfree(ads_zone, task_debug);
+    }
+  }
 }
 
+kern_return_t machine_thread_inherit_taskwide(thread_t thread,
+                                              task_t parent_task) {
+  kern_return_t kr = KERN_SUCCESS;
 
-kern_return_t
-machine_thread_inherit_taskwide(
-	thread_t thread,
-	task_t parent_task)
-{
-	kern_return_t kr = KERN_SUCCESS;
+  if (parent_task->task_debug) {
+    int flavor;
+    mach_msg_type_number_t count;
 
-	if (parent_task->task_debug) {
-		int flavor;
-		mach_msg_type_number_t count;
+    flavor = task_has_64Bit_data(parent_task) ? ARM_DEBUG_STATE64
+                                              : ARM_DEBUG_STATE32;
+    count = task_has_64Bit_data(parent_task) ? ARM_DEBUG_STATE64_COUNT
+                                             : ARM_DEBUG_STATE32_COUNT;
 
-		flavor = task_has_64Bit_data(parent_task) ? ARM_DEBUG_STATE64 : ARM_DEBUG_STATE32;
-		count = task_has_64Bit_data(parent_task) ? ARM_DEBUG_STATE64_COUNT : ARM_DEBUG_STATE32_COUNT;
+    kr = machine_thread_set_state(thread, flavor, parent_task->task_debug,
+                                  count);
+  }
 
-		kr = machine_thread_set_state(thread, flavor, parent_task->task_debug, count);
-	}
-
-	return kr;
+  return kr;
 }
 
-
-void
-machine_task_init(__unused task_t new_task,
-    __unused task_t parent_task,
-    __unused boolean_t memory_inherit)
-{
-}
+void machine_task_init(__unused task_t new_task, __unused task_t parent_task,
+                       __unused boolean_t memory_inherit) {}
 
 /**
  * Converts an OS version maj.min.patch into the format embedded in code
@@ -259,10 +248,9 @@ machine_task_init(__unused task_t new_task,
  * @param patch_version patch version number (z)
  * @return the version number encoded as xxxx.yy.zz
  */
-static inline uint32_t
-sdk_version(uint16_t maj_version, uint8_t min_version, uint8_t patch_version)
-{
-	return (maj_version << 16) | (min_version << 8) | (patch_version << 0);
+static inline uint32_t sdk_version(uint16_t maj_version, uint8_t min_version,
+                                   uint8_t patch_version) {
+  return (maj_version << 16) | (min_version << 8) | (patch_version << 0);
 }
 
 /**
@@ -272,27 +260,26 @@ sdk_version(uint16_t maj_version, uint8_t min_version, uint8_t patch_version)
  * @param platform one of PLATFORM_*
  * @param sdk the SDK version embedded in the code signature
  */
-static bool
-platform_and_sdk_fall_2024_os_or_later(uint32_t platform, uint32_t sdk)
-{
-	switch (platform) {
-	case PLATFORM_MACOS:
-		return sdk >= sdk_version(15, 0, 0);
-	case PLATFORM_IOS:
-	case PLATFORM_IOSSIMULATOR:
-	case PLATFORM_MACCATALYST:
-		return sdk >= sdk_version(18, 0, 0);
-	case PLATFORM_TVOS:
-	case PLATFORM_TVOSSIMULATOR:
-		return sdk >= sdk_version(18, 0, 0);
-	case PLATFORM_WATCHOS:
-	case PLATFORM_WATCHOSSIMULATOR:
-		return sdk >= sdk_version(11, 0, 0);
-	case PLATFORM_DRIVERKIT:
-		return sdk >= sdk_version(24, 0, 0);
-	default:
-		return true;
-	}
+static bool platform_and_sdk_fall_2024_os_or_later(uint32_t platform,
+                                                   uint32_t sdk) {
+  switch (platform) {
+  case PLATFORM_MACOS:
+    return sdk >= sdk_version(15, 0, 0);
+  case PLATFORM_IOS:
+  case PLATFORM_IOSSIMULATOR:
+  case PLATFORM_MACCATALYST:
+    return sdk >= sdk_version(18, 0, 0);
+  case PLATFORM_TVOS:
+  case PLATFORM_TVOSSIMULATOR:
+    return sdk >= sdk_version(18, 0, 0);
+  case PLATFORM_WATCHOS:
+  case PLATFORM_WATCHOSSIMULATOR:
+    return sdk >= sdk_version(11, 0, 0);
+  case PLATFORM_DRIVERKIT:
+    return sdk >= sdk_version(24, 0, 0);
+  default:
+    return true;
+  }
 }
 
 /*
@@ -305,61 +292,58 @@ platform_and_sdk_fall_2024_os_or_later(uint32_t platform, uint32_t sdk)
  * On error, this function should point error_msg to a static error
  * string (the caller will not free it).
  */
-kern_return_t
-machine_task_process_signature(
-	task_t task,
-	uint32_t const __unused platform,
-	uint32_t const __unused sdk,
-	char const ** __unused error_msg)
-{
-	assert(error_msg != NULL);
+kern_return_t machine_task_process_signature(task_t task,
+                                             uint32_t const __unused platform,
+                                             uint32_t const __unused sdk,
+                                             char const **__unused error_msg) {
+  assert(error_msg != NULL);
 
-	kern_return_t kr = KERN_SUCCESS;
+  kern_return_t kr = KERN_SUCCESS;
 
-	bool const x18_entitled =
-	    IOTaskHasEntitlement(task, "com.apple.private.custom-x18-abi") ||
-	    IOTaskHasEntitlement(task, "com.apple.private.uexc");
+  bool const x18_entitled =
+      IOTaskHasEntitlement(task, "com.apple.private.custom-x18-abi") ||
+      IOTaskHasEntitlement(task, "com.apple.private.uexc");
 
 #if !__ARM_KERNEL_PROTECT__
-	task->preserve_x18 = x18_entitled;
+  task->preserve_x18 = x18_entitled;
 
-	/*
-	 * Temporary override for tasks before macOS 13.
-	 * Those were allowed to use x18 for their purposes on Apple Silicon.
-	 */
+  /*
+   * Temporary override for tasks before macOS 13.
+   * Those were allowed to use x18 for their purposes on Apple Silicon.
+   */
 
-	if (platform == PLATFORM_MACOS && sdk < sdk_version(13, 0, 0)) {
-		task->preserve_x18 = true;
-	}
-#else /* !__ARM_KERNEL_PROTECT__ */
-	if (x18_entitled) {
-		/*
-		 * This *will* make you sad, because it means you are
-		 * trying to use x18 on a device where that's just not
-		 * possible. As these are private entitlements, we can
-		 * prevent confusing damage now.
-		 */
+  if (platform == PLATFORM_MACOS && sdk < sdk_version(13, 0, 0)) {
+    task->preserve_x18 = true;
+  }
+#else  /* !__ARM_KERNEL_PROTECT__ */
+  if (x18_entitled) {
+    /*
+     * This *will* make you sad, because it means you are
+     * trying to use x18 on a device where that's just not
+     * possible. As these are private entitlements, we can
+     * prevent confusing damage now.
+     */
 
-		*error_msg = "process has entitlement that indicates custom x18 ABI usage, not available on this device";
-		kr = KERN_FAILURE;
-	}
+    *error_msg = "process has entitlement that indicates custom x18 ABI usage, "
+                 "not available on this device";
+    kr = KERN_FAILURE;
+  }
 #endif /* !__ARM_KERNEL_PROTECT__ */
 
-	/* The task defaults to enable ARMv8.7 extensions if the SDK is recent. */
-	bool uses_1ghz_timebase = platform_and_sdk_fall_2024_os_or_later(platform, sdk);
+  /* The task defaults to enable ARMv8.7 extensions if the SDK is recent. */
+  bool uses_1ghz_timebase =
+      platform_and_sdk_fall_2024_os_or_later(platform, sdk);
 
 #if CONFIG_ROSETTA
-	/* Rosetta tasks expect Apple timebase. */
-	uses_1ghz_timebase = uses_1ghz_timebase && (!task_is_translated(task));
+  /* Rosetta tasks expect Apple timebase. */
+  uses_1ghz_timebase = uses_1ghz_timebase && (!task_is_translated(task));
 #endif /* CONFIG_ROSETTA */
 
-	task->uses_1ghz_timebase = uses_1ghz_timebase;
+  task->uses_1ghz_timebase = uses_1ghz_timebase;
 
-	return kr;
+  return kr;
 }
 
-bool
-ml_task_uses_1ghz_timebase(const task_t task)
-{
-	return task->uses_1ghz_timebase;
+bool ml_task_uses_1ghz_timebase(const task_t task) {
+  return task->uses_1ghz_timebase;
 }

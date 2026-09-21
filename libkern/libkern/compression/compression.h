@@ -29,51 +29,53 @@
 #ifndef __COMPRESSION_H
 #define __COMPRESSION_H
 
-#include <stdint.h>
-#include <stddef.h>
 #include <os/base.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /*!
  *  @enum       compression_algorithm_t
  *  @abstract   Tag used to select a compression algorithm.
- *  @discussion Further details on the supported formats, and their implementation:
+ *  @discussion Further details on the supported formats, and their
+ * implementation:
  *
- *              - LZ4 is an extremely high-performance compressor.  The open source version
- *              is already one of the fastest compressors of which we are aware, and we
- *              have optimized it still further in our implementation.  The encoded format
- *              we produce and consume is compatible with the open source version, except
- *              that we add a very simple frame to the raw stream to allow some additional
- *              validation and functionality.
+ *              - LZ4 is an extremely high-performance compressor.  The open
+ * source version is already one of the fastest compressors of which we are
+ * aware, and we have optimized it still further in our implementation.  The
+ * encoded format we produce and consume is compatible with the open source
+ * version, except that we add a very simple frame to the raw stream to allow
+ * some additional validation and functionality.
  *
- *              The frame is documented here so that you can easily wrap another LZ4
- *              encoder/decoder to produce/consume the same data stream if necessary.  An
- *              LZ4 encoded buffer is a sequence of blocks, each of which begins with a
- *              header.  There are three possible headers:
+ *              The frame is documented here so that you can easily wrap another
+ * LZ4 encoder/decoder to produce/consume the same data stream if necessary.  An
+ *              LZ4 encoded buffer is a sequence of blocks, each of which begins
+ * with a header.  There are three possible headers:
  *
- *                   a "compressed block header" is (hex) 62 76 34 31, followed by the
- *                   size in bytes of the decoded (plaintext) data represented by the
- *                   block and the size (in bytes) of the encoded data stored in the
- *                   block.  Both size fields are stored as (possibly unaligned) 32-bit
- *                   little-endian values.  The compressed block header is followed
- *                   immediately by the actual lz4-encoded data stream.
+ *                   a "compressed block header" is (hex) 62 76 34 31, followed
+ * by the size in bytes of the decoded (plaintext) data represented by the block
+ * and the size (in bytes) of the encoded data stored in the block.  Both size
+ * fields are stored as (possibly unaligned) 32-bit little-endian values.  The
+ * compressed block header is followed immediately by the actual lz4-encoded
+ * data stream.
  *
- *                   an "uncompressed block header" is (hex) 62 76 34 2d, followed by the
- *                   size of the data stored in the uncompressed block as a (possibly
- *                   unaligned) 32-bit little-endian value.  The uncompressed block header
- *                   is followed immediately by the uncompressed data buffer of the
+ *                   an "uncompressed block header" is (hex) 62 76 34 2d,
+ * followed by the size of the data stored in the uncompressed block as a
+ * (possibly unaligned) 32-bit little-endian value.  The uncompressed block
+ * header is followed immediately by the uncompressed data buffer of the
  *                   specified size.
  *
- *                   an "end of stream header" is (hex) 62 76 34 24, and marks the end
- *                   of the lz4 frame.  No further data may be written or read beyond
- *                   this header.
+ *                   an "end of stream header" is (hex) 62 76 34 24, and marks
+ * the end of the lz4 frame.  No further data may be written or read beyond this
+ * header.
  *
- *				- SMB (Server Message Block) is a protocol for sharing files, printers
- *              and other abstractions over a computer network. SMB supports compression
- *              to speed up transfers. The following SMB compression algorithms are
- *              supported:
+ *				- SMB (Server Message Block) is a protocol for
+ * sharing files, printers and other abstractions over a computer network. SMB
+ * supports compression to speed up transfers. The following SMB compression
+ * algorithms are supported:
  *
  *              ---------------|---------|---------|-------|---------------------------
- *                Algorithm    | Encoder | Decoder | Ratio | Encoder / decoder memory
+ *                Algorithm    | Encoder | Decoder | Ratio | Encoder / decoder
+ * memory
  *              ---------------|---------|---------|-------|---------------------------
  *                LZ77         | fastest | fastest | 2.3x  |   66 KB / 0 KB
  *                LZ77+Huffman | slowest | slowest | 2.8x  |  172 KB / 6 KB
@@ -81,25 +83,27 @@
  *              ---------------|---------|---------|-------|---------------------------
  */
 
-typedef enum{
-	COMPRESSION_LZ4       = 0x100, // LZ4 + simple frame format (buffer + stream API)
-	COMPRESSION_LZ4_RAW   = 0x101, // LZ4 (buffer API only)
-	COMPRESSION_SMB_LZNT1 = 0xC00, // SMB LZNT1 (buffer API only)
-	COMPRESSION_SMB_LZ77  = 0xC10, // SMB LZ77 (buffer API only)
-	COMPRESSION_SMB_LZ77H = 0xC20, // SMB LZ77-HUFF (buffer API only)
+typedef enum {
+  COMPRESSION_LZ4 = 0x100, // LZ4 + simple frame format (buffer + stream API)
+  COMPRESSION_LZ4_RAW = 0x101,   // LZ4 (buffer API only)
+  COMPRESSION_SMB_LZNT1 = 0xC00, // SMB LZNT1 (buffer API only)
+  COMPRESSION_SMB_LZ77 = 0xC10,  // SMB LZ77 (buffer API only)
+  COMPRESSION_SMB_LZ77H = 0xC20, // SMB LZ77-HUFF (buffer API only)
 } compression_algorithm_t;
 
 // =================================================================================================================
 #pragma mark - Buffer API
 
 /*!
- *  @abstract        Get the minimum scratch buffer size for the specified compression algorithm encoder.
- *  @param algorithm The compression algorithm for which the scratch space will be used.
- *  @return          The number of bytes to allocate as a scratch buffer for use to encode with the specified
- *                   compression algorithm. This number may be 0.
+ *  @abstract        Get the minimum scratch buffer size for the specified
+ * compression algorithm encoder.
+ *  @param algorithm The compression algorithm for which the scratch space will
+ * be used.
+ *  @return          The number of bytes to allocate as a scratch buffer for use
+ * to encode with the specified compression algorithm. This number may be 0.
  */
-typedef size_t (*compression_encode_scratch_buffer_size_proc)
-(compression_algorithm_t algorithm);
+typedef size_t (*compression_encode_scratch_buffer_size_proc)(
+    compression_algorithm_t algorithm);
 
 /*!
  *  @abstract             Compresses a buffer.
@@ -107,29 +111,32 @@ typedef size_t (*compression_encode_scratch_buffer_size_proc)
  *  @param dst_size       Size of the destination buffer in bytes.
  *  @param src_buffer     Pointer to the first byte of the source buffer.
  *  @param src_size       Size of the source buffer in bytes.
- *  @param scratch_buffer A pointer to scratch space that the routine can use for temporary
- *                        storage during compression.  To determine how much space to allocate for this
- *                        scratch space, call compression_encode_scratch_buffer_size(algorithm).  Scratch space
- *                        may be re-used across multiple (serial) calls to _encode and _decode.
- *                        Can be NULL, if an algorithm does not need any scratch space.
+ *  @param scratch_buffer A pointer to scratch space that the routine can use
+ * for temporary storage during compression.  To determine how much space to
+ * allocate for this scratch space, call
+ * compression_encode_scratch_buffer_size(algorithm).  Scratch space may be
+ * re-used across multiple (serial) calls to _encode and _decode. Can be NULL,
+ * if an algorithm does not need any scratch space.
  *  @param algorithm      The compression algorithm to be used.
- *  @return               The number of bytes written to the destination buffer if the input is
- *                        is successfully compressed.  If the entire input cannot be compressed to fit
- *                        into the provided destination buffer, or an error occurs, 0 is returned.
+ *  @return               The number of bytes written to the destination buffer
+ * if the input is is successfully compressed.  If the entire input cannot be
+ * compressed to fit into the provided destination buffer, or an error occurs, 0
+ * is returned.
  */
-typedef size_t (*compression_encode_buffer_proc)
-(uint8_t* dst_buffer, size_t dst_size,
-    const uint8_t* src_buffer, size_t src_size,
-    void* scratch_buffer, compression_algorithm_t algorithm);
+typedef size_t (*compression_encode_buffer_proc)(
+    uint8_t *dst_buffer, size_t dst_size, const uint8_t *src_buffer,
+    size_t src_size, void *scratch_buffer, compression_algorithm_t algorithm);
 
 /*!
- *  @abstract        Get the minimum scratch buffer size for the specified compression algorithm decoder.
- *  @param algorithm The compression algorithm for which the scratch space will be used.
- *  @return          The number of bytes to allocate as a scratch buffer for use to decode with the specified
- *                   compression algorithm. This number may be 0.
+ *  @abstract        Get the minimum scratch buffer size for the specified
+ * compression algorithm decoder.
+ *  @param algorithm The compression algorithm for which the scratch space will
+ * be used.
+ *  @return          The number of bytes to allocate as a scratch buffer for use
+ * to decode with the specified compression algorithm. This number may be 0.
  */
-typedef size_t (*compression_decode_scratch_buffer_size_proc)
-(compression_algorithm_t algorithm);
+typedef size_t (*compression_decode_scratch_buffer_size_proc)(
+    compression_algorithm_t algorithm);
 
 /*!
  *  @abstract             Decompresses a buffer.
@@ -137,62 +144,62 @@ typedef size_t (*compression_decode_scratch_buffer_size_proc)
  *  @param dst_size       Size of the destination buffer in bytes.
  *  @param src_buffer     Pointer to the first byte of the source buffer.
  *  @param src_size       Size of the source buffer in bytes.
- *  @param scratch_buffer A pointer to scratch space that the routine can use for temporary
- *                        storage during decompression.  To determine how much space to allocate for this
- *                        scratch space, call compression_decode_scratch_buffer_size(algorithm).  Scratch space
- *                        may be re-used across multiple (serial) calls to _encode and _decode.
- *                        Can be NULL, if an algorithm does not need any scratch space.
+ *  @param scratch_buffer A pointer to scratch space that the routine can use
+ * for temporary storage during decompression.  To determine how much space to
+ * allocate for this scratch space, call
+ * compression_decode_scratch_buffer_size(algorithm).  Scratch space may be
+ * re-used across multiple (serial) calls to _encode and _decode. Can be NULL,
+ * if an algorithm does not need any scratch space.
  *  @param algorithm      The compression algorithm to be used.
- *  @return               The number of bytes written to the destination buffer if the input is
- *                        is successfully decompressed.  If there is not enough space in the destination
- *                        buffer to hold the entire expanded output, only the first dst_size bytes will
- *                        be written to the buffer and dst_size is returned.   Note that this behavior
- *                        differs from that of compression_encode.  If an error occurs, 0 is returned.
- *                        SMB algorithms do not support truncated decodes.
- *                        SMB algorithms expect src_size to be exactly the size of the compressed input.
+ *  @return               The number of bytes written to the destination buffer
+ * if the input is is successfully decompressed.  If there is not enough space
+ * in the destination buffer to hold the entire expanded output, only the first
+ * dst_size bytes will be written to the buffer and dst_size is returned.   Note
+ * that this behavior differs from that of compression_encode.  If an error
+ * occurs, 0 is returned. SMB algorithms do not support truncated decodes. SMB
+ * algorithms expect src_size to be exactly the size of the compressed input.
  */
-typedef size_t (*compression_decode_buffer_proc)
-(uint8_t* dst_buffer, size_t dst_size,
-    const uint8_t* src_buffer, size_t src_size,
-    void* scratch_buffer, compression_algorithm_t algorithm);
+typedef size_t (*compression_decode_buffer_proc)(
+    uint8_t *dst_buffer, size_t dst_size, const uint8_t *src_buffer,
+    size_t src_size, void *scratch_buffer, compression_algorithm_t algorithm);
 
 // =================================================================================================================
 #pragma mark - Stream API
 
 /* Return values for the compression_stream functions. */
-typedef enum{
-	COMPRESSION_STATUS_OK    =  0,
-	COMPRESSION_STATUS_ERROR = -1,
-	COMPRESSION_STATUS_END   =  1,
+typedef enum {
+  COMPRESSION_STATUS_OK = 0,
+  COMPRESSION_STATUS_ERROR = -1,
+  COMPRESSION_STATUS_END = 1,
 } compression_status_t;
 
-typedef enum{
-	COMPRESSION_STREAM_ENCODE = 0, /* Encode to a compressed stream */
-	COMPRESSION_STREAM_DECODE = 1, /* Decode from a compressed stream */
+typedef enum {
+  COMPRESSION_STREAM_ENCODE = 0, /* Encode to a compressed stream */
+  COMPRESSION_STREAM_DECODE = 1, /* Decode from a compressed stream */
 } compression_stream_operation_t;
 
 /* Bits for the flags in compression_stream_process. */
-typedef enum{
-	COMPRESSION_STREAM_FINALIZE = 0x0001,
+typedef enum {
+  COMPRESSION_STREAM_FINALIZE = 0x0001,
 } compression_stream_flags_t;
 
-typedef struct{
-	/*
-	 *  You are partially responsible for management of the dst_ptr,
-	 *  dst_size, src_ptr, and src_size fields.  You must initialize
-	 *  them to describe valid memory buffers before making a call to
-	 *  compression_stream_process. compression_stream_process will update
-	 *  these fields before returning to account for the bytes of the src
-	 *  and dst buffers that were successfully processed.
-	 */
-	uint8_t*       dst_ptr;
-	size_t         dst_size;
-	const uint8_t* src_ptr;
-	size_t         src_size;
+typedef struct {
+  /*
+   *  You are partially responsible for management of the dst_ptr,
+   *  dst_size, src_ptr, and src_size fields.  You must initialize
+   *  them to describe valid memory buffers before making a call to
+   *  compression_stream_process. compression_stream_process will update
+   *  these fields before returning to account for the bytes of the src
+   *  and dst buffers that were successfully processed.
+   */
+  uint8_t *dst_ptr;
+  size_t dst_size;
+  const uint8_t *src_ptr;
+  size_t src_size;
 
-	/* The stream state object is managed by the compression_stream functions.
-	 *  You should not ever directly access this field. */
-	void*          state;
+  /* The stream state object is managed by the compression_stream functions.
+   *  You should not ever directly access this field. */
+  void *state;
 } compression_stream_t;
 
 /*  There are two critical features of the stream interfaces:
@@ -202,7 +209,8 @@ typedef struct{
  *
  *     - When resuming, the new source and destination blocks need not be
  *       contiguous with earlier blocks in the stream; all necessary state
- *       to resume compression is represented by the compression_stream_t object.
+ *       to resume compression is represented by the compression_stream_t
+ * object.
  *
  *   These two properties enable tasks like:
  *
@@ -241,111 +249,123 @@ typedef struct{
  *  @abstract         Initialize a compression_stream for
  *                    encoding (if operation is COMPRESSION_STREAM_ENCODE) or
  *                    decoding (if operation is COMPRESSION_STREAM_DECODE).
- *  @param stream     Pointer to the compression_stream object to be initialized.
- *  @param operation  Specifies whether the stream is to initialized for encoding or decoding.
- *                    Must be either COMPRESSION_STREAM_ENCODE or COMPRESSION_STREAM_DECODE.
- *  @param algorithm  The compression algorithm to be used.  Must be one of the values specified
- *                    in the compression_algorithm_t enum.
- *  @discussion       This call initializes all fields of the compression_stream to zero, except for state;
- *                    this routine allocates storage to capture the internal state of the encoding or decoding
- *                    process so that it may be resumed. This storage is tracked via the state parameter.
- *  @return           COMPRESSION_STATUS_OK if the stream was successfully initialized, or
- *                    COMPRESSION_STATUS_ERROR if an error occurred.
+ *  @param stream     Pointer to the compression_stream object to be
+ * initialized.
+ *  @param operation  Specifies whether the stream is to initialized for
+ * encoding or decoding. Must be either COMPRESSION_STREAM_ENCODE or
+ * COMPRESSION_STREAM_DECODE.
+ *  @param algorithm  The compression algorithm to be used.  Must be one of the
+ * values specified in the compression_algorithm_t enum.
+ *  @discussion       This call initializes all fields of the compression_stream
+ * to zero, except for state; this routine allocates storage to capture the
+ * internal state of the encoding or decoding process so that it may be resumed.
+ * This storage is tracked via the state parameter.
+ *  @return           COMPRESSION_STATUS_OK if the stream was successfully
+ * initialized, or COMPRESSION_STATUS_ERROR if an error occurred.
  */
-typedef compression_status_t (*compression_stream_init_proc)
-(compression_stream_t* stream,
-    compression_stream_operation_t operation,
+typedef compression_status_t (*compression_stream_init_proc)(
+    compression_stream_t *stream, compression_stream_operation_t operation,
     compression_algorithm_t algorithm);
 
 /*!
- *  @abstract Functionally equivalent to compression_stream_destroy then compression_stream_init, but keeps the allocated state buffer.
+ *  @abstract Functionally equivalent to compression_stream_destroy then
+ * compression_stream_init, but keeps the allocated state buffer.
  *  @return   Status of the virtual compression_stream_init call
  */
-typedef compression_status_t (*compression_stream_reinit_proc)
-(compression_stream_t* stream,
-    compression_stream_operation_t operation,
+typedef compression_status_t (*compression_stream_reinit_proc)(
+    compression_stream_t *stream, compression_stream_operation_t operation,
     compression_algorithm_t algorithm);
 
 /*!
- *  @abstract   Cleans up state information stored in a compression_stream object.
- *  @discussion Use this to free memory allocated by compression_stream_init.  After calling
- *              this function, you will need to re-init the compression_stream object before
- *              using it again.
+ *  @abstract   Cleans up state information stored in a compression_stream
+ * object.
+ *  @discussion Use this to free memory allocated by compression_stream_init.
+ * After calling this function, you will need to re-init the compression_stream
+ * object before using it again.
  */
-typedef compression_status_t (*compression_stream_destroy_proc)
-(compression_stream_t* stream);
+typedef compression_status_t (*compression_stream_destroy_proc)(
+    compression_stream_t *stream);
 
 /*!
  *  @abstract     Encodes or decodes a block of the stream.
- *  @param stream Pointer to the compression_stream object to be operated on.  Before calling
- *                this function, you must initialize the stream object by calling
- *                compression_stream_init, and setting the user-managed fields to describe your
- *                input and output buffers. When compression_stream_process returns, those
- *                fields will have been updated to account for the bytes that were successfully
- *                encoded or decoded in the course of its operation.
+ *  @param stream Pointer to the compression_stream object to be operated on.
+ * Before calling this function, you must initialize the stream object by
+ * calling compression_stream_init, and setting the user-managed fields to
+ * describe your input and output buffers. When compression_stream_process
+ * returns, those fields will have been updated to account for the bytes that
+ * were successfully encoded or decoded in the course of its operation.
  *  @param flags  Binary OR of zero or more compression_stream_flags:
  *                COMPRESSION_STREAM_FINALIZE
- *                  If set, indicates that no further input will be added to the stream, and
- *                  thus that the end of stream should be indicated if the input block is
- *                  completely processed.
- *  @discussion   Processes the buffers described by the stream object until the source buffer
- *                becomes empty, or the destination buffer becomes full, or the entire stream is
- *                processed, or an error is encountered.
- *  @return       When encoding COMPRESSION_STATUS_END is returned only if all input has been
- *                read from the source, all output (including an end-of-stream marker) has been
- *                written to the destination, and COMPRESSION_STREAM_FINALIZE bit is set.
+ *                  If set, indicates that no further input will be added to the
+ * stream, and thus that the end of stream should be indicated if the input
+ * block is completely processed.
+ *  @discussion   Processes the buffers described by the stream object until the
+ * source buffer becomes empty, or the destination buffer becomes full, or the
+ * entire stream is processed, or an error is encountered.
+ *  @return       When encoding COMPRESSION_STATUS_END is returned only if all
+ * input has been read from the source, all output (including an end-of-stream
+ * marker) has been written to the destination, and COMPRESSION_STREAM_FINALIZE
+ * bit is set.
  *
- *                When decoding COMPRESSION_STATUS_END is returned only if all input (including
- *                and end-of-stream marker) has been read from the source, and all output has
- *                been written to the destination.
+ *                When decoding COMPRESSION_STATUS_END is returned only if all
+ * input (including and end-of-stream marker) has been read from the source, and
+ * all output has been written to the destination.
  *
- *                COMPRESSION_STATUS_OK is returned if all data in the source buffer is consumed,
- *                or all space in the destination buffer is used. In that case, further calls
- *                to compression_stream_process are expected, providing more data in the source
- *                buffer, or more space in the destination buffer.
+ *                COMPRESSION_STATUS_OK is returned if all data in the source
+ * buffer is consumed, or all space in the destination buffer is used. In that
+ * case, further calls to compression_stream_process are expected, providing
+ * more data in the source buffer, or more space in the destination buffer.
  *
- *                COMPRESSION_STATUS_ERROR is returned if an error is encountered (if the
- *                encoded data is corrupted, for example).
+ *                COMPRESSION_STATUS_ERROR is returned if an error is
+ * encountered (if the encoded data is corrupted, for example).
  *
- *                When decoding a valid stream, the end of stream will be detected from the contents
- *                of the input, and COMPRESSION_STATUS_END will be returned in that case, even if
- *                COMPRESSION_STREAM_FINALIZE is not set, or more input is provided.
+ *                When decoding a valid stream, the end of stream will be
+ * detected from the contents of the input, and COMPRESSION_STATUS_END will be
+ * returned in that case, even if COMPRESSION_STREAM_FINALIZE is not set, or
+ * more input is provided.
  *
- *                When decoding a corrupted or truncated stream, if COMPRESSION_STREAM_FINALIZE is not
- *                set to notify the decoder that no more input is coming, the decoder will not consume
- *                or produce any data, and return COMPRESSION_STATUS_OK.  In that case, the client code
- *                will call compression_stream_process again with the same state, entering an infinite loop.
- *                To avoid this, it is strongly advised to always set COMPRESSION_STREAM_FINALIZE when
- *                no more input is expected, for both encoding and decoding.
+ *                When decoding a corrupted or truncated stream, if
+ * COMPRESSION_STREAM_FINALIZE is not set to notify the decoder that no more
+ * input is coming, the decoder will not consume or produce any data, and return
+ * COMPRESSION_STATUS_OK.  In that case, the client code will call
+ * compression_stream_process again with the same state, entering an infinite
+ * loop. To avoid this, it is strongly advised to always set
+ * COMPRESSION_STREAM_FINALIZE when no more input is expected, for both encoding
+ * and decoding.
  */
-typedef compression_status_t (*compression_stream_process_proc)
-(compression_stream_t* stream, int flags);
+typedef compression_status_t (*compression_stream_process_proc)(
+    compression_stream_t *stream, int flags);
 
 /*!
- *  @abstract   Identify the compression algorithm for the first 4 bytes of compressed data.
+ *  @abstract   Identify the compression algorithm for the first 4 bytes of
+ * compressed data.
  *  @param data Points to 4 bytes at the beginning of the compressed data.
- *  @discussion This call identifies the compression algorithm used to generate the given data bytes.
- *  @return     A valid compression_algorithm_t on success, or -1 if the data bytes do not correspond to any supported algorithm.
+ *  @discussion This call identifies the compression algorithm used to generate
+ * the given data bytes.
+ *  @return     A valid compression_algorithm_t on success, or -1 if the data
+ * bytes do not correspond to any supported algorithm.
  */
-typedef int (*compression_stream_identify_algorithm_proc)
-(const uint8_t* data);
+typedef int (*compression_stream_identify_algorithm_proc)(const uint8_t *data);
 
 // =================================================================================================================
 #pragma mark - Kernel interface
 
-typedef struct{
-	// Stream API
-	compression_stream_init_proc                compression_stream_init;
-	compression_stream_reinit_proc              compression_stream_reinit;
-	compression_stream_destroy_proc             compression_stream_destroy;
-	compression_stream_process_proc             compression_stream_process;
-	compression_stream_identify_algorithm_proc  compression_stream_identify_algorithm;
+typedef struct {
+  // Stream API
+  compression_stream_init_proc compression_stream_init;
+  compression_stream_reinit_proc compression_stream_reinit;
+  compression_stream_destroy_proc compression_stream_destroy;
+  compression_stream_process_proc compression_stream_process;
+  compression_stream_identify_algorithm_proc
+      compression_stream_identify_algorithm;
 
-	// Buffer API
-	compression_encode_scratch_buffer_size_proc compression_encode_scratch_buffer_size;
-	compression_encode_buffer_proc              compression_encode_buffer;
-	compression_decode_scratch_buffer_size_proc compression_decode_scratch_buffer_size;
-	compression_decode_buffer_proc              compression_decode_buffer;
+  // Buffer API
+  compression_encode_scratch_buffer_size_proc
+      compression_encode_scratch_buffer_size;
+  compression_encode_buffer_proc compression_encode_buffer;
+  compression_decode_scratch_buffer_size_proc
+      compression_decode_scratch_buffer_size;
+  compression_decode_buffer_proc compression_decode_buffer;
 } compression_ki_t;
 
 __BEGIN_DECLS
@@ -353,21 +373,24 @@ __BEGIN_DECLS
 /**
  * @abstract The compression interface that was registered.
  */
-extern const compression_ki_t * compression_ki_ptr;
+extern const compression_ki_t *compression_ki_ptr;
 
 /**
- * @abstract   Registers the compression kext interface for use within the kernel proper.
+ * @abstract   Registers the compression kext interface for use within the
+ * kernel proper.
  * @param ki   The interface to register.
- * @discussion This routine may only be called once and must be called before late-const has been applied to kernel memory.
+ * @discussion This routine may only be called once and must be called before
+ * late-const has been applied to kernel memory.
  */
-OS_EXPORT OS_NONNULL1
-void compression_interface_register(const compression_ki_t *ki);
+OS_EXPORT OS_NONNULL1 void
+compression_interface_register(const compression_ki_t *ki);
 
 #if PRIVATE
 
 typedef void (*registration_callback_t)(void);
 
-void compression_interface_set_registration_callback(registration_callback_t callback);
+void compression_interface_set_registration_callback(
+    registration_callback_t callback);
 
 #endif /* PRIVATE */
 

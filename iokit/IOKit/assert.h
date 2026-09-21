@@ -37,7 +37,7 @@ extern "C" {
 #ifdef KERNEL
 #if IOASSERT
 #undef MACH_ASSERT
-#define MACH_ASSERT     1
+#define MACH_ASSERT 1
 #endif
 #endif
 #include <kern/assert.h>
@@ -46,10 +46,9 @@ extern "C" {
 }
 #endif
 
-
-#if(!defined(OSCompileAssert))
-#       define OSCompileAssert( TEST )     \
-	extern int OSCompileAssertFailed[ ( TEST ) ? 1 : -1 ] __unused;
+#if (!defined(OSCompileAssert))
+#define OSCompileAssert(TEST)                                                  \
+  extern int OSCompileAssertFailed[(TEST) ? 1 : -1] __unused;
 #endif
 
-#endif  /* _IO_ASSERT_H_ */
+#endif /* _IO_ASSERT_H_ */

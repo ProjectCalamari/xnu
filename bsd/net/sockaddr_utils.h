@@ -196,16 +196,15 @@
 #undef __NET_SOCKADDR_UTILS_H_INCLUDED
 
 #include <net/if_dl.h>
-#include <sys/un.h>
 #include <net/ndrv.h>
-#include <netinet/in_private.h>
-#include <netinet/if_ether.h>
 #include <net/necp.h>
+#include <netinet/if_ether.h>
+#include <netinet/in_private.h>
+#include <sys/un.h>
 
 /*
  * Building blocks for the cast operations
  */
-
 
 /*
  * Generic static cast for sockaddr subtypes.
@@ -225,14 +224,15 @@
  *
  * NOTE: The static cast preserves the CV qualifiers.
  */
-#define __SA_UTILS_STATIC_CAST(EXPR, DST_TYPENAME, ...)  _Generic((EXPR),                         \
-	__STC_BYTES_TO_OBJ_CNV_CLAUSE(DST_TYPENAME),                                     /* [0] */    \
-	__STC_IDENTITY_CNV_CLAUSE(struct, DST_TYPENAME),                                 /* [1] */    \
-	__STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr, DST_TYPENAME),                    /* [2] */    \
-	__STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage, DST_TYPENAME),            /* [3] */    \
-    ##__VA_ARGS__                                                                    /* [4] */    \
-)((EXPR))
-
+#define __SA_UTILS_STATIC_CAST(EXPR, DST_TYPENAME, ...)                        \
+  _Generic((EXPR),                                                             \
+      __STC_BYTES_TO_OBJ_CNV_CLAUSE(DST_TYPENAME),                  /* [0] */  \
+      __STC_IDENTITY_CNV_CLAUSE(struct, DST_TYPENAME),              /* [1] */  \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr, DST_TYPENAME), /* [2] */  \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage,                   \
+                                   DST_TYPENAME), /* [3] */                    \
+      ##__VA_ARGS__                               /* [4] */                    \
+           )((EXPR))
 
 /*
  * Generic const cast for sockaddr subtypes.
@@ -250,13 +250,15 @@
  *
  * NOTE: The static cast preserves the CV qualifiers.
  */
-#define __SA_UTILS_DECONST_CAST(EXPR, DST_TYPENAME, ...)  _Generic((EXPR),                        \
-	__STC_CONST_IDENTITY_CNV_CLAUSE(struct, DST_TYPENAME),                           /* [0] */    \
-	__STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr, DST_TYPENAME),              /* [1] */    \
-	__STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage, DST_TYPENAME),      /* [2] */    \
-    ##__VA_ARGS__                                                                    /* [3] */    \
-)((EXPR))
-
+#define __SA_UTILS_DECONST_CAST(EXPR, DST_TYPENAME, ...)                       \
+  _Generic((EXPR),                                                             \
+      __STC_CONST_IDENTITY_CNV_CLAUSE(struct, DST_TYPENAME), /* [0] */         \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr,                     \
+                                         DST_TYPENAME), /* [1] */              \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage,             \
+                                         DST_TYPENAME), /* [2] */              \
+      ##__VA_ARGS__                                     /* [3] */              \
+           )((EXPR))
 
 /*
  * Strict replacement for struct sockaddr
@@ -271,134 +273,140 @@ __STC_DEFINE_BYTE_TO_OBJ_CNVS(struct, sockaddr, 2, 255);
 
 __STC_DEFINE_SELF_CONVERTERS(struct, sockaddr_storage);
 __STC_DEFINE_BYTE_TO_OBJ_CNVS(struct, sockaddr_storage,
-    sizeof(struct sockaddr_storage), sizeof(struct sockaddr_storage));
+                              sizeof(struct sockaddr_storage),
+                              sizeof(struct sockaddr_storage));
 __STC_DEFINE_BYTE_TO_OBJ_CNVS(union, sockaddr_in_4_6,
-    sizeof(union sockaddr_in_4_6), sizeof(union sockaddr_in_4_6));
+                              sizeof(union sockaddr_in_4_6),
+                              sizeof(union sockaddr_in_4_6));
 __STC_DEFINE_BYTE_TO_OBJ_CNVS(union, necp_sockaddr_union,
-    sizeof(union necp_sockaddr_union), sizeof(union necp_sockaddr_union));
-
+                              sizeof(union necp_sockaddr_union),
+                              sizeof(union necp_sockaddr_union));
 
 /*************************************************************************************************
  *  Generic converter to bytes.
  */
-#define __SA_UTILS_CONV_TO_BYTES(X) _Generic((X),                                                 \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr),                                      \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_storage),                              \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(union, sockaddr_in_4_6),                                \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(union, necp_sockaddr_union),                            \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_ctl),                                  \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_dl),                                   \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_in),                                   \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_in6),                                  \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_inarp),                                \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_inifscope),                            \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_ndrv),                                 \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_sys),                                  \
-	        __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_un),                                   \
-	        __STC_BYTES_TO_BYTES_CNV_CLAUSE()                                                     \
-	)((X))
-
+#define __SA_UTILS_CONV_TO_BYTES(X)                                            \
+  _Generic((X),                                                                \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr),                         \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_storage),                 \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(union, sockaddr_in_4_6),                   \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(union, necp_sockaddr_union),               \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_ctl),                     \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_dl),                      \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_in),                      \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_in6),                     \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_inarp),                   \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_inifscope),               \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_ndrv),                    \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_sys),                     \
+      __STC_OBJ_TO_BYTES_CNV_CLAUSE(struct, sockaddr_un),                      \
+      __STC_BYTES_TO_BYTES_CNV_CLAUSE())((X))
 
 /*************************************************************************************************
  * Converters to `struct sockaddr *'
  */
-#define __SA_UTILS_CONV_TO_SOCKADDR(X) _Generic((X),                                              \
-	        __STC_BYTES_TO_OBJ_CNV_CLAUSE(sockaddr),                                              \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage, sockaddr),                     \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(union, sockaddr_in_4_6, sockaddr),                       \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(union, necp_sockaddr_union, sockaddr),                   \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ctl, sockaddr),                         \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_dl, sockaddr),                          \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in, sockaddr),                          \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in6, sockaddr),                         \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inarp, sockaddr),                       \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inifscope, sockaddr),                   \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ndrv, sockaddr),                        \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_sys, sockaddr),                         \
-	        __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_un, sockaddr),                          \
-	        __STC_IDENTITY_CNV_CLAUSE(struct, sockaddr)                                           \
-	)((X))
+#define __SA_UTILS_CONV_TO_SOCKADDR(X)                                         \
+  _Generic((X),                                                                \
+      __STC_BYTES_TO_OBJ_CNV_CLAUSE(sockaddr),                                 \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage, sockaddr),        \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(union, sockaddr_in_4_6, sockaddr),          \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(union, necp_sockaddr_union, sockaddr),      \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ctl, sockaddr),            \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_dl, sockaddr),             \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in, sockaddr),             \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in6, sockaddr),            \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inarp, sockaddr),          \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inifscope, sockaddr),      \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ndrv, sockaddr),           \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_sys, sockaddr),            \
+      __STC_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_un, sockaddr),             \
+      __STC_IDENTITY_CNV_CLAUSE(struct, sockaddr))((X))
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR(X) _Generic((X),                                  \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage, sockaddr),               \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(union, sockaddr_in_4_6, sockaddr),                 \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(union, necp_sockaddr_union, sockaddr),             \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ctl, sockaddr),                   \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_dl, sockaddr),                    \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in, sockaddr),                    \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in6, sockaddr),                   \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inarp, sockaddr),                 \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inifscope, sockaddr),             \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ndrv, sockaddr),                  \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_sys, sockaddr),                   \
-	        __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_un, sockaddr),                    \
-	        __STC_CONST_IDENTITY_CNV_CLAUSE(struct, sockaddr)                                     \
-	)((X))
-
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR(X)                             \
+  _Generic((X),                                                                \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_storage, sockaddr),  \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(union, sockaddr_in_4_6, sockaddr),    \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(union, necp_sockaddr_union,           \
+                                         sockaddr),                            \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ctl, sockaddr),      \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_dl, sockaddr),       \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in, sockaddr),       \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_in6, sockaddr),      \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inarp, sockaddr),    \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_inifscope,           \
+                                         sockaddr),                            \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_ndrv, sockaddr),     \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_sys, sockaddr),      \
+      __STC_CONST_TYPE_TO_OBJ_CNV_CLAUSE(struct, sockaddr_un, sockaddr),       \
+      __STC_CONST_IDENTITY_CNV_CLAUSE(struct, sockaddr))((X))
 
 #if defined(SA)
 #undef SA
 #endif /* defined(SA) */
-#define SA(s)                          __SA_UTILS_CONV_TO_SOCKADDR((s))
-#define __DECONST_SA(s)                __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR((s))
+#define SA(s) __SA_UTILS_CONV_TO_SOCKADDR((s))
+#define __DECONST_SA(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR((s))
 
 #define SA_BYTES(s) __SA_UTILS_CONV_TO_BYTES(s)
 
 /*************************************************************************************************
  * Replacements for `bcopy', `bcmp' and `bzero'.
  */
-#define SOCKADDR_COPY(SRC, DST, LEN)  do {                                                        \
-	const uint8_t* __sau_sbytes = __SA_UTILS_CONV_TO_BYTES((SRC));                                \
-	uint8_t* __sau_dbytes = __SA_UTILS_CONV_TO_BYTES((DST));                                      \
-	bcopy(__sau_sbytes, __sau_dbytes, (LEN));                                                     \
-} while(0)
+#define SOCKADDR_COPY(SRC, DST, LEN)                                           \
+  do {                                                                         \
+    const uint8_t *__sau_sbytes = __SA_UTILS_CONV_TO_BYTES((SRC));             \
+    uint8_t *__sau_dbytes = __SA_UTILS_CONV_TO_BYTES((DST));                   \
+    bcopy(__sau_sbytes, __sau_dbytes, (LEN));                                  \
+  } while (0)
 
+#define SOCKADDR_ZERO(SRC, LEN)                                                \
+  do {                                                                         \
+    uint8_t *__sau_src_bytes = __SA_UTILS_CONV_TO_BYTES((SRC));                \
+    bzero(__sau_src_bytes, (LEN));                                             \
+  } while (0)
 
-#define SOCKADDR_ZERO(SRC, LEN)  do {                                                             \
-	uint8_t* __sau_src_bytes = __SA_UTILS_CONV_TO_BYTES((SRC));                                   \
-	bzero(__sau_src_bytes, (LEN));                                                                \
-} while(0)
-
-
-#define SOCKADDR_CMP(LH, RH, LEN)  ({                                                             \
-	int __sac_rv = 0;                                                                             \
-	const uint8_t* __sau_lhb = __SA_UTILS_CONV_TO_BYTES((LH));                                    \
-	const uint8_t* __sau_rhb = __SA_UTILS_CONV_TO_BYTES((RH));                                    \
-	__sac_rv = bcmp(__sau_lhb, __sau_rhb, (LEN));                                                 \
-	__sac_rv;                                                                                     \
-})
+#define SOCKADDR_CMP(LH, RH, LEN)                                              \
+  ({                                                                           \
+    int __sac_rv = 0;                                                          \
+    const uint8_t *__sau_lhb = __SA_UTILS_CONV_TO_BYTES((LH));                 \
+    const uint8_t *__sau_rhb = __SA_UTILS_CONV_TO_BYTES((RH));                 \
+    __sac_rv = bcmp(__sau_lhb, __sau_rhb, (LEN));                              \
+    __sac_rv;                                                                  \
+  })
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_ctl *'
  */
 __SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_ctl)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_CTL(X)              __SA_UTILS_STATIC_CAST(X, sockaddr_ctl)
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_CTL(X)  __SA_UTILS_DECONST_CAST(X, sockaddr_ctl)
+#define __SA_UTILS_CONV_TO_SOCKADDR_CTL(X)                                     \
+  __SA_UTILS_STATIC_CAST(X, sockaddr_ctl)
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_CTL(X)                         \
+  __SA_UTILS_DECONST_CAST(X, sockaddr_ctl)
 
-#define SCTL(s)                        __SA_UTILS_CONV_TO_SOCKADDR_CTL((s))
-#define __DECONST_SCTL(s)              __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_CTL((s))
-
+#define SCTL(s) __SA_UTILS_CONV_TO_SOCKADDR_CTL((s))
+#define __DECONST_SCTL(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_CTL((s))
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_dl *'
  */
 __SA_UTILS_DEFINE_VARIABLE_SIZE_SUBTYPE(struct, sockaddr_dl)
 
-
-#define __SA_UTILS_CONV_TO_SOCKADDR_DL(X)             __SA_UTILS_STATIC_CAST(X, sockaddr_dl)
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_DL(X) __SA_UTILS_DECONST_CAST (X, sockaddr_dl)
+#define __SA_UTILS_CONV_TO_SOCKADDR_DL(X) __SA_UTILS_STATIC_CAST(X, sockaddr_dl)
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_DL(X)                          \
+  __SA_UTILS_DECONST_CAST(X, sockaddr_dl)
 
 #if defined(SDL)
 #undef SDL
 #endif /* defined(SDL) */
-#define SDL(s)                         __SA_UTILS_CONV_TO_SOCKADDR_DL((s))
-#define __DECONST_SDL(s)               __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_DL((s))
+#define SDL(s) __SA_UTILS_CONV_TO_SOCKADDR_DL((s))
+#define __DECONST_SDL(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_DL((s))
 
 #if defined(LLADDR)
 #undef LLADDR
 #endif /* defined(LLADDR) */
-#define LLADDR(s) ((caddr_t)(__SA_UTILS_CONV_TO_BYTES((s)) + __offsetof(struct sockaddr_dl, sdl_data) + (s)->sdl_nlen))
+#define LLADDR(s)                                                              \
+  ((caddr_t)(__SA_UTILS_CONV_TO_BYTES((s)) +                                   \
+             __offsetof(struct sockaddr_dl, sdl_data) + (s)->sdl_nlen))
 
 #if defined(CONST_LLADDR)
 #undef CONST_LLADDR
@@ -408,160 +416,160 @@ __SA_UTILS_DEFINE_VARIABLE_SIZE_SUBTYPE(struct, sockaddr_dl)
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_in *'
  */
-__SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_in,                                         \
-        union, sockaddr_in_4_6,                                                                   \
-        union, necp_sockaddr_union)
+__SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_in, union,
+                                     sockaddr_in_4_6, union,
+                                     necp_sockaddr_union)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_IN(X)                                                         \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_in,                                                        \
-	__STC_ENABLE_STATIC_CAST(union, sockaddr_in_4_6, sockaddr_in),                                \
-	__STC_ENABLE_STATIC_CAST(union, necp_sockaddr_union, sockaddr_in))
+#define __SA_UTILS_CONV_TO_SOCKADDR_IN(X)                                      \
+  __SA_UTILS_STATIC_CAST(                                                      \
+      X, sockaddr_in,                                                          \
+      __STC_ENABLE_STATIC_CAST(union, sockaddr_in_4_6, sockaddr_in),           \
+      __STC_ENABLE_STATIC_CAST(union, necp_sockaddr_union, sockaddr_in))
 
-
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN(X)                                             \
-    __SA_UTILS_DECONST_CAST (X, sockaddr_in,                                                      \
-	    __STC_ENABLE_DECONST_CAST(union, sockaddr_in_4_6, sockaddr_in),                           \
-	    __STC_ENABLE_DECONST_CAST(union, necp_sockaddr_union, sockaddr_in))
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN(X)                          \
+  __SA_UTILS_DECONST_CAST(                                                     \
+      X, sockaddr_in,                                                          \
+      __STC_ENABLE_DECONST_CAST(union, sockaddr_in_4_6, sockaddr_in),          \
+      __STC_ENABLE_DECONST_CAST(union, necp_sockaddr_union, sockaddr_in))
 
 #if defined(SIN)
 #undef SIN
 #endif /* defined(SIN) */
-#define SIN(s)                   __SA_UTILS_CONV_TO_SOCKADDR_IN((s))
-#define __DECONST_SIN(s)         __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN((s))
+#define SIN(s) __SA_UTILS_CONV_TO_SOCKADDR_IN((s))
+#define __DECONST_SIN(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN((s))
 
 #if defined(satosin)
 #undef satosin
 #endif /* defined(satosin) */
-#define satosin(sa)     SIN(sa)
+#define satosin(sa) SIN(sa)
 
 #if defined(sintosa)
 #undef sintosa
 #endif /* defined(sintosa) */
-#define sintosa(sin)     SA(sin)
-
+#define sintosa(sin) SA(sin)
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_inarp *'
  */
 __SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_inarp)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_INARP(X)                                                      \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_inarp)
+#define __SA_UTILS_CONV_TO_SOCKADDR_INARP(X)                                   \
+  __SA_UTILS_STATIC_CAST(X, sockaddr_inarp)
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INARP(X)                                          \
-    __SA_UTILS_DECONST_CAST(X, sockaddr_inarp)
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INARP(X)                       \
+  __SA_UTILS_DECONST_CAST(X, sockaddr_inarp)
 
-#define SINARP(s)                __SA_UTILS_CONV_TO_SOCKADDR_INARP((s))
-#define __DECONST_SINARP(s)      __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INARP((s))
-
+#define SINARP(s) __SA_UTILS_CONV_TO_SOCKADDR_INARP((s))
+#define __DECONST_SINARP(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INARP((s))
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_inifscope *'
  */
-__SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_inifscope,                                  \
-        union, sockaddr_in_4_6,                                                                   \
-        union, necp_sockaddr_union)
+__SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_inifscope, union,
+                                     sockaddr_in_4_6, union,
+                                     necp_sockaddr_union)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_INIFSCOPE(X)                                                  \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_inifscope,                                                 \
-	   __STC_ENABLE_STATIC_CAST(union, sockaddr_in_4_6, sockaddr_inifscope),                      \
-	   __STC_ENABLE_STATIC_CAST(union, necp_sockaddr_union, sockaddr_inifscope))
+#define __SA_UTILS_CONV_TO_SOCKADDR_INIFSCOPE(X)                               \
+  __SA_UTILS_STATIC_CAST(                                                      \
+      X, sockaddr_inifscope,                                                   \
+      __STC_ENABLE_STATIC_CAST(union, sockaddr_in_4_6, sockaddr_inifscope),    \
+      __STC_ENABLE_STATIC_CAST(union, necp_sockaddr_union,                     \
+                               sockaddr_inifscope))
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INIFSCOPE(X)                                      \
-    __SA_UTILS_DECONST_CAST(X, sockaddr_inifscope,                                                \
-	    __STC_ENABLE_DECONST_CAST(union, sockaddr_in_4_6, sockaddr_inifscope),                    \
-	    __STC_ENABLE_DECONST_CAST(union, necp_sockaddr_union, sockaddr_inifscope))
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INIFSCOPE(X)                   \
+  __SA_UTILS_DECONST_CAST(                                                     \
+      X, sockaddr_inifscope,                                                   \
+      __STC_ENABLE_DECONST_CAST(union, sockaddr_in_4_6, sockaddr_inifscope),   \
+      __STC_ENABLE_DECONST_CAST(union, necp_sockaddr_union,                    \
+                                sockaddr_inifscope))
 
 #if defined(SINIFSCOPE)
 #undef SINIFSCOPE
 #endif /* defined(SINIFSCOPE) */
-#define SINIFSCOPE(s)            __SA_UTILS_CONV_TO_SOCKADDR_INIFSCOPE((s))
-#define __DECONST_SINIFSCOPE(s)  __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INIFSCOPE((s))
-
+#define SINIFSCOPE(s) __SA_UTILS_CONV_TO_SOCKADDR_INIFSCOPE((s))
+#define __DECONST_SINIFSCOPE(s)                                                \
+  __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_INIFSCOPE((s))
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_in6 *'
  */
-__SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_in6,                                        \
-        union, sockaddr_in_4_6,                                                                   \
-        union, necp_sockaddr_union)
+__SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_in6, union,
+                                     sockaddr_in_4_6, union,
+                                     necp_sockaddr_union)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_IN6(X)                                                        \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_in6,                                                       \
-	__STC_ENABLE_STATIC_CAST(union, sockaddr_in_4_6, sockaddr_in6),                               \
-	__STC_ENABLE_STATIC_CAST(union, necp_sockaddr_union, sockaddr_in6))
+#define __SA_UTILS_CONV_TO_SOCKADDR_IN6(X)                                     \
+  __SA_UTILS_STATIC_CAST(                                                      \
+      X, sockaddr_in6,                                                         \
+      __STC_ENABLE_STATIC_CAST(union, sockaddr_in_4_6, sockaddr_in6),          \
+      __STC_ENABLE_STATIC_CAST(union, necp_sockaddr_union, sockaddr_in6))
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN6(X)                                            \
-    __SA_UTILS_DECONST_CAST(X, sockaddr_in6,                                                      \
-	    __STC_ENABLE_DECONST_CAST(union, sockaddr_in_4_6, sockaddr_in6),                          \
-	    __STC_ENABLE_DECONST_CAST(union, necp_sockaddr_union, sockaddr_in6))
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN6(X)                         \
+  __SA_UTILS_DECONST_CAST(                                                     \
+      X, sockaddr_in6,                                                         \
+      __STC_ENABLE_DECONST_CAST(union, sockaddr_in_4_6, sockaddr_in6),         \
+      __STC_ENABLE_DECONST_CAST(union, necp_sockaddr_union, sockaddr_in6))
 
 #if defined(SIN6)
 #undef SIN6
 #endif /* defined(SIN6) */
-#define SIN6(s)                  __SA_UTILS_CONV_TO_SOCKADDR_IN6((s))
-#define __DECONST_SIN6(s)        __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN6((s))
+#define SIN6(s) __SA_UTILS_CONV_TO_SOCKADDR_IN6((s))
+#define __DECONST_SIN6(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_IN6((s))
 
 #if defined(satosin6)
 #undef satosin6
 #endif /* defined(satosin6) */
-#define satosin6(sa)    SIN6(sa)
+#define satosin6(sa) SIN6(sa)
 
 #if defined(sin6tosa)
 #undef sin6tosa
 #endif /* defined(sin6tosa) */
-#define sin6tosa(sin6)   SA((sin6))
+#define sin6tosa(sin6) SA((sin6))
 
 #if defined(SIN6IFSCOPE)
 #undef SIN6IFSCOPE
 #endif /* defined(SIN6IFSCOPE) */
-#define SIN6IFSCOPE(s)  SIN6(s)
-
+#define SIN6IFSCOPE(s) SIN6(s)
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_ndrv *'
  */
 __SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_ndrv)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_NDRV(X)                                                       \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_ndrv)
+#define __SA_UTILS_CONV_TO_SOCKADDR_NDRV(X)                                    \
+  __SA_UTILS_STATIC_CAST(X, sockaddr_ndrv)
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_NDRV(X)                                           \
-    __SA_UTILS_DECONST_CAST(X, sockaddr_ndrv)
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_NDRV(X)                        \
+  __SA_UTILS_DECONST_CAST(X, sockaddr_ndrv)
 
-#define SNDRV(s)                 __SA_UTILS_CONV_TO_SOCKADDR_NDRV((s))
-#define __DECONST_SNDRV(s)       __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_NDRV((s))
-
+#define SNDRV(s) __SA_UTILS_CONV_TO_SOCKADDR_NDRV((s))
+#define __DECONST_SNDRV(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_NDRV((s))
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_sys *'
  */
 __SA_UTILS_DEFINE_FIXED_SIZE_SUBTYPE(struct, sockaddr_sys)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_SYS(X)                                                        \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_sys)
+#define __SA_UTILS_CONV_TO_SOCKADDR_SYS(X)                                     \
+  __SA_UTILS_STATIC_CAST(X, sockaddr_sys)
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_SYS(X)                                            \
-    __SA_UTILS_DECONST_CAST(X, sockaddr_sys)
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_SYS(X)                         \
+  __SA_UTILS_DECONST_CAST(X, sockaddr_sys)
 
-#define SSYS(s)                  __SA_UTILS_CONV_TO_SOCKADDR_SYS((s))
-#define __DECONST_SSYS(s)        __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_SYS((s))
-
+#define SSYS(s) __SA_UTILS_CONV_TO_SOCKADDR_SYS((s))
+#define __DECONST_SSYS(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_SYS((s))
 
 /*************************************************************************************************
  * Strict replacement for `struct sockaddr_un *'
  */
 __SA_UTILS_DEFINE_VARIABLE_SIZE_SUBTYPE(struct, sockaddr_un)
 
-#define __SA_UTILS_CONV_TO_SOCKADDR_UN(X)                                                         \
-    __SA_UTILS_STATIC_CAST(X, sockaddr_un)
+#define __SA_UTILS_CONV_TO_SOCKADDR_UN(X) __SA_UTILS_STATIC_CAST(X, sockaddr_un)
 
-#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_UN(X)                                             \
-    __SA_UTILS_DECONST_CAST(X, sockaddr_un)
+#define __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_UN(X)                          \
+  __SA_UTILS_DECONST_CAST(X, sockaddr_un)
 
-#define SUN(s)                   __SA_UTILS_CONV_TO_SOCKADDR_UN((s))
-#define __DECONST_SUN(s)         __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_UN((s))
-
+#define SUN(s) __SA_UTILS_CONV_TO_SOCKADDR_UN((s))
+#define __DECONST_SUN(s) __SA_UTILS_DECONST_AND_CONV_TO_SOCKADDR_UN((s))
 
 #endif /* XNU_KERNEL_PRIVATE */
 

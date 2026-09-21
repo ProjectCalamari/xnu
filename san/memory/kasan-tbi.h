@@ -37,7 +37,8 @@
 #endif
 
 #if !KASAN && __has_feature(hwaddress_sanitizer)
-#error "hwaddress_sanitizer enabled in compiler, but kernel is not configured for KASAN"
+#error                                                                         \
+    "hwaddress_sanitizer enabled in compiler, but kernel is not configured for KASAN"
 #endif
 
 /* old-style configs. */
@@ -46,7 +47,7 @@
 #define KASAN_FAKESTACK 0
 
 /* Granularity is 16 bytes */
-#define KASAN_SIZE_ALIGNMENT        0xFUL
+#define KASAN_SIZE_ALIGNMENT 0xFUL
 
 /*
  * KASAN_TBI inline insturmentation emits a brk instruction as a violation
@@ -54,13 +55,14 @@
  * osfmk/arm64/sleh.c needs to now the right ranges to proxy this information
  * back to the kasan runtime.
  */
-#define KASAN_TBI_ESR_BASE          (0x900)
-#define KASAN_TBI_ESR_WRITE         (0x10)
-#define KASAN_TBI_ESR_IGNORE        (0x20)
-#define KASAN_TBI_ESR_SIZE_MASK     (0xF)
-#define KASAN_TBI_ESR_TOP           (KASAN_TBI_ESR_BASE | KASAN_TBI_ESR_WRITE |     \
-	                            KASAN_TBI_ESR_IGNORE | KASAN_TBI_ESR_SIZE_MASK)
-#define KASAN_TBI_GET_SIZE(x)       (1 << ((x) & KASAN_TBI_ESR_SIZE_MASK))
+#define KASAN_TBI_ESR_BASE (0x900)
+#define KASAN_TBI_ESR_WRITE (0x10)
+#define KASAN_TBI_ESR_IGNORE (0x20)
+#define KASAN_TBI_ESR_SIZE_MASK (0xF)
+#define KASAN_TBI_ESR_TOP                                                      \
+  (KASAN_TBI_ESR_BASE | KASAN_TBI_ESR_WRITE | KASAN_TBI_ESR_IGNORE |           \
+   KASAN_TBI_ESR_SIZE_MASK)
+#define KASAN_TBI_GET_SIZE(x) (1 << ((x) & KASAN_TBI_ESR_SIZE_MASK))
 
 /*
  * An allocator may reserve more memory than the user requested. If the unused

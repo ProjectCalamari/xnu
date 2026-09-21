@@ -28,9 +28,9 @@
 #ifndef _MACHINE_MACHINE_RPC_H
 #define _MACHINE_MACHINE_RPC_H
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/machine_rpc.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm/machine_rpc.h"
 #else
 #error architecture not supported

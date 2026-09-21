@@ -30,25 +30,24 @@
 #include <sys/cdefs.h> /* __DARWIN_UNIX03 */
 
 #if __DARWIN_UNIX03
-#define _STRUCT_UCONTEXT64      struct __darwin_ucontext64
+#define _STRUCT_UCONTEXT64 struct __darwin_ucontext64
 #else /* !__DARWIN_UNIX03 */
-#define _STRUCT_UCONTEXT64      struct ucontext64
+#define _STRUCT_UCONTEXT64 struct ucontext64
 #endif /* __DARWIN_UNIX03 */
 
-#include <machine/types.h> /* __darwin_size_t */
-#include <machine/_mcontext.h> /* _STRUCT_MCONTEXT */
-#include <sys/_types.h> /* __darwin_sigset_t */
+#include <machine/_mcontext.h>       /* _STRUCT_MCONTEXT */
+#include <machine/types.h>           /* __darwin_size_t */
+#include <sys/_types.h>              /* __darwin_sigset_t */
 #include <sys/_types/_sigaltstack.h> /* _STRUCT_SIGALTSTACK */
 
-_STRUCT_UCONTEXT64
-{
-	int                     uc_onstack;
-	__darwin_sigset_t       uc_sigmask;     /* signal mask used by this context */
-	_STRUCT_SIGALTSTACK     uc_stack;       /* stack used by this context */
-	_STRUCT_UCONTEXT64      *uc_link;       /* pointer to resuming context */
-	__darwin_size_t         uc_mcsize;      /* size of the machine context passed in */
-	_STRUCT_MCONTEXT64      *uc_mcontext64; /* pointer to machine specific context */
+_STRUCT_UCONTEXT64 {
+  int uc_onstack;
+  __darwin_sigset_t uc_sigmask;      /* signal mask used by this context */
+  _STRUCT_SIGALTSTACK uc_stack;      /* stack used by this context */
+  _STRUCT_UCONTEXT64 *uc_link;       /* pointer to resuming context */
+  __darwin_size_t uc_mcsize;         /* size of the machine context passed in */
+  _STRUCT_MCONTEXT64 *uc_mcontext64; /* pointer to machine specific context */
 };
-typedef _STRUCT_UCONTEXT64      ucontext64_t;   /* [???] user context */
+typedef _STRUCT_UCONTEXT64 ucontext64_t; /* [???] user context */
 
 #endif /* _STRUCT_UCONTEXT64 */

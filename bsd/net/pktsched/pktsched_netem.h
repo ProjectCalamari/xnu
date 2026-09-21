@@ -26,18 +26,19 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#define NETEM_MAX_BATCH_SIZE    32
+#define NETEM_MAX_BATCH_SIZE 32
 
 __BEGIN_DECLS
 
 struct kern_pbufpool;
 
-typedef int (netem_output_func_t)(void *handle, pktsched_pkt_t *pkts,
-    uint32_t n_pkts);
+typedef int(netem_output_func_t)(void *handle, pktsched_pkt_t *pkts,
+                                 uint32_t n_pkts);
 
-extern int netem_config(struct netem **ne, const char *__null_terminated name, struct ifnet *ifp,
-    const struct if_netem_params *p, void *output_handle,
-    netem_output_func_t *output_func, uint32_t output_max_batch_size);
+extern int netem_config(struct netem **ne, const char *__null_terminated name,
+                        struct ifnet *ifp, const struct if_netem_params *p,
+                        void *output_handle, netem_output_func_t *output_func,
+                        uint32_t output_max_batch_size);
 extern void netem_get_params(struct netem *ne, struct if_netem_params *p);
 extern void netem_destroy(struct netem *ne);
 extern int netem_enqueue(struct netem *ne, classq_pkt_t *p, bool *pdrop);

@@ -30,55 +30,54 @@
 #define __IOKIT_IOMAPTYPES_H
 
 // IOConnectMapMemory memoryTypes
-enum {
-	kIODefaultMemoryType        = 0
-};
+enum { kIODefaultMemoryType = 0 };
 
 enum {
-	kIODefaultCache             = 0,
-	kIOInhibitCache             = 1,
-	kIOWriteThruCache           = 2,
-	kIOCopybackCache            = 3,
-	kIOWriteCombineCache        = 4,
-	kIOCopybackInnerCache       = 5,
-	kIOPostedWrite              = 6,
-	kIORealTimeCache            = 7,
-	kIOPostedReordered          = 8,
-	kIOPostedCombinedReordered  = 9,
+  kIODefaultCache = 0,
+  kIOInhibitCache = 1,
+  kIOWriteThruCache = 2,
+  kIOCopybackCache = 3,
+  kIOWriteCombineCache = 4,
+  kIOCopybackInnerCache = 5,
+  kIOPostedWrite = 6,
+  kIORealTimeCache = 7,
+  kIOPostedReordered = 8,
+  kIOPostedCombinedReordered = 9,
 };
 
 // IOMemory mapping options
 enum {
-	kIOMapAnywhere                = 0x00000001,
+  kIOMapAnywhere = 0x00000001,
 
-	kIOMapCacheMask               = 0x00000f00,
-	kIOMapCacheShift              = 8,
-	kIOMapDefaultCache            = kIODefaultCache            << kIOMapCacheShift,
-	kIOMapInhibitCache            = kIOInhibitCache            << kIOMapCacheShift,
-	kIOMapWriteThruCache          = kIOWriteThruCache          << kIOMapCacheShift,
-	kIOMapCopybackCache           = kIOCopybackCache           << kIOMapCacheShift,
-	kIOMapWriteCombineCache       = kIOWriteCombineCache       << kIOMapCacheShift,
-	kIOMapCopybackInnerCache      = kIOCopybackInnerCache      << kIOMapCacheShift,
-	kIOMapPostedWrite             = kIOPostedWrite             << kIOMapCacheShift,
-	kIOMapRealTimeCache           = kIORealTimeCache           << kIOMapCacheShift,
-	kIOMapPostedReordered         = kIOPostedReordered         << kIOMapCacheShift,
-	kIOMapPostedCombinedReordered = kIOPostedCombinedReordered << kIOMapCacheShift,
+  kIOMapCacheMask = 0x00000f00,
+  kIOMapCacheShift = 8,
+  kIOMapDefaultCache = kIODefaultCache << kIOMapCacheShift,
+  kIOMapInhibitCache = kIOInhibitCache << kIOMapCacheShift,
+  kIOMapWriteThruCache = kIOWriteThruCache << kIOMapCacheShift,
+  kIOMapCopybackCache = kIOCopybackCache << kIOMapCacheShift,
+  kIOMapWriteCombineCache = kIOWriteCombineCache << kIOMapCacheShift,
+  kIOMapCopybackInnerCache = kIOCopybackInnerCache << kIOMapCacheShift,
+  kIOMapPostedWrite = kIOPostedWrite << kIOMapCacheShift,
+  kIOMapRealTimeCache = kIORealTimeCache << kIOMapCacheShift,
+  kIOMapPostedReordered = kIOPostedReordered << kIOMapCacheShift,
+  kIOMapPostedCombinedReordered = kIOPostedCombinedReordered
+                                  << kIOMapCacheShift,
 
-	kIOMapUserOptionsMask         = 0x00000fff,
+  kIOMapUserOptionsMask = 0x00000fff,
 
-	kIOMapReadOnly                = 0x00001000,
+  kIOMapReadOnly = 0x00001000,
 
-	kIOMapStatic                  = 0x01000000,
-	kIOMapReference               = 0x02000000,
-	kIOMapUnique                  = 0x04000000,
+  kIOMapStatic = 0x01000000,
+  kIOMapReference = 0x02000000,
+  kIOMapUnique = 0x04000000,
 #ifdef XNU_KERNEL_PRIVATE
-	kIOMap64Bit                   = 0x08000000,
+  kIOMap64Bit = 0x08000000,
 #endif
-	kIOMapPrefault                = 0x10000000,
-	kIOMapOverwrite               = 0x20000000,
-	kIOMapGuardedMask             = 0xC0000000,
-	kIOMapGuardedSmall            = 0x40000000,
-	kIOMapGuardedLarge            = 0x80000000
+  kIOMapPrefault = 0x10000000,
+  kIOMapOverwrite = 0x20000000,
+  kIOMapGuardedMask = 0xC0000000,
+  kIOMapGuardedSmall = 0x40000000,
+  kIOMapGuardedLarge = 0x80000000
 };
 
 #endif /* ! __IOKIT_IOMAPTYPES_H */

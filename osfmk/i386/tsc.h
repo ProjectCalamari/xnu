@@ -40,11 +40,12 @@
 #ifndef _I386_TSC_H_
 #define _I386_TSC_H_
 
-#define BASE_NHM_CLOCK_SOURCE   133333333ULL
-#define BASE_ART_CLOCK_SOURCE           24000000ULL     /* 24MHz */
-#define BASE_ART_CLOCK_SOURCE_SP        25000000ULL     /* 25MHz */
-#define IA32_PERF_STS                   0x198
-#define SLOW_TSC_THRESHOLD      1000067800      /* if slower, nonzero shift required in nanotime() algorithm */
+#define BASE_NHM_CLOCK_SOURCE 133333333ULL
+#define BASE_ART_CLOCK_SOURCE 24000000ULL    /* 24MHz */
+#define BASE_ART_CLOCK_SOURCE_SP 25000000ULL /* 25MHz */
+#define IA32_PERF_STS 0x198
+#define SLOW_TSC_THRESHOLD                                                     \
+  1000067800 /* if slower, nonzero shift required in nanotime() algorithm */
 
 #ifndef ASSEMBLER
 extern uint64_t busFCvtt2n;
@@ -61,17 +62,17 @@ extern uint32_t flex_ratio_max;
 extern uint64_t tsc_at_boot;
 
 struct tscInfo {
-	uint64_t        busFCvtt2n;
-	uint64_t        busFCvtn2t;
-	uint64_t        tscFreq;
-	uint64_t        tscFCvtt2n;
-	uint64_t        tscFCvtn2t;
-	uint64_t        tscGranularity;
-	uint64_t        bus2tsc;
-	uint64_t        busFreq;
-	uint32_t        flex_ratio;
-	uint32_t        flex_ratio_min;
-	uint32_t        flex_ratio_max;
+  uint64_t busFCvtt2n;
+  uint64_t busFCvtn2t;
+  uint64_t tscFreq;
+  uint64_t tscFCvtt2n;
+  uint64_t tscFCvtn2t;
+  uint64_t tscGranularity;
+  uint64_t bus2tsc;
+  uint64_t busFreq;
+  uint32_t flex_ratio;
+  uint32_t flex_ratio_min;
+  uint32_t flex_ratio_max;
 };
 typedef struct tscInfo tscInfo_t;
 
@@ -81,7 +82,8 @@ extern void tsc_init(void);
 
 #if DEVELOPMENT || DEBUG
 extern void cpu_data_tsc_sync_deltas_string(char *buf, uint32_t buflen,
-    uint32_t start_cpu, uint32_t end_cpu);
+                                            uint32_t start_cpu,
+                                            uint32_t end_cpu);
 #endif
 
 #endif /* ASSEMBLER */

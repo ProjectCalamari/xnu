@@ -26,7 +26,6 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-
 #ifndef _SYSTEM_DOMAIN_H_
 #define _SYSTEM_DOMAIN_H_
 
@@ -35,18 +34,18 @@
 #include <sys/types.h>
 
 /* Kernel Events Protocol */
-#define SYSPROTO_EVENT          1       /* kernel events protocol */
+#define SYSPROTO_EVENT 1 /* kernel events protocol */
 
 /* Kernel Control Protocol */
-#define SYSPROTO_CONTROL        2       /* kernel control protocol */
-#define AF_SYS_CONTROL          2       /* corresponding sub address type */
+#define SYSPROTO_CONTROL 2 /* kernel control protocol */
+#define AF_SYS_CONTROL 2   /* corresponding sub address type */
 
 /* System family socket address */
 struct sockaddr_sys {
-	u_char          ss_len;         /* sizeof(struct sockaddr_sys) */
-	u_char          ss_family;      /* AF_SYSTEM */
-	u_int16_t       ss_sysaddr;     /* protocol address in AF_SYSTEM */
-	u_int32_t       ss_reserved[7]; /* reserved to the protocol use */
+  u_char ss_len;            /* sizeof(struct sockaddr_sys) */
+  u_char ss_family;         /* AF_SYSTEM */
+  u_int16_t ss_sysaddr;     /* protocol address in AF_SYSTEM */
+  u_int32_t ss_reserved[7]; /* reserved to the protocol use */
 };
 
 #if defined(PRIVATE) && !defined(MODULES_SUPPORTED)

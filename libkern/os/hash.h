@@ -34,28 +34,25 @@
 
 __BEGIN_DECLS
 
-static inline uint32_t
-os_hash_jenkins_update(const void *data, size_t length, uint32_t hash)
-{
-	const uint8_t *key = (const uint8_t *)data;
+static inline uint32_t os_hash_jenkins_update(const void *data, size_t length,
+                                              uint32_t hash) {
+  const uint8_t *key = (const uint8_t *)data;
 
-	for (size_t i = 0; i < length; i++) {
-		hash += key[i];
-		hash += (hash << 10);
-		hash ^= (hash >> 6);
-	}
+  for (size_t i = 0; i < length; i++) {
+    hash += key[i];
+    hash += (hash << 10);
+    hash ^= (hash >> 6);
+  }
 
-	return hash;
+  return hash;
 }
 
-static inline uint32_t
-os_hash_jenkins_finish(uint32_t hash)
-{
-	hash += (hash << 3);
-	hash ^= (hash >> 11);
-	hash += (hash << 15);
+static inline uint32_t os_hash_jenkins_finish(uint32_t hash) {
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
 
-	return hash;
+  return hash;
 }
 
 /*!
@@ -80,18 +77,14 @@ os_hash_jenkins_finish(uint32_t hash)
  * @returns
  * The jenkins hash for this data.
  */
-__attribute__((overloadable))
-static inline uint32_t
-os_hash_jenkins(const void *data, size_t length, uint32_t seed)
-{
-	return os_hash_jenkins_finish(os_hash_jenkins_update(data, length, seed));
+__attribute__((overloadable)) static inline uint32_t
+os_hash_jenkins(const void *data, size_t length, uint32_t seed) {
+  return os_hash_jenkins_finish(os_hash_jenkins_update(data, length, seed));
 }
 
-__attribute__((overloadable))
-static inline uint32_t
-os_hash_jenkins(const void *data, size_t length)
-{
-	return os_hash_jenkins(data, length, 0);
+__attribute__((overloadable)) static inline uint32_t
+os_hash_jenkins(const void *data, size_t length) {
+  return os_hash_jenkins(data, length, 0);
 }
 
 /*!
@@ -116,12 +109,10 @@ os_hash_jenkins(const void *data, size_t length)
  * @returns
  * The hash for this pointer.
  */
-static inline uint32_t
-os_hash_kernel_pointer(const void *pointer)
-{
-	uintptr_t key = (uintptr_t)((intptr_t)pointer << 16) >> 20;
-	key *= 0x5052acdb;
-	return (uint32_t)key ^ __builtin_bswap32((uint32_t)key);
+static inline uint32_t os_hash_kernel_pointer(const void *pointer) {
+  uintptr_t key = (uintptr_t)((intptr_t)pointer << 16) >> 20;
+  key *= 0x5052acdb;
+  return (uint32_t)key ^ __builtin_bswap32((uint32_t)key);
 }
 
 /*!
@@ -144,16 +135,14 @@ os_hash_kernel_pointer(const void *pointer)
  * @returns
  * The hash for this integer.
  */
-static inline uint32_t
-os_hash_uint64(uint64_t u64)
-{
-	u64 ^= (u64 >> 31);
-	u64 *= 0x7fb5d329728ea185ull;
-	u64 ^= (u64 >> 27);
-	u64 *= 0x81dadef4bc2dd44dull;
-	u64 ^= (u64 >> 33);
+static inline uint32_t os_hash_uint64(uint64_t u64) {
+  u64 ^= (u64 >> 31);
+  u64 *= 0x7fb5d329728ea185ull;
+  u64 ^= (u64 >> 27);
+  u64 *= 0x81dadef4bc2dd44dull;
+  u64 ^= (u64 >> 33);
 
-	return (uint32_t)u64;
+  return (uint32_t)u64;
 }
 
 __END_DECLS

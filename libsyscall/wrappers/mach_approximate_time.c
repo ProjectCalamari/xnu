@@ -20,20 +20,18 @@
  *
  * @APPLE_LICENSE_HEADER_END@
  */
-#include <sys/types.h>
 #include <machine/cpu_capabilities.h>
+#include <sys/types.h>
 
 extern uint64_t mach_absolute_time(void);
 
 #if defined(__arm64__) || defined(__x86_64__)
 
-uint64_t
-mach_approximate_time(void)
-{
-	if (COMM_PAGE_READ(uint8_t, APPROX_TIME_SUPPORTED)) {
-		return COMM_PAGE_READ(uint64_t, APPROX_TIME);
-	}
-	return mach_absolute_time();
+uint64_t mach_approximate_time(void) {
+  if (COMM_PAGE_READ(uint8_t, APPROX_TIME_SUPPORTED)) {
+    return COMM_PAGE_READ(uint64_t, APPROX_TIME);
+  }
+  return mach_absolute_time();
 }
 
 #endif

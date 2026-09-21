@@ -1,4 +1,4 @@
-#!/bin/csh -f
+#!/usr/bin/env -S tcsh -f
 set path = ($path .)
 ######################################################################
 # HISTORY
@@ -78,6 +78,7 @@ set DEF_EXCLAVES="-UMASTER_CONFIG_ENABLE_EXCLAVES"
 set DEF_SPTM="-UMASTER_CONFIG_ENABLE_SPTM"
 set DEF_BUILD=""
 set DEF_TAG=""
+set DEF_OSSHW=""
 
 
 unset doconfig
@@ -157,6 +158,9 @@ while ($#argv >= 1)
 	case "-sptm":
 	    set DEF_SPTM="-DMASTER_CONFIG_ENABLE_SPTM"
 	    breaksw
+	case "-osshw":
+	    set DEF_OSSHW="-DMASTER_CONFIG_OSS_HARDWARE"
+	    breaksw
 	default:
 	    echo "${prog}: ${argv[1]}: unknown switch"
 	    exit 1
@@ -203,7 +207,7 @@ foreach SYS ($argv)
     cat $MASTER $MASTER_CPU - \
         $MASTER $MASTER_CPU \
     | \
-    unifdef -t -DPLATFORM_${PLATFORM} -DCPU_$cpu -DSOC_CONFIG_${SOC_CONFIG} -DSYS_${SYS} $DEF_AVP $DEF_SEED $DEF_EXCLAVES $DEF_SPTM $DEF_BUILD $DEF_TAG - \
+    unifdef -t -DPLATFORM_${PLATFORM} -DCPU_$cpu -DSOC_CONFIG_${SOC_CONFIG} -DSYS_${SYS} $DEF_AVP $DEF_SEED $DEF_EXCLAVES $DEF_SPTM $DEF_BUILD $DEF_TAG $DEF_OSSHW - \
     | \
     sed -n \
 	-e "/^+/{" \

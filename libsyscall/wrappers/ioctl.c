@@ -23,23 +23,21 @@
 
 #if !defined(__i386__)
 
-#include <sys/ioctl.h>
 #include <stdarg.h>
+#include <sys/ioctl.h>
 
 int __ioctl(int, unsigned long, void *);
 /*
  * Stub function to account for the third argument being void *
  */
-int
-ioctl(int d, unsigned long request, ...)
-{
-	va_list ap;
-	void *arg;
+int ioctl(int d, unsigned long request, ...) {
+  va_list ap;
+  void *arg;
 
-	va_start(ap, request);
-	arg = va_arg(ap, void *);
-	va_end(ap);
-	return __ioctl(d, request, arg);
+  va_start(ap, request);
+  arg = va_arg(ap, void *);
+  va_end(ap);
+  return __ioctl(d, request, arg);
 }
 
 #endif

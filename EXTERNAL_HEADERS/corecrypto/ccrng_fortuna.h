@@ -1,20 +1,21 @@
 /* Copyright (c) (2018-2022) Apple Inc. All rights reserved.
  *
- * corecrypto is licensed under Apple Inc.’s Internal Use License Agreement (which
- * is contained in the License.txt file distributed with corecrypto) and only to
- * people who accept that license. IMPORTANT:  Any license rights granted to you by
- * Apple Inc. (if any) are limited to internal use within your organization only on
- * devices and computers you own or control, for the sole purpose of verifying the
- * security characteristics and correct functioning of the Apple Software.  You may
- * not, directly or indirectly, redistribute the Apple Software or any portions thereof.
+ * corecrypto is licensed under Apple Inc.’s Internal Use License Agreement
+ * (which is contained in the License.txt file distributed with corecrypto) and
+ * only to people who accept that license. IMPORTANT:  Any license rights
+ * granted to you by Apple Inc. (if any) are limited to internal use within your
+ * organization only on devices and computers you own or control, for the sole
+ * purpose of verifying the security characteristics and correct functioning of
+ * the Apple Software.  You may not, directly or indirectly, redistribute the
+ * Apple Software or any portions thereof.
  */
 
 #ifndef _CORECRYPTO_CCRNG_FORTUNA_H_
 #define _CORECRYPTO_CCRNG_FORTUNA_H_
 
+#include "cc_lock.h"
 #include <corecrypto/cc.h>
 #include <corecrypto/ccrng.h>
-#include "cc_lock.h"
 
 // This is a Fortuna-inspired PRNG. While it differs from Fortuna in
 // many minor details, the biggest difference is its support for
@@ -77,24 +78,24 @@
 #define CCRNG_FORTUNA_KEY_NBYTES 32
 
 struct ccrng_fortuna_pool_ctx {
-    uint8_t data[CCRNG_FORTUNA_POOL_NBYTES];
+  uint8_t data[CCRNG_FORTUNA_POOL_NBYTES];
 
-    // The number of samples currently resident in the pool
-    uint64_t nsamples;
+  // The number of samples currently resident in the pool
+  uint64_t nsamples;
 
-    // The number of times this pool has been drained in a reseed
-    uint64_t ndrains;
+  // The number of times this pool has been drained in a reseed
+  uint64_t ndrains;
 
-    // The maximum number of samples this pool has held at any one time
-    uint64_t nsamples_max;
+  // The maximum number of samples this pool has held at any one time
+  uint64_t nsamples_max;
 };
 
 struct ccrng_fortuna_sched_ctx {
-    // A counter governing the set of entropy pools to drain
-    uint64_t reseed_sched;
+  // A counter governing the set of entropy pools to drain
+  uint64_t reseed_sched;
 
-    // An index used to add entropy to pools in a round-robin style
-    unsigned pool_idx;
+  // An index used to add entropy to pools in a round-robin style
+  unsigned pool_idx;
 };
 
 // A function pointer to fill an entropy buffer. It should return some
@@ -108,49 +109,48 @@ struct ccrng_fortuna_sched_ctx {
 // bytes it has initialized. The third argument is arbitrary state the
 // implementation provides and receives back on each call.
 typedef int32_t (*ccrng_fortuna_getentropy)(size_t *entropy_nbytes,
-                                            void *entropy,
-                                            void *arg);
+                                            void *entropy, void *arg);
 
 struct ccrng_fortuna_ctx {
-    CCRNG_STATE_COMMON
+  CCRNG_STATE_COMMON
 
-    // The root secret of the PRNG
-    uint8_t key[CCRNG_FORTUNA_KEY_NBYTES];
+  // The root secret of the PRNG
+  uint8_t key[CCRNG_FORTUNA_KEY_NBYTES];
 
-    // A counter used in CTR mode (with the root secret)
-    uint8_t ctr[16];
+  // A counter used in CTR mode (with the root secret)
+  uint8_t ctr[16];
 
-    // State used to schedule entropy consumption and reseeds
-    struct ccrng_fortuna_sched_ctx sched;
+  // State used to schedule entropy consumption and reseeds
+  struct ccrng_fortuna_sched_ctx sched;
 
-    // A mutex governing access to shared state
-    cc_lock_ctx_t lock;
+  // A mutex governing access to shared state
+  cc_lock_ctx_t lock;
 
-    // A set of entropy pools
-    struct ccrng_fortuna_pool_ctx pools[CCRNG_FORTUNA_NPOOLS];
+  // A set of entropy pools
+  struct ccrng_fortuna_pool_ctx pools[CCRNG_FORTUNA_NPOOLS];
 
-    // A function pointer to get entropy
-    CC_SPTR(ccrng_fortuna_ctx, ccrng_fortuna_getentropy) getentropy;
+  // A function pointer to get entropy
+  CC_SPTR(ccrng_fortuna_ctx, ccrng_fortuna_getentropy) getentropy;
 
-    // An arbitrary piece of state to be provided to the entropy function
-    void *getentropy_arg;
+  // An arbitrary piece of state to be provided to the entropy function
+  void *getentropy_arg;
 
-    // A flag describing whether the instance has been seeded with
-    // sufficient entropy. This flag is set when a set of pools
-    // containing a minimum threshold of entropy inputs is
-    // drained. The PRNG will not generate output until this flag is
-    // set. This flag is reset if the entropy source signals a
-    // failure.
-    bool seeded;
+  // A flag describing whether the instance has been seeded with
+  // sufficient entropy. This flag is set when a set of pools
+  // containing a minimum threshold of entropy inputs is
+  // drained. The PRNG will not generate output until this flag is
+  // set. This flag is reset if the entropy source signals a
+  // failure.
+  bool seeded;
 
-    // The number of scheduled reseeds
-    uint64_t nreseeds;
+  // The number of scheduled reseeds
+  uint64_t nreseeds;
 
-    // The maximum number of samples included in any one scheduler reseed
-    uint64_t schedreseed_nsamples_max;
+  // The maximum number of samples included in any one scheduler reseed
+  uint64_t schedreseed_nsamples_max;
 
-    // The maximum number of samples included in any one entropy input
-    uint64_t addentropy_nsamples_max;
+  // The maximum number of samples included in any one entropy input
+  uint64_t addentropy_nsamples_max;
 };
 
 /*
@@ -161,7 +161,9 @@ struct ccrng_fortuna_ctx {
   @param getentropy A function pointer to fill an entropy buffer
   @param getentropy_arg State provided to the entropy function
 
-  @discussion @p max_ngens should be set based on an upper bound of CPUs available on the device. See the @p ccrng_fortuna_getentropy type definition for discussion on its semantics.
+  @discussion @p max_ngens should be set based on an upper bound of CPUs
+  available on the device. See the @p ccrng_fortuna_getentropy type definition
+  for discussion on its semantics.
 */
 void ccrng_fortuna_init(struct ccrng_fortuna_ctx *ctx,
                         ccrng_fortuna_getentropy getentropy,
@@ -175,7 +177,11 @@ void ccrng_fortuna_init(struct ccrng_fortuna_ctx *ctx,
 
   @return True if a reseed occurred, false otherwise.
 
-  @discussion This function should be called on a regular basis. (For example, it is reasonable to call this inline before a call to @p ccrng_fortuna_generate.) This function will not necessarily consume entropy or reseed the internal state on any given invocation. To force an immediate reseed, call @p ccrng_fortuna_reseed.
+  @discussion This function should be called on a regular basis. (For example,
+  it is reasonable to call this inline before a call to @p
+  ccrng_fortuna_generate.) This function will not necessarily consume entropy or
+  reseed the internal state on any given invocation. To force an immediate
+  reseed, call @p ccrng_fortuna_reseed.
 */
 bool ccrng_fortuna_refresh(struct ccrng_fortuna_ctx *ctx);
 
@@ -191,8 +197,13 @@ bool ccrng_fortuna_refresh(struct ccrng_fortuna_ctx *ctx);
 
   @return 0 on success, negative otherwise.
 
-  @discussion @p gen_idx must be a previous argument to @p ccrng_fortuna_initgen. @p nbytes must be less than or equal to @p CCRNG_FORTUNA_GENERATE_MAX_NBYTES. (Callers may invoke this function in a loop to generate larger outputs.) This function will abort if these contracts are violated.
+  @discussion @p gen_idx must be a previous argument to @p
+  ccrng_fortuna_initgen. @p nbytes must be less than or equal to @p
+  CCRNG_FORTUNA_GENERATE_MAX_NBYTES. (Callers may invoke this function in a loop
+  to generate larger outputs.) This function will abort if these contracts are
+  violated.
 */
-int ccrng_fortuna_generate(struct ccrng_fortuna_ctx *ctx, size_t nbytes, void *out);
+int ccrng_fortuna_generate(struct ccrng_fortuna_ctx *ctx, size_t nbytes,
+                           void *out);
 
 #endif /* _CORECRYPTO_CCRNG_FORTUNA_H_ */

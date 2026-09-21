@@ -31,38 +31,38 @@
 
 #include <sys/cdefs.h>
 
-#include <stdint.h>
 #include <kern/kern_types.h>
+#include <stdint.h>
 
-#include <kern/thread_group.h>
 #include <kern/recount.h>
+#include <kern/thread_group.h>
 
 __BEGIN_DECLS
 
 struct work_interval;
 
 struct kern_work_interval_args {
-	uint64_t work_interval_id;
-	uint64_t start;
-	uint64_t finish;
-	uint64_t deadline;
-	uint64_t next_start;
-	uint32_t notify_flags;
-	uint32_t create_flags;
-	uint16_t urgency;
+  uint64_t work_interval_id;
+  uint64_t start;
+  uint64_t finish;
+  uint64_t deadline;
+  uint64_t next_start;
+  uint32_t notify_flags;
+  uint32_t create_flags;
+  uint16_t urgency;
 };
 
 struct kern_work_interval_create_args {
-	uint64_t        wica_id;          /* out param */
-	mach_port_name_t wica_port;        /* out param */
-	uint32_t        wica_create_flags;
+  uint64_t wica_id;           /* out param */
+  mach_port_name_t wica_port; /* out param */
+  uint32_t wica_create_flags;
 };
 
 struct kern_work_interval_workload_id_args {
-	uint32_t        wlida_flags;            /* in/out param */
-	uint32_t        wlida_wicreate_flags;   /* in/out param */
-	char *          wlida_name;             /* in param */
-	uint64_t        wlida_syscall_mask[2];  /* out param */
+  uint32_t wlida_flags;           /* in/out param */
+  uint32_t wlida_wicreate_flags;  /* in/out param */
+  char *wlida_name;               /* in param */
+  uint64_t wlida_syscall_mask[2]; /* out param */
 };
 
 /*
@@ -70,10 +70,12 @@ struct kern_work_interval_workload_id_args {
  * and support deallocating it.
  */
 extern kern_return_t
-kern_work_interval_create(thread_t thread, struct kern_work_interval_create_args *create_params);
+kern_work_interval_create(thread_t thread,
+                          struct kern_work_interval_create_args *create_params);
 
 extern kern_return_t
-kern_work_interval_get_flags_from_port(mach_port_name_t port_name, uint32_t*flags);
+kern_work_interval_get_flags_from_port(mach_port_name_t port_name,
+                                       uint32_t *flags);
 
 /*
  * A private interface for kevent subsystem.
@@ -81,7 +83,7 @@ kern_work_interval_get_flags_from_port(mach_port_name_t port_name, uint32_t*flag
  */
 extern kern_return_t
 kern_port_name_to_work_interval(mach_port_name_t name,
-    struct work_interval **work_interval);
+                                struct work_interval **work_interval);
 
 /*
  * A private interface for kevent subsystem.
@@ -92,8 +94,7 @@ kern_port_name_to_work_interval(mach_port_name_t name,
  */
 extern kern_return_t
 kern_work_interval_get_policy(struct work_interval *work_interval,
-    integer_t *policy,
-    integer_t *priority);
+                              integer_t *policy, integer_t *priority);
 
 #if CONFIG_THREAD_GROUPS
 /*
@@ -103,7 +104,7 @@ kern_work_interval_get_policy(struct work_interval *work_interval,
  */
 extern kern_return_t
 kern_work_interval_get_thread_group(struct work_interval *work_interval,
-    struct thread_group **tg);
+                                    struct thread_group **tg);
 #endif /* CONFIG_THREAD_GROUPS */
 
 /*
@@ -111,8 +112,7 @@ kern_work_interval_get_thread_group(struct work_interval *work_interval,
  * Routine to release a ref count on the work interval.
  * For more information, see work_interval_release.
  */
-extern void
-kern_work_interval_release(struct work_interval *work_interval);
+extern void kern_work_interval_release(struct work_interval *work_interval);
 
 /*
  * A private interface for workqueue subsystem.
@@ -121,20 +121,21 @@ kern_work_interval_release(struct work_interval *work_interval);
  * join the work interval. Expects @thread to be the calling thread.
  */
 extern kern_return_t
-kern_work_interval_explicit_join(thread_t thread, struct work_interval *work_interval);
+kern_work_interval_explicit_join(thread_t thread,
+                                 struct work_interval *work_interval);
 
+extern kern_return_t kern_work_interval_destroy(thread_t thread,
+                                                uint64_t work_interval_id);
+extern kern_return_t kern_work_interval_join(thread_t thread,
+                                             mach_port_name_t port_name);
 
 extern kern_return_t
-kern_work_interval_destroy(thread_t thread, uint64_t work_interval_id);
-extern kern_return_t
-kern_work_interval_join(thread_t thread, mach_port_name_t port_name);
-
-extern kern_return_t
-kern_work_interval_notify(thread_t thread, struct kern_work_interval_args* kwi_args);
-extern kern_return_t
-kern_work_interval_set_name(mach_port_name_t port_name, char *name, size_t len);
-extern kern_return_t
-kern_work_interval_set_workload_id(mach_port_name_t port_name,
+kern_work_interval_notify(thread_t thread,
+                          struct kern_work_interval_args *kwi_args);
+extern kern_return_t kern_work_interval_set_name(mach_port_name_t port_name,
+                                                 char *name, size_t len);
+extern kern_return_t kern_work_interval_set_workload_id(
+    mach_port_name_t port_name,
     struct kern_work_interval_workload_id_args *workload_id_args);
 
 #ifdef MACH_KERNEL_PRIVATE
@@ -148,8 +149,8 @@ void work_interval_auto_join_unwind(thread_t thread);
 void work_interval_auto_join_demote(thread_t thread);
 #endif /* CONFIG_SCHED_AUTO_JOIN */
 
-
-struct recount_track *work_interval_get_recount_tracks(struct work_interval *work_interval);
+struct recount_track *
+work_interval_get_recount_tracks(struct work_interval *work_interval);
 
 extern kern_return_t work_interval_thread_terminate(thread_t thread);
 extern int work_interval_get_priority(thread_t thread);
@@ -158,19 +159,14 @@ extern int work_interval_get_priority(thread_t thread);
 
 #ifdef KERNEL_PRIVATE
 
-__enum_closed_decl(wi_class_t, uint8_t, {
-	WI_CLASS_NONE              = 0,
-	WI_CLASS_DISCRETIONARY     = 1,
-	WI_CLASS_BEST_EFFORT       = 2,
-	WI_CLASS_APPLICATION       = 3,
-	WI_CLASS_SYSTEM            = 4,
-	WI_CLASS_SYSTEM_CRITICAL   = 5,
-	WI_CLASS_REALTIME          = 6,
-	WI_CLASS_REALTIME_CRITICAL = 7,
-	WI_CLASS_APP_SUPPORT       = 8,
+__enum_closed_decl(wi_class_t, uint8_t,
+                   {WI_CLASS_NONE = 0, WI_CLASS_DISCRETIONARY = 1,
+                    WI_CLASS_BEST_EFFORT = 2, WI_CLASS_APPLICATION = 3,
+                    WI_CLASS_SYSTEM = 4, WI_CLASS_SYSTEM_CRITICAL = 5,
+                    WI_CLASS_REALTIME = 6, WI_CLASS_REALTIME_CRITICAL = 7,
+                    WI_CLASS_APP_SUPPORT = 8,
 
-	WI_CLASS_COUNT
-});
+                    WI_CLASS_COUNT});
 
 #endif
 

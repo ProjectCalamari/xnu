@@ -34,9 +34,9 @@
 #ifndef __IMAGE4_API_ENVIRONMENT_H
 #define __IMAGE4_API_ENVIRONMENT_H
 
+#include <image4/coprocessor.h>
 #include <image4/image4.h>
 #include <image4/types.h>
-#include <image4/coprocessor.h>
 #include <stdbool.h>
 
 __BEGIN_DECLS
@@ -84,11 +84,9 @@ typedef struct _image4_environment_storage image4_environment_storage_t;
  * This callback is utilized by exec, sign, and boot trust evaluations.
  */
 typedef errno_t (*image4_environment_query_boot_nonce_t)(
-	const image4_environment_t *nv,
-	uint8_t n[__static_size _Nonnull IMAGE4_NONCE_MAX_LEN],
-	size_t *n_len,
-	void *_ctx
-);
+    const image4_environment_t *nv,
+    uint8_t n[__static_size _Nonnull IMAGE4_NONCE_MAX_LEN], size_t *n_len,
+    void *_ctx);
 
 /*!
  * @typedef image4_environment_query_nonce_digest_t
@@ -126,11 +124,9 @@ typedef errno_t (*image4_environment_query_boot_nonce_t)(
  * callback.
  */
 typedef errno_t (*image4_environment_query_nonce_digest_t)(
-	const image4_environment_t *nv,
-	uint8_t nd[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN],
-	size_t *nd_len,
-	void *_ctx
-);
+    const image4_environment_t *nv,
+    uint8_t nd[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN], size_t *nd_len,
+    void *_ctx);
 
 /*!
  * @typedef image4_environment_identifier_bool_t
@@ -150,11 +146,8 @@ typedef errno_t (*image4_environment_query_nonce_digest_t)(
  * The context pointer which was provided during the environment's construction.
  */
 typedef void (*image4_environment_identifier_bool_t)(
-	const image4_environment_t *nv,
-	const image4_identifier_t *id4,
-	bool val,
-	void *_ctx
-);
+    const image4_environment_t *nv, const image4_identifier_t *id4, bool val,
+    void *_ctx);
 
 /*!
  * @typedef image4_environment_identifier_integer_t
@@ -174,11 +167,8 @@ typedef void (*image4_environment_identifier_bool_t)(
  * The context pointer which was provided during the environment's construction.
  */
 typedef void (*image4_environment_identifier_integer_t)(
-	const image4_environment_t *nv,
-	const image4_identifier_t *id4,
-	uint64_t val,
-	void *_ctx
-);
+    const image4_environment_t *nv, const image4_identifier_t *id4,
+    uint64_t val, void *_ctx);
 
 /*!
  * @typedef image4_environment_identifier_data_t
@@ -201,12 +191,8 @@ typedef void (*image4_environment_identifier_integer_t)(
  * The context pointer which was provided during the environment's construction.
  */
 typedef void (*image4_environment_identifier_data_t)(
-	const image4_environment_t *nv,
-	const image4_identifier_t *id4,
-	const void *vp,
-	size_t vp_len,
-	void *_ctx
-);
+    const image4_environment_t *nv, const image4_identifier_t *id4,
+    const void *vp, size_t vp_len, void *_ctx);
 
 /*!
  * @const IMAGE4_ENVIRONMENT_CALLBACKS_STRUCT_VERSION
@@ -243,12 +229,12 @@ typedef void (*image4_environment_identifier_data_t)(
  * The callback to convey an octet string identifier in the environment.
  */
 typedef struct _image4_environment_callbacks {
-	image4_struct_version_t nvcb_version;
-	image4_environment_query_boot_nonce_t _Nullable nvcb_query_boot_nonce;
-	image4_environment_query_nonce_digest_t _Nullable nvcb_query_nonce_digest;
-	image4_environment_identifier_bool_t _Nullable nvcb_identifier_bool;
-	image4_environment_identifier_integer_t _Nullable nvcb_identifier_integer;
-	image4_environment_identifier_data_t _Nullable nvcb_identifier_data;
+  image4_struct_version_t nvcb_version;
+  image4_environment_query_boot_nonce_t _Nullable nvcb_query_boot_nonce;
+  image4_environment_query_nonce_digest_t _Nullable nvcb_query_nonce_digest;
+  image4_environment_identifier_bool_t _Nullable nvcb_identifier_bool;
+  image4_environment_identifier_integer_t _Nullable nvcb_identifier_integer;
+  image4_environment_identifier_data_t _Nullable nvcb_identifier_data;
 } image4_environment_callbacks_t;
 
 /*!
@@ -267,16 +253,15 @@ typedef struct _image4_environment_callbacks {
  * The opaque storage.
  */
 struct _image4_environment_storage {
-	uint8_t __opaque[256];
+  uint8_t __opaque[256];
 };
 
 /*!
  * @const IMAGE4_TRUST_STORAGE_INIT
  * Initializer for a {@link image4_environment_storage_t} object.
  */
-#define IMAGE4_ENVIRONMENT_STORAGE_INIT (image4_environment_storage_t){ \
-	.__opaque = { 0x00 }, \
-}
+#define IMAGE4_ENVIRONMENT_STORAGE_INIT                                        \
+  (image4_environment_storage_t) { .__opaque = {0x00}, }
 
 #pragma mark API
 /*!
@@ -299,19 +284,14 @@ struct _image4_environment_storage {
  * An initialized {@link image4_environment_t} object.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-image4_environment_t *
-_image4_environment_init(
-	image4_environment_storage_t *storage,
-	const image4_coprocessor_t *_Nullable coproc,
-	image4_coprocessor_handle_t handle,
-	image4_struct_version_t v);
-#define image4_environment_init(_storage, _coproc, _handle) \
-	_image4_environment_init( \
-		(_storage), \
-		(_coproc), \
-		(_handle), \
-		IMAGE4_ENVIRONMENT_STRUCT_VERSION)
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 image4_environment_t *
+_image4_environment_init(image4_environment_storage_t *storage,
+                         const image4_coprocessor_t *_Nullable coproc,
+                         image4_coprocessor_handle_t handle,
+                         image4_struct_version_t v);
+#define image4_environment_init(_storage, _coproc, _handle)                    \
+  _image4_environment_init((_storage), (_coproc), (_handle),                   \
+                           IMAGE4_ENVIRONMENT_STRUCT_VERSION)
 IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_environment_init);
 
 /*!
@@ -344,10 +324,9 @@ IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_environment_init);
  *     nv = image4_environment_init_coproc(&s, CRYPTEX1, BOOT);
  */
 #define image4_environment_init_coproc(_storage, _coproc_short, _handle_short) \
-	image4_environment_init( \
-		(_storage), \
-		IMAGE4_COPROCESSOR_ ## _coproc_short, \
-		IMAGE4_COPROCESSOR_HANDLE_ ## _coproc_short ## _ ## _handle_short)
+  image4_environment_init(                                                     \
+      (_storage), IMAGE4_COPROCESSOR_##_coproc_short,                          \
+      IMAGE4_COPROCESSOR_HANDLE_##_coproc_short##_##_handle_short)
 
 /*!
  * @function image4_environment_new
@@ -371,11 +350,9 @@ IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_environment_init);
  * host runtime does not have an allocator, NULL is returned.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT
-image4_environment_t *_Nullable
-image4_environment_new(
-	const image4_coprocessor_t *_Nullable coproc,
-	image4_coprocessor_handle_t handle);
+OS_EXPORT OS_WARN_RESULT image4_environment_t *_Nullable image4_environment_new(
+    const image4_coprocessor_t *_Nullable coproc,
+    image4_coprocessor_handle_t handle);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_new);
 
 /*!
@@ -408,10 +385,10 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_new);
  *
  *     nv = image4_environment_new_coproc(CRYPTEX1, BOOT);
  */
-#define image4_environment_new_coproc(_coproc_short, _handle_short) \
-	image4_environment_new( \
-		IMAGE4_COPROCESSOR_ ## _coproc_short, \
-		IMAGE4_COPROCESSOR_HANDLE_ ## _coproc_short ## _ ## _handle_short)
+#define image4_environment_new_coproc(_coproc_short, _handle_short)            \
+  image4_environment_new(                                                      \
+      IMAGE4_COPROCESSOR_##_coproc_short,                                      \
+      IMAGE4_COPROCESSOR_HANDLE_##_coproc_short##_##_handle_short)
 
 /*!
  * @function image4_environment_set_secure_boot
@@ -428,11 +405,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_new);
  * secure boot, this is a no-op.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1
-void
-image4_environment_set_secure_boot(
-	image4_environment_t *nv,
-	image4_secure_boot_t secure_boot);
+OS_EXPORT OS_NONNULL1 void
+image4_environment_set_secure_boot(image4_environment_t *nv,
+                                   image4_secure_boot_t secure_boot);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_set_secure_boot);
 
 /*!
@@ -468,11 +443,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_set_secure_boot);
  * the static properties of the coprocessor.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1
-void
-image4_environment_set_nonce_domain(
-	image4_environment_t *nv,
-	uint32_t nonce_domain);
+OS_EXPORT OS_NONNULL1 void
+image4_environment_set_nonce_domain(image4_environment_t *nv,
+                                    uint32_t nonce_domain);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_set_nonce_domain);
 
 /*!
@@ -489,12 +462,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_set_nonce_domain);
  * The caller-defined context to be passed to each callback.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL2
-void
-image4_environment_set_callbacks(
-	image4_environment_t *nv,
-	const image4_environment_callbacks_t *callbacks,
-	void *_Nullable _ctx);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 void image4_environment_set_callbacks(
+    image4_environment_t *nv, const image4_environment_callbacks_t *callbacks,
+    void *_Nullable _ctx);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_set_callbacks);
 
 /*!
@@ -511,10 +481,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_set_callbacks);
  * callback structure, the implementation's behavior is undefined.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1
-void
-image4_environment_identify(
-	const image4_environment_t *nv);
+OS_EXPORT OS_NONNULL1 void
+image4_environment_identify(const image4_environment_t *nv);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_identify);
 
 /*!
@@ -533,10 +501,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_identify);
  * This function first became available in API version 20231215.
  */
 IMAGE4_API_AVAILABLE_FALL_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-const struct ccdigest_info *
-image4_environment_get_digest_info(
-		const image4_environment_t *nv);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 const struct ccdigest_info *
+image4_environment_get_digest_info(const image4_environment_t *nv);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_get_digest_info);
 
 /*!
@@ -564,12 +530,10 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_get_digest_info);
  *                the next boot
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3 errno_t
 image4_environment_copy_nonce_digest(
-	const image4_environment_t *nv,
-	uint8_t d[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN],
-	size_t *d_len);
+    const image4_environment_t *nv,
+    uint8_t d[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN], size_t *d_len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_copy_nonce_digest);
 
 /*!
@@ -589,10 +553,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_copy_nonce_digest);
  *     [ENOTSUP]  The environment does not manage a nonce for anti-replay
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-errno_t
-image4_environment_roll_nonce(
-	const image4_environment_t *nv);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 errno_t
+image4_environment_roll_nonce(const image4_environment_t *nv);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_roll_nonce);
 
 /*!
@@ -647,14 +609,12 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_roll_nonce);
  * that the proposal nonce itself is not desired.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
 image4_environment_generate_nonce_proposal(
-	const image4_environment_t *nv,
-	uint8_t d[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN],
-	size_t *d_len,
-	uint8_t n[__static_array_or_null(IMAGE4_NONCE_MAX_LEN)],
-	size_t *_Nullable n_len);
+    const image4_environment_t *nv,
+    uint8_t d[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN], size_t *d_len,
+    uint8_t n[__static_array_or_null(IMAGE4_NONCE_MAX_LEN)],
+    size_t *_Nullable n_len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_generate_nonce_proposal);
 
 /*!
@@ -684,12 +644,11 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_generate_nonce_proposal);
  *                generates a proposal for the environment
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
 image4_environment_commit_nonce_proposal(
-	const image4_environment_t *nv,
-	const uint8_t d[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN],
-	size_t *d_len);
+    const image4_environment_t *nv,
+    const uint8_t d[__static_size _Nonnull IMAGE4_DIGEST_MAX_LEN],
+    size_t *d_len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_commit_nonce_proposal);
 
 /*!
@@ -748,14 +707,11 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_commit_nonce_proposal);
  * that the proposal nonce itself is not desired.
  */
 IMAGE4_API_AVAILABLE_FALL_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
 image4_environment_flash(
-	const image4_environment_t *nv,
-	const void *__sized_by(object_len) object,
-	size_t object_len,
-	uint8_t n[__static_array_or_null(IMAGE4_NONCE_MAX_LEN)],
-	size_t *_Nullable n_len);
+    const image4_environment_t *nv, const void *__sized_by(object_len) object,
+    size_t object_len, uint8_t n[__static_array_or_null(IMAGE4_NONCE_MAX_LEN)],
+    size_t *_Nullable n_len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_flash);
 
 /*!
@@ -772,10 +728,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_flash);
  * it is a no-op.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1
-void
-image4_environment_destroy(
-	image4_environment_t *_Nonnull *_Nullable nv);
+OS_EXPORT OS_NONNULL1 void
+image4_environment_destroy(image4_environment_t *_Nonnull *_Nullable nv);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_environment_destroy);
 
 #pragma mark Retired

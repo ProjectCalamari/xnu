@@ -36,38 +36,49 @@
 
 class IODMAEventSource;
 
-class IODMAController : public IOService
-{
-	OSDeclareAbstractStructors(IODMAController);
+class IODMAController : public IOService {
+  OSDeclareAbstractStructors(IODMAController);
 
-	friend class IODMAEventSource;
+  friend class IODMAEventSource;
 
 private:
-	IOService       *_provider;
-	OSPtr<const OSSymbol> _dmaControllerName;
+  IOService *_provider;
+  OSPtr<const OSSymbol> _dmaControllerName;
 
 protected:
-	virtual void registerDMAController(IOOptionBits options = 0);
-	virtual IOReturn initDMAChannel(IOService *provider, IODMAEventSource *dmaES, UInt32 *dmaIndex, UInt32 reqIndex) = 0;
-	virtual IOReturn startDMACommand(UInt32 dmaIndex, IODMACommand *dmaCommand, IODirection direction,
-	    IOByteCount byteCount = 0, IOByteCount byteOffset = 0) = 0;
-	virtual IOReturn stopDMACommand(UInt32 dmaIndex, bool flush = false, uint64_t timeout = UINT64_MAX) = 0;
-	virtual void completeDMACommand(IODMAEventSource *dmaES, IODMACommand *dmaCommand);
-	virtual void notifyDMACommand(IODMAEventSource *dmaES, IODMACommand *dmaCommand, IOReturn status, IOByteCount actualByteCount, AbsoluteTime timeStamp);
-	virtual IOReturn queryDMACommand(UInt32 dmaIndex, IODMACommand **dmaCommand, IOByteCount *transferCount, bool waitForIdle = false) = 0;
-	virtual IOByteCount getFIFODepth(UInt32 dmaIndex, IODirection direction) = 0;
-	virtual IOReturn setFIFODepth(UInt32 dmaIndex, IOByteCount depth) = 0;
-	virtual IOByteCount validFIFODepth(UInt32 dmaIndex, IOByteCount depth, IODirection direction) = 0;
-	virtual IOReturn setFrameSize(UInt32 dmaIndex, UInt8 byteCount) = 0;
-	virtual IOReturn setDMAConfig(UInt32 dmaIndex, IOService *provider, UInt32 reqIndex) = 0;
-	virtual bool validDMAConfig(UInt32 dmaIndex, IOService *provider, UInt32 reqIndex) = 0;
+  virtual void registerDMAController(IOOptionBits options = 0);
+  virtual IOReturn initDMAChannel(IOService *provider, IODMAEventSource *dmaES,
+                                  UInt32 *dmaIndex, UInt32 reqIndex) = 0;
+  virtual IOReturn startDMACommand(UInt32 dmaIndex, IODMACommand *dmaCommand,
+                                   IODirection direction,
+                                   IOByteCount byteCount = 0,
+                                   IOByteCount byteOffset = 0) = 0;
+  virtual IOReturn stopDMACommand(UInt32 dmaIndex, bool flush = false,
+                                  uint64_t timeout = UINT64_MAX) = 0;
+  virtual void completeDMACommand(IODMAEventSource *dmaES,
+                                  IODMACommand *dmaCommand);
+  virtual void notifyDMACommand(IODMAEventSource *dmaES,
+                                IODMACommand *dmaCommand, IOReturn status,
+                                IOByteCount actualByteCount,
+                                AbsoluteTime timeStamp);
+  virtual IOReturn queryDMACommand(UInt32 dmaIndex, IODMACommand **dmaCommand,
+                                   IOByteCount *transferCount,
+                                   bool waitForIdle = false) = 0;
+  virtual IOByteCount getFIFODepth(UInt32 dmaIndex, IODirection direction) = 0;
+  virtual IOReturn setFIFODepth(UInt32 dmaIndex, IOByteCount depth) = 0;
+  virtual IOByteCount validFIFODepth(UInt32 dmaIndex, IOByteCount depth,
+                                     IODirection direction) = 0;
+  virtual IOReturn setFrameSize(UInt32 dmaIndex, UInt8 byteCount) = 0;
+  virtual IOReturn setDMAConfig(UInt32 dmaIndex, IOService *provider,
+                                UInt32 reqIndex) = 0;
+  virtual bool validDMAConfig(UInt32 dmaIndex, IOService *provider,
+                              UInt32 reqIndex) = 0;
 
 public:
-	static OSPtr<const OSSymbol> createControllerName(UInt32 phandle);
-	static IODMAController *getController(IOService *provider, UInt32 dmaIndex);
+  static OSPtr<const OSSymbol> createControllerName(UInt32 phandle);
+  static IODMAController *getController(IOService *provider, UInt32 dmaIndex);
 
-	virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
+  virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
 };
-
 
 #endif /* _IOKIT_IODMACONTROLLER_H */

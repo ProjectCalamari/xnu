@@ -28,30 +28,26 @@
 
 #define UT_MODULE osfmk
 
-#include <darwintest.h>
-#include <arm/misc_protos.h>
+#include "mocks/mock_cpu.h"
 #include <arm/cpu_data_internal.h>
 #include <arm/cpu_internal.h>
-#include "mocks/mock_cpu.h"
+#include <arm/misc_protos.h>
+#include <darwintest.h>
 
+T_GLOBAL_META(T_META_NAMESPACE("xnu.unit.debugger_xcall_test"),
+              T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RUN_CONCURRENTLY(false));
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.unit.debugger_xcall_test"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RUN_CONCURRENTLY(false)
-	);
+T_DECL(debugger_xcall_enter_cpu_signal_fail,
+       "DebuggerXCallEnter where cpu_signal fails.") {
+  T_MOCK_SET_RETVAL(cpu_signal, kern_return_t, KERN_FAILURE);
 
+  // Init with 2 CPUs. We are cpu-0
+  T_MOCK_SET_RETVAL(ml_get_max_cpu_number, int, 1);
+  cpu_data_t cpu_data_cpu1 = {0};
+  CpuDataEntries[0].cpu_data_vaddr = getCpuDatap();
+  CpuDataEntries[1].cpu_data_vaddr = &cpu_data_cpu1;
 
-T_DECL(debugger_xcall_enter_cpu_signal_fail, "DebuggerXCallEnter where cpu_signal fails.")
-{
-	T_MOCK_SET_RETVAL(cpu_signal, kern_return_t, KERN_FAILURE);
-
-	// Init with 2 CPUs. We are cpu-0
-	T_MOCK_SET_RETVAL(ml_get_max_cpu_number, int, 1);
-	cpu_data_t cpu_data_cpu1 = {0};
-	CpuDataEntries[0].cpu_data_vaddr = getCpuDatap();
-	CpuDataEntries[1].cpu_data_vaddr = &cpu_data_cpu1;
-
-	kern_return_t result = DebuggerXCallEnter(false, false);
-	T_EXPECT_MACH_SUCCESS(result, "Expecting DebuggerXCallEnter() success.");
+  kern_return_t result = DebuggerXCallEnter(false, false);
+  T_EXPECT_MACH_SUCCESS(result, "Expecting DebuggerXCallEnter() success.");
 }

@@ -66,7 +66,7 @@
 #ifndef _I386__ENDIAN_H_
 #define _I386__ENDIAN_H_
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 
 #include <sys/cdefs.h>
 /*
@@ -80,10 +80,11 @@
 #define _QUAD_HIGHWORD 1
 #define _QUAD_LOWWORD 0
 
-#if     defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#if defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 
 #include <sys/_endian.h>
 
-#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) */
+#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) ||                     \
+          defined(_DARWIN_C_SOURCE)) */
 #endif /* defined (__i386__) || defined (__x86_64__) */
 #endif /* !_I386__ENDIAN_H_ */

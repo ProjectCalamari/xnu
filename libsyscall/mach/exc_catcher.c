@@ -32,35 +32,35 @@
  */
 
 #include <mach/boolean.h>
-#include <mach/message.h>
 #include <mach/exception.h>
+#include <mach/message.h>
 #include <mach/mig_errors.h>
 
 #include "abort.h"
 #include "exc_catcher.h"
 
 __private_extern__ kern_return_t
-internal_catch_exception_raise(
-	mach_port_t exception_port,
-	mach_port_t thread,
-	mach_port_t task,
-	exception_type_t exception,
-	exception_data_t code,
-	mach_msg_type_number_t codeCnt)
-{
+internal_catch_exception_raise(mach_port_t exception_port, mach_port_t thread,
+                               mach_port_t task, exception_type_t exception,
+                               exception_data_t code,
+                               mach_msg_type_number_t codeCnt) {
 #if defined(__DYNAMIC__)
-	static _libkernel_exc_raise_func_t exc_raise_func = (void*)-1;
+  static _libkernel_exc_raise_func_t exc_raise_func = (void *)-1;
 
-	if (exc_raise_func == ((void*)-1) && _dlsym) {
-		exc_raise_func = _dlsym(RTLD_DEFAULT, "catch_exception_raise");
-	}
-	if (exc_raise_func == 0) {
-		/* The user hasn't defined catch_exception_raise in their binary */
-		abort();
-	}
-	return (*exc_raise_func)(exception_port, thread, task, exception, code, codeCnt);
+  if (exc_raise_func == ((void *)-1) && _dlsym) {
+    exc_raise_func = _dlsym(RTLD_DEFAULT, "catch_exception_raise");
+  }
+  if (exc_raise_func == 0) {
+    /* The user hasn't defined catch_exception_raise in their binary */
+    abort();
+  }
+  return (*exc_raise_func)(exception_port, thread, task, exception, code,
+                           codeCnt);
 #else
-	extern kern_return_t catch_exception_raise(mach_port_t, mach_port_t, mach_port_t, exception_type_t, exception_data_t, mach_msg_type_number_t);
-	return catch_exception_raise(exception_port, thread, task, exception, code, codeCnt);
+  extern kern_return_t catch_exception_raise(
+      mach_port_t, mach_port_t, mach_port_t, exception_type_t, exception_data_t,
+      mach_msg_type_number_t);
+  return catch_exception_raise(exception_port, thread, task, exception, code,
+                               codeCnt);
 #endif
 }

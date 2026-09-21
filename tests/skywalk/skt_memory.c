@@ -27,31 +27,32 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
 
-#include "skywalk_test_driver.h"
 #include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
 #include "skywalk_test_utils.h"
 
-static int
-skt_memory_main(int argc, char *argv[])
-{
+static int skt_memory_main(int argc, char *argv[]) {
 #pragma unused(argc, argv)
-	/*
-	 * A failure for this test is indicated by either a panic or
-	 * a hang; we rely on some external mechanism to detect the
-	 * latter and take the appropriate actions.
-	 */
-	return 0;
+  /*
+   * A failure for this test is indicated by either a panic or
+   * a hang; we rely on some external mechanism to detect the
+   * latter and take the appropriate actions.
+   */
+  return 0;
 }
 
 struct skywalk_test skt_memory = {
-	"memory", "skmem allocator basic and advanced tests",
-	SK_FEATURE_SKYWALK | SK_FEATURE_DEV_OR_DEBUG,
-	skt_memory_main, { NULL },
-	sktc_generic_memory_init, sktc_generic_memory_fini,
+    "memory",
+    "skmem allocator basic and advanced tests",
+    SK_FEATURE_SKYWALK | SK_FEATURE_DEV_OR_DEBUG,
+    skt_memory_main,
+    {NULL},
+    sktc_generic_memory_init,
+    sktc_generic_memory_fini,
 };

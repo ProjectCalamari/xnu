@@ -36,8 +36,8 @@
  * This file defines nicer (terser and safer) wrappers for C11's <stdatomic.h>.
  *
  * @discussion
- * @see xnu.git::doc/primitives/atomics.md which provides more extensive documentation
- * about this header.
+ * @see xnu.git::doc/primitives/atomics.md which provides more extensive
+ * documentation about this header.
  *
  * Note that some of the macros defined in this file may be overridden by
  * architecture specific headers.
@@ -94,7 +94,8 @@
  *
  * @discussion
  * The dependency ordering can be used to try to "repair" C11's consume ordering
- * and should be limited to extremely complex algorithms where every cycle counts.
+ * and should be limited to extremely complex algorithms where every cycle
+ * counts.
  *
  * Due to the inherent risks (no compiler support) for this feature, it is
  * reserved for expert and very domain-specific code only and is off by default.
@@ -132,9 +133,9 @@
  * When set, the os_atomic_*_exclusive() macros are defined.
  */
 #if defined(__i386__) || defined(__x86_64__)
-#define OS_ATOMIC_HAS_LLSC  0
+#define OS_ATOMIC_HAS_LLSC 0
 #elif defined(__arm__) || defined(__arm64__)
-#define OS_ATOMIC_HAS_LLSC  1
+#define OS_ATOMIC_HAS_LLSC 1
 #else
 #error unsupported architecture
 #endif
@@ -149,9 +150,9 @@
  * OS_ATOMIC_USE_LLSC implies OS_ATOMIC_HAS_LLSC.
  */
 #if defined(__arm64__) && defined(__ARM_ARCH_8_2__)
-#define OS_ATOMIC_USE_LLSC  0
+#define OS_ATOMIC_USE_LLSC 0
 #else
-#define OS_ATOMIC_USE_LLSC  OS_ATOMIC_HAS_LLSC
+#define OS_ATOMIC_USE_LLSC OS_ATOMIC_HAS_LLSC
 #endif
 
 /*!
@@ -180,8 +181,8 @@
  * `compiler_acq_rel` orderings taken by the os_atomic* functions
  */
 #undef os_compiler_barrier
-#define os_compiler_barrier(b...) \
-	os_atomic_std(atomic_signal_fence)(_os_compiler_barrier_##b)
+#define os_compiler_barrier(b...)                                              \
+  os_atomic_std(atomic_signal_fence)(_os_compiler_barrier_##b)
 
 /*!
  * @function os_atomic_thread_fence
@@ -193,10 +194,11 @@
  * @param m
  * The ordering for this fence.
  */
-#define os_atomic_thread_fence(m)  ({ \
-	os_atomic_std(atomic_thread_fence)(_os_atomic_mo_##m##_smp); \
-	os_atomic_std(atomic_signal_fence)(_os_atomic_mo_##m); \
-})
+#define os_atomic_thread_fence(m)                                              \
+  ({                                                                           \
+    os_atomic_std(atomic_thread_fence)(_os_atomic_mo_##m##_smp);               \
+    os_atomic_std(atomic_signal_fence)(_os_atomic_mo_##m);                     \
+  })
 
 /*!
  * @function os_atomic_barrier_before_lock_acquire()
@@ -212,7 +214,7 @@
  *       If armv8 ever comes up with an ldapr-like kind of acquire semantics
  *       for RMW, then this would have to change.
  */
-#define os_atomic_barrier_before_lock_acquire()  ((void)0)
+#define os_atomic_barrier_before_lock_acquire() ((void)0)
 
 /*!
  * @function os_atomic_init
@@ -234,8 +236,8 @@
  * @returns
  * The value loaded from @a p.
  */
-#define os_atomic_init(p, v) \
-	os_atomic_std(atomic_init)(os_cast_to_atomic_pointer(p), v)
+#define os_atomic_init(p, v)                                                   \
+  os_atomic_std(atomic_init)(os_cast_to_atomic_pointer(p), v)
 
 /*!
  * @function os_atomic_load_is_plain, os_atomic_store_is_plain
@@ -260,7 +262,7 @@
  * True when relaxed atomic loads (resp. stores) compile to a plain load
  * (resp. store) instruction, false otherwise.
  */
-#define os_atomic_load_is_plain(p)  (sizeof(*(p)) <= sizeof(void *))
+#define os_atomic_load_is_plain(p) (sizeof(*(p)) <= sizeof(void *))
 #define os_atomic_store_is_plain(p) os_atomic_load_is_plain(p)
 
 /*!
@@ -279,14 +281,15 @@
  * @returns
  * The value loaded from @a p.
  */
-#define os_atomic_load(p, m)  ({ \
-	_Static_assert(os_atomic_load_is_plain(p), "Load is wide"); \
-	_os_compiler_barrier_before_atomic(m); \
-	__auto_type _r = os_atomic_std(atomic_load_explicit)( \
-	    os_cast_to_atomic_pointer(p), _os_atomic_mo_##m##_smp); \
-	_os_compiler_barrier_after_atomic(m); \
-	_r; \
-})
+#define os_atomic_load(p, m)                                                   \
+  ({                                                                           \
+    _Static_assert(os_atomic_load_is_plain(p), "Load is wide");                \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    __auto_type _r = os_atomic_std(atomic_load_explicit)(                      \
+        os_cast_to_atomic_pointer(p), _os_atomic_mo_##m##_smp);                \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    _r;                                                                        \
+  })
 
 /*!
  * @function os_atomic_store
@@ -307,15 +310,16 @@
  * @returns
  * The value stored at @a p.
  */
-#define os_atomic_store(p, v, m)  ({ \
-	_Static_assert(os_atomic_store_is_plain(p), "Store is wide"); \
-	__auto_type _v = (v); \
-	_os_compiler_barrier_before_atomic(m); \
-	os_atomic_std(atomic_store_explicit)(os_cast_to_atomic_pointer(p), _v, \
-	    _os_atomic_mo_##m##_smp); \
-	_os_compiler_barrier_after_atomic(m); \
-	_v; \
-})
+#define os_atomic_store(p, v, m)                                               \
+  ({                                                                           \
+    _Static_assert(os_atomic_store_is_plain(p), "Store is wide");              \
+    __auto_type _v = (v);                                                      \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    os_atomic_std(atomic_store_explicit)(os_cast_to_atomic_pointer(p), _v,     \
+                                         _os_atomic_mo_##m##_smp);             \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    _v;                                                                        \
+  })
 
 /*!
  * @function os_atomic_load_wide
@@ -333,13 +337,14 @@
  * @returns
  * The value loaded from @a p.
  */
-#define os_atomic_load_wide(p, m)  ({ \
-	_os_compiler_barrier_before_atomic(m); \
-	__auto_type _r = os_atomic_std(atomic_load_explicit)( \
-	    os_cast_to_atomic_pointer(p), _os_atomic_mo_##m##_smp); \
-	_os_compiler_barrier_after_atomic(m); \
-	_r; \
-})
+#define os_atomic_load_wide(p, m)                                              \
+  ({                                                                           \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    __auto_type _r = os_atomic_std(atomic_load_explicit)(                      \
+        os_cast_to_atomic_pointer(p), _os_atomic_mo_##m##_smp);                \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    _r;                                                                        \
+  })
 
 /*!
  * @function os_atomic_store_wide
@@ -360,14 +365,15 @@
  * @returns
  * The value stored at @a p.
  */
-#define os_atomic_store_wide(p, v, m)  ({ \
-	__auto_type _v = (v); \
-	_os_compiler_barrier_before_atomic(m); \
-	os_atomic_std(atomic_store_explicit)(os_cast_to_atomic_pointer(p), _v, \
-	    _os_atomic_mo_##m##_smp); \
-	_os_compiler_barrier_after_atomic(m); \
-	_v; \
-})
+#define os_atomic_store_wide(p, v, m)                                          \
+  ({                                                                           \
+    __auto_type _v = (v);                                                      \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    os_atomic_std(atomic_store_explicit)(os_cast_to_atomic_pointer(p), _v,     \
+                                         _os_atomic_mo_##m##_smp);             \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    _v;                                                                        \
+  })
 
 /*!
  * @function os_atomic_add, os_atomic_add_orig
@@ -389,7 +395,7 @@
  * os_atomic_add returns the value of the variable after the atomic add.
  */
 #define os_atomic_add_orig(p, v, m) _os_atomic_c11_op_orig(p, v, m, fetch_add)
-#define os_atomic_add(p, v, m)      _os_atomic_c11_op(p, v, m, fetch_add, +)
+#define os_atomic_add(p, v, m) _os_atomic_c11_op(p, v, m, fetch_add, +)
 
 /*!
  * @function os_atomic_inc, os_atomic_inc_orig
@@ -404,11 +410,12 @@
  * The ordering to use.
  *
  * @returns
- * os_atomic_inc_orig returns the value of the variable before the atomic increment,
- * os_atomic_inc returns the value of the variable after the atomic increment.
+ * os_atomic_inc_orig returns the value of the variable before the atomic
+ * increment, os_atomic_inc returns the value of the variable after the atomic
+ * increment.
  */
-#define os_atomic_inc_orig(p, m)    _os_atomic_c11_op_orig(p, 1, m, fetch_add)
-#define os_atomic_inc(p, m)         _os_atomic_c11_op(p, 1, m, fetch_add, +)
+#define os_atomic_inc_orig(p, m) _os_atomic_c11_op_orig(p, 1, m, fetch_add)
+#define os_atomic_inc(p, m) _os_atomic_c11_op(p, 1, m, fetch_add, +)
 
 /*!
  * @function os_atomic_sub, os_atomic_sub_orig
@@ -426,11 +433,12 @@
  * The ordering to use.
  *
  * @returns
- * os_atomic_sub_orig returns the value of the variable before the atomic subtract,
- * os_atomic_sub returns the value of the variable after the atomic subtract.
+ * os_atomic_sub_orig returns the value of the variable before the atomic
+ * subtract, os_atomic_sub returns the value of the variable after the atomic
+ * subtract.
  */
 #define os_atomic_sub_orig(p, v, m) _os_atomic_c11_op_orig(p, v, m, fetch_sub)
-#define os_atomic_sub(p, v, m)      _os_atomic_c11_op(p, v, m, fetch_sub, -)
+#define os_atomic_sub(p, v, m) _os_atomic_c11_op(p, v, m, fetch_sub, -)
 
 /*!
  * @function os_atomic_dec, os_atomic_dec_orig
@@ -445,11 +453,12 @@
  * The ordering to use.
  *
  * @returns
- * os_atomic_dec_orig returns the value of the variable before the atomic decrement,
- * os_atomic_dec returns the value of the variable after the atomic decrement.
+ * os_atomic_dec_orig returns the value of the variable before the atomic
+ * decrement, os_atomic_dec returns the value of the variable after the atomic
+ * decrement.
  */
-#define os_atomic_dec_orig(p, m)    _os_atomic_c11_op_orig(p, 1, m, fetch_sub)
-#define os_atomic_dec(p, m)         _os_atomic_c11_op(p, 1, m, fetch_sub, -)
+#define os_atomic_dec_orig(p, m) _os_atomic_c11_op_orig(p, 1, m, fetch_sub)
+#define os_atomic_dec(p, m) _os_atomic_c11_op(p, 1, m, fetch_sub, -)
 
 /*!
  * @function os_atomic_and, os_atomic_and_orig
@@ -471,7 +480,7 @@
  * os_atomic_and returns the value of the variable after the atomic and.
  */
 #define os_atomic_and_orig(p, v, m) _os_atomic_c11_op_orig(p, v, m, fetch_and)
-#define os_atomic_and(p, v, m)      _os_atomic_c11_op(p, v, m, fetch_and, &)
+#define os_atomic_and(p, v, m) _os_atomic_c11_op(p, v, m, fetch_and, &)
 
 /*!
  * @function os_atomic_andnot, os_atomic_andnot_orig
@@ -489,11 +498,14 @@
  * The ordering to use.
  *
  * @returns
- * os_atomic_andnot_orig returns the value of the variable before the atomic andnot,
- * os_atomic_andnot returns the value of the variable after the atomic andnot.
+ * os_atomic_andnot_orig returns the value of the variable before the atomic
+ * andnot, os_atomic_andnot returns the value of the variable after the atomic
+ * andnot.
  */
-#define os_atomic_andnot_orig(p, v, m) _os_atomic_c11_op_orig(p, (typeof(v))~(v), m, fetch_and)
-#define os_atomic_andnot(p, v, m)      _os_atomic_c11_op(p, (typeof(v))~(v), m, fetch_and, &)
+#define os_atomic_andnot_orig(p, v, m)                                         \
+  _os_atomic_c11_op_orig(p, (typeof(v))~(v), m, fetch_and)
+#define os_atomic_andnot(p, v, m)                                              \
+  _os_atomic_c11_op(p, (typeof(v))~(v), m, fetch_and, &)
 
 /*!
  * @function os_atomic_or, os_atomic_or_orig
@@ -514,8 +526,8 @@
  * os_atomic_or_orig returns the value of the variable before the atomic or,
  * os_atomic_or returns the value of the variable after the atomic or.
  */
-#define os_atomic_or_orig(p, v, m)  _os_atomic_c11_op_orig(p, v, m, fetch_or)
-#define os_atomic_or(p, v, m)       _os_atomic_c11_op(p, v, m, fetch_or, |)
+#define os_atomic_or_orig(p, v, m) _os_atomic_c11_op_orig(p, v, m, fetch_or)
+#define os_atomic_or(p, v, m) _os_atomic_c11_op(p, v, m, fetch_or, |)
 
 /*!
  * @function os_atomic_xor, os_atomic_xor_orig
@@ -537,7 +549,7 @@
  * os_atomic_xor returns the value of the variable after the atomic xor.
  */
 #define os_atomic_xor_orig(p, v, m) _os_atomic_c11_op_orig(p, v, m, fetch_xor)
-#define os_atomic_xor(p, v, m)      _os_atomic_c11_op(p, v, m, fetch_xor, ^)
+#define os_atomic_xor(p, v, m) _os_atomic_c11_op(p, v, m, fetch_xor, ^)
 
 /*!
  * @function os_atomic_min, os_atomic_min_orig
@@ -559,7 +571,7 @@
  * os_atomic_min returns the value of the variable after the atomic min.
  */
 #define os_atomic_min_orig(p, v, m) _os_atomic_clang_op_orig(p, v, m, fetch_min)
-#define os_atomic_min(p, v, m)      _os_atomic_clang_op(p, v, m, fetch_min, MIN)
+#define os_atomic_min(p, v, m) _os_atomic_clang_op(p, v, m, fetch_min, MIN)
 
 /*!
  * @function os_atomic_max, os_atomic_max_orig
@@ -581,7 +593,7 @@
  * os_atomic_max returns the value of the variable after the atomic max.
  */
 #define os_atomic_max_orig(p, v, m) _os_atomic_clang_op_orig(p, v, m, fetch_max)
-#define os_atomic_max(p, v, m)      _os_atomic_clang_op(p, v, m, fetch_max, MAX)
+#define os_atomic_max(p, v, m) _os_atomic_clang_op(p, v, m, fetch_max, MAX)
 
 /*!
  * @function os_atomic_xchg
@@ -601,7 +613,7 @@
  * @returns
  * The value of the variable before the exchange.
  */
-#define os_atomic_xchg(p, v, m)     _os_atomic_c11_op_orig(p, v, m, exchange)
+#define os_atomic_xchg(p, v, m) _os_atomic_c11_op_orig(p, v, m, exchange)
 
 /*!
  * @function os_atomic_cmpxchg
@@ -631,16 +643,17 @@
  * 0 if the compare-exchange failed.
  * 1 if the compare-exchange succeeded.
  */
-#define os_atomic_cmpxchg(p, e, v, m)  ({ \
-	os_atomic_basetypeof(p) _r = (e); int _b; \
-	_os_compiler_barrier_before_atomic(m); \
-	_b = os_atomic_std(atomic_compare_exchange_strong_explicit)( \
-	    os_cast_to_atomic_pointer(p), &_r, \
-	    _os_atomic_value_cast(p, v), \
-	    _os_atomic_mo_##m##_smp, _os_atomic_mo_relaxed); \
-	_os_compiler_barrier_after_atomic(m); \
-	_b; \
-})
+#define os_atomic_cmpxchg(p, e, v, m)                                          \
+  ({                                                                           \
+    os_atomic_basetypeof(p) _r = (e);                                          \
+    int _b;                                                                    \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    _b = os_atomic_std(atomic_compare_exchange_strong_explicit)(               \
+        os_cast_to_atomic_pointer(p), &_r, _os_atomic_value_cast(p, v),        \
+        _os_atomic_mo_##m##_smp, _os_atomic_mo_relaxed);                       \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    _b;                                                                        \
+  })
 
 /*!
  * @function os_atomic_cmpxchgv
@@ -675,16 +688,18 @@
  * 0 if the compare-exchange failed.
  * 1 if the compare-exchange succeeded.
  */
-#define os_atomic_cmpxchgv(p, e, v, g, m)  ({ \
-	os_atomic_basetypeof(p) _r = (e); int _b; \
-	_os_compiler_barrier_before_atomic(m); \
-	_b = os_atomic_std(atomic_compare_exchange_strong_explicit)( \
-	    os_cast_to_atomic_pointer(p), &_r, \
-	    _os_atomic_value_cast(p, v), \
-	    _os_atomic_mo_##m##_smp, _os_atomic_mo_relaxed); \
-	_os_compiler_barrier_after_atomic(m); \
-	*(g) = _r; _b; \
-})
+#define os_atomic_cmpxchgv(p, e, v, g, m)                                      \
+  ({                                                                           \
+    os_atomic_basetypeof(p) _r = (e);                                          \
+    int _b;                                                                    \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    _b = os_atomic_std(atomic_compare_exchange_strong_explicit)(               \
+        os_cast_to_atomic_pointer(p), &_r, _os_atomic_value_cast(p, v),        \
+        _os_atomic_mo_##m##_smp, _os_atomic_mo_relaxed);                       \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    *(g) = _r;                                                                 \
+    _b;                                                                        \
+  })
 
 /*!
  * @function os_atomic_rmw_loop
@@ -724,20 +739,21 @@
  * 0 if the loop was aborted with os_atomic_rmw_loop_give_up().
  * 1 if the loop completed.
  */
-#define os_atomic_rmw_loop(p, ov, nv, m, ...)  ({ \
-	int _result = 0; \
-	__auto_type _p = os_cast_to_nonatomic_pointer(p); \
-	_os_compiler_barrier_before_atomic(m); \
-	ov = *_p; \
-	do { \
-	    __VA_ARGS__; \
-	    _result = os_atomic_std(atomic_compare_exchange_weak_explicit)( \
-	        os_cast_to_atomic_pointer(_p), &ov, nv, \
-	        _os_atomic_mo_##m##_smp, _os_atomic_mo_relaxed); \
-	} while (__builtin_expect(!_result, 0)); \
-	_os_compiler_barrier_after_atomic(m); \
-	_result; \
-})
+#define os_atomic_rmw_loop(p, ov, nv, m, ...)                                  \
+  ({                                                                           \
+    int _result = 0;                                                           \
+    __auto_type _p = os_cast_to_nonatomic_pointer(p);                          \
+    _os_compiler_barrier_before_atomic(m);                                     \
+    ov = *_p;                                                                  \
+    do {                                                                       \
+      __VA_ARGS__;                                                             \
+      _result = os_atomic_std(atomic_compare_exchange_weak_explicit)(          \
+          os_cast_to_atomic_pointer(_p), &ov, nv, _os_atomic_mo_##m##_smp,     \
+          _os_atomic_mo_relaxed);                                              \
+    } while (__builtin_expect(!_result, 0));                                   \
+    _os_compiler_barrier_after_atomic(m);                                      \
+    _result;                                                                   \
+  })
 
 /*!
  * @function os_atomic_rmw_loop_give_up
@@ -749,7 +765,11 @@
  * Optional code block to execute before the `break` out of the loop. May
  * further alter the control flow (e.g. using `return`, `goto`, ...).
  */
-#define os_atomic_rmw_loop_give_up(...) ({ __VA_ARGS__; break; })
+#define os_atomic_rmw_loop_give_up(...)                                        \
+  ({                                                                           \
+    __VA_ARGS__;                                                               \
+    break;                                                                     \
+  })
 
 #if OS_ATOMIC_CONFIG_MEMORY_ORDER_DEPENDENCY
 
@@ -769,7 +789,9 @@
  * elide its use to inject hardware dependencies (thwarting the entire purpose
  * of the construct).
  */
-typedef struct { unsigned long __opaque_zero; } os_atomic_dependency_t;
+typedef struct {
+  unsigned long __opaque_zero;
+} os_atomic_dependency_t;
 
 /*!
  * @const OS_ATOMIC_DEPENDENCY_NONE
@@ -778,8 +800,7 @@ typedef struct { unsigned long __opaque_zero; } os_atomic_dependency_t;
  * A value to pass to functions that can carry dependencies, to indicate that
  * no dependency should be carried.
  */
-#define OS_ATOMIC_DEPENDENCY_NONE \
-	((os_atomic_dependency_t){ 0UL })
+#define OS_ATOMIC_DEPENDENCY_NONE ((os_atomic_dependency_t){0UL})
 
 /*!
  * @function os_atomic_make_dependency
@@ -811,8 +832,7 @@ typedef struct { unsigned long __opaque_zero; } os_atomic_dependency_t;
  * The token value is always 0, but the compiler must never be able to reason
  * about that fact (c.f. os_atomic_dependency_t)
  */
-#define os_atomic_make_dependency(v) \
-	((void)(v), OS_ATOMIC_DEPENDENCY_NONE)
+#define os_atomic_make_dependency(v) ((void)(v), OS_ATOMIC_DEPENDENCY_NONE)
 
 /*!
  * @function os_atomic_inject_dependency
@@ -835,8 +855,8 @@ typedef struct { unsigned long __opaque_zero; } os_atomic_dependency_t;
  * A value equal to @a p but that prolongates the dependency chain rooted at
  * @a e.
  */
-#define os_atomic_inject_dependency(p, e) \
-	((typeof(*(p)) *)((p) + _os_atomic_auto_dependency(e).__opaque_zero))
+#define os_atomic_inject_dependency(p, e)                                      \
+  ((typeof(*(p)) *)((p) + _os_atomic_auto_dependency(e).__opaque_zero))
 
 /*!
  * @function os_atomic_load_with_dependency_on
@@ -864,8 +884,8 @@ typedef struct { unsigned long __opaque_zero; } os_atomic_dependency_t;
  * @returns
  * The value loaded from @a p.
  */
-#define os_atomic_load_with_dependency_on(p, e) \
-	os_atomic_load(os_atomic_inject_dependency(p, e), dependency)
+#define os_atomic_load_with_dependency_on(p, e)                                \
+  os_atomic_load(os_atomic_inject_dependency(p, e), dependency)
 
 #endif // OS_ATOMIC_CONFIG_MEMORY_ORDER_DEPENDENCY
 

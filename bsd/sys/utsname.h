@@ -69,18 +69,18 @@
 
 #include <sys/cdefs.h>
 
-#define _SYS_NAMELEN    256
+#define _SYS_NAMELEN 256
 
-struct  utsname {
-	char    sysname[_SYS_NAMELEN];  /* [XSI] Name of OS */
-	char    nodename[_SYS_NAMELEN]; /* [XSI] Name of this network node */
-	char    release[_SYS_NAMELEN];  /* [XSI] Release level */
-	char    version[_SYS_NAMELEN];  /* [XSI] Version level */
-	char    machine[_SYS_NAMELEN];  /* [XSI] Hardware type */
+struct utsname {
+  char sysname[_SYS_NAMELEN];  /* [XSI] Name of OS */
+  char nodename[_SYS_NAMELEN]; /* [XSI] Name of this network node */
+  char release[_SYS_NAMELEN];  /* [XSI] Release level */
+  char version[_SYS_NAMELEN];  /* [XSI] Version level */
+  char machine[_SYS_NAMELEN];  /* [XSI] Hardware type */
 };
 
 __BEGIN_DECLS
 int uname(struct utsname *);
 __END_DECLS
 
-#endif  /* !_SYS_UTSNAME_H */
+#endif /* !_SYS_UTSNAME_H */

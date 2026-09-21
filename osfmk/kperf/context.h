@@ -33,15 +33,15 @@
 
 /* context of what we're looking at */
 struct kperf_context {
-	/* who was running during the event */
-	int cur_pid;
-	thread_t cur_thread;
-	task_t cur_task;
-	uintptr_t *starting_fp;
+  /* who was running during the event */
+  int cur_pid;
+  thread_t cur_thread;
+  task_t cur_task;
+  uintptr_t *starting_fp;
 
-	/* who caused the event */
-	unsigned int trigger_type;
-	unsigned int trigger_id;
+  /* who caused the event */
+  unsigned int trigger_type;
+  unsigned int trigger_id;
 };
 
 #endif /* !defined(KPERF_CONTEXT_H) */

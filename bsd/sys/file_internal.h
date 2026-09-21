@@ -69,15 +69,15 @@
 #include <sys/unistd.h>
 
 #ifdef XNU_KERNEL_PRIVATE
-#include <sys/errno.h>
-#include <sys/queue.h>
+#include <os/refcnt.h>
 #include <sys/cdefs.h>
 #include <sys/constrained_ctypes.h>
-#include <sys/lock.h>
+#include <sys/errno.h>
 #include <sys/file.h>
 #include <sys/filedesc.h>
 #include <sys/guarded.h>
-#include <os/refcnt.h>
+#include <sys/lock.h>
+#include <sys/queue.h>
 
 __BEGIN_DECLS
 
@@ -92,25 +92,28 @@ struct file;
 #define _KAUTH_CRED_T
 typedef struct ucred *kauth_cred_t;
 typedef struct posix_cred *posix_cred_t;
-#endif  /* !_KAUTH_CRED_T */
+#endif /* !_KAUTH_CRED_T */
 
-__options_decl(fileproc_vflags_t, unsigned int, {
-	FPV_NONE        = 0,
-	FPV_DRAIN       = 0x01,
-});
+__options_decl(fileproc_vflags_t, unsigned int,
+               {
+                   FPV_NONE = 0,
+                   FPV_DRAIN = 0x01,
+               });
 
-__options_decl(fileproc_flags_t, uint16_t, {
-	FP_NONE         = 0,
-	FP_CLOEXEC      = 0x01,
-	FP_CLOFORK      = 0x02,
-	FP_INSELECT     = 0x04,
-	FP_AIOISSUED    = 0x08,
-	FP_SELCONFLICT  = 0x10,  /* select conflict on an individual fp */
-});
+__options_decl(
+    fileproc_flags_t, uint16_t,
+    {
+        FP_NONE = 0,
+        FP_CLOEXEC = 0x01,
+        FP_CLOFORK = 0x02,
+        FP_INSELECT = 0x04,
+        FP_AIOISSUED = 0x08,
+        FP_SELCONFLICT = 0x10, /* select conflict on an individual fp */
+    });
 
 struct fileproc_guard {
-	struct select_set *fpg_wset;
-	guardid_t         fpg_guard;
+  struct select_set *fpg_wset;
+  guardid_t fpg_guard;
 };
 
 /*
@@ -118,97 +121,102 @@ struct fileproc_guard {
  * One entry for each open kernel vnode and socket.
  */
 struct fileproc {
-	os_refcnt_t      fp_iocount;
-	_Atomic fileproc_vflags_t fp_vflags;
-	fileproc_flags_t fp_flags;
-	uint16_t         fp_guard_attrs;
-	struct fileglob *XNU_PTRAUTH_SIGNED_PTR("fileproc.fp_glob") fp_glob;
-	union {
-		struct select_set     *fp_wset;   /* fp_guard_attrs == 0 */
-		struct fileproc_guard *XNU_PTRAUTH_SIGNED_PTR("fileproc.fp_guard") fp_guard;  /* fp_guard_attrs != 0 */
-	};
+  os_refcnt_t fp_iocount;
+  _Atomic fileproc_vflags_t fp_vflags;
+  fileproc_flags_t fp_flags;
+  uint16_t fp_guard_attrs;
+  struct fileglob *XNU_PTRAUTH_SIGNED_PTR("fileproc.fp_glob") fp_glob;
+  union {
+    struct select_set *fp_wset; /* fp_guard_attrs == 0 */
+    struct fileproc_guard *XNU_PTRAUTH_SIGNED_PTR(
+        "fileproc.fp_guard") fp_guard; /* fp_guard_attrs != 0 */
+  };
 };
 __CCT_DECLARE_CONSTRAINED_PTR_TYPES(struct fileproc, fileproc);
 #define FILEPROC_NULL ((struct fileproc *)0)
 
 /* file types */
 typedef enum {
-	DTYPE_VNODE     = 1,    /* file */
-	DTYPE_SOCKET,           /* communications endpoint */
-	DTYPE_PSXSHM,           /* POSIX Shared memory */
-	DTYPE_PSXSEM,           /* POSIX Semaphores */
-	DTYPE_KQUEUE,           /* kqueue */
-	DTYPE_PIPE,             /* pipe */
-	DTYPE_FSEVENTS,         /* fsevents */
-	DTYPE_ATALK,            /* (obsolete) */
-	DTYPE_NETPOLICY,        /* networking policy */
-	DTYPE_CHANNEL,          /* Skywalk Channel */
-	DTYPE_NEXUS             /* Skywalk Nexus */
+  DTYPE_VNODE = 1, /* file */
+  DTYPE_SOCKET,    /* communications endpoint */
+  DTYPE_PSXSHM,    /* POSIX Shared memory */
+  DTYPE_PSXSEM,    /* POSIX Semaphores */
+  DTYPE_KQUEUE,    /* kqueue */
+  DTYPE_PIPE,      /* pipe */
+  DTYPE_FSEVENTS,  /* fsevents */
+  DTYPE_ATALK,     /* (obsolete) */
+  DTYPE_NETPOLICY, /* networking policy */
+  DTYPE_CHANNEL,   /* Skywalk Channel */
+  DTYPE_NEXUS      /* Skywalk Nexus */
 } file_type_t;
 
 /* defines for fg_lflags */
 // was  FG_TERM         0x01
-#define FG_INSMSGQ      0x02    /* insert to msgqueue pending .. */
-#define FG_WINSMSGQ     0x04    /* wait for the fielglob is in msgque */
-#define FG_RMMSGQ       0x08    /* the fileglob is being removed from msgqueue */
-#define FG_WRMMSGQ      0x10    /* wait for the fileglob to  be removed from msgqueue */
-#define FG_PORTMADE     0x20    /* a port was at some point created for this fileglob */
-#define FG_NOSIGPIPE    0x40    /* don't deliver SIGPIPE with EPIPE return */
-#define FG_OFF_LOCKED   0x80    /* Used as a mutex for offset changes (for vnodes) */
-#define FG_OFF_LOCKWANT 0x100   /* Somebody's wating for the lock */
-#define FG_CONFINED     0x200   /* fileglob confined to process, immutably */
-#define FG_HAS_OFDLOCK  0x400   /* Has or has had an OFD lock */
+#define FG_INSMSGQ 0x02  /* insert to msgqueue pending .. */
+#define FG_WINSMSGQ 0x04 /* wait for the fielglob is in msgque */
+#define FG_RMMSGQ 0x08   /* the fileglob is being removed from msgqueue */
+#define FG_WRMMSGQ 0x10  /* wait for the fileglob to  be removed from msgqueue \
+                          */
+#define FG_PORTMADE                                                            \
+  0x20 /* a port was at some point created for this fileglob */
+#define FG_NOSIGPIPE 0x40  /* don't deliver SIGPIPE with EPIPE return */
+#define FG_OFF_LOCKED 0x80 /* Used as a mutex for offset changes (for vnodes)  \
+                            */
+#define FG_OFF_LOCKWANT 0x100 /* Somebody's wating for the lock */
+#define FG_CONFINED 0x200     /* fileglob confined to process, immutably */
+#define FG_HAS_OFDLOCK 0x400  /* Has or has had an OFD lock */
 
 struct fileops {
-	file_type_t     fo_type;        /* descriptor type */
-	int (*fo_read)      (struct fileproc *fp, struct uio *uio,
-	    int flags, vfs_context_t ctx);
-	int (*fo_write)     (struct fileproc *fp, struct uio *uio,
-	    int flags, vfs_context_t ctx);
-#define FOF_OFFSET      0x00000001      /* offset supplied to vn_write */
-	int (*fo_ioctl)(struct fileproc *fp, u_long com,
-	    caddr_t data, vfs_context_t ctx);
-	int (*fo_select)    (struct fileproc *fp, int which,
-	    void *wql, vfs_context_t ctx);
-	int (*fo_close)     (struct fileglob *fg, vfs_context_t ctx);
-	int (*fo_kqfilter)  (struct fileproc *fp, struct knote *, struct kevent_qos_s *);
-	int (*fo_drain)     (struct fileproc *fp, vfs_context_t ctx);
+  file_type_t fo_type; /* descriptor type */
+  int (*fo_read)(struct fileproc *fp, struct uio *uio, int flags,
+                 vfs_context_t ctx);
+  int (*fo_write)(struct fileproc *fp, struct uio *uio, int flags,
+                  vfs_context_t ctx);
+#define FOF_OFFSET 0x00000001 /* offset supplied to vn_write */
+  int (*fo_ioctl)(struct fileproc *fp, u_long com, caddr_t data,
+                  vfs_context_t ctx);
+  int (*fo_select)(struct fileproc *fp, int which, void *wql,
+                   vfs_context_t ctx);
+  int (*fo_close)(struct fileglob *fg, vfs_context_t ctx);
+  int (*fo_kqfilter)(struct fileproc *fp, struct knote *,
+                     struct kevent_qos_s *);
+  int (*fo_drain)(struct fileproc *fp, vfs_context_t ctx);
 };
 
 struct fileglob {
-	LIST_ENTRY(fileglob) f_msglist;     /* list of files in unix messages */
-	uint32_t             fg_flag;       /* (atomic) see fcntl.h */
-	os_ref_atomic_t      fg_count;      /* reference count */
-	uint32_t             fg_msgcount;   /* references from message queue */
-	int32_t              fg_lflags;     /* file global flags */
-	kauth_cred_t         XNU_PTRAUTH_SIGNED_PTR("fileglob.fg_cred") fg_cred;        /* credentials associated with descriptor */
-	const struct fileops *XNU_PTRAUTH_SIGNED_PTR("fileglob.fg_ops") fg_ops;
-	off_t                fg_offset;
-	uintptr_t            fg_data;       /* vnode or socket or SHM or semaphore */
-	struct fd_vn_data   *XNU_PTRAUTH_SIGNED_PTR("fileglob.fg_vn_data") fg_vn_data;  /* Per fd vnode data, used for directories */
-	lck_mtx_t            fg_lock;
+  LIST_ENTRY(fileglob) f_msglist; /* list of files in unix messages */
+  uint32_t fg_flag;               /* (atomic) see fcntl.h */
+  os_ref_atomic_t fg_count;       /* reference count */
+  uint32_t fg_msgcount;           /* references from message queue */
+  int32_t fg_lflags;              /* file global flags */
+  kauth_cred_t XNU_PTRAUTH_SIGNED_PTR(
+      "fileglob.fg_cred") fg_cred; /* credentials associated with descriptor */
+  const struct fileops *XNU_PTRAUTH_SIGNED_PTR("fileglob.fg_ops") fg_ops;
+  off_t fg_offset;
+  uintptr_t fg_data; /* vnode or socket or SHM or semaphore */
+  struct fd_vn_data *XNU_PTRAUTH_SIGNED_PTR("fileglob.fg_vn_data")
+      fg_vn_data; /* Per fd vnode data, used for directories */
+  lck_mtx_t fg_lock;
 #if CONFIG_MACF && CONFIG_VNGUARD
-	struct vng_owner    *fg_vgo;        /* Used by the vnode guard MAC hook */
+  struct vng_owner *fg_vgo; /* Used by the vnode guard MAC hook */
 #endif
 };
 
 /* Disambiguate OFD ids from flock ids (fileglobs) */
-__pure2
-static inline caddr_t __unsafe_indexable
-ofd_to_id(const struct fileglob *fg)
-{
-	return (caddr_t __unsafe_indexable)~(uintptr_t)fg;
+__pure2 static inline caddr_t __unsafe_indexable
+ofd_to_id(const struct fileglob *fg) {
+  return (caddr_t __unsafe_indexable) ~(uintptr_t)fg;
 }
 
-extern int maxfiles;                    /* kernel limit on number of open files */
-extern int nfiles;                      /* actual number of open files */
+extern int maxfiles; /* kernel limit on number of open files */
+extern int nfiles;   /* actual number of open files */
 extern int maxfilesperproc;
-os_refgrp_decl_extern(f_refgrp);        /* os_refgrp_t for file refcounts */
+os_refgrp_decl_extern(f_refgrp); /* os_refgrp_t for file refcounts */
 
-#define FILEGLOB_DTYPE(fg)              ((const file_type_t)((fg)->fg_ops->fo_type))
+#define FILEGLOB_DTYPE(fg) ((const file_type_t)((fg)->fg_ops->fo_type))
 
 /* Special value to indicate "no process association". */
-#define FG_NOPROC       ((struct proc *)~0UL)
+#define FG_NOPROC ((struct proc *)~0UL)
 
 #pragma mark files (struct fileglob)
 
@@ -222,8 +230,7 @@ os_refgrp_decl_extern(f_refgrp);        /* os_refgrp_t for file refcounts */
  * The fileglob is allocated as if with falloc_withinit(), but is not
  * assocated with any fileproc.
  */
-struct fileglob *
-fg_alloc_init(vfs_context_t ctx);
+struct fileglob *fg_alloc_init(vfs_context_t ctx);
 
 /*!
  * @function fg_ref
@@ -242,8 +249,7 @@ fg_alloc_init(vfs_context_t ctx);
  * @param fg
  * The specified file
  */
-void
-fg_ref(proc_t proc, struct fileglob *fg);
+void fg_ref(proc_t proc, struct fileglob *fg);
 
 /*!
  * @function fg_drop_live
@@ -254,8 +260,7 @@ fg_ref(proc_t proc, struct fileglob *fg);
  * @param fg
  * The file whose reference is being dropped.
  */
-void
-fg_drop_live(struct fileglob *fg);
+void fg_drop_live(struct fileglob *fg);
 
 /*!
  * @function fg_drop
@@ -277,8 +282,7 @@ fg_drop_live(struct fileglob *fg);
  * 0          Success
  * ???        Any error that @c fileops::fo_close can return
  */
-int
-fg_drop(proc_t p, struct fileglob *fg);
+int fg_drop(proc_t p, struct fileglob *fg);
 
 /*!
  * @function fg_sendable
@@ -286,8 +290,7 @@ fg_drop(proc_t p, struct fileglob *fg);
  * @brief
  * Returns whether a particular file can be sent over IPC.
  */
-bool
-fg_sendable(struct fileglob *fg);
+bool fg_sendable(struct fileglob *fg);
 
 /*!
  * @function fg_get_data_volatile
@@ -302,8 +305,7 @@ fg_sendable(struct fileglob *fg);
  * @param fg
  * The file whose data is being requested.
  */
-void *
-fg_get_data_volatile(struct fileglob *fg);
+void *fg_get_data_volatile(struct fileglob *fg);
 
 /*!
  * @function fg_get_data
@@ -319,11 +321,8 @@ fg_get_data_volatile(struct fileglob *fg);
  * @param fg
  * The file whose data is being requested.
  */
-__pure2
-static inline void *
-fg_get_data(struct fileglob *fg)
-{
-	return fg_get_data_volatile(fg);
+__pure2 static inline void *fg_get_data(struct fileglob *fg) {
+  return fg_get_data_volatile(fg);
 }
 
 /*!
@@ -338,8 +337,7 @@ fg_get_data(struct fileglob *fg)
  * @param fg_data
  * Opaque file data value
  */
-void
-fg_set_data(struct fileglob *fg, void *fg_data);
+void fg_set_data(struct fileglob *fg, void *fg_data);
 
 #pragma mark file descriptor entries (struct fileproc)
 
@@ -357,11 +355,8 @@ fg_set_data(struct fileglob *fg, void *fg_data);
  * @param fp
  * The fileproc whose data is being requested.
  */
-__pure2
-static inline void *
-fp_get_data(struct fileproc *fp)
-{
-	return fg_get_data(fp->fp_glob);
+__pure2 static inline void *fp_get_data(struct fileproc *fp) {
+  return fg_get_data(fp->fp_glob);
 }
 
 /*!
@@ -377,10 +372,8 @@ fp_get_data(struct fileproc *fp)
  * @param fp
  * The fileproc whose data is being requested.
  */
-static inline void *
-fp_get_data_volatile(struct fileproc *fp)
-{
-	return fg_get_data_volatile(fp->fp_glob);
+static inline void *fp_get_data_volatile(struct fileproc *fp) {
+  return fg_get_data_volatile(fp->fp_glob);
 }
 
 /*!
@@ -395,10 +388,8 @@ fp_get_data_volatile(struct fileproc *fp)
  * @param fg_data
  * Opaque file data value
  */
-static inline void
-fp_set_data(struct fileproc *fp, void *fg_data)
-{
-	fg_set_data(fp->fp_glob, fg_data);
+static inline void fp_set_data(struct fileproc *fp, void *fg_data) {
+  fg_set_data(fp->fp_glob, fg_data);
 }
 
 /*!
@@ -428,8 +419,8 @@ fp_set_data(struct fileproc *fp, void *fg_data)
  * EBADF        Bad file descriptor
  * @c err       There is an entry, but it isn't of the specified type.
  */
-extern int
-fp_get_ftype(proc_t p, int fd, file_type_t ftype, int err, struct fileproc **fpp);
+extern int fp_get_ftype(proc_t p, int fd, file_type_t ftype, int err,
+                        struct fileproc **fpp);
 
 /*!
  * @function fp_get_noref_locked
@@ -456,8 +447,7 @@ fp_get_ftype(proc_t p, int fd, file_type_t ftype, int err, struct fileproc **fpp
  * - the fileproc on success
  * - FILEPROC_NULL on error
  */
-extern struct fileproc *
-fp_get_noref_locked(proc_t p, int fd);
+extern struct fileproc *fp_get_noref_locked(proc_t p, int fd);
 
 /*!
  * @function fp_get_noref_locked_with_iocount
@@ -482,8 +472,7 @@ fp_get_noref_locked(proc_t p, int fd);
  * that acquire iocounts without remembering the fileproc pointer,
  * which is bad practice.
  */
-extern struct fileproc *
-fp_get_noref_locked_with_iocount(proc_t p, int fd);
+extern struct fileproc *fp_get_noref_locked_with_iocount(proc_t p, int fd);
 
 /*!
  * @function fp_close_and_unlock
@@ -509,59 +498,70 @@ fp_get_noref_locked_with_iocount(proc_t p, int fd);
  * EBADF        Bad file descriptor
  * ???          Any error that @c fileops::fo_close can return.
  */
-extern int
-fp_close_and_unlock(proc_t p, kauth_cred_t p_cred, int fd, struct fileproc *fp, int flags);
+extern int fp_close_and_unlock(proc_t p, kauth_cred_t p_cred, int fd,
+                               struct fileproc *fp, int flags);
 
 /* wrappers for fp->f_ops->fo_... */
 int fo_read(struct fileproc *fp, struct uio *uio, int flags, vfs_context_t ctx);
 int fo_write(struct fileproc *fp, struct uio *uio, int flags,
-    vfs_context_t ctx);
+             vfs_context_t ctx);
 int fo_ioctl(struct fileproc *fp, u_long com, caddr_t data, vfs_context_t ctx);
 int fo_select(struct fileproc *fp, int which, void *wql, vfs_context_t ctx);
 int fo_close(struct fileglob *fg, vfs_context_t ctx);
 int fo_drain(struct fileproc *fp, vfs_context_t ctx);
-int fo_kqfilter(struct fileproc *fp, struct knote *kn, struct kevent_qos_s *kev);
+int fo_kqfilter(struct fileproc *fp, struct knote *kn,
+                struct kevent_qos_s *kev);
 
 /* Functions to use for unsupported fileops */
-int fo_no_read(struct fileproc *fp, struct uio *uio, int flags, vfs_context_t ctx);
+int fo_no_read(struct fileproc *fp, struct uio *uio, int flags,
+               vfs_context_t ctx);
 int fo_no_write(struct fileproc *fp, struct uio *uio, int flags,
-    vfs_context_t ctx);
-int fo_no_ioctl(struct fileproc *fp, u_long com, caddr_t data, vfs_context_t ctx);
+                vfs_context_t ctx);
+int fo_no_ioctl(struct fileproc *fp, u_long com, caddr_t data,
+                vfs_context_t ctx);
 int fo_no_select(struct fileproc *fp, int which, void *wql, vfs_context_t ctx);
 int fo_no_drain(struct fileproc *fp, vfs_context_t ctx);
 int fo_no_kqfilter(struct fileproc *, struct knote *, struct kevent_qos_s *kev);
 
 int fp_tryswap(proc_t, int fd, struct fileproc *nfp);
 int fp_drop(struct proc *p, int fd, struct fileproc *fp, int locked);
-void fp_free(struct proc * p, int fd, struct fileproc * fp);
+void fp_free(struct proc *p, int fd, struct fileproc *fp);
 int fp_lookup(struct proc *p, int fd, struct fileproc **resultfp, int locked);
-int fp_lookup_guarded(struct proc *p, int fd, guardid_t guard, struct fileproc **resultfp, int locked);
+int fp_lookup_guarded(struct proc *p, int fd, guardid_t guard,
+                      struct fileproc **resultfp, int locked);
 int fp_isguarded(struct fileproc *fp, u_int attribs);
 int fp_guard_exception(proc_t p, int fd, struct fileproc *fp, u_int attribs);
 struct nameidata;
 struct vnode_attr;
 int open1(vfs_context_t ctx, struct nameidata *ndp, int uflags,
-    struct vnode_attr *vap, fp_initfn_t fp_init, void *initarg,
-    int32_t *retval, int authfd);
-int chdir_internal(proc_t p, vfs_context_t ctx, struct nameidata *ndp, int per_thread);
-int kqueue_internal(struct proc *p, fp_initfn_t, void *initarg, int32_t *retval);
-void procfdtbl_releasefd(struct proc * p, int fd, struct fileproc * fp);
+          struct vnode_attr *vap, fp_initfn_t fp_init, void *initarg,
+          int32_t *retval, int authfd);
+int chdir_internal(proc_t p, vfs_context_t ctx, struct nameidata *ndp,
+                   int per_thread);
+int kqueue_internal(struct proc *p, fp_initfn_t, void *initarg,
+                    int32_t *retval);
+void procfdtbl_releasefd(struct proc *p, int fd, struct fileproc *fp);
 extern struct fileproc *fileproc_alloc_init(void);
 extern void fileproc_free(struct fileproc *fp);
-extern void guarded_fileproc_copy_guard(struct fileproc *ofp, struct fileproc *nfp);
+extern void guarded_fileproc_copy_guard(struct fileproc *ofp,
+                                        struct fileproc *nfp);
 extern void guarded_fileproc_unguard(struct fileproc *fp);
 extern void fg_vn_data_free(void *fgvndata);
 extern int nameiat(struct nameidata *ndp, int dirfd);
 extern void vn_offset_lock(struct fileglob *fg);
 extern void vn_offset_unlock(struct fileglob *fg);
 extern int falloc_guarded(struct proc *p, struct fileproc **fp, int *fd,
-    vfs_context_t ctx, const guardid_t *guard, u_int attrs);
-extern void fileproc_modify_vflags(struct fileproc *fp, fileproc_vflags_t vflags, boolean_t clearflags);
+                          vfs_context_t ctx, const guardid_t *guard,
+                          u_int attrs);
+extern void fileproc_modify_vflags(struct fileproc *fp,
+                                   fileproc_vflags_t vflags,
+                                   boolean_t clearflags);
 fileproc_vflags_t fileproc_get_vflags(struct fileproc *fp);
 
 #pragma mark internal version of syscalls
 
-int fileport_makefd(proc_t p, ipc_port_t port, fileproc_flags_t fp_flags, int *fd);
+int fileport_makefd(proc_t p, ipc_port_t port, fileproc_flags_t fp_flags,
+                    int *fd);
 int dup2(proc_t p, kauth_cred_t p_cred, int from, int to, int *fd);
 int close_nocancel(proc_t p, kauth_cred_t p_cred, int fd);
 int fchdir(proc_t p, vfs_context_t ctx, int fd, bool per_thread);

@@ -72,15 +72,15 @@
 /* max bytes for an exec function */
 #ifdef XNU_KERNEL_PRIVATE
 #if defined(XNU_TARGET_OS_OSX)
-#define ARG_MAX           (1024 * 1024)
+#define ARG_MAX (1024 * 1024)
 #else
-#define ARG_MAX            (256 * 1024)
+#define ARG_MAX (256 * 1024)
 #endif
 #else /* XNU_KERNEL_PRIVATE */
 #if defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-#define ARG_MAX           (1024 * 1024)
+#define ARG_MAX (1024 * 1024)
 #else
-#define ARG_MAX            (256 * 1024)
+#define ARG_MAX (256 * 1024)
 #endif
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -90,52 +90,53 @@
  */
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-#define CHILD_MAX                  266  /* max simultaneous processes */
-#define GID_MAX            2147483647U  /* max value for a gid_t (2^31-2) */
-#endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
-#define LINK_MAX                32767   /* max file link count */
-#define MAX_CANON                1024   /* max bytes in term canon input line */
-#define MAX_INPUT                1024   /* max bytes in terminal input */
+#define CHILD_MAX 266       /* max simultaneous processes */
+#define GID_MAX 2147483647U /* max value for a gid_t (2^31-2) */
+#endif                      /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
+#define LINK_MAX 32767      /* max file link count */
+#define MAX_CANON 1024      /* max bytes in term canon input line */
+#define MAX_INPUT 1024      /* max bytes in terminal input */
 /*
- * NOTE: Many filesystems (including HFS & APFS) may support names longer than `NAME_MAX` bytes.
- * See manpage for `getdirentries` and `readdir` for details.
+ * NOTE: Many filesystems (including HFS & APFS) may support names longer than
+ * `NAME_MAX` bytes. See manpage for `getdirentries` and `readdir` for details.
  */
-#define NAME_MAX                  255   /* max bytes in a file name */
-#define NGROUPS_MAX                16   /* max supplemental group id's */
+#define NAME_MAX 255   /* max bytes in a file name */
+#define NGROUPS_MAX 16 /* max supplemental group id's */
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-#define UID_MAX            2147483647U  /* max value for a uid_t (2^31-2) */
+#define UID_MAX 2147483647U /* max value for a uid_t (2^31-2) */
 
-#define OPEN_MAX                10240   /* max open files per process - todo, make a config option? */
+#define OPEN_MAX                                                               \
+  10240 /* max open files per process - todo, make a config option? */
 
-#endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
-#define PATH_MAX                 1024   /* max bytes in pathname */
-#define PIPE_BUF                  512   /* max bytes for atomic pipe writes */
+#endif                /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
+#define PATH_MAX 1024 /* max bytes in pathname */
+#define PIPE_BUF 512  /* max bytes for atomic pipe writes */
 
-#define BC_BASE_MAX                99   /* max ibase/obase values in bc(1) */
-#define BC_DIM_MAX               2048   /* max array elements in bc(1) */
-#define BC_SCALE_MAX               99   /* max scale value in bc(1) */
-#define BC_STRING_MAX            1000   /* max const string length in bc(1) */
-#define CHARCLASS_NAME_MAX         14   /* max character class name size */
-#define COLL_WEIGHTS_MAX            2   /* max weights for order keyword */
-#define EQUIV_CLASS_MAX             2
-#define EXPR_NEST_MAX              32   /* max expressions nested in expr(1) */
-#define LINE_MAX                 2048   /* max bytes in an input line */
-#define RE_DUP_MAX                255   /* max RE's in interval notation */
+#define BC_BASE_MAX 99        /* max ibase/obase values in bc(1) */
+#define BC_DIM_MAX 2048       /* max array elements in bc(1) */
+#define BC_SCALE_MAX 99       /* max scale value in bc(1) */
+#define BC_STRING_MAX 1000    /* max const string length in bc(1) */
+#define CHARCLASS_NAME_MAX 14 /* max character class name size */
+#define COLL_WEIGHTS_MAX 2    /* max weights for order keyword */
+#define EQUIV_CLASS_MAX 2
+#define EXPR_NEST_MAX 32 /* max expressions nested in expr(1) */
+#define LINE_MAX 2048    /* max bytes in an input line */
+#define RE_DUP_MAX 255   /* max RE's in interval notation */
 
 #if __DARWIN_UNIX03
-#define NZERO                      20   /* default priority [XSI] */
-                                        /* = ((PRIO_MAX - PRIO_MIN) / 2) + 1 */
-                                        /* range: 0 - 39 [(2 * NZERO) - 1] */
-                                        /* 0 is not actually used */
-#else /* !__DARWIN_UNIX03 */
-#define NZERO                       0   /* default priority */
-                                        /* range: -20 - 20 */
-                                        /* (PRIO_MIN - PRIO_MAX) */
-#endif /* __DARWIN_UNIX03 */
+#define NZERO 20 /* default priority [XSI] */
+                 /* = ((PRIO_MAX - PRIO_MIN) / 2) + 1 */
+                 /* range: 0 - 39 [(2 * NZERO) - 1] */
+                 /* 0 is not actually used */
+#else            /* !__DARWIN_UNIX03 */
+#define NZERO 0  /* default priority */
+/* range: -20 - 20 */
+/* (PRIO_MIN - PRIO_MAX) */
+#endif           /* __DARWIN_UNIX03 */
 
 #ifdef XNU_KERNEL_PRIVATE
-#define MAXLONGPATHLEN           8192   /* max length of a long path */
-#endif /* XNU_KERNEL_PRIVATE */
+#define MAXLONGPATHLEN 8192 /* max length of a long path */
+#endif                      /* XNU_KERNEL_PRIVATE */
 
 #endif /* !_ANSI_SOURCE */
 

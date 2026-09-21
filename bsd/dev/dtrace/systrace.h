@@ -29,31 +29,31 @@
 
 #include <sys/dtrace.h>
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct systrace_sysent {
-	dtrace_id_t     stsy_entry;
-	dtrace_id_t     stsy_return;
-	int32_t         (*stsy_underlying)(struct proc *, void *, int *);
-	int32_t         stsy_return_type;
+  dtrace_id_t stsy_entry;
+  dtrace_id_t stsy_return;
+  int32_t (*stsy_underlying)(struct proc *, void *, int *);
+  int32_t stsy_return_type;
 } systrace_sysent_t;
 
 extern systrace_sysent_t *systrace_sysent;
 extern systrace_sysent_t *systrace_sysent32;
 
-extern void (*systrace_probe)(dtrace_id_t, uint64_t, uint64_t,
-    uint64_t, uint64_t, uint64_t);
-extern void systrace_stub(dtrace_id_t, uint64_t, uint64_t,
-    uint64_t, uint64_t, uint64_t);
+extern void (*systrace_probe)(dtrace_id_t, uint64_t, uint64_t, uint64_t,
+                              uint64_t, uint64_t);
+extern void systrace_stub(dtrace_id_t, uint64_t, uint64_t, uint64_t, uint64_t,
+                          uint64_t);
 
 extern int32_t dtrace_systrace_syscall(struct proc *, void *, int *);
 
 extern void dtrace_systrace_syscall_return(unsigned short, int, int *);
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif  /* _SYS_SYSTRACE_H */
+#endif /* _SYS_SYSTRACE_H */

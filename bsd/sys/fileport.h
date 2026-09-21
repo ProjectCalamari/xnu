@@ -29,9 +29,9 @@
 #ifndef _SYS_FILEPORT_H_
 #define _SYS_FILEPORT_H_
 
+#include <Availability.h>
 #include <sys/_types.h>
 #include <sys/cdefs.h>
-#include <Availability.h>
 
 #ifndef KERNEL
 
@@ -42,14 +42,14 @@ __BEGIN_DECLS
 #ifndef _FILEPORT_T
 #define _FILEPORT_T
 typedef __darwin_mach_port_t fileport_t;
-#define FILEPORT_NULL   ((fileport_t)0)
+#define FILEPORT_NULL ((fileport_t)0)
 #endif /* _FILEPORT_T */
 
 __API_AVAILABLE(macos(10.7), ios(4.3))
-int     fileport_makeport(int, fileport_t *);
+int fileport_makeport(int, fileport_t *);
 
 __API_AVAILABLE(macos(10.7), ios(4.3))
-int     fileport_makefd(fileport_t);
+int fileport_makefd(fileport_t);
 
 #endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
@@ -57,4 +57,4 @@ __END_DECLS
 
 #endif /* !KERNEL */
 
-#endif  /* !_SYS_FILEPORT_H_ */
+#endif /* !_SYS_FILEPORT_H_ */

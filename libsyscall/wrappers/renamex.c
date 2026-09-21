@@ -24,27 +24,23 @@
 #include <stdio.h>
 
 void __inc_remove_counter(void);
-int __renameatx_np(int oldfd, const char *old, int newfd, const char *new, unsigned int flags);
+int __renameatx_np(int oldfd, const char *old, int newfd, const char *new,
+                   unsigned int flags);
 
-int
-renameatx_np(int oldfd, const char *old, int newfd, const char *new, unsigned int flags)
-{
-	int res = __renameatx_np(oldfd, old, newfd, new, flags);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int renameatx_np(int oldfd, const char *old, int newfd, const char *new,
+                 unsigned int flags) {
+  int res = __renameatx_np(oldfd, old, newfd, new, flags);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }
 
-int
-renamex_np(const char *old, const char *new, unsigned int flags)
-{
-	return renameatx_np(AT_FDCWD, old, AT_FDCWD, new, flags);
+int renamex_np(const char *old, const char *new, unsigned int flags) {
+  return renameatx_np(AT_FDCWD, old, AT_FDCWD, new, flags);
 }
 
 // Deprecated
-int
-rename_ext(const char *old, const char *new, unsigned int flags)
-{
-	return renamex_np(old, new, flags);
+int rename_ext(const char *old, const char *new, unsigned int flags) {
+  return renamex_np(old, new, flags);
 }

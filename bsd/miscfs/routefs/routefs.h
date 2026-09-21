@@ -30,24 +30,21 @@
 
 #include <sys/appleapiopts.h>
 
-
 __BEGIN_DECLS
-
 
 #ifdef BSD_KERNEL_PRIVATE
 
 struct routefs_args {
-	char    route_path[MAXPATHLEN];/* path name of the target route */
-	vnode_t route_rvp; /* vnode of the target of route */
+  char route_path[MAXPATHLEN]; /* path name of the target route */
+  vnode_t route_rvp;           /* vnode of the target of route */
 };
 
 struct routefs_mount {
-	char    route_path[MAXPATHLEN];/* path name of the target route */
-	mount_t route_mount;
-	vnode_t route_rvp; /* vnode of the target of route */
-	int route_vpvid; /* vnode of the target of route */
+  char route_path[MAXPATHLEN]; /* path name of the target route */
+  mount_t route_mount;
+  vnode_t route_rvp; /* vnode of the target of route */
+  int route_vpvid;   /* vnode of the target of route */
 };
-
 
 /*
  * Function: routefs_kernel_mount
@@ -56,11 +53,10 @@ struct routefs_mount {
  *   mount routefs
  *   any links created with devfs_make_link().
  */
-int     routefs_kernel_mount(char * routepath);
+int routefs_kernel_mount(char *routepath);
 
 #endif /* BSD_KERNEL_PRIVATE */
 
 __END_DECLS
-
 
 #endif /* !_MISCFS_ROUTEFS_DEVFS_H_ */

@@ -51,16 +51,16 @@
  * the rights to redistribute these changes.
  */
 
-#include <mach/mach.h>
+#include "externs.h"
 #include <mach/boolean.h>
-#include <mach/machine/ndr_def.h>
-#include <mach/mach_traps.h>
+#include <mach/mach.h>
 #include <mach/mach_host.h>
 #include <mach/mach_init.h>
+#include <mach/mach_traps.h>
+#include <mach/machine/ndr_def.h>
 #include <mach/vm_param.h>
 #include <machine/cpu_capabilities.h>
 #include <stdbool.h>
-#include "externs.h"
 
 mach_port_t bootstrap_port = MACH_PORT_NULL;
 __swift_nonisolated_unsafe mach_port_t mach_task_self_ = MACH_PORT_NULL;
@@ -85,40 +85,34 @@ static void mach_init_doit(void);
 extern void _pthread_set_self(void *);
 extern void _init_cpu_capabilities(void);
 
-kern_return_t
-host_page_size(__unused host_t host, vm_size_t *out_page_size)
-{
-	*out_page_size = vm_kernel_page_size;
-	return KERN_SUCCESS;
+kern_return_t host_page_size(__unused host_t host, vm_size_t *out_page_size) {
+  *out_page_size = vm_kernel_page_size;
+  return KERN_SUCCESS;
 }
 
 /*
  * mach_init() must be called explicitly in static executables (including dyld).
  * called by libSystem_initializer() in dynamic executables
  */
-int
-mach_init(void)
-{
-	static bool mach_init_inited = false;
-	if (!mach_init_inited) {
-		mach_init_doit();
-		mach_init_inited = true;
-	}
-	return 0;
+int mach_init(void) {
+  static bool mach_init_inited = false;
+  if (!mach_init_inited) {
+    mach_init_doit();
+    mach_init_inited = true;
+  }
+  return 0;
 }
 
 // called by libSystem_atfork_child()
-int
-_mach_fork_child(void)
-{
-	mach_init_doit();
-	return 0;
+int _mach_fork_child(void) {
+  mach_init_doit();
+  return 0;
 }
 
 #if defined(__arm__) || defined(__arm64__)
 #if !defined(_COMM_PAGE_USER_PAGE_SHIFT_64) && defined(_COMM_PAGE_UNUSED0)
 #define _COMM_PAGE_USER_PAGE_SHIFT_32 (_COMM_PAGE_UNUSED0)
-#define _COMM_PAGE_USER_PAGE_SHIFT_64 (_COMM_PAGE_UNUSED0+1)
+#define _COMM_PAGE_USER_PAGE_SHIFT_64 (_COMM_PAGE_UNUSED0 + 1)
 #endif
 #endif
 
@@ -128,43 +122,43 @@ _mach_fork_child(void)
 #define COMM_PAGE_KERNEL_PAGE_SHIFT_MIN_VERSION 3
 #endif
 
-void
-mach_init_doit(void)
-{
-	// Initialize cached mach ports defined in mach_init.h
-	mach_task_self_ = task_self_trap();
-	_task_reply_port = mach_reply_port();
+void mach_init_doit(void) {
+  // Initialize cached mach ports defined in mach_init.h
+  mach_task_self_ = task_self_trap();
+  _task_reply_port = mach_reply_port();
 
-	if (vm_kernel_page_shift == 0) {
+  if (vm_kernel_page_shift == 0) {
 #if defined(__x86_64__) || defined(__i386__)
-		if (COMM_PAGE_READ(uint16_t, VERSION) >= COMM_PAGE_KERNEL_PAGE_SHIFT_MIN_VERSION) {
-			vm_kernel_page_shift = COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT);
-		} else {
-			vm_kernel_page_shift = I386_PGSHIFT;
-		}
+    if (COMM_PAGE_READ(uint16_t, VERSION) >=
+        COMM_PAGE_KERNEL_PAGE_SHIFT_MIN_VERSION) {
+      vm_kernel_page_shift = COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT);
+    } else {
+      vm_kernel_page_shift = I386_PGSHIFT;
+    }
 #else
-		vm_kernel_page_shift = COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT);
+    vm_kernel_page_shift = COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT);
 #endif
-		vm_kernel_page_size = 1 << vm_kernel_page_shift;
-		vm_kernel_page_mask = vm_kernel_page_size - 1;
-	}
+    vm_kernel_page_size = 1 << vm_kernel_page_shift;
+    vm_kernel_page_mask = vm_kernel_page_size - 1;
+  }
 
-	if (vm_page_shift == 0) {
+  if (vm_page_shift == 0) {
 #if defined(__arm64__)
-		vm_page_shift = COMM_PAGE_READ(uint8_t, USER_PAGE_SHIFT_64);
+    vm_page_shift = COMM_PAGE_READ(uint8_t, USER_PAGE_SHIFT_64);
 #elif defined(__arm__)
-		vm_page_shift = COMM_PAGE_READ(uint8_t, USER_PAGE_SHIFT_32);
+    vm_page_shift = COMM_PAGE_READ(uint8_t, USER_PAGE_SHIFT_32);
 #else
-		if (COMM_PAGE_READ(uint16_t, VERSION) >= COMM_PAGE_KERNEL_PAGE_SHIFT_MIN_VERSION) {
-			vm_page_shift = COMM_PAGE_READ(uint8_t, USER_PAGE_SHIFT_64);
-		} else {
-			vm_page_shift = vm_kernel_page_shift;
-		}
+    if (COMM_PAGE_READ(uint16_t, VERSION) >=
+        COMM_PAGE_KERNEL_PAGE_SHIFT_MIN_VERSION) {
+      vm_page_shift = COMM_PAGE_READ(uint8_t, USER_PAGE_SHIFT_64);
+    } else {
+      vm_page_shift = vm_kernel_page_shift;
+    }
 #endif
-		vm_page_size = 1 << vm_page_shift;
-		vm_page_mask = vm_page_size - 1;
-	}
+    vm_page_size = 1 << vm_page_shift;
+    vm_page_mask = vm_page_size - 1;
+  }
 
-	_init_cpu_capabilities();
-	_pthread_set_self(0);
+  _init_cpu_capabilities();
+  _pthread_set_self(0);
 }

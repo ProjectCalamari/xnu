@@ -33,32 +33,32 @@
 
 T_GLOBAL_META(T_META_RUN_CONCURRENTLY(true));
 
-T_DECL(waitpid_nohang, "FreeBSDarwin--waitpid_nohang", T_META_TAG_VM_PREFERRED)
-{
-	pid_t child, pid;
-	int status, r;
-	siginfo_t siginfo;
+T_DECL(waitpid_nohang, "FreeBSDarwin--waitpid_nohang",
+       T_META_TAG_VM_PREFERRED) {
+  pid_t child, pid;
+  int status, r;
+  siginfo_t siginfo;
 
-	child = fork();
-	T_ASSERT_POSIX_SUCCESS(child, "child forked successfully");
-	if (child == 0) {
-		sleep(10);
-		_exit(1);
-	}
+  child = fork();
+  T_ASSERT_POSIX_SUCCESS(child, "child forked successfully");
+  if (child == 0) {
+    sleep(10);
+    _exit(1);
+  }
 
-	status = 42;
-	pid = waitpid(child, &status, WNOHANG);
-	T_ASSERT_POSIX_ZERO(pid, "waitpid call is successful");
-	T_EXPECT_EQ(status, 42, "status is unaffected as expected");
+  status = 42;
+  pid = waitpid(child, &status, WNOHANG);
+  T_ASSERT_POSIX_ZERO(pid, "waitpid call is successful");
+  T_EXPECT_EQ(status, 42, "status is unaffected as expected");
 
-	r = kill(child, SIGTERM);
-	T_ASSERT_POSIX_ZERO(r, "signal sent successfully");
-	r = waitid(P_PID, (id_t)child, &siginfo, WEXITED | WNOWAIT);
-	T_ASSERT_POSIX_SUCCESS(r, "waitid call successful");
+  r = kill(child, SIGTERM);
+  T_ASSERT_POSIX_ZERO(r, "signal sent successfully");
+  r = waitid(P_PID, (id_t)child, &siginfo, WEXITED | WNOWAIT);
+  T_ASSERT_POSIX_SUCCESS(r, "waitid call successful");
 
-	status = -1;
-	pid = waitpid(child, &status, WNOHANG);
-	T_ASSERT_EQ(pid, child, "waitpid returns correct pid");
-	T_EXPECT_EQ(WIFSIGNALED(status), true, "child was signaled");
-	T_EXPECT_EQ(WTERMSIG(status), SIGTERM, "child was sent SIGTERM");
+  status = -1;
+  pid = waitpid(child, &status, WNOHANG);
+  T_ASSERT_EQ(pid, child, "waitpid returns correct pid");
+  T_EXPECT_EQ(WIFSIGNALED(status), true, "child was signaled");
+  T_EXPECT_EQ(WTERMSIG(status), SIGTERM, "child was sent SIGTERM");
 }

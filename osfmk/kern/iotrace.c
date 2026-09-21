@@ -44,42 +44,38 @@ uint32_t iotrace_entries_per_cpu;
 uint32_t PERCPU_DATA(iotrace_next);
 iotrace_entry_t *PERCPU_DATA(iotrace_ring);
 
-static void
-init_iotrace_bufs(int entries_per_cpu)
-{
-	const size_t size = entries_per_cpu * sizeof(iotrace_entry_t);
+static void init_iotrace_bufs(int entries_per_cpu) {
+  const size_t size = entries_per_cpu * sizeof(iotrace_entry_t);
 
-	percpu_foreach(ring, iotrace_ring) {
-		*ring = zalloc_permanent_tag(size, ZALIGN(iotrace_entry_t),
-		    VM_KERN_MEMORY_DIAG);
-	};
+  percpu_foreach(ring, iotrace_ring) {
+    *ring = zalloc_permanent_tag(size, ZALIGN(iotrace_entry_t),
+                                 VM_KERN_MEMORY_DIAG);
+  };
 
-	iotrace_entries_per_cpu = entries_per_cpu;
+  iotrace_entries_per_cpu = entries_per_cpu;
 }
 
-__startup_func
-static void
-iotrace_init(void)
-{
-	int entries_per_cpu = DEFAULT_IOTRACE_ENTRIES_PER_CPU;
-	int enable = mmiotrace_enabled;
+__startup_func static void iotrace_init(void) {
+  int entries_per_cpu = DEFAULT_IOTRACE_ENTRIES_PER_CPU;
+  int enable = mmiotrace_enabled;
 
-	if (kern_feature_override(KF_IOTRACE_OVRD)) {
-		enable = 0;
-	}
+  if (kern_feature_override(KF_IOTRACE_OVRD)) {
+    enable = 0;
+  }
 
-	(void) PE_parse_boot_argn("iotrace", &enable, sizeof(enable));
-	if (enable != 0 &&
-	    PE_parse_boot_argn("iotrace_epc", &entries_per_cpu, sizeof(entries_per_cpu)) &&
-	    (entries_per_cpu < 1 || entries_per_cpu > IOTRACE_MAX_ENTRIES_PER_CPU)) {
-		entries_per_cpu = DEFAULT_IOTRACE_ENTRIES_PER_CPU;
-	}
+  (void)PE_parse_boot_argn("iotrace", &enable, sizeof(enable));
+  if (enable != 0 &&
+      PE_parse_boot_argn("iotrace_epc", &entries_per_cpu,
+                         sizeof(entries_per_cpu)) &&
+      (entries_per_cpu < 1 || entries_per_cpu > IOTRACE_MAX_ENTRIES_PER_CPU)) {
+    entries_per_cpu = DEFAULT_IOTRACE_ENTRIES_PER_CPU;
+  }
 
-	mmiotrace_enabled = enable;
+  mmiotrace_enabled = enable;
 
-	if (mmiotrace_enabled) {
-		init_iotrace_bufs(entries_per_cpu);
-	}
+  if (mmiotrace_enabled) {
+    init_iotrace_bufs(entries_per_cpu);
+  }
 }
 
 STARTUP(EARLY_BOOT, STARTUP_RANK_MIDDLE, iotrace_init);

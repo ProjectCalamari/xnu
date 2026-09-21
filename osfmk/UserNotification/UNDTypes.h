@@ -44,7 +44,7 @@ typedef char *UNDPath;
  * serialized key's, list delimiters, ...
  *	(sent as out-of-line data in a message)
  */
-typedef const char * xmlData_t;
+typedef const char *xmlData_t;
 
 #ifdef KERNEL_PRIVATE
 #ifdef MACH_KERNEL_PRIVATE
@@ -73,8 +73,8 @@ typedef mach_port_t UNDReplyRef;
 #endif /* ! KERNEL_PRIVATE */
 
 #define UND_REPLY_NULL ((UNDReplyRef)0)
-#define XML_DATA_NULL   ((xmlData_t)0)
+#define XML_DATA_NULL ((xmlData_t)0)
 
-#endif  /* __APPLE_API_PRIVATE */
+#endif /* __APPLE_API_PRIVATE */
 
-#endif  /* __USERNOTIFICATION_UNDTPES_H */
+#endif /* __USERNOTIFICATION_UNDTPES_H */

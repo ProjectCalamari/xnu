@@ -65,7 +65,7 @@
 
 #ifndef DRIVERKIT
 #include <sys/appleapiopts.h>
-#include <sys/types.h>          /* u_short */
+#include <sys/types.h> /* u_short */
 #else
 #include <sys/_types.h>
 #include <sys/_types/_u_char.h>
@@ -77,19 +77,19 @@
  * Per RFC 768, September, 1981.
  */
 struct udphdr {
-	u_short uh_sport;               /* source port */
-	u_short uh_dport;               /* destination port */
-	u_short uh_ulen;                /* udp length */
-	u_short uh_sum;                 /* udp checksum */
+  u_short uh_sport; /* source port */
+  u_short uh_dport; /* destination port */
+  u_short uh_ulen;  /* udp length */
+  u_short uh_sum;   /* udp checksum */
 };
 
 /*
  * User-settable options (used with setsockopt).
  */
-#define UDP_NOCKSUM     0x01    /* don't checksum outbound payloads */
+#define UDP_NOCKSUM 0x01 /* don't checksum outbound payloads */
 #ifdef PRIVATE
-#define UDP_KEEPALIVE_OFFLOAD   0x02 /* Send keep-alive at a given interval */
-#endif /* PRIVATE */
+#define UDP_KEEPALIVE_OFFLOAD 0x02 /* Send keep-alive at a given interval */
+#endif                             /* PRIVATE */
 
 #ifdef PRIVATE
 /*
@@ -108,14 +108,14 @@ struct udphdr {
 #define UDP_KEEPALIVE_OFFLOAD_DATA_SIZE 32
 
 /* Maximum keep alive interval in seconds */
-#define UDP_KEEPALIVE_INTERVAL_MAX_SECONDS      65536
+#define UDP_KEEPALIVE_INTERVAL_MAX_SECONDS 65536
 
 struct udp_keepalive_offload {
-	u_char ka_data[UDP_KEEPALIVE_OFFLOAD_DATA_SIZE];
-	u_int16_t ka_interval;          /* interval in seconds */
-	u_int8_t ka_data_len;           /* valid length of ka_data */
-	u_int8_t ka_type;               /* type of application */
-#define UDP_KEEPALIVE_OFFLOAD_TYPE_AIRPLAY      0x1
+  u_char ka_data[UDP_KEEPALIVE_OFFLOAD_DATA_SIZE];
+  u_int16_t ka_interval; /* interval in seconds */
+  u_int8_t ka_data_len;  /* valid length of ka_data */
+  u_int8_t ka_type;      /* type of application */
+#define UDP_KEEPALIVE_OFFLOAD_TYPE_AIRPLAY 0x1
 };
 
 #endif /* PRIVATE */

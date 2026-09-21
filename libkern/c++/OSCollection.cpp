@@ -40,8 +40,7 @@
 
 OSDefineMetaClassAndAbstractStructors(OSCollection, OSObject)
 
-
-OSMetaClassDefineReservedUsedX86(OSCollection, 0);
+    OSMetaClassDefineReservedUsedX86(OSCollection, 0);
 OSMetaClassDefineReservedUsedX86(OSCollection, 1);
 OSMetaClassDefineReservedUnused(OSCollection, 2);
 OSMetaClassDefineReservedUnused(OSCollection, 3);
@@ -50,94 +49,84 @@ OSMetaClassDefineReservedUnused(OSCollection, 5);
 OSMetaClassDefineReservedUnused(OSCollection, 6);
 OSMetaClassDefineReservedUnused(OSCollection, 7);
 
-bool
-OSCollection::init()
-{
-	if (!super::init()) {
-		return false;
-	}
+bool OSCollection::init() {
+  if (!super::init()) {
+    return false;
+  }
 
-	updateStamp = 0;
+  updateStamp = 0;
 
-	return true;
+  return true;
 }
 
-void
-OSCollection::haveUpdated()
-{
-	if (fOptions & kImmutable) {
-		if (!(gIOKitDebug & kOSRegistryModsMode)) {
-			panic("Trying to change a collection in the registry");
-		} else {
-			OSReportWithBacktrace("Trying to change a collection in the registry");
-		}
-	}
-	updateStamp++;
+void OSCollection::haveUpdated() {
+  if (fOptions & kImmutable) {
+    if (!(gIOKitDebug & kOSRegistryModsMode)) {
+      panic("Trying to change a collection in the registry");
+    } else {
+      OSReportWithBacktrace("Trying to change a collection in the registry");
+    }
+  }
+  updateStamp++;
 }
 
-unsigned
-OSCollection::setOptions(unsigned options, unsigned mask, void *)
-{
-	unsigned old = fOptions;
+unsigned OSCollection::setOptions(unsigned options, unsigned mask, void *) {
+  unsigned old = fOptions;
 
-	if (mask) {
-		fOptions = (old & ~mask) | (options & mask);
-	}
+  if (mask) {
+    fOptions = (old & ~mask) | (options & mask);
+  }
 
-	return old;
+  return old;
 }
 
 OSSharedPtr<OSCollection>
-OSCollection::copyCollection(OSDictionary *cycleDict)
-{
-	if (cycleDict) {
-		OSObject *obj = cycleDict->getObject((const OSSymbol *) this);
+OSCollection::copyCollection(OSDictionary *cycleDict) {
+  if (cycleDict) {
+    OSObject *obj = cycleDict->getObject((const OSSymbol *)this);
 
-		return OSSharedPtr<OSCollection>(reinterpret_cast<OSCollection *>(obj), OSRetain);
-	} else {
-		// If we are here it means that there is a collection subclass that
-		// hasn't overridden the copyCollection method.  In which case just
-		// return a reference to ourselves.
-		// Hopefully this collection will not be inserted into the registry
-		return OSSharedPtr<OSCollection>(this, OSRetain);
-	}
+    return OSSharedPtr<OSCollection>(reinterpret_cast<OSCollection *>(obj),
+                                     OSRetain);
+  } else {
+    // If we are here it means that there is a collection subclass that
+    // hasn't overridden the copyCollection method.  In which case just
+    // return a reference to ourselves.
+    // Hopefully this collection will not be inserted into the registry
+    return OSSharedPtr<OSCollection>(this, OSRetain);
+  }
 }
 
-bool
-OSCollection::iterateObjects(void * refcon, bool (*callback)(void * refcon, OSObject * object))
-{
-	uint64_t     iteratorStore[2];
-	unsigned int initialUpdateStamp;
-	bool         done;
+bool OSCollection::iterateObjects(void *refcon,
+                                  bool (*callback)(void *refcon,
+                                                   OSObject *object)) {
+  uint64_t iteratorStore[2];
+  unsigned int initialUpdateStamp;
+  bool done;
 
-	assert(iteratorSize() < sizeof(iteratorStore));
+  assert(iteratorSize() < sizeof(iteratorStore));
 
-	if (!initIterator(&iteratorStore[0])) {
-		return false;
-	}
+  if (!initIterator(&iteratorStore[0])) {
+    return false;
+  }
 
-	initialUpdateStamp = updateStamp;
-	done = false;
-	do{
-		OSObject * object;
-		if (!getNextObjectForIterator(&iteratorStore[0], &object)) {
-			break;
-		}
-		done = callback(refcon, object);
-	}while (!done && (initialUpdateStamp == updateStamp));
+  initialUpdateStamp = updateStamp;
+  done = false;
+  do {
+    OSObject *object;
+    if (!getNextObjectForIterator(&iteratorStore[0], &object)) {
+      break;
+    }
+    done = callback(refcon, object);
+  } while (!done && (initialUpdateStamp == updateStamp));
 
-	return initialUpdateStamp == updateStamp;
+  return initialUpdateStamp == updateStamp;
 }
 
-static bool
-OSCollectionIterateObjectsBlock(void * refcon, OSObject * object)
-{
-	bool (^block)(OSObject * object) = (typeof(block))refcon;
-	return block(object);
+static bool OSCollectionIterateObjectsBlock(void *refcon, OSObject *object) {
+  bool (^block)(OSObject *object) = (typeof(block))refcon;
+  return block(object);
 }
 
-bool
-OSCollection::iterateObjects(bool (^block)(OSObject * object))
-{
-	return iterateObjects((void *) block, OSCollectionIterateObjectsBlock);
+bool OSCollection::iterateObjects(bool (^block)(OSObject *object)) {
+  return iterateObjects((void *)block, OSCollectionIterateObjectsBlock);
 }

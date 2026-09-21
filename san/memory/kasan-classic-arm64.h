@@ -26,8 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <mach/vm_param.h>
 #include "kasan-classic.h"
+#include <mach/vm_param.h>
 
 #ifndef _KASAN_CLASSIC_ARM64_H_
 #define _KASAN_CLASSIC_ARM64_H_
@@ -36,21 +36,21 @@
  * ARM64 configuration for KASAN-CLASSIC.
  */
 
-#define STOLEN_MEM_PERCENT      13UL
+#define STOLEN_MEM_PERCENT 13UL
 /* XXX this is for quarantine, should move to allocator-specific quarantine */
-#define STOLEN_MEM_BYTES            MiB(40)
+#define STOLEN_MEM_BYTES MiB(40)
 
 /* Defined in makedefs/MakeInc.def */
 #ifndef KASAN_OFFSET_ARM64
-#define KASAN_OFFSET_ARM64      0xe000000000000000ULL
-#endif  /* KASAN_OFFSET_ARM64 */
+#define KASAN_OFFSET_ARM64 0xe000000000000000ULL
+#endif /* KASAN_OFFSET_ARM64 */
 
 #if defined(ARM_LARGE_MEMORY)
-#define KASAN_SHADOW_MIN        (VM_MAX_KERNEL_ADDRESS+1)
-#define KASAN_SHADOW_MAX        0xffffffffffffffffULL
+#define KASAN_SHADOW_MIN (VM_MAX_KERNEL_ADDRESS + 1)
+#define KASAN_SHADOW_MAX 0xffffffffffffffffULL
 #else
-#define KASAN_SHADOW_MIN        0xfffffffc00000000ULL
-#define KASAN_SHADOW_MAX        0xffffffff80000000ULL
+#define KASAN_SHADOW_MIN 0xfffffffc00000000ULL
+#define KASAN_SHADOW_MAX 0xffffffff80000000ULL
 #endif
 
 #endif /* _KASAN_CLASSIC_ARM64_H_ */

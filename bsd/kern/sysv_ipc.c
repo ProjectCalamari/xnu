@@ -57,18 +57,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include <sys/param.h>
 #include <sys/ipc.h>
-#include <sys/stat.h>   /* mode constants */
-#include <sys/ucred.h>
 #include <sys/kauth.h>
-
+#include <sys/param.h>
+#include <sys/stat.h> /* mode constants */
+#include <sys/ucred.h>
 
 /*
  * Check for ipc permission
  */
-
 
 /*
  * ipc_perm
@@ -97,67 +94,69 @@
  *		See the posix_cred_access() implementation for algorithm
  *		information.
  */
-int
-ipcperm(kauth_cred_t cred, struct ipc_perm *perm, int mode_req)
-{
-	uid_t   uid = kauth_cred_getuid(cred);  /* avoid multiple calls */
-	int     want_mod_controlinfo = (mode_req & IPC_M);
-	int     is_member;
-	mode_t  mode_owner = (perm->mode & S_IRWXU);
-	mode_t  mode_group = (mode_t)((perm->mode & S_IRWXG) << 3);
-	mode_t  mode_world = (mode_t)((perm->mode & S_IRWXO) << 6);
+int ipcperm(kauth_cred_t cred, struct ipc_perm *perm, int mode_req) {
+  uid_t uid = kauth_cred_getuid(cred); /* avoid multiple calls */
+  int want_mod_controlinfo = (mode_req & IPC_M);
+  int is_member;
+  mode_t mode_owner = (perm->mode & S_IRWXU);
+  mode_t mode_group = (mode_t)((perm->mode & S_IRWXG) << 3);
+  mode_t mode_world = (mode_t)((perm->mode & S_IRWXO) << 6);
 
-	/* Grant all rights to super user */
-	if (!suser(cred, (u_short *)NULL)) {
-		return 0;
-	}
+  /* Grant all rights to super user */
+  if (!suser(cred, (u_short *)NULL)) {
+    return 0;
+  }
 
-	/* Grant or deny rights based on ownership */
-	if (uid == perm->cuid || uid == perm->uid) {
-		if (want_mod_controlinfo) {
-			return 0;
-		}
+  /* Grant or deny rights based on ownership */
+  if (uid == perm->cuid || uid == perm->uid) {
+    if (want_mod_controlinfo) {
+      return 0;
+    }
 
-		return (mode_req & mode_owner) == mode_req ? 0 : EACCES;
-	} else {
-		/* everyone else who wants to modify control info is denied */
-		if (want_mod_controlinfo) {
-			return EPERM;
-		}
-	}
+    return (mode_req & mode_owner) == mode_req ? 0 : EACCES;
+  } else {
+    /* everyone else who wants to modify control info is denied */
+    if (want_mod_controlinfo) {
+      return EPERM;
+    }
+  }
 
-	/*
-	 * Combined group and world rights check, if no owner rights; positive
-	 * asssertion of gid/cgid equality avoids an extra callout in the
-	 * common case.
-	 */
-	if ((mode_req & mode_group & mode_world) == mode_req) {
-		return 0;
-	} else {
-		if ((mode_req & mode_group) != mode_req) {
-			if ((!kauth_cred_ismember_gid(cred, perm->gid, &is_member) && is_member) &&
-			    ((perm->gid == perm->cgid) ||
-			    (!kauth_cred_ismember_gid(cred, perm->cgid, &is_member) && is_member))) {
-				return EACCES;
-			} else {
-				if ((mode_req & mode_world) != mode_req) {
-					return EACCES;
-				} else {
-					return 0;
-				}
-			}
-		} else {
-			if ((!kauth_cred_ismember_gid(cred, perm->gid, &is_member) && is_member) ||
-			    ((perm->gid != perm->cgid) &&
-			    (!kauth_cred_ismember_gid(cred, perm->cgid, &is_member) && is_member))) {
-				return 0;
-			} else {
-				if ((mode_req & mode_world) != mode_req) {
-					return EACCES;
-				} else {
-					return 0;
-				}
-			}
-		}
-	}
+  /*
+   * Combined group and world rights check, if no owner rights; positive
+   * asssertion of gid/cgid equality avoids an extra callout in the
+   * common case.
+   */
+  if ((mode_req & mode_group & mode_world) == mode_req) {
+    return 0;
+  } else {
+    if ((mode_req & mode_group) != mode_req) {
+      if ((!kauth_cred_ismember_gid(cred, perm->gid, &is_member) &&
+           is_member) &&
+          ((perm->gid == perm->cgid) ||
+           (!kauth_cred_ismember_gid(cred, perm->cgid, &is_member) &&
+            is_member))) {
+        return EACCES;
+      } else {
+        if ((mode_req & mode_world) != mode_req) {
+          return EACCES;
+        } else {
+          return 0;
+        }
+      }
+    } else {
+      if ((!kauth_cred_ismember_gid(cred, perm->gid, &is_member) &&
+           is_member) ||
+          ((perm->gid != perm->cgid) &&
+           (!kauth_cred_ismember_gid(cred, perm->cgid, &is_member) &&
+            is_member))) {
+        return 0;
+      } else {
+        if ((mode_req & mode_world) != mode_req) {
+          return EACCES;
+        } else {
+          return 0;
+        }
+      }
+    }
+  }
 }

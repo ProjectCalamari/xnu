@@ -40,19 +40,17 @@
  * - created
  */
 
+#include <net/if_dl.h>
 #include <net/multicast_list.h>
+#include <sys/malloc.h>
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <sys/malloc.h>
-#include <net/if_dl.h>
 
 #include <net/sockaddr_utils.h>
 
-__private_extern__ void
-multicast_list_init(struct multicast_list * mc_list)
-{
-	SLIST_INIT(mc_list);
-	return;
+__private_extern__ void multicast_list_init(struct multicast_list *mc_list) {
+  SLIST_INIT(mc_list);
+  return;
 }
 
 /*
@@ -61,23 +59,21 @@ multicast_list_init(struct multicast_list * mc_list)
  *   Remove the given list of multicast addresses from the interface and from
  *   the multicast list structure.
  */
-__private_extern__ int
-multicast_list_remove(struct multicast_list * mc_list)
-{
-	int                         error;
-	struct multicast_entry *    mc;
-	int                         result = 0;
+__private_extern__ int multicast_list_remove(struct multicast_list *mc_list) {
+  int error;
+  struct multicast_entry *mc;
+  int result = 0;
 
-	while ((mc = SLIST_FIRST(mc_list)) != NULL) {
-		error = ifnet_remove_multicast(mc->mc_ifma);
-		if (error != 0) {
-			result = error;
-		}
-		SLIST_REMOVE_HEAD(mc_list, mc_entries);
-		ifmaddr_release(mc->mc_ifma);
-		kfree_type(struct multicast_entry, mc);
-	}
-	return result;
+  while ((mc = SLIST_FIRST(mc_list)) != NULL) {
+    error = ifnet_remove_multicast(mc->mc_ifma);
+    if (error != 0) {
+      result = error;
+    }
+    SLIST_REMOVE_HEAD(mc_list, mc_entries);
+    ifmaddr_release(mc->mc_ifma);
+    kfree_type(struct multicast_entry, mc);
+  }
+  return result;
 }
 
 /*
@@ -93,60 +89,57 @@ multicast_list_remove(struct multicast_list * mc_list)
  *   If it fails, we remove what we've added to the new list, and
  *   return an error.
  */
-__private_extern__ int
-multicast_list_program(struct multicast_list * mc_list,
-    struct ifnet * source_ifp,
-    struct ifnet * target_ifp)
-{
-	u_char                      alen;
-	int                         error = 0;
-	struct multicast_entry *    mc = NULL;
-	struct multicast_list       new_mc_list;
-	struct sockaddr_dl          source_sdl = {};
-	ifmultiaddr_t *__null_terminated source_multicast_list;
-	struct sockaddr_dl          target_sdl;
+__private_extern__ int multicast_list_program(struct multicast_list *mc_list,
+                                              struct ifnet *source_ifp,
+                                              struct ifnet *target_ifp) {
+  u_char alen;
+  int error = 0;
+  struct multicast_entry *mc = NULL;
+  struct multicast_list new_mc_list;
+  struct sockaddr_dl source_sdl = {};
+  ifmultiaddr_t *__null_terminated source_multicast_list;
+  struct sockaddr_dl target_sdl;
 
-	alen = target_ifp->if_addrlen;
-	bzero((char *)&target_sdl, sizeof(target_sdl));
-	target_sdl.sdl_len = sizeof(target_sdl);
-	target_sdl.sdl_family = AF_LINK;
-	target_sdl.sdl_type = target_ifp->if_type;
-	target_sdl.sdl_alen = alen;
-	target_sdl.sdl_index = target_ifp->if_index;
+  alen = target_ifp->if_addrlen;
+  bzero((char *)&target_sdl, sizeof(target_sdl));
+  target_sdl.sdl_len = sizeof(target_sdl);
+  target_sdl.sdl_family = AF_LINK;
+  target_sdl.sdl_type = target_ifp->if_type;
+  target_sdl.sdl_alen = alen;
+  target_sdl.sdl_index = target_ifp->if_index;
 
-	/* build a new list */
-	multicast_list_init(&new_mc_list);
-	error = ifnet_get_multicast_list(source_ifp, &source_multicast_list);
-	if (error != 0) {
-		printf("multicast_list_program: "
-		    "ifnet_get_multicast_list(%s%d) failed, %d\n",
-		    source_ifp->if_name, source_ifp->if_unit, error);
-		return error;
-	}
-	for (ifmultiaddr_t *__null_terminated ptr = source_multicast_list;
-	    *ptr != NULL; ptr++) {
-		if (ifmaddr_address(*ptr, SA(&source_sdl), sizeof(source_sdl)) != 0
-		    || source_sdl.sdl_family != AF_LINK) {
-			continue;
-		}
-		mc = kalloc_type(struct multicast_entry, Z_WAITOK | Z_NOFAIL);
-		bcopy(LLADDR(&source_sdl), LLADDR(&target_sdl), alen);
-		error = ifnet_add_multicast(target_ifp, SA(&target_sdl),
-		    &mc->mc_ifma);
-		if (error != 0) {
-			kfree_type(struct multicast_entry, mc);
-			break;
-		}
-		SLIST_INSERT_HEAD(&new_mc_list, mc, mc_entries);
-	}
-	if (error != 0) {
-		/* restore previous state */
-		(void)multicast_list_remove(&new_mc_list);
-	} else {
-		/* remove the old entries, and return the new list */
-		(void)multicast_list_remove(mc_list);
-		*mc_list = new_mc_list;
-	}
-	ifnet_free_multicast_list(source_multicast_list);
-	return error;
+  /* build a new list */
+  multicast_list_init(&new_mc_list);
+  error = ifnet_get_multicast_list(source_ifp, &source_multicast_list);
+  if (error != 0) {
+    printf("multicast_list_program: "
+           "ifnet_get_multicast_list(%s%d) failed, %d\n",
+           source_ifp->if_name, source_ifp->if_unit, error);
+    return error;
+  }
+  for (ifmultiaddr_t *__null_terminated ptr = source_multicast_list;
+       *ptr != NULL; ptr++) {
+    if (ifmaddr_address(*ptr, SA(&source_sdl), sizeof(source_sdl)) != 0 ||
+        source_sdl.sdl_family != AF_LINK) {
+      continue;
+    }
+    mc = kalloc_type(struct multicast_entry, Z_WAITOK | Z_NOFAIL);
+    bcopy(LLADDR(&source_sdl), LLADDR(&target_sdl), alen);
+    error = ifnet_add_multicast(target_ifp, SA(&target_sdl), &mc->mc_ifma);
+    if (error != 0) {
+      kfree_type(struct multicast_entry, mc);
+      break;
+    }
+    SLIST_INSERT_HEAD(&new_mc_list, mc, mc_entries);
+  }
+  if (error != 0) {
+    /* restore previous state */
+    (void)multicast_list_remove(&new_mc_list);
+  } else {
+    /* remove the old entries, and return the new list */
+    (void)multicast_list_remove(mc_list);
+    *mc_list = new_mc_list;
+  }
+  ifnet_free_multicast_list(source_multicast_list);
+  return error;
 }

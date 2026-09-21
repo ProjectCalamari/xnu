@@ -35,7 +35,6 @@
 
 #if MACH_KERNEL_PRIVATE
 
-
 extern void task_ref_init(void);
 
 extern void task_ref_count_fini(task_t);
@@ -54,14 +53,15 @@ __BEGIN_DECLS
 
 extern struct os_refgrp task_external_refgrp;
 
-__options_closed_decl(task_grp_t, uint32_t, {
-	TASK_GRP_KERNEL,
-	TASK_GRP_INTERNAL,
-	TASK_GRP_MIG,
-	TASK_GRP_EXTERNAL,
+__options_closed_decl(task_grp_t, uint32_t,
+                      {
+                          TASK_GRP_KERNEL,
+                          TASK_GRP_INTERNAL,
+                          TASK_GRP_MIG,
+                          TASK_GRP_EXTERNAL,
 
-	TASK_GRP_COUNT,
-});
+                          TASK_GRP_COUNT,
+                      });
 
 extern void task_reference_grp(task_t, task_grp_t);
 extern void task_deallocate_grp(task_t, task_grp_t);
@@ -70,8 +70,8 @@ extern void task_deallocate_grp(task_t, task_grp_t);
 #define task_deallocate_mig(task) task_deallocate_grp(task, TASK_GRP_MIG)
 
 /*
- * Exported symbols get mapped to their _external versions. Internal consumers of
- * these functions need to pick up the _kernel version.
+ * Exported symbols get mapped to their _external versions. Internal consumers
+ * of these functions need to pick up the _kernel version.
  */
 
 #define task_reference(task) task_reference_grp(task, TASK_GRP_KERNEL)
@@ -82,20 +82,22 @@ extern void task_deallocate_grp(task_t, task_grp_t);
 
 #define port_name_to_task(name) port_name_to_task_kernel(name)
 
-#define convert_port_to_task_suspension_token(port) convert_port_to_task_suspension_token_kernel(port)
-#define convert_task_suspension_token_to_port(token) convert_task_suspension_token_to_port_kernel(token)
+#define convert_port_to_task_suspension_token(port)                            \
+  convert_port_to_task_suspension_token_kernel(port)
+#define convert_task_suspension_token_to_port(token)                           \
+  convert_task_suspension_token_to_port_kernel(token)
 
 #define task_resume2(token) task_resume2_kernel(token)
 #define task_suspend2(task, token) task_suspend2_kernel(task, token)
 
 __END_DECLS
 
-#else /* XNU_KERNEL_PRIVATE */
+#else  /* XNU_KERNEL_PRIVATE */
 
 __BEGIN_DECLS
 
-extern void             task_reference(task_t);
-extern void             task_deallocate(task_t);
+extern void task_reference(task_t);
+extern void task_deallocate(task_t);
 
 __END_DECLS
 #endif /* XNU_KERNEL_PRIVATE */

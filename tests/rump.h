@@ -1,7 +1,7 @@
 // Copyright (c) 2020 Apple Computer, Inc. All rights reserved.
 
-#include <stdlib.h>
 #include <os/atomic_private.h>
+#include <stdlib.h>
 
 #define kheap_alloc(h, s, f) calloc(1, s)
 #define kfree(p, s) free(p)

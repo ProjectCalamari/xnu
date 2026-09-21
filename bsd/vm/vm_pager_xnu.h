@@ -46,14 +46,14 @@
 
 #include <mach/boolean.h>
 
-struct  pager_struct {
-	boolean_t       is_device;
+struct pager_struct {
+  boolean_t is_device;
 };
-typedef struct pager_struct     *vm_pager_t;
-#define vm_pager_null           ((vm_pager_t) 0)
+typedef struct pager_struct *vm_pager_t;
+#define vm_pager_null ((vm_pager_t)0)
 
-#define PAGER_SUCCESS           0  /* page read or written */
-#define PAGER_ABSENT            1  /* pager does not have page */
-#define PAGER_ERROR             2  /* pager unable to read or write page */
+#define PAGER_SUCCESS 0 /* page read or written */
+#define PAGER_ABSENT 1  /* pager does not have page */
+#define PAGER_ERROR 2   /* pager unable to read or write page */
 
-#endif  /* _VM_PAGER_ */
+#endif /* _VM_PAGER_ */

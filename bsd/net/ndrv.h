@@ -38,22 +38,21 @@
 #include <sys/appleapiopts.h>
 #include <sys/types.h>
 
-
 struct sockaddr_ndrv {
-	unsigned char snd_len;
-	unsigned char snd_family;
-	unsigned char snd_name[IFNAMSIZ]; /* from if.h */
+  unsigned char snd_len;
+  unsigned char snd_family;
+  unsigned char snd_name[IFNAMSIZ]; /* from if.h */
 };
 
 /*
  * Support for user-mode protocol handlers
  */
 
-#define NDRV_DEMUXTYPE_ETHERTYPE        4
-#define NDRV_DEMUXTYPE_SAP                      5
-#define NDRV_DEMUXTYPE_SNAP                     6
+#define NDRV_DEMUXTYPE_ETHERTYPE 4
+#define NDRV_DEMUXTYPE_SAP 5
+#define NDRV_DEMUXTYPE_SNAP 6
 
-#define NDRVPROTO_NDRV                          0
+#define NDRVPROTO_NDRV 0
 
 /*
  * Struct: ndrv_demux_desc
@@ -61,15 +60,15 @@ struct sockaddr_ndrv {
  *   To uniquely identify a packet based on its low-level framing information.
  *
  * Fields:
- *		type		:	type of protocol in data field, must be understood by
- *						the interface family of the interface the socket is bound to
+ *		type		:	type of protocol in data field, must be
+ * understood by the interface family of the interface the socket is bound to
  *		length		:       length of protocol data in "data" field
- *		data		:	union of framing-specific data, in network byte order
- *		ether_type	:	ethernet type in network byte order, assuming
- *						ethernet type II framing
- *		sap			:	first 3 bytes of sap header, network byte order
- *		snap		:	first 5 bytes of snap header, network byte order
- *		other		:	up to 28 bytes of protocol data for different protocol type
+ *		data		:	union of framing-specific data, in
+ * network byte order ether_type	:	ethernet type in network byte
+ * order, assuming ethernet type II framing sap			:	first 3
+ * bytes of sap header, network byte order snap		:	first 5 bytes of
+ * snap header, network byte order other		:	up to 28 bytes
+ * of protocol data for different protocol type
  *
  * Examples:
  * 1) 802.1x uses ether_type 0x888e, so the descriptor would be set as:
@@ -88,14 +87,14 @@ struct sockaddr_ndrv {
  *    desc.data.snap[4] = 9B;
  */
 struct ndrv_demux_desc {
-	u_int16_t   type;
-	u_int16_t   length;
-	union{
-		u_int16_t       ether_type;
-		u_int8_t        sap[3];
-		u_int8_t        snap[5];
-		u_int8_t        other[28];
-	} data;
+  u_int16_t type;
+  u_int16_t length;
+  union {
+    u_int16_t ether_type;
+    u_int8_t sap[3];
+    u_int8_t snap[5];
+    u_int8_t other[28];
+  } data;
 };
 
 #define NDRV_PROTOCOL_DESC_VERS 1
@@ -108,25 +107,24 @@ struct ndrv_demux_desc {
  * Field:
  *	version		:	must be NDRV_PROTOCOL_DESC_VERS
  *	protocol_family	:	unique identifier for this protocol
- *	demux_count	:	number of demux_list descriptors in demux_list; maximum of 10
- *	demux_list	:	pointer to array of demux descriptors
+ *	demux_count	:	number of demux_list descriptors in demux_list;
+ * maximum of 10 demux_list	:	pointer to array of demux descriptors
  */
 #ifdef BSD_KERNEL_PRIVATE
 struct ndrv_protocol_desc_kernel {
-	u_int32_t                           version;
-	u_int32_t                           protocol_family;
-	u_int32_t                           demux_count;
-	struct ndrv_demux_desc              *__counted_by(demux_count) demux_list;
+  u_int32_t version;
+  u_int32_t protocol_family;
+  u_int32_t demux_count;
+  struct ndrv_demux_desc *__counted_by(demux_count) demux_list;
 };
 #else
 struct ndrv_protocol_desc {
-	u_int32_t                           version;
-	u_int32_t                           protocol_family;
-	u_int32_t                           demux_count;
-	struct ndrv_demux_desc              *demux_list;
+  u_int32_t version;
+  u_int32_t protocol_family;
+  u_int32_t demux_count;
+  struct ndrv_demux_desc *demux_list;
 };
 #endif
-
 
 #ifdef KERNEL_PRIVATE
 /* LP64 version of ndrv_protocol_desc.  all pointers
@@ -134,25 +132,25 @@ struct ndrv_protocol_desc {
  * WARNING - keep in sync with ndrv_protocol_desc
  */
 struct ndrv_protocol_desc64 {
-	u_int32_t                           version;
-	u_int32_t                           protocol_family;
-	u_int32_t                           demux_count;
-	user64_addr_t                       demux_list __attribute__((aligned(8)));
+  u_int32_t version;
+  u_int32_t protocol_family;
+  u_int32_t demux_count;
+  user64_addr_t demux_list __attribute__((aligned(8)));
 };
 
 struct ndrv_protocol_desc32 {
-	u_int32_t                           version;
-	u_int32_t                           protocol_family;
-	u_int32_t                           demux_count;
-	user32_addr_t                       demux_list;
+  u_int32_t version;
+  u_int32_t protocol_family;
+  u_int32_t demux_count;
+  user32_addr_t demux_list;
 };
 #endif /* KERNEL_PRIVATE */
 
-#define SOL_NDRVPROTO           NDRVPROTO_NDRV  /* Use this socket level */
-#define NDRV_DELDMXSPEC         0x02                    /* Delete the registered protocol */
-#define NDRV_SETDMXSPEC         0x04                    /* Set the protocol spec */
-#define NDRV_ADDMULTICAST       0x05                    /* Add a physical multicast address */
-#define NDRV_DELMULTICAST       0x06                    /* Delete a phyiscal multicast */
+#define SOL_NDRVPROTO NDRVPROTO_NDRV /* Use this socket level */
+#define NDRV_DELDMXSPEC 0x02         /* Delete the registered protocol */
+#define NDRV_SETDMXSPEC 0x04         /* Set the protocol spec */
+#define NDRV_ADDMULTICAST 0x05       /* Add a physical multicast address */
+#define NDRV_DELMULTICAST 0x06       /* Delete a phyiscal multicast */
 
 /*
  * SOL_NDRVPROTO - use this for the socket level when calling setsocketopt
@@ -162,7 +160,8 @@ struct ndrv_protocol_desc32 {
  * NDRV_ADDMULTICAST - Enable reception of a phyiscal multicast address, use
  *                     a sockaddr of the appropriate type for the media in use.
  * NDRV_DELMULTICAST - Disable reception of a phyiscal multicast address, use
- *					   a sockaddr of the appropriate type for the media in use.
+ *					   a sockaddr of the appropriate type
+ * for the media in use.
  *
  * When adding multicasts, the multicasts are ref counted. If the multicast is
  * already registered in the kernel, the count will be bumped. When deleting
@@ -178,11 +177,12 @@ struct ndrv_protocol_desc32 {
  */
 
 /* Max number of descriptions allowed by default */
-#define NDRV_DMUX_MAX_DESCR     1024
+#define NDRV_DMUX_MAX_DESCR 1024
 
 /*
  * sysctl MIB tags at the kern.ipc.nrdv level
  */
-#define NRDV_MULTICAST_ADDRS_PER_SOCK 1 /* to toggle NDRV_DMUX_MAX_DESCR value */
+#define NRDV_MULTICAST_ADDRS_PER_SOCK                                          \
+  1 /* to toggle NDRV_DMUX_MAX_DESCR value */
 
-#endif  /* _NET_NDRV_H */
+#endif /* _NET_NDRV_H */

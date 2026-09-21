@@ -29,6 +29,6 @@
 #define _MOUNT_T
 
 struct mount;
-typedef struct mount * mount_t;
+typedef struct mount *mount_t;
 
 #endif /* _MOUNT_T */

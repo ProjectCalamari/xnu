@@ -33,13 +33,13 @@
 
 /* directory entry */
 typedef struct {
-	uint32_t length;
-	uint32_t returned_attrs[5];
-	int32_t name_offset;
-	uint32_t name_length;
-	uint32_t obj_type;
-	uint64_t file_id;
-	off_t data_length;
+  uint32_t length;
+  uint32_t returned_attrs[5];
+  int32_t name_offset;
+  uint32_t name_length;
+  uint32_t obj_type;
+  uint64_t file_id;
+  off_t data_length;
 } __attribute__((packed)) exclave_fs_dirent_t;
 
 /* root_id for non-EFT_EXCLAVE fs, maps to base dir */
@@ -50,8 +50,9 @@ typedef struct {
 #define EXCLAVE_FS_SYNC_OP_FULL 1
 #define EXCLAVE_FS_SYNC_OP_UBC 2
 
-#define EXCLAVE_FS_REGISTER_ENTITLEMENT  "com.apple.private.vfs.exclave-fs-register"
-#define EXCLAVE_FS_LIST_ENTITLEMENT  "com.apple.private.vfs.exclave-fs-list"
+#define EXCLAVE_FS_REGISTER_ENTITLEMENT                                        \
+  "com.apple.private.vfs.exclave-fs-register"
+#define EXCLAVE_FS_LIST_ENTITLEMENT "com.apple.private.vfs.exclave-fs-list"
 
 int vfs_exclave_fs_start(void);
 void vfs_exclave_fs_stop(void);
@@ -63,16 +64,21 @@ int vfs_exclave_fs_get_base_dirs(void *buf, uint32_t *count);
 int vfs_exclave_fs_register_path(uint32_t fs_tag, const char *base_path);
 
 int vfs_exclave_fs_root(const char *exclave_id, uint64_t *root_id);
-int vfs_exclave_fs_root_ex(uint32_t fs_tag, const char *exclave_id, uint64_t *root_id);
-int vfs_exclave_fs_open(uint32_t fs_tag, uint64_t root_id, const char *name, uint64_t *file_id);
+int vfs_exclave_fs_root_ex(uint32_t fs_tag, const char *exclave_id,
+                           uint64_t *root_id);
+int vfs_exclave_fs_open(uint32_t fs_tag, uint64_t root_id, const char *name,
+                        uint64_t *file_id);
 int vfs_exclave_fs_close(uint32_t fs_tag, uint64_t file_id);
-int vfs_exclave_fs_create(uint32_t fs_tag, uint64_t root_id, const char *name, uint64_t *file_id);
-int vfs_exclave_fs_read(uint32_t fs_tag, uint64_t file_id, uint64_t file_offset, uint64_t length, void *data);
-int vfs_exclave_fs_write(uint32_t fs_tag, uint64_t file_id, uint64_t file_offset, uint64_t length, void *data);
+int vfs_exclave_fs_create(uint32_t fs_tag, uint64_t root_id, const char *name,
+                          uint64_t *file_id);
+int vfs_exclave_fs_read(uint32_t fs_tag, uint64_t file_id, uint64_t file_offset,
+                        uint64_t length, void *data);
+int vfs_exclave_fs_write(uint32_t fs_tag, uint64_t file_id,
+                         uint64_t file_offset, uint64_t length, void *data);
 int vfs_exclave_fs_remove(uint32_t fs_tag, uint64_t root_id, const char *name);
 int vfs_exclave_fs_sync(uint32_t fs_tag, uint64_t file_id, uint64_t sync_op);
 int vfs_exclave_fs_readdir(uint32_t fs_tag, uint64_t file_id, void *dirent_buf,
-    uint32_t buf_size, int32_t *count);
+                           uint32_t buf_size, int32_t *count);
 int vfs_exclave_fs_getsize(uint32_t fs_tag, uint64_t file_id, uint64_t *size);
 int vfs_exclave_fs_sealstate(uint32_t fs_tag, bool *sealed);
 int vfs_exclave_fs_query_volume_group(const uuid_string_t vguuid, bool *exists);

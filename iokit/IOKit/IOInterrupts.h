@@ -32,11 +32,10 @@
  *
  */
 
-
 #ifndef _IOKIT_IOINTERRUPTS_H
 #define _IOKIT_IOINTERRUPTS_H
 
-#define kIOInterruptTypeEdge  (0)
+#define kIOInterruptTypeEdge (0)
 #define kIOInterruptTypeLevel (1)
 
 #ifdef __cplusplus
@@ -45,24 +44,23 @@ class OSData;
 class IOInterruptController;
 
 struct IOInterruptSource {
-	IOInterruptController *interruptController;
-	OSData                *vectorData;
+  IOInterruptController *interruptController;
+  OSData *vectorData;
 };
 typedef struct IOInterruptSource IOInterruptSource;
 
 #ifdef XNU_KERNEL_PRIVATE
 
 struct IOInterruptSourcePrivate {
-	void * vectorBlock;
+  void *vectorBlock;
 };
 typedef struct IOInterruptSourcePrivate IOInterruptSourcePrivate;
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-
 #endif /* __cplusplus */
 
-typedef void (*IOInterruptHandler)(void *target, void *refCon,
-    void *nub, int source);
+typedef void (*IOInterruptHandler)(void *target, void *refCon, void *nub,
+                                   int source);
 
 #endif /* ! _IOKIT_IOINTERRUPTS_H */

@@ -57,36 +57,36 @@
  */
 
 #ifndef _NET_IF_MIB_H
-#define _NET_IF_MIB_H   1
+#define _NET_IF_MIB_H 1
 #include <net/if_var.h>
 #include <sys/appleapiopts.h>
 #include <sys/types.h>
 
 struct ifmibdata {
-	char                    ifmd_name[IFNAMSIZ]; /* name of interface */
-	unsigned int            ifmd_pcount;    /* number of promiscuous listeners */
-	unsigned int            ifmd_flags;     /* interface flags */
-	unsigned int            ifmd_snd_len;   /* instantaneous length of send queue */
-	unsigned int            ifmd_snd_maxlen; /* maximum length of send queue */
-	unsigned int            ifmd_snd_drops; /* number of drops in send queue */
-	unsigned int            ifmd_filler[4]; /* for future expansion */
-	struct if_data64        ifmd_data; /* generic information and statistics */
+  char ifmd_name[IFNAMSIZ];     /* name of interface */
+  unsigned int ifmd_pcount;     /* number of promiscuous listeners */
+  unsigned int ifmd_flags;      /* interface flags */
+  unsigned int ifmd_snd_len;    /* instantaneous length of send queue */
+  unsigned int ifmd_snd_maxlen; /* maximum length of send queue */
+  unsigned int ifmd_snd_drops;  /* number of drops in send queue */
+  unsigned int ifmd_filler[4];  /* for future expansion */
+  struct if_data64 ifmd_data;   /* generic information and statistics */
 };
 
 /*
  * sysctl MIB tags at the net.link.generic level
  */
-#define IFMIB_SYSTEM    1       /* non-interface-specific */
-#define IFMIB_IFDATA    2       /* per-interface data table */
-#define IFMIB_IFALLDATA 3       /* all interfaces data at once */
+#define IFMIB_SYSTEM 1    /* non-interface-specific */
+#define IFMIB_IFDATA 2    /* per-interface data table */
+#define IFMIB_IFALLDATA 3 /* all interfaces data at once */
 
 /*
  * MIB tags for the various net.link.generic.ifdata tables
  */
-#define IFDATA_GENERAL          1       /* generic stats for all kinds of ifaces */
-#define IFDATA_LINKSPECIFIC     2       /* specific to the type of interface */
-#define IFDATA_ADDRS            3       /* addresses assigned to interface */
-#define IFDATA_MULTIADDRS       4       /* multicast addresses assigned to interface */
+#define IFDATA_GENERAL 1      /* generic stats for all kinds of ifaces */
+#define IFDATA_LINKSPECIFIC 2 /* specific to the type of interface */
+#define IFDATA_ADDRS 3        /* addresses assigned to interface */
+#define IFDATA_MULTIADDRS 4   /* multicast addresses assigned to interface */
 #ifdef PRIVATE
 /* See if_mib_private.h for extended tags */
 #endif /* PRIVATE */
@@ -94,13 +94,13 @@ struct ifmibdata {
 /*
  * MIB tags at the net.link.generic.system level
  */
-#define IFMIB_IFCOUNT   1       /* number of interfaces configured */
+#define IFMIB_IFCOUNT 1 /* number of interfaces configured */
 
 /*
  * MIB tags as the net.link level
  * All of the other values are IFT_* names defined in if_types.h.
  */
-#define NETLINK_GENERIC 0       /* functions not specific to a type of iface */
+#define NETLINK_GENERIC 0 /* functions not specific to a type of iface */
 
 /*
  * The reason why the IFDATA_LINKSPECIFIC stuff is not under the
@@ -119,27 +119,27 @@ struct ifmibdata {
 
 /* For IFT_ETHER, IFT_ISO88023, and IFT_STARLAN, as used by RFC 1650 */
 struct ifs_iso_8802_3 {
-	u_int32_t       dot3StatsAlignmentErrors;
-	u_int32_t       dot3StatsFCSErrors;
-	u_int32_t       dot3StatsSingleCollisionFrames;
-	u_int32_t       dot3StatsMultipleCollisionFrames;
-	u_int32_t       dot3StatsSQETestErrors;
-	u_int32_t       dot3StatsDeferredTransmissions;
-	u_int32_t       dot3StatsLateCollisions;
-	u_int32_t       dot3StatsExcessiveCollisions;
-	u_int32_t       dot3StatsInternalMacTransmitErrors;
-	u_int32_t       dot3StatsCarrierSenseErrors;
-	u_int32_t       dot3StatsFrameTooLongs;
-	u_int32_t       dot3StatsInternalMacReceiveErrors;
-	u_int32_t       dot3StatsEtherChipSet;
-	/* Matt Thomas wants this one, not included in RFC 1650: */
-	u_int32_t       dot3StatsMissedFrames;
+  u_int32_t dot3StatsAlignmentErrors;
+  u_int32_t dot3StatsFCSErrors;
+  u_int32_t dot3StatsSingleCollisionFrames;
+  u_int32_t dot3StatsMultipleCollisionFrames;
+  u_int32_t dot3StatsSQETestErrors;
+  u_int32_t dot3StatsDeferredTransmissions;
+  u_int32_t dot3StatsLateCollisions;
+  u_int32_t dot3StatsExcessiveCollisions;
+  u_int32_t dot3StatsInternalMacTransmitErrors;
+  u_int32_t dot3StatsCarrierSenseErrors;
+  u_int32_t dot3StatsFrameTooLongs;
+  u_int32_t dot3StatsInternalMacReceiveErrors;
+  u_int32_t dot3StatsEtherChipSet;
+  /* Matt Thomas wants this one, not included in RFC 1650: */
+  u_int32_t dot3StatsMissedFrames;
 
-	u_int32_t       dot3StatsCollFrequencies[16]; /* NB: index origin */
+  u_int32_t dot3StatsCollFrequencies[16]; /* NB: index origin */
 
-	u_int32_t       dot3Compliance;
-#define DOT3COMPLIANCE_STATS    1
-#define DOT3COMPLIANCE_COLLS    2
+  u_int32_t dot3Compliance;
+#define DOT3COMPLIANCE_STATS 1
+#define DOT3COMPLIANCE_COLLS 2
 };
 
 /*
@@ -149,53 +149,48 @@ struct ifs_iso_8802_3 {
  * obvious to the driver implementor.  So, we define our own identification
  * mechanism here, and let the agent writer deal with the translation.
  */
-#define DOT3CHIPSET_VENDOR(x)   ((x) >> 16)
-#define DOT3CHIPSET_PART(x)     ((x) & 0xffff)
-#define DOT3CHIPSET(v, p)        (((v) << 16) + ((p) & 0xffff))
+#define DOT3CHIPSET_VENDOR(x) ((x) >> 16)
+#define DOT3CHIPSET_PART(x) ((x) & 0xffff)
+#define DOT3CHIPSET(v, p) (((v) << 16) + ((p) & 0xffff))
 
 /* Driver writers!  Add your vendors here! */
 enum dot3Vendors {
-	dot3VendorAMD = 1,
-	dot3VendorIntel = 2,
-	dot3VendorNational = 4,
-	dot3VendorFujitsu = 5,
-	dot3VendorDigital = 6,
-	dot3VendorWesternDigital = 7
+  dot3VendorAMD = 1,
+  dot3VendorIntel = 2,
+  dot3VendorNational = 4,
+  dot3VendorFujitsu = 5,
+  dot3VendorDigital = 6,
+  dot3VendorWesternDigital = 7
 };
 
 /* Driver writers!  Add your chipsets here! */
 enum {
-	dot3ChipSetAMD7990 = 1,
-	dot3ChipSetAMD79900 = 2,
-	dot3ChipSetAMD79C940 = 3
+  dot3ChipSetAMD7990 = 1,
+  dot3ChipSetAMD79900 = 2,
+  dot3ChipSetAMD79C940 = 3
 };
 
 enum {
-	dot3ChipSetIntel82586 = 1,
-	dot3ChipSetIntel82596 = 2,
-	dot3ChipSetIntel82557 = 3
+  dot3ChipSetIntel82586 = 1,
+  dot3ChipSetIntel82596 = 2,
+  dot3ChipSetIntel82557 = 3
+};
+
+enum { dot3ChipSetNational8390 = 1, dot3ChipSetNationalSonic = 2 };
+
+enum { dot3ChipSetFujitsu86950 = 1 };
+
+enum {
+  dot3ChipSetDigitalDC21040 = 1,
+  dot3ChipSetDigitalDC21140 = 2,
+  dot3ChipSetDigitalDC21041 = 3,
+  dot3ChipSetDigitalDC21140A = 4,
+  dot3ChipSetDigitalDC21142 = 5
 };
 
 enum {
-	dot3ChipSetNational8390 = 1,
-	dot3ChipSetNationalSonic = 2
-};
-
-enum {
-	dot3ChipSetFujitsu86950 = 1
-};
-
-enum {
-	dot3ChipSetDigitalDC21040 = 1,
-	dot3ChipSetDigitalDC21140 = 2,
-	dot3ChipSetDigitalDC21041 = 3,
-	dot3ChipSetDigitalDC21140A = 4,
-	dot3ChipSetDigitalDC21142 = 5
-};
-
-enum {
-	dot3ChipSetWesternDigital83C690 = 1,
-	dot3ChipSetWesternDigital83C790 = 2
+  dot3ChipSetWesternDigital83C690 = 1,
+  dot3ChipSetWesternDigital83C790 = 2
 };
 /* END of Ethernet-link MIB stuff */
 

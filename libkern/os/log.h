@@ -25,8 +25,8 @@
 #define __os_log_h
 
 #include <os/object.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifndef __has_attribute
 #define __has_attribute(x) 0
@@ -64,15 +64,13 @@ extern uint64_t startup_serial_num_procs;
 #define OS_LOG_DATA_MAX_SIZE (OS_LOG_BUFFER_MAX_SIZE - 16)
 
 OS_ALWAYS_INLINE
-static inline void
-    _os_log_verify_format_str(__unused const char *msg, ...)
-__osloglike(1, 2);
+static inline void _os_log_verify_format_str(__unused const char *msg, ...)
+    __osloglike(1, 2);
 
 OS_ALWAYS_INLINE
-static inline void
-_os_log_verify_format_str(__unused const char *msg, ...)                                       /* placeholder */
-{
-}
+static inline void _os_log_verify_format_str(__unused const char *msg,
+                                             ...) /* placeholder */
+{}
 
 #if OS_OBJECT_USE_OBJC
 OS_OBJECT_DECL(os_log);
@@ -105,28 +103,28 @@ struct os_log_s _os_log_default;
  * Supported log message types.
  *
  * @constant OS_LOG_TYPE_DEFAULT
- * Equivalent type for "os_log()" messages, i.e., default messages that are always
- * captured to memory or disk.
+ * Equivalent type for "os_log()" messages, i.e., default messages that are
+ * always captured to memory or disk.
  *
  * @constant OS_LOG_TYPE_INFO
- * Equivalent type for "os_log_info()" messages, i.e., Additional informational messages.
+ * Equivalent type for "os_log_info()" messages, i.e., Additional informational
+ * messages.
  *
  * @constant OS_LOG_TYPE_DEBUG
  * Equivalent type for "os_log_debug()" messages, i.e., Debug messages.
  *
  * @constant OS_LOG_TYPE_ERROR
- * Equivalent type for "os_log_error()" messages, i.e., local process error messages.
+ * Equivalent type for "os_log_error()" messages, i.e., local process error
+ * messages.
  *
  * @constant OS_LOG_TYPE_FAULT
- * Equivalent type for "os_log_fault()" messages, i.e., a system error that involves
- * potentially more than one process, usually used by daemons and services.
+ * Equivalent type for "os_log_fault()" messages, i.e., a system error that
+ * involves potentially more than one process, usually used by daemons and
+ * services.
  */
-OS_ENUM(os_log_type, uint8_t,
-    OS_LOG_TYPE_DEFAULT = 0x00,
-    OS_LOG_TYPE_INFO    = 0x01,
-    OS_LOG_TYPE_DEBUG   = 0x02,
-    OS_LOG_TYPE_ERROR   = 0x10,
-    OS_LOG_TYPE_FAULT   = 0x11);
+OS_ENUM(os_log_type, uint8_t, OS_LOG_TYPE_DEFAULT = 0x00,
+        OS_LOG_TYPE_INFO = 0x01, OS_LOG_TYPE_DEBUG = 0x02,
+        OS_LOG_TYPE_ERROR = 0x10, OS_LOG_TYPE_FAULT = 0x11);
 
 /*!
  * @function os_log_create
@@ -156,8 +154,7 @@ OS_ENUM(os_log_type, uint8_t,
  *
  * A value will always be returned to allow for dynamic enablement.
  */
-OS_EXPORT OS_NOTHROW OS_WARN_RESULT OS_OBJECT_RETURNS_RETAINED
-os_log_t
+OS_EXPORT OS_NOTHROW OS_WARN_RESULT OS_OBJECT_RETURNS_RETAINED os_log_t
 os_log_create(const char *subsystem, const char *category);
 
 /*!
@@ -177,9 +174,7 @@ os_log_create(const char *subsystem, const char *category);
  * @result
  * Returns ‘true’ if additional information log messages are enabled.
  */
-OS_EXPORT OS_NOTHROW OS_WARN_RESULT
-bool
-os_log_info_enabled(os_log_t log);
+OS_EXPORT OS_NOTHROW OS_WARN_RESULT bool os_log_info_enabled(os_log_t log);
 
 /*!
  * @function os_log_debug_enabled
@@ -196,9 +191,7 @@ os_log_info_enabled(os_log_t log);
  * @result
  * Returns ‘true’ if debug log messages are enabled.
  */
-OS_EXPORT OS_NOTHROW OS_WARN_RESULT
-bool
-os_log_debug_enabled(os_log_t log);
+OS_EXPORT OS_NOTHROW OS_WARN_RESULT bool os_log_debug_enabled(os_log_t log);
 
 /*!
  * @function os_log
@@ -229,8 +222,8 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded.  This string must be a constant string, not dynamically
  * generated.  Supports all standard printf types and %@ (objects).
  */
-#define os_log(log, format, ...) \
-    os_log_with_type(log, OS_LOG_TYPE_DEFAULT, format, ##__VA_ARGS__)
+#define os_log(log, format, ...)                                               \
+  os_log_with_type(log, OS_LOG_TYPE_DEFAULT, format, ##__VA_ARGS__)
 
 /*!
  * @function os_log_info
@@ -259,8 +252,8 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded.  This string must be a constant string, not dynamically
  * generated.  Supports all standard printf types and %@ (objects).
  */
-#define os_log_info(log, format, ...) \
-    os_log_with_type(log, OS_LOG_TYPE_INFO, format, ##__VA_ARGS__)
+#define os_log_info(log, format, ...)                                          \
+  os_log_with_type(log, OS_LOG_TYPE_INFO, format, ##__VA_ARGS__)
 
 /*!
  * @function os_log_debug
@@ -289,8 +282,8 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded.  This string must be a constant string, not dynamically
  * generated.  Supports all standard printf types and %@ (objects).
  */
-#define os_log_debug(log, format, ...) \
-    os_log_with_type(log, OS_LOG_TYPE_DEBUG, format, ##__VA_ARGS__)
+#define os_log_debug(log, format, ...)                                         \
+  os_log_with_type(log, OS_LOG_TYPE_DEBUG, format, ##__VA_ARGS__)
 
 /*!
  * @function os_log_error
@@ -318,8 +311,8 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded.  This string must be a constant string, not dynamically
  * generated.  Supports all standard printf types and %@ (objects).
  */
-#define os_log_error(log, format, ...) \
-    os_log_with_type(log, OS_LOG_TYPE_ERROR, format, ##__VA_ARGS__)
+#define os_log_error(log, format, ...)                                         \
+  os_log_with_type(log, OS_LOG_TYPE_ERROR, format, ##__VA_ARGS__)
 
 /*!
  * @function os_log_fault
@@ -350,8 +343,8 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded.  This string must be a constant string, not dynamically
  * generated.  Supports all standard printf types and %@ (objects).
  */
-#define os_log_fault(log, format, ...) \
-    os_log_with_type(log, OS_LOG_TYPE_FAULT, format, ##__VA_ARGS__)
+#define os_log_fault(log, format, ...)                                         \
+  os_log_with_type(log, OS_LOG_TYPE_FAULT, format, ##__VA_ARGS__)
 
 /*!
  * @function os_log_with_type
@@ -373,16 +366,19 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded.  This string must be a constant string, not dynamically
  * generated.  Supports all standard printf types and %@ (objects).
  */
-#define os_log_with_type(log, type, format, ...) __extension__({                            \
-    _Static_assert(__builtin_constant_p(format), "format string must be constant");         \
-    __attribute__((section("__TEXT,__os_log"))) static const char _os_log_fmt[] = format;   \
-    if (0) {                                                                                \
-	_os_log_verify_format_str(format, ##__VA_ARGS__);                                   \
-    } else {                                                                                  \
-	_os_log_internal(&__dso_handle, log, type, _os_log_fmt, ##__VA_ARGS__);             \
-    }                                                                                       \
-    __asm__(""); /* avoid tailcall */                                                       \
-})
+#define os_log_with_type(log, type, format, ...)                               \
+  __extension__({                                                              \
+    _Static_assert(__builtin_constant_p(format),                               \
+                   "format string must be constant");                          \
+    __attribute__((                                                            \
+        section("__TEXT,__os_log"))) static const char _os_log_fmt[] = format; \
+    if (0) {                                                                   \
+      _os_log_verify_format_str(format, ##__VA_ARGS__);                        \
+    } else {                                                                   \
+      _os_log_internal(&__dso_handle, log, type, _os_log_fmt, ##__VA_ARGS__);  \
+    }                                                                          \
+    __asm__(""); /* avoid tailcall */                                          \
+  })
 
 /*!
  * @function os_log_at_time
@@ -408,22 +404,27 @@ os_log_debug_enabled(os_log_t log);
  * line is decoded. This string must be a constant string, not dynamically
  * generated. Supports all standard printf types.
  */
-#define os_log_at_time(log, type, ts, format, ...) __extension__({                          \
-    _Static_assert(__builtin_constant_p(format), "format string must be constant");         \
-    __attribute__((section("__TEXT,__os_log"))) static const char _os_log_fmt[] = format;   \
-    if (0) {                                                                                \
-	_os_log_verify_format_str(format, ##__VA_ARGS__);                                   \
-    } else {                                                                                  \
-	_os_log_at_time(&__dso_handle, log, type, ts, _os_log_fmt, ##__VA_ARGS__);          \
-    }                                                                                       \
-    __asm__(""); /* avoid tailcall */                                                       \
-})
+#define os_log_at_time(log, type, ts, format, ...)                             \
+  __extension__({                                                              \
+    _Static_assert(__builtin_constant_p(format),                               \
+                   "format string must be constant");                          \
+    __attribute__((                                                            \
+        section("__TEXT,__os_log"))) static const char _os_log_fmt[] = format; \
+    if (0) {                                                                   \
+      _os_log_verify_format_str(format, ##__VA_ARGS__);                        \
+    } else {                                                                   \
+      _os_log_at_time(&__dso_handle, log, type, ts, _os_log_fmt,               \
+                      ##__VA_ARGS__);                                          \
+    }                                                                          \
+    __asm__(""); /* avoid tailcall */                                          \
+  })
 
 /*!
  * @function os_log_driverKit
  *
  * @abstract
- * Log a message using a specific type. This variant should be called only from dexts.
+ * Log a message using a specific type. This variant should be called only from
+ * dexts.
  *
  * @discussion
  * Will log a message with the provided os_log_type_t.
@@ -442,16 +443,20 @@ os_log_debug_enabled(os_log_t log);
  * @result
  * Returns EPERM if the caller is not a driverKit process, 0 in case of success.
  */
-#define os_log_driverKit(out, log, type, format, ...) __extension__({                            \
-    _Static_assert(__builtin_constant_p(format), "format string must be constant");         \
-    __attribute__((section("__TEXT,__os_log"))) static const char _os_log_fmt[] = format;   \
-    if (0) {                                                                                \
-	_os_log_verify_format_str(format, ##__VA_ARGS__);                                   \
-    } else {                                                                                  \
-	(*(out)) = _os_log_internal_driverKit(&__dso_handle, log, type, _os_log_fmt, ##__VA_ARGS__);                 \
-    }                                                                                       \
-    __asm__(""); /* avoid tailcall */                                                       \
-})
+#define os_log_driverKit(out, log, type, format, ...)                          \
+  __extension__({                                                              \
+    _Static_assert(__builtin_constant_p(format),                               \
+                   "format string must be constant");                          \
+    __attribute__((                                                            \
+        section("__TEXT,__os_log"))) static const char _os_log_fmt[] = format; \
+    if (0) {                                                                   \
+      _os_log_verify_format_str(format, ##__VA_ARGS__);                        \
+    } else {                                                                   \
+      (*(out)) = _os_log_internal_driverKit(&__dso_handle, log, type,          \
+                                            _os_log_fmt, ##__VA_ARGS__);       \
+    }                                                                          \
+    __asm__(""); /* avoid tailcall */                                          \
+  })
 
 /*!
  * @function os_log_coprocessor
@@ -460,9 +465,9 @@ os_log_debug_enabled(os_log_t log);
  * IOP logging function, intended for use by RTBuddy for coprocessor os log
  * functionality only.
  */
-bool
-os_log_coprocessor(void *buff, uint64_t buff_len, os_log_type_t type,
-    const char *uuid, uint64_t timestamp, uint32_t offset, bool stream_log);
+bool os_log_coprocessor(void *buff, uint64_t buff_len, os_log_type_t type,
+                        const char *uuid, uint64_t timestamp, uint32_t offset,
+                        bool stream_log);
 
 /*!
  * @function os_log_coprocessor_register
@@ -472,12 +477,12 @@ os_log_coprocessor(void *buff, uint64_t buff_len, os_log_type_t type,
  * functionality only. Will be removed after all user code will be updated to
  * use os_log_coprocessor_register_with_type.
  */
-void
-os_log_coprocessor_register(const char *uuid, const char *file_path, bool copy);
+void os_log_coprocessor_register(const char *uuid, const char *file_path,
+                                 bool copy);
 
 typedef enum {
-	os_log_coproc_register_memory,
-	os_log_coproc_register_harvest_fs_ftab,
+  os_log_coproc_register_memory,
+  os_log_coproc_register_harvest_fs_ftab,
 } os_log_coproc_reg_t;
 
 /*!
@@ -487,24 +492,34 @@ typedef enum {
  * IOP metadata registration, intended for use by RTBuddy for coprocessor os log
  * functionality only.
  */
-void
-os_log_coprocessor_register_with_type(const char *uuid, const char *file_path, os_log_coproc_reg_t register_type);
+void os_log_coprocessor_register_with_type(const char *uuid,
+                                           const char *file_path,
+                                           os_log_coproc_reg_t register_type);
 
 #ifdef XNU_KERNEL_PRIVATE
-#define os_log_with_startup_serial_and_type(log, type, format, ...) __extension__({ \
-    if (startup_serial_logging_active) { printf(format, ##__VA_ARGS__); }           \
-    else { os_log_with_type(log, type, format, ##__VA_ARGS__); }                    \
-})
-#define os_log_with_startup_serial(log, format, ...) \
-    os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_DEFAULT, format, ##__VA_ARGS__)
-#define os_log_info_with_startup_serial(log, format, ...) \
-    os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_INFO, format, ##__VA_ARGS__)
-#define os_log_debug_with_startup_serial(log, format, ...) \
-    os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_DEBUG, format, ##__VA_ARGS__)
-#define os_log_error_with_startup_serial(log, format, ...) \
-    os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_ERROR, format, ##__VA_ARGS__)
-#define os_log_fault_with_startup_serial(log, format, ...) \
-    os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_FAULT, format, ##__VA_ARGS__)
+#define os_log_with_startup_serial_and_type(log, type, format, ...)            \
+  __extension__({                                                              \
+    if (startup_serial_logging_active) {                                       \
+      printf(format, ##__VA_ARGS__);                                           \
+    } else {                                                                   \
+      os_log_with_type(log, type, format, ##__VA_ARGS__);                      \
+    }                                                                          \
+  })
+#define os_log_with_startup_serial(log, format, ...)                           \
+  os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_DEFAULT, format,        \
+                                      ##__VA_ARGS__)
+#define os_log_info_with_startup_serial(log, format, ...)                      \
+  os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_INFO, format,           \
+                                      ##__VA_ARGS__)
+#define os_log_debug_with_startup_serial(log, format, ...)                     \
+  os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_DEBUG, format,          \
+                                      ##__VA_ARGS__)
+#define os_log_error_with_startup_serial(log, format, ...)                     \
+  os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_ERROR, format,          \
+                                      ##__VA_ARGS__)
+#define os_log_fault_with_startup_serial(log, format, ...)                     \
+  os_log_with_startup_serial_and_type(log, OS_LOG_TYPE_FAULT, format,          \
+                                      ##__VA_ARGS__)
 #endif /* XNU_KERNEL_PRIVATE */
 
 /*!
@@ -513,10 +528,10 @@ os_log_coprocessor_register_with_type(const char *uuid, const char *file_path, o
  * @abstract
  * Internal function used by macros.
  */
-OS_EXPORT OS_NOTHROW
-void
-_os_log_internal(void *dso, os_log_t log, os_log_type_t type, const char *message, ...)
-__osloglike(4, 5);
+OS_EXPORT OS_NOTHROW void _os_log_internal(void *dso, os_log_t log,
+                                           os_log_type_t type,
+                                           const char *message, ...)
+    __osloglike(4, 5);
 
 /*!
  * @function _os_log_internal_driverKit
@@ -524,10 +539,10 @@ __osloglike(4, 5);
  * @abstract
  * Internal function used by macros.
  */
-OS_EXPORT OS_NOTHROW
-int
-_os_log_internal_driverKit(void *dso, os_log_t log, os_log_type_t type, const char *message, ...)
-__osloglike(4, 5);
+OS_EXPORT OS_NOTHROW int _os_log_internal_driverKit(void *dso, os_log_t log,
+                                                    os_log_type_t type,
+                                                    const char *message, ...)
+    __osloglike(4, 5);
 
 /*!
  * @function _os_log_internal_props
@@ -535,10 +550,10 @@ __osloglike(4, 5);
  * @abstract
  * Internal function used by macros.
  */
-OS_EXPORT OS_NOTHROW
-void
-_os_log_at_time(void *dso, os_log_t log, os_log_type_t type, uint64_t ts, const char *message, ...)
-__osloglike(5, 6);
+OS_EXPORT OS_NOTHROW void _os_log_at_time(void *dso, os_log_t log,
+                                          os_log_type_t type, uint64_t ts,
+                                          const char *message, ...)
+    __osloglike(5, 6);
 
 __END_DECLS
 

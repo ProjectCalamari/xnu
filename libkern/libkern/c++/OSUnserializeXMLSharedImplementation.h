@@ -36,10 +36,13 @@
 //
 // to build :
 //	bison -p OSUnserializeXML OSUnserializeXML.y
-//	head -50 OSUnserializeXML.y > ../libkern/c++/OSUnserializeXMLSharedImplementation.h
-//	sed -e "s/#include <stdio.h>//" < OSUnserializeXML.tab.c >> ../libkern/c++/OSUnserializeXMLSharedImplementation.h
+//	head -50 OSUnserializeXML.y >
+//../libkern/c++/OSUnserializeXMLSharedImplementation.h 	sed -e "s/#include
+//<stdio.h>//" < OSUnserializeXML.tab.c >>
+//../libkern/c++/OSUnserializeXMLSharedImplementation.h
 //
-//	when changing code check in both OSUnserializeXML.y and OSUnserializeXMLSharedImplementation.h
+//	when changing code check in both OSUnserializeXML.y and
+//OSUnserializeXMLSharedImplementation.h
 //
 //
 //
@@ -84,7 +87,7 @@
  *  version 2.2 of Bison.  */
 
 /* C LALR(1) parser skeleton written by Richard Stallman, by
-*  simplifying the original so-called "semantic" parser.  */
+ *  simplifying the original so-called "semantic" parser.  */
 
 /* All symbols defined below should begin with yy or YY, to avoid
  *  infringing on user name space.  This should be done even for local
@@ -110,30 +113,29 @@
 
 /* Substitute the variable and function names.  */
 #define yyparse OSUnserializeXMLparse
-#define yylex   OSUnserializeXMLlex
+#define yylex OSUnserializeXMLlex
 #define yyerror OSUnserializeXMLerror
-#define yylval  OSUnserializeXMLlval
-#define yychar  OSUnserializeXMLchar
+#define yylval OSUnserializeXMLlval
+#define yychar OSUnserializeXMLchar
 #define yydebug OSUnserializeXMLdebug
 #define yynerrs OSUnserializeXMLnerrs
 
-
 /* Tokens.  */
 #ifndef YYTOKENTYPE
-# define YYTOKENTYPE
+#define YYTOKENTYPE
 /* Put the tokens into the symbol table, so that GDB and other debuggers
  *  know about them.  */
 enum yytokentype {
-	ARRAY = 258,
-	BOOLEAN = 259,
-	DATA = 260,
-	DICTIONARY = 261,
-	IDREF = 262,
-	KEY = 263,
-	NUMBER = 264,
-	SET = 265,
-	STRING = 266,
-	SYNTAX_ERROR = 267
+  ARRAY = 258,
+  BOOLEAN = 259,
+  DATA = 260,
+  DICTIONARY = 261,
+  IDREF = 262,
+  KEY = 263,
+  NUMBER = 264,
+  SET = 265,
+  STRING = 266,
+  SYNTAX_ERROR = 267
 };
 #endif
 /* Tokens.  */
@@ -148,191 +150,167 @@ enum yytokentype {
 #define STRING 266
 #define SYNTAX_ERROR 267
 
-
-
-
 /* Copy the first part of user declarations.  */
 #line 61 "OSUnserializeXML.y"
 
 #include <string.h>
 #if KERNEL
-#include <libkern/c++/OSMetaClass.h>
 #include <libkern/c++/OSContainers.h>
 #include <libkern/c++/OSLib.h>
+#include <libkern/c++/OSMetaClass.h>
 #else /* !KERNEL */
 #include <DriverKit/DriverKit.h>
 #endif /* KERNEL */
 
-
-#define MAX_OBJECTS              131071
-#define MAX_REFED_OBJECTS        65535
+#define MAX_OBJECTS 131071
+#define MAX_REFED_OBJECTS 65535
 
 #define YYSTYPE object_t *
-#define YYPARSE_PARAM   state
-#define YYLEX_PARAM     (parser_state_t *)state
+#define YYPARSE_PARAM state
+#define YYLEX_PARAM (parser_state_t *)state
 
 // this is the internal struct used to hold objects on parser stack
 // it represents objects both before and after they have been created
 typedef struct object {
-	struct object   *next;
-	struct object   *free;
-	struct object   *elements;
-	OSObject        *object;
-	OSSymbol        *key;                   // for dictionary
-	int             size;
-	void            *data;                  // for data
-	char            *string;                // for string & symbol
-	int             string_alloc_length;
-	long long       number;                 // for number
-	int             idref;
+  struct object *next;
+  struct object *free;
+  struct object *elements;
+  OSObject *object;
+  OSSymbol *key; // for dictionary
+  int size;
+  void *data;   // for data
+  char *string; // for string & symbol
+  int string_alloc_length;
+  long long number; // for number
+  int idref;
 } object_t;
 
 // this code is reentrant, this structure contains all
 // state information for the parsing of a single buffer
 typedef struct parser_state {
-	const char      *parseBuffer;           // start of text to be parsed
-	int             parseBufferIndex;       // current index into text
-	int             lineNumber;             // current line number
-	object_t        *objects;               // internal objects in use
-	object_t        *freeObjects;           // internal objects that are free
-	OSDictionary    *tags;                  // used to remember "ID" tags
-	OSString        **errorString;          // parse error with line
-	OSObject        *parsedObject;          // resultant object of parsed text
-	int             parsedObjectCount;
-	int             retrievedObjectCount;
+  const char *parseBuffer; // start of text to be parsed
+  int parseBufferIndex;    // current index into text
+  int lineNumber;          // current line number
+  object_t *objects;       // internal objects in use
+  object_t *freeObjects;   // internal objects that are free
+  OSDictionary *tags;      // used to remember "ID" tags
+  OSString **errorString;  // parse error with line
+  OSObject *parsedObject;  // resultant object of parsed text
+  int parsedObjectCount;
+  int retrievedObjectCount;
 } parser_state_t;
 
-#define STATE           ((parser_state_t *)state)
+#define STATE ((parser_state_t *)state)
 
 #undef yyerror
-#define yyerror(s)      OSUnserializeerror(STATE, (s))
-static int              OSUnserializeerror(parser_state_t *state, const char *s);
+#define yyerror(s) OSUnserializeerror(STATE, (s))
+static int OSUnserializeerror(parser_state_t *state, const char *s);
 
-static int              yylex(YYSTYPE *lvalp, parser_state_t *state);
+static int yylex(YYSTYPE *lvalp, parser_state_t *state);
 
-static object_t         *newObject(parser_state_t *state);
-static void             freeObject(parser_state_t *state, object_t *o);
-static void             rememberObject(parser_state_t *state, int tag, OSObject *o);
-static object_t         *retrieveObject(parser_state_t *state, int tag);
-static void             cleanupObjects(parser_state_t *state);
+static object_t *newObject(parser_state_t *state);
+static void freeObject(parser_state_t *state, object_t *o);
+static void rememberObject(parser_state_t *state, int tag, OSObject *o);
+static object_t *retrieveObject(parser_state_t *state, int tag);
+static void cleanupObjects(parser_state_t *state);
 
-static object_t         *buildDictionary(parser_state_t *state, object_t *o);
-static object_t         *buildArray(parser_state_t *state, object_t *o);
-static object_t         *buildSet(parser_state_t *state, object_t *o);
-static object_t         *buildString(parser_state_t *state, object_t *o);
-static object_t         *buildSymbol(parser_state_t *state, object_t *o);
-static object_t         *buildData(parser_state_t *state, object_t *o);
-static object_t         *buildNumber(parser_state_t *state, object_t *o);
-static object_t         *buildBoolean(parser_state_t *state, object_t *o);
+static object_t *buildDictionary(parser_state_t *state, object_t *o);
+static object_t *buildArray(parser_state_t *state, object_t *o);
+static object_t *buildSet(parser_state_t *state, object_t *o);
+static object_t *buildString(parser_state_t *state, object_t *o);
+static object_t *buildSymbol(parser_state_t *state, object_t *o);
+static object_t *buildData(parser_state_t *state, object_t *o);
+static object_t *buildNumber(parser_state_t *state, object_t *o);
+static object_t *buildBoolean(parser_state_t *state, object_t *o);
 
 #if KERNEL
 __BEGIN_DECLS
 #include <kern/kalloc.h>
 __END_DECLS
 
-#define malloc(size)         malloc_impl(size)
-#define malloc_type(type)    kalloc_type(type, Z_SET_NOTEARLY)
-static inline void *
-malloc_impl(size_t size)
-{
-	if (size == 0) {
-		return NULL;
-	}
-	return kalloc_data(size,
-	           Z_VM_TAG_BT(Z_WAITOK_ZERO, VM_KERN_MEMORY_LIBKERN));
+#define malloc(size) malloc_impl(size)
+#define malloc_type(type) kalloc_type(type, Z_SET_NOTEARLY)
+static inline void *malloc_impl(size_t size) {
+  if (size == 0) {
+    return NULL;
+  }
+  return kalloc_data(size, Z_VM_TAG_BT(Z_WAITOK_ZERO, VM_KERN_MEMORY_LIBKERN));
 }
 
-#define free(addr)             free_impl(addr)
-#define free_type(type, addr)  kfree_type(type, addr)
-static inline void
-free_impl(void *addr)
-{
-	kfree_data_addr(addr);
-}
-static inline void
-safe_free(void *addr, size_t size)
-{
-	kfree_data(addr, size);
+#define free(addr) free_impl(addr)
+#define free_type(type, addr) kfree_type(type, addr)
+static inline void free_impl(void *addr) { kfree_data_addr(addr); }
+static inline void safe_free(void *addr, size_t size) {
+  kfree_data(addr, size);
 }
 
 #define realloc(addr, osize, nsize) realloc_impl(addr, osize, nsize)
-static inline void *
-realloc_impl(void *addr, size_t osize, size_t nsize)
-{
-	return krealloc_data(addr, osize, nsize,
-	           Z_VM_TAG_BT(Z_WAITOK_ZERO, VM_KERN_MEMORY_LIBKERN));
+static inline void *realloc_impl(void *addr, size_t osize, size_t nsize) {
+  return krealloc_data(addr, osize, nsize,
+                       Z_VM_TAG_BT(Z_WAITOK_ZERO, VM_KERN_MEMORY_LIBKERN));
 }
 #else /* !KERNEL */
-#define malloc(size)      malloc_impl(size)
-#define malloc_type(type) (type *) calloc(1, sizeof(type))
-static inline void *
-malloc_impl(size_t size)
-{
-	if (size == 0) {
-		return NULL;
-	}
-	return calloc(1, size);
+#define malloc(size) malloc_impl(size)
+#define malloc_type(type) (type *)calloc(1, sizeof(type))
+static inline void *malloc_impl(size_t size) {
+  if (size == 0) {
+    return NULL;
+  }
+  return calloc(1, size);
 }
-#define safe_free(addr, size)       free(addr)
-#define free_type(type, addr)       safe_free(addr, sizeof(type))
+#define safe_free(addr, size) free(addr)
+#define free_type(type, addr) safe_free(addr, sizeof(type))
 #define realloc(addr, osize, nsize) realloc_impl(addr, osize, nsize)
-static inline void *
-realloc_impl(void *addr, size_t osize, size_t nsize)
-{
-	void * nmem;
+static inline void *realloc_impl(void *addr, size_t osize, size_t nsize) {
+  void *nmem;
 
-	if (!addr) {
-		return malloc(nsize);
-	}
-	if (nsize == osize) {
-		return addr;
-	}
-	nmem = (realloc)(addr, nsize);
-	if (nmem && nsize > osize) {
-		bzero((uint8_t *)nmem + osize, nsize - osize);
-	}
+  if (!addr) {
+    return malloc(nsize);
+  }
+  if (nsize == osize) {
+    return addr;
+  }
+  nmem = (realloc)(addr, nsize);
+  if (nmem && nsize > osize) {
+    bzero((uint8_t *)nmem + osize, nsize - osize);
+  }
 
-	return nmem;
+  return nmem;
 }
 #endif /* KERNEL */
 
-
-
 /* Enabling traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 0
+#define YYDEBUG 0
 #endif
 
 /* Enabling verbose error messages.  */
 #ifdef YYERROR_VERBOSE
-# undef YYERROR_VERBOSE
-# define YYERROR_VERBOSE 1
+#undef YYERROR_VERBOSE
+#define YYERROR_VERBOSE 1
 #else
-# define YYERROR_VERBOSE 0
+#define YYERROR_VERBOSE 0
 #endif
 
 /* Enabling the token table.  */
 #ifndef YYTOKEN_TABLE
-# define YYTOKEN_TABLE 0
+#define YYTOKEN_TABLE 0
 #endif
 
 #if !defined YYSTYPE && !defined YYSTYPE_IS_DECLARED
 typedef int YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
+#define yystype YYSTYPE /* obsolescent; will be withdrawn */
+#define YYSTYPE_IS_DECLARED 1
+#define YYSTYPE_IS_TRIVIAL 1
 #endif
 
-
-
 /* Copy the second part of user declarations.  */
-
 
 /* Line 216 of yacc.c.  */
 #line 283 "OSUnserializeXML.tab.c"
 
 #ifdef short
-# undef short
+#undef short
 #endif
 
 #ifdef YYTYPE_UINT8
@@ -343,8 +321,8 @@ typedef unsigned char yytype_uint8;
 
 #ifdef YYTYPE_INT8
 typedef YYTYPE_INT8 yytype_int8;
-#elif (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
+#elif (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||     \
+       defined _MSC_VER)
 typedef signed char yytype_int8;
 #else
 typedef short int yytype_int8;
@@ -363,55 +341,53 @@ typedef short int yytype_int16;
 #endif
 
 #ifndef YYSIZE_T
-# ifdef __SIZE_TYPE__
-#  define YYSIZE_T __SIZE_TYPE__
-# elif defined size_t
-#  define YYSIZE_T size_t
-# elif !defined YYSIZE_T && (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYSIZE_T size_t
-# else
-#  define YYSIZE_T unsigned int
-# endif
+#ifdef __SIZE_TYPE__
+#define YYSIZE_T __SIZE_TYPE__
+#elif defined size_t
+#define YYSIZE_T size_t
+#elif !defined YYSIZE_T && (defined __STDC__ || defined __C99__FUNC__ ||       \
+                            defined __cplusplus || defined _MSC_VER)
+#include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#define YYSIZE_T size_t
+#else
+#define YYSIZE_T unsigned int
+#endif
 #endif
 
-#define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
+#define YYSIZE_MAXIMUM ((YYSIZE_T) - 1)
 
 #ifndef YY_
-# if defined YYENABLE_NLS && YYENABLE_NLS
-#  if ENABLE_NLS
-#   include <libintl.h> /* INFRINGES ON USER NAME SPACE */
-#   define YY_(msgid) dgettext ("bison-runtime", msgid)
-#  endif
-# endif
-# ifndef YY_
-#  define YY_(msgid) msgid
-# endif
+#if defined YYENABLE_NLS && YYENABLE_NLS
+#if ENABLE_NLS
+#include <libintl.h> /* INFRINGES ON USER NAME SPACE */
+#define YY_(msgid) dgettext("bison-runtime", msgid)
+#endif
+#endif
+#ifndef YY_
+#define YY_(msgid) msgid
+#endif
 #endif
 
 /* Suppress unused-variable warnings by "using" E.  */
 #if !defined lint || defined __GNUC__
-# define YYUSE(e) ((void) (e))
+#define YYUSE(e) ((void)(e))
 #else
-# define YYUSE(e) /* empty */
+#define YYUSE(e) /* empty */
 #endif
 
 /* Identity function, used to suppress warnings about constant conditions.  */
 #ifndef lint
-# define YYID(n) (n)
+#define YYID(n) (n)
 #else
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static int
-YYID(int i)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static int YYID(int i)
 #else
-static int
-    YYID(i)
+static int YYID(i)
 int i;
 #endif
 {
-	return i;
+  return i;
 }
 #endif
 
@@ -419,375 +395,299 @@ int i;
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */
 
-# ifdef YYSTACK_USE_ALLOCA
-#  if YYSTACK_USE_ALLOCA
-#   ifdef __GNUC__
-#    define YYSTACK_ALLOC __builtin_alloca
-#   elif defined __BUILTIN_VA_ARG_INCR
-#    include <alloca.h> /* INFRINGES ON USER NAME SPACE */
-#   elif defined _AIX
-#    define YYSTACK_ALLOC __alloca
-#   elif defined _MSC_VER
-#    include <malloc.h> /* INFRINGES ON USER NAME SPACE */
-#    define alloca _alloca
-#   else
-#    define YYSTACK_ALLOC alloca
-#    if !defined _ALLOCA_H && !defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-#     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#     ifndef _STDLIB_H
-#      define _STDLIB_H 1
-#     endif
-#    endif
-#   endif
-#  endif
-# endif
+#ifdef YYSTACK_USE_ALLOCA
+#if YYSTACK_USE_ALLOCA
+#ifdef __GNUC__
+#define YYSTACK_ALLOC __builtin_alloca
+#elif defined __BUILTIN_VA_ARG_INCR
+#include <alloca.h> /* INFRINGES ON USER NAME SPACE */
+#elif defined _AIX
+#define YYSTACK_ALLOC __alloca
+#elif defined _MSC_VER
+#include <malloc.h> /* INFRINGES ON USER NAME SPACE */
+#define alloca _alloca
+#else
+#define YYSTACK_ALLOC alloca
+#if !defined _ALLOCA_H && !defined _STDLIB_H &&                                \
+    (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+#include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#ifndef _STDLIB_H
+#define _STDLIB_H 1
+#endif
+#endif
+#endif
+#endif
+#endif
 
-# ifdef YYSTACK_ALLOC
+#ifdef YYSTACK_ALLOC
 /* Pacify GCC's `empty if-body' warning.  */
-#  define YYSTACK_FREE(Ptr) do { /* empty */ ; } while (YYID (0))
-#  ifndef YYSTACK_ALLOC_MAXIMUM
+#define YYSTACK_FREE(Ptr)                                                      \
+  do { /* empty */                                                             \
+    ;                                                                          \
+  } while (YYID(0))
+#ifndef YYSTACK_ALLOC_MAXIMUM
 /* The OS might guarantee only one guard page at the bottom of the stack,
  *  and a page size can be as small as 4096 bytes.  So we cannot safely
  *  invoke alloca (N) if N exceeds 4096.  Use a slightly smaller number
  *  to allow for a few compiler-allocated temporary stack slots.  */
-#   define YYSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
-#  endif
-# else
-#  define YYSTACK_ALLOC YYMALLOC
-#  define YYSTACK_FREE YYFREE
-#  ifndef YYSTACK_ALLOC_MAXIMUM
-#   define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
-#  endif
-#  if (defined __cplusplus && !defined _STDLIB_H \
-        && !((defined YYMALLOC || defined malloc) \
-        && (defined YYFREE || defined free)))
-#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#   ifndef _STDLIB_H
-#    define _STDLIB_H 1
-#   endif
-#  endif
-#  ifndef YYMALLOC
-#   define YYMALLOC malloc
-#   if !defined malloc && !defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-void *malloc(YYSIZE_T);  /* INFRINGES ON USER NAME SPACE */
-#   endif
-#  endif
-#  ifndef YYFREE
-#   define YYFREE free
-#   if !defined free && !defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-void free(void *);  /* INFRINGES ON USER NAME SPACE */
-#   endif
-#  endif
-# endif
+#define YYSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
+#endif
+#else
+#define YYSTACK_ALLOC YYMALLOC
+#define YYSTACK_FREE YYFREE
+#ifndef YYSTACK_ALLOC_MAXIMUM
+#define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
+#endif
+#if (defined __cplusplus && !defined _STDLIB_H &&                              \
+     !((defined YYMALLOC || defined malloc) &&                                 \
+       (defined YYFREE || defined free)))
+#include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#ifndef _STDLIB_H
+#define _STDLIB_H 1
+#endif
+#endif
+#ifndef YYMALLOC
+#define YYMALLOC malloc
+#if !defined malloc && !defined _STDLIB_H &&                                   \
+    (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+void *malloc(YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
+#endif
+#endif
+#ifndef YYFREE
+#define YYFREE free
+#if !defined free && !defined _STDLIB_H &&                                     \
+    (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+void free(void *); /* INFRINGES ON USER NAME SPACE */
+#endif
+#endif
+#endif
 #endif /* ! defined yyoverflow || YYERROR_VERBOSE */
 
-
-#if (!defined yyoverflow \
-        && (!defined __cplusplus \
-        || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
+#if (!defined yyoverflow &&                                                    \
+     (!defined __cplusplus ||                                                  \
+      (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc {
-	yytype_int16 yyss;
-	YYSTYPE yyvs;
+  yytype_int16 yyss;
+  YYSTYPE yyvs;
 };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
-# define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
+#define YYSTACK_GAP_MAXIMUM (sizeof(union yyalloc) - 1)
 
 /* The size of an array large to enough to hold all stacks, each with
  *  N elements.  */
-# define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
-      + YYSTACK_GAP_MAXIMUM)
+#define YYSTACK_BYTES(N)                                                       \
+  ((N) * (sizeof(yytype_int16) + sizeof(YYSTYPE)) + YYSTACK_GAP_MAXIMUM)
 
 /* Copy COUNT objects from FROM to TO.  The source and destination do
  *  not overlap.  */
-# ifndef YYCOPY
-#  if defined __GNUC__ && 1 < __GNUC__
-#   define YYCOPY(To, From, Count) \
-      __builtin_memcpy (To, From, (Count) * sizeof (*(From)))
-#  else
-#   define YYCOPY(To, From, Count)              \
-      do                                        \
-	{                                       \
-	  YYSIZE_T yyi;                         \
-	  for (yyi = 0; yyi < (Count); yyi++)   \
-	    (To)[yyi] = (From)[yyi];            \
-	}                                       \
-      while (YYID (0))
-#  endif
-# endif
+#ifndef YYCOPY
+#if defined __GNUC__ && 1 < __GNUC__
+#define YYCOPY(To, From, Count)                                                \
+  __builtin_memcpy(To, From, (Count) * sizeof(*(From)))
+#else
+#define YYCOPY(To, From, Count)                                                \
+  do {                                                                         \
+    YYSIZE_T yyi;                                                              \
+    for (yyi = 0; yyi < (Count); yyi++)                                        \
+      (To)[yyi] = (From)[yyi];                                                 \
+  } while (YYID(0))
+#endif
+#endif
 
 /* Relocate STACK from its old location to the new one.  The
  *  local variables YYSIZE and YYSTACKSIZE give the old and new number of
  *  elements in the stack, and YYPTR gives the new location of the
  *  stack.  Advance YYPTR to a properly aligned location for the next
  *  stack.  */
-# define YYSTACK_RELOCATE(Stack)                                        \
-    do                                                                  \
-      {                                                                 \
-	YYSIZE_T yynewbytes;                                            \
-	YYCOPY (&yyptr->Stack, Stack, yysize);                          \
-	Stack = &yyptr->Stack;                                          \
-	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
-	yyptr += yynewbytes / sizeof (*yyptr);                          \
-      }                                                                 \
-    while (YYID (0))
+#define YYSTACK_RELOCATE(Stack)                                                \
+  do {                                                                         \
+    YYSIZE_T yynewbytes;                                                       \
+    YYCOPY(&yyptr->Stack, Stack, yysize);                                      \
+    Stack = &yyptr->Stack;                                                     \
+    yynewbytes = yystacksize * sizeof(*Stack) + YYSTACK_GAP_MAXIMUM;           \
+    yyptr += yynewbytes / sizeof(*yyptr);                                      \
+  } while (YYID(0))
 
 #endif
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  33
+#define YYFINAL 33
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   108
+#define YYLAST 108
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  19
+#define YYNTOKENS 19
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  15
+#define YYNNTS 15
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  32
+#define YYNRULES 32
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  40
+#define YYNSTATES 40
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
-#define YYUNDEFTOK  2
-#define YYMAXUTOK   267
+#define YYUNDEFTOK 2
+#define YYMAXUTOK 267
 
-#define YYTRANSLATE(YYX)                                                \
-  ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
+#define YYTRANSLATE(YYX)                                                       \
+  ((unsigned int)(YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[YYLEX] -- Bison symbol number corresponding to YYLEX.  */
-static const yytype_uint8 yytranslate[] =
-{
-	0, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	15, 16, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 17, 2, 18, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 13, 2, 14, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-	2, 2, 2, 2, 2, 2, 1, 2, 3, 4,
-	5, 6, 7, 8, 9, 10, 11, 12
-};
+static const yytype_uint8 yytranslate[] = {
+    0, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 15, 16, 2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 17,
+    2, 18, 2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 13, 2, 14, 2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 2, 2, 2, 2, 2, 2,  2, 2,  2, 2,  2,  2, 2, 2, 2,  2,  2, 2, 2, 2,
+    2, 2,  2, 1, 2, 3, 4, 5, 6,  7, 8,  9, 10, 11, 12};
 
 #if YYDEBUG
 /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
  *  YYRHS.  */
-static const yytype_uint8 yyprhs[] =
-{
-	0, 0, 3, 4, 6, 8, 10, 12, 14, 16,
-	18, 20, 22, 24, 27, 31, 33, 35, 38, 41,
-	43, 46, 50, 52, 55, 59, 61, 63, 66, 68,
-	70, 72, 74
-};
+static const yytype_uint8 yyprhs[] = {
+    0,  0,  3,  4,  6,  8,  10, 12, 14, 16, 18, 20, 22, 24, 27, 31, 33,
+    35, 38, 41, 43, 46, 50, 52, 55, 59, 61, 63, 66, 68, 70, 72, 74};
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
-static const yytype_int8 yyrhs[] =
-{
-	20, 0, -1, -1, 21, -1, 12, -1, 22, -1,
-	26, -1, 27, -1, 33, -1, 30, -1, 32, -1,
-	29, -1, 31, -1, 13, 14, -1, 13, 23, 14,
-	-1, 6, -1, 24, -1, 23, 24, -1, 25, 21,
-	-1, 8, -1, 15, 16, -1, 15, 28, 16, -1,
-	3, -1, 17, 18, -1, 17, 28, 18, -1, 10,
-	-1, 21, -1, 28, 21, -1, 4, -1, 5, -1,
-	7, -1, 9, -1, 11, -1
-};
+static const yytype_int8 yyrhs[] = {
+    20, 0,  -1, -1, 21, -1, 12, -1, 22, -1, 26, -1, 27, -1, 33, -1, 30, -1, 32,
+    -1, 29, -1, 31, -1, 13, 14, -1, 13, 23, 14, -1, 6,  -1, 24, -1, 23, 24, -1,
+    25, 21, -1, 8,  -1, 15, 16, -1, 15, 28, 16, -1, 3,  -1, 17, 18, -1, 17, 28,
+    18, -1, 10, -1, 21, -1, 28, 21, -1, 4,  -1, 5,  -1, 7,  -1, 9,  -1, 11, -1};
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const yytype_uint16 yyrline[] =
-{
-	0, 217, 217, 220, 225, 230, 242, 254, 266, 278,
-	290, 302, 314, 338, 341, 344, 347, 348, 363, 372,
-	384, 387, 390, 393, 396, 399, 402, 405, 412, 415,
-	418, 421, 424
-};
+static const yytype_uint16 yyrline[] = {
+    0,   217, 217, 220, 225, 230, 242, 254, 266, 278, 290,
+    302, 314, 338, 341, 344, 347, 348, 363, 372, 384, 387,
+    390, 393, 396, 399, 402, 405, 412, 415, 418, 421, 424};
 #endif
 
 #if YYDEBUG || YYERROR_VERBOSE || YYTOKEN_TABLE
 /* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
  *  First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
-static const char *const yytname[] =
-{
-	"$end", "error", "$undefined", "ARRAY", "BOOLEAN", "DATA", "DICTIONARY",
-	"IDREF", "KEY", "NUMBER", "SET", "STRING", "SYNTAX_ERROR", "'{'", "'}'",
-	"'('", "')'", "'['", "']'", "$accept", "input", "object", "dict",
-	"pairs", "pair", "key", "array", "set", "elements", "boolean", "data",
-	"idref", "number", "string", 0
-};
+static const char *const yytname[] = {
+    "$end",         "error",   "$undefined", "ARRAY",  "BOOLEAN",  "DATA",
+    "DICTIONARY",   "IDREF",   "KEY",        "NUMBER", "SET",      "STRING",
+    "SYNTAX_ERROR", "'{'",     "'}'",        "'('",    "')'",      "'['",
+    "']'",          "$accept", "input",      "object", "dict",     "pairs",
+    "pair",         "key",     "array",      "set",    "elements", "boolean",
+    "data",         "idref",   "number",     "string", 0};
 #endif
 
-# ifdef YYPRINT
+#ifdef YYPRINT
 /* YYTOKNUM[YYLEX-NUM] -- Internal token number corresponding to
  *  token YYLEX-NUM.  */
-static const yytype_uint16 yytoknum[] =
-{
-	0, 256, 257, 258, 259, 260, 261, 262, 263, 264,
-	265, 266, 267, 123, 125, 40, 41, 91, 93
-};
-# endif
+static const yytype_uint16 yytoknum[] = {0,   256, 257, 258, 259, 260, 261,
+                                         262, 263, 264, 265, 266, 267, 123,
+                                         125, 40,  41,  91,  93};
+#endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
-static const yytype_uint8 yyr1[] =
-{
-	0, 19, 20, 20, 20, 21, 21, 21, 21, 21,
-	21, 21, 21, 22, 22, 22, 23, 23, 24, 25,
-	26, 26, 26, 27, 27, 27, 28, 28, 29, 30,
-	31, 32, 33
-};
+static const yytype_uint8 yyr1[] = {0,  19, 20, 20, 20, 21, 21, 21, 21, 21, 21,
+                                    21, 21, 22, 22, 22, 23, 23, 24, 25, 26, 26,
+                                    26, 27, 27, 27, 28, 28, 29, 30, 31, 32, 33};
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
-static const yytype_uint8 yyr2[] =
-{
-	0, 2, 0, 1, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 2, 3, 1, 1, 2, 2, 1,
-	2, 3, 1, 2, 3, 1, 1, 2, 1, 1,
-	1, 1, 1
-};
+static const yytype_uint8 yyr2[] = {0, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+                                    1, 1, 2, 3, 1, 1, 2, 2, 1, 2, 3,
+                                    1, 2, 3, 1, 1, 2, 1, 1, 1, 1, 1};
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
  *  STATE-NUM when YYTABLE doesn't specify something else to do.  Zero
  *  means the default is an error.  */
-static const yytype_uint8 yydefact[] =
-{
-	2, 22, 28, 29, 15, 30, 31, 25, 32, 4,
-	0, 0, 0, 0, 3, 5, 6, 7, 11, 9,
-	12, 10, 8, 19, 13, 0, 16, 0, 20, 26,
-	0, 23, 0, 1, 14, 17, 18, 21, 27, 24
-};
+static const yytype_uint8 yydefact[] = {2,  22, 28, 29, 15, 30, 31, 25, 32, 4,
+                                        0,  0,  0,  0,  3,  5,  6,  7,  11, 9,
+                                        12, 10, 8,  19, 13, 0,  16, 0,  20, 26,
+                                        0,  23, 0,  1,  14, 17, 18, 21, 27, 24};
 
 /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_int8 yydefgoto[] =
-{
-	-1, 13, 29, 15, 25, 26, 27, 16, 17, 30,
-	18, 19, 20, 21, 22
-};
+static const yytype_int8 yydefgoto[] = {-1, 13, 29, 15, 25, 26, 27, 16,
+                                        17, 30, 18, 19, 20, 21, 22};
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
  *  STATE-NUM.  */
 #define YYPACT_NINF -20
-static const yytype_int8 yypact[] =
-{
-	46, -20, -20, -20, -20, -20, -20, -20, -20, -20,
-	4, 61, -2, 10, -20, -20, -20, -20, -20, -20,
-	-20, -20, -20, -20, -20, 6, -20, 91, -20, -20,
-	76, -20, 30, -20, -20, -20, -20, -20, -20, -20
-};
+static const yytype_int8 yypact[] = {
+    46,  -20, -20, -20, -20, -20, -20, -20, -20, -20, 4,   61, -2,  10,
+    -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, 6,  -20, 91,
+    -20, -20, 76,  -20, 30,  -20, -20, -20, -20, -20, -20, -20};
 
 /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int8 yypgoto[] =
-{
-	-20, -20, 0, -20, -20, -19, -20, -20, -20, 5,
-	-20, -20, -20, -20, -20
-};
+static const yytype_int8 yypgoto[] = {-20, -20, 0,   -20, -20, -19, -20, -20,
+                                      -20, 5,   -20, -20, -20, -20, -20};
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
  *  positive, shift that token.  If negative, reduce the rule which
  *  number is the opposite.  If zero, do what YYDEFACT says.
  *  If YYTABLE_NINF, syntax error.  */
 #define YYTABLE_NINF -1
-static const yytype_uint8 yytable[] =
-{
-	14, 1, 2, 3, 4, 5, 35, 6, 7, 8,
-	33, 10, 23, 11, 23, 12, 31, 32, 24, 0,
-	34, 0, 0, 0, 0, 0, 0, 36, 0, 0,
-	38, 0, 38, 1, 2, 3, 4, 5, 0, 6,
-	7, 8, 0, 10, 0, 11, 0, 12, 39, 1,
-	2, 3, 4, 5, 0, 6, 7, 8, 9, 10,
-	0, 11, 0, 12, 1, 2, 3, 4, 5, 0,
-	6, 7, 8, 0, 10, 0, 11, 28, 12, 1,
-	2, 3, 4, 5, 0, 6, 7, 8, 0, 10,
-	0, 11, 37, 12, 1, 2, 3, 4, 5, 0,
-	6, 7, 8, 0, 10, 0, 11, 0, 12
-};
+static const yytype_uint8 yytable[] = {
+    14, 1,  2,  3, 4,  5,  35, 6,  7,  8,  33, 10, 23, 11, 23, 12, 31, 32, 24,
+    0,  34, 0,  0, 0,  0,  0,  0,  36, 0,  0,  38, 0,  38, 1,  2,  3,  4,  5,
+    0,  6,  7,  8, 0,  10, 0,  11, 0,  12, 39, 1,  2,  3,  4,  5,  0,  6,  7,
+    8,  9,  10, 0, 11, 0,  12, 1,  2,  3,  4,  5,  0,  6,  7,  8,  0,  10, 0,
+    11, 28, 12, 1, 2,  3,  4,  5,  0,  6,  7,  8,  0,  10, 0,  11, 37, 12, 1,
+    2,  3,  4,  5, 0,  6,  7,  8,  0,  10, 0,  11, 0,  12};
 
-static const yytype_int8 yycheck[] =
-{
-	0, 3, 4, 5, 6, 7, 25, 9, 10, 11,
-	0, 13, 8, 15, 8, 17, 18, 12, 14, -1,
-	14, -1, -1, -1, -1, -1, -1, 27, -1, -1,
-	30, -1, 32, 3, 4, 5, 6, 7, -1, 9,
-	10, 11, -1, 13, -1, 15, -1, 17, 18, 3,
-	4, 5, 6, 7, -1, 9, 10, 11, 12, 13,
-	-1, 15, -1, 17, 3, 4, 5, 6, 7, -1,
-	9, 10, 11, -1, 13, -1, 15, 16, 17, 3,
-	4, 5, 6, 7, -1, 9, 10, 11, -1, 13,
-	-1, 15, 16, 17, 3, 4, 5, 6, 7, -1,
-	9, 10, 11, -1, 13, -1, 15, -1, 17
-};
+static const yytype_int8 yycheck[] = {
+    0,  3,  4,  5,  6,  7,  25, 9,  10, 11, 0,  13, 8,  15, 8,  17, 18, 12, 14,
+    -1, 14, -1, -1, -1, -1, -1, -1, 27, -1, -1, 30, -1, 32, 3,  4,  5,  6,  7,
+    -1, 9,  10, 11, -1, 13, -1, 15, -1, 17, 18, 3,  4,  5,  6,  7,  -1, 9,  10,
+    11, 12, 13, -1, 15, -1, 17, 3,  4,  5,  6,  7,  -1, 9,  10, 11, -1, 13, -1,
+    15, 16, 17, 3,  4,  5,  6,  7,  -1, 9,  10, 11, -1, 13, -1, 15, 16, 17, 3,
+    4,  5,  6,  7,  -1, 9,  10, 11, -1, 13, -1, 15, -1, 17};
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
  *  symbol of state STATE-NUM.  */
-static const yytype_uint8 yystos[] =
-{
-	0, 3, 4, 5, 6, 7, 9, 10, 11, 12,
-	13, 15, 17, 20, 21, 22, 26, 27, 29, 30,
-	31, 32, 33, 8, 14, 23, 24, 25, 16, 21,
-	28, 18, 28, 0, 14, 24, 21, 16, 21, 18
-};
+static const yytype_uint8 yystos[] = {0,  3,  4,  5,  6,  7,  9,  10, 11, 12,
+                                      13, 15, 17, 20, 21, 22, 26, 27, 29, 30,
+                                      31, 32, 33, 8,  14, 23, 24, 25, 16, 21,
+                                      28, 18, 28, 0,  14, 24, 21, 16, 21, 18};
 
-#define yyerrok         (yyerrstatus = 0)
-#define yyclearin       (yychar = YYEMPTY)
-#define YYEMPTY         (-2)
-#define YYEOF           0
+#define yyerrok (yyerrstatus = 0)
+#define yyclearin (yychar = YYEMPTY)
+#define YYEMPTY (-2)
+#define YYEOF 0
 
-#define YYACCEPT        goto yyacceptlab
-#define YYABORT         goto yyabortlab
-#define YYERROR         goto yyerrorlab
-
+#define YYACCEPT goto yyacceptlab
+#define YYABORT goto yyabortlab
+#define YYERROR goto yyerrorlab
 
 /* Like YYERROR except do call yyerror.  This remains here temporarily
  *  to ease the transition to the new meaning of YYERROR, for GCC.
  *  Once GCC version 2 has supplanted version 1, this can go.  */
 
-#define YYFAIL          goto yyerrlab
+#define YYFAIL goto yyerrlab
 
-#define YYRECOVERING()  (!!yyerrstatus)
+#define YYRECOVERING() (!!yyerrstatus)
 
-#define YYBACKUP(Token, Value)                                  \
-do                                                              \
-  if (yychar == YYEMPTY && yylen == 1)                          \
-    {                                                           \
-      yychar = (Token);                                         \
-      yylval = (Value);                                         \
-      yytoken = YYTRANSLATE (yychar);                           \
-      YYPOPSTACK (1);                                           \
-      goto yybackup;                                            \
-    }                                                           \
-  else                                                          \
-    {                                                           \
-      yyerror (YY_("syntax error: cannot back up")); \
-      YYERROR;                                                  \
-    }                                                           \
-while (YYID (0))
+#define YYBACKUP(Token, Value)                                                 \
+  do                                                                           \
+    if (yychar == YYEMPTY && yylen == 1) {                                     \
+      yychar = (Token);                                                        \
+      yylval = (Value);                                                        \
+      yytoken = YYTRANSLATE(yychar);                                           \
+      YYPOPSTACK(1);                                                           \
+      goto yybackup;                                                           \
+    } else {                                                                   \
+      yyerror(YY_("syntax error: cannot back up"));                            \
+      YYERROR;                                                                 \
+    }                                                                          \
+  while (YYID(0))
 
-
-#define YYTERROR        1
-#define YYERRCODE       256
-
+#define YYTERROR 1
+#define YYERRCODE 256
 
 /* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
  *  If N is 0, then set CURRENT to the empty location which ends
@@ -795,134 +695,119 @@ while (YYID (0))
 
 #define YYRHSLOC(Rhs, K) ((Rhs)[K])
 #ifndef YYLLOC_DEFAULT
-# define YYLLOC_DEFAULT(Current, Rhs, N)                                \
-    do                                                                  \
-      if (YYID (N))                                                    \
-	{                                                               \
-	  (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;        \
-	  (Current).first_column = YYRHSLOC (Rhs, 1).first_column;      \
-	  (Current).last_line    = YYRHSLOC (Rhs, N).last_line;         \
-	  (Current).last_column  = YYRHSLOC (Rhs, N).last_column;       \
-	}                                                               \
-      else                                                              \
-	{                                                               \
-	  (Current).first_line   = (Current).last_line   =              \
-	    YYRHSLOC (Rhs, 0).last_line;                                \
-	  (Current).first_column = (Current).last_column =              \
-	    YYRHSLOC (Rhs, 0).last_column;                              \
-	}                                                               \
-    while (YYID (0))
+#define YYLLOC_DEFAULT(Current, Rhs, N)                                        \
+  do                                                                           \
+    if (YYID(N)) {                                                             \
+      (Current).first_line = YYRHSLOC(Rhs, 1).first_line;                      \
+      (Current).first_column = YYRHSLOC(Rhs, 1).first_column;                  \
+      (Current).last_line = YYRHSLOC(Rhs, N).last_line;                        \
+      (Current).last_column = YYRHSLOC(Rhs, N).last_column;                    \
+    } else {                                                                   \
+      (Current).first_line = (Current).last_line = YYRHSLOC(Rhs, 0).last_line; \
+      (Current).first_column = (Current).last_column =                         \
+          YYRHSLOC(Rhs, 0).last_column;                                        \
+    }                                                                          \
+  while (YYID(0))
 #endif
-
 
 /* YY_LOCATION_PRINT -- Print the location on the stream.
  *  This macro was not mandated originally: define only if we know
  *  we won't break user code: when these are the locations we know.  */
 
 #ifndef YY_LOCATION_PRINT
-# if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
-#  define YY_LOCATION_PRINT(File, Loc)                  \
-     fprintf (File, "%d.%d-%d.%d",                      \
-	      (Loc).first_line, (Loc).first_column,     \
-	      (Loc).last_line,  (Loc).last_column)
-# else
-#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
-# endif
+#if defined YYLTYPE_IS_TRIVIAL && YYLTYPE_IS_TRIVIAL
+#define YY_LOCATION_PRINT(File, Loc)                                           \
+  fprintf(File, "%d.%d-%d.%d", (Loc).first_line, (Loc).first_column,           \
+          (Loc).last_line, (Loc).last_column)
+#else
+#define YY_LOCATION_PRINT(File, Loc) ((void)0)
 #endif
-
+#endif
 
 /* YYLEX -- calling `yylex' with the right arguments.  */
 
 #ifdef YYLEX_PARAM
-# define YYLEX yylex (&yylval, YYLEX_PARAM)
+#define YYLEX yylex(&yylval, YYLEX_PARAM)
 #else
-# define YYLEX yylex (&yylval)
+#define YYLEX yylex(&yylval)
 #endif
 
 /* Enable debugging if requested.  */
 #if YYDEBUG
 
-# ifndef YYFPRINTF
-#  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYFPRINTF fprintf
-# endif
+#ifndef YYFPRINTF
+#include <stdio.h> /* INFRINGES ON USER NAME SPACE */
+#define YYFPRINTF fprintf
+#endif
 
-# define YYDPRINTF(Args)                        \
-do {                                            \
-  if (yydebug)                                  \
-    YYFPRINTF Args;                             \
-} while (YYID (0))
+#define YYDPRINTF(Args)                                                        \
+  do {                                                                         \
+    if (yydebug)                                                               \
+      YYFPRINTF Args;                                                          \
+  } while (YYID(0))
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)                    \
-do {                                                                      \
-  if (yydebug)                                                            \
-    {                                                                     \
-      YYFPRINTF (stderr, "%s ", Title);                                   \
-      yy_symbol_print (stderr,                                            \
-	          Type, Value); \
-      YYFPRINTF (stderr, "\n");                                           \
-    }                                                                     \
-} while (YYID (0))
-
+#define YY_SYMBOL_PRINT(Title, Type, Value, Location)                          \
+  do {                                                                         \
+    if (yydebug) {                                                             \
+      YYFPRINTF(stderr, "%s ", Title);                                         \
+      yy_symbol_print(stderr, Type, Value);                                    \
+      YYFPRINTF(stderr, "\n");                                                 \
+    }                                                                          \
+  } while (YYID(0))
 
 /*--------------------------------.
  | Print this symbol on YYOUTPUT.  |
  |   `--------------------------------*/
 
 /*ARGSUSED*/
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static void
-yy_symbol_value_print(FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static void yy_symbol_value_print(FILE *yyoutput, int yytype,
+                                  YYSTYPE const *const yyvaluep)
 #else
-static void
-    yy_symbol_value_print(yyoutput, yytype, yyvaluep)
-FILE *yyoutput;
+static void yy_symbol_value_print(yyoutput, yytype, yyvaluep) FILE *yyoutput;
 int yytype;
-YYSTYPE const * const yyvaluep;
+YYSTYPE const *const yyvaluep;
 #endif
 {
-	if (!yyvaluep) {
-		return;
-	}
-# ifdef YYPRINT
-	if (yytype < YYNTOKENS) {
-		YYPRINT(yyoutput, yytoknum[yytype], *yyvaluep);
-	}
-# else
-	YYUSE(yyoutput);
-# endif
-	switch (yytype) {
-	default:
-		break;
-	}
+  if (!yyvaluep) {
+    return;
+  }
+#ifdef YYPRINT
+  if (yytype < YYNTOKENS) {
+    YYPRINT(yyoutput, yytoknum[yytype], *yyvaluep);
+  }
+#else
+  YYUSE(yyoutput);
+#endif
+  switch (yytype) {
+  default:
+    break;
+  }
 }
-
 
 /*--------------------------------.
  | Print this symbol on YYOUTPUT.  |
  |   `--------------------------------*/
 
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static void
-yy_symbol_print(FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static void yy_symbol_print(FILE *yyoutput, int yytype,
+                            YYSTYPE const *const yyvaluep)
 #else
-static void
-    yy_symbol_print(yyoutput, yytype, yyvaluep)
-FILE *yyoutput;
+static void yy_symbol_print(yyoutput, yytype, yyvaluep) FILE *yyoutput;
 int yytype;
-YYSTYPE const * const yyvaluep;
+YYSTYPE const *const yyvaluep;
 #endif
 {
-	if (yytype < YYNTOKENS) {
-		YYFPRINTF(yyoutput, "token %s (", yytname[yytype]);
-	} else {
-		YYFPRINTF(yyoutput, "nterm %s (", yytname[yytype]);
-	}
+  if (yytype < YYNTOKENS) {
+    YYFPRINTF(yyoutput, "token %s (", yytname[yytype]);
+  } else {
+    YYFPRINTF(yyoutput, "nterm %s (", yytname[yytype]);
+  }
 
-	yy_symbol_value_print(yyoutput, yytype, yyvaluep);
-	YYFPRINTF(yyoutput, ")");
+  yy_symbol_value_print(yyoutput, yytype, yyvaluep);
+  YYFPRINTF(yyoutput, ")");
 }
 
 /*------------------------------------------------------------------.
@@ -930,81 +815,72 @@ YYSTYPE const * const yyvaluep;
  | TOP (included).                                                   |
  |   `------------------------------------------------------------------*/
 
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static void
-yy_stack_print(yytype_int16 *bottom, yytype_int16 *top)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static void yy_stack_print(yytype_int16 *bottom, yytype_int16 *top)
 #else
-static void
-    yy_stack_print(bottom, top)
-yytype_int16 *bottom;
+static void yy_stack_print(bottom, top) yytype_int16 *bottom;
 yytype_int16 *top;
 #endif
 {
-	YYFPRINTF(stderr, "Stack now");
-	for (; bottom <= top; ++bottom) {
-		YYFPRINTF(stderr, " %d", *bottom);
-	}
-	YYFPRINTF(stderr, "\n");
+  YYFPRINTF(stderr, "Stack now");
+  for (; bottom <= top; ++bottom) {
+    YYFPRINTF(stderr, " %d", *bottom);
+  }
+  YYFPRINTF(stderr, "\n");
 }
 
-# define YY_STACK_PRINT(Bottom, Top)                            \
-do {                                                            \
-  if (yydebug)                                                  \
-    yy_stack_print ((Bottom), (Top));                           \
-} while (YYID (0))
-
+#define YY_STACK_PRINT(Bottom, Top)                                            \
+  do {                                                                         \
+    if (yydebug)                                                               \
+      yy_stack_print((Bottom), (Top));                                         \
+  } while (YYID(0))
 
 /*------------------------------------------------.
  | Report that the YYRULE is going to be reduced.  |
  |   `------------------------------------------------*/
 
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static void
-yy_reduce_print(YYSTYPE *yyvsp, int yyrule)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static void yy_reduce_print(YYSTYPE *yyvsp, int yyrule)
 #else
-static void
-    yy_reduce_print(yyvsp, yyrule)
-YYSTYPE *yyvsp;
+static void yy_reduce_print(yyvsp, yyrule) YYSTYPE *yyvsp;
 int yyrule;
 #endif
 {
-	int yynrhs = yyr2[yyrule];
-	int yyi;
-	unsigned long int yylno = yyrline[yyrule];
-	YYFPRINTF(stderr, "Reducing stack by rule %d (line %lu):\n",
-	    yyrule - 1, yylno);
-	/* The symbols being reduced.  */
-	for (yyi = 0; yyi < yynrhs; yyi++) {
-		fprintf(stderr, "   $%d = ", yyi + 1);
-		yy_symbol_print(stderr, yyrhs[yyprhs[yyrule] + yyi],
-		    &(yyvsp[(yyi + 1) - (yynrhs)])
-		    );
-		fprintf(stderr, "\n");
-	}
+  int yynrhs = yyr2[yyrule];
+  int yyi;
+  unsigned long int yylno = yyrline[yyrule];
+  YYFPRINTF(stderr, "Reducing stack by rule %d (line %lu):\n", yyrule - 1,
+            yylno);
+  /* The symbols being reduced.  */
+  for (yyi = 0; yyi < yynrhs; yyi++) {
+    fprintf(stderr, "   $%d = ", yyi + 1);
+    yy_symbol_print(stderr, yyrhs[yyprhs[yyrule] + yyi],
+                    &(yyvsp[(yyi + 1) - (yynrhs)]));
+    fprintf(stderr, "\n");
+  }
 }
 
-# define YY_REDUCE_PRINT(Rule)          \
-do {                                    \
-  if (yydebug)                          \
-    yy_reduce_print (yyvsp, Rule); \
-} while (YYID (0))
+#define YY_REDUCE_PRINT(Rule)                                                  \
+  do {                                                                         \
+    if (yydebug)                                                               \
+      yy_reduce_print(yyvsp, Rule);                                            \
+  } while (YYID(0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
  *  multiple parsers can coexist.  */
 int yydebug;
 #else /* !YYDEBUG */
-# define YYDPRINTF(Args)
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)
-# define YY_STACK_PRINT(Bottom, Top)
-# define YY_REDUCE_PRINT(Rule)
+#define YYDPRINTF(Args)
+#define YY_SYMBOL_PRINT(Title, Type, Value, Location)
+#define YY_STACK_PRINT(Bottom, Top)
+#define YY_REDUCE_PRINT(Rule)
 #endif /* !YYDEBUG */
-
 
 /* YYINITDEPTH -- initial size of the parser's stacks.  */
 #ifndef YYINITDEPTH
-# define YYINITDEPTH 200
+#define YYINITDEPTH 200
 #endif
 
 /* YYMAXDEPTH -- maximum size the stacks can grow to (effective only
@@ -1015,67 +891,60 @@ int yydebug;
  *  evaluated with infinite-precision integer arithmetic.  */
 
 #ifndef YYMAXDEPTH
-# define YYMAXDEPTH 10000
+#define YYMAXDEPTH 10000
 #endif
-
-
 
 #if YYERROR_VERBOSE
 
-# ifndef yystrlen
-#  if defined __GLIBC__ && defined _STRING_H
-#   define yystrlen strlen
-#  else
-/* Return the length of YYSTR.  */
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static YYSIZE_T
-yystrlen(const char *yystr)
+#ifndef yystrlen
+#if defined __GLIBC__ && defined _STRING_H
+#define yystrlen strlen
 #else
-static YYSIZE_T
-    yystrlen(yystr)
-const char *yystr;
+/* Return the length of YYSTR.  */
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static YYSIZE_T yystrlen(const char *yystr)
+#else
+static YYSIZE_T yystrlen(yystr) const char *yystr;
 #endif
 {
-	YYSIZE_T yylen;
-	for (yylen = 0; yystr[yylen]; yylen++) {
-		continue;
-	}
-	return yylen;
+  YYSIZE_T yylen;
+  for (yylen = 0; yystr[yylen]; yylen++) {
+    continue;
+  }
+  return yylen;
 }
-#  endif
-# endif
+#endif
+#endif
 
-# ifndef yystpcpy
-#  if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
-#   define yystpcpy stpcpy
-#  else
+#ifndef yystpcpy
+#if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
+#define yystpcpy stpcpy
+#else
 /* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
  *  YYDEST.  */
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static char *
-yystpcpy(char *yydest, const char *yysrc)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static char *yystpcpy(char *yydest, const char *yysrc)
 #else
-static char *
-yystpcpy(yydest, yysrc)
+static char *yystpcpy(yydest, yysrc)
 char *yydest;
 const char *yysrc;
 #endif
 {
-	char *yyd = yydest;
-	const char *yys = yysrc;
+  char *yyd = yydest;
+  const char *yys = yysrc;
 
-	while ((*yyd++ = *yys++) != '\0') {
-		continue;
-	}
+  while ((*yyd++ = *yys++) != '\0') {
+    continue;
+  }
 
-	return yyd - 1;
+  return yyd - 1;
 }
-#  endif
-# endif
+#endif
+#endif
 
-# ifndef yytnamerr
+#ifndef yytnamerr
 /* Copy to YYRES the contents of YYSTR after stripping away unnecessary
  *  quotes and backslashes, so that it's suitable for yyerror.  The
  *  heuristic is that double-quoting is unnecessary unless the string
@@ -1083,48 +952,46 @@ const char *yysrc;
  *  backslash-backslash).  YYSTR is taken from yytname.  If YYRES is
  *  null, do not copy; instead, return the length of what the result
  *  would have been.  */
-static YYSIZE_T
-yytnamerr(char *yyres, const char *yystr)
-{
-	if (*yystr == '"') {
-		YYSIZE_T yyn = 0;
-		char const *yyp = yystr;
+static YYSIZE_T yytnamerr(char *yyres, const char *yystr) {
+  if (*yystr == '"') {
+    YYSIZE_T yyn = 0;
+    char const *yyp = yystr;
 
-		for (;;) {
-			switch (*++yyp) {
-			case '\'':
-			case ',':
-				goto do_not_strip_quotes;
+    for (;;) {
+      switch (*++yyp) {
+      case '\'':
+      case ',':
+        goto do_not_strip_quotes;
 
-			case '\\':
-				if (*++yyp != '\\') {
-					goto do_not_strip_quotes;
-				}
-			/* Fall through.  */
-			default:
-				if (yyres) {
-					yyres[yyn] = *yyp;
-				}
-				yyn++;
-				break;
+      case '\\':
+        if (*++yyp != '\\') {
+          goto do_not_strip_quotes;
+        }
+      /* Fall through.  */
+      default:
+        if (yyres) {
+          yyres[yyn] = *yyp;
+        }
+        yyn++;
+        break;
 
-			case '"':
-				if (yyres) {
-					yyres[yyn] = '\0';
-				}
-				return yyn;
-			}
-		}
-do_not_strip_quotes:;
-	}
+      case '"':
+        if (yyres) {
+          yyres[yyn] = '\0';
+        }
+        return yyn;
+      }
+    }
+  do_not_strip_quotes:;
+  }
 
-	if (!yyres) {
-		return yystrlen(yystr);
-	}
+  if (!yyres) {
+    return yystrlen(yystr);
+  }
 
-	return yystpcpy(yyres, yystr) - yyres;
+  return yystpcpy(yyres, yystr) - yyres;
 }
-# endif
+#endif
 
 /* Copy into YYRESULT an error message about the unexpected token
  *  YYCHAR while in state YYSTATE.  Return the number of bytes copied,
@@ -1133,24 +1000,22 @@ do_not_strip_quotes:;
  *  copied.  As a special case, return 0 if an ordinary "syntax error"
  *  message will do.  Return YYSIZE_MAXIMUM if overflow occurs during
  *  size calculation.  */
-static YYSIZE_T
-yysyntax_error(char *yyresult, int yystate, int yychar)
-{
-	int yyn = yypact[yystate];
+static YYSIZE_T yysyntax_error(char *yyresult, int yystate, int yychar) {
+  int yyn = yypact[yystate];
 
-	if (!(YYPACT_NINF < yyn && yyn <= YYLAST)) {
-		return 0;
-	} else {
-		int yytype = YYTRANSLATE(yychar);
-		YYSIZE_T yysize0 = yytnamerr(0, yytname[yytype]);
-		YYSIZE_T yysize = yysize0;
-		YYSIZE_T yysize1;
-		int yysize_overflow = 0;
-		enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
-		char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
-		int yyx;
+  if (!(YYPACT_NINF < yyn && yyn <= YYLAST)) {
+    return 0;
+  } else {
+    int yytype = YYTRANSLATE(yychar);
+    YYSIZE_T yysize0 = yytnamerr(0, yytname[yytype]);
+    YYSIZE_T yysize = yysize0;
+    YYSIZE_T yysize1;
+    int yysize_overflow = 0;
+    enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
+    char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+    int yyx;
 
-# if 0
+#if 0
 		/* This is so xgettext sees the translatable formats that are
 		 *  constructed on the fly.  */
 		YY_("syntax error, unexpected %s");
@@ -1158,108 +1023,101 @@ yysyntax_error(char *yyresult, int yystate, int yychar)
 		YY_("syntax error, unexpected %s, expecting %s or %s");
 		YY_("syntax error, unexpected %s, expecting %s or %s or %s");
 		YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s");
-# endif
-		char *yyfmt;
-		char const *yyf;
-		static char const yyunexpected[] = "syntax error, unexpected %s";
-		static char const yyexpecting[] = ", expecting %s";
-		static char const yyor[] = " or %s";
-		char yyformat[sizeof yyunexpected
-		+ sizeof yyexpecting - 1
-		+ ((YYERROR_VERBOSE_ARGS_MAXIMUM - 2)
-		* (sizeof yyor - 1))];
-		char const *yyprefix = yyexpecting;
+#endif
+    char *yyfmt;
+    char const *yyf;
+    static char const yyunexpected[] = "syntax error, unexpected %s";
+    static char const yyexpecting[] = ", expecting %s";
+    static char const yyor[] = " or %s";
+    char yyformat[sizeof yyunexpected + sizeof yyexpecting - 1 +
+                  ((YYERROR_VERBOSE_ARGS_MAXIMUM - 2) * (sizeof yyor - 1))];
+    char const *yyprefix = yyexpecting;
 
-		/* Start YYX at -YYN if negative to avoid negative indexes in
-		 *  YYCHECK.  */
-		int yyxbegin = yyn < 0 ? -yyn : 0;
+    /* Start YYX at -YYN if negative to avoid negative indexes in
+     *  YYCHECK.  */
+    int yyxbegin = yyn < 0 ? -yyn : 0;
 
-		/* Stay within bounds of both yycheck and yytname.  */
-		int yychecklim = YYLAST - yyn + 1;
-		int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
-		int yycount = 1;
+    /* Stay within bounds of both yycheck and yytname.  */
+    int yychecklim = YYLAST - yyn + 1;
+    int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+    int yycount = 1;
 
-		yyarg[0] = yytname[yytype];
-		yyfmt = yystpcpy(yyformat, yyunexpected);
+    yyarg[0] = yytname[yytype];
+    yyfmt = yystpcpy(yyformat, yyunexpected);
 
-		for (yyx = yyxbegin; yyx < yyxend; ++yyx) {
-			if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR) {
-				if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM) {
-					yycount = 1;
-					yysize = yysize0;
-					yyformat[sizeof yyunexpected - 1] = '\0';
-					break;
-				}
-				yyarg[yycount++] = yytname[yyx];
-				yysize1 = yysize + yytnamerr(0, yytname[yyx]);
-				yysize_overflow |= (yysize1 < yysize);
-				yysize = yysize1;
-				yyfmt = yystpcpy(yyfmt, yyprefix);
-				yyprefix = yyor;
-			}
-		}
+    for (yyx = yyxbegin; yyx < yyxend; ++yyx) {
+      if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR) {
+        if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM) {
+          yycount = 1;
+          yysize = yysize0;
+          yyformat[sizeof yyunexpected - 1] = '\0';
+          break;
+        }
+        yyarg[yycount++] = yytname[yyx];
+        yysize1 = yysize + yytnamerr(0, yytname[yyx]);
+        yysize_overflow |= (yysize1 < yysize);
+        yysize = yysize1;
+        yyfmt = yystpcpy(yyfmt, yyprefix);
+        yyprefix = yyor;
+      }
+    }
 
-		yyf = YY_(yyformat);
-		yysize1 = yysize + yystrlen(yyf);
-		yysize_overflow |= (yysize1 < yysize);
-		yysize = yysize1;
+    yyf = YY_(yyformat);
+    yysize1 = yysize + yystrlen(yyf);
+    yysize_overflow |= (yysize1 < yysize);
+    yysize = yysize1;
 
-		if (yysize_overflow) {
-			return YYSIZE_MAXIMUM;
-		}
+    if (yysize_overflow) {
+      return YYSIZE_MAXIMUM;
+    }
 
-		if (yyresult) {
-			/* Avoid sprintf, as that infringes on the user's name space.
-			 *  Don't have undefined behavior even if the translation
-			 *  produced a string with the wrong number of "%s"s.  */
-			char *yyp = yyresult;
-			int yyi = 0;
-			while ((*yyp = *yyf) != '\0') {
-				if (*yyp == '%' && yyf[1] == 's' && yyi < yycount) {
-					yyp += yytnamerr(yyp, yyarg[yyi++]);
-					yyf += 2;
-				} else {
-					yyp++;
-					yyf++;
-				}
-			}
-		}
-		return yysize;
-	}
+    if (yyresult) {
+      /* Avoid sprintf, as that infringes on the user's name space.
+       *  Don't have undefined behavior even if the translation
+       *  produced a string with the wrong number of "%s"s.  */
+      char *yyp = yyresult;
+      int yyi = 0;
+      while ((*yyp = *yyf) != '\0') {
+        if (*yyp == '%' && yyf[1] == 's' && yyi < yycount) {
+          yyp += yytnamerr(yyp, yyarg[yyi++]);
+          yyf += 2;
+        } else {
+          yyp++;
+          yyf++;
+        }
+      }
+    }
+    return yysize;
+  }
 }
 #endif /* YYERROR_VERBOSE */
-
 
 /*-----------------------------------------------.
  | Release the memory associated to this symbol.  |
  |   `-----------------------------------------------*/
 
 /*ARGSUSED*/
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-static void
-yydestruct(const char *yymsg, int yytype, YYSTYPE *yyvaluep)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+static void yydestruct(const char *yymsg, int yytype, YYSTYPE *yyvaluep)
 #else
-static void
-    yydestruct(yymsg, yytype, yyvaluep)
-const char *yymsg;
+static void yydestruct(yymsg, yytype, yyvaluep) const char *yymsg;
 int yytype;
 YYSTYPE *yyvaluep;
 #endif
 {
-	YYUSE(yyvaluep);
+  YYUSE(yyvaluep);
 
-	if (!yymsg) {
-		yymsg = "Deleting";
-	}
-	YY_SYMBOL_PRINT(yymsg, yytype, yyvaluep, yylocationp);
+  if (!yymsg) {
+    yymsg = "Deleting";
+  }
+  YY_SYMBOL_PRINT(yymsg, yytype, yyvaluep, yylocationp);
 
-	switch (yytype) {
-	default:
-		break;
-	}
+  switch (yytype) {
+  default:
+    break;
+  }
 }
-
 
 /* Prevent warnings from -Wmissing-prototypes.  */
 
@@ -1277,1450 +1135,1419 @@ int yyparse();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-
-
-
-
-
 /*----------.
  | yyparse.  |
  |   `----------*/
 
 #ifdef YYPARSE_PARAM
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-int
-yyparse(void *YYPARSE_PARAM)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+int yyparse(void *YYPARSE_PARAM)
 #else
-int
-    yyparse(YYPARSE_PARAM)
-void *YYPARSE_PARAM;
+int yyparse(YYPARSE_PARAM) void *YYPARSE_PARAM;
 #endif
 #else /* ! YYPARSE_PARAM */
-#if (defined __STDC__ || defined __C99__FUNC__ \
-        || defined __cplusplus || defined _MSC_VER)
-int
-yyparse(void)
+#if (defined __STDC__ || defined __C99__FUNC__ || defined __cplusplus ||       \
+     defined _MSC_VER)
+int yyparse(void)
 #else
-int
-yyparse()
+int yyparse()
 
 #endif
 #endif
 {
-	/* The look-ahead symbol.  */
-	int yychar;
+  /* The look-ahead symbol.  */
+  int yychar;
 
-/* The semantic value of the look-ahead symbol.  */
-	YYSTYPE yylval;
+  /* The semantic value of the look-ahead symbol.  */
+  YYSTYPE yylval;
 
-/* Number of syntax errors so far.  */
-	int yynerrs;
+  /* Number of syntax errors so far.  */
+  int yynerrs;
 
-	int yystate;
-	int yyn;
-	int yyresult;
-	/* Number of tokens to shift before error messages enabled.  */
-	int yyerrstatus;
-	/* Look-ahead token as an internal (translated) token number.  */
-	int yytoken = 0;
+  int yystate;
+  int yyn;
+  int yyresult;
+  /* Number of tokens to shift before error messages enabled.  */
+  int yyerrstatus;
+  /* Look-ahead token as an internal (translated) token number.  */
+  int yytoken = 0;
 #if YYERROR_VERBOSE
-	/* Buffer for error messages, and its allocated size.  */
-	char yymsgbuf[128];
-	char *yymsg = yymsgbuf;
-	YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
+  /* Buffer for error messages, and its allocated size.  */
+  char yymsgbuf[128];
+  char *yymsg = yymsgbuf;
+  YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
 #endif
 
-	/* Three stacks and their tools:
-	 *  `yyss': related to states,
-	 *  `yyvs': related to semantic values,
-	 *  `yyls': related to locations.
-	 *
-	 *  Refer to the stacks thru separate pointers, to allow yyoverflow
-	 *  to reallocate them elsewhere.  */
+  /* Three stacks and their tools:
+   *  `yyss': related to states,
+   *  `yyvs': related to semantic values,
+   *  `yyls': related to locations.
+   *
+   *  Refer to the stacks thru separate pointers, to allow yyoverflow
+   *  to reallocate them elsewhere.  */
 
-	/* The state stack.  */
-	yytype_int16 yyssa[YYINITDEPTH];
-	yytype_int16 *yyss = yyssa;
-	yytype_int16 *yyssp;
+  /* The state stack.  */
+  yytype_int16 yyssa[YYINITDEPTH];
+  yytype_int16 *yyss = yyssa;
+  yytype_int16 *yyssp;
 
-	/* The semantic value stack.  */
-	YYSTYPE yyvsa[YYINITDEPTH];
-	YYSTYPE *yyvs = yyvsa;
-	YYSTYPE *yyvsp;
+  /* The semantic value stack.  */
+  YYSTYPE yyvsa[YYINITDEPTH];
+  YYSTYPE *yyvs = yyvsa;
+  YYSTYPE *yyvsp;
 
+#define YYPOPSTACK(N) (yyvsp -= (N), yyssp -= (N))
 
+  YYSIZE_T yystacksize = YYINITDEPTH;
 
-#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
+  /* The variables used to return semantic value and location from the
+   *  action routines.  */
+  YYSTYPE yyval;
 
-	YYSIZE_T yystacksize = YYINITDEPTH;
+  /* The number of symbols on the RHS of the reduced rule.
+   *  Keep to zero when no symbol should be popped.  */
+  int yylen = 0;
 
-	/* The variables used to return semantic value and location from the
-	 *  action routines.  */
-	YYSTYPE yyval;
+  YYDPRINTF((stderr, "Starting parse\n"));
 
+  yystate = 0;
+  yyerrstatus = 0;
+  yynerrs = 0;
+  yychar = YYEMPTY; /* Cause a token to be read.  */
 
-	/* The number of symbols on the RHS of the reduced rule.
-	 *  Keep to zero when no symbol should be popped.  */
-	int yylen = 0;
+  /* Initialize stack pointers.
+   *  Waste one element of value and location stack
+   *  so that they stay on the same level as the state stack.
+   *  The wasted elements are never initialized.  */
 
-	YYDPRINTF((stderr, "Starting parse\n"));
+  yyssp = yyss;
+  yyvsp = yyvs;
 
-	yystate = 0;
-	yyerrstatus = 0;
-	yynerrs = 0;
-	yychar = YYEMPTY;       /* Cause a token to be read.  */
-
-	/* Initialize stack pointers.
-	 *  Waste one element of value and location stack
-	 *  so that they stay on the same level as the state stack.
-	 *  The wasted elements are never initialized.  */
-
-	yyssp = yyss;
-	yyvsp = yyvs;
-
-	goto yysetstate;
+  goto yysetstate;
 
 /*------------------------------------------------------------.
  | yynewstate -- Push a new state, which is found in yystate.  |
  |   `------------------------------------------------------------*/
 yynewstate:
-	/* In all cases, when you get here, the value and location stacks
-	 *  have just been pushed.  So pushing a state here evens the stacks.  */
-	yyssp++;
+  /* In all cases, when you get here, the value and location stacks
+   *  have just been pushed.  So pushing a state here evens the stacks.  */
+  yyssp++;
 
 yysetstate:
-	*yyssp = yystate;
+  *yyssp = yystate;
 
-	if (yyss + yystacksize - 1 <= yyssp) {
-		/* Get the current used size of the three stacks, in elements.  */
-		YYSIZE_T yysize = yyssp - yyss + 1;
+  if (yyss + yystacksize - 1 <= yyssp) {
+    /* Get the current used size of the three stacks, in elements.  */
+    YYSIZE_T yysize = yyssp - yyss + 1;
 
 #ifdef yyoverflow
-		{
-			/* Give user a chance to reallocate the stack.  Use copies of
-			 *  these so that the &'s don't force the real ones into
-			 *  memory.  */
-			YYSTYPE *yyvs1 = yyvs;
-			yytype_int16 *yyss1 = yyss;
+    {
+      /* Give user a chance to reallocate the stack.  Use copies of
+       *  these so that the &'s don't force the real ones into
+       *  memory.  */
+      YYSTYPE *yyvs1 = yyvs;
+      yytype_int16 *yyss1 = yyss;
 
+      /* Each stack pointer address is followed by the size of the
+       *  data in use in that stack, in bytes.  This used to be a
+       *  conditional around just the two extra args, but that might
+       *  be undefined if yyoverflow is a macro.  */
+      yyoverflow(YY_("memory exhausted"), &yyss1, yysize * sizeof(*yyssp),
+                 &yyvs1, yysize * sizeof(*yyvsp),
 
-			/* Each stack pointer address is followed by the size of the
-			 *  data in use in that stack, in bytes.  This used to be a
-			 *  conditional around just the two extra args, but that might
-			 *  be undefined if yyoverflow is a macro.  */
-			yyoverflow(YY_("memory exhausted"),
-			    &yyss1, yysize * sizeof(*yyssp),
-			    &yyvs1, yysize * sizeof(*yyvsp),
+                 &yystacksize);
 
-			    &yystacksize);
-
-			yyss = yyss1;
-			yyvs = yyvs1;
-		}
+      yyss = yyss1;
+      yyvs = yyvs1;
+    }
 #else /* no yyoverflow */
-# ifndef YYSTACK_RELOCATE
-		goto yyexhaustedlab;
-# else
-		/* Extend the stack our own way.  */
-		if (YYMAXDEPTH <= yystacksize) {
-			goto yyexhaustedlab;
-		}
-		yystacksize *= 2;
-		if (YYMAXDEPTH < yystacksize) {
-			yystacksize = YYMAXDEPTH;
-		}
+#ifndef YYSTACK_RELOCATE
+    goto yyexhaustedlab;
+#else
+    /* Extend the stack our own way.  */
+    if (YYMAXDEPTH <= yystacksize) {
+      goto yyexhaustedlab;
+    }
+    yystacksize *= 2;
+    if (YYMAXDEPTH < yystacksize) {
+      yystacksize = YYMAXDEPTH;
+    }
 
-		{
-			yytype_int16 *yyss1 = yyss;
-			union yyalloc *yyptr =
-			    (union yyalloc *) YYSTACK_ALLOC(YYSTACK_BYTES(yystacksize));
-			if (!yyptr) {
-				goto yyexhaustedlab;
-			}
-			YYSTACK_RELOCATE(yyss);
-			YYSTACK_RELOCATE(yyvs);
+    {
+      yytype_int16 *yyss1 = yyss;
+      union yyalloc *yyptr =
+          (union yyalloc *)YYSTACK_ALLOC(YYSTACK_BYTES(yystacksize));
+      if (!yyptr) {
+        goto yyexhaustedlab;
+      }
+      YYSTACK_RELOCATE(yyss);
+      YYSTACK_RELOCATE(yyvs);
 
-#  undef YYSTACK_RELOCATE
-			if (yyss1 != yyssa) {
-				YYSTACK_FREE(yyss1);
-			}
-		}
-# endif
+#undef YYSTACK_RELOCATE
+      if (yyss1 != yyssa) {
+        YYSTACK_FREE(yyss1);
+      }
+    }
+#endif
 #endif /* no yyoverflow */
 
-		yyssp = yyss + yysize - 1;
-		yyvsp = yyvs + yysize - 1;
+    yyssp = yyss + yysize - 1;
+    yyvsp = yyvs + yysize - 1;
 
+    YYDPRINTF((stderr, "Stack size increased to %lu\n",
+               (unsigned long int)yystacksize));
 
-		YYDPRINTF((stderr, "Stack size increased to %lu\n",
-		    (unsigned long int) yystacksize));
+    if (yyss + yystacksize - 1 <= yyssp) {
+      YYABORT;
+    }
+  }
 
-		if (yyss + yystacksize - 1 <= yyssp) {
-			YYABORT;
-		}
-	}
+  YYDPRINTF((stderr, "Entering state %d\n", yystate));
 
-	YYDPRINTF((stderr, "Entering state %d\n", yystate));
-
-	goto yybackup;
+  goto yybackup;
 
 /*-----------.
  | yybackup.  |
  |   `-----------*/
 yybackup:
 
-	/* Do appropriate processing given the current state.  Read a
-	 *  look-ahead token if we need one and don't already have one.  */
+  /* Do appropriate processing given the current state.  Read a
+   *  look-ahead token if we need one and don't already have one.  */
 
-	/* First try to decide what to do without reference to look-ahead token.  */
-	yyn = yypact[yystate];
-	if (yyn == YYPACT_NINF) {
-		goto yydefault;
-	}
+  /* First try to decide what to do without reference to look-ahead token.  */
+  yyn = yypact[yystate];
+  if (yyn == YYPACT_NINF) {
+    goto yydefault;
+  }
 
-	/* Not known => get a look-ahead token if don't already have one.  */
+  /* Not known => get a look-ahead token if don't already have one.  */
 
-	/* YYCHAR is either YYEMPTY or YYEOF or a valid look-ahead symbol.  */
-	if (yychar == YYEMPTY) {
-		YYDPRINTF((stderr, "Reading a token: "));
-		yychar = YYLEX;
-	}
+  /* YYCHAR is either YYEMPTY or YYEOF or a valid look-ahead symbol.  */
+  if (yychar == YYEMPTY) {
+    YYDPRINTF((stderr, "Reading a token: "));
+    yychar = YYLEX;
+  }
 
-	if (yychar <= YYEOF) {
-		yychar = yytoken = YYEOF;
-		YYDPRINTF((stderr, "Now at end of input.\n"));
-	} else {
-		yytoken = YYTRANSLATE(yychar);
-		YY_SYMBOL_PRINT("Next token is", yytoken, &yylval, &yylloc);
-	}
+  if (yychar <= YYEOF) {
+    yychar = yytoken = YYEOF;
+    YYDPRINTF((stderr, "Now at end of input.\n"));
+  } else {
+    yytoken = YYTRANSLATE(yychar);
+    YY_SYMBOL_PRINT("Next token is", yytoken, &yylval, &yylloc);
+  }
 
-	/* If the proper action on seeing token YYTOKEN is to reduce or to
-	 *  detect an error, take that action.  */
-	yyn += yytoken;
-	if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken) {
-		goto yydefault;
-	}
-	yyn = yytable[yyn];
-	if (yyn <= 0) {
-		if (yyn == 0 || yyn == YYTABLE_NINF) {
-			goto yyerrlab;
-		}
-		yyn = -yyn;
-		goto yyreduce;
-	}
+  /* If the proper action on seeing token YYTOKEN is to reduce or to
+   *  detect an error, take that action.  */
+  yyn += yytoken;
+  if (yyn < 0 || YYLAST < yyn || yycheck[yyn] != yytoken) {
+    goto yydefault;
+  }
+  yyn = yytable[yyn];
+  if (yyn <= 0) {
+    if (yyn == 0 || yyn == YYTABLE_NINF) {
+      goto yyerrlab;
+    }
+    yyn = -yyn;
+    goto yyreduce;
+  }
 
-	if (yyn == YYFINAL) {
-		YYACCEPT;
-	}
+  if (yyn == YYFINAL) {
+    YYACCEPT;
+  }
 
-	/* Count tokens shifted since error; after three, turn off error
-	 *  status.  */
-	if (yyerrstatus) {
-		yyerrstatus--;
-	}
+  /* Count tokens shifted since error; after three, turn off error
+   *  status.  */
+  if (yyerrstatus) {
+    yyerrstatus--;
+  }
 
-	/* Shift the look-ahead token.  */
-	YY_SYMBOL_PRINT("Shifting", yytoken, &yylval, &yylloc);
+  /* Shift the look-ahead token.  */
+  YY_SYMBOL_PRINT("Shifting", yytoken, &yylval, &yylloc);
 
-	/* Discard the shifted token unless it is eof.  */
-	if (yychar != YYEOF) {
-		yychar = YYEMPTY;
-	}
+  /* Discard the shifted token unless it is eof.  */
+  if (yychar != YYEOF) {
+    yychar = YYEMPTY;
+  }
 
-	yystate = yyn;
-	*++yyvsp = yylval;
+  yystate = yyn;
+  *++yyvsp = yylval;
 
-	goto yynewstate;
-
+  goto yynewstate;
 
 /*-----------------------------------------------------------.
  | yydefault -- do the default action for the current state.  |
  |   `-----------------------------------------------------------*/
 yydefault:
-	yyn = yydefact[yystate];
-	if (yyn == 0) {
-		goto yyerrlab;
-	}
-	goto yyreduce;
-
+  yyn = yydefact[yystate];
+  if (yyn == 0) {
+    goto yyerrlab;
+  }
+  goto yyreduce;
 
 /*-----------------------------.
  | yyreduce -- Do a reduction.  |
  |   `-----------------------------*/
 yyreduce:
-	/* yyn is the number of a rule to reduce with.  */
-	yylen = yyr2[yyn];
+  /* yyn is the number of a rule to reduce with.  */
+  yylen = yyr2[yyn];
 
-	/* If YYLEN is nonzero, implement the default value of the action:
-	 *  `$$ = $1'.
-	 *
-	 *  Otherwise, the following line sets YYVAL to garbage.
-	 *  This behavior is undocumented and Bison
-	 *  users should not rely upon it.  Assigning to YYVAL
-	 *  unconditionally makes the parser a bit smaller, and it avoids a
-	 *  GCC warning that YYVAL may be used uninitialized.  */
-	yyval = yyvsp[1 - yylen];
+  /* If YYLEN is nonzero, implement the default value of the action:
+   *  `$$ = $1'.
+   *
+   *  Otherwise, the following line sets YYVAL to garbage.
+   *  This behavior is undocumented and Bison
+   *  users should not rely upon it.  Assigning to YYVAL
+   *  unconditionally makes the parser a bit smaller, and it avoids a
+   *  GCC warning that YYVAL may be used uninitialized.  */
+  yyval = yyvsp[1 - yylen];
 
-
-	YY_REDUCE_PRINT(yyn);
-	switch (yyn) {
-	case 2:
+  YY_REDUCE_PRINT(yyn);
+  switch (yyn) {
+  case 2:
 #line 217 "OSUnserializeXML.y"
-		{ yyerror("unexpected end of buffer");
-		  YYERROR;
-		  ;}
-		break;
+  {
+    yyerror("unexpected end of buffer");
+    YYERROR;
+    ;
+  } break;
 
-	case 3:
+  case 3:
 #line 220 "OSUnserializeXML.y"
-		{ STATE->parsedObject = (yyvsp[(1) - (1)])->object;
-		  (yyvsp[(1) - (1)])->object = 0;
-		  freeObject(STATE, (yyvsp[(1) - (1)]));
-		  YYACCEPT;
-		  ;}
-		break;
+  {
+    STATE->parsedObject = (yyvsp[(1) - (1)])->object;
+    (yyvsp[(1) - (1)])->object = 0;
+    freeObject(STATE, (yyvsp[(1) - (1)]));
+    YYACCEPT;
+    ;
+  } break;
 
-	case 4:
+  case 4:
 #line 225 "OSUnserializeXML.y"
-		{ yyerror("syntax error");
-		  YYERROR;
-		  ;}
-		break;
+  {
+    yyerror("syntax error");
+    YYERROR;
+    ;
+  } break;
 
-	case 5:
+  case 5:
 #line 230 "OSUnserializeXML.y"
-		{ (yyval) = buildDictionary(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildDictionary(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildDictionary");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildDictionary");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 6:
+  case 6:
 #line 242 "OSUnserializeXML.y"
-		{ (yyval) = buildArray(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildArray(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildArray");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildArray");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 7:
+  case 7:
 #line 254 "OSUnserializeXML.y"
-		{ (yyval) = buildSet(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildSet(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildSet");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildSet");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 8:
+  case 8:
 #line 266 "OSUnserializeXML.y"
-		{ (yyval) = buildString(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildString(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildString");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildString");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 9:
+  case 9:
 #line 278 "OSUnserializeXML.y"
-		{ (yyval) = buildData(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildData(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildData");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildData");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 10:
+  case 10:
 #line 290 "OSUnserializeXML.y"
-		{ (yyval) = buildNumber(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildNumber(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildNumber");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildNumber");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 11:
+  case 11:
 #line 302 "OSUnserializeXML.y"
-		{ (yyval) = buildBoolean(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildBoolean(STATE, (yyvsp[(1) - (1)]));
 
-		  if (!yyval->object) {
-			  yyerror("buildBoolean");
-			  YYERROR;
-		  }
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    if (!yyval->object) {
+      yyerror("buildBoolean");
+      YYERROR;
+    }
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 12:
+  case 12:
 #line 314 "OSUnserializeXML.y"
-		{ (yyval) = retrieveObject(STATE, (yyvsp[(1) - (1)])->idref);
-		  if ((yyval)) {
-			  STATE->retrievedObjectCount++;
-			  (yyval)->object->retain();
-			  if (STATE->retrievedObjectCount > MAX_REFED_OBJECTS) {
-				  yyerror("maximum object reference count");
-				  YYERROR;
-			  }
-		  } else {
-			  yyerror("forward reference detected");
-			  YYERROR;
-		  }
-		  freeObject(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = retrieveObject(STATE, (yyvsp[(1) - (1)])->idref);
+    if ((yyval)) {
+      STATE->retrievedObjectCount++;
+      (yyval)->object->retain();
+      if (STATE->retrievedObjectCount > MAX_REFED_OBJECTS) {
+        yyerror("maximum object reference count");
+        YYERROR;
+      }
+    } else {
+      yyerror("forward reference detected");
+      YYERROR;
+    }
+    freeObject(STATE, (yyvsp[(1) - (1)]));
 
-		  STATE->parsedObjectCount++;
-		  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-			  yyerror("maximum object count");
-			  YYERROR;
-		  }
-		  ;}
-		break;
+    STATE->parsedObjectCount++;
+    if (STATE->parsedObjectCount > MAX_OBJECTS) {
+      yyerror("maximum object count");
+      YYERROR;
+    };
+  } break;
 
-	case 13:
+  case 13:
 #line 338 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (2)]);
-		  (yyval)->elements = NULL;
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (2)]);
+    (yyval)->elements = NULL;
+    ;
+  } break;
 
-	case 14:
+  case 14:
 #line 341 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (3)]);
-		  (yyval)->elements = (yyvsp[(2) - (3)]);
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (3)]);
+    (yyval)->elements = (yyvsp[(2) - (3)]);
+    ;
+  } break;
 
-	case 17:
+  case 17:
 #line 348 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(2) - (2)]);
-		  (yyval)->next = (yyvsp[(1) - (2)]);
+  {
+    (yyval) = (yyvsp[(2) - (2)]);
+    (yyval)->next = (yyvsp[(1) - (2)]);
 
-		  object_t *o;
-		  o = (yyval)->next;
-		  while (o) {
-			  if (o->key == (yyval)->key) {
-				  yyerror("duplicate dictionary key");
-				  YYERROR;
-			  }
-			  o = o->next;
-		  }
-		  ;}
-		break;
+    object_t *o;
+    o = (yyval)->next;
+    while (o) {
+      if (o->key == (yyval)->key) {
+        yyerror("duplicate dictionary key");
+        YYERROR;
+      }
+      o = o->next;
+    };
+  } break;
 
-	case 18:
+  case 18:
 #line 363 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (2)]);
-		  (yyval)->key = (OSSymbol *)(yyval)->object;
-		  (yyval)->object = (yyvsp[(2) - (2)])->object;
-		  (yyval)->next = NULL;
-		  (yyvsp[(2) - (2)])->object = 0;
-		  freeObject(STATE, (yyvsp[(2) - (2)]));
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (2)]);
+    (yyval)->key = (OSSymbol *)(yyval)->object;
+    (yyval)->object = (yyvsp[(2) - (2)])->object;
+    (yyval)->next = NULL;
+    (yyvsp[(2) - (2)])->object = 0;
+    freeObject(STATE, (yyvsp[(2) - (2)]));
+    ;
+  } break;
 
-	case 19:
+  case 19:
 #line 372 "OSUnserializeXML.y"
-		{ (yyval) = buildSymbol(STATE, (yyvsp[(1) - (1)]));
+  {
+    (yyval) = buildSymbol(STATE, (yyvsp[(1) - (1)]));
 
-//				  STATE->parsedObjectCount++;
-//				  if (STATE->parsedObjectCount > MAX_OBJECTS) {
-//				    yyerror("maximum object count");
-//				    YYERROR;
-//				  }
-		  ;}
-		break;
+    //				  STATE->parsedObjectCount++;
+    //				  if (STATE->parsedObjectCount > MAX_OBJECTS) {
+    //				    yyerror("maximum object count");
+    //				    YYERROR;
+    //				  }
+    ;
+  } break;
 
-	case 20:
+  case 20:
 #line 384 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (2)]);
-		  (yyval)->elements = NULL;
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (2)]);
+    (yyval)->elements = NULL;
+    ;
+  } break;
 
-	case 21:
+  case 21:
 #line 387 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (3)]);
-		  (yyval)->elements = (yyvsp[(2) - (3)]);
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (3)]);
+    (yyval)->elements = (yyvsp[(2) - (3)]);
+    ;
+  } break;
 
-	case 23:
+  case 23:
 #line 393 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (2)]);
-		  (yyval)->elements = NULL;
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (2)]);
+    (yyval)->elements = NULL;
+    ;
+  } break;
 
-	case 24:
+  case 24:
 #line 396 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (3)]);
-		  (yyval)->elements = (yyvsp[(2) - (3)]);
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (3)]);
+    (yyval)->elements = (yyvsp[(2) - (3)]);
+    ;
+  } break;
 
-	case 26:
+  case 26:
 #line 402 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(1) - (1)]);
-		  (yyval)->next = NULL;
-		  ;}
-		break;
+  {
+    (yyval) = (yyvsp[(1) - (1)]);
+    (yyval)->next = NULL;
+    ;
+  } break;
 
-	case 27:
+  case 27:
 #line 405 "OSUnserializeXML.y"
-		{ (yyval) = (yyvsp[(2) - (2)]);
-		  (yyval)->next = (yyvsp[(1) - (2)]);
-		  ;}
-		break;
-
+  {
+    (yyval) = (yyvsp[(2) - (2)]);
+    (yyval)->next = (yyvsp[(1) - (2)]);
+    ;
+  } break;
 
 /* Line 1267 of yacc.c.  */
 #line 1772 "OSUnserializeXML.tab.c"
-	default: break;
-	}
-	YY_SYMBOL_PRINT("-> $$ =", yyr1[yyn], &yyval, &yyloc);
+  default:
+    break;
+  }
+  YY_SYMBOL_PRINT("-> $$ =", yyr1[yyn], &yyval, &yyloc);
 
-	YYPOPSTACK(yylen);
-	yylen = 0;
-	YY_STACK_PRINT(yyss, yyssp);
+  YYPOPSTACK(yylen);
+  yylen = 0;
+  YY_STACK_PRINT(yyss, yyssp);
 
-	*++yyvsp = yyval;
+  *++yyvsp = yyval;
 
+  /* Now `shift' the result of the reduction.  Determine what state
+   *  that goes to, based on the state we popped back to and the rule
+   *  number reduced by.  */
 
-	/* Now `shift' the result of the reduction.  Determine what state
-	 *  that goes to, based on the state we popped back to and the rule
-	 *  number reduced by.  */
+  yyn = yyr1[yyn];
 
-	yyn = yyr1[yyn];
+  yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
+  if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp) {
+    yystate = yytable[yystate];
+  } else {
+    yystate = yydefgoto[yyn - YYNTOKENS];
+  }
 
-	yystate = yypgoto[yyn - YYNTOKENS] + *yyssp;
-	if (0 <= yystate && yystate <= YYLAST && yycheck[yystate] == *yyssp) {
-		yystate = yytable[yystate];
-	} else {
-		yystate = yydefgoto[yyn - YYNTOKENS];
-	}
-
-	goto yynewstate;
-
+  goto yynewstate;
 
 /*------------------------------------.
  | yyerrlab -- here on detecting error |
  |   `------------------------------------*/
 yyerrlab:
-	/* If not already recovering from an error, report this error.  */
-	if (!yyerrstatus) {
-		++yynerrs;
+  /* If not already recovering from an error, report this error.  */
+  if (!yyerrstatus) {
+    ++yynerrs;
 #if !YYERROR_VERBOSE
-		yyerror(YY_("syntax error"));
+    yyerror(YY_("syntax error"));
 #else
-		{
-			YYSIZE_T yysize = yysyntax_error(0, yystate, yychar);
-			if (yymsg_alloc < yysize && yymsg_alloc < YYSTACK_ALLOC_MAXIMUM) {
-				YYSIZE_T yyalloc = 2 * yysize;
-				if (!(yysize <= yyalloc && yyalloc <= YYSTACK_ALLOC_MAXIMUM)) {
-					yyalloc = YYSTACK_ALLOC_MAXIMUM;
-				}
-				if (yymsg != yymsgbuf) {
-					YYSTACK_FREE(yymsg);
-				}
-				yymsg = (char *) YYSTACK_ALLOC(yyalloc);
-				if (yymsg) {
-					yymsg_alloc = yyalloc;
-				} else {
-					yymsg = yymsgbuf;
-					yymsg_alloc = sizeof yymsgbuf;
-				}
-			}
+    {
+      YYSIZE_T yysize = yysyntax_error(0, yystate, yychar);
+      if (yymsg_alloc < yysize && yymsg_alloc < YYSTACK_ALLOC_MAXIMUM) {
+        YYSIZE_T yyalloc = 2 * yysize;
+        if (!(yysize <= yyalloc && yyalloc <= YYSTACK_ALLOC_MAXIMUM)) {
+          yyalloc = YYSTACK_ALLOC_MAXIMUM;
+        }
+        if (yymsg != yymsgbuf) {
+          YYSTACK_FREE(yymsg);
+        }
+        yymsg = (char *)YYSTACK_ALLOC(yyalloc);
+        if (yymsg) {
+          yymsg_alloc = yyalloc;
+        } else {
+          yymsg = yymsgbuf;
+          yymsg_alloc = sizeof yymsgbuf;
+        }
+      }
 
-			if (0 < yysize && yysize <= yymsg_alloc) {
-				(void) yysyntax_error(yymsg, yystate, yychar);
-				yyerror(yymsg);
-			} else {
-				yyerror(YY_("syntax error"));
-				if (yysize != 0) {
-					goto yyexhaustedlab;
-				}
-			}
-		}
+      if (0 < yysize && yysize <= yymsg_alloc) {
+        (void)yysyntax_error(yymsg, yystate, yychar);
+        yyerror(yymsg);
+      } else {
+        yyerror(YY_("syntax error"));
+        if (yysize != 0) {
+          goto yyexhaustedlab;
+        }
+      }
+    }
 #endif
-	}
+  }
 
+  if (yyerrstatus == 3) {
+    /* If just tried and failed to reuse look-ahead token after an
+     *  error, discard it.  */
 
+    if (yychar <= YYEOF) {
+      /* Return failure if at end of input.  */
+      if (yychar == YYEOF) {
+        YYABORT;
+      }
+    } else {
+      yydestruct("Error: discarding", yytoken, &yylval);
+      yychar = YYEMPTY;
+    }
+  }
 
-	if (yyerrstatus == 3) {
-		/* If just tried and failed to reuse look-ahead token after an
-		 *  error, discard it.  */
-
-		if (yychar <= YYEOF) {
-			/* Return failure if at end of input.  */
-			if (yychar == YYEOF) {
-				YYABORT;
-			}
-		} else {
-			yydestruct("Error: discarding",
-			    yytoken, &yylval);
-			yychar = YYEMPTY;
-		}
-	}
-
-	/* Else will try to reuse look-ahead token after shifting the error
-	 *  token.  */
-	goto yyerrlab1;
-
+  /* Else will try to reuse look-ahead token after shifting the error
+   *  token.  */
+  goto yyerrlab1;
 
 /*---------------------------------------------------.
  | yyerrorlab -- error raised explicitly by YYERROR.  |
  |   `---------------------------------------------------*/
 yyerrorlab:
 
-	/* Pacify compilers like GCC when the user code never invokes
-	 *  YYERROR and the label yyerrorlab therefore never appears in user
-	 *  code.  */
-	if (/*CONSTCOND*/ 0) {
-		goto yyerrorlab;
-	}
+  /* Pacify compilers like GCC when the user code never invokes
+   *  YYERROR and the label yyerrorlab therefore never appears in user
+   *  code.  */
+  if (/*CONSTCOND*/ 0) {
+    goto yyerrorlab;
+  }
 
-	/* Do not reclaim the symbols of the rule which action triggered
-	 *  this YYERROR.  */
-	YYPOPSTACK(yylen);
-	yylen = 0;
-	YY_STACK_PRINT(yyss, yyssp);
-	yystate = *yyssp;
-	goto yyerrlab1;
-
+  /* Do not reclaim the symbols of the rule which action triggered
+   *  this YYERROR.  */
+  YYPOPSTACK(yylen);
+  yylen = 0;
+  YY_STACK_PRINT(yyss, yyssp);
+  yystate = *yyssp;
+  goto yyerrlab1;
 
 /*-------------------------------------------------------------.
  | yyerrlab1 -- common code for both syntax error and YYERROR.  |
  |   `-------------------------------------------------------------*/
 yyerrlab1:
-	yyerrstatus = 3; /* Each real token shifted decrements this.  */
+  yyerrstatus = 3; /* Each real token shifted decrements this.  */
 
-	for (;;) {
-		yyn = yypact[yystate];
-		if (yyn != YYPACT_NINF) {
-			yyn += YYTERROR;
-			if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR) {
-				yyn = yytable[yyn];
-				if (0 < yyn) {
-					break;
-				}
-			}
-		}
+  for (;;) {
+    yyn = yypact[yystate];
+    if (yyn != YYPACT_NINF) {
+      yyn += YYTERROR;
+      if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR) {
+        yyn = yytable[yyn];
+        if (0 < yyn) {
+          break;
+        }
+      }
+    }
 
-		/* Pop the current state because it cannot handle the error token.  */
-		if (yyssp == yyss) {
-			YYABORT;
-		}
+    /* Pop the current state because it cannot handle the error token.  */
+    if (yyssp == yyss) {
+      YYABORT;
+    }
 
+    yydestruct("Error: popping", yystos[yystate], yyvsp);
+    YYPOPSTACK(1);
+    yystate = *yyssp;
+    YY_STACK_PRINT(yyss, yyssp);
+  }
 
-		yydestruct("Error: popping",
-		    yystos[yystate], yyvsp);
-		YYPOPSTACK(1);
-		yystate = *yyssp;
-		YY_STACK_PRINT(yyss, yyssp);
-	}
+  if (yyn == YYFINAL) {
+    YYACCEPT;
+  }
 
-	if (yyn == YYFINAL) {
-		YYACCEPT;
-	}
+  *++yyvsp = yylval;
 
-	*++yyvsp = yylval;
+  /* Shift the error token.  */
+  YY_SYMBOL_PRINT("Shifting", yystos[yyn], yyvsp, yylsp);
 
-
-	/* Shift the error token.  */
-	YY_SYMBOL_PRINT("Shifting", yystos[yyn], yyvsp, yylsp);
-
-	yystate = yyn;
-	goto yynewstate;
-
+  yystate = yyn;
+  goto yynewstate;
 
 /*-------------------------------------.
  | yyacceptlab -- YYACCEPT comes here.  |
  |   `-------------------------------------*/
 yyacceptlab:
-	yyresult = 0;
-	goto yyreturn;
+  yyresult = 0;
+  goto yyreturn;
 
 /*-----------------------------------.
  | yyabortlab -- YYABORT comes here.  |
  |   `-----------------------------------*/
 yyabortlab:
-	yyresult = 1;
-	goto yyreturn;
+  yyresult = 1;
+  goto yyreturn;
 
 #ifndef yyoverflow
 /*-------------------------------------------------.
  | yyexhaustedlab -- memory exhaustion comes here.  |
  |   `-------------------------------------------------*/
 yyexhaustedlab:
-	yyerror(YY_("memory exhausted"));
-	yyresult = 2;
-	/* Fall through.  */
+  yyerror(YY_("memory exhausted"));
+  yyresult = 2;
+  /* Fall through.  */
 #endif
 
 yyreturn:
-	if (yychar != YYEOF && yychar != YYEMPTY) {
-		yydestruct("Cleanup: discarding lookahead",
-		    yytoken, &yylval);
-	}
-	/* Do not reclaim the symbols of the rule which action triggered
-	 *  this YYABORT or YYACCEPT.  */
-	YYPOPSTACK(yylen);
-	YY_STACK_PRINT(yyss, yyssp);
-	while (yyssp != yyss) {
-		yydestruct("Cleanup: popping",
-		    yystos[*yyssp], yyvsp);
-		YYPOPSTACK(1);
-	}
+  if (yychar != YYEOF && yychar != YYEMPTY) {
+    yydestruct("Cleanup: discarding lookahead", yytoken, &yylval);
+  }
+  /* Do not reclaim the symbols of the rule which action triggered
+   *  this YYABORT or YYACCEPT.  */
+  YYPOPSTACK(yylen);
+  YY_STACK_PRINT(yyss, yyssp);
+  while (yyssp != yyss) {
+    yydestruct("Cleanup: popping", yystos[*yyssp], yyvsp);
+    YYPOPSTACK(1);
+  }
 #ifndef yyoverflow
-	if (yyss != yyssa) {
-		YYSTACK_FREE(yyss);
-	}
+  if (yyss != yyssa) {
+    YYSTACK_FREE(yyss);
+  }
 #endif
 #if YYERROR_VERBOSE
-	if (yymsg != yymsgbuf) {
-		YYSTACK_FREE(yymsg);
-	}
+  if (yymsg != yymsgbuf) {
+    YYSTACK_FREE(yymsg);
+  }
 #endif
-	/* Make sure YYID is used.  */
-	return YYID(yyresult);
+  /* Make sure YYID is used.  */
+  return YYID(yyresult);
 }
-
 
 #line 427 "OSUnserializeXML.y"
 
-
-int
-OSUnserializeerror(parser_state_t * state, const char *s)  /* Called by yyparse on errors */
+int OSUnserializeerror(parser_state_t *state,
+                       const char *s) /* Called by yyparse on errors */
 {
-	if (state->errorString) {
-		char tempString[128];
-		snprintf(tempString, 128, "OSUnserializeXML: %s near line %d\n", s, state->lineNumber);
-		*(state->errorString) = OSString::withCString(tempString);
-	}
+  if (state->errorString) {
+    char tempString[128];
+    snprintf(tempString, 128, "OSUnserializeXML: %s near line %d\n", s,
+             state->lineNumber);
+    *(state->errorString) = OSString::withCString(tempString);
+  }
 
-	return 0;
+  return 0;
 }
 
-#define TAG_MAX_LENGTH          32
-#define TAG_MAX_ATTRIBUTES      32
-#define TAG_BAD                 0
-#define TAG_START               1
-#define TAG_END                 2
-#define TAG_EMPTY               3
-#define TAG_IGNORE              4
+#define TAG_MAX_LENGTH 32
+#define TAG_MAX_ATTRIBUTES 32
+#define TAG_BAD 0
+#define TAG_START 1
+#define TAG_END 2
+#define TAG_EMPTY 3
+#define TAG_IGNORE 4
 
-#define currentChar()   (state->parseBuffer[state->parseBufferIndex])
-#define nextChar()      (state->parseBuffer[++state->parseBufferIndex])
-#define prevChar()      (state->parseBuffer[state->parseBufferIndex - 1])
+#define currentChar() (state->parseBuffer[state->parseBufferIndex])
+#define nextChar() (state->parseBuffer[++state->parseBufferIndex])
+#define prevChar() (state->parseBuffer[state->parseBufferIndex - 1])
 
-#define isSpace(c)      ((c) == ' ' || (c) == '\t')
-#define isAlpha(c)      (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
-#define isDigit(c)      ((c) >= '0' && (c) <= '9')
+#define isSpace(c) ((c) == ' ' || (c) == '\t')
+#define isAlpha(c) (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
+#define isDigit(c) ((c) >= '0' && (c) <= '9')
 #define isAlphaDigit(c) ((c) >= 'a' && (c) <= 'f')
-#define isHexDigit(c)   (isDigit(c) || isAlphaDigit(c))
+#define isHexDigit(c) (isDigit(c) || isAlphaDigit(c))
 #define isAlphaNumeric(c) (isAlpha(c) || isDigit(c) || ((c) == '-'))
 
-static int
-getTag(parser_state_t *state,
-    char tag[TAG_MAX_LENGTH],
-    int *attributeCount,
-    char attributes[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH],
-    char values[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH] )
-{
-	int length = 0;
-	int c = currentChar();
-	int tagType = TAG_START;
+static int getTag(parser_state_t *state, char tag[TAG_MAX_LENGTH],
+                  int *attributeCount,
+                  char attributes[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH],
+                  char values[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH]) {
+  int length = 0;
+  int c = currentChar();
+  int tagType = TAG_START;
 
-	*attributeCount = 0;
+  *attributeCount = 0;
 
-	if (c != '<') {
-		return TAG_BAD;
-	}
-	c = nextChar();         // skip '<'
+  if (c != '<') {
+    return TAG_BAD;
+  }
+  c = nextChar(); // skip '<'
 
+  // <!TAG   declarations     >
+  // <!--     comments      -->
+  if (c == '!') {
+    c = nextChar();
+    bool isComment = (c == '-') && ((c = nextChar()) != 0) && (c == '-');
+    if (!isComment && !isAlpha(c)) {
+      return TAG_BAD; // <!1, <!-A, <!eos
+    }
+    while (c && (c = nextChar()) != 0) {
+      if (c == '\n') {
+        state->lineNumber++;
+      }
+      if (isComment) {
+        if (c != '-') {
+          continue;
+        }
+        c = nextChar();
+        if (c != '-') {
+          continue;
+        }
+        c = nextChar();
+      }
+      if (c == '>') {
+        (void)nextChar();
+        return TAG_IGNORE;
+      }
+      if (isComment) {
+        break;
+      }
+    }
+    return TAG_BAD;
+  } else
+    // <? Processing Instructions  ?>
+    if (c == '?') {
+      while ((c = nextChar()) != 0) {
+        if (c == '\n') {
+          state->lineNumber++;
+        }
+        if (c != '?') {
+          continue;
+        }
+        c = nextChar();
+        if (!c) {
+          return TAG_IGNORE;
+        }
+        if (c == '>') {
+          (void)nextChar();
+          return TAG_IGNORE;
+        }
+      }
+      return TAG_BAD;
+    } else
+      // </ end tag >
+      if (c == '/') {
+        c = nextChar(); // skip '/'
+        tagType = TAG_END;
+      }
+  if (!isAlpha(c)) {
+    return TAG_BAD;
+  }
 
-	// <!TAG   declarations     >
-	// <!--     comments      -->
-	if (c == '!') {
-		c = nextChar();
-		bool isComment = (c == '-') && ((c = nextChar()) != 0) && (c == '-');
-		if (!isComment && !isAlpha(c)) {
-			return TAG_BAD;                      // <!1, <!-A, <!eos
-		}
-		while (c && (c = nextChar()) != 0) {
-			if (c == '\n') {
-				state->lineNumber++;
-			}
-			if (isComment) {
-				if (c != '-') {
-					continue;
-				}
-				c = nextChar();
-				if (c != '-') {
-					continue;
-				}
-				c = nextChar();
-			}
-			if (c == '>') {
-				(void)nextChar();
-				return TAG_IGNORE;
-			}
-			if (isComment) {
-				break;
-			}
-		}
-		return TAG_BAD;
-	} else
-	// <? Processing Instructions  ?>
-	if (c == '?') {
-		while ((c = nextChar()) != 0) {
-			if (c == '\n') {
-				state->lineNumber++;
-			}
-			if (c != '?') {
-				continue;
-			}
-			c = nextChar();
-			if (!c) {
-				return TAG_IGNORE;
-			}
-			if (c == '>') {
-				(void)nextChar();
-				return TAG_IGNORE;
-			}
-		}
-		return TAG_BAD;
-	} else
-	// </ end tag >
-	if (c == '/') {
-		c = nextChar();         // skip '/'
-		tagType = TAG_END;
-	}
-	if (!isAlpha(c)) {
-		return TAG_BAD;
-	}
+  /* find end of tag while copying it */
+  while (isAlphaNumeric(c)) {
+    tag[length++] = c;
+    c = nextChar();
+    if (length >= (TAG_MAX_LENGTH - 1)) {
+      return TAG_BAD;
+    }
+  }
 
-	/* find end of tag while copying it */
-	while (isAlphaNumeric(c)) {
-		tag[length++] = c;
-		c = nextChar();
-		if (length >= (TAG_MAX_LENGTH - 1)) {
-			return TAG_BAD;
-		}
-	}
+  tag[length] = 0;
 
-	tag[length] = 0;
+  //	printf("tag %s, type %d\n", tag, tagType);
 
-//	printf("tag %s, type %d\n", tag, tagType);
+  // look for attributes of the form attribute = "value" ...
+  while ((c != '>') && (c != '/')) {
+    while (isSpace(c)) {
+      c = nextChar();
+    }
 
-	// look for attributes of the form attribute = "value" ...
-	while ((c != '>') && (c != '/')) {
-		while (isSpace(c)) {
-			c = nextChar();
-		}
+    length = 0;
+    while (isAlphaNumeric(c)) {
+      attributes[*attributeCount][length++] = c;
+      if (length >= (TAG_MAX_LENGTH - 1)) {
+        return TAG_BAD;
+      }
+      c = nextChar();
+    }
+    attributes[*attributeCount][length] = 0;
 
-		length = 0;
-		while (isAlphaNumeric(c)) {
-			attributes[*attributeCount][length++] = c;
-			if (length >= (TAG_MAX_LENGTH - 1)) {
-				return TAG_BAD;
-			}
-			c = nextChar();
-		}
-		attributes[*attributeCount][length] = 0;
+    while (isSpace(c)) {
+      c = nextChar();
+    }
 
-		while (isSpace(c)) {
-			c = nextChar();
-		}
+    if (c != '=') {
+      return TAG_BAD;
+    }
+    c = nextChar();
 
-		if (c != '=') {
-			return TAG_BAD;
-		}
-		c = nextChar();
+    while (isSpace(c)) {
+      c = nextChar();
+    }
 
-		while (isSpace(c)) {
-			c = nextChar();
-		}
+    if (c != '"') {
+      return TAG_BAD;
+    }
+    c = nextChar();
+    length = 0;
+    while (c != '"') {
+      values[*attributeCount][length++] = c;
+      if (length >= (TAG_MAX_LENGTH - 1)) {
+        return TAG_BAD;
+      }
+      c = nextChar();
+      if (!c) {
+        return TAG_BAD;
+      }
+    }
+    values[*attributeCount][length] = 0;
 
-		if (c != '"') {
-			return TAG_BAD;
-		}
-		c = nextChar();
-		length = 0;
-		while (c != '"') {
-			values[*attributeCount][length++] = c;
-			if (length >= (TAG_MAX_LENGTH - 1)) {
-				return TAG_BAD;
-			}
-			c = nextChar();
-			if (!c) {
-				return TAG_BAD;
-			}
-		}
-		values[*attributeCount][length] = 0;
+    c = nextChar(); // skip closing quote
 
-		c = nextChar(); // skip closing quote
+    //		printf("	attribute '%s' = '%s', nextchar = '%c'\n",
+    //		       attributes[*attributeCount], values[*attributeCount], c);
 
-//		printf("	attribute '%s' = '%s', nextchar = '%c'\n",
-//		       attributes[*attributeCount], values[*attributeCount], c);
+    (*attributeCount)++;
+    if (*attributeCount >= TAG_MAX_ATTRIBUTES) {
+      return TAG_BAD;
+    }
+  }
 
-		(*attributeCount)++;
-		if (*attributeCount >= TAG_MAX_ATTRIBUTES) {
-			return TAG_BAD;
-		}
-	}
+  if (c == '/') {
+    c = nextChar(); // skip '/'
+    tagType = TAG_EMPTY;
+  }
+  if (c != '>') {
+    return TAG_BAD;
+  }
+  c = nextChar(); // skip '>'
 
-	if (c == '/') {
-		c = nextChar();         // skip '/'
-		tagType = TAG_EMPTY;
-	}
-	if (c != '>') {
-		return TAG_BAD;
-	}
-	c = nextChar();         // skip '>'
-
-	return tagType;
+  return tagType;
 }
 
-static char *
-getString(parser_state_t *state, int *alloc_lengthp)
-{
-	int c = currentChar();
-	int start, length, i, j;
-	char * tempString;
+static char *getString(parser_state_t *state, int *alloc_lengthp) {
+  int c = currentChar();
+  int start, length, i, j;
+  char *tempString;
 
-	start = state->parseBufferIndex;
-	/* find end of string */
+  start = state->parseBufferIndex;
+  /* find end of string */
 
-	while (c != 0) {
-		if (c == '\n') {
-			state->lineNumber++;
-		}
-		if (c == '<') {
-			break;
-		}
-		c = nextChar();
-	}
+  while (c != 0) {
+    if (c == '\n') {
+      state->lineNumber++;
+    }
+    if (c == '<') {
+      break;
+    }
+    c = nextChar();
+  }
 
-	if (c != '<') {
-		return 0;
-	}
+  if (c != '<') {
+    return 0;
+  }
 
-	length = state->parseBufferIndex - start;
+  length = state->parseBufferIndex - start;
 
-	/* copy to null terminated buffer */
-	tempString = (char *)malloc(length + 1);
-	if (tempString == NULL) {
-		printf("OSUnserializeXML: can't alloc temp memory\n");
-		goto error;
-	}
-	if (alloc_lengthp) {
-		*alloc_lengthp = length + 1;
-	}
+  /* copy to null terminated buffer */
+  tempString = (char *)malloc(length + 1);
+  if (tempString == NULL) {
+    printf("OSUnserializeXML: can't alloc temp memory\n");
+    goto error;
+  }
+  if (alloc_lengthp) {
+    *alloc_lengthp = length + 1;
+  }
 
-	// copy out string in tempString
-	// "&amp;" -> '&', "&lt;" -> '<', "&gt;" -> '>'
+  // copy out string in tempString
+  // "&amp;" -> '&', "&lt;" -> '<', "&gt;" -> '>'
 
-	i = j = 0;
-	while (i < length) {
-		c = state->parseBuffer[start + i++];
-		if (c != '&') {
-			tempString[j++] = c;
-		} else {
-			if ((i + 3) > length) {
-				goto error;
-			}
-			c = state->parseBuffer[start + i++];
-			if (c == 'l') {
-				if (state->parseBuffer[start + i++] != 't') {
-					goto error;
-				}
-				if (state->parseBuffer[start + i++] != ';') {
-					goto error;
-				}
-				tempString[j++] = '<';
-				continue;
-			}
-			if (c == 'g') {
-				if (state->parseBuffer[start + i++] != 't') {
-					goto error;
-				}
-				if (state->parseBuffer[start + i++] != ';') {
-					goto error;
-				}
-				tempString[j++] = '>';
-				continue;
-			}
-			if ((i + 3) > length) {
-				goto error;
-			}
-			if (c == 'a') {
-				if (state->parseBuffer[start + i++] != 'm') {
-					goto error;
-				}
-				if (state->parseBuffer[start + i++] != 'p') {
-					goto error;
-				}
-				if (state->parseBuffer[start + i++] != ';') {
-					goto error;
-				}
-				tempString[j++] = '&';
-				continue;
-			}
-			goto error;
-		}
-	}
-	tempString[j] = 0;
+  i = j = 0;
+  while (i < length) {
+    c = state->parseBuffer[start + i++];
+    if (c != '&') {
+      tempString[j++] = c;
+    } else {
+      if ((i + 3) > length) {
+        goto error;
+      }
+      c = state->parseBuffer[start + i++];
+      if (c == 'l') {
+        if (state->parseBuffer[start + i++] != 't') {
+          goto error;
+        }
+        if (state->parseBuffer[start + i++] != ';') {
+          goto error;
+        }
+        tempString[j++] = '<';
+        continue;
+      }
+      if (c == 'g') {
+        if (state->parseBuffer[start + i++] != 't') {
+          goto error;
+        }
+        if (state->parseBuffer[start + i++] != ';') {
+          goto error;
+        }
+        tempString[j++] = '>';
+        continue;
+      }
+      if ((i + 3) > length) {
+        goto error;
+      }
+      if (c == 'a') {
+        if (state->parseBuffer[start + i++] != 'm') {
+          goto error;
+        }
+        if (state->parseBuffer[start + i++] != 'p') {
+          goto error;
+        }
+        if (state->parseBuffer[start + i++] != ';') {
+          goto error;
+        }
+        tempString[j++] = '&';
+        continue;
+      }
+      goto error;
+    }
+  }
+  tempString[j] = 0;
 
-//	printf("string %s\n", tempString);
+  //	printf("string %s\n", tempString);
 
-	return tempString;
+  return tempString;
 
 error:
-	if (tempString) {
-		safe_free(tempString, length + 1);
-		if (alloc_lengthp) {
-			*alloc_lengthp = 0;
-		}
-	}
-	return 0;
+  if (tempString) {
+    safe_free(tempString, length + 1);
+    if (alloc_lengthp) {
+      *alloc_lengthp = 0;
+    }
+  }
+  return 0;
 }
 
-static long long
-getNumber(parser_state_t *state)
-{
-	unsigned long long n = 0;
-	int base = 10;
-	bool negate = false;
-	int c = currentChar();
+static long long getNumber(parser_state_t *state) {
+  unsigned long long n = 0;
+  int base = 10;
+  bool negate = false;
+  int c = currentChar();
 
-	if (c == '0') {
-		c = nextChar();
-		if (c == 'x') {
-			base = 16;
-			c = nextChar();
-		}
-	}
-	if (base == 10) {
-		if (c == '-') {
-			negate = true;
-			c = nextChar();
-		}
-		while (isDigit(c)) {
-			n = (n * base + c - '0');
-			c = nextChar();
-		}
-		if (negate) {
-			n = (unsigned long long)((long long)n * (long long)-1);
-		}
-	} else {
-		while (isHexDigit(c)) {
-			if (isDigit(c)) {
-				n = (n * base + c - '0');
-			} else {
-				n = (n * base + 0xa + c - 'a');
-			}
-			c = nextChar();
-		}
-	}
-//	printf("number 0x%x\n", (unsigned long)n);
-	return n;
+  if (c == '0') {
+    c = nextChar();
+    if (c == 'x') {
+      base = 16;
+      c = nextChar();
+    }
+  }
+  if (base == 10) {
+    if (c == '-') {
+      negate = true;
+      c = nextChar();
+    }
+    while (isDigit(c)) {
+      n = (n * base + c - '0');
+      c = nextChar();
+    }
+    if (negate) {
+      n = (unsigned long long)((long long)n * (long long)-1);
+    }
+  } else {
+    while (isHexDigit(c)) {
+      if (isDigit(c)) {
+        n = (n * base + c - '0');
+      } else {
+        n = (n * base + 0xa + c - 'a');
+      }
+      c = nextChar();
+    }
+  }
+  //	printf("number 0x%x\n", (unsigned long)n);
+  return n;
 }
 
 // taken from CFXMLParsing/CFPropertyList.c
 
 static const signed char __CFPLDataDecodeTable[128] = {
-	/* 000 */ -1, -1, -1, -1, -1, -1, -1, -1,
-	/* 010 */ -1, -1, -1, -1, -1, -1, -1, -1,
-	/* 020 */ -1, -1, -1, -1, -1, -1, -1, -1,
-	/* 030 */ -1, -1, -1, -1, -1, -1, -1, -1,
-	/* ' ' */ -1, -1, -1, -1, -1, -1, -1, -1,
-	/* '(' */ -1, -1, -1, 62, -1, -1, -1, 63,
-	/* '0' */ 52, 53, 54, 55, 56, 57, 58, 59,
-	/* '8' */ 60, 61, -1, -1, -1, 0, -1, -1,
-	/* '@' */ -1, 0, 1, 2, 3, 4, 5, 6,
-	/* 'H' */ 7, 8, 9, 10, 11, 12, 13, 14,
-	/* 'P' */ 15, 16, 17, 18, 19, 20, 21, 22,
-	/* 'X' */ 23, 24, 25, -1, -1, -1, -1, -1,
-	/* '`' */ -1, 26, 27, 28, 29, 30, 31, 32,
-	/* 'h' */ 33, 34, 35, 36, 37, 38, 39, 40,
-	/* 'p' */ 41, 42, 43, 44, 45, 46, 47, 48,
-	/* 'x' */ 49, 50, 51, -1, -1, -1, -1, -1
-};
+    /* 000 */ -1, -1, -1, -1, -1, -1, -1, -1,
+    /* 010 */ -1, -1, -1, -1, -1, -1, -1, -1,
+    /* 020 */ -1, -1, -1, -1, -1, -1, -1, -1,
+    /* 030 */ -1, -1, -1, -1, -1, -1, -1, -1,
+    /* ' ' */ -1, -1, -1, -1, -1, -1, -1, -1,
+    /* '(' */ -1, -1, -1, 62, -1, -1, -1, 63,
+    /* '0' */ 52, 53, 54, 55, 56, 57, 58, 59,
+    /* '8' */ 60, 61, -1, -1, -1, 0,  -1, -1,
+    /* '@' */ -1, 0,  1,  2,  3,  4,  5,  6,
+    /* 'H' */ 7,  8,  9,  10, 11, 12, 13, 14,
+    /* 'P' */ 15, 16, 17, 18, 19, 20, 21, 22,
+    /* 'X' */ 23, 24, 25, -1, -1, -1, -1, -1,
+    /* '`' */ -1, 26, 27, 28, 29, 30, 31, 32,
+    /* 'h' */ 33, 34, 35, 36, 37, 38, 39, 40,
+    /* 'p' */ 41, 42, 43, 44, 45, 46, 47, 48,
+    /* 'x' */ 49, 50, 51, -1, -1, -1, -1, -1};
 
 #define DATA_ALLOC_SIZE 4096
 
-static void *
-getCFEncodedData(parser_state_t *state, unsigned int *size)
-{
-	int numeq = 0, cntr = 0;
-	unsigned int acc = 0;
-	int tmpbufpos = 0;
-	size_t tmpbuflen = DATA_ALLOC_SIZE;
-	unsigned char *tmpbuf = (unsigned char *)malloc(tmpbuflen);
+static void *getCFEncodedData(parser_state_t *state, unsigned int *size) {
+  int numeq = 0, cntr = 0;
+  unsigned int acc = 0;
+  int tmpbufpos = 0;
+  size_t tmpbuflen = DATA_ALLOC_SIZE;
+  unsigned char *tmpbuf = (unsigned char *)malloc(tmpbuflen);
 
-	int c = currentChar();
-	*size = 0;
+  int c = currentChar();
+  *size = 0;
 
-	while (c != '<') {
-		c &= 0x7f;
-		if (c == 0) {
-			safe_free(tmpbuf, tmpbuflen);
-			return 0;
-		}
-		if (c == '=') {
-			numeq++;
-		} else {
-			numeq = 0;
-		}
-		if (c == '\n') {
-			state->lineNumber++;
-		}
-		if (__CFPLDataDecodeTable[c] < 0) {
-			c = nextChar();
-			continue;
-		}
-		cntr++;
-		acc <<= 6;
-		acc += __CFPLDataDecodeTable[c];
-		if (0 == (cntr & 0x3)) {
-			if (tmpbuflen <= tmpbufpos + 2) {
-				size_t oldsize = tmpbuflen;
-				tmpbuflen *= 2;
-				tmpbuf = (unsigned char *)realloc(tmpbuf, oldsize, tmpbuflen);
-			}
-			tmpbuf[tmpbufpos++] = (acc >> 16) & 0xff;
-			if (numeq < 2) {
-				tmpbuf[tmpbufpos++] = (acc >> 8) & 0xff;
-			}
-			if (numeq < 1) {
-				tmpbuf[tmpbufpos++] = acc & 0xff;
-			}
-		}
-		c = nextChar();
-	}
-	*size = tmpbufpos;
-	if (*size == 0) {
-		safe_free(tmpbuf, tmpbuflen);
-		return 0;
-	}
-	return tmpbuf;
+  while (c != '<') {
+    c &= 0x7f;
+    if (c == 0) {
+      safe_free(tmpbuf, tmpbuflen);
+      return 0;
+    }
+    if (c == '=') {
+      numeq++;
+    } else {
+      numeq = 0;
+    }
+    if (c == '\n') {
+      state->lineNumber++;
+    }
+    if (__CFPLDataDecodeTable[c] < 0) {
+      c = nextChar();
+      continue;
+    }
+    cntr++;
+    acc <<= 6;
+    acc += __CFPLDataDecodeTable[c];
+    if (0 == (cntr & 0x3)) {
+      if (tmpbuflen <= tmpbufpos + 2) {
+        size_t oldsize = tmpbuflen;
+        tmpbuflen *= 2;
+        tmpbuf = (unsigned char *)realloc(tmpbuf, oldsize, tmpbuflen);
+      }
+      tmpbuf[tmpbufpos++] = (acc >> 16) & 0xff;
+      if (numeq < 2) {
+        tmpbuf[tmpbufpos++] = (acc >> 8) & 0xff;
+      }
+      if (numeq < 1) {
+        tmpbuf[tmpbufpos++] = acc & 0xff;
+      }
+    }
+    c = nextChar();
+  }
+  *size = tmpbufpos;
+  if (*size == 0) {
+    safe_free(tmpbuf, tmpbuflen);
+    return 0;
+  }
+  return tmpbuf;
 }
 
-static void *
-getHexData(parser_state_t *state, unsigned int *size)
-{
-	int c;
-	unsigned char *d, *start;
+static void *getHexData(parser_state_t *state, unsigned int *size) {
+  int c;
+  unsigned char *d, *start;
 
-	size_t buflen = DATA_ALLOC_SIZE; // initial buffer size
-	start = d = (unsigned char *)malloc(buflen);
-	c = currentChar();
+  size_t buflen = DATA_ALLOC_SIZE; // initial buffer size
+  start = d = (unsigned char *)malloc(buflen);
+  c = currentChar();
 
-	while (c != '<') {
-		if (isSpace(c)) {
-			while ((c = nextChar()) != 0 && isSpace(c)) {
-			}
-		}
-		;
-		if (c == '\n') {
-			state->lineNumber++;
-			c = nextChar();
-			continue;
-		}
+  while (c != '<') {
+    if (isSpace(c)) {
+      while ((c = nextChar()) != 0 && isSpace(c)) {
+      }
+    };
+    if (c == '\n') {
+      state->lineNumber++;
+      c = nextChar();
+      continue;
+    }
 
-		// get high nibble
-		if (isDigit(c)) {
-			*d = (c - '0') << 4;
-		} else if (isAlphaDigit(c)) {
-			*d =  (0xa + (c - 'a')) << 4;
-		} else {
-			goto error;
-		}
+    // get high nibble
+    if (isDigit(c)) {
+      *d = (c - '0') << 4;
+    } else if (isAlphaDigit(c)) {
+      *d = (0xa + (c - 'a')) << 4;
+    } else {
+      goto error;
+    }
 
-		// get low nibble
-		c = nextChar();
-		if (isDigit(c)) {
-			*d |= c - '0';
-		} else if (isAlphaDigit(c)) {
-			*d |= 0xa + (c - 'a');
-		} else {
-			goto error;
-		}
+    // get low nibble
+    c = nextChar();
+    if (isDigit(c)) {
+      *d |= c - '0';
+    } else if (isAlphaDigit(c)) {
+      *d |= 0xa + (c - 'a');
+    } else {
+      goto error;
+    }
 
-		d++;
-		size_t oldsize = d - start;
-		if (oldsize >= buflen) {
-			assert(oldsize == buflen);
-			buflen *= 2;
-			start = (unsigned char *)realloc(start, oldsize, buflen);
-			d = start + oldsize;
-		}
-		c = nextChar();
-	}
+    d++;
+    size_t oldsize = d - start;
+    if (oldsize >= buflen) {
+      assert(oldsize == buflen);
+      buflen *= 2;
+      start = (unsigned char *)realloc(start, oldsize, buflen);
+      d = start + oldsize;
+    }
+    c = nextChar();
+  }
 
-	*size = d - start;
-	return start;
+  *size = d - start;
+  return start;
 
 error:
 
-	*size = 0;
-	safe_free(start, buflen);
-	return 0;
+  *size = 0;
+  safe_free(start, buflen);
+  return 0;
 }
 
-static int
-yylex(YYSTYPE *lvalp, parser_state_t *state)
-{
-	int c, i;
-	int tagType;
-	char tag[TAG_MAX_LENGTH];
-	int attributeCount;
-	char attributes[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH];
-	char values[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH];
-	object_t *object;
-	int alloc_length;
+static int yylex(YYSTYPE *lvalp, parser_state_t *state) {
+  int c, i;
+  int tagType;
+  char tag[TAG_MAX_LENGTH];
+  int attributeCount;
+  char attributes[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH];
+  char values[TAG_MAX_ATTRIBUTES][TAG_MAX_LENGTH];
+  object_t *object;
+  int alloc_length;
 top:
-	c = currentChar();
+  c = currentChar();
 
-	/* skip white space  */
-	if (isSpace(c)) {
-		while ((c = nextChar()) != 0 && isSpace(c)) {
-		}
-	}
-	;
+  /* skip white space  */
+  if (isSpace(c)) {
+    while ((c = nextChar()) != 0 && isSpace(c)) {
+    }
+  };
 
-	/* keep track of line number, don't return \n's */
-	if (c == '\n') {
-		STATE->lineNumber++;
-		(void)nextChar();
-		goto top;
-	}
+  /* keep track of line number, don't return \n's */
+  if (c == '\n') {
+    STATE->lineNumber++;
+    (void)nextChar();
+    goto top;
+  }
 
-	// end of the buffer?
-	if (!c) {
-		return 0;
-	}
+  // end of the buffer?
+  if (!c) {
+    return 0;
+  }
 
-	tagType = getTag(STATE, tag, &attributeCount, attributes, values);
-	if (tagType == TAG_BAD) {
-		return SYNTAX_ERROR;
-	}
-	if (tagType == TAG_IGNORE) {
-		goto top;
-	}
+  tagType = getTag(STATE, tag, &attributeCount, attributes, values);
+  if (tagType == TAG_BAD) {
+    return SYNTAX_ERROR;
+  }
+  if (tagType == TAG_IGNORE) {
+    goto top;
+  }
 
-	// handle allocation and check for "ID" and "IDREF" tags up front
-	*lvalp = object = newObject(STATE);
-	object->idref = -1;
-	for (i = 0; i < attributeCount; i++) {
-		if (attributes[i][0] == 'I' && attributes[i][1] == 'D') {
-			// check for idref's, note: we ignore the tag, for
-			// this to work correctly, all idrefs must be unique
-			// across the whole serialization
-			if (attributes[i][2] == 'R' && attributes[i][3] == 'E' &&
-			    attributes[i][4] == 'F' && !attributes[i][5]) {
-				if (tagType != TAG_EMPTY) {
-					return SYNTAX_ERROR;
-				}
-				object->idref = strtol(values[i], NULL, 0);
-				return IDREF;
-			}
-			// check for id's
-			if (!attributes[i][2]) {
-				object->idref = strtol(values[i], NULL, 0);
-			} else {
-				return SYNTAX_ERROR;
-			}
-		}
-	}
+  // handle allocation and check for "ID" and "IDREF" tags up front
+  *lvalp = object = newObject(STATE);
+  object->idref = -1;
+  for (i = 0; i < attributeCount; i++) {
+    if (attributes[i][0] == 'I' && attributes[i][1] == 'D') {
+      // check for idref's, note: we ignore the tag, for
+      // this to work correctly, all idrefs must be unique
+      // across the whole serialization
+      if (attributes[i][2] == 'R' && attributes[i][3] == 'E' &&
+          attributes[i][4] == 'F' && !attributes[i][5]) {
+        if (tagType != TAG_EMPTY) {
+          return SYNTAX_ERROR;
+        }
+        object->idref = strtol(values[i], NULL, 0);
+        return IDREF;
+      }
+      // check for id's
+      if (!attributes[i][2]) {
+        object->idref = strtol(values[i], NULL, 0);
+      } else {
+        return SYNTAX_ERROR;
+      }
+    }
+  }
 
-	switch (*tag) {
-	case 'a':
-		if (!strcmp(tag, "array")) {
-			if (tagType == TAG_EMPTY) {
-				object->elements = NULL;
-				return ARRAY;
-			}
-			return (tagType == TAG_START) ? '(' : ')';
-		}
-		break;
-	case 'd':
-		if (!strcmp(tag, "dict")) {
-			if (tagType == TAG_EMPTY) {
-				object->elements = NULL;
-				return DICTIONARY;
-			}
-			return (tagType == TAG_START) ? '{' : '}';
-		}
-		if (!strcmp(tag, "data")) {
-			unsigned int size;
-			if (tagType == TAG_EMPTY) {
-				object->data = NULL;
-				object->size = 0;
-				return DATA;
-			}
+  switch (*tag) {
+  case 'a':
+    if (!strcmp(tag, "array")) {
+      if (tagType == TAG_EMPTY) {
+        object->elements = NULL;
+        return ARRAY;
+      }
+      return (tagType == TAG_START) ? '(' : ')';
+    }
+    break;
+  case 'd':
+    if (!strcmp(tag, "dict")) {
+      if (tagType == TAG_EMPTY) {
+        object->elements = NULL;
+        return DICTIONARY;
+      }
+      return (tagType == TAG_START) ? '{' : '}';
+    }
+    if (!strcmp(tag, "data")) {
+      unsigned int size;
+      if (tagType == TAG_EMPTY) {
+        object->data = NULL;
+        object->size = 0;
+        return DATA;
+      }
 
-			bool isHexFormat = false;
-			for (i = 0; i < attributeCount; i++) {
-				if (!strcmp(attributes[i], "format") && !strcmp(values[i], "hex")) {
-					isHexFormat = true;
-					break;
-				}
-			}
-			// CF encoded is the default form
-			if (isHexFormat) {
-				object->data = getHexData(STATE, &size);
-			} else {
-				object->data = getCFEncodedData(STATE, &size);
-			}
-			object->size = size;
-			if ((getTag(STATE, tag, &attributeCount, attributes, values) != TAG_END) || strcmp(tag, "data")) {
-				return SYNTAX_ERROR;
-			}
-			return DATA;
-		}
-		break;
-	case 'f':
-		if (!strcmp(tag, "false")) {
-			if (tagType == TAG_EMPTY) {
-				object->number = 0;
-				return BOOLEAN;
-			}
-		}
-		break;
-	case 'i':
-		if (!strcmp(tag, "integer")) {
-			object->size = 64;      // default
-			for (i = 0; i < attributeCount; i++) {
-				if (!strcmp(attributes[i], "size")) {
-					object->size = strtoul(values[i], NULL, 0);
-				}
-			}
-			if (tagType == TAG_EMPTY) {
-				object->number = 0;
-				return NUMBER;
-			}
-			object->number = getNumber(STATE);
-			if ((getTag(STATE, tag, &attributeCount, attributes, values) != TAG_END) || strcmp(tag, "integer")) {
-				return SYNTAX_ERROR;
-			}
-			return NUMBER;
-		}
-		break;
-	case 'k':
-		if (!strcmp(tag, "key")) {
-			if (tagType == TAG_EMPTY) {
-				return SYNTAX_ERROR;
-			}
-			object->string = getString(STATE, &alloc_length);
-			if (!object->string) {
-				return SYNTAX_ERROR;
-			}
-			object->string_alloc_length = alloc_length;
-			if ((getTag(STATE, tag, &attributeCount, attributes, values) != TAG_END)
-			    || strcmp(tag, "key")) {
-				return SYNTAX_ERROR;
-			}
-			return KEY;
-		}
-		break;
-	case 'p':
-		if (!strcmp(tag, "plist")) {
-			freeObject(STATE, object);
-			goto top;
-		}
-		break;
-	case 's':
-		if (!strcmp(tag, "string")) {
-			if (tagType == TAG_EMPTY) {
-				object->string = (char *)malloc(1);
-				object->string_alloc_length = 1;
-				object->string[0] = 0;
-				return STRING;
-			}
-			object->string = getString(STATE, &alloc_length);
-			if (!object->string) {
-				return SYNTAX_ERROR;
-			}
-			object->string_alloc_length = alloc_length;
-			if ((getTag(STATE, tag, &attributeCount, attributes, values) != TAG_END)
-			    || strcmp(tag, "string")) {
-				return SYNTAX_ERROR;
-			}
-			return STRING;
-		}
-		if (!strcmp(tag, "set")) {
-			if (tagType == TAG_EMPTY) {
-				object->elements = NULL;
-				return SET;
-			}
-			if (tagType == TAG_START) {
-				return '[';
-			} else {
-				return ']';
-			}
-		}
-		break;
-	case 't':
-		if (!strcmp(tag, "true")) {
-			if (tagType == TAG_EMPTY) {
-				object->number = 1;
-				return BOOLEAN;
-			}
-		}
-		break;
-	}
+      bool isHexFormat = false;
+      for (i = 0; i < attributeCount; i++) {
+        if (!strcmp(attributes[i], "format") && !strcmp(values[i], "hex")) {
+          isHexFormat = true;
+          break;
+        }
+      }
+      // CF encoded is the default form
+      if (isHexFormat) {
+        object->data = getHexData(STATE, &size);
+      } else {
+        object->data = getCFEncodedData(STATE, &size);
+      }
+      object->size = size;
+      if ((getTag(STATE, tag, &attributeCount, attributes, values) !=
+           TAG_END) ||
+          strcmp(tag, "data")) {
+        return SYNTAX_ERROR;
+      }
+      return DATA;
+    }
+    break;
+  case 'f':
+    if (!strcmp(tag, "false")) {
+      if (tagType == TAG_EMPTY) {
+        object->number = 0;
+        return BOOLEAN;
+      }
+    }
+    break;
+  case 'i':
+    if (!strcmp(tag, "integer")) {
+      object->size = 64; // default
+      for (i = 0; i < attributeCount; i++) {
+        if (!strcmp(attributes[i], "size")) {
+          object->size = strtoul(values[i], NULL, 0);
+        }
+      }
+      if (tagType == TAG_EMPTY) {
+        object->number = 0;
+        return NUMBER;
+      }
+      object->number = getNumber(STATE);
+      if ((getTag(STATE, tag, &attributeCount, attributes, values) !=
+           TAG_END) ||
+          strcmp(tag, "integer")) {
+        return SYNTAX_ERROR;
+      }
+      return NUMBER;
+    }
+    break;
+  case 'k':
+    if (!strcmp(tag, "key")) {
+      if (tagType == TAG_EMPTY) {
+        return SYNTAX_ERROR;
+      }
+      object->string = getString(STATE, &alloc_length);
+      if (!object->string) {
+        return SYNTAX_ERROR;
+      }
+      object->string_alloc_length = alloc_length;
+      if ((getTag(STATE, tag, &attributeCount, attributes, values) !=
+           TAG_END) ||
+          strcmp(tag, "key")) {
+        return SYNTAX_ERROR;
+      }
+      return KEY;
+    }
+    break;
+  case 'p':
+    if (!strcmp(tag, "plist")) {
+      freeObject(STATE, object);
+      goto top;
+    }
+    break;
+  case 's':
+    if (!strcmp(tag, "string")) {
+      if (tagType == TAG_EMPTY) {
+        object->string = (char *)malloc(1);
+        object->string_alloc_length = 1;
+        object->string[0] = 0;
+        return STRING;
+      }
+      object->string = getString(STATE, &alloc_length);
+      if (!object->string) {
+        return SYNTAX_ERROR;
+      }
+      object->string_alloc_length = alloc_length;
+      if ((getTag(STATE, tag, &attributeCount, attributes, values) !=
+           TAG_END) ||
+          strcmp(tag, "string")) {
+        return SYNTAX_ERROR;
+      }
+      return STRING;
+    }
+    if (!strcmp(tag, "set")) {
+      if (tagType == TAG_EMPTY) {
+        object->elements = NULL;
+        return SET;
+      }
+      if (tagType == TAG_START) {
+        return '[';
+      } else {
+        return ']';
+      }
+    }
+    break;
+  case 't':
+    if (!strcmp(tag, "true")) {
+      if (tagType == TAG_EMPTY) {
+        object->number = 1;
+        return BOOLEAN;
+      }
+    }
+    break;
+  }
 
-	return SYNTAX_ERROR;
+  return SYNTAX_ERROR;
 }
 
 // !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
@@ -2731,367 +2558,340 @@ top:
 // the middle of the parsed string we just bail with pointers hanging
 // all over place, this code helps keeps it all together
 
-//static int object_count = 0;
+// static int object_count = 0;
 
-object_t *
-newObject(parser_state_t *state)
-{
-	object_t *o;
+object_t *newObject(parser_state_t *state) {
+  object_t *o;
 
-	if (state->freeObjects) {
-		o = state->freeObjects;
-		state->freeObjects = state->freeObjects->next;
-	} else {
-		o = malloc_type(object_t);
-//		object_count++;
-		o->free = state->objects;
-		state->objects = o;
-	}
+  if (state->freeObjects) {
+    o = state->freeObjects;
+    state->freeObjects = state->freeObjects->next;
+  } else {
+    o = malloc_type(object_t);
+    //		object_count++;
+    o->free = state->objects;
+    state->objects = o;
+  }
 
-	return o;
+  return o;
 }
 
-void
-freeObject(parser_state_t * state, object_t *o)
-{
-	o->next = state->freeObjects;
-	state->freeObjects = o;
+void freeObject(parser_state_t *state, object_t *o) {
+  o->next = state->freeObjects;
+  state->freeObjects = o;
 }
 
-void
-cleanupObjects(parser_state_t *state)
-{
-	object_t *t, *o = state->objects;
+void cleanupObjects(parser_state_t *state) {
+  object_t *t, *o = state->objects;
 
-	while (o) {
-		if (o->object) {
-//			printf("OSUnserializeXML: releasing object o=%x object=%x\n", (int)o, (int)o->object);
-			o->object->release();
-		}
-		if (o->data) {
-//			printf("OSUnserializeXML: freeing   object o=%x data=%x\n", (int)o, (int)o->data);
-			free(o->data);
-		}
-		if (o->key) {
-//			printf("OSUnserializeXML: releasing object o=%x key=%x\n", (int)o, (int)o->key);
-			o->key->release();
-		}
-		if (o->string) {
-//			printf("OSUnserializeXML: freeing   object o=%x string=%x\n", (int)o, (int)o->string);
-			free(o->string);
-		}
+  while (o) {
+    if (o->object) {
+      //			printf("OSUnserializeXML: releasing object o=%x
+      //object=%x\n", (int)o, (int)o->object);
+      o->object->release();
+    }
+    if (o->data) {
+      //			printf("OSUnserializeXML: freeing   object o=%x
+      //data=%x\n", (int)o, (int)o->data);
+      free(o->data);
+    }
+    if (o->key) {
+      //			printf("OSUnserializeXML: releasing object o=%x
+      //key=%x\n", (int)o, (int)o->key);
+      o->key->release();
+    }
+    if (o->string) {
+      //			printf("OSUnserializeXML: freeing   object o=%x
+      //string=%x\n", (int)o, (int)o->string);
+      free(o->string);
+    }
 
-		t = o;
-		o = o->free;
-		free_type(object_t, t);
-//		object_count--;
-	}
-//	printf("object_count = %d\n", object_count);
-}
-
-// !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
-// !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
-// !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
-
-static void
-rememberObject(parser_state_t *state, int tag, OSObject *o)
-{
-	char key[16];
-	snprintf(key, 16, "%u", tag);
-
-//	printf("remember key %s\n", key);
-
-	state->tags->setObject(key, o);
-}
-
-static object_t *
-retrieveObject(parser_state_t *state, int tag)
-{
-	OSObject *ref;
-	object_t *o;
-	char key[16];
-	snprintf(key, 16, "%u", tag);
-
-//	printf("retrieve key '%s'\n", key);
-
-	ref = state->tags->getObject(key);
-	if (!ref) {
-		return 0;
-	}
-
-	o = newObject(state);
-	o->object = ref;
-	return o;
+    t = o;
+    o = o->free;
+    free_type(object_t, t);
+    //		object_count--;
+  }
+  //	printf("object_count = %d\n", object_count);
 }
 
 // !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
 // !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
 // !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
 
-object_t *
-buildDictionary(parser_state_t *state, object_t * header)
-{
-	object_t *o, *t;
-	int count = 0;
-	OSDictionary *dict;
+static void rememberObject(parser_state_t *state, int tag, OSObject *o) {
+  char key[16];
+  snprintf(key, 16, "%u", tag);
 
-	// get count and reverse order
-	o = header->elements;
-	header->elements = 0;
-	while (o) {
-		count++;
-		t = o;
-		o = o->next;
+  //	printf("remember key %s\n", key);
 
-		t->next = header->elements;
-		header->elements = t;
-	}
+  state->tags->setObject(key, o);
+}
 
-	dict = OSDictionary::withCapacity(count);
-	if (header->idref >= 0) {
-		rememberObject(state, header->idref, dict);
-	}
+static object_t *retrieveObject(parser_state_t *state, int tag) {
+  OSObject *ref;
+  object_t *o;
+  char key[16];
+  snprintf(key, 16, "%u", tag);
 
-	o = header->elements;
-	while (o) {
-		dict->setObject(o->key, o->object);
+  //	printf("retrieve key '%s'\n", key);
 
-		o->key->release();
-		o->object->release();
-		o->key = 0;
-		o->object = 0;
+  ref = state->tags->getObject(key);
+  if (!ref) {
+    return 0;
+  }
 
-		t = o;
-		o = o->next;
-		freeObject(state, t);
-	}
-	o = header;
-	o->object = dict;
-	return o;
+  o = newObject(state);
+  o->object = ref;
+  return o;
+}
+
+// !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
+// !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
+// !@$&)(^Q$&*^!$(*!@$_(^%_(*Q#$(_*&!$_(*&!$_(*&!#$(*!@&^!@#%!_!#
+
+object_t *buildDictionary(parser_state_t *state, object_t *header) {
+  object_t *o, *t;
+  int count = 0;
+  OSDictionary *dict;
+
+  // get count and reverse order
+  o = header->elements;
+  header->elements = 0;
+  while (o) {
+    count++;
+    t = o;
+    o = o->next;
+
+    t->next = header->elements;
+    header->elements = t;
+  }
+
+  dict = OSDictionary::withCapacity(count);
+  if (header->idref >= 0) {
+    rememberObject(state, header->idref, dict);
+  }
+
+  o = header->elements;
+  while (o) {
+    dict->setObject(o->key, o->object);
+
+    o->key->release();
+    o->object->release();
+    o->key = 0;
+    o->object = 0;
+
+    t = o;
+    o = o->next;
+    freeObject(state, t);
+  }
+  o = header;
+  o->object = dict;
+  return o;
 };
 
-object_t *
-buildArray(parser_state_t *state, object_t * header)
-{
-	object_t *o, *t;
-	int count = 0;
-	OSArray *array;
+object_t *buildArray(parser_state_t *state, object_t *header) {
+  object_t *o, *t;
+  int count = 0;
+  OSArray *array;
 
-	// get count and reverse order
-	o = header->elements;
-	header->elements = 0;
-	while (o) {
-		count++;
-		t = o;
-		o = o->next;
+  // get count and reverse order
+  o = header->elements;
+  header->elements = 0;
+  while (o) {
+    count++;
+    t = o;
+    o = o->next;
 
-		t->next = header->elements;
-		header->elements = t;
-	}
+    t->next = header->elements;
+    header->elements = t;
+  }
 
-	array = OSArray::withCapacity(count);
-	if (header->idref >= 0) {
-		rememberObject(state, header->idref, array);
-	}
+  array = OSArray::withCapacity(count);
+  if (header->idref >= 0) {
+    rememberObject(state, header->idref, array);
+  }
 
-	o = header->elements;
-	while (o) {
-		array->setObject(o->object);
+  o = header->elements;
+  while (o) {
+    array->setObject(o->object);
 
-		o->object->release();
-		o->object = 0;
+    o->object->release();
+    o->object = 0;
 
-		t = o;
-		o = o->next;
-		freeObject(state, t);
-	}
-	o = header;
-	o->object = array;
-	return o;
+    t = o;
+    o = o->next;
+    freeObject(state, t);
+  }
+  o = header;
+  o->object = array;
+  return o;
 };
 
-object_t *
-buildSet(parser_state_t *state, object_t *header)
-{
-	object_t *o = buildArray(state, header);
+object_t *buildSet(parser_state_t *state, object_t *header) {
+  object_t *o = buildArray(state, header);
 
 #if KERNEL
-	OSArray *array = (OSArray *)o->object;
-	OSSet *set = OSSet::withArray(array, array->getCapacity());
+  OSArray *array = (OSArray *)o->object;
+  OSSet *set = OSSet::withArray(array, array->getCapacity());
 
-	// write over the reference created in buildArray
-	if (header->idref >= 0) {
-		rememberObject(state, header->idref, set);
-	}
+  // write over the reference created in buildArray
+  if (header->idref >= 0) {
+    rememberObject(state, header->idref, set);
+  }
 
-	array->release();
-	o->object = set;
+  array->release();
+  o->object = set;
 #endif /* KERNEL */
-	return o;
+  return o;
 };
 
-object_t *
-buildString(parser_state_t *state, object_t *o)
-{
-	OSString *string;
+object_t *buildString(parser_state_t *state, object_t *o) {
+  OSString *string;
 
-	string = OSString::withCString(o->string);
-	if (o->idref >= 0) {
-		rememberObject(state, o->idref, string);
-	}
+  string = OSString::withCString(o->string);
+  if (o->idref >= 0) {
+    rememberObject(state, o->idref, string);
+  }
 
-	free(o->string);
-	o->string = 0;
-	o->object = string;
+  free(o->string);
+  o->string = 0;
+  o->object = string;
 
-	return o;
+  return o;
 };
 
-object_t *
-buildSymbol(parser_state_t *state, object_t *o)
-{
-	OSSymbol *symbol;
+object_t *buildSymbol(parser_state_t *state, object_t *o) {
+  OSSymbol *symbol;
 
-	symbol = const_cast < OSSymbol * > (OSSymbol::withCString(o->string));
-	if (o->idref >= 0) {
-		rememberObject(state, o->idref, symbol);
-	}
+  symbol = const_cast<OSSymbol *>(OSSymbol::withCString(o->string));
+  if (o->idref >= 0) {
+    rememberObject(state, o->idref, symbol);
+  }
 
-	safe_free(o->string, o->string_alloc_length);
-	o->string = 0;
-	o->object = symbol;
+  safe_free(o->string, o->string_alloc_length);
+  o->string = 0;
+  o->object = symbol;
 
-	return o;
+  return o;
 };
 
-object_t *
-buildData(parser_state_t *state, object_t *o)
-{
-	OSData *data;
+object_t *buildData(parser_state_t *state, object_t *o) {
+  OSData *data;
 
-	if (o->size) {
-		data = OSData::withBytes(o->data, o->size);
-	} else {
-		data = OSData::withCapacity(0);
-	}
-	if (o->idref >= 0) {
-		rememberObject(state, o->idref, data);
-	}
+  if (o->size) {
+    data = OSData::withBytes(o->data, o->size);
+  } else {
+    data = OSData::withCapacity(0);
+  }
+  if (o->idref >= 0) {
+    rememberObject(state, o->idref, data);
+  }
 
-	if (o->size) {
-		free(o->data);
-	}
-	o->data = 0;
-	o->object = data;
-	return o;
+  if (o->size) {
+    free(o->data);
+  }
+  o->data = 0;
+  o->object = data;
+  return o;
 };
 
-object_t *
-buildNumber(parser_state_t *state, object_t *o)
-{
-	OSNumber *number = OSNumber::withNumber(o->number, o->size);
+object_t *buildNumber(parser_state_t *state, object_t *o) {
+  OSNumber *number = OSNumber::withNumber(o->number, o->size);
 
-	if (o->idref >= 0) {
-		rememberObject(state, o->idref, number);
-	}
+  if (o->idref >= 0) {
+    rememberObject(state, o->idref, number);
+  }
 
-	o->object = number;
-	return o;
+  o->object = number;
+  return o;
 };
 
-object_t *
-buildBoolean(parser_state_t *state __unused, object_t *o)
-{
-	o->object = ((o->number == 0) ? kOSBooleanFalse : kOSBooleanTrue);
-	o->object->retain();
-	return o;
+object_t *buildBoolean(parser_state_t *state __unused, object_t *o) {
+  o->object = ((o->number == 0) ? kOSBooleanFalse : kOSBooleanTrue);
+  o->object->retain();
+  return o;
 };
 
-OSObject*
-OSUnserializeXML(const char *buffer, OSString **errorString)
-{
-	OSObject *object;
+OSObject *OSUnserializeXML(const char *buffer, OSString **errorString) {
+  OSObject *object;
 
-	if (!buffer) {
-		return 0;
-	}
-	parser_state_t *state = (parser_state_t *)malloc_type(parser_state_t);
-	if (!state) {
-		return 0;
-	}
+  if (!buffer) {
+    return 0;
+  }
+  parser_state_t *state = (parser_state_t *)malloc_type(parser_state_t);
+  if (!state) {
+    return 0;
+  }
 
-	// just in case
-	if (errorString) {
-		*errorString = NULL;
-	}
+  // just in case
+  if (errorString) {
+    *errorString = NULL;
+  }
 
-	state->parseBuffer = buffer;
-	state->parseBufferIndex = 0;
-	state->lineNumber = 1;
-	state->objects = 0;
-	state->freeObjects = 0;
-	state->tags = OSDictionary::withCapacity(128);
-	state->errorString = errorString;
-	state->parsedObject = 0;
-	state->parsedObjectCount = 0;
-	state->retrievedObjectCount = 0;
+  state->parseBuffer = buffer;
+  state->parseBufferIndex = 0;
+  state->lineNumber = 1;
+  state->objects = 0;
+  state->freeObjects = 0;
+  state->tags = OSDictionary::withCapacity(128);
+  state->errorString = errorString;
+  state->parsedObject = 0;
+  state->parsedObjectCount = 0;
+  state->retrievedObjectCount = 0;
 
-	(void)yyparse((void *)state);
+  (void)yyparse((void *)state);
 
-	object = state->parsedObject;
+  object = state->parsedObject;
 
-	cleanupObjects(state);
-	state->tags->release();
-	free_type(parser_state_t, state);
+  cleanupObjects(state);
+  state->tags->release();
+  free_type(parser_state_t, state);
 
-	return object;
+  return object;
 }
 
 #if KERNEL
 #include <libkern/OSSerializeBinary.h>
 
-OSObject*
-OSUnserializeXML(const char *buffer, size_t bufferSize, OSString **errorString)
-{
-	if (!buffer) {
-		return 0;
-	}
-	if (bufferSize < sizeof(kOSSerializeBinarySignature)) {
-		return 0;
-	}
+OSObject *OSUnserializeXML(const char *buffer, size_t bufferSize,
+                           OSString **errorString) {
+  if (!buffer) {
+    return 0;
+  }
+  if (bufferSize < sizeof(kOSSerializeBinarySignature)) {
+    return 0;
+  }
 
-	if (!strcmp(kOSSerializeBinarySignature, buffer)
-	    || (kOSSerializeIndexedBinarySignature == (uint8_t)buffer[0])) {
-		return OSUnserializeBinary(buffer, bufferSize, errorString);
-	}
+  if (!strcmp(kOSSerializeBinarySignature, buffer) ||
+      (kOSSerializeIndexedBinarySignature == (uint8_t)buffer[0])) {
+    return OSUnserializeBinary(buffer, bufferSize, errorString);
+  }
 
-	// XML must be null terminated
-	if (buffer[bufferSize - 1]) {
-		return 0;
-	}
+  // XML must be null terminated
+  if (buffer[bufferSize - 1]) {
+    return 0;
+  }
 
-	return OSUnserializeXML(buffer, errorString);
+  return OSUnserializeXML(buffer, errorString);
 }
 
 #else /* !KERNEL */
 
-OSObject*
-OSUnserializeXML(const char *buffer, size_t bufferSize, OSString **errorString)
-{
-	if (!buffer) {
-		return 0;
-	}
+OSObject *OSUnserializeXML(const char *buffer, size_t bufferSize,
+                           OSString **errorString) {
+  if (!buffer) {
+    return 0;
+  }
 
-	// XML must be null terminated
-	if (buffer[bufferSize - 1]) {
-		return 0;
-	}
+  // XML must be null terminated
+  if (buffer[bufferSize - 1]) {
+    return 0;
+  }
 
-	return OSUnserializeXML(buffer, errorString);
+  return OSUnserializeXML(buffer, errorString);
 }
 
 #endif /* KERNEL */
-
 
 //
 //

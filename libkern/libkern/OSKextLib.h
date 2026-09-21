@@ -29,15 +29,15 @@
 #ifndef _LIBKERN_OSKEXTLIB_H
 #define _LIBKERN_OSKEXTLIB_H
 
-#include <sys/cdefs.h>
-#include <stdint.h>
 #include <mach/kmod.h>
 #include <mach/vm_types.h>
+#include <stdint.h>
+#include <sys/cdefs.h>
 #include <uuid/uuid.h>
 
 #ifdef KERNEL
-#include <libkern/OSTypes.h>
 #include <libkern/OSReturn.h>
+#include <libkern/OSTypes.h>
 #else
 #include <libkern/OSReturn.h>
 #endif /* KERNEL */
@@ -67,14 +67,13 @@ __BEGIN_DECLS
 
 #ifdef XNU_KERNEL_PRIVATE
 /*********************************************************************
-* Check libsyscall/mach/err_libkern.sub when editing or adding
-* result codes!
-*********************************************************************/
+ * Check libsyscall/mach/err_libkern.sub when editing or adding
+ * result codes!
+ *********************************************************************/
 #endif /* XNU_KERNEL_PRIVATE */
 
-#define sub_libkern_kext           err_sub(2)
-#define libkern_kext_err(code)     (sys_libkern|sub_libkern_kext|(code))
-
+#define sub_libkern_kext err_sub(2)
+#define libkern_kext_err(code) (sys_libkern | sub_libkern_kext | (code))
 
 /*!
  * @define   kOSKextReturnInternalError
@@ -82,172 +81,174 @@ __BEGIN_DECLS
  *           Contrast with <code>@link //apple_ref/c/econst/OSReturnError
  *           OSReturnError@/link</code>.
  */
-#define kOSKextReturnInternalError                   libkern_kext_err(0x1)
+#define kOSKextReturnInternalError libkern_kext_err(0x1)
 
 /*!
  * @define   kOSKextReturnNoMemory
  * @abstract Memory allocation failed.
  */
-#define kOSKextReturnNoMemory                        libkern_kext_err(0x2)
+#define kOSKextReturnNoMemory libkern_kext_err(0x2)
 
 /*!
  * @define   kOSKextReturnNoResources
  * @abstract Some resource other than memory (such as available load tags)
  *           is exhausted.
  */
-#define kOSKextReturnNoResources                     libkern_kext_err(0x3)
+#define kOSKextReturnNoResources libkern_kext_err(0x3)
 
 /*!
  * @define   kOSKextReturnNotPrivileged
  * @abstract The caller lacks privileges to perform the requested operation.
  */
-#define kOSKextReturnNotPrivileged                   libkern_kext_err(0x4)
+#define kOSKextReturnNotPrivileged libkern_kext_err(0x4)
 
 /*!
  * @define   kOSKextReturnInvalidArgument
  * @abstract Invalid argument.
  */
-#define kOSKextReturnInvalidArgument                 libkern_kext_err(0x5)
+#define kOSKextReturnInvalidArgument libkern_kext_err(0x5)
 
 /*!
  * @define   kOSKextReturnNotFound
  * @abstract Search item not found.
  */
-#define kOSKextReturnNotFound                        libkern_kext_err(0x6)
+#define kOSKextReturnNotFound libkern_kext_err(0x6)
 
 /*!
  * @define   kOSKextReturnBadData
  * @abstract Malformed data (not used for XML).
  */
-#define kOSKextReturnBadData                         libkern_kext_err(0x7)
+#define kOSKextReturnBadData libkern_kext_err(0x7)
 
 /*!
  * @define   kOSKextReturnSerialization
  * @abstract Error converting or (un)serializing URL, string, or XML.
  */
-#define kOSKextReturnSerialization                   libkern_kext_err(0x8)
+#define kOSKextReturnSerialization libkern_kext_err(0x8)
 
 /*!
  * @define   kOSKextReturnUnsupported
  * @abstract Operation is no longer or not yet supported.
  */
-#define kOSKextReturnUnsupported                     libkern_kext_err(0x9)
+#define kOSKextReturnUnsupported libkern_kext_err(0x9)
 
 /*!
  * @define   kOSKextReturnDisabled
  * @abstract Operation is currently disabled.
  */
-#define kOSKextReturnDisabled                        libkern_kext_err(0xa)
+#define kOSKextReturnDisabled libkern_kext_err(0xa)
 
 /*!
  * @define   kOSKextReturnNotAKext
  * @abstract Bundle is not a kernel extension.
  */
-#define kOSKextReturnNotAKext                        libkern_kext_err(0xb)
+#define kOSKextReturnNotAKext libkern_kext_err(0xb)
 
 /*!
  * @define   kOSKextReturnValidation
  * @abstract Validation failures encountered; check diagnostics for details.
  */
-#define kOSKextReturnValidation                      libkern_kext_err(0xc)
+#define kOSKextReturnValidation libkern_kext_err(0xc)
 
 /*!
  * @define   kOSKextReturnAuthentication
  * @abstract Authetication failures encountered; check diagnostics for details.
  */
-#define kOSKextReturnAuthentication                  libkern_kext_err(0xd)
+#define kOSKextReturnAuthentication libkern_kext_err(0xd)
 
 /*!
  * @define   kOSKextReturnDependencies
- * @abstract Dependency resolution failures encountered; check diagnostics for details.
+ * @abstract Dependency resolution failures encountered; check diagnostics for
+ * details.
  */
-#define kOSKextReturnDependencies                    libkern_kext_err(0xe)
+#define kOSKextReturnDependencies libkern_kext_err(0xe)
 
 /*!
  * @define   kOSKextReturnArchNotFound
  * @abstract Kext does not contain code for the requested architecture.
  */
-#define kOSKextReturnArchNotFound                    libkern_kext_err(0xf)
+#define kOSKextReturnArchNotFound libkern_kext_err(0xf)
 
 /*!
  * @define   kOSKextReturnCache
  * @abstract An error occurred processing a system kext cache.
  */
-#define kOSKextReturnCache                           libkern_kext_err(0x10)
+#define kOSKextReturnCache libkern_kext_err(0x10)
 
 /*!
  * @define   kOSKextReturnDeferred
- * @abstract Operation has been posted asynchronously to user space (kernel only).
+ * @abstract Operation has been posted asynchronously to user space (kernel
+ * only).
  */
-#define kOSKextReturnDeferred                        libkern_kext_err(0x11)
+#define kOSKextReturnDeferred libkern_kext_err(0x11)
 
 /*!
  * @define   kOSKextReturnBootLevel
  * @abstract Kext not loadable or operation not allowed at current boot level.
  */
-#define kOSKextReturnBootLevel                       libkern_kext_err(0x12)
+#define kOSKextReturnBootLevel libkern_kext_err(0x12)
 
 /*!
  * @define   kOSKextReturnNotLoadable
  * @abstract Kext cannot be loaded; check diagnostics for details.
  */
-#define kOSKextReturnNotLoadable                     libkern_kext_err(0x13)
+#define kOSKextReturnNotLoadable libkern_kext_err(0x13)
 
 /*!
  * @define   kOSKextReturnLoadedVersionDiffers
  * @abstract A different version (or executable UUID, or executable by checksum)
  *           of the requested kext is already loaded.
  */
-#define kOSKextReturnLoadedVersionDiffers            libkern_kext_err(0x14)
+#define kOSKextReturnLoadedVersionDiffers libkern_kext_err(0x14)
 
 /*!
  * @define   kOSKextReturnDependencyLoadError
  * @abstract A load error occurred on a dependency of the kext being loaded.
  */
-#define kOSKextReturnDependencyLoadError             libkern_kext_err(0x15)
+#define kOSKextReturnDependencyLoadError libkern_kext_err(0x15)
 
 /*!
  * @define   kOSKextReturnLinkError
  * @abstract A link failure occured with this kext or a dependency.
  */
-#define kOSKextReturnLinkError                       libkern_kext_err(0x16)
+#define kOSKextReturnLinkError libkern_kext_err(0x16)
 
 /*!
  * @define   kOSKextReturnStartStopError
  * @abstract The kext start or stop routine returned an error.
  */
-#define kOSKextReturnStartStopError                  libkern_kext_err(0x17)
+#define kOSKextReturnStartStopError libkern_kext_err(0x17)
 
 /*!
  * @define   kOSKextReturnInUse
  * @abstract The kext is currently in use or has outstanding references,
  *           and cannot be unloaded.
  */
-#define kOSKextReturnInUse                           libkern_kext_err(0x18)
+#define kOSKextReturnInUse libkern_kext_err(0x18)
 
 /*!
  * @define   kOSKextReturnTimeout
  * @abstract A kext request has timed out.
  */
-#define kOSKextReturnTimeout                         libkern_kext_err(0x19)
+#define kOSKextReturnTimeout libkern_kext_err(0x19)
 
 /*!
  * @define   kOSKextReturnStopping
  * @abstract The kext is in the process of stopping; requests cannot be made.
  */
-#define kOSKextReturnStopping                        libkern_kext_err(0x1a)
+#define kOSKextReturnStopping libkern_kext_err(0x1a)
 
 /*!
  * @define   kOSKextReturnSystemPolicy
  * @abstract The kext was prevented from loading due to system policy.
  */
-#define kOSKextReturnSystemPolicy                    libkern_kext_err(0x1b)
+#define kOSKextReturnSystemPolicy libkern_kext_err(0x1b)
 
 /*!
  * @define   kOSKextReturnKCLoadFailure
  * @abstract Loading of the System KC failed
  */
-#define kOSKextReturnKCLoadFailure                  libkern_kext_err(0x1c)
+#define kOSKextReturnKCLoadFailure libkern_kext_err(0x1c)
 
 /*!
  * @define   kOSKextReturnKCLoadFailureSystemKC
@@ -259,7 +260,7 @@ __BEGIN_DECLS
  * If both the System and Aux KCs fail to load, then the error code will be:
  * libkern_kext_err(0x1f)
  */
-#define kOSKextReturnKCLoadFailureSystemKC          libkern_kext_err(0x1d)
+#define kOSKextReturnKCLoadFailureSystemKC libkern_kext_err(0x1d)
 
 /*!
  * @define   kOSKextReturnKCLoadFailureAuxKC
@@ -271,7 +272,7 @@ __BEGIN_DECLS
  * If both the System and Aux KCs fail to load, then the error code will be:
  * libkern_kext_err(0x1f)
  */
-#define kOSKextReturnKCLoadFailureAuxKC             libkern_kext_err(0x1e)
+#define kOSKextReturnKCLoadFailureAuxKC libkern_kext_err(0x1e)
 
 /* next available error is: libkern_kext_err(0x20) */
 
@@ -291,14 +292,14 @@ __BEGIN_DECLS
 #ifdef KERNEL
 /* Define C-string versions of the CFBundle keys for use in the kernel.
  */
-#define kCFBundleIdentifierKey                  "CFBundleIdentifier"
-#define kCFBundleIdentifierKernelKey            "CFBundleIdentifierKernel"
-#define kCFBundleVersionKey                     "CFBundleVersion"
-#define kCFBundleNameKey                        "CFBundleName"
-#define kCFBundleExecutableKey                  "CFBundleExecutable"
-#define kCFBundlePackageTypeKey                 "CFBundlePackageType"
-#define kCFBundleDriverKitUUIDKey               "CFBundleDriverKitUUID"
-#define kCFBundleDriverKitExecutableKey         "CFBundleUEXTExecutable"
+#define kCFBundleIdentifierKey "CFBundleIdentifier"
+#define kCFBundleIdentifierKernelKey "CFBundleIdentifierKernel"
+#define kCFBundleVersionKey "CFBundleVersion"
+#define kCFBundleNameKey "CFBundleName"
+#define kCFBundleExecutableKey "CFBundleExecutable"
+#define kCFBundlePackageTypeKey "CFBundlePackageType"
+#define kCFBundleDriverKitUUIDKey "CFBundleDriverKitUUID"
+#define kCFBundleDriverKitExecutableKey "CFBundleUEXTExecutable"
 #endif /* KERNEL */
 
 /*!
@@ -307,7 +308,7 @@ __BEGIN_DECLS
  *           in extended Mac OS 'vers' format (####.##.##s{1-255} where 's'
  *           is a build stage 'd', 'a', 'b', 'f' or 'fc').
  */
-#define kOSBundleCompatibleVersionKey           "OSBundleCompatibleVersion"
+#define kOSBundleCompatibleVersionKey "OSBundleCompatibleVersion"
 
 /*!
  * @define   kOSBundleEnableKextLoggingKey
@@ -316,21 +317,21 @@ __BEGIN_DECLS
  *           See <code>@link //apple_ref/c/econst/OSKextLogSpec
  *           OSKextLogSpec@/link</code>.
  */
-#define kOSBundleEnableKextLoggingKey           "OSBundleEnableKextLogging"
+#define kOSBundleEnableKextLoggingKey "OSBundleEnableKextLogging"
 
 /*!
  * @define   kOSBundleIsInterfaceKey
  * @abstract A boolean value indicating whether the kext executable
  *           contains only symbol references.
  */
-#define kOSBundleIsInterfaceKey                 "OSBundleIsInterface"
+#define kOSBundleIsInterfaceKey "OSBundleIsInterface"
 
 /*!
  * @define   kOSBundleLibrariesKey
  * @abstract A dictionary listing link dependencies for this kext.
  *           Keys are bundle identifiers, values are version strings.
  */
-#define kOSBundleLibrariesKey                   "OSBundleLibraries"
+#define kOSBundleLibrariesKey "OSBundleLibraries"
 
 /*!
  * @define   kOSBundleRequiredKey
@@ -342,9 +343,10 @@ __BEGIN_DECLS
  * <ul>
  * <li>@link kOSBundleRequiredRoot "OSBundleRequiredRoot"@/link</li>
  * <li>@link kOSBundleRequiredLocalRoot "OSBundleRequiredLocalRoot"@/link</li>
- * <li>@link kOSBundleRequiredNetworkRoot "OSBundleRequiredNetworkRoot"@/link</li>
- * <li>@link kOSBundleRequiredSafeBoot "OSBundleRequiredSafeBoot"@/link</li>
- * <li>@link kOSBundleRequiredConsole "OSBundleRequiredConsole"@/link</li>
+ * <li>@link kOSBundleRequiredNetworkRoot
+ * "OSBundleRequiredNetworkRoot"@/link</li> <li>@link kOSBundleRequiredSafeBoot
+ * "OSBundleRequiredSafeBoot"@/link</li> <li>@link kOSBundleRequiredConsole
+ * "OSBundleRequiredConsole"@/link</li>
  * </ul>
  *
  * Use this property judiciously.
@@ -352,14 +354,14 @@ __BEGIN_DECLS
  * increases startup time, as the booter must read it into memory,
  * or startup kext caches must include it.
  */
-#define kOSBundleRequiredKey                    "OSBundleRequired"
+#define kOSBundleRequiredKey "OSBundleRequired"
 
 /*!
  * @define   kOSBundleRequireExplicitLoadKey
  * @abstract A boolean value indicating whether the kext requires an
  *           explicit kextload in order to start/match.
  */
-#define kOSBundleRequireExplicitLoadKey         "OSBundleRequireExplicitLoad"
+#define kOSBundleRequireExplicitLoadKey "OSBundleRequireExplicitLoad"
 
 /*!
  * @define   kOSBundleAllowUserLoadKey
@@ -367,41 +369,45 @@ __BEGIN_DECLS
  *           <code>@link //apple_ref/doc/man/8/kextd kextcache(8)@/link</code>
  *           will honor a non-root process's request to load a kext.
  * @discussion
- * See <code>@link //apple_ref/doc/compositePage/c/func/KextManagerLoadKextWithURL
+ * See <code>@link
+ * //apple_ref/doc/compositePage/c/func/KextManagerLoadKextWithURL
  * KextManagerLoadKextWithURL@/link</code>
- * and <code>@link //apple_ref/doc/compositePage/c/func/KextManagerLoadKextWithIdentifier
+ * and <code>@link
+ * //apple_ref/doc/compositePage/c/func/KextManagerLoadKextWithIdentifier
  * KextManagerLoadKextWithIdentifier@/link</code>.
  */
-#define kOSBundleAllowUserLoadKey               "OSBundleAllowUserLoad"
+#define kOSBundleAllowUserLoadKey "OSBundleAllowUserLoad"
 
 /*!
  * @define   kOSBundleAllowUserTerminateKey
  * @abstract A boolean value indicating whether the kextunload tool
- *           is allowed to issue IOService terminate to classes defined in this kext.
+ *           is allowed to issue IOService terminate to classes defined in this
+ * kext.
  * @discussion A boolean value indicating whether the kextunload tool
- *           is allowed to issue IOService terminate to classes defined in this kext.
+ *           is allowed to issue IOService terminate to classes defined in this
+ * kext.
  */
-#define kOSBundleAllowUserTerminateKey          "OSBundleAllowUserTerminate"
+#define kOSBundleAllowUserTerminateKey "OSBundleAllowUserTerminate"
 
 /*!
  * @define   kOSKernelResourceKey
  * @abstract A boolean value indicating whether the kext represents a built-in
  *           component of the kernel.
  */
-#define kOSKernelResourceKey                    "OSKernelResource"
+#define kOSKernelResourceKey "OSKernelResource"
 
 /*!
  * @define   kOSKextVariantOverrideKey
  * @abstract A dictionary with target names as key and a target-specific variant
  *           name as value.
  */
-#define kOSKextVariantOverrideKey               "OSKextVariantOverride"
+#define kOSKextVariantOverrideKey "OSKextVariantOverride"
 
 /*!
  * @define   kIOKitPersonalitiesKey
  * @abstract A dictionary of dictionaries used in matching for I/O Kit drivers.
  */
-#define kIOKitPersonalitiesKey                  "IOKitPersonalities"
+#define kIOKitPersonalitiesKey "IOKitPersonalities"
 
 /*
  * @define   kIOPersonalityPublisherKey
@@ -409,25 +415,24 @@ __BEGIN_DECLS
  *           contains the CFBundleIdentifier of the kext
  *           that the personality originated in.
  */
-#define kIOPersonalityPublisherKey              "IOPersonalityPublisher"
+#define kIOPersonalityPublisherKey "IOPersonalityPublisher"
 
 #if CONFIG_KEC_FIPS
 /*
  * @define   kAppleTextHashesKey
  * @abstract A dictionary conataining hashes for corecrypto kext.
  */
-#define kAppleTextHashesKey                     "AppleTextHashes"
+#define kAppleTextHashesKey "AppleTextHashes"
 #endif
 
 /*!
  * @define   kOSMutableSegmentCopy
  * @abstract A boolean value indicating whether the kext requires a copy of
- *           its mutable segments to be kept in memory, and then reset when the kext
- *           unloads. This should be used with caution as it will increase the
- *           amount of memory used by the kext.
+ *           its mutable segments to be kept in memory, and then reset when the
+ * kext unloads. This should be used with caution as it will increase the amount
+ * of memory used by the kext.
  */
-#define kOSMutableSegmentCopy                   "OSMutableSegmentCopy"
-
+#define kOSMutableSegmentCopy "OSMutableSegmentCopy"
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -443,7 +448,7 @@ __BEGIN_DECLS
  * On 10.6 Snow Leopard, use <code>@link OSKextEnableKextLogging
  * OSKextEnableKextLogging@/link</code>.
  */
-#define kOSBundleDebugLevelKey                  "OSBundleDebugLevel"
+#define kOSBundleDebugLevelKey "OSBundleDebugLevel"
 
 /*!
  * @define   kOSBundleSharedExecutableIdentifierKey
@@ -452,8 +457,8 @@ __BEGIN_DECLS
  *           Value is the bundle identifier of the pseudokext
  *           that contains an executable shared by this kext.
  */
-#define kOSBundleSharedExecutableIdentifierKey  "OSBundleSharedExecutableIdentifier"
-
+#define kOSBundleSharedExecutableIdentifierKey                                 \
+  "OSBundleSharedExecutableIdentifier"
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -472,7 +477,7 @@ __BEGIN_DECLS
  * @abstract
  * This is the CFBundleIdentifier user for the kernel itself.
  */
-#define kOSKextKernelIdentifier                 "__kernel__"
+#define kOSKextKernelIdentifier "__kernel__"
 
 #if CONFIG_SPTM && PRIVATE
 /*!
@@ -480,14 +485,14 @@ __BEGIN_DECLS
  * @abstract
  * This is the CFBundleIdentifier used by the Secure Page Table Monitor (SPTM).
  */
-#define kOSKextSPTMIdentifier                 "com.apple.sptm"
+#define kOSKextSPTMIdentifier "com.apple.sptm"
 
 /*!
  * @define   kOSKextTXMIdentifier
  * @abstract
  * This is the CFBundleIdentifier used by the Trusted Execution Monitor (TXM).
  */
-#define kOSKextTXMIdentifier                 "com.apple.txm"
+#define kOSKextTXMIdentifier "com.apple.txm"
 #endif /* CONFIG_SPTM */
 
 /*!
@@ -495,14 +500,14 @@ __BEGIN_DECLS
  * @abstract
  * The bundle type value for Kernel Extensions.
  */
-#define kOSKextBundlePackageTypeKext        "KEXT"
+#define kOSKextBundlePackageTypeKext "KEXT"
 
 /*!
  * @define  kOSKextBundlePackageTypeDriverKit
  * @abstract
  * The bundle type value for Driver Extensions.
  */
-#define kOSKextBundlePackageTypeDriverKit   "DEXT"
+#define kOSKextBundlePackageTypeDriverKit "DEXT"
 
 /*!
  * @define   kOSBundleRequiredRoot
@@ -511,7 +516,7 @@ __BEGIN_DECLS
  * value indicates that the kext may be needed to mount the root filesystem
  * whether starting from a local or a network volume.
  */
-#define kOSBundleRequiredRoot                   "Root"
+#define kOSBundleRequiredRoot "Root"
 
 /*!
  * @define   kOSBundleRequiredLocalRoot
@@ -520,7 +525,7 @@ __BEGIN_DECLS
  * value indicates that the kext may be needed to mount the root filesystem
  * when starting from a local disk.
  */
-#define kOSBundleRequiredLocalRoot              "Local-Root"
+#define kOSBundleRequiredLocalRoot "Local-Root"
 
 /*!
  * @define   kOSBundleRequiredNetworkRoot
@@ -529,7 +534,7 @@ __BEGIN_DECLS
  * value indicates that the kext may be needed to mount the root filesystem
  * when starting over a network connection.
  */
-#define kOSBundleRequiredNetworkRoot            "Network-Root"
+#define kOSBundleRequiredNetworkRoot "Network-Root"
 
 /*!
  * @define   kOSBundleRequiredSafeBoot
@@ -539,7 +544,7 @@ __BEGIN_DECLS
  * This value does not normally cause the kext to be read by the booter
  * or included in startup kext caches.
  */
-#define kOSBundleRequiredSafeBoot               "Safe Boot"
+#define kOSBundleRequiredSafeBoot "Safe Boot"
 
 /*!
  * @define   kOSBundleRequiredConsole
@@ -551,7 +556,7 @@ __BEGIN_DECLS
  * does not run)
  * and should be loaded during early startup.
  */
-#define kOSBundleRequiredConsole                "Console"
+#define kOSBundleRequiredConsole "Console"
 
 /*!
  * @define   kOSBundleRequiredDriverKit
@@ -565,7 +570,7 @@ __BEGIN_DECLS
  * matching will happen during early boot, and the actual driver launch
  * will happen after kextd starts.
  */
-#define kOSBundleRequiredDriverKit              "DriverKit"
+#define kOSBundleRequiredDriverKit "DriverKit"
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -615,7 +620,7 @@ __BEGIN_DECLS
  * <code>id</code> field (cast to this type).
  */
 #endif
-typedef uint32_t  OSKextLoadTag;
+typedef uint32_t OSKextLoadTag;
 
 /*!
  * @define kOSKextInvalidLoadTag
@@ -624,7 +629,7 @@ typedef uint32_t  OSKextLoadTag;
  * A load tag value that will never be used for a loaded kext;
  * indicates kext not found.
  */
-#define  kOSKextInvalidLoadTag  ((OSKextLoadTag)(-1))
+#define kOSKextInvalidLoadTag ((OSKextLoadTag)(-1))
 
 #ifdef KERNEL
 
@@ -658,7 +663,7 @@ OSKextLoadTag OSKextGetCurrentLoadTag(void);
  * @result
  * The CFBundleIdentifier for the calling kext as a C string.
  */
-const char * OSKextGetCurrentIdentifier(void);
+const char *OSKextGetCurrentIdentifier(void);
 
 /*!
  * @function OSKextGetCurrentVersionString
@@ -669,7 +674,7 @@ const char * OSKextGetCurrentIdentifier(void);
  * @result
  * The CFBundleVersion for the calling kext as a C string.
  */
-const char * OSKextGetCurrentVersionString(void);
+const char *OSKextGetCurrentVersionString(void);
 
 #endif /* !XNU_KERNEL_PRIVATE */
 
@@ -693,10 +698,10 @@ const char * OSKextGetCurrentVersionString(void);
  * @param  kextIdentifier  The bundle identifier of the kext to be loaded.
  *
  * @result
- * <code>@link //apple_ref/c/macro/kOSReturnSuccess kOSReturnSuccess@/link</code>
- * if the kext was loaded (or was already loaded).
- * <code>@link //apple_ref/c/macro/kOSKextReturnDeferred kOSKextReturnDeferred@/link</code>
- * if the kext was not found and a request
+ * <code>@link //apple_ref/c/macro/kOSReturnSuccess
+ * kOSReturnSuccess@/link</code> if the kext was loaded (or was already loaded).
+ * <code>@link //apple_ref/c/macro/kOSKextReturnDeferred
+ * kOSKextReturnDeferred@/link</code> if the kext was not found and a request
  * was queued to <code>@link //apple_ref/doc/man/8/kextd kextd(8)@/link</code>.
  * Other return values indicate a failure to load the kext.
  *
@@ -704,11 +709,11 @@ const char * OSKextGetCurrentVersionString(void);
  * If a kext is already in the kernel but not loaded, it is loaded immediately.
  * If it isn't found, an asynchronous load request is
  * made to <code>@link //apple_ref/doc/man/8/kextd kextd(8)@/link</code>
- * and  <code>@link //apple_ref/c/macro/kOSKextReturnDeferred kOSKextReturnDeferred@/link</code> is returned.
- * There is no general notification or callback mechanism for load requests.
+ * and  <code>@link //apple_ref/c/macro/kOSKextReturnDeferred
+ * kOSKextReturnDeferred@/link</code> is returned. There is no general
+ * notification or callback mechanism for load requests.
  */
-OSReturn OSKextLoadKextWithIdentifier(const char * kextIdentifier);
-
+OSReturn OSKextLoadKextWithIdentifier(const char *kextIdentifier);
 
 /*!
  * @function OSKextRetainKextWithLoadTag
@@ -721,9 +726,9 @@ OSReturn OSKextLoadKextWithIdentifier(const char * kextIdentifier);
  *                   See <code>@link OSKextGetCurrentLoadTag@/link</code>.
  *
  * @result
- * <code>@link //apple_ref/c/macro/kOSReturnSuccess kOSReturnSuccess@/link</code>
- * if the kext was retained.
- * <code>@link //apple_ref/c/macro/kOSKextReturnNotFound kOSKextReturnNotFound@/link</code>
+ * <code>@link //apple_ref/c/macro/kOSReturnSuccess
+ * kOSReturnSuccess@/link</code> if the kext was retained. <code>@link
+ * //apple_ref/c/macro/kOSKextReturnNotFound kOSKextReturnNotFound@/link</code>
  * if the kext was not found.
  * <code>@link //apple_ref/c/macro/kOSKextReturnInvalidArgument
  * kOSKextReturnInvalidArgument@/link</code>
@@ -744,7 +749,8 @@ OSReturn OSKextLoadKextWithIdentifier(const char * kextIdentifier);
  * without having to define and create Libkern C++ objects.
  * For example, a filesystem kext can retain itself whenever a new mount
  * is created, and release itself when a mount is removed.
- * When the last mount is removed, the kext will be unloaded after a brief delay.
+ * When the last mount is removed, the kext will be unloaded after a brief
+ * delay.
  *
  * A kext can get its own load tag using the
  * <code>@link OSKextGetCurrentLoadTag@/link</code>.
@@ -753,7 +759,6 @@ OSReturn OSKextLoadKextWithIdentifier(const char * kextIdentifier);
  * are accounted for internally.
  */
 OSReturn OSKextRetainKextWithLoadTag(OSKextLoadTag loadTag);
-
 
 /*!
  * @function OSKextReleaseKextWithLoadTag
@@ -765,10 +770,9 @@ OSReturn OSKextRetainKextWithLoadTag(OSKextLoadTag loadTag);
  *                   See <code>@link OSKextGetCurrentLoadTag@/link</code>.
  *
  * @result
- * <code>@link //apple_ref/c/macro/kOSReturnSuccess kOSReturnSuccess@/link</code>
- * if the kext was released.
- * <code>@link //apple_ref/c/macro/kOSKextReturnNotFound
- * kOSKextReturnNotFound@/link</code>
+ * <code>@link //apple_ref/c/macro/kOSReturnSuccess
+ * kOSReturnSuccess@/link</code> if the kext was released. <code>@link
+ * //apple_ref/c/macro/kOSKextReturnNotFound kOSKextReturnNotFound@/link</code>
  * if the kext was not found.
  * <code>@link //apple_ref/c/macro/kOSKextReturnInvalidArgument
  * kOSKextReturnInvalidArgument@/link</code>
@@ -791,7 +795,8 @@ OSReturn OSKextRetainKextWithLoadTag(OSKextLoadTag loadTag);
  * without having to define and create Libkern C++ objects.
  * For example, a filesystem kext can be retained whenever a new mount
  * is created, and released when a mount is removed.
- * When the last mount is removed, the kext will be unloaded after a brief delay.
+ * When the last mount is removed, the kext will be unloaded after a brief
+ * delay.
  *
  * While the autounload scan takes place after a delay of at least a minute,
  * a kext that manages its own reference counts for autounload should
@@ -832,7 +837,7 @@ typedef uint32_t OSKextRequestTag;
  * A request tag value that will never be used for a kext request;
  * indicates failure to create/queue the request.
  */
-#define kOSKextRequestTagInvalid  ((OSKextRequestTag)-1)
+#define kOSKextRequestTagInvalid ((OSKextRequestTag) - 1)
 
 /*!
  * @typedef OSKextRequestResourceCallback
@@ -840,7 +845,8 @@ typedef uint32_t OSKextRequestTag;
  * @abstract
  * Invoked to provide results for a kext resource request.
  *
- * @param  requestTag          The tag of the request that the callback pertains to.
+ * @param  requestTag          The tag of the request that the callback pertains
+ * to.
  * @param  result              The result of the request:
  *                             <code>@link kOSReturnSuccess
  *                             kOSReturnSuccess@/link</code>
@@ -861,12 +867,11 @@ typedef uint32_t OSKextRequestTag;
  *                             <code>@link OSKextRequestResource
  *                             OSKextRequestResource@/link</code>.
  */
-typedef void (* OSKextRequestResourceCallback)(
-	OSKextRequestTag                requestTag,
-	OSReturn                        result,
-	const void                    * resourceData,
-	uint32_t                        resourceDataLength,
-	void                          * context);
+typedef void (*OSKextRequestResourceCallback)(OSKextRequestTag requestTag,
+                                              OSReturn result,
+                                              const void *resourceData,
+                                              uint32_t resourceDataLength,
+                                              void *context);
 
 /*!
  * @function OSKextRequestResource
@@ -885,22 +890,20 @@ typedef void (* OSKextRequestResourceCallback)(
  * @param  requestTagOut   If non-<code>NULL</code>,
  *                         filled on success with a tag identifying the
  *                         pending request
- *                         (or on failure with <code>@link kOSKextRequestTagInvalid
- *                         kOSKextRequestTagInvalid@/link</code>;
- *                         can be used with
- *                         <code>@link OSKextCancelRequest
- *                         OSKextCancelRequest@/link</code>.
+ *                         (or on failure with <code>@link
+ * kOSKextRequestTagInvalid kOSKextRequestTagInvalid@/link</code>; can be used
+ * with <code>@link OSKextCancelRequest OSKextCancelRequest@/link</code>.
  *
  * @result
  * <code>@link kOSReturnSuccess kOSReturnSuccess@/link</code>
  * if the request is successfully queued.
- * <code>@link kOSKextReturnInvalidArgument kOSKextReturnInvalidArgument@/link</code>
- * if <code>kextIdentifier</code> or <code>resourceName</code> or if
- * <code>callback</code> is not an address within a loaded kext executable.
- * <code>@link kOSKextReturnStopping kOSKextReturnStopping@/link</code>
- * if an unload attempt is being made
- * on the kext containing <code>callback</code>.
- * Other <code>OSKextReturn...</code> errors are possible.
+ * <code>@link kOSKextReturnInvalidArgument
+ * kOSKextReturnInvalidArgument@/link</code> if <code>kextIdentifier</code> or
+ * <code>resourceName</code> or if <code>callback</code> is not an address
+ * within a loaded kext executable. <code>@link kOSKextReturnStopping
+ * kOSKextReturnStopping@/link</code> if an unload attempt is being made on the
+ * kext containing <code>callback</code>. Other <code>OSKextReturn...</code>
+ * errors are possible.
  *
  * @discussion
  * This function queues an asynchronous request to the user-space kext daemon
@@ -951,12 +954,10 @@ typedef void (* OSKextRequestResourceCallback)(
  * If the kext does prevent unloading, it can reissue resource requests
  * outside of the stop function.
  */
-OSReturn OSKextRequestResource(
-	const char                    * kextIdentifier,
-	const char                    * resourceName,
-	OSKextRequestResourceCallback   callback,
-	void                          * context,
-	OSKextRequestTag              * requestTagOut);
+OSReturn OSKextRequestResource(const char *kextIdentifier,
+                               const char *resourceName,
+                               OSKextRequestResourceCallback callback,
+                               void *context, OSKextRequestTag *requestTagOut);
 
 /*!
  * @function OSKextCancelRequest
@@ -989,10 +990,7 @@ OSReturn OSKextRequestResource(
  * <code>@link kOSKextReturnTimeout kOSKextReturnTimeout@/link</code>
  * before the stop function is called.
  */
-OSReturn OSKextCancelRequest(
-	OSKextRequestTag    requestTag,
-	void             ** contextOut);
-
+OSReturn OSKextCancelRequest(OSKextRequestTag requestTag, void **contextOut);
 
 /*!
  * @function OSKextGrabPgoData
@@ -1001,7 +999,8 @@ OSReturn OSKextCancelRequest(
  * Grab a LLVM profile data buffer from a loaded kext.
  *
  * @param   uuid             the uuid identifying the kext to retrieve data from
- * @param   pSize            pointer of where to store the size of the buffer.   May be NULL.
+ * @param   pSize            pointer of where to store the size of the buffer.
+ * May be NULL.
  * @param   pBuffer          pointer to the output buffer.   May be NULL.
  * @param   bufferSize       size of the buffer pointed to by pBuffer
  * @param   wait_for_unload  (boolean) sleep until the kext is unloaded
@@ -1014,31 +1013,26 @@ OSReturn OSKextCancelRequest(
  * ERRORS  if the provided buffer is too small
  * EIO     internal error, such as if __llvm_profile_write_buffer_internal fails
  */
-int
-OSKextGrabPgoData(uuid_t uuid,
-    uint64_t *pSize,
-    char *pBuffer,
-    uint64_t bufferSize,
-    int wait_for_unload,
-    int metadata);
+int OSKextGrabPgoData(uuid_t uuid, uint64_t *pSize, char *pBuffer,
+                      uint64_t bufferSize, int wait_for_unload, int metadata);
 
 /*!
  * @function OSKextResetPgoCountersLock
  *
  * @abstract
- * Call this function before trapping into the debugger to call OSKextResetPgoCounters.
+ * Call this function before trapping into the debugger to call
+ * OSKextResetPgoCounters.
  */
-void
-OSKextResetPgoCountersLock(void);
+void OSKextResetPgoCountersLock(void);
 
 /*!
  * @function OSKextResetPgoCountersUnlock
  *
  * @abstract
- * Call this function after trapping into the debugger to call OSKextResetPgoCounters.
+ * Call this function after trapping into the debugger to call
+ * OSKextResetPgoCounters.
  */
-void
-OSKextResetPgoCountersUnlock(void);
+void OSKextResetPgoCountersUnlock(void);
 
 /*!
  * @function OSKextResetPgoCounters
@@ -1046,9 +1040,7 @@ OSKextResetPgoCountersUnlock(void);
  * @abstract Reset the PGO counters for all kexts.  Call only from debugger
  * context, while holding OSKextResetPgoCountersLock().
  */
-void
-OSKextResetPgoCounters(void);
-
+void OSKextResetPgoCounters(void);
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -1082,7 +1074,7 @@ OSKextResetPgoCounters(void);
  * @/textblock
  * </pre>
  */
-extern const void * const gOSKextUnresolved;
+extern const void *const gOSKextUnresolved;
 
 /*!
  * @define OSKextSymbolIsResolved
@@ -1110,9 +1102,7 @@ extern const void * const gOSKextUnresolved;
  * @/textblock
  * </pre>
  */
-#define OSKextSymbolIsResolved(weak_sym)        \
-    (&(weak_sym) != gOSKextUnresolved)
-
+#define OSKextSymbolIsResolved(weak_sym) (&(weak_sym) != gOSKextUnresolved)
 
 #if CONFIG_KEC_FIPS
 
@@ -1126,9 +1116,9 @@ extern const void * const gOSKextUnresolved;
 // Kernel External Components for FIPS compliance (KEC_FIPS)
 // WARNING - ath_hash is owned by the kernel, do not free
 typedef struct AppleTEXTHash {
-	int                 ath_version;// version of this structure (value is 1 or 2)
-	int             ath_length; // length of hash data
-	void *          ath_hash;   // hash extracted from AppleTextHashes dict
+  int ath_version; // version of this structure (value is 1 or 2)
+  int ath_length;  // length of hash data
+  void *ath_hash;  // hash extracted from AppleTextHashes dict
 } AppleTEXTHash_t;
 #endif // CONFIG_KEC_FIPS
 

@@ -32,35 +32,26 @@
 
 OSDefineMetaClassAndAbstractStructors(IORTC, IOService);
 
-void
-IORTC::getUTCTimeOfDay( clock_sec_t * secs, clock_nsec_t * nsecs )
-{
-	*nsecs = 0;
-	*secs = getGMTTimeOfDay();
+void IORTC::getUTCTimeOfDay(clock_sec_t *secs, clock_nsec_t *nsecs) {
+  *nsecs = 0;
+  *secs = getGMTTimeOfDay();
 }
 
-void
-IORTC::setUTCTimeOfDay( clock_sec_t secs, clock_nsec_t nsecs )
-{
-	setGMTTimeOfDay(secs);
+void IORTC::setUTCTimeOfDay(clock_sec_t secs, clock_nsec_t nsecs) {
+  setGMTTimeOfDay(secs);
 }
 
-IOReturn
-IORTC::getMonotonicClockOffset( int64_t * usecs )
-{
-	return kIOReturnUnsupported;
+IOReturn IORTC::getMonotonicClockOffset(int64_t *usecs) {
+  return kIOReturnUnsupported;
 }
 
-IOReturn
-IORTC::setMonotonicClockOffset( int64_t usecs )
-{
-	return kIOReturnUnsupported;
+IOReturn IORTC::setMonotonicClockOffset(int64_t usecs) {
+  return kIOReturnUnsupported;
 }
 
-IOReturn
-IORTC::getMonotonicClockAndTimestamp( uint64_t * usecs, uint64_t *mach_absolute_time )
-{
-	return kIOReturnUnsupported;
+IOReturn IORTC::getMonotonicClockAndTimestamp(uint64_t *usecs,
+                                              uint64_t *mach_absolute_time) {
+  return kIOReturnUnsupported;
 }
 
 OSMetaClassDefineReservedUnused(IORTC, 0);

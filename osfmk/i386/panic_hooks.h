@@ -31,11 +31,11 @@
 
 #if XNU_KERNEL_PRIVATE
 
-#include <stdint.h>
 #include <mach/i386/boolean.h>
+#include <stdint.h>
 
 typedef struct {
-	uint64_t        opaque[6];
+  uint64_t opaque[6];
 } panic_hook_t;
 
 typedef void (*panic_hook_fn_t)(panic_hook_t *);
@@ -48,13 +48,13 @@ void panic_unhook(panic_hook_t *hook);
 void panic_dump_mem(const void *addr, int len);
 
 typedef struct panic_phys_range {
-	uint32_t type;
-	uint64_t phys_start;
-	uint64_t len;
+  uint32_t type;
+  uint64_t phys_start;
+  uint64_t len;
 } panic_phys_range_t;
 
 boolean_t panic_phys_range_before(const void *addr, uint64_t *pphys,
-    panic_phys_range_t *range);
+                                  panic_phys_range_t *range);
 
 #endif // XNU_KERNEL_PRIVATE
 

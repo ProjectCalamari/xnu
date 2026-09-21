@@ -32,8 +32,8 @@
 #ifndef __IMAGE4_API_RESTRICTED_ENVIRONMENT_H
 #define __IMAGE4_API_RESTRICTED_ENVIRONMENT_H
 
-#include <image4/image4.h>
 #include <image4/environment.h>
+#include <image4/image4.h>
 
 __BEGIN_DECLS
 OS_ASSUME_NONNULL_BEGIN
@@ -59,13 +59,11 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  * This function first became available in restricted API version 1000; it will
  * be functionally neutered in version 2000.
  */
-OS_EXPORT OS_WARN_RESULT OS_NONNULL2
-const void *_Nullable
-image4_environment_get_firmware_chip(
-	uint32_t v,
-	const image4_environment_t *nv);
-#define image4_environment_get_firmware_chip(...) \
-	image4_call_restricted(environment_get_firmware_chip, ## __VA_ARGS__)
+OS_EXPORT OS_WARN_RESULT
+    OS_NONNULL2 const void *_Nullable image4_environment_get_firmware_chip(
+        uint32_t v, const image4_environment_t *nv);
+#define image4_environment_get_firmware_chip(...)                              \
+  image4_call_restricted(environment_get_firmware_chip, ##__VA_ARGS__)
 
 OS_ASSUME_PTR_ABI_SINGLE_END
 OS_ASSUME_NONNULL_END

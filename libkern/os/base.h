@@ -23,7 +23,6 @@
 
 #include <sys/cdefs.h>
 
-
 #ifndef __has_builtin
 #define __has_builtin(x) 0
 #endif
@@ -78,7 +77,7 @@
 #endif /* __BUILDING_XNU_LIBRARY__ */
 #define OS_TRANSPARENT_UNION __attribute__((__transparent_union__))
 #define OS_ALIGNED(n) __attribute__((__aligned__((n))))
-#define OS_FORMAT_PRINTF(x, y) __attribute__((__format__(printf,x,y)))
+#define OS_FORMAT_PRINTF(x, y) __attribute__((__format__(printf, x, y)))
 #define OS_EXPORT extern __attribute__((__visibility__("default")))
 #define OS_INLINE static __inline__
 #define OS_EXPECT(x, v) __builtin_expect((x), (v))
@@ -137,7 +136,7 @@
 
 #if __has_feature(assume_nonnull)
 #define OS_ASSUME_NONNULL_BEGIN _Pragma("clang assume_nonnull begin")
-#define OS_ASSUME_NONNULL_END   _Pragma("clang assume_nonnull end")
+#define OS_ASSUME_NONNULL_END _Pragma("clang assume_nonnull end")
 #else
 #define OS_ASSUME_NONNULL_BEGIN
 #define OS_ASSUME_NONNULL_END
@@ -182,16 +181,20 @@
 #define __OS_OPTIONS_ATTR
 #endif // __has_attribute(flag_enum)
 
-#if __has_feature(objc_fixed_enum) || __has_extension(cxx_fixed_enum) || \
-        __has_extension(cxx_strong_enums)
-#define OS_ENUM(_name, _type, ...) \
-	typedef enum : _type { __VA_ARGS__ } _name##_t
-#define OS_CLOSED_ENUM(_name, _type, ...) \
-	typedef enum : _type { __VA_ARGS__ } __OS_ENUM_ATTR_CLOSED _name##_t
-#define OS_OPTIONS(_name, _type, ...) \
-	typedef enum : _type { __VA_ARGS__ } __OS_ENUM_ATTR __OS_OPTIONS_ATTR _name##_t
-#define OS_CLOSED_OPTIONS(_name, _type, ...) \
-	typedef enum : _type { __VA_ARGS__ } __OS_ENUM_ATTR_CLOSED __OS_OPTIONS_ATTR _name##_t
+#if __has_feature(objc_fixed_enum) || __has_extension(cxx_fixed_enum) ||       \
+    __has_extension(cxx_strong_enums)
+#define OS_ENUM(_name, _type, ...)                                             \
+  typedef enum : _type { __VA_ARGS__ } _name##_t
+#define OS_CLOSED_ENUM(_name, _type, ...)                                      \
+  typedef enum : _type { __VA_ARGS__ } __OS_ENUM_ATTR_CLOSED _name##_t
+#define OS_OPTIONS(_name, _type, ...)                                          \
+  typedef enum : _type {                                                       \
+    __VA_ARGS__                                                                \
+  } __OS_ENUM_ATTR __OS_OPTIONS_ATTR _name##_t
+#define OS_CLOSED_OPTIONS(_name, _type, ...)                                   \
+  typedef enum : _type {                                                       \
+    __VA_ARGS__                                                                \
+  } __OS_ENUM_ATTR_CLOSED __OS_OPTIONS_ATTR _name##_t
 #else
 /*!
  * There is unfortunately no good way in plain C to have both fixed-type enums
@@ -223,35 +226,39 @@
  *
  * When compiling in ObjC or C++, both of the above assignments are illegal.
  */
-#define __OS_ENUM_C_FALLBACK(_name, _type, ...) \
-	typedef _type _name##_t; enum _name { __VA_ARGS__ }
+#define __OS_ENUM_C_FALLBACK(_name, _type, ...)                                \
+  typedef _type _name##_t;                                                     \
+  enum _name { __VA_ARGS__ }
 
-#define OS_ENUM(_name, _type, ...) \
-	typedef _type _name##_t; enum { __VA_ARGS__ }
-#define OS_CLOSED_ENUM(_name, _type, ...) \
-	__OS_ENUM_C_FALLBACK(_name, _type, ## __VA_ARGS__) \
-	__OS_ENUM_ATTR_CLOSED
-#define OS_OPTIONS(_name, _type, ...) \
-	__OS_ENUM_C_FALLBACK(_name, _type, ## __VA_ARGS__) \
-	__OS_ENUM_ATTR __OS_OPTIONS_ATTR
-#define OS_CLOSED_OPTIONS(_name, _type, ...) \
-	__OS_ENUM_C_FALLBACK(_name, _type, ## __VA_ARGS__) \
-	__OS_ENUM_ATTR_CLOSED __OS_OPTIONS_ATTR
+#define OS_ENUM(_name, _type, ...)                                             \
+  typedef _type _name##_t;                                                     \
+  enum { __VA_ARGS__ }
+#define OS_CLOSED_ENUM(_name, _type, ...)                                      \
+  __OS_ENUM_C_FALLBACK(_name, _type, ##__VA_ARGS__)                            \
+  __OS_ENUM_ATTR_CLOSED
+#define OS_OPTIONS(_name, _type, ...)                                          \
+  __OS_ENUM_C_FALLBACK(_name, _type, ##__VA_ARGS__)                            \
+  __OS_ENUM_ATTR __OS_OPTIONS_ATTR
+#define OS_CLOSED_OPTIONS(_name, _type, ...)                                   \
+  __OS_ENUM_C_FALLBACK(_name, _type, ##__VA_ARGS__)                            \
+  __OS_ENUM_ATTR_CLOSED __OS_OPTIONS_ATTR
 #endif // __has_feature(objc_fixed_enum) || __has_extension(cxx_strong_enums)
 
 #if __has_feature(attribute_availability_swift)
 // equivalent to __SWIFT_UNAVAILABLE from Availability.h
-#define OS_SWIFT_UNAVAILABLE(_msg) \
-	__attribute__((__availability__(swift, unavailable, message=_msg)))
+#define OS_SWIFT_UNAVAILABLE(_msg)                                             \
+  __attribute__((__availability__(swift, unavailable, message = _msg)))
 #else
 #define OS_SWIFT_UNAVAILABLE(_msg)
 #endif
 
 #if __has_attribute(__swift_attr__)
-#define OS_SWIFT_UNAVAILABLE_FROM_ASYNC(msg) \
-	__attribute__((__swift_attr__("@_unavailableFromAsync(message: \"" msg "\")")))
+#define OS_SWIFT_UNAVAILABLE_FROM_ASYNC(msg)                                   \
+  __attribute__((                                                              \
+      __swift_attr__("@_unavailableFromAsync(message: \"" msg "\")")))
 #define OS_SWIFT_NONISOLATED __attribute__((__swift_attr__("nonisolated")))
-#define OS_SWIFT_NONISOLATED_UNSAFE __attribute__((__swift_attr__("nonisolated(unsafe)")))
+#define OS_SWIFT_NONISOLATED_UNSAFE                                            \
+  __attribute__((__swift_attr__("nonisolated(unsafe)")))
 #else
 #define OS_SWIFT_UNAVAILABLE_FROM_ASYNC(msg)
 #define OS_SWIFT_NONISOLATED
@@ -259,30 +266,34 @@
 #endif
 
 #if __has_attribute(swift_private)
-# define OS_REFINED_FOR_SWIFT __attribute__((__swift_private__))
+#define OS_REFINED_FOR_SWIFT __attribute__((__swift_private__))
 #else
-# define OS_REFINED_FOR_SWIFT
+#define OS_REFINED_FOR_SWIFT
 #endif
 
 #if __has_attribute(swift_name)
-# define OS_SWIFT_NAME(_name) __attribute__((__swift_name__(#_name)))
+#define OS_SWIFT_NAME(_name) __attribute__((__swift_name__(#_name)))
 #else
-# define OS_SWIFT_NAME(_name)
+#define OS_SWIFT_NAME(_name)
 #endif
 
 #define __OS_STRINGIFY(s) #s
 #define OS_STRINGIFY(s) __OS_STRINGIFY(s)
-#define __OS_CONCAT(x, y) x ## y
+#define __OS_CONCAT(x, y) x##y
 #define OS_CONCAT(x, y) __OS_CONCAT(x, y)
 
 #ifdef __GNUC__
-#define os_prevent_tail_call_optimization()  __asm__("")
-#define os_is_compile_time_constant(expr)    __builtin_constant_p(expr)
-#define os_compiler_barrier()                __asm__ __volatile__("" ::: "memory")
+#define os_prevent_tail_call_optimization() __asm__("")
+#define os_is_compile_time_constant(expr) __builtin_constant_p(expr)
+#define os_compiler_barrier() __asm__ __volatile__("" ::: "memory")
 #else
-#define os_prevent_tail_call_optimization()  do { } while (0)
-#define os_is_compile_time_constant(expr)    0
-#define os_compiler_barrier()                do { } while (0)
+#define os_prevent_tail_call_optimization()                                    \
+  do {                                                                         \
+  } while (0)
+#define os_is_compile_time_constant(expr) 0
+#define os_compiler_barrier()                                                  \
+  do {                                                                         \
+  } while (0)
 #endif
 
 #if __has_attribute(not_tail_called)
@@ -354,8 +365,16 @@ typedef void (^os_block_t)(void);
 #if KERNEL
 #if __has_feature(ptrauth_calls)
 #include <ptrauth.h>
-#define OS_PTRAUTH_SIGNED_PTR(type) __ptrauth(ptrauth_key_process_independent_data, 1, ptrauth_string_discriminator(type))
-#define OS_PTRAUTH_SIGNED_PTR_AUTH_NULL(type) __ptrauth(ptrauth_key_process_independent_data, 1, ptrauth_string_discriminator(type), "authenticates-null-values")
+#define OS_PTRAUTH_SIGNED_PTR(type)                                            \
+  __ptrauth(ptrauth_key_process_independent_data, 1,                           \
+            ptrauth_string_discriminator(type))
+#if defined(__apple_build_version__)
+#define OS_PTRAUTH_SIGNED_PTR_AUTH_NULL(type)                                  \
+  __ptrauth(ptrauth_key_process_independent_data, 1,                           \
+            ptrauth_string_discriminator(type), "authenticates-null-values")
+#else
+#define OS_PTRAUTH_SIGNED_PTR_AUTH_NULL(type) OS_PTRAUTH_SIGNED_PTR(type)
+#endif
 #define OS_PTRAUTH_DISCRIMINATOR(str) ptrauth_string_discriminator(str)
 #define __ptrauth_only
 #else //  __has_feature(ptrauth_calls)
@@ -368,8 +387,8 @@ typedef void (^os_block_t)(void);
 
 #if KERNEL
 #if __has_feature(ptrauth_calls)
-#define XNU_PTRAUTH_SIGNED_FUNCTION_PTR(type) \
-	__ptrauth(ptrauth_key_function_pointer, 1, ptrauth_string_discriminator(type))
+#define XNU_PTRAUTH_SIGNED_FUNCTION_PTR(type)                                  \
+  __ptrauth(ptrauth_key_function_pointer, 1, ptrauth_string_discriminator(type))
 #else
 #define XNU_PTRAUTH_SIGNED_FUNCTION_PTR(type)
 #endif

@@ -69,19 +69,19 @@
  * HISTORY
  */
 
+#include <sys/kernel.h>
 #include <sys/param.h>
+#include <sys/proc_internal.h>
+#include <sys/resource.h>
+#include <sys/resourcevar.h>
+#include <sys/sysctl.h>
 #include <sys/systm.h>
 #include <sys/time.h>
-#include <sys/resourcevar.h>
-#include <sys/kernel.h>
-#include <sys/resource.h>
-#include <sys/proc_internal.h>
 #include <sys/vm.h>
-#include <sys/sysctl.h>
 
-#include <kern/thread.h>
-#include <kern/ast.h>
 #include <kern/assert.h>
+#include <kern/ast.h>
+#include <kern/thread.h>
 #include <mach/boolean.h>
 
 #include <kern/thread_call.h>
@@ -108,8 +108,8 @@ int tvtohz(struct timeval *tv);
  * The hz hardware interval timer.
  */
 
-int             hz = 100;                /* GET RID OF THIS !!! */
-int             tick = (1000000 / 100);  /* GET RID OF THIS !!! */
+int hz = 100;               /* GET RID OF THIS !!! */
+int tick = (1000000 / 100); /* GET RID OF THIS !!! */
 
 /*
  * Kernel timeout services.
@@ -122,16 +122,12 @@ int             tick = (1000000 / 100);  /* GET RID OF THIS !!! */
  *	param:		parameter to pass to function
  *	interval:	timeout interval, in hz.
  */
-void
-timeout(
-	timeout_fcn_t                   fcn,
-	void                                    *param,
-	int                                             interval)
-{
-	uint64_t                deadline;
+void timeout(timeout_fcn_t fcn, void *param, int interval) {
+  uint64_t deadline;
 
-	clock_interval_to_deadline(interval, NSEC_PER_SEC / hz, &deadline);
-	thread_call_func_delayed((thread_call_func_t)(void (*)(void))fcn, param, deadline);
+  clock_interval_to_deadline(interval, NSEC_PER_SEC / hz, &deadline);
+  thread_call_func_delayed((thread_call_func_t)(void (*)(void))fcn, param,
+                           deadline);
 }
 
 /*
@@ -142,21 +138,19 @@ timeout(
  *	interval:	timeout interval, in hz.
  *	leeway_interval:	leeway interval, in hz.
  */
-void
-timeout_with_leeway(
-	timeout_fcn_t                   fcn,
-	void                                    *param,
-	int                                             interval,
-	int                                             leeway_interval)
-{
-	uint64_t                deadline;
-	uint64_t                leeway;
+void timeout_with_leeway(timeout_fcn_t fcn, void *param, int interval,
+                         int leeway_interval) {
+  uint64_t deadline;
+  uint64_t leeway;
 
-	clock_interval_to_deadline(interval, NSEC_PER_SEC / hz, &deadline);
+  clock_interval_to_deadline(interval, NSEC_PER_SEC / hz, &deadline);
 
-	clock_interval_to_absolutetime_interval(leeway_interval, NSEC_PER_SEC / hz, &leeway);
+  clock_interval_to_absolutetime_interval(leeway_interval, NSEC_PER_SEC / hz,
+                                          &leeway);
 
-	thread_call_func_delayed_with_leeway((thread_call_func_t)(void (*)(void))fcn, param, deadline, leeway, THREAD_CALL_DELAY_LEEWAY);
+  thread_call_func_delayed_with_leeway((thread_call_func_t)(void (*)(void))fcn,
+                                       param, deadline, leeway,
+                                       THREAD_CALL_DELAY_LEEWAY);
 }
 
 /*
@@ -164,14 +158,10 @@ timeout_with_leeway(
  * Deprecated because it's very inefficient.
  * Switch to an allocated thread call instead.
  */
-void
-untimeout(
-	timeout_fcn_t           fcn,
-	void                    *param)
-{
-	thread_call_func_cancel((thread_call_func_t)(void (*)(void))fcn, param, FALSE);
+void untimeout(timeout_fcn_t fcn, void *param) {
+  thread_call_func_cancel((thread_call_func_t)(void (*)(void))fcn, param,
+                          FALSE);
 }
-
 
 /*
  *	Set a timeout.
@@ -180,19 +170,16 @@ untimeout(
  *	param:		parameter to pass to function
  *	ts:		timeout interval, in timespec
  */
-void
-bsd_timeout(
-	timeout_fcn_t                   fcn,
-	void                                    *param,
-	struct timespec         *ts)
-{
-	uint64_t                deadline = 0;
+void bsd_timeout(timeout_fcn_t fcn, void *param, struct timespec *ts) {
+  uint64_t deadline = 0;
 
-	if (ts && (ts->tv_sec || ts->tv_nsec)) {
-		nanoseconds_to_absolutetime((uint64_t)ts->tv_sec * NSEC_PER_SEC + ts->tv_nsec, &deadline );
-		clock_absolutetime_interval_to_deadline( deadline, &deadline );
-	}
-	thread_call_func_delayed((thread_call_func_t)(void (*)(void))fcn, param, deadline);
+  if (ts && (ts->tv_sec || ts->tv_nsec)) {
+    nanoseconds_to_absolutetime(
+        (uint64_t)ts->tv_sec * NSEC_PER_SEC + ts->tv_nsec, &deadline);
+    clock_absolutetime_interval_to_deadline(deadline, &deadline);
+  }
+  thread_call_func_delayed((thread_call_func_t)(void (*)(void))fcn, param,
+                           deadline);
 }
 
 /*
@@ -200,152 +187,137 @@ bsd_timeout(
  * Deprecated because it's very inefficient.
  * Switch to an allocated thread call instead.
  */
-void
-bsd_untimeout(
-	timeout_fcn_t           fcn,
-	void                    *param)
-{
-	thread_call_func_cancel((thread_call_func_t)(void (*)(void))fcn, param, FALSE);
+void bsd_untimeout(timeout_fcn_t fcn, void *param) {
+  thread_call_func_cancel((thread_call_func_t)(void (*)(void))fcn, param,
+                          FALSE);
 }
-
 
 /*
  * Compute number of hz until specified time.
  * Used to compute third argument to timeout() from an
  * absolute time.
  */
-int
-hzto(struct timeval *tv)
-{
-	struct timeval now;
-	long ticks;
-	long sec;
+int hzto(struct timeval *tv) {
+  struct timeval now;
+  long ticks;
+  long sec;
 
-	microtime(&now);
-	/*
-	 * If number of milliseconds will fit in 32 bit arithmetic,
-	 * then compute number of milliseconds to time and scale to
-	 * ticks.  Otherwise just compute number of hz in time, rounding
-	 * times greater than representible to maximum value.
-	 *
-	 * Delta times less than 25 days can be computed ``exactly''.
-	 * Maximum value for any timeout in 10ms ticks is 250 days.
-	 */
-	sec = tv->tv_sec - now.tv_sec;
-	if (sec <= 0x7fffffff / 1000 - 1000) {
-		ticks = ((tv->tv_sec - now.tv_sec) * 1000 +
-		    (tv->tv_usec - now.tv_usec) / 1000)
-		    / (tick / 1000);
-	} else if (sec <= 0x7fffffff / hz) {
-		ticks = sec * hz;
-	} else {
-		ticks = 0x7fffffff;
-	}
+  microtime(&now);
+  /*
+   * If number of milliseconds will fit in 32 bit arithmetic,
+   * then compute number of milliseconds to time and scale to
+   * ticks.  Otherwise just compute number of hz in time, rounding
+   * times greater than representible to maximum value.
+   *
+   * Delta times less than 25 days can be computed ``exactly''.
+   * Maximum value for any timeout in 10ms ticks is 250 days.
+   */
+  sec = tv->tv_sec - now.tv_sec;
+  if (sec <= 0x7fffffff / 1000 - 1000) {
+    ticks = ((tv->tv_sec - now.tv_sec) * 1000 +
+             (tv->tv_usec - now.tv_usec) / 1000) /
+            (tick / 1000);
+  } else if (sec <= 0x7fffffff / hz) {
+    ticks = sec * hz;
+  } else {
+    ticks = 0x7fffffff;
+  }
 
-	return (int)ticks;
+  return (int)ticks;
 }
 
 /*
  * Return information about system clocks.
  */
-static int
-sysctl_clockrate
-(__unused struct sysctl_oid *oidp, __unused void *arg1, __unused int arg2, __unused struct sysctl_req *req)
-{
-	struct clockinfo clkinfo = {
-		.hz         = hz,
-		.tick       = tick,
-		.tickadj    = 0,
-		.stathz     = hz,
-		.profhz     = hz,
-	};
+static int sysctl_clockrate(__unused struct sysctl_oid *oidp,
+                            __unused void *arg1, __unused int arg2,
+                            __unused struct sysctl_req *req) {
+  struct clockinfo clkinfo = {
+      .hz = hz,
+      .tick = tick,
+      .tickadj = 0,
+      .stathz = hz,
+      .profhz = hz,
+  };
 
-	return sysctl_io_opaque(req, &clkinfo, sizeof(clkinfo), NULL);
+  return sysctl_io_opaque(req, &clkinfo, sizeof(clkinfo), NULL);
 }
 
 SYSCTL_PROC(_kern, KERN_CLOCKRATE, clockrate,
-    CTLTYPE_STRUCT | CTLFLAG_RD | CTLFLAG_LOCKED,
-    0, 0, sysctl_clockrate, "S,clockinfo", "");
-
+            CTLTYPE_STRUCT | CTLFLAG_RD | CTLFLAG_LOCKED, 0, 0,
+            sysctl_clockrate, "S,clockinfo", "");
 
 /*
  * Compute number of ticks in the specified amount of time.
  */
-int
-tvtohz(struct timeval *tv)
-{
-	unsigned long ticks;
-	long sec, usec;
+int tvtohz(struct timeval *tv) {
+  unsigned long ticks;
+  long sec, usec;
 
-	/*
-	 * If the number of usecs in the whole seconds part of the time
-	 * difference fits in a long, then the total number of usecs will
-	 * fit in an unsigned long.  Compute the total and convert it to
-	 * ticks, rounding up and adding 1 to allow for the current tick
-	 * to expire.  Rounding also depends on unsigned long arithmetic
-	 * to avoid overflow.
-	 *
-	 * Otherwise, if the number of ticks in the whole seconds part of
-	 * the time difference fits in a long, then convert the parts to
-	 * ticks separately and add, using similar rounding methods and
-	 * overflow avoidance.  This method would work in the previous
-	 * case but it is slightly slower and assumes that hz is integral.
-	 *
-	 * Otherwise, round the time difference down to the maximum
-	 * representable value.
-	 *
-	 * If ints have 32 bits, then the maximum value for any timeout in
-	 * 10ms ticks is 248 days.
-	 */
-	sec = tv->tv_sec;
-	usec = tv->tv_usec;
-	if (usec < 0) {
-		sec--;
-		usec += 1000000;
-	}
-	if (sec < 0) {
+  /*
+   * If the number of usecs in the whole seconds part of the time
+   * difference fits in a long, then the total number of usecs will
+   * fit in an unsigned long.  Compute the total and convert it to
+   * ticks, rounding up and adding 1 to allow for the current tick
+   * to expire.  Rounding also depends on unsigned long arithmetic
+   * to avoid overflow.
+   *
+   * Otherwise, if the number of ticks in the whole seconds part of
+   * the time difference fits in a long, then convert the parts to
+   * ticks separately and add, using similar rounding methods and
+   * overflow avoidance.  This method would work in the previous
+   * case but it is slightly slower and assumes that hz is integral.
+   *
+   * Otherwise, round the time difference down to the maximum
+   * representable value.
+   *
+   * If ints have 32 bits, then the maximum value for any timeout in
+   * 10ms ticks is 248 days.
+   */
+  sec = tv->tv_sec;
+  usec = tv->tv_usec;
+  if (usec < 0) {
+    sec--;
+    usec += 1000000;
+  }
+  if (sec < 0) {
 #ifdef DIAGNOSTIC
-		if (usec > 0) {
-			sec++;
-			usec -= 1000000;
-		}
-		printf("tvotohz: negative time difference %ld sec %ld usec\n",
-		    sec, usec);
+    if (usec > 0) {
+      sec++;
+      usec -= 1000000;
+    }
+    printf("tvotohz: negative time difference %ld sec %ld usec\n", sec, usec);
 #endif
-		ticks = 1;
-	} else if (sec <= LONG_MAX / 1000000) {
-		ticks = (sec * 1000000 + (unsigned long)usec + (tick - 1))
-		    / tick + 1;
-	} else if (sec <= LONG_MAX / hz) {
-		ticks = sec * hz
-		    + ((unsigned long)usec + (tick - 1)) / tick + 1;
-	} else {
-		ticks = LONG_MAX;
-	}
-	if (ticks > INT_MAX) {
-		ticks = INT_MAX;
-	}
-	return (int)ticks;
+    ticks = 1;
+  } else if (sec <= LONG_MAX / 1000000) {
+    ticks = (sec * 1000000 + (unsigned long)usec + (tick - 1)) / tick + 1;
+  } else if (sec <= LONG_MAX / hz) {
+    ticks = sec * hz + ((unsigned long)usec + (tick - 1)) / tick + 1;
+  } else {
+    ticks = LONG_MAX;
+  }
+  if (ticks > INT_MAX) {
+    ticks = INT_MAX;
+  }
+  return (int)ticks;
 }
 
 /* TBD locking user profiling is not resolved yet */
-void
-get_procrustime(time_value_t *tv)
-{
-	struct proc *p = current_proc();
-	struct timeval st;
+void get_procrustime(time_value_t *tv) {
+  struct proc *p = current_proc();
+  struct timeval st;
 
-	if (p == NULL) {
-		return;
-	}
-	if (!(p->p_flag & P_PROFIL)) {
-		return;
-	}
+  if (p == NULL) {
+    return;
+  }
+  if (!(p->p_flag & P_PROFIL)) {
+    return;
+  }
 
-	//proc_lock(p);
-	st = p->p_stats->p_ru.ru_stime;
-	//proc_unlock(p);
+  // proc_lock(p);
+  st = p->p_stats->p_ru.ru_stime;
+  // proc_unlock(p);
 
-	tv->seconds = (integer_t)st.tv_sec;
-	tv->microseconds = st.tv_usec;
+  tv->seconds = (integer_t)st.tv_sec;
+  tv->microseconds = st.tv_usec;
 }

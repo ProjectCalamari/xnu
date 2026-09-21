@@ -65,15 +65,15 @@
 #define _SYS_FILE_H_
 
 #include <sys/appleapiopts.h>
-#include <sys/types.h>
-#include <sys/fcntl.h>
-#include <sys/unistd.h>
-#include <sys/queue.h>
 #include <sys/cdefs.h>
+#include <sys/fcntl.h>
+#include <sys/queue.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
 
 #ifdef KERNEL
-#include <sys/queue.h>
 #include <sys/kernel_types.h>
+#include <sys/queue.h>
 #include <sys/uio.h>
 #endif
 
@@ -83,7 +83,7 @@ struct ucred;
 typedef struct ucred *kauth_cred_t;
 struct posix_cred;
 typedef struct posix_cred *posix_cred_t;
-#endif  /* !_KAUTH_CRED_T */
+#endif /* !_KAUTH_CRED_T */
 
 __BEGIN_DECLS
 #ifdef KERNEL
@@ -98,11 +98,13 @@ int file_drop(int);
 struct fileglob;
 struct fileproc;
 struct vnode;
-int fp_getfvp(struct proc *p, int fd, struct fileproc **resultfp, struct vnode  **resultvp);
+int fp_getfvp(struct proc *p, int fd, struct fileproc **resultfp,
+              struct vnode **resultvp);
 int fp_get_pipe_id(proc_t p, int fd, uint64_t *result_pipe_id);
 struct vnode *fg_get_vnode(struct fileglob *fg);
-void generate_file_permissions_guard_exception(unsigned int code_target, int64_t subcode);
+void generate_file_permissions_guard_exception(unsigned int code_target,
+                                               int64_t subcode);
 #define GEN_FILEPERM_EXCEPTION 1
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 __END_DECLS
 #endif /* !_SYS_FILE_H_ */

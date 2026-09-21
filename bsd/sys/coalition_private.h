@@ -37,18 +37,21 @@ __BEGIN_DECLS
 
 #define COALITION_POLICY_ENTITLEMENT "com.apple.private.coalition-policy"
 
-__enum_decl(coalition_policy_flavor_t, uint32_t, {
-	COALITION_POLICY_SUPPRESS = 1,
-});
+__enum_decl(coalition_policy_flavor_t, uint32_t,
+            {
+                COALITION_POLICY_SUPPRESS = 1,
+            });
 
-__enum_decl(coalition_policy_suppress_t, uint32_t, {
-	COALITION_POLICY_SUPPRESS_NONE = 0,
-	COALITION_POLICY_SUPPRESS_DARWIN_BG = 1,
-});
+__enum_decl(coalition_policy_suppress_t, uint32_t,
+            {
+                COALITION_POLICY_SUPPRESS_NONE = 0,
+                COALITION_POLICY_SUPPRESS_DARWIN_BG = 1,
+            });
 
 #ifndef KERNEL
 /* Userspace syscall prototypes */
-int coalition_policy_set(uint64_t cid, coalition_policy_flavor_t flavor, uint32_t value);
+int coalition_policy_set(uint64_t cid, coalition_policy_flavor_t flavor,
+                         uint32_t value);
 int coalition_policy_get(uint64_t cid, coalition_policy_flavor_t flavor);
 #endif /* #ifndef KERNEL */
 

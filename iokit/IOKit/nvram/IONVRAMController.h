@@ -31,21 +31,20 @@
 
 #include <IOKit/IOService.h>
 
-class IONVRAMController : public IOService
-{
-	OSDeclareAbstractStructors(IONVRAMController);
+class IONVRAMController : public IOService {
+  OSDeclareAbstractStructors(IONVRAMController);
 
 public:
-	virtual void registerService(IOOptionBits options = 0) APPLE_KEXT_OVERRIDE;
+  virtual void registerService(IOOptionBits options = 0) APPLE_KEXT_OVERRIDE;
 
-	virtual void sync(void);
-	virtual IOReturn select(uint32_t bank);
-	virtual IOReturn eraseBank(void);
+  virtual void sync(void);
+  virtual IOReturn select(uint32_t bank);
+  virtual IOReturn eraseBank(void);
 
-	virtual IOReturn read(IOByteCount offset, UInt8 *buffer,
-	    IOByteCount length) = 0;
-	virtual IOReturn write(IOByteCount offset, UInt8 *buffer,
-	    IOByteCount length) = 0;
+  virtual IOReturn read(IOByteCount offset, UInt8 *buffer,
+                        IOByteCount length) = 0;
+  virtual IOReturn write(IOByteCount offset, UInt8 *buffer,
+                         IOByteCount length) = 0;
 };
 
 #endif /* !_IOKIT_IONVRAMCONTROLLER_H */

@@ -40,37 +40,37 @@
 /* Security Association Index */
 /* NOTE: Ensure to be same address family */
 struct secasindex {
-	struct sockaddr_storage src;    /* srouce address for SA */
-	struct sockaddr_storage dst;    /* destination address for SA */
-	u_int16_t proto;                /* IPPROTO_ESP or IPPROTO_AH */
-	u_int8_t mode;                  /* mode of protocol, see ipsec.h */
-	u_int32_t reqid;                /* reqid id who owned this SA */
-	                                /* see IPSEC_MANUAL_REQID_MAX. */
-	u_int ipsec_ifindex;
+  struct sockaddr_storage src; /* srouce address for SA */
+  struct sockaddr_storage dst; /* destination address for SA */
+  u_int16_t proto;             /* IPPROTO_ESP or IPPROTO_AH */
+  u_int8_t mode;               /* mode of protocol, see ipsec.h */
+  u_int32_t reqid;             /* reqid id who owned this SA */
+                               /* see IPSEC_MANUAL_REQID_MAX. */
+  u_int ipsec_ifindex;
 };
 
-#define SECURITY_ASSOCIATION_ANY          0x0000
-#define SECURITY_ASSOCIATION_PFKEY        0x0001
+#define SECURITY_ASSOCIATION_ANY 0x0000
+#define SECURITY_ASSOCIATION_PFKEY 0x0001
 #define SECURITY_ASSOCIATION_CUSTOM_IPSEC 0x0010
 
 /* Security Association Data Base */
 struct secashead {
-	LIST_ENTRY(secashead) chain;
+  LIST_ENTRY(secashead) chain;
 
-	struct secasindex saidx;
+  struct secasindex saidx;
 
-	ifnet_t ipsec_if;
-	u_int outgoing_if;
-	u_int8_t dir;                   /* IPSEC_DIR_INBOUND or IPSEC_DIR_OUTBOUND */
-	u_int8_t state;                 /* MATURE or DEAD. */
-	LIST_HEAD(_satree, secasvar) savtree[SADB_SASTATE_MAX + 1];
-	/* SA chain */
-	/* The first of this list is newer SA */
+  ifnet_t ipsec_if;
+  u_int outgoing_if;
+  u_int8_t dir;   /* IPSEC_DIR_INBOUND or IPSEC_DIR_OUTBOUND */
+  u_int8_t state; /* MATURE or DEAD. */
+  LIST_HEAD(_satree, secasvar) savtree[SADB_SASTATE_MAX + 1];
+  /* SA chain */
+  /* The first of this list is newer SA */
 
-	struct route_in6 sa_route;              /* route cache */
+  struct route_in6 sa_route; /* route cache */
 
-	uint16_t flags;
-	u_int32_t use_count;
+  uint16_t flags;
+  u_int32_t use_count;
 };
 
 #define MAX_REPLAY_WINDOWS 4
@@ -79,96 +79,98 @@ struct secashead {
 
 /* Security Association */
 struct secasvar {
-	LIST_ENTRY(secasvar) chain;
-	LIST_ENTRY(secasvar) spihash;
-	int refcnt;                     /* reference count */
-	u_int8_t state;                 /* Status of this Association */
+  LIST_ENTRY(secasvar) chain;
+  LIST_ENTRY(secasvar) spihash;
+  int refcnt;     /* reference count */
+  u_int8_t state; /* Status of this Association */
 
-	u_int8_t alg_auth;              /* Authentication Algorithm Identifier*/
-	u_int8_t alg_enc;               /* Cipher Algorithm Identifier */
-	u_int32_t spi;                  /* SPI Value, network byte order */
-	u_int32_t flags;                /* holder for SADB_KEY_FLAGS */
-	u_int16_t flags2;               /* holder for SADB_SA2_KEY_FLAGS */
+  u_int8_t alg_auth; /* Authentication Algorithm Identifier*/
+  u_int8_t alg_enc;  /* Cipher Algorithm Identifier */
+  u_int32_t spi;     /* SPI Value, network byte order */
+  u_int32_t flags;   /* holder for SADB_KEY_FLAGS */
+  u_int16_t flags2;  /* holder for SADB_SA2_KEY_FLAGS */
 
-	struct sadb_key *__sized_by(key_auth_len) key_auth;     /* Key for Authentication */
-	struct sadb_key *__sized_by(key_enc_len) key_enc;       /* Key for Encryption */
-	caddr_t __sized_by(ivlen) iv;                           /* Initialization Vector */
-	void *__sized_by(schedlen_auth) sched_auth;             /* intermediate authentication key */
-	void *__sized_by(schedlen_enc) sched_enc;               /* intermediate encryption key */
-	uint32_t key_auth_len;
-	uint32_t key_enc_len;
-	size_t schedlen_auth;
-	size_t schedlen_enc;
-	u_int ivlen;                                            /* length of IV */
+  struct sadb_key *
+      __sized_by(key_auth_len) key_auth;            /* Key for Authentication */
+  struct sadb_key *__sized_by(key_enc_len) key_enc; /* Key for Encryption */
+  caddr_t __sized_by(ivlen) iv;                     /* Initialization Vector */
+  void *__sized_by(schedlen_auth)
+      sched_auth; /* intermediate authentication key */
+  void *__sized_by(schedlen_enc) sched_enc; /* intermediate encryption key */
+  uint32_t key_auth_len;
+  uint32_t key_enc_len;
+  size_t schedlen_auth;
+  size_t schedlen_enc;
+  u_int ivlen; /* length of IV */
 
-	struct secreplay *replay[MAX_REPLAY_WINDOWS]; /* replay prevention */
+  struct secreplay *replay[MAX_REPLAY_WINDOWS]; /* replay prevention */
 
-	u_int64_t created;              /* for lifetime */
+  u_int64_t created; /* for lifetime */
 
-	struct sadb_lifetime *lft_c;    /* CURRENT lifetime, it's constant. */
-	struct sadb_lifetime *lft_h;    /* HARD lifetime */
-	struct sadb_lifetime *lft_s;    /* SOFT lifetime */
+  struct sadb_lifetime *lft_c; /* CURRENT lifetime, it's constant. */
+  struct sadb_lifetime *lft_h; /* HARD lifetime */
+  struct sadb_lifetime *lft_s; /* SOFT lifetime */
 
-	struct socket *so; /* Associated socket */
+  struct socket *so; /* Associated socket */
 
-	u_int32_t seq;                  /* sequence number */
-	pid_t pid;                      /* message's pid */
+  u_int32_t seq; /* sequence number */
+  pid_t pid;     /* message's pid */
 
-	struct secashead *sah;          /* back pointer to the secashead */
+  struct secashead *sah; /* back pointer to the secashead */
 
-	/* Nat Traversal related bits */
-	u_int64_t       natt_last_activity;
-	u_int16_t       remote_ike_port;
-	u_int16_t       natt_encapsulated_src_port;     /* network byte order */
-	u_int16_t       natt_interval; /* Interval in seconds */
-	u_int16_t       natt_offload_interval; /* Hardware Offload Interval in seconds */
-	/*
-	 * Globally unique flow identifier for the SA.
-	 * Added on outgoing packets by the IPSec driver.
-	 */
-	uint32_t        flowid;
+  /* Nat Traversal related bits */
+  u_int64_t natt_last_activity;
+  u_int16_t remote_ike_port;
+  u_int16_t natt_encapsulated_src_port; /* network byte order */
+  u_int16_t natt_interval;              /* Interval in seconds */
+  u_int16_t natt_offload_interval; /* Hardware Offload Interval in seconds */
+  /*
+   * Globally unique flow identifier for the SA.
+   * Added on outgoing packets by the IPSec driver.
+   */
+  uint32_t flowid;
 
-	u_int8_t        always_expire; /* Send expire/delete messages even if unused */
+  u_int8_t always_expire; /* Send expire/delete messages even if unused */
 };
 
 /* replay prevention */
 struct secreplay {
-	u_int8_t wsize;                          /* window size */
-	u_int32_t count;                         /* used by sender/receiver */
-	u_int32_t seq;                           /* used by sender */
-	u_int32_t lastseq;                       /* used by sender/receiver */
-	caddr_t __sized_by(wsize) bitmap;        /* used by receiver */
-	int overflow;                            /* overflow flag */
+  u_int8_t wsize;                   /* window size */
+  u_int32_t count;                  /* used by sender/receiver */
+  u_int32_t seq;                    /* used by sender */
+  u_int32_t lastseq;                /* used by sender/receiver */
+  caddr_t __sized_by(wsize) bitmap; /* used by receiver */
+  int overflow;                     /* overflow flag */
 };
 
 /* socket table due to send PF_KEY messages. */
 struct secreg {
-	LIST_ENTRY(secreg) chain;
+  LIST_ENTRY(secreg) chain;
 
-	struct socket *so;
+  struct socket *so;
 };
 
 #ifndef IPSEC_NONBLOCK_ACQUIRE
 /* acquiring list table. */
 struct secacq {
-	LIST_ENTRY(secacq) chain;
+  LIST_ENTRY(secacq) chain;
 
-	struct secasindex saidx;
+  struct secasindex saidx;
 
-	u_int32_t seq;          /* sequence number */
-	u_int64_t created;      /* for lifetime */
-	int count;              /* for lifetime */
+  u_int32_t seq;     /* sequence number */
+  u_int64_t created; /* for lifetime */
+  int count;         /* for lifetime */
 };
 #endif
 
 /* Sensitivity Level Specification */
 /* nothing */
 
-#define SADB_KILL_INTERVAL      600     /* six seconds */
+#define SADB_KILL_INTERVAL 600 /* six seconds */
 
 struct key_cb {
-	int key_count;
-	int any_count;
+  int key_count;
+  int any_count;
 };
 
 /* secpolicy */

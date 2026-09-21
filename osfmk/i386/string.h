@@ -32,11 +32,11 @@
 /*
  * memory functions
  */
-#define __arch_bcopy                    1
-#define __arch_bzero                    1
-#define __arch_memcpy                   1
-#define __arch_memmove                  1
-#define __arch_memset                   1
+#define __arch_bcopy 1
+#define __arch_bzero 1
+#define __arch_memcpy 1
+#define __arch_memmove 1
+#define __arch_memset 1
 
 /*
  * string functions

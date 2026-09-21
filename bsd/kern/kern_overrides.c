@@ -26,29 +26,29 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <sys/kauth.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
-#include <sys/proc_internal.h>
-#include <sys/proc.h>
-#include <sys/kauth.h>
-#include <sys/unistd.h>
+#include <sys/param.h>
 #include <sys/priv.h>
+#include <sys/proc.h>
+#include <sys/proc_internal.h>
+#include <sys/systm.h>
+#include <sys/unistd.h>
 
+#include <kern/assert.h>
+#include <kern/locks.h>
+#include <kern/sched_prim.h>
+#include <kern/task.h>
 #include <mach/mach_types.h>
 #include <mach/vm_param.h>
-#include <kern/task.h>
-#include <kern/locks.h>
-#include <kern/assert.h>
-#include <kern/sched_prim.h>
 
-#include <sys/kern_memorystatus_xnu.h>
-#include <sys/kern_overrides.h>
 #include <sys/bsdtask_info.h>
 #include <sys/kdebug.h>
-#include <sys/sysproto.h>
+#include <sys/kern_memorystatus_xnu.h>
+#include <sys/kern_overrides.h>
 #include <sys/msgbuf.h>
+#include <sys/sysproto.h>
 
 /* Mutex for global system override state */
 static LCK_GRP_DECLARE(sys_override_mtx_grp, "system_override");
@@ -78,115 +78,125 @@ static LCK_MTX_DECLARE(sys_override_lock, &sys_override_mtx_grp);
  * specific state in the kernel.
  *
  */
-static int64_t          io_throttle_assert_cnt;
-static int64_t          cpu_throttle_assert_cnt;
-static int64_t          fast_jetsam_assert_cnt;
+static int64_t io_throttle_assert_cnt;
+static int64_t cpu_throttle_assert_cnt;
+static int64_t fast_jetsam_assert_cnt;
 
 /* Wait Channel for system override */
-static uint64_t         sys_override_wait;
+static uint64_t sys_override_wait;
 
 /* Helper routines */
 static void system_override_begin(uint64_t flags);
 static void system_override_end(uint64_t flags);
 static void system_override_abort(uint64_t flags);
 static void system_override_callouts(uint64_t flags, boolean_t enable_override);
-static __attribute__((noinline)) int PROCESS_OVERRIDING_SYSTEM_DEFAULTS(uint64_t timeout);
+static __attribute__((noinline)) int
+PROCESS_OVERRIDING_SYSTEM_DEFAULTS(uint64_t timeout);
 
 /* system call implementation */
-int
-system_override(__unused struct proc *p, struct system_override_args * uap, __unused int32_t *retval)
-{
-	uint64_t timeout = uap->timeout;
-	uint64_t flags = uap->flags;
-	int error = 0;
+int system_override(__unused struct proc *p, struct system_override_args *uap,
+                    __unused int32_t *retval) {
+  uint64_t timeout = uap->timeout;
+  uint64_t flags = uap->flags;
+  int error = 0;
 
-	/* Check credentials for caller. Only entitled processes are allowed to make this call. */
-	if ((error = priv_check_cred(kauth_cred_get(), PRIV_SYSTEM_OVERRIDE, 0))) {
-		goto out;
-	}
+  /* Check credentials for caller. Only entitled processes are allowed to make
+   * this call. */
+  if ((error = priv_check_cred(kauth_cred_get(), PRIV_SYSTEM_OVERRIDE, 0))) {
+    goto out;
+  }
 
-	/* Check to see if sane flags are specified. */
-	if ((flags & ~SYS_OVERRIDE_FLAGS_MASK) != 0) {
-		error = EINVAL;
-		goto out;
-	}
+  /* Check to see if sane flags are specified. */
+  if ((flags & ~SYS_OVERRIDE_FLAGS_MASK) != 0) {
+    error = EINVAL;
+    goto out;
+  }
 
-	lck_mtx_lock(&sys_override_lock);
+  lck_mtx_lock(&sys_override_lock);
 
-	if (flags & SYS_OVERRIDE_DISABLE) {
-		flags &= ~SYS_OVERRIDE_DISABLE;
-		system_override_abort(flags);
-	} else {
-		system_override_begin(flags);
-		error = PROCESS_OVERRIDING_SYSTEM_DEFAULTS(timeout);
-		system_override_end(flags);
-	}
+  if (flags & SYS_OVERRIDE_DISABLE) {
+    flags &= ~SYS_OVERRIDE_DISABLE;
+    system_override_abort(flags);
+  } else {
+    system_override_begin(flags);
+    error = PROCESS_OVERRIDING_SYSTEM_DEFAULTS(timeout);
+    system_override_end(flags);
+  }
 
-	lck_mtx_unlock(&sys_override_lock);
+  lck_mtx_unlock(&sys_override_lock);
 
 out:
-	return error;
+  return error;
 }
 
 /*
- * Helper routines for enabling/disabling system overrides for various mechanisms.
- * These routines should be called with the sys_override_lock held. Each subsystem
- * which is hooked into the override service provides two routines:
+ * Helper routines for enabling/disabling system overrides for various
+ * mechanisms. These routines should be called with the sys_override_lock held.
+ * Each subsystem which is hooked into the override service provides two
+ * routines:
  *
  * - void sys_override_foo_init(void);
- * Routine to initialize the subsystem or the data needed for the override to work.
- * This routine is optional and if a subsystem needs it, it should be invoked from
- * init_system_override().
+ * Routine to initialize the subsystem or the data needed for the override to
+ * work. This routine is optional and if a subsystem needs it, it should be
+ * invoked from init_system_override().
  *
  * - void sys_override_foo(boolean_t enable_override);
- * Routine to enable/disable the override mechanism for that subsystem. A value of
- * true indicates that the mechanism should be overridden and the special behavior
- * should begin. A false value indicates that the subsystem should return to default
- * behavior. This routine is mandatory and should be invoked as part of the helper
- * routines if the flags passed in the syscall match the subsystem. Also, this
- * routine should preferably be idempotent.
+ * Routine to enable/disable the override mechanism for that subsystem. A value
+ * of true indicates that the mechanism should be overridden and the special
+ * behavior should begin. A false value indicates that the subsystem should
+ * return to default behavior. This routine is mandatory and should be invoked
+ * as part of the helper routines if the flags passed in the syscall match the
+ * subsystem. Also, this routine should preferably be idempotent.
  */
 
-static void
-system_override_callouts(uint64_t flags, boolean_t enable_override)
-{
-	switch (flags) {
-	case SYS_OVERRIDE_IO_THROTTLE:
-		if (enable_override) {
-			KERNEL_DEBUG_CONSTANT(FSDBG_CODE(DBG_THROTTLE, IO_THROTTLE_DISABLE) | DBG_FUNC_START,
-			    proc_getpid(current_proc()), 0, 0, 0, 0);
-		} else {
-			KERNEL_DEBUG_CONSTANT(FSDBG_CODE(DBG_THROTTLE, IO_THROTTLE_DISABLE) | DBG_FUNC_END,
-			    proc_getpid(current_proc()), 0, 0, 0, 0);
-		}
-		sys_override_io_throttle(enable_override);
-		break;
+static void system_override_callouts(uint64_t flags,
+                                     boolean_t enable_override) {
+  switch (flags) {
+  case SYS_OVERRIDE_IO_THROTTLE:
+    if (enable_override) {
+      KERNEL_DEBUG_CONSTANT(FSDBG_CODE(DBG_THROTTLE, IO_THROTTLE_DISABLE) |
+                                DBG_FUNC_START,
+                            proc_getpid(current_proc()), 0, 0, 0, 0);
+    } else {
+      KERNEL_DEBUG_CONSTANT(FSDBG_CODE(DBG_THROTTLE, IO_THROTTLE_DISABLE) |
+                                DBG_FUNC_END,
+                            proc_getpid(current_proc()), 0, 0, 0, 0);
+    }
+    sys_override_io_throttle(enable_override);
+    break;
 
-	case SYS_OVERRIDE_CPU_THROTTLE:
-		if (enable_override) {
-			KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_SCHED, MACH_CPU_THROTTLE_DISABLE) | DBG_FUNC_START,
-			    proc_getpid(current_proc()), 0, 0, 0, 0);
-		} else {
-			KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_SCHED, MACH_CPU_THROTTLE_DISABLE) | DBG_FUNC_END,
-			    proc_getpid(current_proc()), 0, 0, 0, 0);
-		}
-		sys_override_cpu_throttle(enable_override);
-		break;
+  case SYS_OVERRIDE_CPU_THROTTLE:
+    if (enable_override) {
+      KERNEL_DEBUG_CONSTANT(
+          MACHDBG_CODE(DBG_MACH_SCHED, MACH_CPU_THROTTLE_DISABLE) |
+              DBG_FUNC_START,
+          proc_getpid(current_proc()), 0, 0, 0, 0);
+    } else {
+      KERNEL_DEBUG_CONSTANT(
+          MACHDBG_CODE(DBG_MACH_SCHED, MACH_CPU_THROTTLE_DISABLE) |
+              DBG_FUNC_END,
+          proc_getpid(current_proc()), 0, 0, 0, 0);
+    }
+    sys_override_cpu_throttle(enable_override);
+    break;
 
-	case SYS_OVERRIDE_FAST_JETSAM:
-		if (enable_override) {
-			KERNEL_DEBUG_CONSTANT(BSDDBG_CODE(DBG_BSD_MEMSTAT, BSD_MEMSTAT_FAST_JETSAM) | DBG_FUNC_START,
-			    proc_getpid(current_proc()), 0, 0, 0, 0);
-		} else {
-			KERNEL_DEBUG_CONSTANT(BSDDBG_CODE(DBG_BSD_MEMSTAT, BSD_MEMSTAT_FAST_JETSAM) | DBG_FUNC_END,
-			    proc_getpid(current_proc()), 0, 0, 0, 0);
-		}
-		memorystatus_fast_jetsam_override(enable_override);
-		break;
+  case SYS_OVERRIDE_FAST_JETSAM:
+    if (enable_override) {
+      KERNEL_DEBUG_CONSTANT(
+          BSDDBG_CODE(DBG_BSD_MEMSTAT, BSD_MEMSTAT_FAST_JETSAM) |
+              DBG_FUNC_START,
+          proc_getpid(current_proc()), 0, 0, 0, 0);
+    } else {
+      KERNEL_DEBUG_CONSTANT(
+          BSDDBG_CODE(DBG_BSD_MEMSTAT, BSD_MEMSTAT_FAST_JETSAM) | DBG_FUNC_END,
+          proc_getpid(current_proc()), 0, 0, 0, 0);
+    }
+    memorystatus_fast_jetsam_override(enable_override);
+    break;
 
-	default:
-		panic("Unknown option to system_override_callouts(): %llu", flags);
-	}
+  default:
+    panic("Unknown option to system_override_callouts(): %llu", flags);
+  }
 }
 
 /*
@@ -195,31 +205,29 @@ system_override_callouts(uint64_t flags, boolean_t enable_override)
  * Routine to start a system override if the assertion count
  * transitions from 0->1 for a specified mechanism.
  */
-static void
-system_override_begin(uint64_t flags)
-{
-	lck_mtx_assert(&sys_override_lock, LCK_MTX_ASSERT_OWNED);
+static void system_override_begin(uint64_t flags) {
+  lck_mtx_assert(&sys_override_lock, LCK_MTX_ASSERT_OWNED);
 
-	if (flags & SYS_OVERRIDE_IO_THROTTLE) {
-		if (io_throttle_assert_cnt == 0) {
-			system_override_callouts(SYS_OVERRIDE_IO_THROTTLE, true);
-		}
-		io_throttle_assert_cnt++;
-	}
+  if (flags & SYS_OVERRIDE_IO_THROTTLE) {
+    if (io_throttle_assert_cnt == 0) {
+      system_override_callouts(SYS_OVERRIDE_IO_THROTTLE, true);
+    }
+    io_throttle_assert_cnt++;
+  }
 
-	if (flags & SYS_OVERRIDE_CPU_THROTTLE) {
-		if (cpu_throttle_assert_cnt == 0) {
-			system_override_callouts(SYS_OVERRIDE_CPU_THROTTLE, true);
-		}
-		cpu_throttle_assert_cnt++;
-	}
+  if (flags & SYS_OVERRIDE_CPU_THROTTLE) {
+    if (cpu_throttle_assert_cnt == 0) {
+      system_override_callouts(SYS_OVERRIDE_CPU_THROTTLE, true);
+    }
+    cpu_throttle_assert_cnt++;
+  }
 
-	if (flags & SYS_OVERRIDE_FAST_JETSAM) {
-		if (fast_jetsam_assert_cnt == 0) {
-			system_override_callouts(SYS_OVERRIDE_FAST_JETSAM, true);
-		}
-		fast_jetsam_assert_cnt++;
-	}
+  if (flags & SYS_OVERRIDE_FAST_JETSAM) {
+    if (fast_jetsam_assert_cnt == 0) {
+      system_override_callouts(SYS_OVERRIDE_FAST_JETSAM, true);
+    }
+    fast_jetsam_assert_cnt++;
+  }
 }
 
 /*
@@ -228,34 +236,32 @@ system_override_begin(uint64_t flags)
  * Routine to end a system override if the assertion count
  * transitions from 1->0 for a specified mechanism.
  */
-static void
-system_override_end(uint64_t flags)
-{
-	lck_mtx_assert(&sys_override_lock, LCK_MTX_ASSERT_OWNED);
+static void system_override_end(uint64_t flags) {
+  lck_mtx_assert(&sys_override_lock, LCK_MTX_ASSERT_OWNED);
 
-	if (flags & SYS_OVERRIDE_IO_THROTTLE) {
-		assert(io_throttle_assert_cnt > 0);
-		io_throttle_assert_cnt--;
-		if (io_throttle_assert_cnt == 0) {
-			system_override_callouts(SYS_OVERRIDE_IO_THROTTLE, false);
-		}
-	}
+  if (flags & SYS_OVERRIDE_IO_THROTTLE) {
+    assert(io_throttle_assert_cnt > 0);
+    io_throttle_assert_cnt--;
+    if (io_throttle_assert_cnt == 0) {
+      system_override_callouts(SYS_OVERRIDE_IO_THROTTLE, false);
+    }
+  }
 
-	if (flags & SYS_OVERRIDE_CPU_THROTTLE) {
-		assert(cpu_throttle_assert_cnt > 0);
-		cpu_throttle_assert_cnt--;
-		if (cpu_throttle_assert_cnt == 0) {
-			system_override_callouts(SYS_OVERRIDE_CPU_THROTTLE, false);
-		}
-	}
+  if (flags & SYS_OVERRIDE_CPU_THROTTLE) {
+    assert(cpu_throttle_assert_cnt > 0);
+    cpu_throttle_assert_cnt--;
+    if (cpu_throttle_assert_cnt == 0) {
+      system_override_callouts(SYS_OVERRIDE_CPU_THROTTLE, false);
+    }
+  }
 
-	if (flags & SYS_OVERRIDE_FAST_JETSAM) {
-		assert(fast_jetsam_assert_cnt > 0);
-		fast_jetsam_assert_cnt--;
-		if (fast_jetsam_assert_cnt == 0) {
-			system_override_callouts(SYS_OVERRIDE_FAST_JETSAM, false);
-		}
-	}
+  if (flags & SYS_OVERRIDE_FAST_JETSAM) {
+    assert(fast_jetsam_assert_cnt > 0);
+    fast_jetsam_assert_cnt--;
+    if (fast_jetsam_assert_cnt == 0) {
+      system_override_callouts(SYS_OVERRIDE_FAST_JETSAM, false);
+    }
+  }
 }
 
 /*
@@ -265,31 +271,29 @@ system_override_end(uint64_t flags)
  * irrespective of the assertion counts and number of blocked
  * requestors.
  */
-static void
-system_override_abort(uint64_t flags)
-{
-	lck_mtx_assert(&sys_override_lock, LCK_MTX_ASSERT_OWNED);
+static void system_override_abort(uint64_t flags) {
+  lck_mtx_assert(&sys_override_lock, LCK_MTX_ASSERT_OWNED);
 
-	if ((flags & SYS_OVERRIDE_IO_THROTTLE) && (io_throttle_assert_cnt > 0)) {
-		system_override_callouts(SYS_OVERRIDE_IO_THROTTLE, false);
-	}
+  if ((flags & SYS_OVERRIDE_IO_THROTTLE) && (io_throttle_assert_cnt > 0)) {
+    system_override_callouts(SYS_OVERRIDE_IO_THROTTLE, false);
+  }
 
-	if ((flags & SYS_OVERRIDE_CPU_THROTTLE) && (cpu_throttle_assert_cnt > 0)) {
-		system_override_callouts(SYS_OVERRIDE_CPU_THROTTLE, false);
-	}
+  if ((flags & SYS_OVERRIDE_CPU_THROTTLE) && (cpu_throttle_assert_cnt > 0)) {
+    system_override_callouts(SYS_OVERRIDE_CPU_THROTTLE, false);
+  }
 
-	if ((flags & SYS_OVERRIDE_FAST_JETSAM) && (fast_jetsam_assert_cnt > 0)) {
-		system_override_callouts(SYS_OVERRIDE_FAST_JETSAM, false);
-	}
+  if ((flags & SYS_OVERRIDE_FAST_JETSAM) && (fast_jetsam_assert_cnt > 0)) {
+    system_override_callouts(SYS_OVERRIDE_FAST_JETSAM, false);
+  }
 }
 
 static __attribute__((noinline)) int
-PROCESS_OVERRIDING_SYSTEM_DEFAULTS(uint64_t timeout)
-{
-	struct timespec ts;
-	ts.tv_sec = timeout / NSEC_PER_SEC;
-	ts.tv_nsec = timeout - ((long)ts.tv_sec * NSEC_PER_SEC);
-	int error = msleep((caddr_t)&sys_override_wait, &sys_override_lock, PRIBIO | PCATCH, "system_override", &ts);
-	/* msleep returns EWOULDBLOCK if timeout expires, treat that as success */
-	return (error == EWOULDBLOCK) ? 0 : error;
+PROCESS_OVERRIDING_SYSTEM_DEFAULTS(uint64_t timeout) {
+  struct timespec ts;
+  ts.tv_sec = timeout / NSEC_PER_SEC;
+  ts.tv_nsec = timeout - ((long)ts.tv_sec * NSEC_PER_SEC);
+  int error = msleep((caddr_t)&sys_override_wait, &sys_override_lock,
+                     PRIBIO | PCATCH, "system_override", &ts);
+  /* msleep returns EWOULDBLOCK if timeout expires, treat that as success */
+  return (error == EWOULDBLOCK) ? 0 : error;
 }

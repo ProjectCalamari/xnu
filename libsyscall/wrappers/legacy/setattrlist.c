@@ -33,12 +33,12 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/attr.h>
 #include "_errno.h"
+#include <sys/attr.h>
 
 #ifdef __LP64__
 extern int __setattrlist(const char *, void *, void *, size_t, unsigned int);
-#else /* !__LP64__ */
+#else  /* !__LP64__ */
 extern int __setattrlist(const char *, void *, void *, size_t, unsigned long);
 #endif /* __LP64__ */
 
@@ -49,18 +49,18 @@ int
 #ifdef __LP64__
 setattrlist(const char *path, void *attrList, void *attrBuf,
     size_t attrBufSize, unsigned int options)
-#else /* !__LP64__ */
+#else  /* !__LP64__ */
 setattrlist(const char *path, void *attrList, void *attrBuf,
     size_t attrBufSize, unsigned long options)
 #endif /* __LP64__ */
 {
-	int ret = __setattrlist(path, attrList, attrBuf, attrBufSize, options);
+  int ret = __setattrlist(path, attrList, attrBuf, attrBufSize, options);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif

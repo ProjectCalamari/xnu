@@ -34,31 +34,27 @@
  *			alarm clock facility.
  */
 
-#include <mach/message.h>
+#include <kern/clock.h>
 #include <kern/host.h>
+#include <kern/ipc_host.h>
+#include <kern/ipc_kobject.h>
+#include <kern/misc_protos.h>
 #include <kern/processor.h>
 #include <kern/task.h>
 #include <kern/thread.h>
-#include <kern/ipc_host.h>
-#include <kern/ipc_kobject.h>
-#include <kern/clock.h>
-#include <kern/misc_protos.h>
+#include <mach/message.h>
 
-IPC_KOBJECT_DEFINE(IKOT_CLOCK,
-    .iko_op_movable_send = true,
-    .iko_op_stable    = true,
-    .iko_op_permanent = true);
+IPC_KOBJECT_DEFINE(IKOT_CLOCK, .iko_op_movable_send = true,
+                   .iko_op_stable = true, .iko_op_permanent = true);
 
 /*
  *	Routine:	ipc_clock_init
  *	Purpose:
  *		Initialize ipc control of a clock.
  */
-void
-ipc_clock_init(clock_t clock)
-{
-	clock->cl_service = ipc_kobject_alloc_port(clock, IKOT_CLOCK,
-	    IPC_KOBJECT_ALLOC_NONE);
+void ipc_clock_init(clock_t clock) {
+  clock->cl_service =
+      ipc_kobject_alloc_port(clock, IKOT_CLOCK, IPC_KOBJECT_ALLOC_NONE);
 }
 
 /*
@@ -70,16 +66,14 @@ ipc_clock_init(clock_t clock)
  *	Conditions:
  *		Nothing locked.
  */
-clock_t
-convert_port_to_clock(ipc_port_t port)
-{
-	clock_t clock = CLOCK_NULL;
+clock_t convert_port_to_clock(ipc_port_t port) {
+  clock_t clock = CLOCK_NULL;
 
-	if (IP_VALID(port)) {
-		clock = ipc_kobject_get_stable(port, IKOT_CLOCK);
-	}
+  if (IP_VALID(port)) {
+    clock = ipc_kobject_get_stable(port, IKOT_CLOCK);
+  }
 
-	return clock;
+  return clock;
 }
 
 /*
@@ -90,10 +84,8 @@ convert_port_to_clock(ipc_port_t port)
  *	Conditions:
  *		Nothing locked.
  */
-ipc_port_t
-convert_clock_to_port(clock_t clock)
-{
-	return ipc_kobject_make_send(clock->cl_service, clock, IKOT_CLOCK);
+ipc_port_t convert_clock_to_port(clock_t clock) {
+  return ipc_kobject_make_send(clock->cl_service, clock, IKOT_CLOCK);
 }
 
 /*
@@ -101,21 +93,19 @@ convert_clock_to_port(clock_t clock)
  *	Purpose:
  *		Convert from a clock name to a clock pointer.
  */
-clock_t
-port_name_to_clock(mach_port_name_t clock_name)
-{
-	clock_t         clock = CLOCK_NULL;
-	ipc_space_t     space;
-	ipc_port_t      port;
+clock_t port_name_to_clock(mach_port_name_t clock_name) {
+  clock_t clock = CLOCK_NULL;
+  ipc_space_t space;
+  ipc_port_t port;
 
-	if (clock_name == 0) {
-		return clock;
-	}
-	space = current_space();
-	if (ipc_port_translate_send(space, clock_name, &port) != KERN_SUCCESS) {
-		return clock;
-	}
-	clock = (clock_t)ipc_kobject_get_stable(port, IKOT_CLOCK);
-	ip_mq_unlock(port);
-	return clock;
+  if (clock_name == 0) {
+    return clock;
+  }
+  space = current_space();
+  if (ipc_port_translate_send(space, clock_name, &port) != KERN_SUCCESS) {
+    return clock;
+  }
+  clock = (clock_t)ipc_kobject_get_stable(port, IKOT_CLOCK);
+  ip_mq_unlock(port);
+  return clock;
 }

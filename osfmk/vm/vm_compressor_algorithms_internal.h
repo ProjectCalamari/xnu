@@ -33,26 +33,28 @@
 #include <vm/vm_compressor_algorithms_xnu.h>
 
 int metacompressor(const uint8_t *in, uint8_t *cdst, int32_t outbufsz,
-    uint16_t *codec, void *cscratch, boolean_t *, uint32_t *pop_count_p);
+                   uint16_t *codec, void *cscratch, boolean_t *,
+                   uint32_t *pop_count_p);
 bool metadecompressor(const uint8_t *source, uint8_t *dest, uint32_t csize,
-    uint16_t ccodec, void *compressor_dscratch, uint32_t *pop_count_p);
+                      uint16_t ccodec, void *compressor_dscratch,
+                      uint32_t *pop_count_p);
 
 typedef enum {
-	CCWK = 0, // must be 0 or 1
-	CCLZ4 = 1, //must be 0 or 1
-	CINVALID = 0xFFFF
+  CCWK = 0,  // must be 0 or 1
+  CCLZ4 = 1, // must be 0 or 1
+  CINVALID = 0xFFFF
 } vm_compressor_codec_t;
 
 typedef enum {
-	CMODE_WK = 0,
-	CMODE_LZ4 = 1,
-	CMODE_HYB = 2,
-	VM_COMPRESSOR_DEFAULT_CODEC = 3,
-	CMODE_INVALID = 4
+  CMODE_WK = 0,
+  CMODE_LZ4 = 1,
+  CMODE_HYB = 2,
+  VM_COMPRESSOR_DEFAULT_CODEC = 3,
+  CMODE_INVALID = 4
 } vm_compressor_mode_t;
 
 void vm_compressor_algorithm_init(void);
 int vm_compressor_algorithm(void);
 
 #endif /* XNU_KERNEL_PRIVATE */
-#endif  /* _VM_COMPRESSOR_ALGORITHMS_INTERNAL_H_ */
+#endif /* _VM_COMPRESSOR_ALGORITHMS_INTERNAL_H_ */

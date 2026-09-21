@@ -41,56 +41,53 @@
 #include <stdio.h>
 #include <string.h>
 
-T_DECL(posix_so_linger, "POSIX SO_LINGER", T_META_TAG_VM_PREFERRED)
-{
-	T_LOG("POSIX SO_LINGER 0x%x", SO_LINGER);
+T_DECL(posix_so_linger, "POSIX SO_LINGER", T_META_TAG_VM_PREFERRED) {
+  T_LOG("POSIX SO_LINGER 0x%x", SO_LINGER);
 
-	int s = -1;
-	T_ASSERT_POSIX_SUCCESS(s = socket(AF_INET, SOCK_STREAM, 0),
-	    "socket(AF_INET, SOCK_DGRAM)");
+  int s = -1;
+  T_ASSERT_POSIX_SUCCESS(s = socket(AF_INET, SOCK_STREAM, 0),
+                         "socket(AF_INET, SOCK_DGRAM)");
 
-	struct linger set_l = { .l_onoff = 1, .l_linger = 5 };
-	T_ASSERT_POSIX_SUCCESS(setsockopt(s, SOL_SOCKET, SO_LINGER,
-	    &set_l, sizeof(struct linger)),
-	    "setsockopt SO_LINGER");
+  struct linger set_l = {.l_onoff = 1, .l_linger = 5};
+  T_ASSERT_POSIX_SUCCESS(
+      setsockopt(s, SOL_SOCKET, SO_LINGER, &set_l, sizeof(struct linger)),
+      "setsockopt SO_LINGER");
 
-	struct linger get_l = {};
-	socklen_t len = sizeof(struct linger);
-	T_ASSERT_POSIX_SUCCESS(getsockopt(s, SOL_SOCKET, SO_LINGER,
-	    &get_l, &len),
-	    "getsockopt SO_LINGER");
+  struct linger get_l = {};
+  socklen_t len = sizeof(struct linger);
+  T_ASSERT_POSIX_SUCCESS(getsockopt(s, SOL_SOCKET, SO_LINGER, &get_l, &len),
+                         "getsockopt SO_LINGER");
 
-	T_EXPECT_EQ(set_l.l_onoff, get_l.l_onoff,
-	    "POSIX SO_LINGER set l_onoff %d == get l_onoff %d",
-	    set_l.l_onoff, get_l.l_onoff);
-	T_EXPECT_EQ(set_l.l_linger, get_l.l_linger,
-	    "POSIX SO_LINGER set l_linger %d == get l_linger %d",
-	    set_l.l_linger, get_l.l_linger);
+  T_EXPECT_EQ(set_l.l_onoff, get_l.l_onoff,
+              "POSIX SO_LINGER set l_onoff %d == get l_onoff %d", set_l.l_onoff,
+              get_l.l_onoff);
+  T_EXPECT_EQ(set_l.l_linger, get_l.l_linger,
+              "POSIX SO_LINGER set l_linger %d == get l_linger %d",
+              set_l.l_linger, get_l.l_linger);
 }
 
-T_DECL(posix_so_linger_negative, "POSIX SO_LINGER negative", T_META_TAG_VM_PREFERRED)
-{
-	T_LOG("POSIX SO_LINGER 0x%x", SO_LINGER);
+T_DECL(posix_so_linger_negative, "POSIX SO_LINGER negative",
+       T_META_TAG_VM_PREFERRED) {
+  T_LOG("POSIX SO_LINGER 0x%x", SO_LINGER);
 
-	int s = -1;
-	T_ASSERT_POSIX_SUCCESS(s = socket(AF_INET, SOCK_STREAM, 0),
-	    "socket(AF_INET, SOCK_DGRAM)");
+  int s = -1;
+  T_ASSERT_POSIX_SUCCESS(s = socket(AF_INET, SOCK_STREAM, 0),
+                         "socket(AF_INET, SOCK_DGRAM)");
 
-	struct linger set_l = { .l_onoff = 0, .l_linger = -1 };
-	T_ASSERT_POSIX_SUCCESS(setsockopt(s, SOL_SOCKET, SO_LINGER,
-	    &set_l, sizeof(struct linger)),
-	    "setsockopt SO_LINGER");
+  struct linger set_l = {.l_onoff = 0, .l_linger = -1};
+  T_ASSERT_POSIX_SUCCESS(
+      setsockopt(s, SOL_SOCKET, SO_LINGER, &set_l, sizeof(struct linger)),
+      "setsockopt SO_LINGER");
 
-	struct linger get_l = {};
-	socklen_t len = sizeof(struct linger);
-	T_ASSERT_POSIX_SUCCESS(getsockopt(s, SOL_SOCKET, SO_LINGER,
-	    &get_l, &len),
-	    "getsockopt SO_LINGER");
+  struct linger get_l = {};
+  socklen_t len = sizeof(struct linger);
+  T_ASSERT_POSIX_SUCCESS(getsockopt(s, SOL_SOCKET, SO_LINGER, &get_l, &len),
+                         "getsockopt SO_LINGER");
 
-	T_EXPECT_EQ(set_l.l_onoff, get_l.l_onoff,
-	    "POSIX SO_LINGER set l_onoff %d == get l_onoff %d",
-	    set_l.l_onoff, get_l.l_onoff);
-	T_EXPECT_EQ(set_l.l_linger, get_l.l_linger,
-	    "POSIX SO_LINGER set l_linger %d == get l_linger %d",
-	    set_l.l_linger, get_l.l_linger);
+  T_EXPECT_EQ(set_l.l_onoff, get_l.l_onoff,
+              "POSIX SO_LINGER set l_onoff %d == get l_onoff %d", set_l.l_onoff,
+              get_l.l_onoff);
+  T_EXPECT_EQ(set_l.l_linger, get_l.l_linger,
+              "POSIX SO_LINGER set l_linger %d == get l_linger %d",
+              set_l.l_linger, get_l.l_linger);
 }

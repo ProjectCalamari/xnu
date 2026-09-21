@@ -1,4 +1,5 @@
-/*	$FreeBSD: src/sys/netinet6/ah6.h,v 1.2.2.2 2001/07/03 11:01:49 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet6/ah6.h,v 1.2.2.2 2001/07/03 11:01:49 ume Exp $
+ */
 /*	$KAME: ah.h,v 1.13 2000/10/18 21:28:00 itojun Exp $	*/
 
 /*
@@ -43,9 +44,9 @@ struct secasvar;
 
 extern int ah6_input(struct mbuf **, int *, int);
 extern int ah6_output(struct mbuf *, u_char *, struct mbuf *,
-    struct secasvar *);
-extern int ah6_calccksum(struct mbuf *, caddr_t __sized_by(len),
-    size_t len, const struct ah_algorithm *, struct secasvar *);
+                      struct secasvar *);
+extern int ah6_calccksum(struct mbuf *, caddr_t __sized_by(len), size_t len,
+                         const struct ah_algorithm *, struct secasvar *);
 
 extern void ah6_ctlinput(int, struct sockaddr *, void *);
 #endif /* BSD_KERNEL_PRIVATE */

@@ -34,7 +34,7 @@
  * static_asserts to check that these values are accurate.
  */
 
-#define KCAMBRIA_THCTX_LR_OFFSET  (8)
+#define KCAMBRIA_THCTX_LR_OFFSET (8)
 #define KCAMBRIA_THCTX_RSP_OFFSET (48)
 #define KCAMBRIA_THCTX_RBP_OFFSET (56)
 

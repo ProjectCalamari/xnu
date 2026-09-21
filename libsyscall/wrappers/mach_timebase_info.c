@@ -22,27 +22,24 @@
  */
 #include <mach/mach_time.h>
 
-extern kern_return_t
-mach_timebase_info_trap(mach_timebase_info_t info);
+extern kern_return_t mach_timebase_info_trap(mach_timebase_info_t info);
 
-kern_return_t
-mach_timebase_info(mach_timebase_info_t info)
-{
-	static mach_timebase_info_data_t cached_info;
+kern_return_t mach_timebase_info(mach_timebase_info_t info) {
+  static mach_timebase_info_data_t cached_info;
 
-	/*
-	 * This is racy, but because it is safe to initialize twice we avoid a
-	 * barrier in the fast path by risking double initialization.
-	 */
-	if (cached_info.numer == 0 || cached_info.denom == 0) {
-		kern_return_t kr = mach_timebase_info_trap(&cached_info);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-	}
+  /*
+   * This is racy, but because it is safe to initialize twice we avoid a
+   * barrier in the fast path by risking double initialization.
+   */
+  if (cached_info.numer == 0 || cached_info.denom == 0) {
+    kern_return_t kr = mach_timebase_info_trap(&cached_info);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+  }
 
-	info->numer = cached_info.numer;
-	info->denom = cached_info.denom;
+  info->numer = cached_info.numer;
+  info->denom = cached_info.denom;
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }

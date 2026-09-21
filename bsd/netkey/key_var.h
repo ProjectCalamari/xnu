@@ -34,58 +34,60 @@
 #include <sys/appleapiopts.h>
 
 /* sysctl */
-#define KEYCTL_DEBUG_LEVEL              1
-#define KEYCTL_SPI_TRY                  2
-#define KEYCTL_SPI_MIN_VALUE            3
-#define KEYCTL_SPI_MAX_VALUE            4
-#define KEYCTL_RANDOM_INT               5
-#define KEYCTL_LARVAL_LIFETIME          6
-#define KEYCTL_BLOCKACQ_COUNT           7
-#define KEYCTL_BLOCKACQ_LIFETIME        8
-#define KEYCTL_ESP_KEYMIN               9
-#define KEYCTL_ESP_AUTH                 10
-#define KEYCTL_AH_KEYMIN                11
-#define KEYCTL_PREFERED_OLDSA           12
-#define KEYCTL_NATT_KEEPALIVE_INTERVAL  13
-#define KEYCTL_PFKEYSTAT                14
-#define KEYCTL_MAXID                    15
+#define KEYCTL_DEBUG_LEVEL 1
+#define KEYCTL_SPI_TRY 2
+#define KEYCTL_SPI_MIN_VALUE 3
+#define KEYCTL_SPI_MAX_VALUE 4
+#define KEYCTL_RANDOM_INT 5
+#define KEYCTL_LARVAL_LIFETIME 6
+#define KEYCTL_BLOCKACQ_COUNT 7
+#define KEYCTL_BLOCKACQ_LIFETIME 8
+#define KEYCTL_ESP_KEYMIN 9
+#define KEYCTL_ESP_AUTH 10
+#define KEYCTL_AH_KEYMIN 11
+#define KEYCTL_PREFERED_OLDSA 12
+#define KEYCTL_NATT_KEEPALIVE_INTERVAL 13
+#define KEYCTL_PFKEYSTAT 14
+#define KEYCTL_MAXID 15
 
 #ifdef BSD_KERNEL_PRIVATE
-#define KEYCTL_NAMES { \
-	{ 0, 0 }, \
-	{ "debug", CTLTYPE_INT }, \
-	{ "spi_try", CTLTYPE_INT }, \
-	{ "spi_min_value", CTLTYPE_INT }, \
-	{ "spi_max_value", CTLTYPE_INT }, \
-	{ "random_int", CTLTYPE_INT }, \
-	{ "larval_lifetime", CTLTYPE_INT }, \
-	{ "blockacq_count", CTLTYPE_INT }, \
-	{ "blockacq_lifetime", CTLTYPE_INT }, \
-	{ "esp_keymin", CTLTYPE_INT }, \
-	{ "esp_auth", CTLTYPE_INT }, \
-	{ "ah_keymin", CTLTYPE_INT }, \
-	{ "prefered_oldsa", CTLTYPE_INT }, \
-	{ "natt_keepalive_interval", CTLTYPE_INT }, \
-	{ "pfkeystat", CTLTYPE_STRUCT }, \
-}
+#define KEYCTL_NAMES                                                           \
+  {                                                                            \
+      {0, 0},                                                                  \
+      {"debug", CTLTYPE_INT},                                                  \
+      {"spi_try", CTLTYPE_INT},                                                \
+      {"spi_min_value", CTLTYPE_INT},                                          \
+      {"spi_max_value", CTLTYPE_INT},                                          \
+      {"random_int", CTLTYPE_INT},                                             \
+      {"larval_lifetime", CTLTYPE_INT},                                        \
+      {"blockacq_count", CTLTYPE_INT},                                         \
+      {"blockacq_lifetime", CTLTYPE_INT},                                      \
+      {"esp_keymin", CTLTYPE_INT},                                             \
+      {"esp_auth", CTLTYPE_INT},                                               \
+      {"ah_keymin", CTLTYPE_INT},                                              \
+      {"prefered_oldsa", CTLTYPE_INT},                                         \
+      {"natt_keepalive_interval", CTLTYPE_INT},                                \
+      {"pfkeystat", CTLTYPE_STRUCT},                                           \
+  }
 
-#define KEYCTL_VARS { \
-	0, \
-	&key_debug_level, \
-	&key_spi_trycnt, \
-	&key_spi_minval, \
-	&key_spi_maxval, \
-	&key_int_random, \
-	&key_larval_lifetime, \
-	&key_blockacq_count, \
-	&key_blockacq_lifetime, \
-	&ipsec_esp_keymin, \
-	&ipsec_ah_keymin, \
-	&ipsec_prefered_oldsa, \
-	&natt_keepalive_interval, \
-}
+#define KEYCTL_VARS                                                            \
+  {                                                                            \
+      0,                                                                       \
+      &key_debug_level,                                                        \
+      &key_spi_trycnt,                                                         \
+      &key_spi_minval,                                                         \
+      &key_spi_maxval,                                                         \
+      &key_int_random,                                                         \
+      &key_larval_lifetime,                                                    \
+      &key_blockacq_count,                                                     \
+      &key_blockacq_lifetime,                                                  \
+      &ipsec_esp_keymin,                                                       \
+      &ipsec_ah_keymin,                                                        \
+      &ipsec_prefered_oldsa,                                                   \
+      &natt_keepalive_interval,                                                \
+  }
 
-#define _ARRAYLEN(p) (sizeof(p)/sizeof(p[0]))
+#define _ARRAYLEN(p) (sizeof(p) / sizeof(p[0]))
 #define _KEYLEN(key) ((u_int)((key)->sadb_key_bits >> 3))
 #define _KEYBITS(key) ((u_int)((key)->sadb_key_bits))
 #define _KEYBUF(key) ((caddr_t)((caddr_t)(key) + sizeof(struct sadb_key)))

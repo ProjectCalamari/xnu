@@ -30,39 +30,38 @@
 
 #include <sys/types.h>
 #if KERNEL
-    #include <libkern/kxld_types.h>
+#include <libkern/kxld_types.h>
 #else
-    #include "kxld_types.h"
+#include "kxld_types.h"
 #endif
 
 struct uuid_command;
 typedef struct kxld_uuid KXLDuuid;
 
 struct kxld_uuid {
-	u_char uuid[16];
-	boolean_t has_uuid;
+  u_char uuid[16];
+  boolean_t has_uuid;
 };
 
 /*******************************************************************************
-* Constructors and destructors
-*******************************************************************************/
+ * Constructors and destructors
+ *******************************************************************************/
 
 void kxld_uuid_init_from_macho(KXLDuuid *uuid, struct uuid_command *src)
-__attribute__((nonnull, visibility("hidden")));
+    __attribute__((nonnull, visibility("hidden")));
 
 void kxld_uuid_clear(KXLDuuid *uuid)
-__attribute__((nonnull, visibility("hidden")));
+    __attribute__((nonnull, visibility("hidden")));
 
 /*******************************************************************************
-* Accessors
-*******************************************************************************/
+ * Accessors
+ *******************************************************************************/
 
 u_long kxld_uuid_get_macho_header_size(void)
-__attribute__((pure, visibility("hidden")));
+    __attribute__((pure, visibility("hidden")));
 
-kern_return_t
-kxld_uuid_export_macho(const KXLDuuid *uuid, u_char *buf,
-    u_long *header_offset, u_long header_size)
-__attribute__((pure, nonnull, visibility("hidden")));
+kern_return_t kxld_uuid_export_macho(const KXLDuuid *uuid, u_char *buf,
+                                     u_long *header_offset, u_long header_size)
+    __attribute__((pure, nonnull, visibility("hidden")));
 
 #endif /* _KXLD_UUID_H_ */

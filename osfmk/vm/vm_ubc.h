@@ -29,10 +29,10 @@
 #ifndef _VM_VM_UBC_H_
 #define _VM_VM_UBC_H_
 
-#include <sys/cdefs.h>
-#include <mach/memory_object_types.h>
-#include <mach/mach_types.h>
 #include <kern/kern_types.h>
+#include <mach/mach_types.h>
+#include <mach/memory_object_types.h>
+#include <sys/cdefs.h>
 #include <vm/vm_options.h>
 
 /*
@@ -43,7 +43,7 @@ __BEGIN_DECLS
 
 struct vnode;
 
-extern struct vnode * upl_lookup_vnode(upl_t upl);
+extern struct vnode *upl_lookup_vnode(upl_t upl);
 
 extern upl_t vector_upl_create(vm_offset_t, uint32_t);
 extern upl_size_t vector_upl_get_size(const upl_t);
@@ -52,54 +52,38 @@ extern boolean_t vector_upl_set_subupl(upl_t, upl_t, u_int32_t);
 extern void vector_upl_set_pagelist(upl_t);
 uint32_t vector_upl_max_upls(const upl_t upl);
 
+extern kern_return_t
+memory_object_pages_resident(memory_object_control_t control,
+                             boolean_t *has_pages_resident);
 
-extern kern_return_t    memory_object_pages_resident(
-	memory_object_control_t         control,
-	boolean_t                       *               has_pages_resident);
+extern kern_return_t memory_object_signed(memory_object_control_t control,
+                                          boolean_t is_signed);
 
-extern kern_return_t    memory_object_signed(
-	memory_object_control_t         control,
-	boolean_t                       is_signed);
+extern boolean_t memory_object_is_signed(memory_object_control_t control);
 
-extern boolean_t        memory_object_is_signed(
-	memory_object_control_t control);
+extern void memory_object_mark_used(memory_object_control_t control);
 
-extern void             memory_object_mark_used(
-	memory_object_control_t         control);
+extern void memory_object_mark_unused(memory_object_control_t control,
+                                      boolean_t rage);
 
-extern void             memory_object_mark_unused(
-	memory_object_control_t         control,
-	boolean_t                       rage);
+extern void memory_object_mark_io_tracking(memory_object_control_t control);
 
-extern void             memory_object_mark_io_tracking(
-	memory_object_control_t         control);
+extern void memory_object_mark_trusted(memory_object_control_t control);
 
-extern void             memory_object_mark_trusted(
-	memory_object_control_t         control);
+extern memory_object_t vnode_pager_setup(struct vnode *, memory_object_t);
 
+extern void vnode_pager_deallocate(memory_object_t);
+extern void vnode_pager_vrele(struct vnode *vp);
 
-extern memory_object_t vnode_pager_setup(
-	struct vnode *, memory_object_t);
-
-extern void vnode_pager_deallocate(
-	memory_object_t);
-extern void vnode_pager_vrele(
-	struct vnode *vp);
-
-extern kern_return_t memory_object_create_named(
-	memory_object_t pager,
-	memory_object_offset_t  size,
-	memory_object_control_t         *control);
+extern kern_return_t
+memory_object_create_named(memory_object_t pager, memory_object_offset_t size,
+                           memory_object_control_t *control);
 
 typedef int pager_return_t;
-extern pager_return_t   vnode_pagein(
-	struct vnode *, upl_t,
-	upl_offset_t, vm_object_offset_t,
-	upl_size_t, int, int *);
-extern pager_return_t   vnode_pageout(
-	struct vnode *, upl_t,
-	upl_offset_t, vm_object_offset_t,
-	upl_size_t, int, int *);
+extern pager_return_t vnode_pagein(struct vnode *, upl_t, upl_offset_t,
+                                   vm_object_offset_t, upl_size_t, int, int *);
+extern pager_return_t vnode_pageout(struct vnode *, upl_t, upl_offset_t,
+                                    vm_object_offset_t, upl_size_t, int, int *);
 
 __END_DECLS
 

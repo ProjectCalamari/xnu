@@ -48,56 +48,52 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <stdio.h>
-#include <unistd.h>     /* for unlink */
-#include "parser.h"
 #include "config.h"
+#include "parser.h"
+#include <stdio.h>
+#include <unistd.h> /* for unlink */
 
 /*
  * build the ioconf.c file
  */
-void    pseudo_inits(FILE *fp);
+void pseudo_inits(FILE *fp);
 
-void
-mkioconf(void)
-{
-	FILE *fp;
+void mkioconf(void) {
+  FILE *fp;
 
-	unlink(path("ioconf.c"));
-	fp = fopen(path("ioconf.c"), "w");
-	if (fp == 0) {
-		perror(path("ioconf.c"));
-		exit(1);
-	}
-	fprintf(fp, "#include <dev/busvar.h>\n");
-	fprintf(fp, "\n");
-	pseudo_inits(fp);
-	(void) fclose(fp);
+  unlink(path("ioconf.c"));
+  fp = fopen(path("ioconf.c"), "w");
+  if (fp == 0) {
+    perror(path("ioconf.c"));
+    exit(1);
+  }
+  fprintf(fp, "#include <dev/busvar.h>\n");
+  fprintf(fp, "\n");
+  pseudo_inits(fp);
+  (void)fclose(fp);
 }
 
-void
-pseudo_inits(FILE *fp)
-{
-	struct device *dp;
-	int count;
+void pseudo_inits(FILE *fp) {
+  struct device *dp;
+  int count;
 
-	fprintf(fp, "\n");
-	for (dp = dtab; dp != 0; dp = dp->d_next) {
-		if (dp->d_type != PSEUDO_DEVICE || dp->d_init == 0) {
-			continue;
-		}
-		fprintf(fp, "extern int %s(int);\n", dp->d_init);
-	}
-	fprintf(fp, "\nstruct pseudo_init pseudo_inits[] = {\n");
-	for (dp = dtab; dp != 0; dp = dp->d_next) {
-		if (dp->d_type != PSEUDO_DEVICE || dp->d_init == 0) {
-			continue;
-		}
-		count = dp->d_slave;
-		if (count <= 0) {
-			count = 1;
-		}
-		fprintf(fp, "\t{%d,\t%s},\n", count, dp->d_init);
-	}
-	fprintf(fp, "\t{0,\t0},\n};\n");
+  fprintf(fp, "\n");
+  for (dp = dtab; dp != 0; dp = dp->d_next) {
+    if (dp->d_type != PSEUDO_DEVICE || dp->d_init == 0) {
+      continue;
+    }
+    fprintf(fp, "extern int %s(int);\n", dp->d_init);
+  }
+  fprintf(fp, "\nstruct pseudo_init pseudo_inits[] = {\n");
+  for (dp = dtab; dp != 0; dp = dp->d_next) {
+    if (dp->d_type != PSEUDO_DEVICE || dp->d_init == 0) {
+      continue;
+    }
+    count = dp->d_slave;
+    if (count <= 0) {
+      count = 1;
+    }
+    fprintf(fp, "\t{%d,\t%s},\n", count, dp->d_init);
+  }
+  fprintf(fp, "\t{0,\t0},\n};\n");
 }

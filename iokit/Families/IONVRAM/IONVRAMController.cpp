@@ -26,35 +26,23 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <IOKit/nvram/IONVRAMController.h>
 #include <IOKit/IOPlatformExpert.h>
+#include <IOKit/nvram/IONVRAMController.h>
 
 #define super IOService
 OSDefineMetaClass(IONVRAMController, IOService);
 OSDefineAbstractStructors(IONVRAMController, IOService);
 
+void IONVRAMController::registerService(IOOptionBits options) {
+  super::registerService(options);
 
-void
-IONVRAMController::registerService(IOOptionBits options)
-{
-	super::registerService(options);
-
-	getPlatform()->registerNVRAMController(this);
+  getPlatform()->registerNVRAMController(this);
 }
 
-void
-IONVRAMController::sync(void)
-{
+void IONVRAMController::sync(void) {}
+
+IOReturn IONVRAMController::select(uint32_t bank) {
+  return kIOReturnUnsupported;
 }
 
-IOReturn
-IONVRAMController::select(uint32_t bank)
-{
-	return kIOReturnUnsupported;
-}
-
-IOReturn
-IONVRAMController::eraseBank(void)
-{
-	return kIOReturnUnsupported;
-}
+IOReturn IONVRAMController::eraseBank(void) { return kIOReturnUnsupported; }

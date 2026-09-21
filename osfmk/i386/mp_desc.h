@@ -80,54 +80,46 @@ __BEGIN_DECLS
  * The descriptor tables are together in a structure
  * allocated one per processor (except for the boot processor).
  */
-#define FSTK_SZ (PAGE_SIZE/2)
+#define FSTK_SZ (PAGE_SIZE / 2)
 typedef struct cpu_desc_table64 {
-	struct fake_descriptor  gdt[GDTSZ]       __attribute__ ((aligned(16)));
-	struct x86_64_tss       ktss             __attribute__ ((aligned(16)));
-	struct sysenter_stack   sstk             __attribute__ ((aligned(16)));
-	uint8_t                 *fstkp;
+  struct fake_descriptor gdt[GDTSZ] __attribute__((aligned(16)));
+  struct x86_64_tss ktss __attribute__((aligned(16)));
+  struct sysenter_stack sstk __attribute__((aligned(16)));
+  uint8_t *fstkp;
 } cpu_desc_table64_t;
 
 typedef struct {
-	uint8_t                 fstk[FSTK_SZ]  __attribute__ ((aligned(16)));
+  uint8_t fstk[FSTK_SZ] __attribute__((aligned(16)));
 } cpu_fault_stack_t;
 
-#define current_gdt()   (current_cpu_datap()->cpu_desc_index.cdi_gdtb.ptr)
-#define current_idt()   (current_cpu_datap()->cpu_desc_index.cdi_idtb.ptr)
-#define current_ldt()   (current_cpu_datap()->cpu_desc_index.cdi_ldtb)
-#define current_ktss()  (current_cpu_datap()->cpu_desc_index.cdi_ktssb)
-#define current_sstk()  (current_cpu_datap()->cpu_desc_index.cdi_sstkb)
+#define current_gdt() (current_cpu_datap()->cpu_desc_index.cdi_gdtb.ptr)
+#define current_idt() (current_cpu_datap()->cpu_desc_index.cdi_idtb.ptr)
+#define current_ldt() (current_cpu_datap()->cpu_desc_index.cdi_ldtb)
+#define current_ktss() (current_cpu_datap()->cpu_desc_index.cdi_ktssb)
+#define current_sstk() (current_cpu_datap()->cpu_desc_index.cdi_sstkb)
 
-#define current_ktss64() ((struct x86_64_tss *) current_ktss())
-#define current_sstk64() ((addr64_t *) current_sstk())
+#define current_ktss64() ((struct x86_64_tss *)current_ktss())
+#define current_sstk64() ((addr64_t *)current_sstk())
 
-#define gdt_desc_p(sel) \
-	(&((struct real_descriptor *)current_gdt())[sel_idx(sel)])
-#define ldt_desc_p(sel) \
-	(&current_ldt()[sel_idx(sel)])
+#define gdt_desc_p(sel)                                                        \
+  (&((struct real_descriptor *)current_gdt())[sel_idx(sel)])
+#define ldt_desc_p(sel) (&current_ldt()[sel_idx(sel)])
 
-extern void     cpu_syscall_init(cpu_data_t *cdp);
+extern void cpu_syscall_init(cpu_data_t *cdp);
 
-extern void     cpu_desc_init(cpu_data_t *cdp);
-extern void     cpu_desc_load(cpu_data_t *cdp);
+extern void cpu_desc_init(cpu_data_t *cdp);
+extern void cpu_desc_load(cpu_data_t *cdp);
 
-extern boolean_t
-valid_user_data_selector(uint16_t selector);
+extern boolean_t valid_user_data_selector(uint16_t selector);
 
-extern boolean_t
-valid_user_code_selector(uint16_t selector);
+extern boolean_t valid_user_code_selector(uint16_t selector);
 
-extern boolean_t
-valid_user_stack_selector(uint16_t selector);
+extern boolean_t valid_user_stack_selector(uint16_t selector);
 
-extern boolean_t
-valid_user_segment_selectors(uint16_t cs,
-    uint16_t ss,
-    uint16_t ds,
-    uint16_t es,
-    uint16_t fs,
-    uint16_t gs);
+extern boolean_t valid_user_segment_selectors(uint16_t cs, uint16_t ss,
+                                              uint16_t ds, uint16_t es,
+                                              uint16_t fs, uint16_t gs);
 
 __END_DECLS
 
-#endif  /* _X86_64_MP_DESC_H_ */
+#endif /* _X86_64_MP_DESC_H_ */

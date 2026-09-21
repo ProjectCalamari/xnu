@@ -79,21 +79,23 @@ __BEGIN_DECLS
  * KERN_SUCCESS in case of success, specific error otherwise.
  * If the call is not supported, KERN_NOT_SUPPORTED is returned.
  */
-extern kern_return_t mach_sync_ipc_link_monitoring_start(mach_port_t* port);
+extern kern_return_t mach_sync_ipc_link_monitoring_start(mach_port_t *port);
 
 /*!
  * @function mach_sync_ipc_link_monitoring_stop
  *
  * @abstract
  * Stops monitoring the sync IPC priority inversion avoidance facility
- * of the current thread started by a call to mach_sync_ipc_link_monitoring_start().
+ * of the current thread started by a call to
+ * mach_sync_ipc_link_monitoring_start().
  *
  * Returns whether the facility took effect for all synchronous IPC performed
  * from this thread between the calls to start and stop.
  *
  * Reasons for this function to return false include:
  * -remote message event handler did not reply to the message itself
- * -remote message was not received by a workloop (xpc connection or dispatch mach channel)
+ * -remote message was not received by a workloop (xpc connection or dispatch
+ * mach channel)
  *
  * @discussion
  * To be called after mach_sync_ipc_link_monitoring_start(). If
@@ -113,21 +115,22 @@ extern kern_return_t mach_sync_ipc_link_monitoring_start(mach_port_t* port);
  * KERN_SUCCESS in case of no errors, specific error otherwise.
  * If the call is not supported, KERN_NOT_SUPPORTED is returned.
  */
-extern kern_return_t mach_sync_ipc_link_monitoring_stop(mach_port_t port, boolean_t* in_effect);
+extern kern_return_t mach_sync_ipc_link_monitoring_stop(mach_port_t port,
+                                                        boolean_t *in_effect);
 
 typedef enum thread_destruct_special_reply_port_rights {
-	THREAD_SPECIAL_REPLY_PORT_ALL,
-	THREAD_SPECIAL_REPLY_PORT_RECEIVE_ONLY,
-	THREAD_SPECIAL_REPLY_PORT_SEND_ONLY,
+  THREAD_SPECIAL_REPLY_PORT_ALL,
+  THREAD_SPECIAL_REPLY_PORT_RECEIVE_ONLY,
+  THREAD_SPECIAL_REPLY_PORT_SEND_ONLY,
 } thread_destruct_special_reply_port_rights_t;
 
-extern kern_return_t thread_destruct_special_reply_port(mach_port_name_t port, thread_destruct_special_reply_port_rights_t rights);
+extern kern_return_t thread_destruct_special_reply_port(
+    mach_port_name_t port, thread_destruct_special_reply_port_rights_t rights);
 
 extern mach_port_t mig_get_special_reply_port(void);
 
 extern void mig_dealloc_special_reply_port(mach_port_t migport);
 
-
 __END_DECLS
 
-#endif  /* _MACH_SYNC_IPC_H_ */
+#endif /* _MACH_SYNC_IPC_H_ */

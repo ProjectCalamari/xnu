@@ -56,9 +56,8 @@
  * $FreeBSD: src/sys/net/if_mib.c,v 1.8.2.1 2000/08/03 00:09:34 ps Exp $
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
 #include <sys/kernel.h>
+#include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/systm.h>
 
@@ -94,204 +93,198 @@
 
 SYSCTL_DECL(_net_link_generic);
 
-SYSCTL_NODE(_net_link_generic, IFMIB_SYSTEM, system, CTLFLAG_RD | CTLFLAG_LOCKED, 0,
-    "Variables global to all interfaces");
+SYSCTL_NODE(_net_link_generic, IFMIB_SYSTEM, system,
+            CTLFLAG_RD | CTLFLAG_LOCKED, 0,
+            "Variables global to all interfaces");
 
 static int sysctl_ifdata SYSCTL_HANDLER_ARGS;
-SYSCTL_NODE(_net_link_generic, IFMIB_IFDATA, ifdata, CTLFLAG_RD | CTLFLAG_LOCKED,
-    sysctl_ifdata, "Interface table");
+SYSCTL_NODE(_net_link_generic, IFMIB_IFDATA, ifdata,
+            CTLFLAG_RD | CTLFLAG_LOCKED, sysctl_ifdata, "Interface table");
 
 static int sysctl_ifalldata SYSCTL_HANDLER_ARGS;
-SYSCTL_NODE(_net_link_generic, IFMIB_IFALLDATA, ifalldata, CTLFLAG_RD | CTLFLAG_LOCKED,
-    sysctl_ifalldata, "Interface table");
+SYSCTL_NODE(_net_link_generic, IFMIB_IFALLDATA, ifalldata,
+            CTLFLAG_RD | CTLFLAG_LOCKED, sysctl_ifalldata, "Interface table");
 
-static int make_ifmibdata(struct ifnet *, int *__counted_by(2), struct sysctl_req *);
-int
-make_ifmibdata(struct ifnet *ifp, int *__counted_by(2) name, struct sysctl_req *req)
-{
-	struct ifmibdata        ifmd;
-	int error = 0;
+static int make_ifmibdata(struct ifnet *, int *__counted_by(2),
+                          struct sysctl_req *);
+int make_ifmibdata(struct ifnet *ifp, int *__counted_by(2) name,
+                   struct sysctl_req *req) {
+  struct ifmibdata ifmd;
+  int error = 0;
 
-	switch (name[1]) {
-	default:
-		error = ENOENT;
-		break;
+  switch (name[1]) {
+  default:
+    error = ENOENT;
+    break;
 
-	case IFDATA_GENERAL:
-		bzero(&ifmd, sizeof(ifmd));
-		/*
-		 * Make sure the interface is in use
-		 */
-		if (ifnet_is_fully_attached(ifp)) {
-			snprintf(ifmd.ifmd_name, sizeof(ifmd.ifmd_name), "%s",
-			    if_name(ifp));
+  case IFDATA_GENERAL:
+    bzero(&ifmd, sizeof(ifmd));
+    /*
+     * Make sure the interface is in use
+     */
+    if (ifnet_is_fully_attached(ifp)) {
+      snprintf(ifmd.ifmd_name, sizeof(ifmd.ifmd_name), "%s", if_name(ifp));
 
 #define COPY(fld) ifmd.ifmd_##fld = ifp->if_##fld
-			COPY(pcount);
-			COPY(flags);
-			if_data_internal_to_if_data64(ifp, &ifp->if_data, &ifmd.ifmd_data);
+      COPY(pcount);
+      COPY(flags);
+      if_data_internal_to_if_data64(ifp, &ifp->if_data, &ifmd.ifmd_data);
 #undef COPY
-			ifmd.ifmd_snd_len = IFCQ_LEN(ifp->if_snd);
-			ifmd.ifmd_snd_maxlen = IFCQ_MAXLEN(ifp->if_snd);
-			ifmd.ifmd_snd_drops =
-			    (unsigned int)ifp->if_snd->ifcq_dropcnt.packets;
-		}
-		error = SYSCTL_OUT(req, &ifmd, sizeof ifmd);
-		if (error || !req->newptr) {
-			break;
-		}
+      ifmd.ifmd_snd_len = IFCQ_LEN(ifp->if_snd);
+      ifmd.ifmd_snd_maxlen = IFCQ_MAXLEN(ifp->if_snd);
+      ifmd.ifmd_snd_drops = (unsigned int)ifp->if_snd->ifcq_dropcnt.packets;
+    }
+    error = SYSCTL_OUT(req, &ifmd, sizeof ifmd);
+    if (error || !req->newptr) {
+      break;
+    }
 
 #ifdef IF_MIB_WR
-		error = SYSCTL_IN(req, &ifmd, sizeof ifmd);
-		if (error) {
-			break;
-		}
+    error = SYSCTL_IN(req, &ifmd, sizeof ifmd);
+    if (error) {
+      break;
+    }
 
 #define DONTCOPY(fld) ifmd.ifmd_data.ifi_##fld = ifp->if_data.ifi_##fld
-		DONTCOPY(type);
-		DONTCOPY(physical);
-		DONTCOPY(addrlen);
-		DONTCOPY(hdrlen);
-		DONTCOPY(mtu);
-		DONTCOPY(metric);
-		DONTCOPY(baudrate);
+    DONTCOPY(type);
+    DONTCOPY(physical);
+    DONTCOPY(addrlen);
+    DONTCOPY(hdrlen);
+    DONTCOPY(mtu);
+    DONTCOPY(metric);
+    DONTCOPY(baudrate);
 #undef DONTCOPY
 #define COPY(fld) ifp->if_##fld = ifmd.ifmd_##fld
-		COPY(data);
-		ifp->if_snd->ifq_maxlen = ifmd.ifmd_snd_maxlen;
-		ifp->if_snd->ifq_drops = ifmd.ifmd_snd_drops;
+    COPY(data);
+    ifp->if_snd->ifq_maxlen = ifmd.ifmd_snd_maxlen;
+    ifp->if_snd->ifq_drops = ifmd.ifmd_snd_drops;
 #undef COPY
 #endif /* IF_MIB_WR */
-		break;
+    break;
 
-	case IFDATA_LINKSPECIFIC:
-		error = SYSCTL_OUT(req, ifp->if_linkmib, ifp->if_linkmiblen);
-		if (error || !req->newptr) {
-			break;
-		}
+  case IFDATA_LINKSPECIFIC:
+    error = SYSCTL_OUT(req, ifp->if_linkmib, ifp->if_linkmiblen);
+    if (error || !req->newptr) {
+      break;
+    }
 
 #ifdef IF_MIB_WR
-		error = SYSCTL_IN(req, ifp->if_linkmib, ifp->if_linkmiblen);
-		if (error) {
-			break;
-		}
+    error = SYSCTL_IN(req, ifp->if_linkmib, ifp->if_linkmiblen);
+    if (error) {
+      break;
+    }
 #endif /* IF_MIB_WR */
-		break;
+    break;
 
-	case IFDATA_SUPPLEMENTAL: {
-		struct ifmibdata_supplemental *ifmd_supp;
+  case IFDATA_SUPPLEMENTAL: {
+    struct ifmibdata_supplemental *ifmd_supp;
 
-		ifmd_supp = kalloc_type(struct ifmibdata_supplemental,
-		    Z_WAITOK_ZERO_NOFAIL);
-		if_copy_traffic_class(ifp, &ifmd_supp->ifmd_traffic_class);
-		if_copy_data_extended(ifp, &ifmd_supp->ifmd_data_extended);
-		if_copy_packet_stats(ifp, &ifmd_supp->ifmd_packet_stats);
-		if_copy_rxpoll_stats(ifp, &ifmd_supp->ifmd_rxpoll_stats);
-		if_copy_netif_stats(ifp, &ifmd_supp->ifmd_netif_stats);
+    ifmd_supp =
+        kalloc_type(struct ifmibdata_supplemental, Z_WAITOK_ZERO_NOFAIL);
+    if_copy_traffic_class(ifp, &ifmd_supp->ifmd_traffic_class);
+    if_copy_data_extended(ifp, &ifmd_supp->ifmd_data_extended);
+    if_copy_packet_stats(ifp, &ifmd_supp->ifmd_packet_stats);
+    if_copy_rxpoll_stats(ifp, &ifmd_supp->ifmd_rxpoll_stats);
+    if_copy_netif_stats(ifp, &ifmd_supp->ifmd_netif_stats);
 
-		if (req->oldptr == USER_ADDR_NULL) {
-			req->oldlen = sizeof(*ifmd_supp);
-		}
+    if (req->oldptr == USER_ADDR_NULL) {
+      req->oldlen = sizeof(*ifmd_supp);
+    }
 
-		error = SYSCTL_OUT(req, ifmd_supp, MIN(sizeof(*ifmd_supp),
-		    req->oldlen));
+    error = SYSCTL_OUT(req, ifmd_supp, MIN(sizeof(*ifmd_supp), req->oldlen));
 #if DEVELOPMENT || DEBUG
-		if (error != 0) {
-			os_log(OS_LOG_DEFAULT, "%s: IFDATA_SUPPLEMENTAL SYSCTL_OUT(MIN(%lu, %lu) failed with error %d",
-			    __func__, sizeof(*ifmd_supp), req->oldlen, error);
-		}
+    if (error != 0) {
+      os_log(OS_LOG_DEFAULT,
+             "%s: IFDATA_SUPPLEMENTAL SYSCTL_OUT(MIN(%lu, %lu) failed with "
+             "error %d",
+             __func__, sizeof(*ifmd_supp), req->oldlen, error);
+    }
 #endif /* DEVELOPMENT || DEBUG */
 
-		kfree_type(struct ifmibdata_supplemental, ifmd_supp);
-		break;
-	}
+    kfree_type(struct ifmibdata_supplemental, ifmd_supp);
+    break;
+  }
 
-	case IFDATA_LINKHEURISTICS: {
-		struct if_linkheuristics *ifmd_lh;
+  case IFDATA_LINKHEURISTICS: {
+    struct if_linkheuristics *ifmd_lh;
 
-		ifmd_lh = kalloc_type(struct if_linkheuristics,
-		    Z_WAITOK_ZERO_NOFAIL);
+    ifmd_lh = kalloc_type(struct if_linkheuristics, Z_WAITOK_ZERO_NOFAIL);
 
-		if_copy_link_heuristics_stats(ifp, ifmd_lh);
+    if_copy_link_heuristics_stats(ifp, ifmd_lh);
 
-		if (req->oldptr == USER_ADDR_NULL) {
-			req->oldlen = sizeof(struct if_linkheuristics);
-		}
+    if (req->oldptr == USER_ADDR_NULL) {
+      req->oldlen = sizeof(struct if_linkheuristics);
+    }
 
-		error = SYSCTL_OUT(req, ifmd_lh, MIN(sizeof(struct if_linkheuristics),
-		    req->oldlen));
+    error = SYSCTL_OUT(req, ifmd_lh,
+                       MIN(sizeof(struct if_linkheuristics), req->oldlen));
 
-		kfree_type(struct if_linkheuristics, ifmd_lh);
-		break;
-	}
-	}
+    kfree_type(struct if_linkheuristics, ifmd_lh);
+    break;
+  }
+  }
 
-	return error;
+  return error;
 }
 
-int
-sysctl_ifdata SYSCTL_HANDLER_ARGS /* XXX bad syntax! */
+int sysctl_ifdata SYSCTL_HANDLER_ARGS /* XXX bad syntax! */
 {
 #pragma unused(oidp)
-	DECLARE_SYSCTL_HANDLER_ARG_ARRAY(int, 2, name, namelen);
-	int error = 0;
-	struct ifnet *ifp;
+  DECLARE_SYSCTL_HANDLER_ARG_ARRAY(int, 2, name, namelen);
+  int error = 0;
+  struct ifnet *ifp;
 
-	ifnet_head_lock_shared();
-	if (name[0] <= 0 || name[0] > if_index ||
-	    (ifp = ifindex2ifnet[name[0]]) == NULL) {
-		ifnet_head_done();
-		return ENOENT;
-	}
-	ifnet_reference(ifp);
-	ifnet_head_done();
+  ifnet_head_lock_shared();
+  if (name[0] <= 0 || name[0] > if_index ||
+      (ifp = ifindex2ifnet[name[0]]) == NULL) {
+    ifnet_head_done();
+    return ENOENT;
+  }
+  ifnet_reference(ifp);
+  ifnet_head_done();
 
-	ifnet_lock_shared(ifp);
-	error = make_ifmibdata(ifp, name, req);
-	ifnet_lock_done(ifp);
+  ifnet_lock_shared(ifp);
+  error = make_ifmibdata(ifp, name, req);
+  ifnet_lock_done(ifp);
 
-	ifnet_release(ifp);
+  ifnet_release(ifp);
 
-	return error;
+  return error;
 }
 
-int
-sysctl_ifalldata SYSCTL_HANDLER_ARGS /* XXX bad syntax! */
+int sysctl_ifalldata SYSCTL_HANDLER_ARGS /* XXX bad syntax! */
 {
 #pragma unused(oidp)
-	DECLARE_SYSCTL_HANDLER_ARG_ARRAY(int, 2, name, namelen);
-	int error = 0;
-	struct ifnet *ifp;
+  DECLARE_SYSCTL_HANDLER_ARG_ARRAY(int, 2, name, namelen);
+  int error = 0;
+  struct ifnet *ifp;
 
-	ifnet_head_lock_shared();
-	TAILQ_FOREACH(ifp, &ifnet_head, if_link) {
-		ifnet_lock_shared(ifp);
+  ifnet_head_lock_shared();
+  TAILQ_FOREACH(ifp, &ifnet_head, if_link) {
+    ifnet_lock_shared(ifp);
 
-		error = make_ifmibdata(ifp, name, req);
+    error = make_ifmibdata(ifp, name, req);
 
-		ifnet_lock_done(ifp);
-		if (error != 0) {
-			break;
-		}
-	}
-	ifnet_head_done();
-	return error;
+    ifnet_lock_done(ifp);
+    if (error != 0) {
+      break;
+    }
+  }
+  ifnet_head_done();
+  return error;
 }
 
-static int
-sysctl_ifindex SYSCTL_HANDLER_ARGS
-{
-	int error, val = if_index;
+static int sysctl_ifindex SYSCTL_HANDLER_ARGS {
+  int error, val = if_index;
 
-	error = sysctl_handle_int(oidp, &val, 0, req);
-	if (error || !req->newptr) {
-		return error;
-	}
+  error = sysctl_handle_int(oidp, &val, 0, req);
+  if (error || !req->newptr) {
+    return error;
+  }
 
-	return 0;
+  return 0;
 }
 
-SYSCTL_PROC( _net_link_generic_system, IFMIB_IFCOUNT, ifcount,
-    CTLFLAG_RD | CTLFLAG_LOCKED,
-    NULL, 0, sysctl_ifindex, "Number of configured interfaces",
-    "");
+SYSCTL_PROC(_net_link_generic_system, IFMIB_IFCOUNT, ifcount,
+            CTLFLAG_RD | CTLFLAG_LOCKED, NULL, 0, sysctl_ifindex,
+            "Number of configured interfaces", "");

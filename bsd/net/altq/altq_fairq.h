@@ -59,14 +59,15 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $DragonFly: src/sys/net/altq/altq_fairq.h,v 1.1 2008/04/06 18:58:15 dillon Exp $
+ * $DragonFly: src/sys/net/altq/altq_fairq.h,v 1.1 2008/04/06 18:58:15 dillon
+ * Exp $
  */
 
 #ifndef _NET_ALTQ_ALTQ_FAIRQ_H_
 #define _NET_ALTQ_ALTQ_FAIRQ_H_
 
-#include <net/pfvar.h>
 #include <net/altq/altq.h>
+#include <net/pfvar.h>
 #include <net/pktsched/pktsched_fairq.h>
 
 #endif /* _NET_ALTQ_ALTQ_FAIRQ_H_ */

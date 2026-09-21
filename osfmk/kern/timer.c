@@ -54,55 +54,41 @@
  * the rights to redistribute these changes.
  */
 
+#include <kern/processor.h>
+#include <kern/queue.h>
+#include <kern/sched_prim.h>
+#include <kern/thread.h>
+#include <kern/timer.h>
 #include <mach/kern_return.h>
 #include <mach/port.h>
-#include <kern/queue.h>
-#include <kern/processor.h>
-#include <kern/thread.h>
-#include <kern/sched_prim.h>
-#include <kern/timer.h>
 
 #include <machine/config.h>
 
-void
-timer_init(timer_t timer)
-{
-	memset(timer, 0, sizeof(*timer));
-}
+void timer_init(timer_t timer) { memset(timer, 0, sizeof(*timer)); }
 
-static void
-timer_advance(timer_t timer, uint64_t delta)
-{
+static void timer_advance(timer_t timer, uint64_t delta) {
 #if defined(__LP64__)
-	timer->all_bits += delta;
-#else /* defined(__LP64__) */
-	extern void timer_advance_internal_32(timer_t timer, uint32_t high,
-	    uint32_t low);
-	uint64_t low = delta + timer->low_bits;
-	if (low >> 32) {
-		timer_advance_internal_32(timer,
-		    (uint32_t)(timer->high_bits + (low >> 32)), (uint32_t)low);
-	} else {
-		timer->low_bits = (uint32_t)low;
-	}
+  timer->all_bits += delta;
+#else  /* defined(__LP64__) */
+  extern void timer_advance_internal_32(timer_t timer, uint32_t high,
+                                        uint32_t low);
+  uint64_t low = delta + timer->low_bits;
+  if (low >> 32) {
+    timer_advance_internal_32(timer, (uint32_t)(timer->high_bits + (low >> 32)),
+                              (uint32_t)low);
+  } else {
+    timer->low_bits = (uint32_t)low;
+  }
 #endif /* defined(__LP64__) */
 }
 
-void
-timer_start(timer_t timer, uint64_t tstamp)
-{
-	timer->tstamp = tstamp;
+void timer_start(timer_t timer, uint64_t tstamp) { timer->tstamp = tstamp; }
+
+void timer_stop(timer_t timer, uint64_t tstamp) {
+  timer_advance(timer, tstamp - timer->tstamp);
 }
 
-void
-timer_stop(timer_t timer, uint64_t tstamp)
-{
-	timer_advance(timer, tstamp - timer->tstamp);
-}
-
-void
-timer_update(timer_t timer, uint64_t tstamp)
-{
-	timer_advance(timer, tstamp - timer->tstamp);
-	timer->tstamp = tstamp;
+void timer_update(timer_t timer, uint64_t tstamp) {
+  timer_advance(timer, tstamp - timer->tstamp);
+  timer->tstamp = tstamp;
 }

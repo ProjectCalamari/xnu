@@ -67,32 +67,32 @@
 /*
  * For mount(2), defined here for easy use with System.framework/PrivateHeaders.
  */
-#define MNT_IMGSRC_BY_INDEX     0x20000000
+#define MNT_IMGSRC_BY_INDEX 0x20000000
 
 typedef struct imgsrc_info {
-	uint32_t        ii_height;      /* Nesting height: 0 is outermost */
-	uint32_t        ii_flags;       /* Currently unused */
-	dev_t           ii_dev;         /* dev_t for this volume */
-	char            ii_reserved[24];/* TBD */
+  uint32_t ii_height;   /* Nesting height: 0 is outermost */
+  uint32_t ii_flags;    /* Currently unused */
+  dev_t ii_dev;         /* dev_t for this volume */
+  char ii_reserved[24]; /* TBD */
 } *imgsrc_info_t;
 
 struct mnt_imgsrc_args {
-	uint32_t        mi_height;      /* As determined from an imgsrc_info structure */
-	uint32_t        mi_flags;       /* TBD */
-	const char*     mi_devpath;     /* Path to devnode */
+  uint32_t mi_height;     /* As determined from an imgsrc_info structure */
+  uint32_t mi_flags;      /* TBD */
+  const char *mi_devpath; /* Path to devnode */
 };
 
 #ifdef BSD_KERNEL_PRIVATE
 struct user64_mnt_imgsrc_args {
-	uint32_t        mi_height;
-	uint32_t        mi_flags;
-	user64_addr_t   mi_devpath;
+  uint32_t mi_height;
+  uint32_t mi_flags;
+  user64_addr_t mi_devpath;
 };
 
 struct user32_mnt_imgsrc_args {
-	uint32_t        mi_height;
-	uint32_t        mi_flags;
-	user32_addr_t   mi_devpath;
+  uint32_t mi_height;
+  uint32_t mi_flags;
+  user32_addr_t mi_devpath;
 };
 #endif /* XNU_KERNEL_PRIVATE */
 #endif /* _SYS_IMGSRC_H_ */

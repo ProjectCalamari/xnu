@@ -13,9 +13,9 @@
 // search path.
 #include <Apple/Common/Library/Include/EfiCompatibility.h>
 #else // !EFI
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 #endif // !EFI
 
 /* Bounds attributes */
@@ -34,13 +34,13 @@
 #endif
 
 #if EFI
-    #if defined(__cplusplus)
-        #define __BEGIN_DECLS extern "C" {
-        #define __END_DECLS }
-    #else
-        #define __BEGIN_DECLS
-        #define __END_DECLS
-    #endif
+#if defined(__cplusplus)
+#define __BEGIN_DECLS extern "C" {
+#define __END_DECLS }
+#else
+#define __BEGIN_DECLS
+#define __END_DECLS
+#endif
 #else // !EFI
 #include <sys/cdefs.h>
 #endif // !EFI
@@ -54,7 +54,7 @@ typedef INT32 CT_int;
 typedef UINT64 CT_uint64_t;
 typedef size_t CT_size_t;
 typedef BOOLEAN CT_bool;
-#else // !EFI
+#else  // !EFI
 typedef uint8_t CT_uint8_t;
 typedef uint32_t CT_uint32_t;
 typedef uint64_t CT_uint64_t;

@@ -65,25 +65,25 @@
  *	@(#)tty_conf.c	8.4 (Berkeley) 1/21/94
  */
 
+#include <sys/conf.h>
 #include <sys/param.h>
 #include <sys/systm.h>
 #include <sys/tty.h>
-#include <sys/conf.h>
 
 #ifndef MAXLDISC
 #define MAXLDISC 8
 #endif
 
-#define l_nodev         (void (*)(void))&enodev
+#define l_nodev (void (*)(void)) & enodev
 
-#define l_noopen        ((l_open_t *)  l_nodev)
-#define l_noclose       ((l_close_t *) l_nodev)
-#define l_noread        ((l_read_t *)  l_nodev)
-#define l_nowrite       ((l_write_t *) l_nodev)
-#define l_norint        ((l_rint_t *)  l_nodev)
+#define l_noopen ((l_open_t *)l_nodev)
+#define l_noclose ((l_close_t *)l_nodev)
+#define l_noread ((l_read_t *)l_nodev)
+#define l_nowrite ((l_write_t *)l_nodev)
+#define l_norint ((l_rint_t *)l_nodev)
 
-static l_ioctl_t        l_noioctl;
-static l_start_t        l_nostart;
+static l_ioctl_t l_noioctl;
+static l_start_t l_nostart;
 
 /*
  * XXX it probably doesn't matter what the entries other than the l_open
@@ -91,24 +91,23 @@ static l_start_t        l_nostart;
  * Reconsider the removal of nullmodem anyway.  It was too much like
  * ttymodem, but a completely null version might be useful.
  */
-#define NODISC(n) \
-	{ l_noopen,	l_noclose,	l_noread,	l_nowrite, \
-	  l_noioctl,	l_norint,	l_nostart,	ttymodem }
+#define NODISC(n)                                                              \
+  {l_noopen,  l_noclose, l_noread,  l_nowrite,                                 \
+   l_noioctl, l_norint,  l_nostart, ttymodem}
 
-struct  linesw linesw[MAXLDISC] =
-{
-	/* 0- termios */
-	{ ttyopen, ttylclose, ttread, ttwrite,
-	  l_noioctl, ttyinput, ttwwakeup, ttymodem },
-	NODISC(1),              /* 1- defunct */
-	                        /* 2- NTTYDISC */
-	{ ttyopen, ttylclose, ttread, ttwrite,
-	  l_noioctl, ttyinput, ttwwakeup, ttymodem },
-	NODISC(3),              /* TABLDISC */
-	NODISC(4),              /* SLIPDISC */
-	NODISC(5),              /* PPPDISC */
-	NODISC(6),              /* loadable */
-	NODISC(7),              /* loadable */
+struct linesw linesw[MAXLDISC] = {
+    /* 0- termios */
+    {ttyopen, ttylclose, ttread, ttwrite, l_noioctl, ttyinput, ttwwakeup,
+     ttymodem},
+    NODISC(1), /* 1- defunct */
+               /* 2- NTTYDISC */
+    {ttyopen, ttylclose, ttread, ttwrite, l_noioctl, ttyinput, ttwwakeup,
+     ttymodem},
+    NODISC(3), /* TABLDISC */
+    NODISC(4), /* SLIPDISC */
+    NODISC(5), /* PPPDISC */
+    NODISC(6), /* loadable */
+    NODISC(7), /* loadable */
 };
 
 const int nlinesw = sizeof(linesw) / sizeof(linesw[0]);
@@ -124,27 +123,25 @@ static struct linesw nodisc = NODISC(0);
  *
  * Returns: Index used or -1 on failure.
  */
-int
-ldisc_register(int discipline, struct linesw *linesw_p)
-{
-	int slot = -1;
+int ldisc_register(int discipline, struct linesw *linesw_p) {
+  int slot = -1;
 
-	if (discipline == LDISC_LOAD) {
-		int i;
-		for (i = LOADABLE_LDISC; i < MAXLDISC; i++) {
-			if (bcmp(linesw + i, &nodisc, sizeof(nodisc)) == 0) {
-				slot = i;
-			}
-		}
-	} else if (discipline >= 0 && discipline < MAXLDISC) {
-		slot = discipline;
-	}
+  if (discipline == LDISC_LOAD) {
+    int i;
+    for (i = LOADABLE_LDISC; i < MAXLDISC; i++) {
+      if (bcmp(linesw + i, &nodisc, sizeof(nodisc)) == 0) {
+        slot = i;
+      }
+    }
+  } else if (discipline >= 0 && discipline < MAXLDISC) {
+    slot = discipline;
+  }
 
-	if (slot != -1 && linesw_p) {
-		linesw[slot] = *linesw_p;
-	}
+  if (slot != -1 && linesw_p) {
+    linesw[slot] = *linesw_p;
+  }
 
-	return slot;
+  return slot;
 }
 
 /*
@@ -153,26 +150,20 @@ ldisc_register(int discipline, struct linesw *linesw_p)
  *
  * discipline: Index for discipline to unload.
  */
-void
-ldisc_deregister(int discipline)
-{
-	if (discipline >= LOADABLE_LDISC && discipline < MAXLDISC) {
-		linesw[discipline] = nodisc;
-	}
+void ldisc_deregister(int discipline) {
+  if (discipline >= LOADABLE_LDISC && discipline < MAXLDISC) {
+    linesw[discipline] = nodisc;
+  }
 }
 
 /*
  * Do nothing specific version of line
  * discipline specific ioctl command.
  */
-static int
-l_noioctl(__unused struct tty *tp, __unused u_long cmd, __unused caddr_t data,
-    __unused int flags, __unused struct proc *p)
-{
-	return ENOTTY;
+static int l_noioctl(__unused struct tty *tp, __unused u_long cmd,
+                     __unused caddr_t data, __unused int flags,
+                     __unused struct proc *p) {
+  return ENOTTY;
 }
 
-static void
-l_nostart(__unused struct tty *tp)
-{
-}
+static void l_nostart(__unused struct tty *tp) {}

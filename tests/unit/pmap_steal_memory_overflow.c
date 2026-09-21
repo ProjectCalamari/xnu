@@ -33,43 +33,38 @@
 
 #define UT_MODULE osfmk
 
-extern void *pmap_steal_memory_internal(
-	vm_size_t size,
-	vm_size_t alignment,
-	boolean_t might_free,
-	unsigned int flags,
-	pmap_mapping_type_t mapping_type);
+extern void *pmap_steal_memory_internal(vm_size_t size, vm_size_t alignment,
+                                        boolean_t might_free,
+                                        unsigned int flags,
+                                        pmap_mapping_type_t mapping_type);
 
-T_DECL(size_overflow, "make sure we panic when size is greater than UINT64_MAX - 8")
-{
-	vm_size_t size = UINT64_MAX - 7;
-	vm_size_t alignment = 0;
-	boolean_t might_free = false;
-	unsigned int flags = 0;
-	pmap_mapping_type_t mapping_type = PMAP_MAPPING_TYPE_INFER;
-	T_ASSERT_PANIC({
-		pmap_steal_memory_internal(
-			size,
-			alignment,
-			might_free,
-			flags,
-			mapping_type);
-	}, "should panic because of size overflow");
+T_DECL(size_overflow,
+       "make sure we panic when size is greater than UINT64_MAX - 8") {
+  vm_size_t size = UINT64_MAX - 7;
+  vm_size_t alignment = 0;
+  boolean_t might_free = false;
+  unsigned int flags = 0;
+  pmap_mapping_type_t mapping_type = PMAP_MAPPING_TYPE_INFER;
+  T_ASSERT_PANIC(
+      {
+        pmap_steal_memory_internal(size, alignment, might_free, flags,
+                                   mapping_type);
+      },
+      "should panic because of size overflow");
 }
 
-T_DECL(addr_plus_size_overflow, "make sure we panic when size is so big that addr + size will overflow")
-{
-	vm_size_t size = UINT64_MAX - 8;
-	vm_size_t alignment = 0;
-	boolean_t might_free = false;
-	unsigned int flags = 0;
-	pmap_mapping_type_t mapping_type = PMAP_MAPPING_TYPE_INFER;
-	T_ASSERT_PANIC({
-		pmap_steal_memory_internal(
-			size,
-			alignment,
-			might_free,
-			flags,
-			mapping_type);
-	}, "should panic because of size overflow");
+T_DECL(
+    addr_plus_size_overflow,
+    "make sure we panic when size is so big that addr + size will overflow") {
+  vm_size_t size = UINT64_MAX - 8;
+  vm_size_t alignment = 0;
+  boolean_t might_free = false;
+  unsigned int flags = 0;
+  pmap_mapping_type_t mapping_type = PMAP_MAPPING_TYPE_INFER;
+  T_ASSERT_PANIC(
+      {
+        pmap_steal_memory_internal(size, alignment, might_free, flags,
+                                   mapping_type);
+      },
+      "should panic because of size overflow");
 }

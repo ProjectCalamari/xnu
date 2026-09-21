@@ -62,22 +62,25 @@
  * This class is an abstract class which represents an I/O command.
  * @discussion
  * This class is an abstract class which represents an I/O command passed
- * from a device driver to a controller. All controller commands (e.g. IOATACommand)
- * should inherit from this class.
+ * from a device driver to a controller. All controller commands (e.g.
+ * IOATACommand) should inherit from this class.
  */
 
-class IOCommand : public OSObject
-{
-	OSDeclareDefaultStructors(IOCommand);
+class IOCommand : public OSObject {
+  OSDeclareDefaultStructors(IOCommand);
 
 public:
-	virtual bool init(void) APPLE_KEXT_OVERRIDE;
+  virtual bool init(void) APPLE_KEXT_OVERRIDE;
 
-/*! @var fCommandChain
- *   This variable is used by the current 'owner' to queue the command.  During the life cycle of a command it moves through a series of queues.  This is the queue pointer for it.  Only valid while 'ownership' is clear.  For instance a IOCommandPool uses this pointer to maintain its list of free commands.  May be manipulated using the kern/queue.h macros */
-	queue_chain_t fCommandChain;    /* used to queue commands */
+  /*! @var fCommandChain
+   *   This variable is used by the current 'owner' to queue the command. During
+   * the life cycle of a command it moves through a series of queues.  This is
+   * the queue pointer for it.  Only valid while 'ownership' is clear.  For
+   * instance a IOCommandPool uses this pointer to maintain its list of free
+   * commands.  May be manipulated using the kern/queue.h macros */
+  queue_chain_t fCommandChain; /* used to queue commands */
 };
 
 #endif /* defined(KERNEL) && defined(__cplusplus) */
 
-#endif  /* _IOKIT_IO_COMMAND_H_ */
+#endif /* _IOKIT_IO_COMMAND_H_ */

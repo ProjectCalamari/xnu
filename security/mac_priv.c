@@ -62,8 +62,8 @@
  * MAC checks for system privileges.
  */
 
-#include <sys/param.h>
 #include <sys/kernel.h>
+#include <sys/param.h>
 
 #include <security/mac_internal.h>
 
@@ -81,34 +81,30 @@
  * Restrict access to a privilege for a credential.  Return failure if any
  * policy denies access.
  */
-int
-mac_priv_check(kauth_cred_t cred, int priv)
-{
-	int error;
+int mac_priv_check(kauth_cred_t cred, int priv) {
+  int error;
 
-	if (!mac_cred_check_enforce(cred)) {
-		return 0;
-	}
+  if (!mac_cred_check_enforce(cred)) {
+    return 0;
+  }
 
-	MAC_CHECK(priv_check, cred, priv);
+  MAC_CHECK(priv_check, cred, priv);
 
-	return error;
+  return error;
 }
 
 /*
  * Grant access to a privilege for a credential.  Return success if any
  * policy grants access.
  */
-int
-mac_priv_grant(kauth_cred_t cred, int priv)
-{
-	int error;
+int mac_priv_grant(kauth_cred_t cred, int priv) {
+  int error;
 
-	if (!mac_cred_check_enforce(cred)) {
-		return 0;
-	}
+  if (!mac_cred_check_enforce(cred)) {
+    return 0;
+  }
 
-	MAC_GRANT(priv_grant, cred, priv);
+  MAC_GRANT(priv_grant, cred, priv);
 
-	return error;
+  return error;
 }

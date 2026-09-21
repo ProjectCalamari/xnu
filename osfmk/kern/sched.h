@@ -67,21 +67,21 @@
 #ifndef _KERN_SCHED_H_
 #define _KERN_SCHED_H_
 
-#include <mach/policy.h>
-#include <kern/kern_types.h>
-#include <kern/smp.h>
-#include <kern/circle_queue.h>
-#include <kern/macro_help.h>
-#include <kern/timer_call.h>
 #include <kern/ast.h>
 #include <kern/bits.h>
+#include <kern/circle_queue.h>
+#include <kern/kern_types.h>
+#include <kern/macro_help.h>
+#include <kern/smp.h>
+#include <kern/timer_call.h>
+#include <mach/policy.h>
 
-#define NRQS_MAX        (128)                           /* maximum number of priority levels */
+#define NRQS_MAX (128) /* maximum number of priority levels */
 
-#define MAXPRI          (NRQS_MAX-1)
-#define MINPRI          0                               /* lowest legal priority schedulable */
-#define IDLEPRI         MINPRI                          /* idle thread priority */
-#define NOPRI           -1
+#define MAXPRI (NRQS_MAX - 1)
+#define MINPRI 0       /* lowest legal priority schedulable */
+#define IDLEPRI MINPRI /* idle thread priority */
+#define NOPRI -1
 
 /*
  *	High-level priority assignments
@@ -140,52 +140,56 @@
  *************************************************************************
  */
 
-#define BASEPRI_RTQUEUES        (BASEPRI_REALTIME + 1)                          /* 97 */
-#define BASEPRI_REALTIME        (MAXPRI - (NRQS_MAX / 4) + 1)                   /* 96 */
+#define BASEPRI_RTQUEUES (BASEPRI_REALTIME + 1)        /* 97 */
+#define BASEPRI_REALTIME (MAXPRI - (NRQS_MAX / 4) + 1) /* 96 */
 
-#define MAXPRI_KERNEL           (BASEPRI_REALTIME - 1)                          /* 95 */
-#define BASEPRI_PREEMPT_HIGH    (BASEPRI_PREEMPT + 1)                           /* 93 */
-#define BASEPRI_PREEMPT         (MAXPRI_KERNEL - 3)                             /* 92 */
-#define BASEPRI_VM              (BASEPRI_PREEMPT - 1)                           /* 91 */
+#define MAXPRI_KERNEL (BASEPRI_REALTIME - 1)       /* 95 */
+#define BASEPRI_PREEMPT_HIGH (BASEPRI_PREEMPT + 1) /* 93 */
+#define BASEPRI_PREEMPT (MAXPRI_KERNEL - 3)        /* 92 */
+#define BASEPRI_VM (BASEPRI_PREEMPT - 1)           /* 91 */
 
-#define BASEPRI_KERNEL          (MINPRI_KERNEL + 1)                             /* 81 */
-#define MINPRI_KERNEL           (MAXPRI_KERNEL - (NRQS_MAX / 8) + 1)            /* 80 */
+#define BASEPRI_KERNEL (MINPRI_KERNEL + 1)                 /* 81 */
+#define MINPRI_KERNEL (MAXPRI_KERNEL - (NRQS_MAX / 8) + 1) /* 80 */
 
-#define MAXPRI_RESERVED         (MINPRI_KERNEL - 1)                             /* 79 */
-#define BASEPRI_GRAPHICS        (MAXPRI_RESERVED - 3)                           /* 76 */
-#define MINPRI_RESERVED         (MAXPRI_RESERVED - (NRQS_MAX / 8) + 1)          /* 64 */
+#define MAXPRI_RESERVED (MINPRI_KERNEL - 1)                    /* 79 */
+#define BASEPRI_GRAPHICS (MAXPRI_RESERVED - 3)                 /* 76 */
+#define MINPRI_RESERVED (MAXPRI_RESERVED - (NRQS_MAX / 8) + 1) /* 64 */
 
-#define MAXPRI_USER             (MINPRI_RESERVED - 1)                           /* 63 */
-#define BASEPRI_CONTROL         (BASEPRI_DEFAULT + 17)                          /* 48 */
-#define BASEPRI_FOREGROUND      (BASEPRI_DEFAULT + 16)                          /* 47 */
-#define BASEPRI_BACKGROUND      (BASEPRI_DEFAULT + 15)                          /* 46 */
-#define BASEPRI_USER_INITIATED  (BASEPRI_DEFAULT +  6)                          /* 37 */
-#define BASEPRI_DEFAULT         (MAXPRI_USER - (NRQS_MAX / 4))                  /* 31 */
-#define MAXPRI_SUPPRESSED       (BASEPRI_DEFAULT - 3)                           /* 28 */
-#define BASEPRI_UTILITY         (BASEPRI_DEFAULT - 11)                          /* 20 */
-#define MAXPRI_THROTTLE         (MINPRI + 4)                                    /*  4 */
-#define MINPRI_USER             MINPRI                                          /*  0 */
+#define MAXPRI_USER (MINPRI_RESERVED - 1)              /* 63 */
+#define BASEPRI_CONTROL (BASEPRI_DEFAULT + 17)         /* 48 */
+#define BASEPRI_FOREGROUND (BASEPRI_DEFAULT + 16)      /* 47 */
+#define BASEPRI_BACKGROUND (BASEPRI_DEFAULT + 15)      /* 46 */
+#define BASEPRI_USER_INITIATED (BASEPRI_DEFAULT + 6)   /* 37 */
+#define BASEPRI_DEFAULT (MAXPRI_USER - (NRQS_MAX / 4)) /* 31 */
+#define MAXPRI_SUPPRESSED (BASEPRI_DEFAULT - 3)        /* 28 */
+#define BASEPRI_UTILITY (BASEPRI_DEFAULT - 11)         /* 20 */
+#define MAXPRI_THROTTLE (MINPRI + 4)                   /*  4 */
+#define MINPRI_USER MINPRI                             /*  0 */
 
-#define DEPRESSPRI              (MINPRI)                /* depress priority */
+#define DEPRESSPRI (MINPRI) /* depress priority */
 
-#define MAXPRI_PROMOTE          (MAXPRI_KERNEL)         /* ceiling for mutex promotion */
-#define MINPRI_RWLOCK           (BASEPRI_BACKGROUND)    /* floor when holding rwlock count */
-#define MINPRI_EXEC             (BASEPRI_DEFAULT)       /* floor when in exec state */
-#define MINPRI_WAITQ            (BASEPRI_DEFAULT)       /* floor when in waitq handover state */
-#define MINPRI_FLOOR            (BASEPRI_BACKGROUND)    /* floor when boost requested */
+#define MAXPRI_PROMOTE (MAXPRI_KERNEL)     /* ceiling for mutex promotion */
+#define MINPRI_RWLOCK (BASEPRI_BACKGROUND) /* floor when holding rwlock count  \
+                                            */
+#define MINPRI_EXEC (BASEPRI_DEFAULT)      /* floor when in exec state */
+#define MINPRI_WAITQ (BASEPRI_DEFAULT) /* floor when in waitq handover state   \
+                                        */
+#define MINPRI_FLOOR (BASEPRI_BACKGROUND) /* floor when boost requested */
 
-#define NRQS                    (BASEPRI_REALTIME)      /* Non-realtime levels for runqs */
-#define NRTQS                   (MAXPRI - BASEPRI_REALTIME) /* Realtime levels for runqs */
+#define NRQS (BASEPRI_REALTIME)           /* Non-realtime levels for runqs */
+#define NRTQS (MAXPRI - BASEPRI_REALTIME) /* Realtime levels for runqs */
 
-/* Ensure that NRQS is large enough to represent all non-realtime threads; even promoted ones */
-_Static_assert((NRQS == (MAXPRI_PROMOTE + 1)), "Runqueues are too small to hold all non-realtime threads");
+/* Ensure that NRQS is large enough to represent all non-realtime threads; even
+ * promoted ones */
+_Static_assert((NRQS == (MAXPRI_PROMOTE + 1)),
+               "Runqueues are too small to hold all non-realtime threads");
 
 /* Type used for thread->sched_mode and saved_mode */
 typedef enum {
-	TH_MODE_NONE = 0,                                       /* unassigned, usually for saved_mode only */
-	TH_MODE_REALTIME,                                       /* time constraints supplied */
-	TH_MODE_FIXED,                                          /* use fixed priorities, no decay */
-	TH_MODE_TIMESHARE,                                      /* use timesharing algorithm */
+  TH_MODE_NONE = 0,  /* unassigned, usually for saved_mode only */
+  TH_MODE_REALTIME,  /* time constraints supplied */
+  TH_MODE_FIXED,     /* use fixed priorities, no decay */
+  TH_MODE_TIMESHARE, /* use timesharing algorithm */
 } sched_mode_t;
 
 /*
@@ -195,19 +199,19 @@ typedef enum {
 #if defined(__arm64__) && CONFIG_CLUTCH && !CONFIG_SCHED_EDGE_OPT_OUT
 
 /*
- * Single-cluster, symmetric (SMP) systems can run with just the Clutch policy, but
- * multi-cluster, asymmetric (AMP) systems must further enable the Edge policy
- * extension to Clutch in order to manage scheduling across the multiple CPU clusters.
+ * Single-cluster, symmetric (SMP) systems can run with just the Clutch policy,
+ * but multi-cluster, asymmetric (AMP) systems must further enable the Edge
+ * policy extension to Clutch in order to manage scheduling across the multiple
+ * CPU clusters.
  */
 #define CONFIG_SCHED_CLUTCH 1
 #if __AMP__
-#define CONFIG_SCHED_EDGE   1
+#define CONFIG_SCHED_EDGE 1
 #endif /* __AMP__ */
 
 #endif /* defined(__arm64__) && CONFIG_CLUTCH && !CONFIG_SCHED_EDGE_OPT_OUT */
 
 #if CONFIG_SCHED_EDGE
-
 
 #endif /* CONFIG_SCHED_EDGE */
 
@@ -220,17 +224,20 @@ typedef enum {
 
 /* Buckets used for load calculation */
 typedef enum {
-	TH_BUCKET_FIXPRI = 0,                   /* Fixed-priority */
-	TH_BUCKET_SHARE_FG,                     /* Timeshare thread above BASEPRI_DEFAULT */
+  TH_BUCKET_FIXPRI = 0, /* Fixed-priority */
+  TH_BUCKET_SHARE_FG,   /* Timeshare thread above BASEPRI_DEFAULT */
 #if CONFIG_SCHED_CLUTCH
-	TH_BUCKET_SHARE_IN,                     /* Timeshare thread between BASEPRI_USER_INITIATED and BASEPRI_DEFAULT */
-#endif /* CONFIG_SCHED_CLUTCH */
-	TH_BUCKET_SHARE_DF,                     /* Timeshare thread between BASEPRI_DEFAULT and BASEPRI_UTILITY */
-	TH_BUCKET_SHARE_UT,                     /* Timeshare thread between BASEPRI_UTILITY and MAXPRI_THROTTLE */
-	TH_BUCKET_SHARE_BG,                     /* Timeshare thread between MAXPRI_THROTTLE and MINPRI */
-	TH_BUCKET_RUN,                          /* All runnable threads */
-	TH_BUCKET_SCHED_MAX = TH_BUCKET_RUN,    /* Maximum schedulable buckets */
-	TH_BUCKET_MAX,
+  TH_BUCKET_SHARE_IN, /* Timeshare thread between BASEPRI_USER_INITIATED and
+                         BASEPRI_DEFAULT */
+#endif                /* CONFIG_SCHED_CLUTCH */
+  TH_BUCKET_SHARE_DF, /* Timeshare thread between BASEPRI_DEFAULT and
+                         BASEPRI_UTILITY */
+  TH_BUCKET_SHARE_UT, /* Timeshare thread between BASEPRI_UTILITY and
+                         MAXPRI_THROTTLE */
+  TH_BUCKET_SHARE_BG, /* Timeshare thread between MAXPRI_THROTTLE and MINPRI */
+  TH_BUCKET_RUN,      /* All runnable threads */
+  TH_BUCKET_SCHED_MAX = TH_BUCKET_RUN, /* Maximum schedulable buckets */
+  TH_BUCKET_MAX,
 } sched_bucket_t;
 
 /*
@@ -239,92 +246,85 @@ typedef enum {
 #define invalid_pri(pri) ((pri) < MINPRI || (pri) > MAXPRI)
 
 struct runq_stats {
-	uint64_t                count_sum;
-	uint64_t                last_change_timestamp;
+  uint64_t count_sum;
+  uint64_t last_change_timestamp;
 };
 
 #if defined(CONFIG_SCHED_TIMESHARE_CORE)
 
 struct run_queue {
-	int                     highq;                          /* highest runnable queue */
-	bitmap_t                bitmap[BITMAP_LEN(NRQS)];       /* run queue bitmap array */
-	int                     count;                          /* # of threads total */
-	int                     urgency;                        /* level of preemption urgency */
-	circle_queue_head_t     queues[NRQS];           /* one for each priority */
+  int highq;                         /* highest runnable queue */
+  bitmap_t bitmap[BITMAP_LEN(NRQS)]; /* run queue bitmap array */
+  int count;                         /* # of threads total */
+  int urgency;                       /* level of preemption urgency */
+  circle_queue_head_t queues[NRQS];  /* one for each priority */
 
-	struct runq_stats       runq_stats;
+  struct runq_stats runq_stats;
 };
 
-inline static void
-rq_bitmap_set(bitmap_t *__header_indexable map, u_int n)
-{
-	assert(n < NRQS);
-	bitmap_set(map, n);
+inline static void rq_bitmap_set(bitmap_t *__header_indexable map, u_int n) {
+  assert(n < NRQS);
+  bitmap_set(map, n);
 }
 
-inline static void
-rq_bitmap_clear(bitmap_t *__header_indexable map, u_int n)
-{
-	assert(n < NRQS);
-	bitmap_clear(map, n);
+inline static void rq_bitmap_clear(bitmap_t *__header_indexable map, u_int n) {
+  assert(n < NRQS);
+  bitmap_clear(map, n);
 }
 
 #endif /* defined(CONFIG_SCHED_TIMESHARE_CORE) */
 
 typedef struct {
-	queue_head_t            pri_queue;                      /* runnable RT threads for this priority */
-	uint64_t                pri_earliest_deadline;          /* earliest deadline for this priority */
-	int                     pri_count;                      /* # of threads for this priority */
-	uint32_t                pri_constraint;                 /* constraint of earliest deadline thread for this priority */
+  queue_head_t pri_queue;         /* runnable RT threads for this priority */
+  uint64_t pri_earliest_deadline; /* earliest deadline for this priority */
+  int pri_count;                  /* # of threads for this priority */
+  uint32_t pri_constraint; /* constraint of earliest deadline thread for this
+                              priority */
 } rt_queue_pri_t;
 
 struct rt_queue {
-	_Atomic uint64_t        earliest_deadline;              /* earliest deadline */
-	_Atomic int             count;                          /* # of threads total */
-	_Atomic uint32_t        constraint;                     /* constraint of earliest deadline thread */
-	_Atomic int             ed_index;                       /* index of earliest deadline thread */
+  _Atomic uint64_t earliest_deadline; /* earliest deadline */
+  _Atomic int count;                  /* # of threads total */
+  _Atomic uint32_t constraint; /* constraint of earliest deadline thread */
+  _Atomic int ed_index;        /* index of earliest deadline thread */
 
-	bitmap_t                bitmap[BITMAP_LEN(NRTQS)];
+  bitmap_t bitmap[BITMAP_LEN(NRTQS)];
 
-	rt_queue_pri_t          rt_queue_pri[NRTQS];
+  rt_queue_pri_t rt_queue_pri[NRTQS];
 
-	struct runq_stats       runq_stats;
+  struct runq_stats runq_stats;
 };
 typedef struct rt_queue *rt_queue_t;
 
-#define RT_CONSTRAINT_NONE              UINT32_MAX
-#define RT_DEADLINE_NONE                UINT64_MAX
-#define RT_DEADLINE_QUANTUM_EXPIRED     (UINT64_MAX - 1)
+#define RT_CONSTRAINT_NONE UINT32_MAX
+#define RT_DEADLINE_NONE UINT64_MAX
+#define RT_DEADLINE_QUANTUM_EXPIRED (UINT64_MAX - 1)
 
 /*
  *	Scheduler routines.
  */
 
 /* Handle quantum expiration for an executing thread */
-extern void             thread_quantum_expire(
-	timer_call_param_t      processor,
-	timer_call_param_t      thread);
+extern void thread_quantum_expire(timer_call_param_t processor,
+                                  timer_call_param_t thread);
 
 /* Handle preemption timer expiration for an executing thread */
-extern void             thread_preempt_expire(
-	timer_call_param_t      processor,
-	timer_call_param_t      thread);
+extern void thread_preempt_expire(timer_call_param_t processor,
+                                  timer_call_param_t thread);
 
 /* Invoke the performance controller supplied callback on the processor */
-extern void             perfcontrol_timer_expire(
-	timer_call_param_t      processor,
-	timer_call_param_t      thread);
+extern void perfcontrol_timer_expire(timer_call_param_t processor,
+                                     timer_call_param_t thread);
 
 /* Context switch check for current processor */
-extern ast_t    csw_check(
-	thread_t      thread,
-	processor_t   processor,
-	ast_t         check_reason);
+extern ast_t csw_check(thread_t thread, processor_t processor,
+                       ast_t check_reason);
 
 /* Check for pending ASTs */
 extern void ast_check(processor_t processor);
 
-extern ast_t update_pending_nonurgent_preemption(processor_t processor, ast_t reason);
+extern ast_t update_pending_nonurgent_preemption(processor_t processor,
+                                                 ast_t reason);
 extern void clear_pending_nonurgent_preemption(processor_t processor);
 
 extern void sched_update_generation_count(void);
@@ -349,32 +349,28 @@ extern int default_preemption_rate;
  *	Aging may be deferred during periods where all processors are idle
  *	and cumulatively applied during periods of activity.
  */
-#define SCHED_TICK_SHIFT        3
-#define SCHED_TICK_MAX_DELTA    (8)
+#define SCHED_TICK_SHIFT 3
+#define SCHED_TICK_MAX_DELTA (8)
 
 extern _Atomic uint32_t sched_tick;
-extern uint32_t         sched_tick_interval;
+extern uint32_t sched_tick_interval;
 
 #endif /* CONFIG_SCHED_TIMESHARE_CORE */
 
-extern uint64_t         sched_one_second_interval;
+extern uint64_t sched_one_second_interval;
 
 /* Periodic computation of various averages */
-extern void            compute_sched_load(void);
+extern void compute_sched_load(void);
 
-extern void             compute_averages(uint64_t);
+extern void compute_averages(uint64_t);
 
-extern void             compute_averunnable(
-	void                    *nrun);
+extern void compute_averunnable(void *nrun);
 
-extern void             compute_stack_target(
-	void                    *arg);
+extern void compute_stack_target(void *arg);
 
-extern void             compute_pageout_gc_throttle(
-	void                    *arg);
+extern void compute_pageout_gc_throttle(void *arg);
 
-extern void             compute_pmap_gc_throttle(
-	void                    *arg);
+extern void compute_pmap_gc_throttle(void *arg);
 
 /*
  *	Conversion factor from usage
@@ -384,28 +380,28 @@ extern void             compute_pmap_gc_throttle(
 
 #define MAX_LOAD (NRQS - 1)
 #define SCHED_PRI_SHIFT_MAX ((8 * sizeof(uint32_t)) - 1)
-extern uint32_t         sched_pri_shifts[TH_BUCKET_MAX];
-extern uint32_t         sched_fixed_shift;
-extern int8_t           sched_load_shifts[NRQS];
-extern uint32_t         sched_decay_usage_age_factor;
+extern uint32_t sched_pri_shifts[TH_BUCKET_MAX];
+extern uint32_t sched_fixed_shift;
+extern int8_t sched_load_shifts[NRQS];
+extern uint32_t sched_decay_usage_age_factor;
 void sched_timeshare_consider_maintenance(uint64_t ctime, bool safe_point);
 #endif /* CONFIG_SCHED_TIMESHARE_CORE */
 
 void sched_consider_recommended_cores(uint64_t ctime, thread_t thread);
 
-extern int32_t          sched_poll_yield_shift;
-extern uint64_t         sched_safe_rt_duration;
-extern uint64_t         sched_safe_fixed_duration;
+extern int32_t sched_poll_yield_shift;
+extern uint64_t sched_safe_rt_duration;
+extern uint64_t sched_safe_fixed_duration;
 
-extern uint32_t         sched_load_average, sched_mach_factor;
+extern uint32_t sched_load_average, sched_mach_factor;
 
-extern uint32_t         avenrun[3], mach_factor[3];
+extern uint32_t avenrun[3], mach_factor[3];
 
-extern uint64_t         max_unsafe_rt_computation;
-extern uint64_t         max_unsafe_fixed_computation;
-extern uint64_t         max_poll_computation;
+extern uint64_t max_unsafe_rt_computation;
+extern uint64_t max_unsafe_fixed_computation;
+extern uint64_t max_poll_computation;
 
-extern uint32_t         sched_run_buckets[TH_BUCKET_MAX];
+extern uint32_t sched_run_buckets[TH_BUCKET_MAX];
 
 extern uint32_t sched_run_incr(thread_t thread);
 extern uint32_t sched_run_decr(thread_t thread);
@@ -415,10 +411,10 @@ extern uint32_t sched_smt_run_incr(thread_t thread);
 extern uint32_t sched_smt_run_decr(thread_t thread);
 extern void sched_smt_update_thread_bucket(thread_t thread);
 
-#define SCHED_DECAY_TICKS       32
+#define SCHED_DECAY_TICKS 32
 struct shift_data {
-	int     shift1;
-	int     shift2;
+  int shift1;
+  int shift2;
 };
 
 /*
@@ -430,20 +426,20 @@ struct shift_data {
  * tracking like in sched_clutch_cpu_usage_update(), to maintain
  * accurate CPU usage accounting for the scheduler.
  */
-#define sched_tick_delta(thread, delta) \
-MACRO_BEGIN \
-    uint64_t _total = recount_thread_time_mach(thread); \
-    (delta) = (typeof(delta))(_total - thread->sched_time_save); \
-    thread->sched_time_save = _total; \
-MACRO_END
+#define sched_tick_delta(thread, delta)                                        \
+  MACRO_BEGIN                                                                  \
+  uint64_t _total = recount_thread_time_mach(thread);                          \
+  (delta) = (typeof(delta))(_total - thread->sched_time_save);                 \
+  thread->sched_time_save = _total;                                            \
+  MACRO_END
 
-#define SCHED_MAX_BACKUP_PROCESSORS             7
+#define SCHED_MAX_BACKUP_PROCESSORS 7
 #if defined(__x86_64__)
-#define SCHED_DEFAULT_BACKUP_PROCESSORS         1
-#define SCHED_DEFAULT_BACKUP_PROCESSORS_SMT     2
+#define SCHED_DEFAULT_BACKUP_PROCESSORS 1
+#define SCHED_DEFAULT_BACKUP_PROCESSORS_SMT 2
 #else
-#define SCHED_DEFAULT_BACKUP_PROCESSORS         0
-#define SCHED_DEFAULT_BACKUP_PROCESSORS_SMT     0
+#define SCHED_DEFAULT_BACKUP_PROCESSORS 0
+#define SCHED_DEFAULT_BACKUP_PROCESSORS_SMT 0
 #endif
 extern int sched_rt_n_backup_processors;
 
@@ -451,4 +447,4 @@ extern int sched_rt_n_backup_processors;
 extern bool system_is_SMT;
 #endif /* CONFIG_SCHED_SMT */
 
-#endif  /* _KERN_SCHED_H_ */
+#endif /* _KERN_SCHED_H_ */

@@ -29,8 +29,8 @@
 #ifndef _STRING_H_
 #define _STRING_H_
 
-#include <stdarg.h>
 #include <_types.h>
+#include <stdarg.h>
 #include <sys/_types/_null.h>
 #include <sys/_types/_size_t.h>
 #include <sys/_types/_uintptr_t.h>
@@ -39,11 +39,13 @@
 // of Libc's string.h (which no one should be using bar MIG) in order
 // to override their use of memcpy.
 
-int _mach_snprintf(char *buffer, int length, const char *fmt, ...) __printflike(3, 4);
-int _mach_vsnprintf(char *buffer, int length, const char *fmt, va_list ap) __printflike(3, 0);
+int _mach_snprintf(char *buffer, int length, const char *fmt, ...)
+    __printflike(3, 4);
+int _mach_vsnprintf(char *buffer, int length, const char *fmt, va_list ap)
+    __printflike(3, 0);
 
-// These declarations are just for MIG, other users should include string/strings.h
-// These symbols are defined in _libc_funcptr.c
+// These declarations are just for MIG, other users should include
+// string/strings.h These symbols are defined in _libc_funcptr.c
 
 void *memcpy(void *dst0, const void *src0, size_t length);
 void *memset(void *dst0, int c0, size_t length);

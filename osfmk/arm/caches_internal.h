@@ -26,13 +26,13 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #ifndef _ARM_CACHES_INTERNAL
-#define _ARM_CACHES_INTERNAL    1
+#define _ARM_CACHES_INTERNAL 1
 
 #include <arm64/proc_reg.h>
 
 #include <kern/kern_types.h>
 
-extern void flush_dcache_syscall( vm_offset_t addr, unsigned length);
+extern void flush_dcache_syscall(vm_offset_t addr, unsigned length);
 
 #ifdef MACH_KERNEL_PRIVATE
 
@@ -44,7 +44,7 @@ extern void flush_dcache64(addr64_t addr, unsigned count, int phys);
 extern void invalidate_icache(vm_offset_t addr, unsigned cnt, int phys);
 extern void invalidate_icache64(addr64_t addr, unsigned cnt, int phys);
 
-#if     defined(ARMA7)
+#if defined(ARMA7)
 #define LWFlush 1
 #define LWClean 2
 extern void cache_xcall(unsigned int op);
@@ -89,7 +89,8 @@ extern void cache_sync_page(ppnum_t pp);
 extern void platform_cache_init(void);
 extern void platform_cache_idle_enter(void);
 extern void platform_cache_flush(void);
-extern boolean_t platform_cache_batch_wimg(unsigned int new_wimg, unsigned int size);
+extern boolean_t platform_cache_batch_wimg(unsigned int new_wimg,
+                                           unsigned int size);
 extern void platform_cache_flush_wimg(unsigned int new_wimg);
 extern void platform_cache_clean(void);
 extern void platform_cache_shutdown(void);

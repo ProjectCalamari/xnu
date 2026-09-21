@@ -24,12 +24,10 @@
 void __inc_remove_counter(void);
 int __renameat(int oldfd, const char *old, int newfd, const char *new);
 
-int
-renameat(int oldfd, const char *old, int newfd, const char *new)
-{
-	int res = __renameat(oldfd, old, newfd, new);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int renameat(int oldfd, const char *old, int newfd, const char *new) {
+  int res = __renameat(oldfd, old, newfd, new);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }

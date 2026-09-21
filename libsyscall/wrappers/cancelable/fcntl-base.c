@@ -29,58 +29,56 @@ int __FCNTL(int, int, void *);
  * argument when int and void * are different sizes. Also add pthread
  * cancelability.
  */
-int
-fcntl(int fd, int cmd, ...)
-{
-	va_list ap;
-	void *arg;
+int fcntl(int fd, int cmd, ...) {
+  va_list ap;
+  void *arg;
 
-	va_start(ap, cmd);
-	switch (cmd) {
-	case F_GETLK:
-	case F_GETLKPID:
-	case F_SETLK:
-	case F_SETLKW:
-	case F_SETLKWTIMEOUT:
-	case F_OFD_GETLK:
-	case F_OFD_GETLKPID:
-	case F_OFD_SETLK:
-	case F_OFD_SETLKW:
-	case F_OFD_SETLKWTIMEOUT:
-	case F_PREALLOCATE:
-	case F_PUNCHHOLE:
-	case F_SETSIZE:
-	case F_RDADVISE:
-	case F_LOG2PHYS:
-	case F_LOG2PHYS_EXT:
-	case F_GETPATH:
-	case F_GETPATH_NOFIRMLINK:
-	case F_GETPATH_MTMINFO:
-	case F_GETCODEDIR:
-	case F_PATHPKG_CHECK:
-	case F_OPENFROM:
-	case F_UNLINKFROM:
-	case F_ADDSIGS:
-	case F_ADDFILESIGS:
-	case F_ADDFILESIGS_FOR_DYLD_SIM:
-	case F_ADDFILESIGS_RETURN:
-	case F_ADDFILESIGS_INFO:
-	case F_ADDSIGS_MAIN_BINARY:
-	case F_ADDFILESUPPL:
-	case F_FINDSIGS:
-	case F_TRANSCODEKEY:
-	case F_TRIM_ACTIVE_FILE:
-	case F_SPECULATIVE_READ:
-	case F_CHECK_LV:
-	case F_GETSIGSINFO:
-	case F_ATTRIBUTION_TAG:
-	case F_ASSERT_BG_ACCESS:
-		arg = va_arg(ap, void *);
-		break;
-	default:
-		arg = (void *)((unsigned long)va_arg(ap, int));
-		break;
-	}
-	va_end(ap);
-	return __FCNTL(fd, cmd, arg);
+  va_start(ap, cmd);
+  switch (cmd) {
+  case F_GETLK:
+  case F_GETLKPID:
+  case F_SETLK:
+  case F_SETLKW:
+  case F_SETLKWTIMEOUT:
+  case F_OFD_GETLK:
+  case F_OFD_GETLKPID:
+  case F_OFD_SETLK:
+  case F_OFD_SETLKW:
+  case F_OFD_SETLKWTIMEOUT:
+  case F_PREALLOCATE:
+  case F_PUNCHHOLE:
+  case F_SETSIZE:
+  case F_RDADVISE:
+  case F_LOG2PHYS:
+  case F_LOG2PHYS_EXT:
+  case F_GETPATH:
+  case F_GETPATH_NOFIRMLINK:
+  case F_GETPATH_MTMINFO:
+  case F_GETCODEDIR:
+  case F_PATHPKG_CHECK:
+  case F_OPENFROM:
+  case F_UNLINKFROM:
+  case F_ADDSIGS:
+  case F_ADDFILESIGS:
+  case F_ADDFILESIGS_FOR_DYLD_SIM:
+  case F_ADDFILESIGS_RETURN:
+  case F_ADDFILESIGS_INFO:
+  case F_ADDSIGS_MAIN_BINARY:
+  case F_ADDFILESUPPL:
+  case F_FINDSIGS:
+  case F_TRANSCODEKEY:
+  case F_TRIM_ACTIVE_FILE:
+  case F_SPECULATIVE_READ:
+  case F_CHECK_LV:
+  case F_GETSIGSINFO:
+  case F_ATTRIBUTION_TAG:
+  case F_ASSERT_BG_ACCESS:
+    arg = va_arg(ap, void *);
+    break;
+  default:
+    arg = (void *)((unsigned long)va_arg(ap, int));
+    break;
+  }
+  va_end(ap);
+  return __FCNTL(fd, cmd, arg);
 }

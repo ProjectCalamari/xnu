@@ -42,13 +42,14 @@
  *
  * Counters can be statically allocated or dynamically allocated.
  *
- * Statically allocated counters are always backed by per-cpu storage which means
- * writes take place on the current CPUs value and reads sum all of the per-cpu values.
+ * Statically allocated counters are always backed by per-cpu storage which
+ * means writes take place on the current CPUs value and reads sum all of the
+ * per-cpu values.
  *
- * Dynamically allocated counters can be either per-cpu or use a single 64bit value.
- * To create a per-cpu counter, use the scalable_counter_t type. Note that this
- * trades of additional memory for better scalability.
- * To create a single 64bit counter, use the atomic_counter_t type.
+ * Dynamically allocated counters can be either per-cpu or use a single 64bit
+ * value. To create a per-cpu counter, use the scalable_counter_t type. Note
+ * that this trades of additional memory for better scalability. To create a
+ * single 64bit counter, use the atomic_counter_t type.
  *
  * For most counters you can just use the counter_t type and the choice of
  * scalable or atomic will be made at compile time based on the target.
@@ -97,10 +98,10 @@
  * </code>
  */
 
-#include <mach/mach_types.h>
 #include <kern/macro_help.h>
 #include <kern/startup.h>
 #include <kern/zalloc.h>
+#include <mach/mach_types.h>
 
 typedef uint64_t *__zpercpu scalable_counter_t;
 typedef uint64_t atomic_counter_t;
@@ -115,8 +116,7 @@ struct generic_counter_t;
  *
  * @param var           the name of the counter.
  */
-#define SCALABLE_COUNTER_DECLARE(name) \
-	extern scalable_counter_t name;
+#define SCALABLE_COUNTER_DECLARE(name) extern scalable_counter_t name;
 
 /*!
  * @macro SCALABLE_COUNTER_DEFINE
@@ -127,11 +127,12 @@ struct generic_counter_t;
  *
  * @param var           the name of the counter.
  */
-#define SCALABLE_COUNTER_DEFINE(name) \
-	__startup_data uint64_t __ ##name##_early_storage = 0;                                   \
-	scalable_counter_t name = {&__##name##_early_storage};                                   \
-	STARTUP_ARG(TUNABLES, STARTUP_RANK_MIDDLE, scalable_counter_static_boot_mangle, &name);  \
-	STARTUP_ARG(PERCPU, STARTUP_RANK_SECOND, scalable_counter_static_init, &name);
+#define SCALABLE_COUNTER_DEFINE(name)                                          \
+  __startup_data uint64_t __##name##_early_storage = 0;                        \
+  scalable_counter_t name = {&__##name##_early_storage};                       \
+  STARTUP_ARG(TUNABLES, STARTUP_RANK_MIDDLE,                                   \
+              scalable_counter_static_boot_mangle, &name);                     \
+  STARTUP_ARG(PERCPU, STARTUP_RANK_SECOND, scalable_counter_static_init, &name);
 
 /*
  * Initialize a per-cpu counter.
@@ -162,9 +163,11 @@ extern void counter_inc(struct generic_counter_t *);
 OS_OVERLOADABLE
 extern void counter_dec(struct generic_counter_t *);
 
-/* Variants of the above operations where the caller takes responsibility for disabling preemption. */
+/* Variants of the above operations where the caller takes responsibility for
+ * disabling preemption. */
 OS_OVERLOADABLE
-extern void counter_add_preemption_disabled(struct generic_counter_t *, uint64_t amount);
+extern void counter_add_preemption_disabled(struct generic_counter_t *,
+                                            uint64_t amount);
 OS_OVERLOADABLE
 extern void counter_inc_preemption_disabled(struct generic_counter_t *);
 OS_OVERLOADABLE
@@ -180,7 +183,8 @@ extern uint64_t counter_load(struct generic_counter_t *);
 #pragma mark implementation details
 /* NB: Nothing below here should be used directly. */
 
-__startup_func void scalable_counter_static_boot_mangle(scalable_counter_t *counter);
+__startup_func void
+scalable_counter_static_boot_mangle(scalable_counter_t *counter);
 __startup_func void scalable_counter_static_init(scalable_counter_t *counter);
 
 #if XNU_TARGET_OS_WATCH || XNU_TARGET_OS_TV
@@ -195,33 +199,33 @@ typedef scalable_counter_t counter_t;
 typedef atomic_counter_t counter_t;
 #endif /* ATOMIC_COUNTER_USE_PERCPU */
 
-#define COUNTER_MAKE_PROTOTYPES(counter_t)                                 \
-OS_OVERLOADABLE                                                            \
-extern void counter_alloc(counter_t *);                                    \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_free(counter_t *);                                     \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_add(counter_t *, uint64_t amount);                     \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_inc(counter_t *);                                      \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_dec(counter_t *);                                      \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_add_preemption_disabled(counter_t *, uint64_t amount); \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_inc_preemption_disabled(counter_t *);                  \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern void counter_dec_preemption_disabled(counter_t *);                  \
-                                                                           \
-OS_OVERLOADABLE                                                            \
-extern uint64_t counter_load(counter_t *);
+#define COUNTER_MAKE_PROTOTYPES(counter_t)                                     \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_alloc(counter_t *);                                      \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_free(counter_t *);                                       \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_add(counter_t *, uint64_t amount);                       \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_inc(counter_t *);                                        \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_dec(counter_t *);                                        \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_add_preemption_disabled(counter_t *, uint64_t amount);   \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_inc_preemption_disabled(counter_t *);                    \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern void counter_dec_preemption_disabled(counter_t *);                    \
+                                                                               \
+  OS_OVERLOADABLE                                                              \
+  extern uint64_t counter_load(counter_t *);
 
 COUNTER_MAKE_PROTOTYPES(scalable_counter_t);
 COUNTER_MAKE_PROTOTYPES(atomic_counter_t);

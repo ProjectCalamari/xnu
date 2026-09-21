@@ -30,15 +30,15 @@
  *
  */
 
+#include "string.h"
 #include <mach/mach.h>
 #include <mach/mach_init.h>
 #include <stdarg.h>
-#include "string.h"
 
 int (*vprintf_stderr_func)(const char *format, va_list ap) __printflike(1, 0);
 
 #define __STDERR_FILENO 2
-int write(int fd, const char* cbuf, int nbyte);
+int write(int fd, const char *cbuf, int nbyte);
 
 /* This function allows the writing of a mach error message to an
  * application-controllable output method, the default being to
@@ -48,22 +48,20 @@ int write(int fd, const char* cbuf, int nbyte);
  * a function which takes the same parameters as vprintf.
  */
 
-__printflike(1, 2)
-__private_extern__ int
-fprintf_stderr(const char *format, ...)
-{
-	va_list args;
-	int retval;
+__printflike(1, 2) __private_extern__ int fprintf_stderr(const char *format,
+                                                         ...) {
+  va_list args;
+  int retval;
 
-	va_start(args, format);
-	if (vprintf_stderr_func == NULL) {
-		char buffer[1024];
-		retval = _mach_vsnprintf(buffer, sizeof(buffer), format, args);
-		write(__STDERR_FILENO, buffer, retval);
-	} else {
-		retval = (*vprintf_stderr_func)(format, args);
-	}
-	va_end(args);
+  va_start(args, format);
+  if (vprintf_stderr_func == NULL) {
+    char buffer[1024];
+    retval = _mach_vsnprintf(buffer, sizeof(buffer), format, args);
+    write(__STDERR_FILENO, buffer, retval);
+  } else {
+    retval = (*vprintf_stderr_func)(format, args);
+  }
+  va_end(args);
 
-	return retval;
+  return retval;
 }

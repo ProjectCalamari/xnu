@@ -24,11 +24,12 @@
 #include <stdint.h>
 #include <sys/event_log.h>
 
-extern int __record_system_event(uint32_t, uint32_t, const char *, const char *);
+extern int __record_system_event(uint32_t, uint32_t, const char *,
+                                 const char *);
 
-int
-record_system_event_as_kernel(system_event_type type, system_event_subsystem subsystem, const char *event,
-    const char *payload)
-{
-	return __record_system_event((uint32_t)type, (uint32_t)subsystem, event, payload);
+int record_system_event_as_kernel(system_event_type type,
+                                  system_event_subsystem subsystem,
+                                  const char *event, const char *payload) {
+  return __record_system_event((uint32_t)type, (uint32_t)subsystem, event,
+                               payload);
 }

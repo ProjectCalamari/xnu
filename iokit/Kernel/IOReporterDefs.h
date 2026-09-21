@@ -29,16 +29,16 @@
 #ifndef _IOEPORTERDEFS_H
 #define _IOEPORTERDEFS_H
 
-//#include "IOReportHubCommon.h"
+// #include "IOReportHubCommon.h"
 
-//#define IORDEBUG_IOLOG
+// #define IORDEBUG_IOLOG
 
 #if defined(IORDEBUG_IOLOG)
-#define IORLOG(fmt, args...)    \
-do {                            \
-    IOLog((fmt), ##args);         \
-    IOLog("\n");                \
-} while(0)
+#define IORLOG(fmt, args...)                                                   \
+  do {                                                                         \
+    IOLog((fmt), ##args);                                                      \
+    IOLog("\n");                                                               \
+  } while (0)
 
 #else
 #define IORLOG(fmt, args...)
@@ -57,57 +57,54 @@ do {                            \
 #error "(SIZE_T_MAX < INT_MAX) -> PREFL_MEMOP_*()) unsafe for size_t"
 #endif
 
-#define PREFL_MEMOP_FAIL(__val, __type) do {  \
-    if (__val <= 0) {  \
-	IORERROR("%s - %s <= 0!\n", __func__, #__val);  \
-	res = kIOReturnUnderrun;  \
-	goto finish;  \
-    }  else if (__val > INT_MAX / (int)sizeof(__type)) {  \
-	IORERROR("%s - %s > INT_MAX / sizeof(%s)!\n",__func__,#__val,#__type);\
-	res = kIOReturnOverrun;  \
-	goto finish;  \
-    }  \
-} while(0)
+#define PREFL_MEMOP_FAIL(__val, __type)                                        \
+  do {                                                                         \
+    if (__val <= 0) {                                                          \
+      IORERROR("%s - %s <= 0!\n", __func__, #__val);                           \
+      res = kIOReturnUnderrun;                                                 \
+      goto finish;                                                             \
+    } else if (__val > INT_MAX / (int)sizeof(__type)) {                        \
+      IORERROR("%s - %s > INT_MAX / sizeof(%s)!\n", __func__, #__val,          \
+               #__type);                                                       \
+      res = kIOReturnOverrun;                                                  \
+      goto finish;                                                             \
+    }                                                                          \
+  } while (0)
 
-#define PREFL_MEMOP_PANIC(__val, __type) do {  \
-    if (__val <= 0) {  \
-	panic("%s - %s <= 0!", __func__, #__val);  \
-    }  else if (__val > INT_MAX / (int)sizeof(__type)) {  \
-	panic("%s - %s > INT_MAX / sizeof(%s)!", __func__, #__val, #__type);  \
-    }  \
-} while(0)
+#define PREFL_MEMOP_PANIC(__val, __type)                                       \
+  do {                                                                         \
+    if (__val <= 0) {                                                          \
+      panic("%s - %s <= 0!", __func__, #__val);                                \
+    } else if (__val > INT_MAX / (int)sizeof(__type)) {                        \
+      panic("%s - %s > INT_MAX / sizeof(%s)!", __func__, #__val, #__type);     \
+    }                                                                          \
+  } while (0)
 
-//#include "IOReportHubCommon.h"//
+// #include "IOReportHubCommon.h"//
 
+#define IOREPORTER_DEBUG_ELEMENT(idx)                                          \
+  do {                                                                         \
+    IOLog("IOReporter::DrvID: %llx | Elt:[%3d] |ID: %llx |Ticks: %llu |",      \
+          _elements[idx].provider_id, idx, _elements[idx].channel_id,          \
+          _elements[idx].timestamp);                                           \
+    IOLog("0: %llu | 1: %llu | 2: %llu | 3: %llu\n",                           \
+          _elements[idx].values.v[0], _elements[idx].values.v[1],              \
+          _elements[idx].values.v[2], _elements[idx].values.v[3]);             \
+  } while (0)
 
+#define IOREPORTER_CHECK_LOCK()                                                \
+  do {                                                                         \
+    if (!_reporterIsLocked) {                                                  \
+      panic("%s was called out of locked context!", __PRETTY_FUNCTION__);      \
+    }                                                                          \
+  } while (0)
 
-#define IOREPORTER_DEBUG_ELEMENT(idx)                                   \
-do {                                                                    \
-IOLog("IOReporter::DrvID: %llx | Elt:[%3d] |ID: %llx |Ticks: %llu |",   \
-_elements[idx].provider_id,                                             \
-idx,                                                                    \
-_elements[idx].channel_id,                                              \
-_elements[idx].timestamp);                                              \
-IOLog("0: %llu | 1: %llu | 2: %llu | 3: %llu\n",                        \
-_elements[idx].values.v[0],                                             \
-_elements[idx].values.v[1],                                             \
-_elements[idx].values.v[2],                                             \
-_elements[idx].values.v[3]);                                            \
-} while(0)
-
-
-#define IOREPORTER_CHECK_LOCK()                                         \
-do {                                                                    \
-    if (!_reporterIsLocked) {                                           \
-	panic("%s was called out of locked context!", __PRETTY_FUNCTION__); \
-    }                                                                   \
-} while(0)                                                              \
-
-#define IOREPORTER_CHECK_CONFIG_LOCK()                                  \
-do {                                                                    \
-    if (!_reporterConfigIsLocked) {                                     \
-	panic("%s was called out of config locked context!", __PRETTY_FUNCTION__); \
-    }                                                                   \
-} while(0)                                                              \
+#define IOREPORTER_CHECK_CONFIG_LOCK()                                         \
+  do {                                                                         \
+    if (!_reporterConfigIsLocked) {                                            \
+      panic("%s was called out of config locked context!",                     \
+            __PRETTY_FUNCTION__);                                              \
+    }                                                                          \
+  } while (0)
 
 #endif /* ! _IOEPORTERDEFS_H */

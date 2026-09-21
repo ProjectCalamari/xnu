@@ -27,11 +27,10 @@
  */
 #ifdef KERNEL
 #ifndef _STRUCT_USER32_ITIMERVAL
-#define _STRUCT_USER32_ITIMERVAL                struct user32_itimerval
-_STRUCT_USER32_ITIMERVAL
-{
-	_STRUCT_USER32_TIMEVAL  it_interval;    /* timer interval */
-	_STRUCT_USER32_TIMEVAL  it_value;       /* current value */
+#define _STRUCT_USER32_ITIMERVAL struct user32_itimerval
+_STRUCT_USER32_ITIMERVAL {
+  _STRUCT_USER32_TIMEVAL it_interval; /* timer interval */
+  _STRUCT_USER32_TIMEVAL it_value;    /* current value */
 };
 #endif /* _STRUCT_USER32_TIMEVAL */
 #endif /* KERNEL */

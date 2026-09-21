@@ -26,48 +26,46 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/param.h>
-#include <sys/proc.h>
-#include <sys/kauth.h>
 #include <security/mac_framework.h>
 #include <security/mac_internal.h>
+#include <sys/kauth.h>
+#include <sys/param.h>
+#include <sys/proc.h>
 
-int
-mac_necp_check_open(proc_t proc, int flags)
-{
-	int error;
+int mac_necp_check_open(proc_t proc, int flags) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_proc_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_proc_enforce) {
+    return 0;
+  }
 #endif
 
-	if (!mac_proc_check_enforce(proc)) {
-		return 0;
-	}
+  if (!mac_proc_check_enforce(proc)) {
+    return 0;
+  }
 
-	MAC_CHECK(necp_check_open, current_cached_proc_cred(proc), flags);
-	return error;
+  MAC_CHECK(necp_check_open, current_cached_proc_cred(proc), flags);
+  return error;
 }
 
-int
-mac_necp_check_client_action(proc_t proc, struct fileglob *fg, uint32_t action)
-{
-	int error;
+int mac_necp_check_client_action(proc_t proc, struct fileglob *fg,
+                                 uint32_t action) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_proc_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_proc_enforce) {
+    return 0;
+  }
 #endif
 
-	if (!mac_proc_check_enforce(proc)) {
-		return 0;
-	}
+  if (!mac_proc_check_enforce(proc)) {
+    return 0;
+  }
 
-	MAC_CHECK(necp_check_client_action, current_cached_proc_cred(proc), fg, action);
-	return error;
+  MAC_CHECK(necp_check_client_action, current_cached_proc_cred(proc), fg,
+            action);
+  return error;
 }

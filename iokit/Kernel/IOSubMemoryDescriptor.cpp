@@ -26,8 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <IOKit/IOSubMemoryDescriptor.h>
 #include <IOKit/IOLib.h>
+#include <IOKit/IOSubMemoryDescriptor.h>
 
 #include "IOKitKernelInternal.h"
 
@@ -35,216 +35,184 @@
 
 OSDefineMetaClassAndStructors(IOSubMemoryDescriptor, IOMemoryDescriptor)
 
-IOReturn
-IOSubMemoryDescriptor::redirect( task_t safeTask, bool doRedirect )
-{
+    IOReturn IOSubMemoryDescriptor::redirect(task_t safeTask, bool doRedirect) {
 #ifdef __LP64__
-	super::redirect( safeTask, doRedirect );
+  super::redirect(safeTask, doRedirect);
 #endif /* __LP64__ */
-	return _parent->redirect( safeTask, doRedirect );
+  return _parent->redirect(safeTask, doRedirect);
 }
 
 IOSubMemoryDescriptor *
-IOSubMemoryDescriptor::withSubRange(IOMemoryDescriptor *        of,
-    IOByteCount             offset,
-    IOByteCount             length,
-    IOOptionBits            options)
-{
-	IOSubMemoryDescriptor *self = new IOSubMemoryDescriptor;
+IOSubMemoryDescriptor::withSubRange(IOMemoryDescriptor *of, IOByteCount offset,
+                                    IOByteCount length, IOOptionBits options) {
+  IOSubMemoryDescriptor *self = new IOSubMemoryDescriptor;
 
-	if (self && !self->initSubRange(of, offset, length, (IODirection) options)) {
-		self->release();
-		self = NULL;
-	}
-	return self;
+  if (self && !self->initSubRange(of, offset, length, (IODirection)options)) {
+    self->release();
+    self = NULL;
+  }
+  return self;
 }
 
-bool
-IOSubMemoryDescriptor::initSubRange( IOMemoryDescriptor * parent,
-    IOByteCount offset, IOByteCount length,
-    IODirection direction )
-{
-	if (parent && ((offset + length) > parent->getLength())) {
-		return false;
-	}
+bool IOSubMemoryDescriptor::initSubRange(IOMemoryDescriptor *parent,
+                                         IOByteCount offset, IOByteCount length,
+                                         IODirection direction) {
+  if (parent && ((offset + length) > parent->getLength())) {
+    return false;
+  }
 
-	/*
-	 * We can check the _parent instance variable before having ever set it
-	 * to an initial value because I/O Kit guarantees that all our instance
-	 * variables are zeroed on an object's allocation.
-	 */
+  /*
+   * We can check the _parent instance variable before having ever set it
+   * to an initial value because I/O Kit guarantees that all our instance
+   * variables are zeroed on an object's allocation.
+   */
 
-	if (!_parent) {
-		if (!super::init()) {
-			return false;
-		}
-	} else {
-		/*
-		 * An existing memory descriptor is being retargeted to
-		 * point to somewhere else.  Clean up our present state.
-		 */
+  if (!_parent) {
+    if (!super::init()) {
+      return false;
+    }
+  } else {
+    /*
+     * An existing memory descriptor is being retargeted to
+     * point to somewhere else.  Clean up our present state.
+     */
 
-		_parent->release();
-	}
+    _parent->release();
+  }
 
-	if (parent) {
-		parent->retain();
-		_tag    = parent->getTag();
-	} else {
-		_tag    = 0;
-	}
-	_parent     = parent;
-	_start      = offset;
-	_length     = length;
-	_flags      = direction;
-	_flags |= kIOMemoryThreadSafe;
+  if (parent) {
+    parent->retain();
+    _tag = parent->getTag();
+  } else {
+    _tag = 0;
+  }
+  _parent = parent;
+  _start = offset;
+  _length = length;
+  _flags = direction;
+  _flags |= kIOMemoryThreadSafe;
 
 #ifndef __LP64__
-	_direction  = (IODirection) (_flags & kIOMemoryDirectionMask);
+  _direction = (IODirection)(_flags & kIOMemoryDirectionMask);
 #endif /* !__LP64__ */
 
-	return true;
+  return true;
 }
 
-void
-IOSubMemoryDescriptor::free( void )
-{
-	if (_parent) {
-		_parent->release();
-	}
+void IOSubMemoryDescriptor::free(void) {
+  if (_parent) {
+    _parent->release();
+  }
 
-	super::free();
+  super::free();
 }
 
-addr64_t
-IOSubMemoryDescriptor::getPhysicalSegment(IOByteCount offset, IOByteCount * length, IOOptionBits options)
-{
-	addr64_t    address;
-	IOByteCount actualLength;
+addr64_t IOSubMemoryDescriptor::getPhysicalSegment(IOByteCount offset,
+                                                   IOByteCount *length,
+                                                   IOOptionBits options) {
+  addr64_t address;
+  IOByteCount actualLength;
 
-	assert(offset <= _length);
+  assert(offset <= _length);
 
-	if (length) {
-		*length = 0;
-	}
+  if (length) {
+    *length = 0;
+  }
 
-	if (offset >= _length) {
-		return 0;
-	}
+  if (offset >= _length) {
+    return 0;
+  }
 
-	address = _parent->getPhysicalSegment( offset + _start, &actualLength, options );
+  address =
+      _parent->getPhysicalSegment(offset + _start, &actualLength, options);
 
-	if (address && length) {
-		*length = min( _length - offset, actualLength );
-	}
+  if (address && length) {
+    *length = min(_length - offset, actualLength);
+  }
 
-	return address;
+  return address;
 }
 
-IOReturn
-IOSubMemoryDescriptor::setPurgeable( IOOptionBits newState,
-    IOOptionBits * oldState )
-{
-	IOReturn err;
+IOReturn IOSubMemoryDescriptor::setPurgeable(IOOptionBits newState,
+                                             IOOptionBits *oldState) {
+  IOReturn err;
 
-	err = _parent->setPurgeable( newState, oldState );
+  err = _parent->setPurgeable(newState, oldState);
 
-	return err;
+  return err;
 }
 
-IOReturn
-IOSubMemoryDescriptor::setOwnership( task_t newOwner,
-    int newLedgerTag,
-    IOOptionBits newLedgerOptions )
-{
-	IOReturn err;
+IOReturn IOSubMemoryDescriptor::setOwnership(task_t newOwner, int newLedgerTag,
+                                             IOOptionBits newLedgerOptions) {
+  IOReturn err;
 
-	if (iokit_iomd_setownership_enabled == FALSE) {
-		return kIOReturnUnsupported;
-	}
+  if (iokit_iomd_setownership_enabled == FALSE) {
+    return kIOReturnUnsupported;
+  }
 
-	err = _parent->setOwnership( newOwner, newLedgerTag, newLedgerOptions );
+  err = _parent->setOwnership(newOwner, newLedgerTag, newLedgerOptions);
 
-	return err;
+  return err;
 }
 
-IOReturn
-IOSubMemoryDescriptor::prepare(
-	IODirection forDirection)
-{
-	IOReturn    err;
+IOReturn IOSubMemoryDescriptor::prepare(IODirection forDirection) {
+  IOReturn err;
 
-	err = _parent->prepare( forDirection);
+  err = _parent->prepare(forDirection);
 
-	return err;
+  return err;
 }
 
-IOReturn
-IOSubMemoryDescriptor::complete(
-	IODirection forDirection)
-{
-	IOReturn    err;
+IOReturn IOSubMemoryDescriptor::complete(IODirection forDirection) {
+  IOReturn err;
 
-	err = _parent->complete( forDirection);
+  err = _parent->complete(forDirection);
 
-	return err;
+  return err;
 }
 
-IOMemoryMap *
-IOSubMemoryDescriptor::makeMapping(
-	IOMemoryDescriptor *    owner,
-	task_t                  intoTask,
-	IOVirtualAddress        address,
-	IOOptionBits            options,
-	IOByteCount             offset,
-	IOByteCount             length )
-{
-	IOMemoryMap * mapping = NULL;
+IOMemoryMap *IOSubMemoryDescriptor::makeMapping(
+    IOMemoryDescriptor *owner, task_t intoTask, IOVirtualAddress address,
+    IOOptionBits options, IOByteCount offset, IOByteCount length) {
+  IOMemoryMap *mapping = NULL;
 
 #ifndef __LP64__
-	if (!(kIOMap64Bit & options)) {
-		panic("IOSubMemoryDescriptor::makeMapping !64bit");
-	}
+  if (!(kIOMap64Bit & options)) {
+    panic("IOSubMemoryDescriptor::makeMapping !64bit");
+  }
 #endif /* !__LP64__ */
 
-	mapping = (IOMemoryMap *) _parent->makeMapping(
-		owner,
-		intoTask,
-		address,
-		options, _start + offset, length );
+  mapping = (IOMemoryMap *)_parent->makeMapping(
+      owner, intoTask, address, options, _start + offset, length);
 
-	return mapping;
+  return mapping;
 }
 
-uint64_t
-IOSubMemoryDescriptor::getPreparationID( void )
-{
-	uint64_t pID;
+uint64_t IOSubMemoryDescriptor::getPreparationID(void) {
+  uint64_t pID;
 
-	if (!super::getKernelReserved()) {
-		return kIOPreparationIDUnsupported;
-	}
+  if (!super::getKernelReserved()) {
+    return kIOPreparationIDUnsupported;
+  }
 
-	pID = _parent->getPreparationID();
-	if (reserved->kernReserved[0] != pID) {
-		reserved->kernReserved[0] = pID;
-		reserved->preparationID   = kIOPreparationIDUnprepared;
-		super::setPreparationID();
-	}
+  pID = _parent->getPreparationID();
+  if (reserved->kernReserved[0] != pID) {
+    reserved->kernReserved[0] = pID;
+    reserved->preparationID = kIOPreparationIDUnprepared;
+    super::setPreparationID();
+  }
 
-	return super::getPreparationID();
+  return super::getPreparationID();
 }
 
-IOReturn
-IOSubMemoryDescriptor::getPageCounts(IOByteCount * residentPageCount,
-    IOByteCount * dirtyPageCount)
-{
-	return _parent->getPageCounts(residentPageCount, dirtyPageCount);
+IOReturn IOSubMemoryDescriptor::getPageCounts(IOByteCount *residentPageCount,
+                                              IOByteCount *dirtyPageCount) {
+  return _parent->getPageCounts(residentPageCount, dirtyPageCount);
 }
 
-IOReturn
-IOSubMemoryDescriptor::getPageCounts(IOByteCount * residentPageCount,
-    IOByteCount * dirtyPageCount, IOByteCount * swappedPageCount)
-{
-	return _parent->getPageCounts(residentPageCount, dirtyPageCount, swappedPageCount);
+IOReturn IOSubMemoryDescriptor::getPageCounts(IOByteCount *residentPageCount,
+                                              IOByteCount *dirtyPageCount,
+                                              IOByteCount *swappedPageCount) {
+  return _parent->getPageCounts(residentPageCount, dirtyPageCount,
+                                swappedPageCount);
 }

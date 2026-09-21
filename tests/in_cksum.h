@@ -22,6 +22,6 @@
  *
  * @APPLE_LICENSE_HEADER_END@
  */
-extern unsigned short in_cksum(void * pkt, int len);
+extern unsigned short in_cksum(void *pkt, int len);
 
 #endif /* _S_IN_CKSUM_H */

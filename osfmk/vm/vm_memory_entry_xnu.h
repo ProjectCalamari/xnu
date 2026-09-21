@@ -38,10 +38,12 @@ __BEGIN_DECLS
 
 extern void mach_memory_entry_port_release(ipc_port_t port);
 extern vm_named_entry_t mach_memory_entry_from_port(ipc_port_t port);
-extern struct vm_named_entry *mach_memory_entry_allocate(ipc_port_t *user_handle_p);
+extern struct vm_named_entry *
+mach_memory_entry_allocate(ipc_port_t *user_handle_p);
 
-extern void mach_memory_entry_describe(vm_named_entry_t named_entry, kobject_description_t desc);
+extern void mach_memory_entry_describe(vm_named_entry_t named_entry,
+                                       kobject_description_t desc);
 
 __END_DECLS
 #endif /* XNU_KERNEL_PRIVATE */
-#endif  /* _VM_VM_MEMORY_ENTRY_XNU_H_ */
+#endif /* _VM_VM_MEMORY_ENTRY_XNU_H_ */

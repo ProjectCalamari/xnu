@@ -30,22 +30,10 @@
 
 #undef mach_host_self
 
-mach_port_t
-mach_host_self(void)
-{
-	return host_self_trap();
-}
+mach_port_t mach_host_self(void) { return host_self_trap(); }
 
 #undef mach_task_self
 
-mach_port_t
-mach_task_self(void)
-{
-	return task_self_trap();
-}
+mach_port_t mach_task_self(void) { return task_self_trap(); }
 
-mach_port_t
-mach_thread_self(void)
-{
-	return thread_self_trap();
-}
+mach_port_t mach_thread_self(void) { return thread_self_trap(); }

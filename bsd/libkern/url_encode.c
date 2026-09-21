@@ -28,55 +28,47 @@
 
 #include <libkern/libkern.h>
 
-static int
-hex2int(int c)
-{
-	if (c >= '0' && c <= '9') {
-		return c - '0';
-	} else if (c >= 'A' && c <= 'F') {
-		return c - 'A' + 10;
-	} else if (c >= 'a' && c <= 'f') {
-		return c - 'a' + 10;
-	}
-	return 0;
+static int hex2int(int c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  } else if (c >= 'A' && c <= 'F') {
+    return c - 'A' + 10;
+  } else if (c >= 'a' && c <= 'f') {
+    return c - 'a' + 10;
+  }
+  return 0;
 }
 
-static bool
-isprint(int ch)
-{
-	return ch >= 0x20 && ch <= 0x7e;
-}
+static bool isprint(int ch) { return ch >= 0x20 && ch <= 0x7e; }
 
 /*
  * In-place decode of URL percent-encoded str
  */
-void
-url_decode(char *str)
-{
-	if (!str) {
-		return;
-	}
+void url_decode(char *str) {
+  if (!str) {
+    return;
+  }
 
-	while (*str) {
-		if (*str == '%') {
-			char c = 0;
-			char *esc = str++; /* remember the start of the escape sequence */
+  while (*str) {
+    if (*str == '%') {
+      char c = 0;
+      char *esc = str++; /* remember the start of the escape sequence */
 
-			if (*str) {
-				c += hex2int(*str++);
-			}
-			if (*str) {
-				c = (char)((c << 4) + hex2int(*str++));
-			}
+      if (*str) {
+        c += hex2int(*str++);
+      }
+      if (*str) {
+        c = (char)((c << 4) + hex2int(*str++));
+      }
 
-			if (isprint(c)) {
-				/* overwrite the '%' with the new char, and bump the rest of the
-				 * string down a few characters */
-				*esc++ = c;
-				str = memmove(esc, str, strlen(str) + 1);
-			}
-		} else {
-			str++;
-		}
-	}
+      if (isprint(c)) {
+        /* overwrite the '%' with the new char, and bump the rest of the
+         * string down a few characters */
+        *esc++ = c;
+        str = memmove(esc, str, strlen(str) + 1);
+      }
+    } else {
+      str++;
+    }
+  }
 }

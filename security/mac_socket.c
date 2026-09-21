@@ -67,253 +67,216 @@
 
 #include <sys/cdefs.h>
 
-#include <sys/param.h>
+#include <sys/file.h>
 #include <sys/kernel.h>
+#include <sys/kpi_socket.h>
 #include <sys/lock.h>
 #include <sys/malloc.h>
-#include <sys/sbuf.h>
-#include <sys/systm.h>
 #include <sys/mount.h>
-#include <sys/file.h>
 #include <sys/namei.h>
+#include <sys/param.h>
 #include <sys/protosw.h>
+#include <sys/sbuf.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
 #include <sys/sysctl.h>
-#include <sys/kpi_socket.h>
+#include <sys/systm.h>
 
 #include <security/mac_internal.h>
 
-int
-mac_socket_check_accept(kauth_cred_t cred, struct socket *so)
-{
-	int error;
+int mac_socket_check_accept(kauth_cred_t cred, struct socket *so) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_accept, cred,
-	    (socket_t)so, NULL);
-	return error;
+  MAC_CHECK(socket_check_accept, cred, (socket_t)so, NULL);
+  return error;
 }
 
 #if CONFIG_MACF_SOCKET_SUBSET
-int
-mac_socket_check_accepted(kauth_cred_t cred, struct socket *so)
-{
-	struct sockaddr *sockaddr;
-	int error;
+int mac_socket_check_accepted(kauth_cred_t cred, struct socket *so) {
+  struct sockaddr *sockaddr;
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	if (sock_getaddr((socket_t)so, &sockaddr, 1) != 0) {
-		error = ECONNABORTED;
-	} else {
-		MAC_CHECK(socket_check_accepted, cred,
-		    (socket_t)so, NULL, sockaddr);
-		sock_freeaddr(sockaddr);
-	}
-	return error;
+  if (sock_getaddr((socket_t)so, &sockaddr, 1) != 0) {
+    error = ECONNABORTED;
+  } else {
+    MAC_CHECK(socket_check_accepted, cred, (socket_t)so, NULL, sockaddr);
+    sock_freeaddr(sockaddr);
+  }
+  return error;
 }
 #endif
 
-int
-mac_socket_check_bind(kauth_cred_t ucred, struct socket *so,
-    struct sockaddr *sockaddr)
-{
-	int error;
+int mac_socket_check_bind(kauth_cred_t ucred, struct socket *so,
+                          struct sockaddr *sockaddr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_bind, ucred,
-	    (socket_t)so, NULL, sockaddr);
-	return error;
+  MAC_CHECK(socket_check_bind, ucred, (socket_t)so, NULL, sockaddr);
+  return error;
 }
 
-int
-mac_socket_check_connect(kauth_cred_t cred, struct socket *so,
-    struct sockaddr *sockaddr)
-{
-	int error;
+int mac_socket_check_connect(kauth_cred_t cred, struct socket *so,
+                             struct sockaddr *sockaddr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_connect, cred,
-	    (socket_t)so, NULL,
-	    sockaddr);
-	return error;
+  MAC_CHECK(socket_check_connect, cred, (socket_t)so, NULL, sockaddr);
+  return error;
 }
 
-int
-mac_socket_check_create(kauth_cred_t cred, int domain, int type, int protocol)
-{
-	int error;
+int mac_socket_check_create(kauth_cred_t cred, int domain, int type,
+                            int protocol) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_create, cred, domain, type, protocol);
-	return error;
+  MAC_CHECK(socket_check_create, cred, domain, type, protocol);
+  return error;
 }
 
-int
-mac_socket_check_ioctl(kauth_cred_t cred, struct socket *so, u_long cmd)
-{
-	int error;
+int mac_socket_check_ioctl(kauth_cred_t cred, struct socket *so, u_long cmd) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_ioctl, cred,
-	    (socket_t)so, cmd, NULL);
-	return error;
+  MAC_CHECK(socket_check_ioctl, cred, (socket_t)so, cmd, NULL);
+  return error;
 }
 
-int
-mac_socket_check_stat(kauth_cred_t cred, struct socket *so)
-{
-	int error;
+int mac_socket_check_stat(kauth_cred_t cred, struct socket *so) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_stat, cred,
-	    (socket_t)so, NULL);
-	return error;
+  MAC_CHECK(socket_check_stat, cred, (socket_t)so, NULL);
+  return error;
 }
 
-int
-mac_socket_check_listen(kauth_cred_t cred, struct socket *so)
-{
-	int error;
+int mac_socket_check_listen(kauth_cred_t cred, struct socket *so) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_listen, cred,
-	    (socket_t)so, NULL);
-	return error;
+  MAC_CHECK(socket_check_listen, cred, (socket_t)so, NULL);
+  return error;
 }
 
-int
-mac_socket_check_receive(kauth_cred_t cred, struct socket *so)
-{
-	int error;
+int mac_socket_check_receive(kauth_cred_t cred, struct socket *so) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_receive, cred,
-	    (socket_t)so, NULL);
-	return error;
+  MAC_CHECK(socket_check_receive, cred, (socket_t)so, NULL);
+  return error;
 }
 
-int
-mac_socket_check_received(kauth_cred_t cred, struct socket *so, struct sockaddr *saddr)
-{
-	int error;
+int mac_socket_check_received(kauth_cred_t cred, struct socket *so,
+                              struct sockaddr *saddr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_received, cred,
-	    so, NULL, saddr);
-	return error;
+  MAC_CHECK(socket_check_received, cred, so, NULL, saddr);
+  return error;
 }
 
-int
-mac_socket_check_send(kauth_cred_t cred, struct socket *so,
-    struct sockaddr *sockaddr)
-{
-	int error;
+int mac_socket_check_send(kauth_cred_t cred, struct socket *so,
+                          struct sockaddr *sockaddr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_send, cred,
-	    (socket_t)so, NULL, sockaddr);
-	return error;
+  MAC_CHECK(socket_check_send, cred, (socket_t)so, NULL, sockaddr);
+  return error;
 }
 
-int
-mac_socket_check_setsockopt(kauth_cred_t cred, struct socket *so,
-    struct sockopt *sopt)
-{
-	int error;
+int mac_socket_check_setsockopt(kauth_cred_t cred, struct socket *so,
+                                struct sockopt *sopt) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_setsockopt, cred,
-	    (socket_t)so, NULL, sopt);
-	return error;
+  MAC_CHECK(socket_check_setsockopt, cred, (socket_t)so, NULL, sopt);
+  return error;
 }
 
-int
-mac_socket_check_getsockopt(kauth_cred_t cred, struct socket *so,
-    struct sockopt *sopt)
-{
-	int error;
+int mac_socket_check_getsockopt(kauth_cred_t cred, struct socket *so,
+                                struct sockopt *sopt) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_socket_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_socket_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(socket_check_getsockopt, cred,
-	    (socket_t)so, NULL, sopt);
-	return error;
+  MAC_CHECK(socket_check_getsockopt, cred, (socket_t)so, NULL, sopt);
+  return error;
 }

@@ -52,13 +52,15 @@
 #ifndef __KPI_SOCKETFILTER__
 #define __KPI_SOCKETFILTER__
 
+#include <sys/ioccom.h>
 #include <sys/kernel_types.h>
 #include <sys/kpi_socket.h>
-#include <sys/ioccom.h>
 
 #ifndef PRIVATE
 #include <Availability.h>
-#define __NKE_API_DEPRECATED __API_DEPRECATED("Network Kernel Extension KPI is deprecated", macos(10.4, 10.15))
+#define __NKE_API_DEPRECATED                                                   \
+  __API_DEPRECATED("Network Kernel Extension KPI is deprecated",               \
+                   macos(10.4, 10.15))
 #else
 #define __NKE_API_DEPRECATED
 #endif /* PRIVATE */
@@ -74,26 +76,26 @@ struct sockaddr;
  *       @constant SFLT_PROG Indicates this socket filter should be attached
  *               only when request by the application using the SO_NKE socket
  *               option.
- *       @constant SFLT_EXTENDED	Indicates that this socket filter utilizes
- *               the extended fields within the sflt_filter structure.
+ *       @constant SFLT_EXTENDED	Indicates that this socket filter
+ * utilizes the extended fields within the sflt_filter structure.
  *       @constant SFLT_EXTENDED_REGISTRY Indicates that this socket filter
  *               wants to attach to all the sockets already present on the
  *               system. It will also receive notifications for these sockets.
  */
 enum {
-	SFLT_GLOBAL             = 0x01,
-	SFLT_PROG               = 0x02,
-	SFLT_EXTENDED           = 0x04,
-	SFLT_EXTENDED_REGISTRY  = 0x08
+  SFLT_GLOBAL = 0x01,
+  SFLT_PROG = 0x02,
+  SFLT_EXTENDED = 0x04,
+  SFLT_EXTENDED_REGISTRY = 0x08
 };
-typedef u_int32_t       sflt_flags;
+typedef u_int32_t sflt_flags;
 
 /*!
  *       @typedef sflt_handle
  *       @abstract A 4 byte identifier used with the SO_NKE socket option to
  *               identify the socket filter to be attached.
  */
-typedef u_int32_t       sflt_handle;
+typedef u_int32_t sflt_handle;
 
 /*!
  *       @enum sflt_event_t
@@ -108,8 +110,8 @@ typedef u_int32_t       sflt_handle;
  *               flushed.
  *       @constant sock_evt_shutdown The read and or write side(s) of the
  *               connection have been shutdown. The param will point to an
- *               integer that indicates the direction that has been shutdown. See
- *               'man 2 shutdown' for more information.
+ *               integer that indicates the direction that has been shutdown.
+ * See 'man 2 shutdown' for more information.
  *       @constant sock_evt_cantrecvmore Indicates the socket cannot receive
  *               more data.
  *       @constant sock_evt_cantsendmore Indicates the socket cannot send
@@ -119,18 +121,19 @@ typedef u_int32_t       sflt_handle;
  *               bound state (only for PF_INET/PF_INET6 domain).
  */
 enum {
-	sock_evt_connecting             = 1,
-	sock_evt_connected              = 2,
-	sock_evt_disconnecting          = 3,
-	sock_evt_disconnected           = 4,
-	sock_evt_flush_read             = 5,
-	sock_evt_shutdown               = 6, /* param points to an integer specifying how (read, write, or both) see man 2 shutdown */
-	sock_evt_cantrecvmore           = 7,
-	sock_evt_cantsendmore           = 8,
-	sock_evt_closing                = 9,
-	sock_evt_bound                  = 10
+  sock_evt_connecting = 1,
+  sock_evt_connected = 2,
+  sock_evt_disconnecting = 3,
+  sock_evt_disconnected = 4,
+  sock_evt_flush_read = 5,
+  sock_evt_shutdown = 6, /* param points to an integer specifying how (read,
+                            write, or both) see man 2 shutdown */
+  sock_evt_cantrecvmore = 7,
+  sock_evt_cantsendmore = 8,
+  sock_evt_closing = 9,
+  sock_evt_bound = 10
 };
-typedef u_int32_t       sflt_event_t;
+typedef u_int32_t sflt_event_t;
 
 /*!
  *       @enum sflt_data_flag_t
@@ -142,11 +145,8 @@ typedef u_int32_t       sflt_event_t;
  *       @constant sock_data_filt_flag_record Indicates this data is a
  *               record. This flag is only ever seen on inbound data.
  */
-enum {
-	sock_data_filt_flag_oob         = 1,
-	sock_data_filt_flag_record      = 2
-};
-typedef u_int32_t       sflt_data_flag_t;
+enum { sock_data_filt_flag_oob = 1, sock_data_filt_flag_record = 2 };
+typedef u_int32_t sflt_data_flag_t;
 
 __BEGIN_DECLS
 
@@ -169,8 +169,8 @@ typedef void (*sf_unregistered_func)(sflt_handle handle);
  *               been attached to a socket. The filter may allocate memory for
  *               this attachment and use the cookie to track it. This filter is
  *               called in one of two cases:
- *               1) You've installed a global filter and a new socket was created.
- *               2) Your non-global socket filter is being attached using the SO_NKE
+ *               1) You've installed a global filter and a new socket was
+ * created. 2) Your non-global socket filter is being attached using the SO_NKE
  *               socket option.
  *       @param cookie Used to allow the socket filter to set the cookie for
  *               this attachment.
@@ -178,7 +178,7 @@ typedef void (*sf_unregistered_func)(sflt_handle handle);
  *       @result If you return a non-zero value, your filter will not be
  *               attached to this socket.
  */
-typedef errno_t (*sf_attach_func)(void  **cookie, socket_t so);
+typedef errno_t (*sf_attach_func)(void **cookie, socket_t so);
 
 /*!
  *       @typedef sf_detach_func
@@ -207,7 +207,7 @@ typedef void (*sf_detach_func)(void *cookie, socket_t so);
  *       @param param Additional information about the event.
  */
 typedef void (*sf_notify_func)(void *cookie, socket_t so, sflt_event_t event,
-    void *param);
+                               void *param);
 
 /*!
  *       @typedef sf_getpeername_func
@@ -228,7 +228,7 @@ typedef void (*sf_notify_func)(void *cookie, socket_t so, sflt_event_t event,
  *               getpeername.
  */
 typedef int (*sf_getpeername_func)(void *cookie, socket_t so,
-    struct sockaddr **sa);
+                                   struct sockaddr **sa);
 
 /*!
  *       @typedef sf_getsockname_func
@@ -249,7 +249,7 @@ typedef int (*sf_getpeername_func)(void *cookie, socket_t so,
  *               getsockname.
  */
 typedef int (*sf_getsockname_func)(void *cookie, socket_t so,
-    struct sockaddr **sa);
+                                   struct sockaddr **sa);
 
 /*!
  *       @typedef sf_data_in_func
@@ -272,24 +272,22 @@ typedef int (*sf_getsockname_func)(void *cookie, socket_t so,
  *       @param flags Flags to indicate if this is out of band data or a
  *               record.
  *       @result Return:
- *               0 - The caller will continue with normal processing of the data.
- *               EJUSTRETURN - The caller will stop processing the data, the
- *                       data will not be freed.
- *               Anything Else - The caller will free the data and stop
+ *               0 - The caller will continue with normal processing of the
+ * data. EJUSTRETURN - The caller will stop processing the data, the data will
+ * not be freed. Anything Else - The caller will free the data and stop
  *                       processing.
  */
 typedef errno_t (*sf_data_in_func)(void *cookie, socket_t so,
-    const struct sockaddr *from, mbuf_t *data, mbuf_t *control,
-    sflt_data_flag_t flags);
+                                   const struct sockaddr *from, mbuf_t *data,
+                                   mbuf_t *control, sflt_data_flag_t flags);
 
 /*!
  *       @typedef sf_data_out_func
  *
  *       @discussion sf_data_out_func is called to filter outbound data. If
- *               your filter intercepts data for later reinjection, it must queue
- *               all outbound data to preserve the order of the data when
- *               reinjecting. Use sock_inject_data_out to later reinject this
- *               data.
+ *               your filter intercepts data for later reinjection, it must
+ * queue all outbound data to preserve the order of the data when reinjecting.
+ * Use sock_inject_data_out to later reinject this data.
  *       @param cookie Cookie value specified when the filter attach was
  *               called.
  *       @param so The socket the filter is attached to.
@@ -302,23 +300,22 @@ typedef errno_t (*sf_data_in_func)(void *cookie, socket_t so,
  *       @param flags Flags to indicate if this is out of band data or a
  *               record.
  *       @result Return:
- *               0 - The caller will continue with normal processing of the data.
- *               EJUSTRETURN - The caller will stop processing the data,
- *                       the data will not be freed.
- *               Anything Else - The caller will free the data and stop
+ *               0 - The caller will continue with normal processing of the
+ * data. EJUSTRETURN - The caller will stop processing the data, the data will
+ * not be freed. Anything Else - The caller will free the data and stop
  *                       processing.
  */
 typedef errno_t (*sf_data_out_func)(void *cookie, socket_t so,
-    const struct sockaddr *to, mbuf_t *data, mbuf_t *control,
-    sflt_data_flag_t flags);
+                                    const struct sockaddr *to, mbuf_t *data,
+                                    mbuf_t *control, sflt_data_flag_t flags);
 
 /*!
  *       @typedef sf_connect_in_func
  *
  *       @discussion sf_connect_in_func is called to filter inbound connections.
  *               A protocol will call this before accepting an incoming
- *               connection and placing it on the queue of completed connections.
- *               Warning: This filter is on the data path. Do not spend excesive
+ *               connection and placing it on the queue of completed
+ * connections. Warning: This filter is on the data path. Do not spend excesive
  *               time. Do not wait for data on another socket.
  *       @param cookie Cookie value specified when the filter attach was
  *               called.
@@ -331,7 +328,7 @@ typedef errno_t (*sf_data_out_func)(void *cookie, socket_t so,
  *                       connection.
  */
 typedef errno_t (*sf_connect_in_func)(void *cookie, socket_t so,
-    const struct sockaddr *from);
+                                      const struct sockaddr *from);
 
 /*!
  *       @typedef sf_connect_out_func
@@ -346,14 +343,14 @@ typedef errno_t (*sf_connect_in_func)(void *cookie, socket_t so,
  *       @result Return:
  *               0 - The caller will continue with normal processing of the
  *                       connection.
- *               EJUSTRETURN - The caller will return with a value of 0 (no error)
- *                       from that point without further processing the connect command. The
+ *               EJUSTRETURN - The caller will return with a value of 0 (no
+ * error) from that point without further processing the connect command. The
  *                       protocol layer will not see the call.
  *               Anything Else - The caller will rejecting the outbound
  *                       connection.
  */
 typedef errno_t (*sf_connect_out_func)(void *cookie, socket_t so,
-    const struct sockaddr *to);
+                                       const struct sockaddr *to);
 
 /*!
  *       @typedef sf_bind_func
@@ -365,14 +362,13 @@ typedef errno_t (*sf_connect_out_func)(void *cookie, socket_t so,
  *       @param so The socket the filter is attached to.
  *       @param to The local address of the socket will be bound to.
  *       @result Return:
- *               0 - The caller will continue with normal processing of the bind.
- *               EJUSTRETURN - The caller will return with a value of 0 (no error)
- *                       from that point without further processing the bind command. The
- *                       protocol layer will not see the call.
- *               Anything Else - The caller will rejecting the bind.
+ *               0 - The caller will continue with normal processing of the
+ * bind. EJUSTRETURN - The caller will return with a value of 0 (no error) from
+ * that point without further processing the bind command. The protocol layer
+ * will not see the call. Anything Else - The caller will rejecting the bind.
  */
 typedef errno_t (*sf_bind_func)(void *cookie, socket_t so,
-    const struct sockaddr *to);
+                                const struct sockaddr *to);
 
 /*!
  *       @typedef sf_setoption_func
@@ -386,11 +382,10 @@ typedef errno_t (*sf_bind_func)(void *cookie, socket_t so,
  *       @result Return:
  *               0 - The caller will continue with normal processing of the
  *                       setsockopt.
- *               EJUSTRETURN - The caller will return with a value of 0 (no error)
- *                       from that point without further propagating the set option
- *                       command. The socket and protocol layers will not see the call.
- *               Anything Else - The caller will stop processing and return
- *                       this error.
+ *               EJUSTRETURN - The caller will return with a value of 0 (no
+ * error) from that point without further propagating the set option command.
+ * The socket and protocol layers will not see the call. Anything Else - The
+ * caller will stop processing and return this error.
  */
 typedef errno_t (*sf_setoption_func)(void *cookie, socket_t so, sockopt_t opt);
 
@@ -406,11 +401,10 @@ typedef errno_t (*sf_setoption_func)(void *cookie, socket_t so, sockopt_t opt);
  *       @result Return:
  *               0 - The caller will continue with normal processing of the
  *                       getsockopt.
- *               EJUSTRETURN - The caller will return with a value of 0 (no error)
- *                       from that point without further propagating the get option
- *                       command. The socket and protocol layers will not see the call.
- *               Anything Else - The caller will stop processing and return
- *                       this error.
+ *               EJUSTRETURN - The caller will return with a value of 0 (no
+ * error) from that point without further propagating the get option command.
+ * The socket and protocol layers will not see the call. Anything Else - The
+ * caller will stop processing and return this error.
  */
 typedef errno_t (*sf_getoption_func)(void *cookie, socket_t so, sockopt_t opt);
 
@@ -424,8 +418,8 @@ typedef errno_t (*sf_getoption_func)(void *cookie, socket_t so, sockopt_t opt);
  *       @param so The socket the filter is attached to.
  *       @result Return:
  *               0 - The caller will continue with normal processing of listen.
- *               EJUSTRETURN - The caller will return with a value of 0 (no error)
- *               from that point without further processing the listen command. The
+ *               EJUSTRETURN - The caller will return with a value of 0 (no
+ * error) from that point without further processing the listen command. The
  *               protocol will not see the call.
  *               Anything Else - The caller will stop processing and return
  *                       this error.
@@ -449,14 +443,15 @@ typedef errno_t (*sf_listen_func)(void *cookie, socket_t so);
  *       @result Return:
  *               0 - The caller will continue with normal processing of
  *                       this ioctl.
- *               EJUSTRETURN - The caller will return with a value of 0 (no error)
- *                       from that point without further processing or propogating
- *                       the ioctl.
+ *               EJUSTRETURN - The caller will return with a value of 0 (no
+ * error) from that point without further processing or propogating the ioctl.
  *               Anything Else - The caller will stop processing and return
  *                       this error.
  */
 typedef errno_t (*sf_ioctl_func)(void *cookie, socket_t so,
-    unsigned long request, const char*__sized_by(IOCPARM_LEN(request)) argp);
+                                 unsigned long request,
+                                 const char *__sized_by(IOCPARM_LEN(request))
+                                     argp);
 
 /*!
  *       @typedef sf_accept_func
@@ -476,20 +471,19 @@ typedef errno_t (*sf_ioctl_func)(void *cookie, socket_t so,
  *       @result Return:
  *               0 - The caller will continue with normal processing of accept.
  *               EJUSTRETURN - The to be accepted socket will be disconnected
- *                   prior to being returned to the caller of accept.  No further
- *                   control or data operations on the socket will be allowed.
- *                   This is the recommended return value as it has the least
- *                   amount of impact, especially to applications which don't
- *                   check the error value returned by accept.
- *               Anything Else - The to be accepted socket will be closed and
- *                   the error will be returned to the caller of accept.
- *                   Note that socket filter developers are advised to exercise
- *                   caution when returning non-zero values to the caller,
+ *                   prior to being returned to the caller of accept.  No
+ * further control or data operations on the socket will be allowed. This is the
+ * recommended return value as it has the least amount of impact, especially to
+ * applications which don't check the error value returned by accept. Anything
+ * Else - The to be accepted socket will be closed and the error will be
+ * returned to the caller of accept. Note that socket filter developers are
+ * advised to exercise caution when returning non-zero values to the caller,
  *                   since some applications don't check the error value
  *                   returned by accept and therefore risk breakage.
  */
 typedef errno_t (*sf_accept_func)(void *cookie, socket_t so_listen, socket_t so,
-    const struct sockaddr *local, const struct sockaddr *remote);
+                                  const struct sockaddr *local,
+                                  const struct sockaddr *remote);
 
 /*!
  *       @struct sflt_filter
@@ -532,38 +526,38 @@ typedef errno_t (*sf_accept_func)(void *cookie, socket_t so_listen, socket_t so,
  *               the reserved fields with zeroes.
  */
 struct sflt_filter {
-	sflt_handle                     sf_handle;
-	int                             sf_flags;
-	char                            *sf_name;
+  sflt_handle sf_handle;
+  int sf_flags;
+  char *sf_name;
 
-	sf_unregistered_func            sf_unregistered;
-	sf_attach_func                  sf_attach;
-	sf_detach_func                  sf_detach;
+  sf_unregistered_func sf_unregistered;
+  sf_attach_func sf_attach;
+  sf_detach_func sf_detach;
 
-	sf_notify_func                  sf_notify;
-	sf_getpeername_func             sf_getpeername;
-	sf_getsockname_func             sf_getsockname;
-	sf_data_in_func                 sf_data_in;
-	sf_data_out_func                sf_data_out;
-	sf_connect_in_func              sf_connect_in;
-	sf_connect_out_func             sf_connect_out;
-	sf_bind_func                    sf_bind;
-	sf_setoption_func               sf_setoption;
-	sf_getoption_func               sf_getoption;
-	sf_listen_func                  sf_listen;
-	sf_ioctl_func                   sf_ioctl;
-	/*
-	 * The following are valid only if SFLT_EXTENDED flag is set.
-	 * Initialize sf_ext_len to sizeof sflt_filter_ext structure.
-	 * Filters must also initialize reserved fields with zeroes.
-	 */
-	struct sflt_filter_ext {
-		unsigned int            sf_ext_len;
-		sf_accept_func          sf_ext_accept;
-		void                    *sf_ext_rsvd[5];        /* Reserved */
-	} sf_ext;
-#define sf_len          sf_ext.sf_ext_len
-#define sf_accept       sf_ext.sf_ext_accept
+  sf_notify_func sf_notify;
+  sf_getpeername_func sf_getpeername;
+  sf_getsockname_func sf_getsockname;
+  sf_data_in_func sf_data_in;
+  sf_data_out_func sf_data_out;
+  sf_connect_in_func sf_connect_in;
+  sf_connect_out_func sf_connect_out;
+  sf_bind_func sf_bind;
+  sf_setoption_func sf_setoption;
+  sf_getoption_func sf_getoption;
+  sf_listen_func sf_listen;
+  sf_ioctl_func sf_ioctl;
+  /*
+   * The following are valid only if SFLT_EXTENDED flag is set.
+   * Initialize sf_ext_len to sizeof sflt_filter_ext structure.
+   * Filters must also initialize reserved fields with zeroes.
+   */
+  struct sflt_filter_ext {
+    unsigned int sf_ext_len;
+    sf_accept_func sf_ext_accept;
+    void *sf_ext_rsvd[5]; /* Reserved */
+  } sf_ext;
+#define sf_len sf_ext.sf_ext_len
+#define sf_accept sf_ext.sf_ext_accept
 };
 
 /*!
@@ -579,27 +573,25 @@ struct sflt_filter {
  */
 #ifdef KERNEL_PRIVATE
 extern errno_t sflt_register_internal(const struct sflt_filter *filter,
-    int domain, int type, int protocol);
+                                      int domain, int type, int protocol);
 
-#define sflt_register(filter, domain, type, protocol) \
-    sflt_register_internal((filter), (domain), (type), (protocol))
+#define sflt_register(filter, domain, type, protocol)                          \
+  sflt_register_internal((filter), (domain), (type), (protocol))
 #else
 extern errno_t sflt_register(const struct sflt_filter *filter, int domain,
-    int type, int protocol)
-__NKE_API_DEPRECATED;
+                             int type, int protocol) __NKE_API_DEPRECATED;
 #endif /* KERNEL_PRIVATE */
 
 /*!
  *       @function sflt_unregister
  *       @discussion Unregisters a socket filter. This will not detach the
  *               socket filter from all sockets it may be attached to at the
- *               time, it will just prevent the socket filter from being attached
- *               to any new sockets.
+ *               time, it will just prevent the socket filter from being
+ * attached to any new sockets.
  *       @param handle The sf_handle of the socket filter to unregister.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sflt_unregister(sflt_handle handle)
-__NKE_API_DEPRECATED;
+extern errno_t sflt_unregister(sflt_handle handle) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sflt_attach
@@ -609,8 +601,8 @@ __NKE_API_DEPRECATED;
  *       @param handle The handle of the registered filter to be attached.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sflt_attach(socket_t socket, sflt_handle handle)
-__NKE_API_DEPRECATED;
+extern errno_t sflt_attach(socket_t socket,
+                           sflt_handle handle) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sflt_detach
@@ -619,8 +611,8 @@ __NKE_API_DEPRECATED;
  *       @param handle The handle of the registered filter to be detached.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sflt_detach(socket_t socket, sflt_handle handle)
-__NKE_API_DEPRECATED;
+extern errno_t sflt_detach(socket_t socket,
+                           sflt_handle handle) __NKE_API_DEPRECATED;
 
 /* Functions for manipulating sockets */
 /*
@@ -636,9 +628,8 @@ __NKE_API_DEPRECATED;
  *               it had come from the network.
  *       @param so The socket to inject the data on.
  *       @param from The address the data is from, only necessary on
- *               un-connected sockets. A copy of the address will be made, caller
- *               is responsible for freeing the address after calling this
- *               function.
+ *               un-connected sockets. A copy of the address will be made,
+ * caller is responsible for freeing the address after calling this function.
  *       @param data The data and possibly control mbufs.
  *       @param control The separate control mbufs.
  *       @param flags Flags indicating the type of data.
@@ -647,8 +638,8 @@ __NKE_API_DEPRECATED;
  *               mbuf.
  */
 extern errno_t sock_inject_data_in(socket_t so, const struct sockaddr *from,
-    mbuf_t data, mbuf_t control, sflt_data_flag_t flags)
-__NKE_API_DEPRECATED;
+                                   mbuf_t data, mbuf_t control,
+                                   sflt_data_flag_t flags) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_inject_data_out
@@ -664,19 +655,16 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error. The data and control
  *               values are always freed regardless of return value.
  */
-extern errno_t sock_inject_data_out(socket_t so, const struct sockaddr *to,
-    mbuf_t data, mbuf_t control, sflt_data_flag_t flags)
-__NKE_API_DEPRECATED;
-
+extern errno_t
+sock_inject_data_out(socket_t so, const struct sockaddr *to, mbuf_t data,
+                     mbuf_t control,
+                     sflt_data_flag_t flags) __NKE_API_DEPRECATED;
 
 /*
  * sockopt_t accessors
  */
 
-enum {
-	sockopt_get     = 1,
-	sockopt_set     = 2
-};
+enum { sockopt_get = 1, sockopt_set = 2 };
 typedef u_int8_t sockopt_dir;
 
 /*!
@@ -686,8 +674,7 @@ typedef u_int8_t sockopt_dir;
  *       @param sopt The socket option.
  *       @result sock_opt_get or sock_opt_set.
  */
-extern sockopt_dir sockopt_direction(sockopt_t sopt)
-__NKE_API_DEPRECATED;
+extern sockopt_dir sockopt_direction(sockopt_t sopt) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sockopt_level
@@ -695,8 +682,7 @@ __NKE_API_DEPRECATED;
  *       @param sopt The socket option.
  *       @result The socket option level. See man 2 setsockopt
  */
-extern int sockopt_level(sockopt_t sopt)
-__NKE_API_DEPRECATED;
+extern int sockopt_level(sockopt_t sopt) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sockopt_name
@@ -704,8 +690,7 @@ __NKE_API_DEPRECATED;
  *       @param sopt The socket option.
  *       @result The socket option name. See man 2 setsockopt
  */
-extern int sockopt_name(sockopt_t sopt)
-__NKE_API_DEPRECATED;
+extern int sockopt_name(sockopt_t sopt) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sockopt_valsize
@@ -713,8 +698,7 @@ __NKE_API_DEPRECATED;
  *       @param sopt The socket option.
  *       @result The length, in bytes, of the data.
  */
-extern size_t sockopt_valsize(sockopt_t sopt)
-__NKE_API_DEPRECATED;
+extern size_t sockopt_valsize(sockopt_t sopt) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sockopt_copyin
@@ -724,8 +708,8 @@ __NKE_API_DEPRECATED;
  *       @param length The number of bytes to copy.
  *       @result An errno error or zero upon success.
  */
-extern errno_t sockopt_copyin(sockopt_t sopt, void *__sized_by(length) data, size_t length)
-__NKE_API_DEPRECATED;
+extern errno_t sockopt_copyin(sockopt_t sopt, void *__sized_by(length) data,
+                              size_t length) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sockopt_copyout
@@ -735,8 +719,8 @@ __NKE_API_DEPRECATED;
  *       @param length The number of bytes to copy.
  *       @result An errno error or zero upon success.
  */
-extern errno_t sockopt_copyout(sockopt_t sopt, void *__sized_by(length) data, size_t length)
-__NKE_API_DEPRECATED;
+extern errno_t sockopt_copyout(sockopt_t sopt, void *__sized_by(length) data,
+                               size_t length) __NKE_API_DEPRECATED;
 
 #undef __NKE_API_DEPRECATED
 __END_DECLS

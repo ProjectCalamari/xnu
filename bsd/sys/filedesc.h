@@ -80,108 +80,118 @@
  * should be selected to be the biggest multiple of OFILESIZE (see below)
  * that will fit in a power-of-two sized piece of memory.
  */
-#define NDFILE          25              /* 125 bytes */
-#define NDEXTENT        50              /* 250 bytes in 256-byte alloc. */
+#define NDFILE 25   /* 125 bytes */
+#define NDEXTENT 50 /* 250 bytes in 256-byte alloc. */
 
 #ifdef XNU_KERNEL_PRIVATE
 
-#include <sys/kernel_types.h>
 #include <kern/locks.h>
+#include <sys/kernel_types.h>
 
 struct klist;
 struct kqwllist;
 struct ucred;
 
-__options_decl(filedesc_flags_t, uint8_t, {
-	/*
-	 * process was chrooted... keep track even
-	 * if we're force unmounted and unable to
-	 * take a vnode_ref on fd_rdir during a fork
-	 */
-	FD_CHROOT                     = 0x01,
+__options_decl(filedesc_flags_t, uint8_t,
+               {
+                   /*
+                    * process was chrooted... keep track even
+                    * if we're force unmounted and unable to
+                    * take a vnode_ref on fd_rdir during a fork
+                    */
+                   FD_CHROOT = 0x01,
 
-	/*
-	 * process has created a kqworkloop that
-	 * requires manual cleanup on exit
-	 */
-	FD_WORKLOOP                   = 0x02,
+                   /*
+                    * process has created a kqworkloop that
+                    * requires manual cleanup on exit
+                    */
+                   FD_WORKLOOP = 0x02,
 
 #if CONFIG_PROC_RESOURCE_LIMITS
-	/* process has exceeded fd_nfiles soft limit */
-	FD_ABOVE_SOFT_LIMIT           = 0x04,
-	/* process has exceeded fd_nfiles hard limit */
-	FD_ABOVE_HARD_LIMIT           = 0x08,
-	KQWL_ABOVE_SOFT_LIMIT         = 0x10,
-	KQWL_ABOVE_HARD_LIMIT         = 0x20,
+                   /* process has exceeded fd_nfiles soft limit */
+                   FD_ABOVE_SOFT_LIMIT = 0x04,
+                   /* process has exceeded fd_nfiles hard limit */
+                   FD_ABOVE_HARD_LIMIT = 0x08,
+                   KQWL_ABOVE_SOFT_LIMIT = 0x10,
+                   KQWL_ABOVE_HARD_LIMIT = 0x20,
 #endif /* CONFIG_PROC_RESOURCE_LIMITS */
-});
+               });
 
 #define FILEDESC_FORK_INHERITED_MASK (FD_CHROOT)
 
 struct filedesc {
-	lck_mtx_t           fd_lock;        /* (L) lock to protect fdesc */
-	uint8_t             fd_fpdrainwait; /* (L) has drain waiters */
-	filedesc_flags_t    fd_flags;       /* (L) filedesc flags */
-	u_short             fd_cmask;       /* (L) mask for file creation */
-	int                 fd_nfiles;      /* (L) number of open fdesc slots allocated */
-	int                 fd_afterlast;   /* (L) high-water mark of fd_ofiles */
-	int                 fd_freefile;    /* (L) approx. next free file */
+  lck_mtx_t fd_lock;         /* (L) lock to protect fdesc */
+  uint8_t fd_fpdrainwait;    /* (L) has drain waiters */
+  filedesc_flags_t fd_flags; /* (L) filedesc flags */
+  u_short fd_cmask;          /* (L) mask for file creation */
+  int fd_nfiles;             /* (L) number of open fdesc slots allocated */
+  int fd_afterlast;          /* (L) high-water mark of fd_ofiles */
+  int fd_freefile;           /* (L) approx. next free file */
 #if CONFIG_PROC_RESOURCE_LIMITS
-#define FD_LIMIT_SENTINEL ((int) (-1))
-	int                 fd_nfiles_open;
-	int                 fd_nfiles_soft_limit; /* (L) fd_nfiles soft limit to trigger guard. */
-	int                 fd_nfiles_hard_limit; /* (L) fd_nfiles hard limit to terminate. */
+#define FD_LIMIT_SENTINEL ((int)(-1))
+  int fd_nfiles_open;
+  int fd_nfiles_soft_limit; /* (L) fd_nfiles soft limit to trigger guard. */
+  int fd_nfiles_hard_limit; /* (L) fd_nfiles hard limit to terminate. */
 
-#define KQWL_LIMIT_SENTINEL ((int) (-1))
-	int                 num_kqwls;           /* Number of kqwls in the fd_kqhash */
-	int                 kqwl_dyn_soft_limit; /* (L) soft limit for dynamic kqueue */
-	int                 kqwl_dyn_hard_limit; /* (L) hard limit for dynamic kqueue */
-#endif /* CONFIG_PROC_RESOURCE_LIMITS */
+#define KQWL_LIMIT_SENTINEL ((int)(-1))
+  int num_kqwls;           /* Number of kqwls in the fd_kqhash */
+  int kqwl_dyn_soft_limit; /* (L) soft limit for dynamic kqueue */
+  int kqwl_dyn_hard_limit; /* (L) hard limit for dynamic kqueue */
+#endif                     /* CONFIG_PROC_RESOURCE_LIMITS */
 
-	int                 fd_knlistsize;  /* (L) size of knlist */
-	int                 unused_padding;/* Due to alignment */
-	struct fileproc   **XNU_PTRAUTH_SIGNED_PTR("filedesc.fd_ofiles") fd_ofiles; /* (L) file structures for open files */
-	char               *fd_ofileflags;  /* (L) per-process open file flags */
+  int fd_knlistsize;  /* (L) size of knlist */
+  int unused_padding; /* Due to alignment */
+  struct fileproc **XNU_PTRAUTH_SIGNED_PTR(
+      "filedesc.fd_ofiles") fd_ofiles; /* (L) file structures for open files */
+  char *fd_ofileflags;                 /* (L) per-process open file flags */
 
-	struct  klist      *fd_knlist;      /* (L) list of attached knotes */
+  struct klist *fd_knlist; /* (L) list of attached knotes */
 
-	struct  kqworkq    *fd_wqkqueue;    /* (L) the workq kqueue */
-	struct  vnode      *fd_cdir;        /* (L) current directory */
-	struct  vnode      *fd_rdir;        /* (L) root directory */
-	lck_rw_t            fd_dirs_lock;   /* keeps fd_cdir and fd_rdir stable across a lookup */
+  struct kqworkq *fd_wqkqueue; /* (L) the workq kqueue */
+  struct vnode *fd_cdir;       /* (L) current directory */
+  struct vnode *fd_rdir;       /* (L) root directory */
+  lck_rw_t fd_dirs_lock; /* keeps fd_cdir and fd_rdir stable across a lookup */
 
-	lck_mtx_t           fd_kqhashlock;  /* (Q) lock for dynamic kqueue hash */
-	u_long              fd_kqhashmask;  /* (Q) size of dynamic kqueue hash */
-	struct  kqwllist   *fd_kqhash;      /* (Q) hash table for dynamic kqueues */
+  lck_mtx_t fd_kqhashlock;    /* (Q) lock for dynamic kqueue hash */
+  u_long fd_kqhashmask;       /* (Q) size of dynamic kqueue hash */
+  struct kqwllist *fd_kqhash; /* (Q) hash table for dynamic kqueues */
 
-	lck_mtx_t           fd_knhashlock;  /* (N) lock for hash table for attached knotes */
-	u_long              fd_knhashmask;  /* (N) size of knhash */
-	struct  klist      *fd_knhash;      /* (N) hash table for attached knotes */
+  lck_mtx_t fd_knhashlock; /* (N) lock for hash table for attached knotes */
+  u_long fd_knhashmask;    /* (N) size of knhash */
+  struct klist *fd_knhash; /* (N) hash table for attached knotes */
 };
 
-#define fdt_flag_test(fdt, flag)        (((fdt)->fd_flags & (flag)) != 0)
-#define fdt_flag_set(fdt, flag)         ((void)((fdt)->fd_flags |= (flag)))
-#define fdt_flag_clear(fdt, flag)       ((void)((fdt)->fd_flags &= ~(flag)))
+#define fdt_flag_test(fdt, flag) (((fdt)->fd_flags & (flag)) != 0)
+#define fdt_flag_set(fdt, flag) ((void)((fdt)->fd_flags |= (flag)))
+#define fdt_flag_clear(fdt, flag) ((void)((fdt)->fd_flags &= ~(flag)))
 
 #if CONFIG_PROC_RESOURCE_LIMITS
-#define fd_above_soft_limit_notified(fdp)                 fdt_flag_test(fdp, FD_ABOVE_SOFT_LIMIT)
-#define fd_above_hard_limit_notified(fdp)                 fdt_flag_test(fdp, FD_ABOVE_HARD_LIMIT)
-#define fd_above_soft_limit_send_notification(fdp)      fdt_flag_set(fdp, FD_ABOVE_SOFT_LIMIT)
-#define fd_above_hard_limit_send_notification(fdp)      fdt_flag_set(fdp, FD_ABOVE_HARD_LIMIT)
+#define fd_above_soft_limit_notified(fdp)                                      \
+  fdt_flag_test(fdp, FD_ABOVE_SOFT_LIMIT)
+#define fd_above_hard_limit_notified(fdp)                                      \
+  fdt_flag_test(fdp, FD_ABOVE_HARD_LIMIT)
+#define fd_above_soft_limit_send_notification(fdp)                             \
+  fdt_flag_set(fdp, FD_ABOVE_SOFT_LIMIT)
+#define fd_above_hard_limit_send_notification(fdp)                             \
+  fdt_flag_set(fdp, FD_ABOVE_HARD_LIMIT)
 
-#define kqwl_above_soft_limit_notified(fdp)              fdt_flag_test(fdp, KQWL_ABOVE_SOFT_LIMIT)
-#define kqwl_above_hard_limit_notified(fdp)              fdt_flag_test(fdp, KQWL_ABOVE_HARD_LIMIT)
-#define kqwl_above_soft_limit_send_notification(fdp)     fdt_flag_set(fdp, KQWL_ABOVE_SOFT_LIMIT)
-#define kqwl_above_hard_limit_send_notification(fdp)     fdt_flag_set(fdp, KQWL_ABOVE_HARD_LIMIT)
+#define kqwl_above_soft_limit_notified(fdp)                                    \
+  fdt_flag_test(fdp, KQWL_ABOVE_SOFT_LIMIT)
+#define kqwl_above_hard_limit_notified(fdp)                                    \
+  fdt_flag_test(fdp, KQWL_ABOVE_HARD_LIMIT)
+#define kqwl_above_soft_limit_send_notification(fdp)                           \
+  fdt_flag_set(fdp, KQWL_ABOVE_SOFT_LIMIT)
+#define kqwl_above_hard_limit_send_notification(fdp)                           \
+  fdt_flag_set(fdp, KQWL_ABOVE_HARD_LIMIT)
 #endif /* CONFIG_PROC_RESOURCE_LIMITS */
 
 /*
  * Per-process open flags.
  */
-#define UF_RESERVED     0x04            /* open pending / in progress */
-#define UF_CLOSING      0x08            /* close in progress */
-#define UF_RESVWAIT     0x10            /* close in progress */
-#define UF_INHERIT      0x20            /* "inherit-on-exec" */
+#define UF_RESERVED 0x04 /* open pending / in progress */
+#define UF_CLOSING 0x08  /* close in progress */
+#define UF_RESVWAIT 0x10 /* close in progress */
+#define UF_INHERIT 0x20  /* "inherit-on-exec" */
 
 /*
  * Storage required per open file descriptor.
@@ -199,8 +209,7 @@ struct filedesc {
  * The answer is only valid so long as the @c proc_fdlock() is held by the
  * caller.
  */
-extern bool
-fdt_available_locked(proc_t p, int n);
+extern bool fdt_available_locked(proc_t p, int n);
 
 /*!
  * @struct fdt_iterator
@@ -209,8 +218,8 @@ fdt_available_locked(proc_t p, int n);
  * Type used to iterate a file descriptor table.
  */
 struct fdt_iterator {
-	int              fdti_fd;
-	struct fileproc *fdti_fp;
+  int fdti_fd;
+  struct fileproc *fdti_fp;
 };
 
 /*!
@@ -236,8 +245,7 @@ struct fdt_iterator {
  * The next iterator position.
  * If @c fdti_fp is NULL, the iteration is done.
  */
-extern struct fdt_iterator
-fdt_next(proc_t p, int fd, bool only_settled);
+extern struct fdt_iterator fdt_next(proc_t p, int fd, bool only_settled);
 
 /*!
  * @function fdt_next
@@ -262,8 +270,7 @@ fdt_next(proc_t p, int fd, bool only_settled);
  * The next iterator position.
  * If @c fdti_fp is NULL, the iteration is done.
  */
-extern struct fdt_iterator
-fdt_prev(proc_t p, int fd, bool only_settled);
+extern struct fdt_iterator fdt_prev(proc_t p, int fd, bool only_settled);
 
 /*!
  * @def fdt_foreach
@@ -281,10 +288,10 @@ fdt_prev(proc_t p, int fd, bool only_settled);
  * @param p
  * The process for which the file descriptor table is being iterated.
  */
-#define fdt_foreach(fp, p) \
-	for (struct fdt_iterator __fdt_it = fdt_next(p, -1, true); \
-	    ((fp) = __fdt_it.fdti_fp); \
-	    __fdt_it = fdt_next(p, __fdt_it.fdti_fd, true))
+#define fdt_foreach(fp, p)                                                     \
+  for (struct fdt_iterator __fdt_it = fdt_next(p, -1, true);                   \
+       ((fp) = __fdt_it.fdti_fp);                                              \
+       __fdt_it = fdt_next(p, __fdt_it.fdti_fd, true))
 
 /*!
  * @def fdt_foreach_fd
@@ -293,7 +300,7 @@ fdt_prev(proc_t p, int fd, bool only_settled);
  * When in an @c fdt_foreach() loop, return the current file descriptor
  * being inspected.
  */
-#define fdt_foreach_fd()  __fdt_it.fdti_fd
+#define fdt_foreach_fd() __fdt_it.fdti_fd
 
 /*!
  * @function fdt_init
@@ -306,8 +313,7 @@ fdt_prev(proc_t p, int fd, bool only_settled);
  * as this function is used to setup @c kernelproc's file descriptor table
  * and some fields are already initialized when fdt_init() is called.
  */
-extern void
-fdt_init(proc_t p);
+extern void fdt_init(proc_t p);
 
 /*!
  * @function fdt_destroy
@@ -321,8 +327,7 @@ fdt_init(proc_t p);
  * This cannot be done while the process this table belongs
  * to can be looked up.
  */
-extern void
-fdt_destroy(proc_t p);
+extern void fdt_destroy(proc_t p);
 
 /*!
  * @function fdt_fork
@@ -368,8 +373,8 @@ fdt_destroy(proc_t p);
  * EPERM        Unable to acquire a reference to the current chroot directory
  * ENOMEM       Not enough memory to perform the clone operation
  */
-extern int
-fdt_fork(struct filedesc *child_fdt, proc_t parent_p, struct vnode *uth_cdir, bool in_exec);
+extern int fdt_fork(struct filedesc *child_fdt, proc_t parent_p,
+                    struct vnode *uth_cdir, bool in_exec);
 
 /*!
  * @function fdt_exec
@@ -397,8 +402,8 @@ fdt_fork(struct filedesc *child_fdt, proc_t parent_p, struct vnode *uth_cdir, bo
  * @param in_exec
  * If the process is in exec
  */
-extern void
-fdt_exec(proc_t p, struct ucred *p_cred, short posix_spawn_flags, thread_t thread, bool in_exec);
+extern void fdt_exec(proc_t p, struct ucred *p_cred, short posix_spawn_flags,
+                     thread_t thread, bool in_exec);
 
 /*!
  * @function fdt_invalidate
@@ -415,40 +420,34 @@ fdt_exec(proc_t p, struct ucred *p_cred, short posix_spawn_flags, thread_t threa
  *
  * This function internally takes and drops proc_fdlock().
  */
-extern void
-fdt_invalidate(proc_t p);
+extern void fdt_invalidate(proc_t p);
 
 /*
  * Kernel global variables and routines.
  */
-extern int      dupfdopen(proc_t p, int indx, int dfd, int mode, int error);
-extern int      fdalloc(proc_t p, int want, int *result);
-extern void     fdrelse(struct proc * p, int fd);
-#define         fdfile(p, fd)                                   \
-	                (&(p)->p_fd.fd_ofiles[(fd)])
-#define         fdflags(p, fd)                                  \
-	                (&(p)->p_fd.fd_ofileflags[(fd)])
+extern int dupfdopen(proc_t p, int indx, int dfd, int mode, int error);
+extern int fdalloc(proc_t p, int want, int *result);
+extern void fdrelse(struct proc *p, int fd);
+#define fdfile(p, fd) (&(p)->p_fd.fd_ofiles[(fd)])
+#define fdflags(p, fd) (&(p)->p_fd.fd_ofileflags[(fd)])
 
 typedef void (*fp_initfn_t)(struct fileproc *, void *ctx);
-extern int      falloc_withinit(
-	proc_t                  p,
-	struct ucred           *p_cred,
-	struct vfs_context     *ctx,
-	struct fileproc       **resultfp,
-	int                    *resultfd,
-	fp_initfn_t             fp_init,
-	void                   *initarg);
+extern int falloc_withinit(proc_t p, struct ucred *p_cred,
+                           struct vfs_context *ctx, struct fileproc **resultfp,
+                           int *resultfd, fp_initfn_t fp_init, void *initarg);
 
-#define falloc(p, rfp, rfd)  ({ \
-	struct proc *__p = (p);                                                 \
-	falloc_withinit(__p, current_cached_proc_cred(__p),                     \
-	    vfs_context_current(), rfp, rfd, NULL, NULL);                       \
-})
+#define falloc(p, rfp, rfd)                                                    \
+  ({                                                                           \
+    struct proc *__p = (p);                                                    \
+    falloc_withinit(__p, current_cached_proc_cred(__p), vfs_context_current(), \
+                    rfp, rfd, NULL, NULL);                                     \
+  })
 
-#define falloc_exec(p, ctx, rfp, rfd)  ({ \
-	struct vfs_context *__c = (ctx);                                        \
-	falloc_withinit(p, vfs_context_ucred(__c), __c, rfp, rfd, NULL, NULL);  \
-})
+#define falloc_exec(p, ctx, rfp, rfd)                                          \
+  ({                                                                           \
+    struct vfs_context *__c = (ctx);                                           \
+    falloc_withinit(p, vfs_context_ucred(__c), __c, rfp, rfd, NULL, NULL);     \
+  })
 
 #if CONFIG_PROC_RESOURCE_LIMITS
 /* The proc_fdlock has to be held by caller for duration of the call */

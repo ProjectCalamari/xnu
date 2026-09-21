@@ -39,24 +39,23 @@ extern "C" {
  * @class      IOPlatformIO
  * @abstract   The base class for platform I/O drivers, such as AppleARMIO.
  */
-class IOPlatformIO : public IOService
-{
-	OSDeclareAbstractStructors(IOPlatformIO);
+class IOPlatformIO : public IOService {
+  OSDeclareAbstractStructors(IOPlatformIO);
 
 public:
-	virtual bool start(IOService * provider) APPLE_KEXT_OVERRIDE;
+  virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
 
-	/*!
-	 * @function   handlePlatformError
-	 * @abstract   Handler for platform-defined errors.
-	 * @discussion If the CPU reports an error that XNU does not know how
-	 *             to handle, such as a parity error or SError, XNU will
-	 *             invoke this method if there is an IOPlatformIO
-	 *             driver loaded.
-	 * @param far  Fault address provided by the CPU, if any.
-	 * @result     true if the exception was handled, false if not.
-	 */
-	virtual bool handlePlatformError(vm_offset_t far) = 0;
+  /*!
+   * @function   handlePlatformError
+   * @abstract   Handler for platform-defined errors.
+   * @discussion If the CPU reports an error that XNU does not know how
+   *             to handle, such as a parity error or SError, XNU will
+   *             invoke this method if there is an IOPlatformIO
+   *             driver loaded.
+   * @param far  Fault address provided by the CPU, if any.
+   * @result     true if the exception was handled, false if not.
+   */
+  virtual bool handlePlatformError(vm_offset_t far) = 0;
 };
 
 #endif /* ! _IOKIT_PLATFORM_IOPLATFORMIO_H */

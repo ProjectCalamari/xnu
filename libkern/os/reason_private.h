@@ -29,8 +29,8 @@
 #ifndef OS_REASON_PRIVATE_H
 #define OS_REASON_PRIVATE_H
 
-#include <sys/reason.h>
 #include <os/base.h>
+#include <sys/reason.h>
 
 __BEGIN_DECLS
 
@@ -42,12 +42,13 @@ __BEGIN_DECLS
  * [EBUSY]   too many corpses are being generated at the moment
  * [EQFULL]  the process used all its user fault quota
  * [ENOTSUP] generating simulated abort with reason is disabled
- * [EPERM]   generating simulated abort with reason for this namespace is not turned on
+ * [EPERM]   generating simulated abort with reason for this namespace is not
+ * turned on
  */
-int
-os_fault_with_payload(uint32_t reason_namespace, uint64_t reason_code,
-    void *payload, uint32_t payload_size, const char *reason_string,
-    uint64_t reason_flags) __attribute__((cold));
+int os_fault_with_payload(uint32_t reason_namespace, uint64_t reason_code,
+                          void *payload, uint32_t payload_size,
+                          const char *reason_string, uint64_t reason_flags)
+    __attribute__((cold));
 
 #endif // !KERNEL
 
@@ -56,12 +57,14 @@ os_fault_with_payload(uint32_t reason_namespace, uint64_t reason_code,
  */
 
 OS_ENUM(os_reason_libsystem_code, uint64_t,
-    OS_REASON_LIBSYSTEM_CODE_WORKLOOP_OWNERSHIP_LEAK = 1,
-    OS_REASON_LIBSYSTEM_CODE_FAULT = 2, /* generic fault with old-style os_log_fault payload */
-    OS_REASON_LIBSYSTEM_CODE_SECINIT_INITIALIZER = 3,
-    OS_REASON_LIBSYSTEM_CODE_PTHREAD_CORRUPTION = 4,
-    OS_REASON_LIBSYSTEM_CODE_OS_LOG_FAULT = 5, /* generated _only_ by os_log_fault in libtrace */
-    );
+        OS_REASON_LIBSYSTEM_CODE_WORKLOOP_OWNERSHIP_LEAK = 1,
+        OS_REASON_LIBSYSTEM_CODE_FAULT =
+            2, /* generic fault with old-style os_log_fault payload */
+        OS_REASON_LIBSYSTEM_CODE_SECINIT_INITIALIZER = 3,
+        OS_REASON_LIBSYSTEM_CODE_PTHREAD_CORRUPTION = 4,
+        OS_REASON_LIBSYSTEM_CODE_OS_LOG_FAULT =
+            5, /* generated _only_ by os_log_fault in libtrace */
+);
 
 __END_DECLS
 

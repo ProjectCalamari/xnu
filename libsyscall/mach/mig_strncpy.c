@@ -71,26 +71,21 @@
  */
 #include <mach/mig_errors.h>
 
-int
-mig_strncpy(
-	char *dest,
-	const char *src,
-	int len)
-{
-	int i;
+int mig_strncpy(char *dest, const char *src, int len) {
+  int i;
 
-	if (len <= 0) {
-		return 0;
-	}
+  if (len <= 0) {
+    return 0;
+  }
 
-	for (i = 1; i < len; i++) {
-		if (!(*dest++ = *src++)) {
-			return i;
-		}
-	}
+  for (i = 1; i < len; i++) {
+    if (!(*dest++ = *src++)) {
+      return i;
+    }
+  }
 
-	*dest = '\0';
-	return i;
+  *dest = '\0';
+  return i;
 }
 
 /*
@@ -112,39 +107,34 @@ mig_strncpy(
  * Result:
  *	length of string copied, INCLUDING the trailing 0.
  */
-int
-mig_strncpy_zerofill(
-	char *dest,
-	const char *src,
-	int len)
-{
-	int i;
-	boolean_t terminated = FALSE;
-	int retval = 0;
+int mig_strncpy_zerofill(char *dest, const char *src, int len) {
+  int i;
+  boolean_t terminated = FALSE;
+  int retval = 0;
 
-	if (len <= 0 || dest == 0) {
-		return 0;
-	}
+  if (len <= 0 || dest == 0) {
+    return 0;
+  }
 
-	if (src == 0) {
-		terminated = TRUE;
-	}
+  if (src == 0) {
+    terminated = TRUE;
+  }
 
-	for (i = 1; i < len; i++) {
-		if (!terminated) {
-			if (!(*dest++ = *src++)) {
-				retval = i;
-				terminated = TRUE;
-			}
-		} else {
-			*dest++ = '\0';
-		}
-	}
+  for (i = 1; i < len; i++) {
+    if (!terminated) {
+      if (!(*dest++ = *src++)) {
+        retval = i;
+        terminated = TRUE;
+      }
+    } else {
+      *dest++ = '\0';
+    }
+  }
 
-	*dest = '\0';
-	if (!terminated) {
-		retval = i;
-	}
+  *dest = '\0';
+  if (!terminated) {
+    retval = i;
+  }
 
-	return retval;
+  return retval;
 }

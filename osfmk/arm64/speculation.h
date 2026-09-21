@@ -28,10 +28,9 @@
 
 #ifndef _SPECULATION_H_
 #define _SPECULATION_H_
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
-
 
 /*
  * SPECULATION_GUARD_ZEROING_???_CC
@@ -63,30 +62,34 @@
  * 64-bit operands, pass an empty string. For 32-bit operands, pass "w"
  * cs_prefix: The ASM prefix for the registers in the select instruction.
  */
-#define SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, cmp_prefix, cs_prefix) \
-    { \
-	__asm__ ( \
-	    "cmp       %" cmp_prefix "[_cmp_1], %" cmp_prefix "[_cmp_2]\n" \
-	    "csel      %" cs_prefix "[_out], %" cs_prefix "[_value], %" cs_prefix "[_zero], " cc "\n" \
-	    "cset      %w[_out_valid], " cc "\n" \
-	    "csdb\n" \
-	    : [_out] "=r" (out), [_out_valid] "=r" (out_valid) \
-	    : [_cmp_1] "r" (cmp_1), [_cmp_2] "r" (cmp_2), [_value] "r" (value), [_zero] "rz" (0ULL) \
-	    : "cc" \
-	); \
-    }
+#define SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, \
+                                      cmp_prefix, cs_prefix)                   \
+  {                                                                            \
+    __asm__("cmp       %" cmp_prefix "[_cmp_1], %" cmp_prefix "[_cmp_2]\n"     \
+            "csel      %" cs_prefix "[_out], %" cs_prefix                      \
+            "[_value], %" cs_prefix "[_zero], " cc "\n"                        \
+            "cset      %w[_out_valid], " cc "\n"                               \
+            "csdb\n"                                                           \
+            : [_out] "=r"(out), [_out_valid] "=r"(out_valid)                   \
+            : [_cmp_1] "r"(cmp_1), [_cmp_2] "r"(cmp_2), [_value] "r"(value),   \
+              [_zero] "rz"(0ULL)                                               \
+            : "cc");                                                           \
+  }
 
 #define SPECULATION_GUARD_ZEROING_XXX(out, out_valid, value, cmp_1, cmp_2, cc) \
-    SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "", "")
+  SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "", "")
 
 #define SPECULATION_GUARD_ZEROING_XWW(out, out_valid, value, cmp_1, cmp_2, cc) \
-    SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "w", "")
+  SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "w",  \
+                                "")
 
 #define SPECULATION_GUARD_ZEROING_WXX(out, out_valid, value, cmp_1, cmp_2, cc) \
-    SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "", "w")
+  SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "",   \
+                                "w")
 
 #define SPECULATION_GUARD_ZEROING_WWW(out, out_valid, value, cmp_1, cmp_2, cc) \
-    SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "w", "w")
+  SPECULATION_GUARD_ZEROING_GEN(out, out_valid, value, cmp_1, cmp_2, cc, "w",  \
+                                "w")
 
 /*
  * SPECULATION_GUARD_SELECT_???_CC
@@ -124,26 +127,35 @@
  * 64-bit operands, pass an empty string. For 32-bit operands, pass "w"
  * cs_prefix: The ASM prefix for the registers in the select instruction.
  */
-#define SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, cmp_prefix, cs_prefix) \
-    __asm__ ( \
-	"cmp       %" cmp_prefix "[_cmp_1], %" cmp_prefix "[_cmp_2]\n" \
-	"csel      %" cs_prefix "[_out], %" cs_prefix "[_sel_1], %" cs_prefix "[_sel_2], " cc "\n" \
-	"csdb\n" \
-	: [_out] "=r" (out) \
-	: [_cmp_1] "r" (cmp_1), [_cmp_2] "r" (cmp_2), [_sel_1] "r" (sel_1), [_sel_2] "r" (sel_2), [_zero] "rz" (0ULL) \
-	: "cc" \
-    );
+#define SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc,       \
+                                     sel_2, cmp_prefix, cs_prefix)             \
+  __asm__("cmp       %" cmp_prefix "[_cmp_1], %" cmp_prefix "[_cmp_2]\n"       \
+          "csel      %" cs_prefix "[_out], %" cs_prefix                        \
+          "[_sel_1], %" cs_prefix "[_sel_2], " cc "\n"                         \
+          "csdb\n"                                                             \
+          : [_out] "=r"(out)                                                   \
+          : [_cmp_1] "r"(cmp_1), [_cmp_2] "r"(cmp_2), [_sel_1] "r"(sel_1),     \
+            [_sel_2] "r"(sel_2), [_zero] "rz"(0ULL)                            \
+          : "cc");
 
-#define SPECULATION_GUARD_SELECT_XXX(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2) \
-    SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "", "")
+#define SPECULATION_GUARD_SELECT_XXX(out, cmp_1, cmp_2, cc, sel_1, n_cc,       \
+                                     sel_2)                                    \
+  SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "",  \
+                               "")
 
-#define SPECULATION_GUARD_SELECT_XWW(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2) \
-    SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "w", "")
+#define SPECULATION_GUARD_SELECT_XWW(out, cmp_1, cmp_2, cc, sel_1, n_cc,       \
+                                     sel_2)                                    \
+  SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "w", \
+                               "")
 
-#define SPECULATION_GUARD_SELECT_WXX(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2) \
-    SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "", "w")
+#define SPECULATION_GUARD_SELECT_WXX(out, cmp_1, cmp_2, cc, sel_1, n_cc,       \
+                                     sel_2)                                    \
+  SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "",  \
+                               "w")
 
-#define SPECULATION_GUARD_SELECT_WWW(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2) \
-    SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "w", "w")
+#define SPECULATION_GUARD_SELECT_WWW(out, cmp_1, cmp_2, cc, sel_1, n_cc,       \
+                                     sel_2)                                    \
+  SPECULATION_GUARD_SELECT_GEN(out, cmp_1, cmp_2, cc, sel_1, n_cc, sel_2, "w", \
+                               "w")
 
 #endif /* _SPECULATION_H_ */

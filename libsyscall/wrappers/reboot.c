@@ -25,16 +25,12 @@
 
 extern int __reboot(int, const char *);
 
-int
-reboot(int howto)
-{
-	int res = __reboot(howto, NULL);
-	return res;
+int reboot(int howto) {
+  int res = __reboot(howto, NULL);
+  return res;
 }
 
-int
-reboot_np(int howto, const char *msg)
-{
-	int res = __reboot(howto, msg);
-	return res;
+int reboot_np(int howto, const char *msg) {
+  int res = __reboot(howto, msg);
+  return res;
 }

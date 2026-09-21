@@ -37,12 +37,12 @@
  * Definitions for byte order,
  * according to byte significance from low address to high.
  */
-#define LITTLE_ENDIAN   1234    /* least-significant byte first (vax) */
-#define BIG_ENDIAN      4321    /* most-significant byte first (IBM, net) */
-#define PDP_ENDIAN      3412    /* LSB first in word, MSW first in long (pdp) */
+#define LITTLE_ENDIAN 1234 /* least-significant byte first (vax) */
+#define BIG_ENDIAN 4321    /* most-significant byte first (IBM, net) */
+#define PDP_ENDIAN 3412    /* LSB first in word, MSW first in long (pdp) */
 
-#define BYTE_ORDER      LITTLE_ENDIAN   /* byte order on i386 */
-#define ENDIAN          LITTLE
+#define BYTE_ORDER LITTLE_ENDIAN /* byte order on i386 */
+#define ENDIAN LITTLE
 
 /*
  * Macros for network/external number representation conversion.
@@ -50,44 +50,38 @@
  */
 
 #if !defined(ntohs)
-static __inline__ unsigned short        ntohs(unsigned short);
-static __inline__
-unsigned short
-ntohs(unsigned short w_int)
-{
-	return (unsigned short)((w_int << 8) | (w_int >> 8));
+static __inline__ unsigned short ntohs(unsigned short);
+static __inline__ unsigned short ntohs(unsigned short w_int) {
+  return (unsigned short)((w_int << 8) | (w_int >> 8));
 }
 #endif
 
 #if !defined(htons)
-unsigned short  htons(unsigned short);
-#define htons   ntohs
+unsigned short htons(unsigned short);
+#define htons ntohs
 #endif
 
 #if !defined(ntohl)
 static __inline__ unsigned long ntohl(unsigned long);
-static __inline__
-unsigned long
-ntohl(unsigned long value)
-{
+static __inline__ unsigned long ntohl(unsigned long value) {
 #if defined(__clang__)
-	return (unsigned long)__builtin_bswap32((unsigned int)value);
+  return (unsigned long)__builtin_bswap32((unsigned int)value);
 #else
-	unsigned long l = value;
-	__asm__ volatile ("bswap %0" : "=r" (l) : "0" (l));
-	return l;
+  unsigned long l = value;
+  __asm__ volatile("bswap %0" : "=r"(l) : "0"(l));
+  return l;
 #endif
 }
 #endif
 
 #if !defined(htonl)
-unsigned long   htonl(unsigned long);
-#define htonl   ntohl
+unsigned long htonl(unsigned long);
+#define htonl ntohl
 #endif
 
-#define NTOHL(x)        (x) = ntohl((unsigned long)x)
-#define NTOHS(x)        (x) = ntohs((unsigned short)x)
-#define HTONL(x)        (x) = htonl((unsigned long)x)
-#define HTONS(x)        (x) = htons((unsigned short)x)
+#define NTOHL(x) (x) = ntohl((unsigned long)x)
+#define NTOHS(x) (x) = ntohs((unsigned short)x)
+#define HTONL(x) (x) = htonl((unsigned long)x)
+#define HTONS(x) (x) = htons((unsigned short)x)
 
 #endif

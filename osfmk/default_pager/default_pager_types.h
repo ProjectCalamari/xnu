@@ -29,7 +29,6 @@
  * @OSF_COPYRIGHT@
  */
 
-
 #ifndef _MACH_DEFAULT_PAGER_TYPES_H_
 #define _MACH_DEFAULT_PAGER_TYPES_H_
 
@@ -41,16 +40,16 @@
 #include <mach/machine/vm_types.h>
 #include <mach/memory_object_types.h>
 
-#define HI_WAT_ALERT            0x01
-#define LO_WAT_ALERT            0x02
-#define SWAP_ENCRYPT_ON         0x04
-#define SWAP_ENCRYPT_OFF        0x08
-#define SWAP_COMPACT_DISABLE    0x10
-#define SWAP_COMPACT_ENABLE     0x20
-#define PROC_RESUME             0x40
-#define SWAP_FILE_CREATION_ERROR        0x80
-#define USE_EMERGENCY_SWAP_FILE_FIRST   0x100
+#define HI_WAT_ALERT 0x01
+#define LO_WAT_ALERT 0x02
+#define SWAP_ENCRYPT_ON 0x04
+#define SWAP_ENCRYPT_OFF 0x08
+#define SWAP_COMPACT_DISABLE 0x10
+#define SWAP_COMPACT_ENABLE 0x20
+#define PROC_RESUME 0x40
+#define SWAP_FILE_CREATION_ERROR 0x80
+#define USE_EMERGENCY_SWAP_FILE_FIRST 0x100
 
 #endif /* __APPLE_API_UNSTABLE */
 
-#endif  /* _MACH_DEFAULT_PAGER_TYPES_H_ */
+#endif /* _MACH_DEFAULT_PAGER_TYPES_H_ */

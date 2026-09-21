@@ -61,7 +61,7 @@
  *	Machine-dependent definitions for cpu identification.
  *
  */
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _ARM_CPU_NUMBER_H_
 #define _ARM_CPU_NUMBER_H_
@@ -70,11 +70,11 @@
 
 __BEGIN_DECLS
 
-extern int      cpu_number(void);
-extern int      cpu_cluster_id(void);
+extern int cpu_number(void);
+extern int cpu_cluster_id(void);
 
 __END_DECLS
 
-#endif  /* _ARM_CPU_NUMBER_H_ */
+#endif /* _ARM_CPU_NUMBER_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

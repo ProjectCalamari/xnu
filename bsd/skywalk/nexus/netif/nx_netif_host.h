@@ -33,17 +33,18 @@
 
 __BEGIN_DECLS
 extern int nx_netif_host_na_activate(struct nexus_adapter *,
-    na_activate_mode_t);
+                                     na_activate_mode_t);
 extern int nx_netif_host_krings_create(struct nexus_adapter *,
-    struct kern_channel *);
+                                       struct kern_channel *);
 extern void nx_netif_host_krings_delete(struct nexus_adapter *,
-    struct kern_channel *, boolean_t);
-extern int nx_netif_host_na_rxsync(struct __kern_channel_ring *,
-    struct proc *, uint32_t);
-extern int nx_netif_host_na_txsync(struct __kern_channel_ring *,
-    struct proc *, uint32_t);
+                                        struct kern_channel *, boolean_t);
+extern int nx_netif_host_na_rxsync(struct __kern_channel_ring *, struct proc *,
+                                   uint32_t);
+extern int nx_netif_host_na_txsync(struct __kern_channel_ring *, struct proc *,
+                                   uint32_t);
 extern int nx_netif_host_na_special(struct nexus_adapter *,
-    struct kern_channel *, struct chreq *, nxspec_cmd_t);
+                                    struct kern_channel *, struct chreq *,
+                                    nxspec_cmd_t);
 extern int nx_netif_host_output(struct ifnet *, struct mbuf *);
 extern boolean_t netif_chain_enqueue_enabled(struct ifnet *);
 __END_DECLS

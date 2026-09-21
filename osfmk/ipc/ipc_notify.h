@@ -71,13 +71,11 @@
 __BEGIN_DECLS __ASSUME_PTR_ABI_SINGLE_BEGIN
 #pragma GCC visibility push(hidden)
 
-
-typedef struct ipc_notify_nsenders {
-	ipc_port_t              ns_notify;
-	mach_port_mscount_t     ns_mscount;
-	boolean_t               ns_is_kobject;
+    typedef struct ipc_notify_nsenders {
+  ipc_port_t ns_notify;
+  mach_port_mscount_t ns_mscount;
+  boolean_t ns_is_kobject;
 } ipc_notify_nsenders_t;
-
 
 /*!
  * @abstract
@@ -95,9 +93,7 @@ typedef struct ipc_notify_nsenders {
  * @param name          The name for the port whose receive right has been
  *                      destroyed.
  */
-extern void ipc_notify_dead_name(
-	ipc_port_t              notify,
-	mach_port_name_t        name);
+extern void ipc_notify_dead_name(ipc_port_t notify, mach_port_name_t name);
 
 /*!
  * @abstract
@@ -118,9 +114,7 @@ extern void ipc_notify_dead_name(
  * @param name          The name for the port which can now receive messages
  *                      without blocking.
  */
-extern void ipc_notify_send_possible(
-	ipc_port_t              notify,
-	mach_port_name_t        name);
+extern void ipc_notify_send_possible(ipc_port_t notify, mach_port_name_t name);
 
 /*!
  * @abstract
@@ -139,9 +133,7 @@ extern void ipc_notify_send_possible(
  * @param name          The name for the port which has been removed from the
  *                      space.
  */
-extern void ipc_notify_port_deleted(
-	ipc_port_t              notify,
-	mach_port_name_t        name);
+extern void ipc_notify_port_deleted(ipc_port_t notify, mach_port_name_t name);
 
 /*!
  * @abstract
@@ -161,9 +153,7 @@ extern void ipc_notify_port_deleted(
  * @param notify        The port receiving the notification.
  * @param right         The receive right being sent back.
  */
-extern void ipc_notify_port_destroyed(
-	ipc_port_t              notify,
-	ipc_port_t              right);
+extern void ipc_notify_port_destroyed(ipc_port_t notify, ipc_port_t right);
 
 /*!
  * @abstract
@@ -179,9 +169,8 @@ extern void ipc_notify_port_destroyed(
  *                      was sent (it can be used to synchronize new rights
  *                      being made by the client concurrently).
  */
-extern void ipc_notify_no_senders_mqueue(
-	ipc_port_t              notify,
-	mach_port_mscount_t     mscount);
+extern void ipc_notify_no_senders_mqueue(ipc_port_t notify,
+                                         mach_port_mscount_t mscount);
 
 /*!
  * @abstract
@@ -199,9 +188,8 @@ extern void ipc_notify_no_senders_mqueue(
  *                      was sent (it can be used to synchronize new rights
  *                      being made by the client concurrently).
  */
-extern void ipc_notify_no_senders_kobject(
-	ipc_port_t              notify,
-	mach_port_mscount_t     mscount);
+extern void ipc_notify_no_senders_kobject(ipc_port_t notify,
+                                          mach_port_mscount_t mscount);
 
 /*!
  * @abstract
@@ -224,26 +212,21 @@ extern void ipc_notify_no_senders_kobject(
  * @returns
  * A token that must be passed to ipc_notify_no_senders_emit.
  */
-extern ipc_notify_nsenders_t ipc_notify_no_senders_prepare(
-	ipc_port_t              port);
+extern ipc_notify_nsenders_t ipc_notify_no_senders_prepare(ipc_port_t port);
 
 /*!
  * @abstract
  * Emits a no-senders notification that was prepared by
  * @c ipc_notify_no_senders_prepare().
  */
-static inline void
-ipc_notify_no_senders_emit(ipc_notify_nsenders_t nsrequest)
-{
-	if (!nsrequest.ns_notify) {
-		/* nothing to do */
-	} else if (nsrequest.ns_is_kobject) {
-		ipc_notify_no_senders_kobject(nsrequest.ns_notify,
-		    nsrequest.ns_mscount);
-	} else {
-		ipc_notify_no_senders_mqueue(nsrequest.ns_notify,
-		    nsrequest.ns_mscount);
-	}
+static inline void ipc_notify_no_senders_emit(ipc_notify_nsenders_t nsrequest) {
+  if (!nsrequest.ns_notify) {
+    /* nothing to do */
+  } else if (nsrequest.ns_is_kobject) {
+    ipc_notify_no_senders_kobject(nsrequest.ns_notify, nsrequest.ns_mscount);
+  } else {
+    ipc_notify_no_senders_mqueue(nsrequest.ns_notify, nsrequest.ns_mscount);
+  }
 }
 
 /* Send a send-once notification */
@@ -259,11 +242,9 @@ ipc_notify_no_senders_emit(ipc_notify_nsenders_t nsrequest)
  * - @c port is locked.
  * - Consumes a ref/soright for @c port.
  */
-extern void ipc_notify_send_once_and_unlock(
-	ipc_port_t              port);
-
+extern void ipc_notify_send_once_and_unlock(ipc_port_t port);
 
 #pragma GCC visibility pop
 __ASSUME_PTR_ABI_SINGLE_END __END_DECLS
 
-#endif  /* _IPC_IPC_NOTIFY_H_ */
+#endif /* _IPC_IPC_NOTIFY_H_ */

@@ -27,8 +27,8 @@
  */
 
 #include "kdd.h"
-#include <kcdata.h>
 #import <Foundation/Foundation.h>
+#include <kcdata.h>
 
 @interface KCDBasicTypeDescription : KCDataType
 
@@ -40,6 +40,6 @@
  */
 - (id)createDefaultForType:(uint32_t)typeID;
 
-- (BOOL) shouldMergeData;
+- (BOOL)shouldMergeData;
 
 @end

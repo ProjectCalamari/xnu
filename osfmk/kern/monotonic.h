@@ -54,8 +54,8 @@ __END_DECLS
 
 #if MACH_KERNEL_PRIVATE
 
-#include <kern/thread.h>
 #include <kern/task.h>
+#include <kern/thread.h>
 #include <stdbool.h>
 
 __BEGIN_DECLS
@@ -120,7 +120,7 @@ void mt_perfcontrol(uint64_t *instrs, uint64_t *cycles);
  */
 typedef void (*mt_pmi_fn)(bool user_mode, void *ctx);
 int mt_microstackshot_start(unsigned int ctr, uint64_t period, mt_pmi_fn fn,
-    void *ctx);
+                            void *ctx);
 int mt_microstackshot_stop(void);
 
 __END_DECLS

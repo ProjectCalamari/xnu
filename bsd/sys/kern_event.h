@@ -40,12 +40,12 @@
 #include <sys/ioccom.h>
 #include <sys/sys_domain.h>
 
-#define KEV_SNDSPACE    (4 * 1024)
-#define KEV_RECVSPACE   (32 * 1024)
+#define KEV_SNDSPACE (4 * 1024)
+#define KEV_RECVSPACE (32 * 1024)
 
-#define KEV_ANY_VENDOR          0
-#define KEV_ANY_CLASS           0
-#define KEV_ANY_SUBCLASS        0
+#define KEV_ANY_VENDOR 0
+#define KEV_ANY_CLASS 0
+#define KEV_ANY_SUBCLASS 0
 
 /*
  * Vendor Code
@@ -53,11 +53,11 @@
 
 /*!
  *       @defined KEV_VENDOR_APPLE
- *       @discussion Apple generated kernel events use the hard coded vendor code
- *       value of 1. Third party kernel events use a dynamically allocated vendor
+ *       @discussion Apple generated kernel events use the hard coded vendor
+ * code value of 1. Third party kernel events use a dynamically allocated vendor
  *       code. The vendor code can be found using the SIOCGKEVVENDOR ioctl.
  */
-#define KEV_VENDOR_APPLE        1
+#define KEV_VENDOR_APPLE 1
 
 /*
  * Definition of top-level classifications for KEV_VENDOR_APPLE
@@ -67,46 +67,46 @@
  *       @defined KEV_NETWORK_CLASS
  *       @discussion Network kernel event class.
  */
-#define KEV_NETWORK_CLASS       1
+#define KEV_NETWORK_CLASS 1
 
 /*!
  *       @defined KEV_IOKIT_CLASS
  *       @discussion IOKit kernel event class.
  */
-#define KEV_IOKIT_CLASS         2
+#define KEV_IOKIT_CLASS 2
 
 /*!
  *       @defined KEV_SYSTEM_CLASS
  *       @discussion System kernel event class.
  */
-#define KEV_SYSTEM_CLASS        3
+#define KEV_SYSTEM_CLASS 3
 
 /*!
  *       @defined KEV_APPLESHARE_CLASS
  *       @discussion AppleShare kernel event class.
  */
-#define KEV_APPLESHARE_CLASS    4
+#define KEV_APPLESHARE_CLASS 4
 
 /*!
  *       @defined KEV_FIREWALL_CLASS
  *       @discussion Firewall kernel event class.
  */
-#define KEV_FIREWALL_CLASS      5
+#define KEV_FIREWALL_CLASS 5
 
 /*!
  *       @defined KEV_IEEE80211_CLASS
  *       @discussion IEEE 802.11 kernel event class.
  */
-#define KEV_IEEE80211_CLASS     6
+#define KEV_IEEE80211_CLASS 6
 
 /*!
  *       @defined KEV_NKE_CLASS
  *       @discussion NKE kernel event class.
  */
-#define KEV_NKE_CLASS           7
+#define KEV_NKE_CLASS 7
 
-#define KEV_NKE_ALF_SUBCLASS            1
-#define KEV_NKE_ALF_STATE_CHANGED       1
+#define KEV_NKE_ALF_SUBCLASS 1
+#define KEV_NKE_ALF_STATE_CHANGED 1
 
 /*
  * The following struct is KPI, but it was originally defined with a trailing
@@ -148,13 +148,13 @@
  *               using total_size - KEV_MSG_HEADER_SIZE.
  */
 struct kern_event_msg {
-	u_int32_t       total_size;     /* Size of entire event msg */
-	u_int32_t       vendor_code;    /* For non-Apple extensibility */
-	u_int32_t       kev_class;      /* Layer of event source */
-	u_int32_t       kev_subclass;   /* Component within layer */
-	u_int32_t       id;             /* Monotonically increasing value */
-	u_int32_t       event_code;     /* unique code */
-	u_int32_t       event_data[XNU_KERN_EVENT_DATA_SIZE];   /* One or more data words */
+  u_int32_t total_size;   /* Size of entire event msg */
+  u_int32_t vendor_code;  /* For non-Apple extensibility */
+  u_int32_t kev_class;    /* Layer of event source */
+  u_int32_t kev_subclass; /* Component within layer */
+  u_int32_t id;           /* Monotonically increasing value */
+  u_int32_t event_code;   /* unique code */
+  u_int32_t event_data[XNU_KERN_EVENT_DATA_SIZE]; /* One or more data words */
 };
 
 /*!
@@ -177,38 +177,39 @@ struct kern_event_msg {
  *               will be ignored. KEV_ANY_VENDOR can be used to receive kernel
  *               events with any vendor code.
  *       @field kev_class All kernel events that don't match this class will be
- *               ignored. KEV_ANY_CLASS can be used to receive kernel events with
- *               any class.
+ *               ignored. KEV_ANY_CLASS can be used to receive kernel events
+ * with any class.
  *       @field kev_subclass All kernel events that don't match this subclass
  *               will be ignored. KEV_ANY_SUBCLASS can be used to receive kernel
  *               events with any subclass.
  */
 struct kev_request {
-	u_int32_t       vendor_code;
-	u_int32_t       kev_class;
-	u_int32_t       kev_subclass;
+  u_int32_t vendor_code;
+  u_int32_t kev_class;
+  u_int32_t kev_subclass;
 };
 
 /*!
  *       @defined KEV_VENDOR_CODE_MAX_STR_LEN
  *       @discussion This define sets the maximum length of a string that can be
- *               used to identify a vendor or kext when looking up a vendor code.
+ *               used to identify a vendor or kext when looking up a vendor
+ * code.
  */
-#define KEV_VENDOR_CODE_MAX_STR_LEN     200
+#define KEV_VENDOR_CODE_MAX_STR_LEN 200
 
 /*!
  *       @struct kev_vendor_code
  *       @discussion This structure is used with the SIOCGKEVVENDOR ioctl to
  *               convert from a string identifying a kext or vendor, in the
  *               form of a bundle identifier, to a vendor code.
- *       @field vendor_code After making the SIOCGKEVVENDOR ioctl call, this will
- *               be filled in with the vendor code if there is one.
+ *       @field vendor_code After making the SIOCGKEVVENDOR ioctl call, this
+ * will be filled in with the vendor code if there is one.
  *       @field vendor_string A bundle style identifier.
  */
 #pragma pack(4)
 struct kev_vendor_code {
-	u_int32_t       vendor_code;
-	char            vendor_string[KEV_VENDOR_CODE_MAX_STR_LEN];
+  u_int32_t vendor_code;
+  char vendor_string[KEV_VENDOR_CODE_MAX_STR_LEN];
 };
 #pragma pack()
 
@@ -218,14 +219,14 @@ struct kev_vendor_code {
  *               have a new id. The next event to be generated will have an id
  *               of id+1.
  */
-#define SIOCGKEVID      _IOR('e', 1, u_int32_t)
+#define SIOCGKEVID _IOR('e', 1, u_int32_t)
 
 /*!
  *       @defined SIOCSKEVFILT
  *       @discussion Set the kernel event filter for this socket. Kernel events
  *               not matching this filter will not be received on this socket.
  */
-#define SIOCSKEVFILT    _IOW('e', 2, struct kev_request)
+#define SIOCSKEVFILT _IOW('e', 2, struct kev_request)
 
 /*!
  *       @defined SIOCGKEVFILT
@@ -233,22 +234,21 @@ struct kev_vendor_code {
  *               events not matching this filter will not be received on this
  *               socket.
  */
-#define SIOCGKEVFILT    _IOR('e', 3, struct kev_request)
+#define SIOCGKEVFILT _IOR('e', 3, struct kev_request)
 
 /*!
  *       @defined SIOCGKEVVENDOR
- *       @discussion Lookup the vendor code for the specified vendor. ENOENT will
- *               be returned if a vendor code for that vendor string does not
- *               exist.
+ *       @discussion Lookup the vendor code for the specified vendor. ENOENT
+ * will be returned if a vendor code for that vendor string does not exist.
  */
-#define SIOCGKEVVENDOR  _IOWR('e', 4, struct kev_vendor_code)
+#define SIOCGKEVVENDOR _IOWR('e', 4, struct kev_vendor_code)
 
 #ifdef KERNEL
 /*!
  *       @define N_KEV_VECTORS
  *       @discussion The maximum number of kev_d_vectors for a kernel event.
  */
-#define N_KEV_VECTORS   5
+#define N_KEV_VECTORS 5
 
 /*!
  *       @struct kev_d_vectors
@@ -258,8 +258,8 @@ struct kev_vendor_code {
  *       @field data_ptr A pointer to data.
  */
 struct kev_d_vectors {
-	u_int32_t       data_length;    /* Length of the event data */
-	void            *data_ptr;      /* Pointer to event data */
+  u_int32_t data_length; /* Length of the event data */
+  void *data_ptr;        /* Pointer to event data */
 };
 
 /*!
@@ -273,11 +273,11 @@ struct kev_d_vectors {
  *               to the kernel event.
  */
 struct kev_msg {
-	u_int32_t vendor_code;          /* For non-Apple extensibility */
-	u_int32_t kev_class;            /* Layer of event source */
-	u_int32_t kev_subclass;         /* Component within layer */
-	u_int32_t event_code;           /* The event code */
-	struct kev_d_vectors dv[N_KEV_VECTORS]; /* Up to n data vectors */
+  u_int32_t vendor_code;                  /* For non-Apple extensibility */
+  u_int32_t kev_class;                    /* Layer of event source */
+  u_int32_t kev_subclass;                 /* Component within layer */
+  u_int32_t event_code;                   /* The event code */
+  struct kev_d_vectors dv[N_KEV_VECTORS]; /* Up to n data vectors */
 };
 
 /*!

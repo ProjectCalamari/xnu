@@ -80,33 +80,34 @@
 
 #include <sys/_types/_ino_t.h>
 
-
-#define __DARWIN_MAXNAMLEN      255
+#define __DARWIN_MAXNAMLEN 255
 
 #pragma pack(4)
 
 #if !__DARWIN_64_BIT_INO_T
 struct dirent {
-	ino_t d_ino;                    /* file number of entry */
-	__uint16_t d_reclen;            /* length of this record */
-	__uint8_t  d_type;              /* file type, see below */
-	__uint8_t  d_namlen;            /* length of string in d_name */
-	char d_name[__DARWIN_MAXNAMLEN + 1];    /* name must be no longer than this */
+  ino_t d_ino;                         /* file number of entry */
+  __uint16_t d_reclen;                 /* length of this record */
+  __uint8_t d_type;                    /* file type, see below */
+  __uint8_t d_namlen;                  /* length of string in d_name */
+  char d_name[__DARWIN_MAXNAMLEN + 1]; /* name must be no longer than this */
 };
 #endif /* !__DARWIN_64_BIT_INO_T */
 
 #pragma pack()
 
-#define __DARWIN_MAXPATHLEN     1024
+#define __DARWIN_MAXPATHLEN 1024
 
-#define __DARWIN_STRUCT_DIRENTRY { \
-	__uint64_t  d_ino;      /* file number of entry */ \
-	__uint64_t  d_seekoff;  /* seek offset (optional, used by servers) */ \
-	__uint16_t  d_reclen;   /* length of this record */ \
-	__uint16_t  d_namlen;   /* length of string in d_name */ \
-	__uint8_t   d_type;     /* file type, see below */ \
-	char      d_name[__DARWIN_MAXPATHLEN]; /* entry name (up to MAXPATHLEN bytes) */ \
-}
+#define __DARWIN_STRUCT_DIRENTRY                                               \
+  {                                                                            \
+    __uint64_t d_ino;     /* file number of entry */                           \
+    __uint64_t d_seekoff; /* seek offset (optional, used by servers) */        \
+    __uint16_t d_reclen;  /* length of this record */                          \
+    __uint16_t d_namlen;  /* length of string in d_name */                     \
+    __uint8_t d_type;     /* file type, see below */                           \
+    char                                                                       \
+        d_name[__DARWIN_MAXPATHLEN]; /* entry name (up to MAXPATHLEN bytes) */ \
+  }
 
 #if __DARWIN_64_BIT_INO_T
 struct dirent __DARWIN_STRUCT_DIRENTRY;
@@ -117,27 +118,26 @@ struct dirent __DARWIN_STRUCT_DIRENTRY;
 struct direntry __DARWIN_STRUCT_DIRENTRY;
 #endif
 
-
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-#define d_fileno        d_ino           /* backward compatibility */
-#define MAXNAMLEN       __DARWIN_MAXNAMLEN
+#define d_fileno d_ino /* backward compatibility */
+#define MAXNAMLEN __DARWIN_MAXNAMLEN
 /*
  * File types
  */
-#define DT_UNKNOWN       0
-#define DT_FIFO          1
-#define DT_CHR           2
-#define DT_DIR           4
-#define DT_BLK           6
-#define DT_REG           8
-#define DT_LNK          10
-#define DT_SOCK         12
-#define DT_WHT          14
+#define DT_UNKNOWN 0
+#define DT_FIFO 1
+#define DT_CHR 2
+#define DT_DIR 4
+#define DT_BLK 6
+#define DT_REG 8
+#define DT_LNK 10
+#define DT_SOCK 12
+#define DT_WHT 14
 
 /*
  * Convert between stat structure types and directory types.
  */
-#define IFTODT(mode)    (((mode) & 0170000) >> 12)
+#define IFTODT(mode) (((mode) & 0170000) >> 12)
 #define DTTOIF(dirtype) ((dirtype) << 12)
 #endif
 

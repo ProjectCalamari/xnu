@@ -32,16 +32,16 @@
 
 #include <libkern/c++/OSObject.h>
 
+#include <libkern/c++/OSArray.h>
 #include <libkern/c++/OSBoolean.h>
+#include <libkern/c++/OSCollectionIterator.h>
+#include <libkern/c++/OSData.h>
+#include <libkern/c++/OSDictionary.h>
+#include <libkern/c++/OSNumber.h>
+#include <libkern/c++/OSOrderedSet.h>
+#include <libkern/c++/OSSet.h>
 #include <libkern/c++/OSString.h>
 #include <libkern/c++/OSSymbol.h>
-#include <libkern/c++/OSData.h>
-#include <libkern/c++/OSNumber.h>
-#include <libkern/c++/OSArray.h>
-#include <libkern/c++/OSSet.h>
-#include <libkern/c++/OSOrderedSet.h>
-#include <libkern/c++/OSCollectionIterator.h>
-#include <libkern/c++/OSDictionary.h>
 #if KERNEL_PRIVATE
 #include <libkern/c++/OSValueObject.h>
 #endif

@@ -28,12 +28,12 @@
 #ifndef __MACH_RIGHT_PRIVATE_H
 #define __MACH_RIGHT_PRIVATE_H
 
-#include <os/base.h>
 #include <mach/mach.h>
-#include <mach/port.h>
 #include <mach/mach_port.h>
-#include <sys/cdefs.h>
+#include <mach/port.h>
+#include <os/base.h>
 #include <stdbool.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS;
 
@@ -42,7 +42,7 @@ __BEGIN_DECLS;
  * A type representing the receive right to a Mach port.
  */
 typedef struct _mach_right_recv {
-	mach_port_t mrr_name;
+  mach_port_t mrr_name;
 } mach_right_recv_t;
 
 /*!
@@ -54,8 +54,8 @@ typedef struct _mach_right_recv {
 #elif defined(__cplusplus) && __cplusplus >= 201103L
 #define MACH_RIGHT_RECV_NULL (mach_right_recv_t{MACH_PORT_NULL})
 #elif defined(__cplusplus)
-#define MACH_RIGHT_RECV_NULL \
-	        (mach_right_recv_t((mach_right_recv_t){MACH_PORT_NULL}))
+#define MACH_RIGHT_RECV_NULL                                                   \
+  (mach_right_recv_t((mach_right_recv_t){MACH_PORT_NULL}))
 #else
 #define MACH_RIGHT_RECV_NULL {MACH_PORT_NULL}
 #endif
@@ -65,7 +65,7 @@ typedef struct _mach_right_recv {
  * A type representing a send right to a Mach port.
  */
 typedef struct _mach_right_send {
-	mach_port_t mrs_name;
+  mach_port_t mrs_name;
 } mach_right_send_t;
 
 /*!
@@ -77,8 +77,8 @@ typedef struct _mach_right_send {
 #elif defined(__cplusplus) && __cplusplus >= 201103L
 #define MACH_RIGHT_SEND_NULL (mach_right_send_t{MACH_PORT_NULL})
 #elif defined(__cplusplus)
-#define MACH_RIGHT_SEND_NULL \
-	        (mach_right_send_t((mach_right_send_t){MACH_PORT_NULL}))
+#define MACH_RIGHT_SEND_NULL                                                   \
+  (mach_right_send_t((mach_right_send_t){MACH_PORT_NULL}))
 #else
 #define MACH_RIGHT_SEND_NULL {MACH_PORT_NULL}
 #endif
@@ -88,7 +88,7 @@ typedef struct _mach_right_send {
  * A type representing a send-once right to a Mach port.
  */
 typedef struct _mach_right_send_once {
-	mach_port_t mrso_name;
+  mach_port_t mrso_name;
 } mach_right_send_once_t;
 
 /*!
@@ -100,8 +100,8 @@ typedef struct _mach_right_send_once {
 #elif defined(__cplusplus) && __cplusplus >= 201103L
 #define MACH_RIGHT_SEND_ONCE_NULL (mach_right_send_once_t{MACH_PORT_NULL})
 #elif defined(__cplusplus)
-#define MACH_RIGHT_SEND_ONCE_NULL \
-	        (mach_right_send_once_t((mach_right_send_once_t){MACH_PORT_NULL}))
+#define MACH_RIGHT_SEND_ONCE_NULL                                              \
+  (mach_right_send_once_t((mach_right_send_once_t){MACH_PORT_NULL}))
 #else
 #define MACH_RIGHT_SEND_ONCE_NULL {MACH_PORT_NULL}
 #endif
@@ -117,12 +117,10 @@ typedef struct _mach_right_send_once {
  * @result
  * A new receive right object.
  */
-OS_ALWAYS_INLINE OS_WARN_RESULT
-static inline mach_right_recv_t
-mach_right_recv(mach_port_name_t pn)
-{
-	mach_right_recv_t mrr = {pn};
-	return mrr;
+OS_ALWAYS_INLINE OS_WARN_RESULT static inline mach_right_recv_t
+mach_right_recv(mach_port_name_t pn) {
+  mach_right_recv_t mrr = {pn};
+  return mrr;
 }
 
 /*!
@@ -136,12 +134,10 @@ mach_right_recv(mach_port_name_t pn)
  * @result
  * A new send right object.
  */
-OS_ALWAYS_INLINE OS_WARN_RESULT
-static inline mach_right_send_t
-mach_right_send(mach_port_name_t pn)
-{
-	mach_right_send_t mrs = {pn};
-	return mrs;
+OS_ALWAYS_INLINE OS_WARN_RESULT static inline mach_right_send_t
+mach_right_send(mach_port_name_t pn) {
+  mach_right_send_t mrs = {pn};
+  return mrs;
 }
 
 /*!
@@ -154,11 +150,9 @@ mach_right_send(mach_port_name_t pn)
  * @result
  * A Boolean indicating whether the right is valid.
  */
-OS_ALWAYS_INLINE OS_WARN_RESULT
-static inline bool
-mach_right_send_valid(mach_right_send_t mrs)
-{
-	return MACH_PORT_VALID(mrs.mrs_name);
+OS_ALWAYS_INLINE OS_WARN_RESULT static inline bool
+mach_right_send_valid(mach_right_send_t mrs) {
+  return MACH_PORT_VALID(mrs.mrs_name);
 }
 
 /*!
@@ -172,12 +166,10 @@ mach_right_send_valid(mach_right_send_t mrs)
  * @result
  * A new send-once right object.
  */
-OS_ALWAYS_INLINE OS_WARN_RESULT
-static inline mach_right_send_once_t
-mach_right_send_once(mach_port_name_t pn)
-{
-	mach_right_send_once_t mrso = {pn};
-	return mrso;
+OS_ALWAYS_INLINE OS_WARN_RESULT static inline mach_right_send_once_t
+mach_right_send_once(mach_port_name_t pn) {
+  mach_right_send_once_t mrso = {pn};
+  return mrso;
 }
 
 /*!
@@ -190,11 +182,9 @@ mach_right_send_once(mach_port_name_t pn)
  * @result
  * A Boolean indicating whether the right is valid.
  */
-OS_ALWAYS_INLINE OS_WARN_RESULT
-static inline bool
-mach_right_send_once_valid(mach_right_send_once_t mrso)
-{
-	return MACH_PORT_VALID(mrso.mrso_name);
+OS_ALWAYS_INLINE OS_WARN_RESULT static inline bool
+mach_right_send_once_valid(mach_right_send_once_t mrso) {
+  return MACH_PORT_VALID(mrso.mrso_name);
 }
 
 /*!
@@ -214,12 +204,10 @@ mach_right_send_once_valid(mach_right_send_once_t mrso)
  * @const MACH_RIGHT_RECV_FLAG_IMMOVABLE
  * The constructed Mach port's receive right will be immovable.
  */
-OS_ENUM(mach_right_flags, uint64_t,
-    MACH_RIGHT_RECV_FLAG_INIT = 0,
-    MACH_RIGHT_RECV_FLAG_UNGUARDED = (1 << 0),
-    MACH_RIGHT_RECV_FLAG_STRICT = (1 << 1),
-    MACH_RIGHT_RECV_FLAG_IMMOVABLE = (1 << 2),
-    );
+OS_ENUM(mach_right_flags, uint64_t, MACH_RIGHT_RECV_FLAG_INIT = 0,
+        MACH_RIGHT_RECV_FLAG_UNGUARDED = (1 << 0),
+        MACH_RIGHT_RECV_FLAG_STRICT = (1 << 1),
+        MACH_RIGHT_RECV_FLAG_IMMOVABLE = (1 << 2), );
 
 /*!
  * @function mach_right_recv_construct
@@ -249,10 +237,8 @@ OS_ENUM(mach_right_flags, uint64_t,
  * the kernel. Thus the caller may assert that a new, valid receive right is
  * always returned.
  */
-OS_EXPORT OS_WARN_RESULT
-mach_right_recv_t
-mach_right_recv_construct(mach_right_flags_t flags,
-    mach_right_send_t *_Nullable sr, uintptr_t ctx);
+OS_EXPORT OS_WARN_RESULT mach_right_recv_t mach_right_recv_construct(
+    mach_right_flags_t flags, mach_right_send_t *_Nullable sr, uintptr_t ctx);
 
 /*!
  * @function mach_right_recv_destruct
@@ -286,9 +272,8 @@ mach_right_recv_construct(mach_right_flags_t flags,
  * caller's complete control.
  */
 OS_EXPORT
-void
-mach_right_recv_destruct(mach_right_recv_t r, mach_right_send_t *_Nullable s,
-    uintptr_t ctx);
+void mach_right_recv_destruct(mach_right_recv_t r,
+                              mach_right_send_t *_Nullable s, uintptr_t ctx);
 
 /*!
  * @function mach_right_send_create
@@ -309,8 +294,7 @@ mach_right_recv_destruct(mach_right_recv_t r, mach_right_send_t *_Nullable s,
  * such, this routine should only be used on ports that are known to be under
  * the caller's complete control.
  */
-OS_EXPORT OS_WARN_RESULT
-mach_right_send_t
+OS_EXPORT OS_WARN_RESULT mach_right_send_t
 mach_right_send_create(mach_right_recv_t r);
 
 /*!
@@ -328,8 +312,7 @@ mach_right_send_create(mach_right_recv_t r);
  *
  * If the implementation encounters any other failure condition, it will abort.
  */
-OS_EXPORT OS_WARN_RESULT
-mach_right_send_t
+OS_EXPORT OS_WARN_RESULT mach_right_send_t
 mach_right_send_retain(mach_right_send_t s);
 
 /*!
@@ -346,8 +329,7 @@ mach_right_send_retain(mach_right_send_t s);
  * If the implementation encounters any other failure condition, it will abort.
  */
 OS_EXPORT
-void
-mach_right_send_release(mach_right_send_t s);
+void mach_right_send_release(mach_right_send_t s);
 
 /*!
  * @function mach_right_send_once_create
@@ -372,8 +354,7 @@ mach_right_send_release(mach_right_send_t s);
  * The returned right does not support retain/release semantics despite the
  * presence of "create" in the name.
  */
-OS_EXPORT OS_WARN_RESULT
-mach_right_send_once_t
+OS_EXPORT OS_WARN_RESULT mach_right_send_once_t
 mach_right_send_once_create(mach_right_recv_t r);
 
 /*!
@@ -394,8 +375,7 @@ mach_right_send_once_create(mach_right_recv_t r);
  * which case there are no side effects.
  */
 OS_EXPORT
-void
-mach_right_send_once_consume(mach_right_send_once_t so);
+void mach_right_send_once_consume(mach_right_send_once_t so);
 
 __END_DECLS;
 

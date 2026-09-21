@@ -45,12 +45,14 @@
 
 #ifndef __KPI_MBUF__
 #define __KPI_MBUF__
-#include <sys/kernel_types.h>
 #include <mach/vm_types.h>
+#include <sys/kernel_types.h>
 
 #ifndef PRIVATE
 #include <Availability.h>
-#define __NKE_API_DEPRECATED __API_DEPRECATED("Network Kernel Extension KPI is deprecated", macos(10.4, 10.15.4))
+#define __NKE_API_DEPRECATED                                                   \
+  __API_DEPRECATED("Network Kernel Extension KPI is deprecated",               \
+                   macos(10.4, 10.15.4))
 #else
 #define __NKE_API_DEPRECATED
 #endif /* PRIVATE */
@@ -58,18 +60,19 @@
 #ifdef KERNEL_PRIVATE
 #include <Availability.h>
 #if __has_feature(attribute_unavailable_with_message)
-#define __EXTENSION_ONLY_KPI_DEPRECATED_BY(REPLACEMENT)                                              \
-__attribute__((__unavailable__(                                                                      \
-	    "Only available outside of the kernel. Use " #REPLACEMENT " in the kernel instead.")))
+#define __EXTENSION_ONLY_KPI_DEPRECATED_BY(REPLACEMENT)                        \
+  __attribute__((__unavailable__(                                              \
+      "Only available outside of the kernel. Use " #REPLACEMENT                \
+      " in the kernel instead.")))
 #define __BOUNDS_SAFETY_DEPRECATED_BY(REPLACEMENT)
-#else  /*! __has_feature(attribute_unavailable_with_message) */
+#else /*! __has_feature(attribute_unavailable_with_message) */
 #define __EXTENSION_ONLY_KPI_DEPRECATED_BY(REPLACEMENT)
 #define __BOUNDS_SAFETY_DEPRECATED_BY(REPLACEMENT)
 #endif /*! __has_feature(attribute_unavailable_with_message) */
-#else /* !KERNEL_PRIVATE */
+#else  /* !KERNEL_PRIVATE */
 #define __EXTENSION_ONLY_KPI_DEPRECATED_BY(REPLACEMENT)
-#define __BOUNDS_SAFETY_DEPRECATED_BY(REPLACEMENT)                                                     \
-__ptrcheck_unavailable_r(REPLACEMENT)
+#define __BOUNDS_SAFETY_DEPRECATED_BY(REPLACEMENT)                             \
+  __ptrcheck_unavailable_r(REPLACEMENT)
 #endif /* !KERNEL_PRIVATE */
 
 #ifdef KERNEL_PRIVATE
@@ -93,23 +96,23 @@ __ptrcheck_unavailable_r(REPLACEMENT)
  *       @constant MBUF_FIRSTFRAG Indicates this packet is the first fragment.
  *       @constant MBUF_LASTFRAG Indicates this packet is the last fragment.
  *       @constant MBUF_PROMISC Indicates this packet was only received
- *               because the interface is in promiscuous mode. This should be set
- *               by the demux function. These packets will be discarded after
- *               being passed to any interface filters.
+ *               because the interface is in promiscuous mode. This should be
+ * set by the demux function. These packets will be discarded after being passed
+ * to any interface filters.
  */
 enum {
-	MBUF_EXT        = 0x0001,       /* has associated external storage */
-	MBUF_PKTHDR     = 0x0002,       /* start of record */
-	MBUF_EOR        = 0x0004,       /* end of record */
-	MBUF_LOOP       = 0x0040,       /* packet is looped back */
+  MBUF_EXT = 0x0001,    /* has associated external storage */
+  MBUF_PKTHDR = 0x0002, /* start of record */
+  MBUF_EOR = 0x0004,    /* end of record */
+  MBUF_LOOP = 0x0040,   /* packet is looped back */
 
-	MBUF_BCAST      = 0x0100,       /* send/received as link-level broadcast */
-	MBUF_MCAST      = 0x0200,       /* send/received as link-level multicast */
-	MBUF_FRAG       = 0x0400,       /* packet is a fragment of a larger packet */
-	MBUF_FIRSTFRAG  = 0x0800,       /* packet is first fragment */
-	MBUF_LASTFRAG   = 0x1000,       /* packet is last fragment */
-	MBUF_PROMISC    = 0x2000,       /* packet is promiscuous */
-	MBUF_HASFCS     = 0x4000        /* packet has FCS */
+  MBUF_BCAST = 0x0100,     /* send/received as link-level broadcast */
+  MBUF_MCAST = 0x0200,     /* send/received as link-level multicast */
+  MBUF_FRAG = 0x0400,      /* packet is a fragment of a larger packet */
+  MBUF_FIRSTFRAG = 0x0800, /* packet is first fragment */
+  MBUF_LASTFRAG = 0x1000,  /* packet is last fragment */
+  MBUF_PROMISC = 0x2000,   /* packet is promiscuous */
+  MBUF_HASFCS = 0x4000     /* packet has FCS */
 };
 typedef u_int32_t mbuf_flags_t;
 
@@ -118,12 +121,11 @@ typedef u_int32_t mbuf_flags_t;
  *       @abstract Types of mbufs.
  *       @discussion Some mbufs represent packets, some represnt data waiting
  *               on sockets. Other mbufs store control data or other various
- *               structures. The mbuf type is used to store what sort of data the
- *               mbuf contains.
+ *               structures. The mbuf type is used to store what sort of data
+ * the mbuf contains.
  *       @constant MBUF_MT_FREE Indicates the mbuf is free and is
- *               sitting on the queue of free mbufs. If you find that an mbuf you
- *               have a reference to has this type, something has gone terribly
- *               wrong.
+ *               sitting on the queue of free mbufs. If you find that an mbuf
+ * you have a reference to has this type, something has gone terribly wrong.
  *       @constant MBUF_MT_DATA Indicates this mbuf is being used to store
  *               data.
  *       @constant MBUF_MT_HEADER Indicates this mbuf has a packet header,
@@ -143,21 +145,21 @@ typedef u_int32_t mbuf_flags_t;
  *       @constant MBUF_MT_OOBDATA Out of band data.
  */
 enum {
-	MBUF_TYPE_FREE          = 0,    /* should be on free list */
-	MBUF_TYPE_DATA          = 1,    /* dynamic (data) allocation */
-	MBUF_TYPE_HEADER        = 2,    /* packet header */
-	MBUF_TYPE_SOCKET        = 3,    /* socket structure */
-	MBUF_TYPE_PCB           = 4,    /* protocol control block */
-	MBUF_TYPE_RTABLE        = 5,    /* routing tables */
-	MBUF_TYPE_HTABLE        = 6,    /* IMP host tables */
-	MBUF_TYPE_ATABLE        = 7,    /* address resolution tables */
-	MBUF_TYPE_SONAME        = 8,    /* socket name */
-	MBUF_TYPE_SOOPTS        = 10,   /* socket options */
-	MBUF_TYPE_FTABLE        = 11,   /* fragment reassembly header */
-	MBUF_TYPE_RIGHTS        = 12,   /* access rights */
-	MBUF_TYPE_IFADDR        = 13,   /* interface address */
-	MBUF_TYPE_CONTROL       = 14,   /* extra-data protocol message */
-	MBUF_TYPE_OOBDATA       = 15    /* expedited data  */
+  MBUF_TYPE_FREE = 0,     /* should be on free list */
+  MBUF_TYPE_DATA = 1,     /* dynamic (data) allocation */
+  MBUF_TYPE_HEADER = 2,   /* packet header */
+  MBUF_TYPE_SOCKET = 3,   /* socket structure */
+  MBUF_TYPE_PCB = 4,      /* protocol control block */
+  MBUF_TYPE_RTABLE = 5,   /* routing tables */
+  MBUF_TYPE_HTABLE = 6,   /* IMP host tables */
+  MBUF_TYPE_ATABLE = 7,   /* address resolution tables */
+  MBUF_TYPE_SONAME = 8,   /* socket name */
+  MBUF_TYPE_SOOPTS = 10,  /* socket options */
+  MBUF_TYPE_FTABLE = 11,  /* fragment reassembly header */
+  MBUF_TYPE_RIGHTS = 12,  /* access rights */
+  MBUF_TYPE_IFADDR = 13,  /* interface address */
+  MBUF_TYPE_CONTROL = 14, /* extra-data protocol message */
+  MBUF_TYPE_OOBDATA = 15  /* expedited data  */
 };
 typedef u_int32_t mbuf_type_t;
 
@@ -181,23 +183,20 @@ typedef u_int32_t mbuf_type_t;
  *       @constant MBUF_CSUM_REQ_UDPIPV6 Indicates the UDP checksum for IPv6
  *               has not been calculated yet.
  */
-enum {
-	MBUF_TSO_IPV4           = 0x100000,
-	MBUF_TSO_IPV6           = 0x200000
-};
+enum { MBUF_TSO_IPV4 = 0x100000, MBUF_TSO_IPV6 = 0x200000 };
 typedef u_int32_t mbuf_tso_request_flags_t;
 
 enum {
 #ifdef KERNEL_PRIVATE
-	MBUF_CSUM_PARTIAL       = 0x1000,       /* 16-bit 1's complement sum */
-	MBUF_CSUM_REQ_SUM16     = MBUF_CSUM_PARTIAL,
-	MBUF_CSUM_REQ_ZERO_INVERT = 0x2000,
+  MBUF_CSUM_PARTIAL = 0x1000, /* 16-bit 1's complement sum */
+  MBUF_CSUM_REQ_SUM16 = MBUF_CSUM_PARTIAL,
+  MBUF_CSUM_REQ_ZERO_INVERT = 0x2000,
 #endif /* KERNEL_PRIVATE */
-	MBUF_CSUM_REQ_IP        = 0x0001,
-	MBUF_CSUM_REQ_TCP       = 0x0002,
-	MBUF_CSUM_REQ_UDP       = 0x0004,
-	MBUF_CSUM_REQ_TCPIPV6   = 0x0020,
-	MBUF_CSUM_REQ_UDPIPV6   = 0x0040
+  MBUF_CSUM_REQ_IP = 0x0001,
+  MBUF_CSUM_REQ_TCP = 0x0002,
+  MBUF_CSUM_REQ_UDP = 0x0004,
+  MBUF_CSUM_REQ_TCPIPV6 = 0x0020,
+  MBUF_CSUM_REQ_UDPIPV6 = 0x0040
 };
 typedef u_int32_t mbuf_csum_request_flags_t;
 
@@ -205,9 +204,8 @@ typedef u_int32_t mbuf_csum_request_flags_t;
  *       @enum mbuf_csum_performed_flags_t
  *       @abstract Checksum performed/requested flags.
  *       @discussion Mbufs often contain packets. Some hardware supports
- *               performing checksums in hardware. The driver uses these flags to
- *               communicate to the stack the checksums that were calculated in
- *               hardware.
+ *               performing checksums in hardware. The driver uses these flags
+ * to communicate to the stack the checksums that were calculated in hardware.
  *       @constant MBUF_CSUM_DID_IP Indicates that the driver/hardware verified
  *               the IP checksum in hardware.
  *       @constant MBUF_CSUM_IP_GOOD Indicates whether or not the IP checksum
@@ -219,19 +217,19 @@ typedef u_int32_t mbuf_csum_request_flags_t;
  *               can be retrieved using the second parameter passed to
  *               mbuf_get_csum_performed. This should be done for IPv4 or IPv6.
  *       @constant MBUF_CSUM_PSEUDO_HDR If set, this indicates that the
- *               checksum value for MBUF_CSUM_DID_DATA includes the pseudo header
- *               value. If this is not set, the stack will calculate the pseudo
- *               header value and add that to the checksum. The value of this bit
- *               is only valid when MBUF_CSUM_DID_DATA is set.
+ *               checksum value for MBUF_CSUM_DID_DATA includes the pseudo
+ * header value. If this is not set, the stack will calculate the pseudo header
+ * value and add that to the checksum. The value of this bit is only valid when
+ * MBUF_CSUM_DID_DATA is set.
  */
 enum {
 #ifdef KERNEL_PRIVATE
-	MBUF_CSUM_TCP_SUM16     = MBUF_CSUM_PARTIAL,
+  MBUF_CSUM_TCP_SUM16 = MBUF_CSUM_PARTIAL,
 #endif /* KERNEL_PRIVATE */
-	MBUF_CSUM_DID_IP        = 0x0100,
-	MBUF_CSUM_IP_GOOD       = 0x0200,
-	MBUF_CSUM_DID_DATA      = 0x0400,
-	MBUF_CSUM_PSEUDO_HDR    = 0x0800
+  MBUF_CSUM_DID_IP = 0x0100,
+  MBUF_CSUM_IP_GOOD = 0x0200,
+  MBUF_CSUM_DID_DATA = 0x0400,
+  MBUF_CSUM_PSEUDO_HDR = 0x0800
 };
 typedef u_int32_t mbuf_csum_performed_flags_t;
 
@@ -246,8 +244,8 @@ typedef u_int32_t mbuf_csum_performed_flags_t;
  *               block, if blocking is necessary fail and return immediately.
  */
 enum {
-	MBUF_WAITOK     = 0,    /* Ok to block to get memory */
-	MBUF_DONTWAIT   = 1     /* Don't block, fail if blocking would be required */
+  MBUF_WAITOK = 0,  /* Ok to block to get memory */
+  MBUF_DONTWAIT = 1 /* Don't block, fail if blocking would be required */
 };
 typedef u_int32_t mbuf_how_t;
 
@@ -277,59 +275,59 @@ typedef u_int16_t mbuf_tag_type_t;
  *       @field bigmclbytes Length of a big mbuf cluster.
  */
 struct mbuf_stat {
-	u_int32_t       mbufs;          /* mbufs obtained from page pool */
-	u_int32_t       clusters;       /* clusters obtained from page pool */
-	u_int32_t       clfree;         /* free clusters */
-	u_int32_t       drops;          /* times failed to find space */
-	u_int32_t       wait;           /* times waited for space */
-	u_int32_t       drain;          /* times drained protocols for space */
-	u_short         mtypes[256];    /* type specific mbuf allocations */
-	u_int32_t       mcfail;         /* times m_copym failed */
-	u_int32_t       mpfail;         /* times m_pullup failed */
-	u_int32_t       msize;          /* length of an mbuf */
-	u_int32_t       mclbytes;       /* length of an mbuf cluster */
-	u_int32_t       minclsize;      /* min length of data to allocate a cluster */
-	u_int32_t       mlen;           /* length of data in an mbuf */
-	u_int32_t       mhlen;          /* length of data in a header mbuf */
-	u_int32_t       bigclusters;    /* number of big clusters */
-	u_int32_t       bigclfree;      /* number of big clustser free */
-	u_int32_t       bigmclbytes;    /* length of data in a big cluster */
+  u_int32_t mbufs;       /* mbufs obtained from page pool */
+  u_int32_t clusters;    /* clusters obtained from page pool */
+  u_int32_t clfree;      /* free clusters */
+  u_int32_t drops;       /* times failed to find space */
+  u_int32_t wait;        /* times waited for space */
+  u_int32_t drain;       /* times drained protocols for space */
+  u_short mtypes[256];   /* type specific mbuf allocations */
+  u_int32_t mcfail;      /* times m_copym failed */
+  u_int32_t mpfail;      /* times m_pullup failed */
+  u_int32_t msize;       /* length of an mbuf */
+  u_int32_t mclbytes;    /* length of an mbuf cluster */
+  u_int32_t minclsize;   /* min length of data to allocate a cluster */
+  u_int32_t mlen;        /* length of data in an mbuf */
+  u_int32_t mhlen;       /* length of data in a header mbuf */
+  u_int32_t bigclusters; /* number of big clusters */
+  u_int32_t bigclfree;   /* number of big clustser free */
+  u_int32_t bigmclbytes; /* length of data in a big cluster */
 };
 
 /* Parameter for m_copym to copy all bytes */
-#define MBUF_COPYALL    1000000000
+#define MBUF_COPYALL 1000000000
 
 __BEGIN_DECLS
 /* Data access */
 
 /*!
  *       @function mbuf_data_len
- *       @discussion Returns a pointer to the start of data along with the data length in this mbuf.
- *               There may be additional data on chained mbufs. The data you're
- *               looking for may not be virtually contiguous if it spans more
- *               than one mbuf.  In addition, data that is virtually contiguous
- *               might not be represented by physically contiguous pages; see
- *               further comments in `mbuf_data_to_physical'.
- *               If the data structure you want to access stradles multiple
- *               mbufs in a chain, the useable data length (returned by `*out_len')
+ *       @discussion Returns a pointer to the start of data along with the data
+ * length in this mbuf. There may be additional data on chained mbufs. The data
+ * you're looking for may not be virtually contiguous if it spans more than one
+ * mbuf.  In addition, data that is virtually contiguous might not be
+ * represented by physically contiguous pages; see further comments in
+ * `mbuf_data_to_physical'. If the data structure you want to access stradles
+ * multiple mbufs in a chain, the useable data length (returned by `*out_len')
  *               will be smaller than the expected size.
  *               In this case, either use `mbuf_pullup', which will create
  *               a new mbuf with the data structure in a congigous buffer,
  *               or alternatively copy the pieces of the data structure
- *               from the mbufs comprised by the chain into a separately allocated
- *               buffer with a sufficient capacity.
- *               Using `mbuf_pullup' has the advantage of not having to
- *               copy the data; however if the size of the requred data exceeds
- *               the maximal mbuf size, `mbuf_pullup' will fail, and free the chain.
+ *               from the mbufs comprised by the chain into a separately
+ * allocated buffer with a sufficient capacity. Using `mbuf_pullup' has the
+ * advantage of not having to copy the data; however if the size of the requred
+ * data exceeds the maximal mbuf size, `mbuf_pullup' will fail, and free the
+ * chain.
  *       @param mbuf The mbuf.
  *       @param out_buf Pointer to the data buffer in this mbuf.
- *       @param out_len Pointer to the amount of available data in the buffer pointed to by `out_buf'.
+ *       @param out_len Pointer to the amount of available data in the buffer
+ * pointed to by `out_buf'.
  *       @result EINVAL if one of the parameters is NULL.
  *               ENOENT if the mbuf does not have valid data buffer.
  *               0      if successful.
  */
-extern errno_t mbuf_data_len(mbuf_t mbuf, void *__sized_by(*out_len) * out_buf, size_t *out_len)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_data_len(mbuf_t mbuf, void *__sized_by(*out_len) * out_buf,
+                             size_t *out_len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_data
@@ -339,11 +337,10 @@ __NKE_API_DEPRECATED;
  *               than one mbuf.  In addition, data that is virtually contiguous
  *               might not be represented by physically contiguous pages; see
  *               further comments in `mbuf_data_to_physical'.
- *               To determine the usable length of the data available in this mbuf,
- *               use `mbuf_len', or replace the invocation of `mbuf_data'
- *               with `mbuf_data_len', which will return the length of available
- *               data along with the data pointer.
- *               If the data structure you want to access stradles multiple
+ *               To determine the usable length of the data available in this
+ * mbuf, use `mbuf_len', or replace the invocation of `mbuf_data' with
+ * `mbuf_data_len', which will return the length of available data along with
+ * the data pointer. If the data structure you want to access stradles multiple
  *               mbufs in a chain, the returned length will be smaller than
  *               the expected size. In this case, either use `mbuf_pullup',
  *               which will create an mbuf containing the data structure
@@ -352,54 +349,51 @@ __NKE_API_DEPRECATED;
  *               into a separately allocated buffer with a sufficient capacity.
  *               Using `mbuf_pullup' has the advantage of not having to
  *               copy the data; however if the size of the requred data exceeds
- *               the maximal mbuf size, `mbuf_pullup' will fail, and free the chain.
+ *               the maximal mbuf size, `mbuf_pullup' will fail, and free the
+ * chain.
  *       @warning This function is NOT SAFE to use with `-fbounds-safety'.
  *               Use `mbuf_data_safe' or `mbuf_data_len' instead.
  *               Inside the kernel, the recommended replacement is `mtod'.
  *       @param mbuf The mbuf.
  *       @result A pointer to the data in the mbuf.
  */
-extern void * __unsafe_indexable mbuf_data(mbuf_t mbuf)
-__BOUNDS_SAFETY_DEPRECATED_BY('mbuf_data_safe, mbuf_data_len')
-__NKE_API_DEPRECATED;
+extern void *__unsafe_indexable mbuf_data(mbuf_t mbuf)
+    __BOUNDS_SAFETY_DEPRECATED_BY('mbuf_data_safe, mbuf_data_len')
+        __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_data_safe
- *       @discussion Returns a checked pointer to the start of data in this mbuf.
- *               There may be additional data on chained mbufs. The data you're
- *               looking for may not be virtually contiguous if it spans more
- *               than one mbuf.  In addition, data that is virtually contiguous
- *               might not be represented by physically contiguous pages; see
- *               further comments in `mbuf_data_to_physical'.
- *               To determine the usable length of the data available in this mbuf,
- *               use `mbuf_len', or replace the invocation of `mbuf_data_safe'
- *               with `mbuf_data_len', which will return the length of available
- *               data along with the data pointer.
- *               If the data structure you want to access stradles multiple
+ *       @discussion Returns a checked pointer to the start of data in this
+ * mbuf. There may be additional data on chained mbufs. The data you're looking
+ * for may not be virtually contiguous if it spans more than one mbuf.  In
+ * addition, data that is virtually contiguous might not be represented by
+ * physically contiguous pages; see further comments in `mbuf_data_to_physical'.
+ *               To determine the usable length of the data available in this
+ * mbuf, use `mbuf_len', or replace the invocation of `mbuf_data_safe' with
+ * `mbuf_data_len', which will return the length of available data along with
+ * the data pointer. If the data structure you want to access stradles multiple
  *               mbufs in a chain, the useable data length (see above) will be
  *               smaller than the expected size.
  *               In this case, either use `mbuf_pullup', which will create
  *               a new mbuf with the data structure in a congigous buffer,
  *               or alternatively copy the pieces of the data structure
- *               from the mbufs comprised by the chain into a separately allocated
- *               buffer with a sufficient capacity.
- *               Using `mbuf_pullup' has the advantage of not having to
- *               copy the data; however if the size of the requred data exceeds
- *               the maximal mbuf size, `mbuf_pullup' will fail, and free the chain.
+ *               from the mbufs comprised by the chain into a separately
+ * allocated buffer with a sufficient capacity. Using `mbuf_pullup' has the
+ * advantage of not having to copy the data; however if the size of the requred
+ * data exceeds the maximal mbuf size, `mbuf_pullup' will fail, and free the
+ * chain.
  *       @param mbuf The mbuf.
  *       @result A pointer to the data in the mbuf.
  */
-static inline void * __header_indexable
-mbuf_data_safe(mbuf_t mbuf)
-{
-	size_t len = 0;
-	void * __sized_by(len) buf = 0;
-	errno_t err;
-	err = mbuf_data_len(mbuf, &buf, &len);
-	if (err != 0) {
-		return 0;
-	}
-	return buf;
+static inline void *__header_indexable mbuf_data_safe(mbuf_t mbuf) {
+  size_t len = 0;
+  void *__sized_by(len) buf = 0;
+  errno_t err;
+  err = mbuf_data_len(mbuf, &buf, &len);
+  if (err != 0) {
+    return 0;
+  }
+  return buf;
 }
 #define __KPI_MBUF_HAS_MBUF_DATA_SAFE (1)
 
@@ -414,8 +408,7 @@ mbuf_data_safe(mbuf_t mbuf)
  *       @param mbuf The mbuf.
  *       @result A pointer to smallest possible value for data.
  */
-extern void *mbuf_datastart(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern void *mbuf_datastart(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_setdata
@@ -431,22 +424,21 @@ __NKE_API_DEPRECATED;
  *       @param len The new length of data in the mbuf.
  *       @result 0 on success, errno error on failure.
  */
-extern errno_t mbuf_setdata(mbuf_t mbuf, void *data, size_t len)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_setdata(mbuf_t mbuf, void *data,
+                            size_t len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_align_32
  *       @discussion mbuf_align_32 is a replacement for M_ALIGN and MH_ALIGN.
- *               mbuf_align_32 will set the data pointer to a location aligned on
- *               a four byte boundry with at least 'len' bytes between the data
- *               pointer and the end of the data block.
+ *               mbuf_align_32 will set the data pointer to a location aligned
+ * on a four byte boundry with at least 'len' bytes between the data pointer and
+ * the end of the data block.
  *       @param mbuf The mbuf.
  *       @param len The minimum length of space that should follow the new
  *               data location.
  *       @result 0 on success, errno error on failure.
  */
-extern errno_t mbuf_align_32(mbuf_t mbuf, size_t len)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_align_32(mbuf_t mbuf, size_t len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_data_to_physical
@@ -465,9 +457,7 @@ __NKE_API_DEPRECATED;
  *       @result The 64 bit physical address of the mbuf data or NULL if ptr
  *               does not point to data stored in an mbuf.
  */
-extern addr64_t mbuf_data_to_physical(void *ptr)
-__NKE_API_DEPRECATED;
-
+extern addr64_t mbuf_data_to_physical(void *ptr) __NKE_API_DEPRECATED;
 
 /* Allocation */
 
@@ -479,37 +469,38 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result 0 on success, errno error on failure.
  */
-extern errno_t mbuf_get(mbuf_how_t how, mbuf_type_t type, mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_get(mbuf_how_t how, mbuf_type_t type,
+                        mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_gethdr
  *       @discussion Allocates an mbuf without a cluster for external data.
- *               Sets a flag to indicate there is a packet header and initializes
- *               the packet header.
+ *               Sets a flag to indicate there is a packet header and
+ * initializes the packet header.
  *       @param how Blocking or non-blocking.
  *       @param type The type of the mbuf.
  *       @param mbuf The mbuf.
  *       @result 0 on success, errno error on failure.
  */
-extern errno_t mbuf_gethdr(mbuf_how_t how, mbuf_type_t type, mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_gethdr(mbuf_how_t how, mbuf_type_t type,
+                           mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_attachcluster
- *       @discussion Attach an external buffer as a cluster for an mbuf.  If mbuf
- *               points to a NULL mbuf_t, an mbuf will be allocated for you.  If
- *               mbuf points to a non-NULL mbuf_t, the user-supplied mbuf will
- *               be used instead.  The caller is responsible for allocating the
- *               external buffer by calling mbuf_alloccluster().
+ *       @discussion Attach an external buffer as a cluster for an mbuf.  If
+ * mbuf points to a NULL mbuf_t, an mbuf will be allocated for you.  If mbuf
+ * points to a non-NULL mbuf_t, the user-supplied mbuf will be used instead. The
+ * caller is responsible for allocating the external buffer by calling
+ * mbuf_alloccluster().
  *       @param how Blocking or non-blocking.
- *       @param type The type of the mbuf if mbuf is non-NULL; otherwise ignored.
+ *       @param type The type of the mbuf if mbuf is non-NULL; otherwise
+ * ignored.
  *       @param mbuf Pointer to the address of the mbuf; if NULL, an mbuf will
  *               be allocated, otherwise, it must point to a valid mbuf address.
  *               If the user-supplied mbuf is already attached to a cluster, the
  *               current cluster will be freed before the mbuf gets attached to
- *               the supplied external buffer.  Note that this routine may return
- *               a different mbuf_t than the one you passed in.
+ *               the supplied external buffer.  Note that this routine may
+ * return a different mbuf_t than the one you passed in.
  *       @param extbuf Address of the external buffer.
  *       @param extfree Free routine for the external buffer; the caller is
  *               required to defined a routine that will be invoked when the
@@ -522,9 +513,11 @@ __NKE_API_DEPRECATED;
  *               ENOMEM - Not enough memory available
  */
 extern errno_t mbuf_attachcluster(mbuf_how_t how, mbuf_type_t type,
-    mbuf_t *mbuf, caddr_t extbuf __sized_by_or_null(extsize), void (*extfree)(caddr_t, u_int, caddr_t),
-    size_t extsize, caddr_t extarg)
-__NKE_API_DEPRECATED;
+                                  mbuf_t *mbuf,
+                                  caddr_t extbuf __sized_by_or_null(extsize),
+                                  void (*extfree)(caddr_t, u_int, caddr_t),
+                                  size_t extsize,
+                                  caddr_t extarg) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_alloccluster
@@ -549,8 +542,9 @@ __NKE_API_DEPRECATED;
  *               In this case, the caller is advised to use 4096 bytes or
  *               smaller during subseqent requests.
  */
-extern errno_t mbuf_alloccluster(mbuf_how_t how, size_t *size, char * __sized_by_or_null(*size) * addr)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_alloccluster(mbuf_how_t how, size_t *size,
+                                 char *__sized_by_or_null(*size) *
+                                     addr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_freecluster
@@ -561,8 +555,7 @@ __NKE_API_DEPRECATED;
  *       @param addr The address of the cluster.
  *       @param size The actual size of the cluster.
  */
-extern void mbuf_freecluster(caddr_t addr, size_t size)
-__NKE_API_DEPRECATED;
+extern void mbuf_freecluster(caddr_t addr, size_t size) __NKE_API_DEPRECATED;
 
 #ifdef BSD_KERNEL_PRIVATE
 /*
@@ -570,11 +563,13 @@ __NKE_API_DEPRECATED;
  * used only by the Nexus netif compatibility code.
  */
 extern errno_t mbuf_ring_cluster_alloc(mbuf_how_t how, mbuf_type_t type,
-    mbuf_t *mbuf, void (*extfree)(caddr_t, u_int, caddr_t), size_t *size);
+                                       mbuf_t *mbuf,
+                                       void (*extfree)(caddr_t, u_int, caddr_t),
+                                       size_t *size);
 extern int mbuf_ring_cluster_is_active(mbuf_t mbuf);
 extern errno_t mbuf_ring_cluster_activate(mbuf_t mbuf);
 extern errno_t mbuf_cluster_set_prop(mbuf_t mbuf, u_int32_t oldprop,
-    u_int32_t newprop);
+                                     u_int32_t newprop);
 extern errno_t mbuf_cluster_get_prop(mbuf_t mbuf, u_int32_t *prop);
 
 #endif /* BSD_KERNEL_PRIVATE */
@@ -595,20 +590,16 @@ extern errno_t mbuf_cluster_get_prop(mbuf_t mbuf, u_int32_t *prop);
  *               caller must additionally check for ENOTSUP (see below).
  *       @param mbuf The mbuf the cluster will be attached to.
  *       @result 0 on success, errno error on failure. If you specified NULL
- *               for the mbuf, any intermediate mbuf that may have been allocated
- *               will be freed. If you specify an mbuf value in *mbuf,
- *               mbuf_mclget will not free it.
- *               EINVAL - Invalid parameter
- *               ENOMEM - Not enough memory available
- *               ENOTSUP - The caller had requested greater than 4096 bytes
- *                   cluster and the system is unable to fulfill it due to the
- *                   lack of jumbo clusters support based on the configuration.
- *                   In this case, the caller is advised to use 4096 bytes or
- *                   smaller during subsequent requests.
+ *               for the mbuf, any intermediate mbuf that may have been
+ * allocated will be freed. If you specify an mbuf value in *mbuf, mbuf_mclget
+ * will not free it. EINVAL - Invalid parameter ENOMEM - Not enough memory
+ * available ENOTSUP - The caller had requested greater than 4096 bytes cluster
+ * and the system is unable to fulfill it due to the lack of jumbo clusters
+ * support based on the configuration. In this case, the caller is advised to
+ * use 4096 bytes or smaller during subsequent requests.
  */
 extern errno_t mbuf_getcluster(mbuf_how_t how, mbuf_type_t type, size_t size,
-    mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+                               mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_mclget
@@ -621,12 +612,12 @@ __NKE_API_DEPRECATED;
  *       @param type The type of the mbuf.
  *       @param mbuf The mbuf the cluster will be attached to.
  *       @result 0 on success, errno error on failure. If you specified NULL
- *               for the mbuf, any intermediate mbuf that may have been allocated
- *               will be freed. If you specify an mbuf value in *mbuf,
- *               mbuf_mclget will not free it.
+ *               for the mbuf, any intermediate mbuf that may have been
+ * allocated will be freed. If you specify an mbuf value in *mbuf, mbuf_mclget
+ * will not free it.
  */
-extern errno_t mbuf_mclget(mbuf_how_t how, mbuf_type_t type, mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_mclget(mbuf_how_t how, mbuf_type_t type,
+                           mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_allocpacket
@@ -664,8 +655,8 @@ __NKE_API_DEPRECATED;
  *                   chunks requested
  */
 extern errno_t mbuf_allocpacket(mbuf_how_t how, size_t packetlen,
-    unsigned int * maxchunks, mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+                                unsigned int *maxchunks,
+                                mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_allocpacket_list
@@ -704,8 +695,8 @@ __NKE_API_DEPRECATED;
  *                   chunks requested
  */
 extern errno_t mbuf_allocpacket_list(unsigned int numpkts, mbuf_how_t how,
-    size_t packetlen, unsigned int * maxchunks, mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+                                     size_t packetlen, unsigned int *maxchunks,
+                                     mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_getpacket
@@ -715,8 +706,8 @@ __NKE_API_DEPRECATED;
  *       @param mbuf Upon success, *mbuf will be a reference to the new mbuf.
  *       @result 0 on success, errno error on failure.
  */
-extern errno_t mbuf_getpacket(mbuf_how_t how, mbuf_t *mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_getpacket(mbuf_how_t how,
+                              mbuf_t *mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_free
@@ -725,16 +716,14 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf to free.
  *       @result The next mbuf in the chain.
  */
-extern mbuf_t mbuf_free(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern mbuf_t mbuf_free(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_freem
  *       @discussion Frees a chain of mbufs link through mnext.
  *       @param mbuf The first mbuf in the chain to free.
  */
-extern void mbuf_freem(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern void mbuf_freem(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_freem_list
@@ -743,8 +732,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The first mbuf in the linked list to free.
  *       @result The number of mbufs freed.
  */
-extern int mbuf_freem_list(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern int mbuf_freem_list(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_leadingspace
@@ -753,8 +741,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The number of unused bytes at the start of the mbuf.
  */
-extern size_t mbuf_leadingspace(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern size_t mbuf_leadingspace(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_trailingspace
@@ -763,8 +750,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The number of unused bytes following the current data.
  */
-extern size_t mbuf_trailingspace(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern size_t mbuf_trailingspace(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /* Manipulation */
 
@@ -783,8 +769,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_copym(const mbuf_t src, size_t offset, size_t len,
-    mbuf_how_t how, mbuf_t *new_mbuf)
-__NKE_API_DEPRECATED;
+                          mbuf_how_t how,
+                          mbuf_t *new_mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_dup
@@ -797,8 +783,8 @@ __NKE_API_DEPRECATED;
  *       @param new_mbuf Upon success, the newly allocated mbuf.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_dup(const mbuf_t src, mbuf_how_t how, mbuf_t *new_mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_dup(const mbuf_t src, mbuf_how_t how,
+                        mbuf_t *new_mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_prepend
@@ -813,8 +799,8 @@ __NKE_API_DEPRECATED;
  *       @param how Blocking or non-blocking.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_prepend(mbuf_t *mbuf, size_t len, mbuf_how_t how)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_prepend(mbuf_t *mbuf, size_t len,
+                            mbuf_how_t how) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_split
@@ -830,8 +816,7 @@ __NKE_API_DEPRECATED;
  *               preserved.
  */
 extern errno_t mbuf_split(mbuf_t src, size_t offset, mbuf_how_t how,
-    mbuf_t *new_mbuf)
-__NKE_API_DEPRECATED;
+                          mbuf_t *new_mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pullup
@@ -844,8 +829,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error. In the case of an
  *               error, the mbuf chain has been freed.
  */
-extern errno_t mbuf_pullup(mbuf_t *mbuf, size_t len)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_pullup(mbuf_t *mbuf, size_t len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pulldown
@@ -866,20 +850,18 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_pulldown(mbuf_t src, size_t *offset, size_t length,
-    mbuf_t *location)
-__NKE_API_DEPRECATED;
+                             mbuf_t *location) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_adj
  *       @discussion Trims len bytes from the mbuf. If the length is greater
  *               than zero, the bytes are trimmed from the front of the mbuf. If
- *               the length is less than zero, the bytes are trimmed from the end
- *               of the mbuf chain.
+ *               the length is less than zero, the bytes are trimmed from the
+ * end of the mbuf chain.
  *       @param mbuf The mbuf chain to trim.
  *       @param len The number of bytes to trim from the mbuf chain.
  */
-extern void mbuf_adj(mbuf_t mbuf, int len)
-__NKE_API_DEPRECATED;
+extern void mbuf_adj(mbuf_t mbuf, int len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_adjustlen
@@ -892,8 +874,7 @@ __NKE_API_DEPRECATED;
  *       @param amount The number of bytes increment the length by.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_adjustlen(mbuf_t mbuf, int amount)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_adjustlen(mbuf_t mbuf, int amount) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_concatenate
@@ -912,14 +893,14 @@ __NKE_API_DEPRECATED;
  *               chain.  Otherwise it returns NULL if the original dst mbuf
  *               chain is NULL.
  */
-extern mbuf_t mbuf_concatenate(mbuf_t dst, mbuf_t src)
-__NKE_API_DEPRECATED;
+extern mbuf_t mbuf_concatenate(mbuf_t dst, mbuf_t src) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_copydata
  *       @discussion Copies data out of an mbuf in to a specified buffer. If
  *               the data is stored in a chain of mbufs, the data will be copied
- *               from each mbuf in the chain until length bytes have been copied.
+ *               from each mbuf in the chain until length bytes have been
+ * copied.
  *       @param mbuf The mbuf chain to copy data out of.
  *       @param offset The offset in to the mbuf to start copying.
  *       @param length The number of bytes to copy.
@@ -927,9 +908,9 @@ __NKE_API_DEPRECATED;
  *               copied.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_copydata(const mbuf_t mbuf, size_t offset, size_t length,
-    void *out_data __sized_by_or_null(length))
-__NKE_API_DEPRECATED;
+extern errno_t
+mbuf_copydata(const mbuf_t mbuf, size_t offset, size_t length,
+              void *out_data __sized_by_or_null(length)) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_copyback
@@ -954,20 +935,18 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success, EINVAL or ENOBUFS upon failure.
  */
 extern errno_t mbuf_copyback(mbuf_t mbuf, size_t offset, size_t length,
-    const void *data __sized_by_or_null(length), mbuf_how_t how)
-__NKE_API_DEPRECATED;
+                             const void *data __sized_by_or_null(length),
+                             mbuf_how_t how) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_mclhasreference
- *       @discussion Check if a cluster of an mbuf is referenced by another mbuf.
- *               References may be taken, for example, as a result of a call to
+ *       @discussion Check if a cluster of an mbuf is referenced by another
+ * mbuf. References may be taken, for example, as a result of a call to
  *               mbuf_split or mbuf_copym
  *       @param mbuf The mbuf with the cluster to test.
  *       @result 0 if there is no reference by another mbuf, 1 otherwise.
  */
-extern int mbuf_mclhasreference(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
-
+extern int mbuf_mclhasreference(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /* mbuf header */
 
@@ -977,8 +956,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The next mbuf in the chain.
  */
-extern mbuf_t mbuf_next(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern mbuf_t mbuf_next(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_setnext
@@ -987,8 +965,7 @@ __NKE_API_DEPRECATED;
  *       @param next The new next mbuf.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_setnext(mbuf_t mbuf, mbuf_t next)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_setnext(mbuf_t mbuf, mbuf_t next) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_nextpkt
@@ -996,8 +973,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The nextpkt.
  */
-extern mbuf_t mbuf_nextpkt(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern mbuf_t mbuf_nextpkt(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_setnextpkt
@@ -1005,8 +981,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @param nextpkt The new next packet.
  */
-extern void mbuf_setnextpkt(mbuf_t mbuf, mbuf_t nextpkt)
-__NKE_API_DEPRECATED;
+extern void mbuf_setnextpkt(mbuf_t mbuf, mbuf_t nextpkt) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_len
@@ -1014,8 +989,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The length.
  */
-extern size_t mbuf_len(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern size_t mbuf_len(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_setlen
@@ -1024,8 +998,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @param len The new length.
  */
-extern void mbuf_setlen(mbuf_t mbuf, size_t len)
-__NKE_API_DEPRECATED;
+extern void mbuf_setlen(mbuf_t mbuf, size_t len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_maxlen
@@ -1036,8 +1009,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The maximum lenght of data for this mbuf.
  */
-extern size_t mbuf_maxlen(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern size_t mbuf_maxlen(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_type
@@ -1045,8 +1017,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The type.
  */
-extern mbuf_type_t mbuf_type(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern mbuf_type_t mbuf_type(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_settype
@@ -1055,8 +1026,8 @@ __NKE_API_DEPRECATED;
  *       @param new_type The new type.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_settype(mbuf_t mbuf, mbuf_type_t new_type)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_settype(mbuf_t mbuf,
+                            mbuf_type_t new_type) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_flags
@@ -1064,8 +1035,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf.
  *       @result The flags.
  */
-extern mbuf_flags_t mbuf_flags(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern mbuf_flags_t mbuf_flags(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_setflags
@@ -1075,8 +1045,8 @@ __NKE_API_DEPRECATED;
  *               cleared.  Certain flags such as MBUF_EXT cannot be altered.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_setflags(mbuf_t mbuf, mbuf_flags_t flags)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_setflags(mbuf_t mbuf,
+                             mbuf_flags_t flags) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_setflags_mask
@@ -1089,8 +1059,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_setflags_mask(mbuf_t mbuf, mbuf_flags_t flags,
-    mbuf_flags_t mask)
-__NKE_API_DEPRECATED;
+                                  mbuf_flags_t mask) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_copy_pkthdr
@@ -1099,8 +1068,8 @@ __NKE_API_DEPRECATED;
  *       @param dest The mbuf to which the packet header will be copied.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_copy_pkthdr(mbuf_t dest, const mbuf_t src)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_copy_pkthdr(mbuf_t dest,
+                                const mbuf_t src) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pkthdr_len
@@ -1108,8 +1077,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf containing the packet header
  *       @result The length, in bytes, of the packet.
  */
-extern size_t mbuf_pkthdr_len(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern size_t mbuf_pkthdr_len(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pkthdr_setlen
@@ -1117,8 +1085,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf containing the packet header.
  *       @param len The new length of the packet.
  */
-extern void mbuf_pkthdr_setlen(mbuf_t mbuf, size_t len)
-__NKE_API_DEPRECATED;
+extern void mbuf_pkthdr_setlen(mbuf_t mbuf, size_t len) __NKE_API_DEPRECATED;
 
 #ifdef XNU_KERNEL_PRIVATE
 /*!
@@ -1140,23 +1107,21 @@ extern size_t mbuf_pkthdr_maxlen(const mbuf_t mbuf);
  *       @param amount The number of bytes to adjust the packet header length
  *               field by.
  */
-extern void mbuf_pkthdr_adjustlen(mbuf_t mbuf, int amount)
-__NKE_API_DEPRECATED;
+extern void mbuf_pkthdr_adjustlen(mbuf_t mbuf, int amount) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pkthdr_rcvif
  *       @discussion Returns the interface the packet was received on. This
  *               funciton does not modify the reference count of the interface.
- *               The interface is only valid for as long as the mbuf is not freed
- *               and the rcvif for the mbuf is not changed. Take a reference on
- *               the interface that you will release later before doing any of
- *               the following: free the mbuf, change the rcvif, pass the mbuf to
- *               any function that may free the mbuf or change the rcvif.
+ *               The interface is only valid for as long as the mbuf is not
+ * freed and the rcvif for the mbuf is not changed. Take a reference on the
+ * interface that you will release later before doing any of the following: free
+ * the mbuf, change the rcvif, pass the mbuf to any function that may free the
+ * mbuf or change the rcvif.
  *       @param mbuf The mbuf containing the packet header.
  *       @result A reference to the interface.
  */
-extern ifnet_t mbuf_pkthdr_rcvif(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern ifnet_t mbuf_pkthdr_rcvif(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pkthdr_setrcvif
@@ -1165,8 +1130,8 @@ __NKE_API_DEPRECATED;
  *       @param ifp A reference to an interface.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_pkthdr_setrcvif(mbuf_t mbuf, ifnet_t ifp)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_pkthdr_setrcvif(mbuf_t mbuf,
+                                    ifnet_t ifp) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pkthdr_header
@@ -1174,8 +1139,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf containing the packet header.
  *       @result A pointer to the packet header.
  */
-extern void *mbuf_pkthdr_header(const mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern void *mbuf_pkthdr_header(const mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_pkthdr_setheader
@@ -1183,8 +1147,8 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf containing the packet header.
  *       @param header A pointer to the header.
  */
-extern void mbuf_pkthdr_setheader(mbuf_t mbuf, void *header)
-__NKE_API_DEPRECATED;
+extern void mbuf_pkthdr_setheader(mbuf_t mbuf,
+                                  void *header) __NKE_API_DEPRECATED;
 
 /* Checksums */
 
@@ -1201,27 +1165,25 @@ __NKE_API_DEPRECATED;
  *               original checksum was valid.
  *       @param mbuf The mbuf that has been modified.
  */
-extern void mbuf_inbound_modified(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern void mbuf_inbound_modified(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_outbound_finalize
  *       @discussion This function will "finalize" the packet allowing your
  *               code to inspect the final packet.
  *
- *               There are a number of operations that are performed in hardware,
- *               such as calculating checksums. This function will perform in
+ *               There are a number of operations that are performed in
+ * hardware, such as calculating checksums. This function will perform in
  *               software the various opterations that were scheduled to be done
  *               in hardware. Future operations may include IPsec processing or
- *               vlan support. If you are redirecting a packet to a new interface
- *               which may not have the same hardware support or encapsulating
- *               the packet, you should call this function to force the stack to
- *               calculate and fill out the checksums. This will bypass hardware
- *               checksums but give you a complete packet to work with. If you
- *               need to inspect aspects of the packet which may be generated by
- *               hardware, you must call this function to get an aproximate final
- *               packet. If you plan to modify the packet in any way, you should
- *               call this function.
+ *               vlan support. If you are redirecting a packet to a new
+ * interface which may not have the same hardware support or encapsulating the
+ * packet, you should call this function to force the stack to calculate and
+ * fill out the checksums. This will bypass hardware checksums but give you a
+ * complete packet to work with. If you need to inspect aspects of the packet
+ * which may be generated by hardware, you must call this function to get an
+ * aproximate final packet. If you plan to modify the packet in any way, you
+ * should call this function.
  *
  *               This function should be called before modifying any outbound
  *               packets.
@@ -1240,8 +1202,7 @@ __NKE_API_DEPRECATED;
  *               would be the length of an ethernet header.
  */
 extern void mbuf_outbound_finalize(mbuf_t mbuf, u_int32_t protocol_family,
-    size_t protocol_offset)
-__NKE_API_DEPRECATED;
+                                   size_t protocol_offset) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_set_vlan_tag
@@ -1252,8 +1213,8 @@ __NKE_API_DEPRECATED;
  *       @param vlan The protocol family of the aux data to add.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_set_vlan_tag(mbuf_t mbuf, u_int16_t vlan)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_set_vlan_tag(mbuf_t mbuf,
+                                 u_int16_t vlan) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_get_vlan_tag
@@ -1267,8 +1228,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error. ENXIO indicates
  *               that the vlan tag is not set.
  */
-extern errno_t mbuf_get_vlan_tag(mbuf_t mbuf, u_int16_t *vlan)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_get_vlan_tag(mbuf_t mbuf,
+                                 u_int16_t *vlan) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_clear_vlan_tag
@@ -1277,8 +1238,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf containing the packet.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_clear_vlan_tag(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_clear_vlan_tag(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
@@ -1296,7 +1256,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_set_csum_requested(mbuf_t mbuf,
-    mbuf_csum_request_flags_t request, u_int32_t value);
+                                       mbuf_csum_request_flags_t request,
+                                       u_int32_t value);
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -1310,8 +1271,8 @@ extern errno_t mbuf_set_csum_requested(mbuf_t mbuf,
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_get_csum_requested(mbuf_t mbuf,
-    mbuf_csum_request_flags_t *request, u_int32_t *value)
-__NKE_API_DEPRECATED;
+                                       mbuf_csum_request_flags_t *request,
+                                       u_int32_t *value) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_get_tso_requested
@@ -1324,19 +1285,18 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_get_tso_requested(mbuf_t mbuf,
-    mbuf_tso_request_flags_t *request, u_int32_t *mss)
-__NKE_API_DEPRECATED;
-
+                                      mbuf_tso_request_flags_t *request,
+                                      u_int32_t *mss) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 
 enum {
-	MBUF_GSO_TYPE_NONE      = 0,
-	MBUF_GSO_TYPE_IPV4      = 1,
-	MBUF_GSO_TYPE_IPV6      = 2,
+  MBUF_GSO_TYPE_NONE = 0,
+  MBUF_GSO_TYPE_IPV4 = 1,
+  MBUF_GSO_TYPE_IPV6 = 2,
 };
 
-#define MBUF_GSO_TYPE_NONE      MBUF_GSO_TYPE_NONE
+#define MBUF_GSO_TYPE_NONE MBUF_GSO_TYPE_NONE
 
 typedef uint8_t mbuf_gso_type_t;
 
@@ -1356,8 +1316,8 @@ typedef uint8_t mbuf_gso_type_t;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_get_gso_info(mbuf_t mbuf, mbuf_gso_type_t *type,
-    uint16_t *seg_size, uint16_t *hdr_len)
-__NKE_API_DEPRECATED;
+                                 uint16_t *seg_size,
+                                 uint16_t *hdr_len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_set_gso_info
@@ -1371,9 +1331,9 @@ __NKE_API_DEPRECATED;
  *       @param hdr_len The protocol (e.g. IP+TCP) header size.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_set_gso_info(mbuf_t mbuf,
-    mbuf_gso_type_t type, uint16_t seg_size, uint16_t hdr_len)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_set_gso_info(mbuf_t mbuf, mbuf_gso_type_t type,
+                                 uint16_t seg_size,
+                                 uint16_t hdr_len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_get_lro_info
@@ -1386,8 +1346,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_get_lro_info(mbuf_t mbuf, uint8_t *seg_cnt,
-    uint8_t *dup_ack_cnt)
-__NKE_API_DEPRECATED;
+                                 uint8_t *dup_ack_cnt) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_set_lro_info
@@ -1399,8 +1358,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_set_lro_info(mbuf_t mbuf, uint8_t seg_cnt,
-    uint8_t dup_ack_cnt)
-__NKE_API_DEPRECATED;
+                                 uint8_t dup_ack_cnt) __NKE_API_DEPRECATED;
 
 #endif /* KERNEL_PRIVATE */
 
@@ -1410,8 +1368,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf containing the packet.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_clear_csum_requested(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_clear_csum_requested(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_set_csum_performed
@@ -1426,8 +1383,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_set_csum_performed(mbuf_t mbuf,
-    mbuf_csum_performed_flags_t flags, u_int32_t value)
-__NKE_API_DEPRECATED;
+                                       mbuf_csum_performed_flags_t flags,
+                                       u_int32_t value) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -1443,7 +1400,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_get_csum_performed(mbuf_t mbuf,
-    mbuf_csum_performed_flags_t *flags, u_int32_t *value);
+                                       mbuf_csum_performed_flags_t *flags,
+                                       u_int32_t *value);
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -1454,8 +1412,7 @@ extern errno_t mbuf_get_csum_performed(mbuf_t mbuf,
  *               legacy MLEN macro.
  *       @result	The number of bytes of available data.
  */
-extern u_int32_t mbuf_get_mlen(void)
-__NKE_API_DEPRECATED;
+extern u_int32_t mbuf_get_mlen(void) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_get_mhlen
@@ -1463,18 +1420,17 @@ __NKE_API_DEPRECATED;
  *               header mbuf.  This is equivalent to the legacy MHLEN macro.
  *       @result	The number of bytes of available data.
  */
-extern u_int32_t mbuf_get_mhlen(void)
-__NKE_API_DEPRECATED;
+extern u_int32_t mbuf_get_mhlen(void) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_get_minclsize
  *       @discussion This routine returns the minimum number of data bytes
  *               before an external cluster is used.  This is equivalent to the
  *               legacy MINCLSIZE macro.
- *       @result	The minimum number of bytes before a cluster will be used.
+ *       @result	The minimum number of bytes before a cluster will be
+ * used.
  */
-extern u_int32_t mbuf_get_minclsize(void)
-__NKE_API_DEPRECATED;
+extern u_int32_t mbuf_get_minclsize(void) __NKE_API_DEPRECATED;
 
 #ifdef XNU_KERNEL_PRIVATE
 /*
@@ -1491,8 +1447,7 @@ extern u_int32_t mbuf_get_msize(void);
  *       @param mbuf The mbuf containing the packet.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_clear_csum_performed(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern errno_t mbuf_clear_csum_performed(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_inet_cksum
@@ -1521,8 +1476,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_inet_cksum(mbuf_t mbuf, int protocol, u_int32_t offset,
-    u_int32_t length, u_int16_t *csum)
-__NKE_API_DEPRECATED;
+                               u_int32_t length,
+                               u_int16_t *csum) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_inet6_cksum
@@ -1551,8 +1506,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_inet6_cksum(mbuf_t mbuf, int protocol, u_int32_t offset,
-    u_int32_t length, u_int16_t *csum)
-__NKE_API_DEPRECATED;
+                                u_int32_t length,
+                                u_int16_t *csum) __NKE_API_DEPRECATED;
 
 /* mbuf tags */
 
@@ -1560,23 +1515,22 @@ __NKE_API_DEPRECATED;
  *       @function mbuf_tag_id_find
  *       @discussion Lookup the module id for a string. If there is no module
  *               id assigned to this string, a new module id will be assigned.
- *               The string should be the bundle id of the kext. In the case of a
- *               tag that will be shared across multiple kexts, a common bundle
- *               id style string should be used.
+ *               The string should be the bundle id of the kext. In the case of
+ * a tag that will be shared across multiple kexts, a common bundle id style
+ * string should be used.
  *
- *               The lookup operation is not optimized. A module should call this
- *               function once during startup and chache the module id. The
- *               module id will not be resassigned until the machine reboots.
+ *               The lookup operation is not optimized. A module should call
+ * this function once during startup and chache the module id. The module id
+ * will not be resassigned until the machine reboots.
  *       @param module_string A unique string identifying your module.
  *               Example: com.apple.nke.SharedIP.
  *       @param module_id Upon return, a unique identifier for use with
- *               mbuf_tag_* functions. This identifier is valid until the machine
- *               is rebooted.
+ *               mbuf_tag_* functions. This identifier is valid until the
+ * machine is rebooted.
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_tag_id_find(const char *module_string,
-    mbuf_tag_id_t *module_id)
-__NKE_API_DEPRECATED;
+                                mbuf_tag_id_t *module_id) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_tag_allocate
@@ -1600,8 +1554,9 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_tag_allocate(mbuf_t mbuf, mbuf_tag_id_t module_id,
-    mbuf_tag_type_t type, size_t length, mbuf_how_t how, void **data_p)
-__NKE_API_DEPRECATED;
+                                 mbuf_tag_type_t type, size_t length,
+                                 mbuf_how_t how,
+                                 void **data_p) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_tag_find
@@ -1616,8 +1571,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_tag_find(mbuf_t mbuf, mbuf_tag_id_t module_id,
-    mbuf_tag_type_t type, size_t *length, void **data_p)
-__NKE_API_DEPRECATED;
+                             mbuf_tag_type_t type, size_t *length,
+                             void **data_p) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_tag_free
@@ -1627,8 +1582,7 @@ __NKE_API_DEPRECATED;
  *       @param type The type of the tag to free.
  */
 extern void mbuf_tag_free(mbuf_t mbuf, mbuf_tag_id_t module_id,
-    mbuf_tag_type_t type)
-__NKE_API_DEPRECATED;
+                          mbuf_tag_type_t type) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
@@ -1655,8 +1609,9 @@ __NKE_API_DEPRECATED;
  *               space allocated for the data.  Caller may set this to NULL.
  *       @result 0 upon success otherwise the errno error.
  */
-extern errno_t mbuf_add_drvaux(mbuf_t mbuf, mbuf_how_t how,
-    u_int32_t family, u_int32_t subfamily, size_t length, void **data_p);
+extern errno_t mbuf_add_drvaux(mbuf_t mbuf, mbuf_how_t how, u_int32_t family,
+                               u_int32_t subfamily, size_t length,
+                               void **data_p);
 
 /*!
  *       @function mbuf_find_drvaux
@@ -1676,7 +1631,8 @@ extern errno_t mbuf_add_drvaux(mbuf_t mbuf, mbuf_how_t how,
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_find_drvaux(mbuf_t mbuf, u_int32_t *family_p,
-    u_int32_t *subfamily_p, u_int32_t *length_p, void **data_p);
+                                u_int32_t *subfamily_p, u_int32_t *length_p,
+                                void **data_p);
 
 /*!
  *       @function mbuf_del_drvaux
@@ -1694,31 +1650,30 @@ extern void mbuf_del_drvaux(mbuf_t mbuf);
  *       @discussion Get the mbuf statistics.
  *       @param stats Storage to copy the stats in to.
  */
-extern void mbuf_stats(struct mbuf_stat *stats)
-__NKE_API_DEPRECATED;
-
+extern void mbuf_stats(struct mbuf_stat *stats) __NKE_API_DEPRECATED;
 
 /*!
  *       @enum mbuf_traffic_class_t
  *       @abstract Traffic class of a packet
- *       @discussion Property that represent the category of traffic of a packet.
- *               This information may be used by the driver and at the link level.
+ *       @discussion Property that represent the category of traffic of a
+ * packet. This information may be used by the driver and at the link level.
  *       @constant MBUF_TC_BE Best effort, normal class.
  *       @constant MBUF_TC_BK Background, low priority or bulk traffic.
  *       @constant MBUF_TC_VI Interactive video, constant bit rate, low latency.
- *       @constant MBUF_TC_VO Interactive voice, constant bit rate, lowest latency.
+ *       @constant MBUF_TC_VO Interactive voice, constant bit rate, lowest
+ * latency.
  */
 typedef enum {
 #ifdef XNU_KERNEL_PRIVATE
-	MBUF_TC_UNSPEC  = -1,           /* Internal: not specified */
+  MBUF_TC_UNSPEC = -1, /* Internal: not specified */
 #endif
-	MBUF_TC_BE              = 0,
-	MBUF_TC_BK              = 1,
-	MBUF_TC_VI              = 2,
-	MBUF_TC_VO              = 3
+  MBUF_TC_BE = 0,
+  MBUF_TC_BK = 1,
+  MBUF_TC_VI = 2,
+  MBUF_TC_VO = 3
 #ifdef XNU_KERNEL_PRIVATE
-	,
-	MBUF_TC_MAX             = 4     /* Internal: traffic class count */
+  ,
+  MBUF_TC_MAX = 4 /* Internal: traffic class count */
 #endif
 } mbuf_traffic_class_t;
 
@@ -1728,8 +1683,8 @@ typedef enum {
  *       @param mbuf The mbuf to get the traffic class of.
  *       @result The traffic class
  */
-extern mbuf_traffic_class_t mbuf_get_traffic_class(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern mbuf_traffic_class_t
+mbuf_get_traffic_class(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_set_traffic_class
@@ -1739,7 +1694,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success, EINVAL if bad parameter is passed
  */
 extern errno_t mbuf_set_traffic_class(mbuf_t mbuf, mbuf_traffic_class_t tc)
-__NKE_API_DEPRECATED;
+    __NKE_API_DEPRECATED;
 
 /*!
  *       @function mbuf_is_traffic_class_privileged
@@ -1748,8 +1703,7 @@ __NKE_API_DEPRECATED;
  *       @param mbuf The mbuf to retrieve the status from.
  *       @result Non-zero if privileged, 0 otherwise.
  */
-extern int mbuf_is_traffic_class_privileged(mbuf_t mbuf)
-__NKE_API_DEPRECATED;
+extern int mbuf_is_traffic_class_privileged(mbuf_t mbuf) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 
@@ -1768,7 +1722,7 @@ extern u_int32_t mbuf_get_traffic_class_max_count(void);
  *       @result 0 on success, EINVAL if bad parameter is passed
  */
 extern errno_t mbuf_get_traffic_class_index(mbuf_traffic_class_t tc,
-    u_int32_t *index);
+                                            u_int32_t *index);
 
 /*!
  *       @enum mbuf_svc_class_t
@@ -1815,22 +1769,22 @@ extern errno_t mbuf_get_traffic_class_index(mbuf_traffic_class_t tc,
  */
 typedef enum {
 #ifdef XNU_KERNEL_PRIVATE
-	MBUF_SC_UNSPEC          = -1,           /* Internal: not specified */
+  MBUF_SC_UNSPEC = -1, /* Internal: not specified */
 #endif
-	MBUF_SC_BK_SYS          = 0x00080090,   /* lowest class */
-	MBUF_SC_BK              = 0x00100080,
+  MBUF_SC_BK_SYS = 0x00080090, /* lowest class */
+  MBUF_SC_BK = 0x00100080,
 
-	MBUF_SC_BE              = 0x00000000,
-	MBUF_SC_RD              = 0x00180010,
-	MBUF_SC_OAM             = 0x00200020,
+  MBUF_SC_BE = 0x00000000,
+  MBUF_SC_RD = 0x00180010,
+  MBUF_SC_OAM = 0x00200020,
 
-	MBUF_SC_AV              = 0x00280120,
-	MBUF_SC_RV              = 0x00300110,
-	MBUF_SC_VI              = 0x00380100,
-	MBUF_SC_SIG             = 0x00380130,
+  MBUF_SC_AV = 0x00280120,
+  MBUF_SC_RV = 0x00300110,
+  MBUF_SC_VI = 0x00380100,
+  MBUF_SC_SIG = 0x00380130,
 
-	MBUF_SC_VO              = 0x00400180,
-	MBUF_SC_CTL             = 0x00480190,   /* highest class */
+  MBUF_SC_VO = 0x00400180,
+  MBUF_SC_CTL = 0x00480190, /* highest class */
 } mbuf_svc_class_t;
 
 /*!
@@ -1848,7 +1802,7 @@ extern u_int32_t mbuf_get_service_class_max_count(void);
  *       @result 0 on success, EINVAL if bad parameter is passed
  */
 extern errno_t mbuf_get_service_class_index(mbuf_svc_class_t sc,
-    u_int32_t *index);
+                                            u_int32_t *index);
 
 /*!
  *       @function mbuf_get_service_class
@@ -1888,8 +1842,8 @@ extern int mbuf_is_service_class_privileged(mbuf_t mbuf);
  *               the default IPv6 router.
  */
 enum {
-	MBUF_PKTAUXF_INET_RESOLVE_RTR   = 0x0004,
-	MBUF_PKTAUXF_INET6_RESOLVE_RTR  = 0x0008,
+  MBUF_PKTAUXF_INET_RESOLVE_RTR = 0x0004,
+  MBUF_PKTAUXF_INET6_RESOLVE_RTR = 0x0008,
 };
 typedef u_int32_t mbuf_pkthdr_aux_flags_t;
 
@@ -1901,7 +1855,7 @@ typedef u_int32_t mbuf_pkthdr_aux_flags_t;
  *       @result 0 upon success otherwise the errno error.
  */
 extern errno_t mbuf_pkthdr_aux_flags(mbuf_t mbuf,
-    mbuf_pkthdr_aux_flags_t *paux_flags);
+                                     mbuf_pkthdr_aux_flags_t *paux_flags);
 
 /*!
  *       @function mbuf_get_driver_scratch
@@ -1914,7 +1868,7 @@ extern errno_t mbuf_pkthdr_aux_flags(mbuf_t mbuf,
  *               the memory location.
  */
 extern errno_t mbuf_get_driver_scratch(mbuf_t m, u_int8_t **area,
-    size_t *area_ln);
+                                       size_t *area_ln);
 
 /*!
  *       @function mbuf_get_unsent_data_bytes
@@ -1930,11 +1884,11 @@ extern errno_t mbuf_get_driver_scratch(mbuf_t m, u_int8_t **area,
  *               code will be EINVAL
  */
 extern errno_t mbuf_get_unsent_data_bytes(const mbuf_t m,
-    u_int32_t *unsent_data);
+                                          u_int32_t *unsent_data);
 
 typedef struct {
-	int32_t buf_interface; /* data to send at interface */
-	int32_t buf_sndbuf; /* data to send at socket buffer */
+  int32_t buf_interface; /* data to send at interface */
+  int32_t buf_sndbuf;    /* data to send at socket buffer */
 } mbuf_buffer_status_t;
 
 /*!
@@ -1951,7 +1905,7 @@ typedef struct {
  *               EINVAL will be returned
  */
 extern errno_t mbuf_get_buffer_status(const mbuf_t m,
-    mbuf_buffer_status_t *buf_status);
+                                      mbuf_buffer_status_t *buf_status);
 
 /*!
  *       @function mbuf_pkt_new_flow
@@ -1997,9 +1951,9 @@ extern size_t mbuf_pkt_list_len(const mbuf_t mbuf);
 /*!
  *       @function mbuf_pkt_list_maxlen
  *       @discussion Retrieves the maximum length of data that may be stored
- *               in the list of mbuf packet. This value assumes that the data pointer
- *               was set to the start of the possible range for that pointer
- *               for each mbuf in the packet chain
+ *               in the list of mbuf packet. This value assumes that the data
+ * pointer was set to the start of the possible range for that pointer for each
+ * mbuf in the packet chain
  *       @param mbuf The mbuf.
  *       @result The maximum length of data for this mbuf.
  */
@@ -2052,7 +2006,9 @@ extern errno_t mbuf_set_timestamp(mbuf_t mbuf, u_int64_t ts, boolean_t valid);
  */
 
 typedef void (*mbuf_tx_compl_func)(uintptr_t pktid, ifnet_t ifp, u_int64_t ts,
-    uintptr_t tx_compl_arg, uintptr_t tx_compl_data, kern_return_t tx_compl_val);
+                                   uintptr_t tx_compl_arg,
+                                   uintptr_t tx_compl_data,
+                                   kern_return_t tx_compl_val);
 
 /*!
  *       @function mbuf_register_tx_compl_callback
@@ -2065,8 +2021,7 @@ typedef void (*mbuf_tx_compl_func)(uintptr_t pktid, ifnet_t ifp, u_int64_t ts,
  *               the function pointer is invalid. EEXIST is returned when
  *               the function pointer is already registered.
  */
-extern errno_t mbuf_register_tx_compl_callback(
-	mbuf_tx_compl_func callback);
+extern errno_t mbuf_register_tx_compl_callback(mbuf_tx_compl_func callback);
 
 /*!
  *       @function mbuf_unregister_tx_compl_callback
@@ -2078,8 +2033,7 @@ extern errno_t mbuf_register_tx_compl_callback(
  *               when the function pointer is invalid. ENOENT is returned when
  *               the function pointer is not registered.
  */
-extern errno_t mbuf_unregister_tx_compl_callback(
-	mbuf_tx_compl_func callback);
+extern errno_t mbuf_unregister_tx_compl_callback(mbuf_tx_compl_func callback);
 
 /*!
  *       @function mbuf_get_timestamp_requested
@@ -2107,8 +2061,8 @@ extern errno_t mbuf_get_timestamp_requested(mbuf_t mbuf, boolean_t *requested);
  *               if the mbuf is not a valid packet or if one of the parameter
  *               is NULL. ENOENT if the callback is not registred.
  */
-extern errno_t mbuf_set_timestamp_requested(mbuf_t mbuf,
-    uintptr_t *pktid, mbuf_tx_compl_func callback);
+extern errno_t mbuf_set_timestamp_requested(mbuf_t mbuf, uintptr_t *pktid,
+                                            mbuf_tx_compl_func callback);
 
 /*!
  *       @function mbuf_get_status
@@ -2143,7 +2097,7 @@ extern errno_t mbuf_set_status(mbuf_t mbuf, kern_return_t status);
  *               code will be EINVAL
  */
 extern errno_t mbuf_get_tx_compl_data(mbuf_t m, uintptr_t *arg,
-    uintptr_t *data);
+                                      uintptr_t *data);
 
 /*!
  *       @function mbuf_set_tx_compl_data
@@ -2153,8 +2107,7 @@ extern errno_t mbuf_get_tx_compl_data(mbuf_t m, uintptr_t *arg,
  *               packet header does not have valid data bytes, the error
  *               code will be EINVAL
  */
-extern errno_t mbuf_set_tx_compl_data(mbuf_t m, uintptr_t arg,
-    uintptr_t data);
+extern errno_t mbuf_set_tx_compl_data(mbuf_t m, uintptr_t arg, uintptr_t data);
 
 /*!
  *       @function mbuf_get_flowid
@@ -2209,7 +2162,8 @@ extern errno_t mbuf_set_keepalive_flag(mbuf_t mbuf, boolean_t is_keepalive);
  *               packet header does not have valid data bytes, the error
  *               code will be EINVAL.
  */
-extern errno_t mbuf_get_wake_packet_flag(mbuf_t mbuf, boolean_t *is_wake_packet);
+extern errno_t mbuf_get_wake_packet_flag(mbuf_t mbuf,
+                                         boolean_t *is_wake_packet);
 
 /*!
  *       @function mbuf_set_wake_packet_flag
@@ -2226,33 +2180,36 @@ extern errno_t mbuf_set_wake_packet_flag(mbuf_t mbuf, boolean_t is_wake_packet);
 
 /* IF_QUEUE interaction */
 
-#define IF_ENQUEUE_MBUF(ifq, m) {                                       \
-	mbuf_setnextpkt((m), 0);                                        \
-	if ((ifq)->ifq_tail == 0)                                       \
-	        (ifq)->ifq_head = (m);                                  \
-	else                                                            \
-	        mbuf_setnextpkt((mbuf_t)(ifq)->ifq_tail, (m));          \
-	(ifq)->ifq_tail = (m);                                          \
-	(ifq)->ifq_len++;                                               \
-}
+#define IF_ENQUEUE_MBUF(ifq, m)                                                \
+  {                                                                            \
+    mbuf_setnextpkt((m), 0);                                                   \
+    if ((ifq)->ifq_tail == 0)                                                  \
+      (ifq)->ifq_head = (m);                                                   \
+    else                                                                       \
+      mbuf_setnextpkt((mbuf_t)(ifq)->ifq_tail, (m));                           \
+    (ifq)->ifq_tail = (m);                                                     \
+    (ifq)->ifq_len++;                                                          \
+  }
 
-#define IF_PREPEND_MBUF(ifq, m) {                                       \
-	mbuf_setnextpkt((m), (ifq)->ifq_head);                          \
-	if ((ifq)->ifq_tail == 0)                                       \
-	        (ifq)->ifq_tail = (m);                                  \
-	(ifq)->ifq_head = (m);                                          \
-	(ifq)->ifq_len++;                                               \
-}
+#define IF_PREPEND_MBUF(ifq, m)                                                \
+  {                                                                            \
+    mbuf_setnextpkt((m), (ifq)->ifq_head);                                     \
+    if ((ifq)->ifq_tail == 0)                                                  \
+      (ifq)->ifq_tail = (m);                                                   \
+    (ifq)->ifq_head = (m);                                                     \
+    (ifq)->ifq_len++;                                                          \
+  }
 
-#define IF_DEQUEUE_MBUF(ifq, m) {                                       \
-	(m) = (ifq)->ifq_head;                                          \
-	if (m) {                                                        \
-	        if (((ifq)->ifq_head = mbuf_nextpkt((m))) == 0)         \
-	                (ifq)->ifq_tail = 0;                            \
-	        mbuf_setnextpkt((m), 0);                                \
-	        (ifq)->ifq_len--;                                       \
-	}                                                               \
-}
+#define IF_DEQUEUE_MBUF(ifq, m)                                                \
+  {                                                                            \
+    (m) = (ifq)->ifq_head;                                                     \
+    if (m) {                                                                   \
+      if (((ifq)->ifq_head = mbuf_nextpkt((m))) == 0)                          \
+        (ifq)->ifq_tail = 0;                                                   \
+      mbuf_setnextpkt((m), 0);                                                 \
+      (ifq)->ifq_len--;                                                        \
+    }                                                                          \
+  }
 
 __END_DECLS
 #undef __NKE_API_DEPRECATED

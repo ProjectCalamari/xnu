@@ -27,8 +27,6 @@
  */
 /*	@(#)semaphore.h	1.0	2/29/00		*/
 
-
-
 /*
  * semaphore.h - POSIX semaphores
  *
@@ -52,17 +50,17 @@ typedef int sem_t;
 __BEGIN_DECLS
 int sem_close(sem_t *);
 int sem_destroy(sem_t *) __deprecated;
-int sem_getvalue(sem_t * __restrict, int * __restrict) __deprecated;
+int sem_getvalue(sem_t *__restrict, int *__restrict) __deprecated;
 int sem_init(sem_t *, int, unsigned int) __deprecated;
-sem_t * sem_open(const char *, int, ...);
+sem_t *sem_open(const char *, int, ...);
 int sem_post(sem_t *);
 int sem_trywait(sem_t *);
 int sem_unlink(const char *);
 int sem_wait(sem_t *) __DARWIN_ALIAS_C(sem_wait);
 __END_DECLS
 
-#else   /* KERNEL */
+#else  /* KERNEL */
 void psem_cache_init(void);
-#endif  /* KERNEL */
+#endif /* KERNEL */
 
-#endif  /* _SYS_SEMAPHORE_H_ */
+#endif /* _SYS_SEMAPHORE_H_ */

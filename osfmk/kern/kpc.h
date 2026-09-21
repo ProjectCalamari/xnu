@@ -39,44 +39,48 @@ __BEGIN_DECLS
 typedef uint64_t kpc_config_t;
 
 /* cross-platform class constants */
-#define KPC_CLASS_FIXED         (0)
-#define KPC_CLASS_CONFIGURABLE  (1)
-#define KPC_CLASS_POWER         (2)
-#define KPC_CLASS_RAWPMU        (3)
+#define KPC_CLASS_FIXED (0)
+#define KPC_CLASS_CONFIGURABLE (1)
+#define KPC_CLASS_POWER (2)
+#define KPC_CLASS_RAWPMU (3)
 
-#define KPC_CLASS_FIXED_MASK         (1u << KPC_CLASS_FIXED)
-#define KPC_CLASS_CONFIGURABLE_MASK  (1u << KPC_CLASS_CONFIGURABLE)
-#define KPC_CLASS_POWER_MASK         (1u << KPC_CLASS_POWER)
-#define KPC_CLASS_RAWPMU_MASK        (1u << KPC_CLASS_RAWPMU)
+#define KPC_CLASS_FIXED_MASK (1u << KPC_CLASS_FIXED)
+#define KPC_CLASS_CONFIGURABLE_MASK (1u << KPC_CLASS_CONFIGURABLE)
+#define KPC_CLASS_POWER_MASK (1u << KPC_CLASS_POWER)
+#define KPC_CLASS_RAWPMU_MASK (1u << KPC_CLASS_RAWPMU)
 
-#define KPC_PMU_ERROR     (0)
-#define KPC_PMU_INTEL_V3  (1)
+#define KPC_PMU_ERROR (0)
+#define KPC_PMU_INTEL_V3 (1)
 #define KPC_PMU_ARM_APPLE (2)
-#define KPC_PMU_INTEL_V2  (3)
-#define KPC_PMU_ARM_V2    (4)
+#define KPC_PMU_INTEL_V2 (3)
+#define KPC_PMU_ARM_V2 (4)
 
 #define KPC_ALL_CPUS (1u << 31)
 
 /* action id setters/getters */
-#define FIXED_ACTIONID(ctr)                     (kpc_actionid[(ctr)])
-#define CONFIGURABLE_ACTIONID(ctr)              (kpc_actionid[(ctr) + kpc_fixed_count()])
+#define FIXED_ACTIONID(ctr) (kpc_actionid[(ctr)])
+#define CONFIGURABLE_ACTIONID(ctr) (kpc_actionid[(ctr) + kpc_fixed_count()])
 
 /* reload counter setters/getters */
-#define FIXED_RELOAD(ctr)                       (current_cpu_datap()->cpu_kpc_reload[(ctr)])
-#define FIXED_RELOAD_CPU(cpu, ctr)              (cpu_datap(cpu)->cpu_kpc_reload[(ctr)])
-#define CONFIGURABLE_RELOAD(ctr)                (current_cpu_datap()->cpu_kpc_reload[(ctr) + kpc_fixed_count()])
-#define CONFIGURABLE_RELOAD_CPU(cpu, ctr)       (cpu_datap(cpu)->cpu_kpc_reload[(ctr) + kpc_fixed_count()])
+#define FIXED_RELOAD(ctr) (current_cpu_datap()->cpu_kpc_reload[(ctr)])
+#define FIXED_RELOAD_CPU(cpu, ctr) (cpu_datap(cpu)->cpu_kpc_reload[(ctr)])
+#define CONFIGURABLE_RELOAD(ctr)                                               \
+  (current_cpu_datap()->cpu_kpc_reload[(ctr) + kpc_fixed_count()])
+#define CONFIGURABLE_RELOAD_CPU(cpu, ctr)                                      \
+  (cpu_datap(cpu)->cpu_kpc_reload[(ctr) + kpc_fixed_count()])
 
 /* shadow counter setters/getters */
-#define FIXED_SHADOW(ctr)                       (current_cpu_datap()->cpu_kpc_shadow[(ctr)])
-#define FIXED_SHADOW_CPU(cpu, ctr)              (cpu_datap(cpu)->cpu_kpc_shadow[(ctr)])
-#define CONFIGURABLE_SHADOW(ctr)                (current_cpu_datap()->cpu_kpc_shadow[(ctr) + kpc_fixed_count()])
-#define CONFIGURABLE_SHADOW_CPU(cpu, ctr)       (cpu_datap(cpu)->cpu_kpc_shadow[(ctr) + kpc_fixed_count()])
+#define FIXED_SHADOW(ctr) (current_cpu_datap()->cpu_kpc_shadow[(ctr)])
+#define FIXED_SHADOW_CPU(cpu, ctr) (cpu_datap(cpu)->cpu_kpc_shadow[(ctr)])
+#define CONFIGURABLE_SHADOW(ctr)                                               \
+  (current_cpu_datap()->cpu_kpc_shadow[(ctr) + kpc_fixed_count()])
+#define CONFIGURABLE_SHADOW_CPU(cpu, ctr)                                      \
+  (cpu_datap(cpu)->cpu_kpc_shadow[(ctr) + kpc_fixed_count()])
 
 /**
  * Callback for notification when PMCs are acquired/released by a task. The
- * argument is equal to TRUE if the Power Manager (PM) can use its reserved PMCs.
- * Otherwise, the argument is equal to FALSE.
+ * argument is equal to TRUE if the Power Manager (PM) can use its reserved
+ * PMCs. Otherwise, the argument is equal to FALSE.
  */
 typedef void (*kpc_pm_handler_t)(boolean_t);
 
@@ -108,11 +112,11 @@ extern int kpc_set_running(uint32_t classes);
 
 /* Read CPU counters */
 extern int kpc_get_cpu_counters(boolean_t all_cpus, uint32_t classes,
-    int *curcpu, uint64_t *buf);
+                                int *curcpu, uint64_t *buf);
 
 /* Read shadow counters */
-extern int kpc_get_shadow_counters( boolean_t all_cpus, uint32_t classes,
-    int *curcpu, uint64_t *buf );
+extern int kpc_get_shadow_counters(boolean_t all_cpus, uint32_t classes,
+                                   int *curcpu, uint64_t *buf);
 
 /* Read current thread's counter accumulations */
 extern int kpc_get_curthread_counters(uint32_t *inoutcount, uint64_t *buf);
@@ -123,7 +127,7 @@ extern uint32_t kpc_get_config_count(uint32_t classes);
 
 /* enable/disable thread counting */
 extern uint32_t kpc_get_thread_counting(void);
-extern int      kpc_set_thread_counting(uint32_t classes);
+extern int kpc_set_thread_counting(uint32_t classes);
 
 /* get and set config registers */
 extern int kpc_get_config(uint32_t classes, kpc_config_t *current_config);
@@ -143,14 +147,14 @@ extern void kpc_thread_destroy(thread_t thread);
 
 /* allocate a buffer big enough for all counters */
 extern uint64_t *kpc_counterbuf_alloc(void);
-extern void      kpc_counterbuf_free(uint64_t*);
-extern uint32_t  kpc_get_counterbuf_size(void);
+extern void kpc_counterbuf_free(uint64_t *);
+extern uint32_t kpc_get_counterbuf_size(void);
 
 /* whether we're currently accounting into threads */
 extern int kpc_threads_counting;
 
 /* AST callback for KPC */
-extern void kpc_thread_ast_handler( thread_t thread );
+extern void kpc_thread_ast_handler(thread_t thread);
 
 #if XNU_KERNEL_PRIVATE
 int kpc_set_config_kernel(uint32_t classes, kpc_config_t *new_config);
@@ -165,24 +169,23 @@ extern boolean_t kpc_off_cpu_active;
 extern void kpc_off_cpu_internal(thread_t thread);
 extern void kpc_off_cpu_update(void);
 
-static inline void
-kpc_off_cpu(thread_t thread)
-{
-	if (__improbable(kpc_off_cpu_active)) {
-		kpc_off_cpu_internal(thread);
-	}
+static inline void kpc_off_cpu(thread_t thread) {
+  if (__improbable(kpc_off_cpu_active)) {
+    kpc_off_cpu_internal(thread);
+  }
 }
 
 #endif /* defined(MACH_KERNEL_PRIVATE) */
 
 /* acquire/release the counters used by the Power Manager */
-extern int kpc_force_all_ctrs( task_t task, int val );
-extern int kpc_get_force_all_ctrs( void );
+extern int kpc_force_all_ctrs(task_t task, int val);
+extern int kpc_get_force_all_ctrs(void);
 
-/* arch-specific routine for acquire/release the counters used by the Power Manager */
-extern int kpc_force_all_ctrs_arch( task_t task, int val );
+/* arch-specific routine for acquire/release the counters used by the Power
+ * Manager */
+extern int kpc_force_all_ctrs_arch(task_t task, int val);
 
-extern int kpc_set_sw_inc( uint32_t mask );
+extern int kpc_set_sw_inc(uint32_t mask);
 
 /*
  * Register the Power Manager as a PMCs user.
@@ -206,8 +209,8 @@ extern boolean_t kpc_register_pm_handler(void (*handler)(boolean_t));
  * Power management must acknowledge the change using kpc_pm_acknowledge.
  *
  * @param pmc_mask
- * Bitmask of the configurable PMCs used by the Power Manager. The number of bits
- * set must less or equal than the number of configurable counters
+ * Bitmask of the configurable PMCs used by the Power Manager. The number of
+ * bits set must less or equal than the number of configurable counters
  * available on the SoC.
  *
  * @param custom_config
@@ -219,8 +222,9 @@ extern boolean_t kpc_register_pm_handler(void (*handler)(boolean_t));
  * FALSE if a task has acquired all the PMCs, otherwise TRUE and the Power
  * Manager can start using the reserved PMCs.
  */
-extern boolean_t kpc_reserve_pm_counters(uint64_t pmc_mask, kpc_pm_handler_t handler,
-    boolean_t custom_config);
+extern boolean_t kpc_reserve_pm_counters(uint64_t pmc_mask,
+                                         kpc_pm_handler_t handler,
+                                         boolean_t custom_config);
 
 /*
  * Unregister the Power Manager as a PMCs user, and release the previously
@@ -260,10 +264,8 @@ extern boolean_t kpc_controls_fixed_counters(void);
  */
 extern boolean_t kpc_controls_counter(uint32_t ctr);
 
-
 extern void kpc_idle(void);
 extern void kpc_idle_exit(void);
-
 
 /*
  * KPC PRIVATE
@@ -273,25 +275,25 @@ extern uint32_t kpc_actionid[KPC_MAX_COUNTERS];
 
 /* handler for mp operations */
 struct kpc_config_remote {
-	uint32_t classes;
-	kpc_config_t *configv;
-	uint64_t pmc_mask;
-	bool secure;
+  uint32_t classes;
+  kpc_config_t *configv;
+  uint64_t pmc_mask;
+  bool secure;
 };
 
 /* handler for mp operations */
 struct kpc_running_remote {
-	uint32_t        classes;                /* classes to run */
-	uint64_t        cfg_target_mask;        /* configurable counters selected */
-	uint64_t        cfg_state_mask;         /* configurable counters new state */
+  uint32_t classes;         /* classes to run */
+  uint64_t cfg_target_mask; /* configurable counters selected */
+  uint64_t cfg_state_mask;  /* configurable counters new state */
 };
 
 /* handler for mp operations */
 struct kpc_get_counters_remote {
-	uint32_t classes;
-	uint32_t nb_counters;
-	uint32_t buf_stride;
-	uint64_t *buf;
+  uint32_t classes;
+  uint32_t nb_counters;
+  uint32_t buf_stride;
+  uint64_t *buf;
 };
 
 int kpc_get_all_cpus_counters(uint32_t classes, int *curcpu, uint64_t *buf);
@@ -313,18 +315,20 @@ uint64_t kpc_configurable_max(void);
 int kpc_set_config_arch(struct kpc_config_remote *mp_config);
 int kpc_set_period_arch(struct kpc_config_remote *mp_config);
 
-__options_decl(kperf_kpc_flags_t, uint16_t, {
-	KPC_KERNEL_PC = 0x01, // the PC is a kernel address
-	KPC_KERNEL_COUNTING = 0x02, // the counter counts while running in the kernel
-	KPC_USER_COUNTING = 0x04, // the counter counts while running in user space
-	KPC_CAPTURED_PC = 0x08, // the PC was captured by hardware
-});
+__options_decl(kperf_kpc_flags_t, uint16_t,
+               {
+                   KPC_KERNEL_PC = 0x01, // the PC is a kernel address
+                   KPC_KERNEL_COUNTING =
+                       0x02, // the counter counts while running in the kernel
+                   KPC_USER_COUNTING =
+                       0x04, // the counter counts while running in user space
+                   KPC_CAPTURED_PC = 0x08, // the PC was captured by hardware
+               });
 
 void kpc_sample_kperf(uint32_t actionid, uint32_t counter, uint64_t config,
-    uint64_t count, uintptr_t pc, kperf_kpc_flags_t flags);
+                      uint64_t count, uintptr_t pc, kperf_kpc_flags_t flags);
 
 int kpc_set_running_arch(struct kpc_running_remote *mp_config);
-
 
 /*
  * Helpers

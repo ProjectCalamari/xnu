@@ -36,7 +36,7 @@
 #ifndef _MACH_ARM_VM_PARAM_H_
 #define _MACH_ARM_VM_PARAM_H_
 
-#if defined (__arm__) || defined (__arm64__)
+#if defined(__arm__) || defined(__arm64__)
 
 #if defined(XNU_KERNEL_PRIVATE) && defined(__arm64__)
 #include <arm64/proc_reg.h>
@@ -46,18 +46,18 @@
 #include <arm64/proc_reg.h>
 #endif
 
-#if !defined (KERNEL) && !defined (__ASSEMBLER__)
+#if !defined(KERNEL) && !defined(__ASSEMBLER__)
 #include <mach/vm_page_size.h>
 #endif
 
-#define BYTE_SIZE       8       /* byte size in bits */
+#define BYTE_SIZE 8 /* byte size in bits */
 
-#if defined (KERNEL)
+#if defined(KERNEL)
 
 #ifndef __ASSEMBLER__
 
-#ifdef  __arm__
-#define PAGE_SHIFT_CONST        12
+#ifdef __arm__
+#define PAGE_SHIFT_CONST 12
 #elif defined(__arm64__)
 extern int PAGE_SHIFT_CONST;
 #else
@@ -65,76 +65,80 @@ extern int PAGE_SHIFT_CONST;
 #endif
 
 #if defined(KERNEL_PRIVATE) && __ARM_16K_PG__
-#define PAGE_SHIFT              ARM_PGSHIFT
+#define PAGE_SHIFT ARM_PGSHIFT
 #else
-#define PAGE_SHIFT              PAGE_SHIFT_CONST
+#define PAGE_SHIFT PAGE_SHIFT_CONST
 #endif
-#define PAGE_SIZE               (1 << PAGE_SHIFT)
-#define PAGE_MASK               (PAGE_SIZE-1)
+#define PAGE_SIZE (1 << PAGE_SHIFT)
+#define PAGE_MASK (PAGE_SIZE - 1)
 
-#define VM_PAGE_SIZE            PAGE_SIZE
+#define VM_PAGE_SIZE PAGE_SIZE
 
-#define machine_ptob(x)         ((x) << PAGE_SHIFT)
+#define machine_ptob(x) ((x) << PAGE_SHIFT)
 
 /*
  * Defined for the purpose of testing the pmap advertised page
  * size; this does not necessarily match the hardware page size.
  */
-#define TEST_PAGE_SIZE_16K      ((PAGE_SHIFT_CONST == 14))
-#define TEST_PAGE_SIZE_4K       ((PAGE_SHIFT_CONST == 12))
+#define TEST_PAGE_SIZE_16K ((PAGE_SHIFT_CONST == 14))
+#define TEST_PAGE_SIZE_4K ((PAGE_SHIFT_CONST == 12))
 
-#endif  /* !__ASSEMBLER__ */
+#endif /* !__ASSEMBLER__ */
 
 #else
 
-#define PAGE_SHIFT                      vm_page_shift
-#define PAGE_SIZE                       vm_page_size
-#define PAGE_MASK                       vm_page_mask
+#define PAGE_SHIFT vm_page_shift
+#define PAGE_SIZE vm_page_size
+#define PAGE_MASK vm_page_mask
 
-#define VM_PAGE_SIZE            vm_page_size
+#define VM_PAGE_SIZE vm_page_size
 
-#define machine_ptob(x)         ((x) << PAGE_SHIFT)
+#define machine_ptob(x) ((x) << PAGE_SHIFT)
 
 #endif
 
-#define PAGE_MAX_SHIFT          14
-#define PAGE_MAX_SIZE           (1 << PAGE_MAX_SHIFT)
-#define PAGE_MAX_MASK           (PAGE_MAX_SIZE-1)
+#define PAGE_MAX_SHIFT 14
+#define PAGE_MAX_SIZE (1 << PAGE_MAX_SHIFT)
+#define PAGE_MAX_MASK (PAGE_MAX_SIZE - 1)
 
-#define PAGE_MIN_SHIFT          12
-#define PAGE_MIN_SIZE           (1 << PAGE_MIN_SHIFT)
-#define PAGE_MIN_MASK           (PAGE_MIN_SIZE-1)
+#define PAGE_MIN_SHIFT 12
+#define PAGE_MIN_SIZE (1 << PAGE_MIN_SHIFT)
+#define PAGE_MIN_MASK (PAGE_MIN_SIZE - 1)
 
-#define VM_MAX_PAGE_ADDRESS     MACH_VM_MAX_ADDRESS
+#define VM_MAX_PAGE_ADDRESS MACH_VM_MAX_ADDRESS
 
 #ifndef __ASSEMBLER__
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
-#define VM32_SUPPORT            1
-#define VM32_MIN_ADDRESS        ((vm32_offset_t) 0)
-#define VM32_MAX_ADDRESS        ((vm32_offset_t) (VM_MAX_ADDRESS & 0xFFFFFFFF))
+#define VM32_SUPPORT 1
+#define VM32_MIN_ADDRESS ((vm32_offset_t)0)
+#define VM32_MAX_ADDRESS ((vm32_offset_t)(VM_MAX_ADDRESS & 0xFFFFFFFF))
 
 #endif /* MACH_KERNEL_PRIVATE */
 
-#if defined (__arm__)
+#if defined(__arm__)
 
-#define VM_MIN_ADDRESS          ((vm_address_t) 0x00000000)
-#define VM_MAX_ADDRESS          ((vm_address_t) 0x80000000)
+#define VM_MIN_ADDRESS ((vm_address_t)0x00000000)
+#define VM_MAX_ADDRESS ((vm_address_t)0x80000000)
 
 /* system-wide values */
-#define MACH_VM_MIN_ADDRESS     ((mach_vm_offset_t) 0)
-#define MACH_VM_MAX_ADDRESS     ((mach_vm_offset_t) VM_MAX_ADDRESS)
+#define MACH_VM_MIN_ADDRESS ((mach_vm_offset_t)0)
+#define MACH_VM_MAX_ADDRESS ((mach_vm_offset_t)VM_MAX_ADDRESS)
 
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 
-#define VM_MIN_ADDRESS          ((vm_address_t) 0x0000000000000000ULL)
-#define VM_MAX_ADDRESS          ((vm_address_t) 0x00000000F0000000ULL)
+#define VM_MIN_ADDRESS ((vm_address_t)0x0000000000000000ULL)
+#define VM_MAX_ADDRESS ((vm_address_t)0x00000000F0000000ULL)
 
 /* system-wide values */
 #define MACH_VM_MIN_ADDRESS_RAW 0x0ULL
 #if defined(XNU_PLATFORM_MacOSX) || defined(XNU_PLATFORM_DriverKit)
+#if __ARM_16K_PG__
 #define MACH_VM_MAX_ADDRESS_RAW 0x00007FFFFE000000ULL
+#else
+#define MACH_VM_MAX_ADDRESS_RAW 0x0000000FC0000000ULL
+#endif
 #else
 #define MACH_VM_MAX_ADDRESS_RAW 0x0000000FC0000000ULL
 #endif
@@ -150,33 +154,35 @@ extern int PAGE_SHIFT_CONST;
 #endif /* defined(XNU_PLATFORM_iPhoneOS) && EXTENDED_USER_VA_SUPPORT */
 /* threshold for allocations to be placed in the large file range */
 #define VM_LARGE_FILE_THRESHOLD (1ULL << 30)
-#define MACH_VM_JUMBO_ADDRESS ((mach_vm_offset_t) 0x0000000FC0000000ULL)
+#define MACH_VM_JUMBO_ADDRESS ((mach_vm_offset_t)0x0000000FC0000000ULL)
 #endif /* KERNEL_PRIVATE */
 
-#define MACH_VM_MIN_ADDRESS     ((mach_vm_offset_t) MACH_VM_MIN_ADDRESS_RAW)
-#define MACH_VM_MAX_ADDRESS     ((mach_vm_offset_t) MACH_VM_MAX_ADDRESS_RAW)
+#define MACH_VM_MIN_ADDRESS ((mach_vm_offset_t)MACH_VM_MIN_ADDRESS_RAW)
+#define MACH_VM_MAX_ADDRESS ((mach_vm_offset_t)MACH_VM_MAX_ADDRESS_RAW)
 
 #define MACH_VM_MIN_GPU_CARVEOUT_ADDRESS_RAW 0x0000001000000000ULL
 #define MACH_VM_MAX_GPU_CARVEOUT_ADDRESS_RAW 0x0000007000000000ULL
-#define MACH_VM_MIN_GPU_CARVEOUT_ADDRESS     ((mach_vm_offset_t) MACH_VM_MIN_GPU_CARVEOUT_ADDRESS_RAW)
-#define MACH_VM_MAX_GPU_CARVEOUT_ADDRESS     ((mach_vm_offset_t) MACH_VM_MAX_GPU_CARVEOUT_ADDRESS_RAW)
+#define MACH_VM_MIN_GPU_CARVEOUT_ADDRESS                                       \
+  ((mach_vm_offset_t)MACH_VM_MIN_GPU_CARVEOUT_ADDRESS_RAW)
+#define MACH_VM_MAX_GPU_CARVEOUT_ADDRESS                                       \
+  ((mach_vm_offset_t)MACH_VM_MAX_GPU_CARVEOUT_ADDRESS_RAW)
 
 #else /* defined(__arm64__) */
 #error architecture not supported
 #endif
 
-#define VM_MAP_MIN_ADDRESS      VM_MIN_ADDRESS
-#define VM_MAP_MAX_ADDRESS      VM_MAX_ADDRESS
+#define VM_MAP_MIN_ADDRESS VM_MIN_ADDRESS
+#define VM_MAP_MAX_ADDRESS VM_MAX_ADDRESS
 
-#ifdef  KERNEL
+#ifdef KERNEL
 
-#if defined (__arm__)
-#define VM_KERNEL_POINTER_SIGNIFICANT_BITS  31
-#define VM_MIN_KERNEL_ADDRESS   ((vm_address_t) 0x80000000)
-#define VM_MAX_KERNEL_ADDRESS   ((vm_address_t) 0xFFFEFFFF)
-#define VM_HIGH_KERNEL_WINDOW   ((vm_address_t) 0xFFFE0000)
+#if defined(__arm__)
+#define VM_KERNEL_POINTER_SIGNIFICANT_BITS 31
+#define VM_MIN_KERNEL_ADDRESS ((vm_address_t)0x80000000)
+#define VM_MAX_KERNEL_ADDRESS ((vm_address_t)0xFFFEFFFF)
+#define VM_HIGH_KERNEL_WINDOW ((vm_address_t)0xFFFE0000)
 
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 /*
  * kalloc() parameters:
  *
@@ -190,16 +196,15 @@ extern int PAGE_SHIFT_CONST;
  * Note that most dynamically allocated data structures contain more than
  * one int/long/pointer member, so KALLOC_MINSIZE should probably start at 8.
  */
-#define TiB(x)                  ((0ULL + (x)) << 40)
-#define GiB(x)                  ((0ULL + (x)) << 30)
-#define KALLOC_MINSIZE          16      /* minimum allocation size */
-#define KALLOC_LOG2_MINALIGN    4       /* log2 minimum alignment */
+#define TiB(x) ((0ULL + (x)) << 40)
+#define GiB(x) ((0ULL + (x)) << 30)
+#define KALLOC_MINSIZE 16      /* minimum allocation size */
+#define KALLOC_LOG2_MINALIGN 4 /* log2 minimum alignment */
 
 /*
  * The minimum and maximum kernel address; some configurations may
  * constrain the address space further.
  */
-
 
 #ifndef __BUILDING_XNU_LIBRARY__
 #if XNU_KERNEL_PRIVATE
@@ -217,10 +222,10 @@ extern int PAGE_SHIFT_CONST;
  * |                       |        |        | LOW_GLOBALS            |
  * +-----------------------+--------+--------+------------------------+
  */
-#define VM_KERNEL_POINTER_SIGNIFICANT_BITS  41
+#define VM_KERNEL_POINTER_SIGNIFICANT_BITS 41
 
 // Kernel VA space starts at -2TB
-#define VM_MIN_KERNEL_ADDRESS   ((vm_address_t) (0ULL - TiB(2)))
+#define VM_MIN_KERNEL_ADDRESS ((vm_address_t)(0ULL - TiB(2)))
 
 //   64 GB for kernel cache and globals
 //  768 GB for heap/general kernel use
@@ -230,8 +235,8 @@ extern int PAGE_SHIFT_CONST;
 //     Since we place the DRAM PAPT below VM_MIN_KERNEL_ADDRESS on large
 //     memory configurations, this configuration works until systems have
 //     ~17.5TB of DRAM.
-#define VM_MAX_KERNEL_ADDRESS \
-	((vm_address_t) (VM_MIN_KERNEL_ADDRESS + GiB(64) + GiB(768) - 1))
+#define VM_MAX_KERNEL_ADDRESS                                                  \
+  ((vm_address_t)(VM_MIN_KERNEL_ADDRESS + GiB(64) + GiB(768) - 1))
 
 #else // ARM_LARGE_MEMORY
 /*
@@ -250,75 +255,84 @@ extern int PAGE_SHIFT_CONST;
  * |                       |        |        | PMAP_HEAP_RANGE_START  | >= H9
  * +-----------------------+--------+--------+------------------------+
  */
-#if defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR)
-#define VM_KERNEL_POINTER_SIGNIFICANT_BITS  38
-#define VM_MIN_KERNEL_ADDRESS   ((vm_address_t) (0ULL - GiB(144)))
-#else /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR) */
-#define VM_KERNEL_POINTER_SIGNIFICANT_BITS  37
-#define VM_MIN_KERNEL_ADDRESS   ((vm_address_t) 0xffffffe000000000ULL)
-#endif /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR) */
-#define VM_MAX_KERNEL_ADDRESS   ((vm_address_t) 0xfffffffbffffffffULL)
+#if defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||        \
+    defined(KERNEL_INTEGRITY_PV_CTRR)
+#define VM_KERNEL_POINTER_SIGNIFICANT_BITS 38
+#define VM_MIN_KERNEL_ADDRESS ((vm_address_t)(0ULL - GiB(144)))
+#else /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||   \
+         defined(KERNEL_INTEGRITY_PV_CTRR) */
+#define VM_KERNEL_POINTER_SIGNIFICANT_BITS 37
+#define VM_MIN_KERNEL_ADDRESS ((vm_address_t)0xffffffe000000000ULL)
+#endif /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||  \
+          defined(KERNEL_INTEGRITY_PV_CTRR) */
+#define VM_MAX_KERNEL_ADDRESS ((vm_address_t)0xfffffffbffffffffULL)
 
 #endif // ARM_LARGE_MEMORY
 
 #else // !XNU_KERNEL_PRIVATE
 // Inform kexts about largest possible kernel address space
-#define VM_KERNEL_POINTER_SIGNIFICANT_BITS  41
-#define VM_MIN_KERNEL_ADDRESS   ((vm_address_t) (0ULL - TiB(2)))
-#define VM_MAX_KERNEL_ADDRESS   ((vm_address_t) 0xfffffffbffffffffULL)
+#define VM_KERNEL_POINTER_SIGNIFICANT_BITS 41
+#define VM_MIN_KERNEL_ADDRESS ((vm_address_t)(0ULL - TiB(2)))
+#define VM_MAX_KERNEL_ADDRESS ((vm_address_t)0xfffffffbffffffffULL)
 #endif // XNU_KERNEL_PRIVATE
-#else /* __BUILDING_XNU_LIBRARY__ */
+#else  /* __BUILDING_XNU_LIBRARY__ */
 #define VM_MIN_KERNEL_ADDRESS ((vm_address_t)(0x100000000ULL))
 #define VM_MAX_KERNEL_ADDRESS ((vm_address_t)(0ULL + GiB(2)))
-#define VM_KERNEL_POINTER_SIGNIFICANT_BITS  31
+#define VM_KERNEL_POINTER_SIGNIFICANT_BITS 31
 #endif /*__BUILDING_XNU_LIBRARY__ */
 #else
 #error architecture not supported
 #endif
 
-#define VM_MIN_KERNEL_AND_KEXT_ADDRESS  VM_MIN_KERNEL_ADDRESS
+#define VM_MIN_KERNEL_AND_KEXT_ADDRESS VM_MIN_KERNEL_ADDRESS
 
-#if defined (__arm64__)
+#if defined(__arm64__)
 /* Top-Byte-Ignore */
-#define ARM_TBI_USER_MASK        (0xFF00000000000000ULL)
-#define VM_USER_STRIP_TBI(_v)    ((typeof (_v))(((uintptr_t)(_v)) &~ (ARM_TBI_USER_MASK)))
+#define ARM_TBI_USER_MASK (0xFF00000000000000ULL)
+#define VM_USER_STRIP_TBI(_v)                                                  \
+  ((typeof(_v))(((uintptr_t)(_v)) & ~(ARM_TBI_USER_MASK)))
 #else /* __arm64__ */
-#define VM_USER_STRIP_TBI(_v)    (_v)
+#define VM_USER_STRIP_TBI(_v) (_v)
 #endif /* __arm64__ */
-
 
 #if __arm64__
 
 #if XNU_KERNEL_PRIVATE
-#define VM_KERNEL_STRIP_MASK            (-1ULL << (64 - T1SZ_BOOT))
-#define VM_USER_STRIP_MASK              (-1ULL >> (T0SZ_BOOT))
-#define _VM_KERNEL_STRIP_PTR(_va)       ({((_va) & 1ULL << 55) ? ((_va) | VM_KERNEL_STRIP_MASK) : ((_va) & VM_USER_STRIP_MASK);})
+#define VM_KERNEL_STRIP_MASK (-1ULL << (64 - T1SZ_BOOT))
+#define VM_USER_STRIP_MASK (-1ULL >> (T0SZ_BOOT))
+#define _VM_KERNEL_STRIP_PTR(_va)                                              \
+  ({                                                                           \
+    ((_va) & 1ULL << 55) ? ((_va) | VM_KERNEL_STRIP_MASK)                      \
+                         : ((_va) & VM_USER_STRIP_MASK);                       \
+  })
 #else /* XNU_KERNEL_PRIVATE */
 
 #if __has_feature(ptrauth_calls)
 #include <ptrauth.h>
-#define VM_KERNEL_STRIP_PAC(_v)         ((uintptr_t)(ptrauth_strip((void *)(uintptr_t)(_v), ptrauth_key_asia)))
+#define VM_KERNEL_STRIP_PAC(_v)                                                \
+  ((uintptr_t)(ptrauth_strip((void *)(uintptr_t)(_v), ptrauth_key_asia)))
 #else /* !ptrauth_calls */
-#define VM_KERNEL_STRIP_PAC(_v)         (_v)
+#define VM_KERNEL_STRIP_PAC(_v) (_v)
 #endif /* ptrauth_calls */
 /* For KEXT, just blow away TBI bits, even if only used for KASAN. */
-#define _VM_KERNEL_STRIP_PTR(_v)        (VM_KERNEL_STRIP_PAC(_v) | (0xFF00000000000000ULL))
+#define _VM_KERNEL_STRIP_PTR(_v)                                               \
+  (VM_KERNEL_STRIP_PAC(_v) | (0xFF00000000000000ULL))
 #endif /* XNU_KERNEL_PRIVATE */
 
 #else /* __arm64__ */
-#define _VM_KERNEL_STRIP_PTR(_v)        (_v)
+#define _VM_KERNEL_STRIP_PTR(_v) (_v)
 #endif /* __arm64__ */
 
-#define VM_KERNEL_STRIP_PTR(_va)        (_VM_KERNEL_STRIP_PTR((uintptr_t)(_va)))
+#define VM_KERNEL_STRIP_PTR(_va) (_VM_KERNEL_STRIP_PTR((uintptr_t)(_va)))
 
 /* Vestige from the past, kept for retro-compatibility. */
-#define VM_KERNEL_STRIP_UPTR(_va)       (VM_KERNEL_STRIP_PTR(_va))
+#define VM_KERNEL_STRIP_UPTR(_va) (VM_KERNEL_STRIP_PTR(_va))
 
-#define VM_KERNEL_ADDRESS(_va)  \
-	((VM_KERNEL_STRIP_PTR(_va) >= VM_MIN_KERNEL_ADDRESS) && \
-	 (VM_KERNEL_STRIP_PTR(_va) <= VM_MAX_KERNEL_ADDRESS))
+#define VM_KERNEL_ADDRESS(_va)                                                 \
+  ((VM_KERNEL_STRIP_PTR(_va) >= VM_MIN_KERNEL_ADDRESS) &&                      \
+   (VM_KERNEL_STRIP_PTR(_va) <= VM_MAX_KERNEL_ADDRESS))
 
-#define VM_USER_STRIP_PTR(_v)           (VM_USER_STRIP_TBI(_v))
+#define VM_USER_STRIP_PTR(_v) (VM_USER_STRIP_TBI(_v))
 
 #if DEBUG || DEVELOPMENT || !defined(HAS_APPLE_PAC)
 
@@ -339,14 +353,14 @@ __END_DECLS
 
 #endif /* DEBUG || DEVELOPMENT || !defined(HAS_APPLE_PAC) */
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 /*
  *	Physical memory is mapped linearly at an offset virtual memory.
  */
-extern unsigned long            gVirtBase, gPhysBase, gPhysSize;
+extern unsigned long gVirtBase, gPhysBase, gPhysSize;
 
-#define isphysmem(a)            (((vm_address_t)(a) - gPhysBase) < gPhysSize)
-#define physmap_enclosed(a)     isphysmem(a)
+#define isphysmem(a) (((vm_address_t)(a) - gPhysBase) < gPhysSize)
+#define physmap_enclosed(a) isphysmem(a)
 
 /*
  * gPhysBase/Size only represent kernel-managed memory. These globals represent
@@ -354,23 +368,23 @@ extern unsigned long            gVirtBase, gPhysBase, gPhysSize;
  * tree.
  */
 #include <stdint.h>
-extern uint64_t                 gDramBase, gDramSize;
-#define is_dram_addr(addr)      (((uint64_t)(addr) - gDramBase) < gDramSize)
+extern uint64_t gDramBase, gDramSize;
+#define is_dram_addr(addr) (((uint64_t)(addr) - gDramBase) < gDramSize)
 
 #endif /* MACH_KERNEL_PRIVATE */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #if KASAN
 /* Increase the stack sizes to account for the redzones that get added to every
  * stack object. */
-# define KERNEL_STACK_SIZE      (4*4*4096)
+#define KERNEL_STACK_SIZE (4 * 4 * 4096)
 #elif DEBUG
 /**
  * Increase the stack size to account for less efficient use of stack space when
  * compiling with -O0.
  */
-# define KERNEL_STACK_SIZE      (2*4*4096)
+#define KERNEL_STACK_SIZE (2 * 4 * 4096)
 #else
 /*
  * KERNEL_STACK_MULTIPLIER can be defined externally to get a larger
@@ -380,19 +394,19 @@ extern uint64_t                 gDramBase, gDramSize;
 #ifndef KERNEL_STACK_MULTIPLIER
 #define KERNEL_STACK_MULTIPLIER (1)
 #endif /* KERNEL_STACK_MULTIPLIER */
-# define KERNEL_STACK_SIZE      (4*4096*KERNEL_STACK_MULTIPLIER)
+#define KERNEL_STACK_SIZE (4 * 4096 * KERNEL_STACK_MULTIPLIER)
 #endif /* XNU_KERNEL_PRIVATE */
 
-#define INTSTACK_SIZE           (4*4096)
+#define INTSTACK_SIZE (4 * 4096)
 
 #ifdef __arm64__
-#define EXCEPSTACK_SIZE         (4*4096)
+#define EXCEPSTACK_SIZE (4 * 4096)
 #else
-#define FIQSTACK_SIZE           (4096)
+#define FIQSTACK_SIZE (4096)
 #endif
 
-#if defined (__arm__)
-#define HIGH_EXC_VECTORS        ((vm_address_t) 0xFFFF0000)
+#if defined(__arm__)
+#define HIGH_EXC_VECTORS ((vm_address_t)0xFFFF0000)
 #endif
 
 /*
@@ -401,21 +415,21 @@ extern uint64_t                 gDramBase, gDramSize;
  * the make files.  Clean this up, so we don't hardcode it
  * twice; this is nothing but trouble.
  */
-#if defined (__arm__)
-#define VM_KERNEL_LINK_ADDRESS  ((vm_address_t) 0x80000000)
-#elif defined (__arm64__)
+#if defined(__arm__)
+#define VM_KERNEL_LINK_ADDRESS ((vm_address_t)0x80000000)
+#elif defined(__arm64__)
 /* VM_KERNEL_LINK_ADDRESS defined in makedefs/MakeInc.def for arm64 platforms */
 #else
 #error architecture not supported
 #endif
 
-#endif  /* MACH_KERNEL_PRIVATE */
-#endif  /* KERNEL */
+#endif /* MACH_KERNEL_PRIVATE */
+#endif /* KERNEL */
 
-#endif  /* !__ASSEMBLER__ */
+#endif /* !__ASSEMBLER__ */
 
-#define SWI_SYSCALL     0x80
+#define SWI_SYSCALL 0x80
 
 #endif /* defined (__arm__) || defined (__arm64__) */
 
-#endif  /* _MACH_ARM_VM_PARAM_H_ */
+#endif /* _MACH_ARM_VM_PARAM_H_ */

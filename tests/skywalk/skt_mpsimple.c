@@ -26,39 +26,38 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
+#include <assert.h>
+#include <darwintest.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <assert.h>
-#include <darwintest.h>
-#include "skywalk_test_driver.h"
-#include "skywalk_test_common.h"
 
 /****************************************************************/
 
-static int
-skt_mp100noop_main(int argc, char *argv[])
-{
-	char buf[1] = { 0 };
-	assert(!strcmp(argv[3], "--child"));
-	ssize_t ret;
+static int skt_mp100noop_main(int argc, char *argv[]) {
+  char buf[1] = {0};
+  assert(!strcmp(argv[3], "--child"));
+  ssize_t ret;
 
-	if ((ret = write(MPTEST_SEQ_FILENO, buf, sizeof(buf))) == -1) {
-		SKT_LOG("write fail: %s", strerror(errno));
-		return 1;
-	}
-	assert(ret == 1);
+  if ((ret = write(MPTEST_SEQ_FILENO, buf, sizeof(buf))) == -1) {
+    SKT_LOG("write fail: %s", strerror(errno));
+    return 1;
+  }
+  assert(ret == 1);
 
-	/* Wait for go signal */
-	if ((ret = read(MPTEST_SEQ_FILENO, buf, sizeof(buf))) == -1) {
-		SKT_LOG("read fail: %s", strerror(errno));
-		return 1;
-	}
-	assert(ret == 1);
+  /* Wait for go signal */
+  if ((ret = read(MPTEST_SEQ_FILENO, buf, sizeof(buf))) == -1) {
+    SKT_LOG("read fail: %s", strerror(errno));
+    return 1;
+  }
+  assert(ret == 1);
 
-	return 0;
+  return 0;
 }
 
 struct skywalk_mptest skt_mp100noop = {
-	"mp100noop", "test just returns true from 100 children", 0, 100, skt_mp100noop_main,
+    "mp100noop",        "test just returns true from 100 children", 0, 100,
+    skt_mp100noop_main,
 };

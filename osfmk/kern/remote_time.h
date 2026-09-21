@@ -29,43 +29,45 @@
 #ifndef REMOTE_TIME_H
 #define REMOTE_TIME_H
 
-#include <sys/cdefs.h>
-#include <stdint.h>
 #include <os/overflow.h>
+#include <stdint.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 /* bt_params is an ABI for tracing tools */
 struct bt_params {
-	double rate;
-	uint64_t base_local_ts;
-	uint64_t base_remote_ts;
+  double rate;
+  uint64_t base_local_ts;
+  uint64_t base_remote_ts;
 };
 
 /* local_ts_ns should be in nanoseconds */
-static inline uint64_t
-mach_bridge_compute_timestamp(uint64_t local_ts_ns, struct bt_params *params)
-{
-	if (!params || params->rate == 0.0) {
-		return 0;
-	}
-	/*
-	 * Formula to compute remote_timestamp
-	 * remote_timestamp = (bt_params.rate * (local_ts_ns - bt_params.base_local_ts))
-	 *	 +  bt_params.base_remote_ts
-	 */
-	int64_t remote_ts = 0;
-	int64_t rate_prod = 0;
-	/* To avoid precision loss due to typecasting from int64_t to double */
-	if (params->rate != 1.0) {
-		rate_prod = (int64_t)(params->rate * (double)((int64_t)local_ts_ns - (int64_t)params->base_local_ts));
-	} else {
-		rate_prod = (int64_t)local_ts_ns - (int64_t)params->base_local_ts;
-	}
-	if (os_add_overflow((int64_t)params->base_remote_ts, rate_prod, &remote_ts)) {
-		return 0;
-	}
+static inline uint64_t mach_bridge_compute_timestamp(uint64_t local_ts_ns,
+                                                     struct bt_params *params) {
+  if (!params || params->rate == 0.0) {
+    return 0;
+  }
+  /*
+   * Formula to compute remote_timestamp
+   * remote_timestamp = (bt_params.rate * (local_ts_ns -
+   * bt_params.base_local_ts))
+   *	 +  bt_params.base_remote_ts
+   */
+  int64_t remote_ts = 0;
+  int64_t rate_prod = 0;
+  /* To avoid precision loss due to typecasting from int64_t to double */
+  if (params->rate != 1.0) {
+    rate_prod =
+        (int64_t)(params->rate * (double)((int64_t)local_ts_ns -
+                                          (int64_t)params->base_local_ts));
+  } else {
+    rate_prod = (int64_t)local_ts_ns - (int64_t)params->base_local_ts;
+  }
+  if (os_add_overflow((int64_t)params->base_remote_ts, rate_prod, &remote_ts)) {
+    return 0;
+  }
 
-	return (uint64_t)remote_ts;
+  return (uint64_t)remote_ts;
 }
 
 uint64_t mach_bridge_remote_time(uint64_t);

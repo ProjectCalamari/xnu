@@ -29,9 +29,9 @@
 #include <sys/cdefs.h>
 
 typedef enum {
-	KDP_EVENT_ENTER,
-	KDP_EVENT_EXIT,
-	KDP_EVENT_PANICLOG
+  KDP_EVENT_ENTER,
+  KDP_EVENT_EXIT,
+  KDP_EVENT_PANICLOG
 } kdp_event_t;
 
 __BEGIN_DECLS

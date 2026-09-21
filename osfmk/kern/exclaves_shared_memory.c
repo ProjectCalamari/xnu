@@ -28,10 +28,10 @@
 
 #if CONFIG_EXCLAVES
 
-#include <stdint.h>
-#include <mach/kern_return.h>
 #include <kern/assert.h>
 #include <kern/misc_protos.h>
+#include <mach/kern_return.h>
+#include <stdint.h>
 
 #include "exclaves_debug.h"
 #include "exclaves_shared_memory.h"
@@ -39,149 +39,155 @@
 
 kern_return_t
 exclaves_shared_memory_init(const uint64_t endpoint,
-    sharedmemorybase_segxnuaccess_s *sm_client)
-{
-	assert3p(sm_client, !=, NULL);
+                            sharedmemorybase_segxnuaccess_s *sm_client) {
+  assert3p(sm_client, !=, NULL);
 
-	tb_endpoint_t ep = tb_endpoint_create_with_value(
-		TB_TRANSPORT_TYPE_XNU, endpoint, TB_ENDPOINT_OPTIONS_NONE);
-	tb_error_t ret = sharedmemorybase_segxnuaccess__init(sm_client, ep);
+  tb_endpoint_t ep = tb_endpoint_create_with_value(
+      TB_TRANSPORT_TYPE_XNU, endpoint, TB_ENDPOINT_OPTIONS_NONE);
+  tb_error_t ret = sharedmemorybase_segxnuaccess__init(sm_client, ep);
 
-	return ret == TB_ERROR_SUCCESS ? KERN_SUCCESS : KERN_FAILURE;
+  return ret == TB_ERROR_SUCCESS ? KERN_SUCCESS : KERN_FAILURE;
 }
 
-static kern_return_t
-exclaves_shared_memory_access_check(
-	const sharedmemorybase_segxnuaccess_s *sm_client,
-	const sharedmemorybase_perms_s perm, const uint64_t endpage)
-{
-	assert3p(sm_client, !=, NULL);
+static kern_return_t exclaves_shared_memory_access_check(
+    const sharedmemorybase_segxnuaccess_s *sm_client,
+    const sharedmemorybase_perms_s perm, const uint64_t endpage) {
+  assert3p(sm_client, !=, NULL);
 
-	__block kern_return_t kr = KERN_SUCCESS;
-	tb_error_t ret = TB_ERROR_SUCCESS;
+  __block kern_return_t kr = KERN_SUCCESS;
+  tb_error_t ret = TB_ERROR_SUCCESS;
 
-	ret = sharedmemorybase_segxnuaccess_xnuaccessstatus(sm_client,
-	    ^(sharedmemorybase_accessstatus_s result) {
-		/*
-		 * Check permissions.
-		 * For the moment just check for writable
-		 * access (if relevant).
-		 */
-		if (perm != result.permissions) {
-		        kr = KERN_PROTECTION_FAILURE;
-		        return;
-		}
+  ret = sharedmemorybase_segxnuaccess_xnuaccessstatus(
+      sm_client, ^(sharedmemorybase_accessstatus_s result) {
+        /*
+         * Check permissions.
+         * For the moment just check for writable
+         * access (if relevant).
+         */
+        if (perm != result.permissions) {
+          kr = KERN_PROTECTION_FAILURE;
+          return;
+        }
 
-		if (!result.xnu) {
-		        kr = KERN_FAILURE;
-		        return;
-		}
+        if (!result.xnu) {
+          kr = KERN_FAILURE;
+          return;
+        }
 
-		if (endpage > result.segmentstatus.npages) {
-		        kr = KERN_FAILURE;
-		        return;
-		}
-	});
+        if (endpage > result.segmentstatus.npages) {
+          kr = KERN_FAILURE;
+          return;
+        }
+      });
 
-	if (ret != TB_ERROR_SUCCESS) {
-		return KERN_FAILURE;
-	}
+  if (ret != TB_ERROR_SUCCESS) {
+    return KERN_FAILURE;
+  }
 
-	return kr;
+  return kr;
 }
 
 kern_return_t
 exclaves_shared_memory_setup(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_perms_s perm, const uint64_t startpage,
-    const uint64_t endpage, sharedmemorybase_mapping_s *mapping)
-{
-	assert3p(sm_client, !=, NULL);
-	assert3p(mapping, !=, NULL);
-	assert3u(startpage, <, endpage);
-	assert(perm == SHAREDMEMORYBASE_PERMS_READWRITE ||
-	    perm == SHAREDMEMORYBASE_PERMS_READONLY);
+                             const sharedmemorybase_perms_s perm,
+                             const uint64_t startpage, const uint64_t endpage,
+                             sharedmemorybase_mapping_s *mapping) {
+  assert3p(sm_client, !=, NULL);
+  assert3p(mapping, !=, NULL);
+  assert3u(startpage, <, endpage);
+  assert(perm == SHAREDMEMORYBASE_PERMS_READWRITE ||
+         perm == SHAREDMEMORYBASE_PERMS_READONLY);
 
-	tb_error_t ret = TB_ERROR_SUCCESS;
+  tb_error_t ret = TB_ERROR_SUCCESS;
 
-	/* Do a quick sanity check that this access is allowed. */
-	kern_return_t kret = exclaves_shared_memory_access_check(sm_client,
-	    perm, endpage);
-	if (kret != KERN_SUCCESS) {
-		return kret;
-	}
+  /* Do a quick sanity check that this access is allowed. */
+  kern_return_t kret =
+      exclaves_shared_memory_access_check(sm_client, perm, endpage);
+  if (kret != KERN_SUCCESS) {
+    return kret;
+  }
 
-	sharedmemorybase_pagerange__opt_s opt_range = {};
+  sharedmemorybase_pagerange__opt_s opt_range = {};
 
-	sharedmemorybase_pagerange_s range = {
-		.startpage = startpage,
-		.endpage = endpage,
-	};
-	sharedmemorybase_pagerange__opt_init(&opt_range, &range);
+  sharedmemorybase_pagerange_s range = {
+      .startpage = startpage,
+      .endpage = endpage,
+  };
+  sharedmemorybase_pagerange__opt_init(&opt_range, &range);
 
-	*mapping = 0;
+  *mapping = 0;
 
-	/* BEGIN IGNORE CODESTYLE */
-	ret = sharedmemorybase_segxnuaccess_createxnumapping(sm_client, perm,
-	    &opt_range,
-	    ^(sharedmemorybase_segxnuaccess_createxnumapping__result_s result) {
-		sharedmemorybase_accesserror_s *error = NULL;
-		error = sharedmemorybase_segxnuaccess_createxnumapping__result_get_failure(&result);
-		if (error != NULL) {
-			exclaves_debug_printf(show_errors,
-			    "%s: failed to create mapping: %u", __func__, *error);
-			return;
-		}
+  /* BEGIN IGNORE CODESTYLE */
+  ret = sharedmemorybase_segxnuaccess_createxnumapping(
+      sm_client, perm, &opt_range,
+      ^(sharedmemorybase_segxnuaccess_createxnumapping__result_s result) {
+        sharedmemorybase_accesserror_s *error = NULL;
+        error =
+            sharedmemorybase_segxnuaccess_createxnumapping__result_get_failure(
+                &result);
+        if (error != NULL) {
+          exclaves_debug_printf(show_errors, "%s: failed to create mapping: %u",
+                                __func__, *error);
+          return;
+        }
 
-		sharedmemorybase_mappingresult_s *sm_result = NULL;
-		sm_result = sharedmemorybase_segxnuaccess_createxnumapping__result_get_success(&result);
-		assert3p(sm_result, !=, NULL);
+        sharedmemorybase_mappingresult_s *sm_result = NULL;
+        sm_result =
+            sharedmemorybase_segxnuaccess_createxnumapping__result_get_success(
+                &result);
+        assert3p(sm_result, !=, NULL);
 
-		*mapping = sm_result->mappinginfo.mapping;
-		assert3u(*mapping, !=, 0);
-	});
-	/* END IGNORE CODESTYLE */
+        *mapping = sm_result->mappinginfo.mapping;
+        assert3u(*mapping, !=, 0);
+      });
+  /* END IGNORE CODESTYLE */
 
-	if (ret != TB_ERROR_SUCCESS || *mapping == 0) {
-		return KERN_FAILURE;
-	}
+  if (ret != TB_ERROR_SUCCESS || *mapping == 0) {
+    return KERN_FAILURE;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
  * Currently unused as the setup process can provide an initial mapping.
  */
-kern_return_t
-exclaves_shared_memory_teardown(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_mapping_s *mapping)
-{
-	assert3p(sm_client, !=, NULL);
-	assert3p(mapping, !=, NULL);
+kern_return_t exclaves_shared_memory_teardown(
+    const sharedmemorybase_segxnuaccess_s *sm_client,
+    const sharedmemorybase_mapping_s *mapping) {
+  assert3p(sm_client, !=, NULL);
+  assert3p(mapping, !=, NULL);
 
-	tb_error_t ret = TB_ERROR_SUCCESS;
-	__block bool success = false;
+  tb_error_t ret = TB_ERROR_SUCCESS;
+  __block bool success = false;
 
-	/* BEGIN IGNORE CODESTYLE */
-	ret = sharedmemorybase_segxnuaccess_mappingdestroy(sm_client, *mapping,
-	    ^(sharedmemorybase_segaccessbase_mappingdestroy__result_s result) {
-		sharedmemorybase_accesserror_s *error;
-		error = sharedmemorybase_segaccessbase_mappingdestroy__result_get_failure(&result);
-		if (error != NULL) {
-			exclaves_debug_printf(show_errors,
-			    "%s: failed to destroy mapping: %u\n", __func__, *error);
-			return;
-		}
+  /* BEGIN IGNORE CODESTYLE */
+  ret = sharedmemorybase_segxnuaccess_mappingdestroy(
+      sm_client, *mapping,
+      ^(sharedmemorybase_segaccessbase_mappingdestroy__result_s result) {
+        sharedmemorybase_accesserror_s *error;
+        error =
+            sharedmemorybase_segaccessbase_mappingdestroy__result_get_failure(
+                &result);
+        if (error != NULL) {
+          exclaves_debug_printf(show_errors,
+                                "%s: failed to destroy mapping: %u\n", __func__,
+                                *error);
+          return;
+        }
 
-		assert(sharedmemorybase_segaccessbase_mappingdestroy__result_get_success(&result));
-		success = true;
-	});
-	/* END IGNORE CODESTYLE */
+        assert(
+            sharedmemorybase_segaccessbase_mappingdestroy__result_get_success(
+                &result));
+        success = true;
+      });
+  /* END IGNORE CODESTYLE */
 
-	if (ret != TB_ERROR_SUCCESS || !success) {
-		return KERN_FAILURE;
-	}
+  if (ret != TB_ERROR_SUCCESS || !success) {
+    return KERN_FAILURE;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -189,133 +195,142 @@ exclaves_shared_memory_teardown(const sharedmemorybase_segxnuaccess_s *sm_client
  */
 kern_return_t
 exclaves_shared_memory_map(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_mapping_s *mapping, const uint64_t startpage,
-    const uint64_t endpage)
-{
-	assert3p(sm_client, !=, NULL);
-	assert3p(mapping, !=, NULL);
-	assert3u(startpage, <, endpage);
+                           const sharedmemorybase_mapping_s *mapping,
+                           const uint64_t startpage, const uint64_t endpage) {
+  assert3p(sm_client, !=, NULL);
+  assert3p(mapping, !=, NULL);
+  assert3u(startpage, <, endpage);
 
-	tb_error_t ret = TB_ERROR_SUCCESS;
-	__block bool success = false;
+  tb_error_t ret = TB_ERROR_SUCCESS;
+  __block bool success = false;
 
-	const sharedmemorybase_pagerange_s range = {
-		.startpage = startpage,
-		.endpage = endpage,
-	};
+  const sharedmemorybase_pagerange_s range = {
+      .startpage = startpage,
+      .endpage = endpage,
+  };
 
-	/* BEGIN IGNORE CODESTYLE */
-	ret = sharedmemorybase_segxnuaccess_mappingmap(sm_client, *mapping,
-	    &range, ^(sharedmemorybase_segaccessbase_mappingmap__result_s result) {
-		sharedmemorybase_accesserror_s *error;
-		error = sharedmemorybase_segaccessbase_mappingmap__result_get_failure(&result);
-		if (error != NULL) {
-			exclaves_debug_printf(show_errors,
-			    "%s: failed to map: %u\n", __func__, *error);
-			return;
-		}
+  /* BEGIN IGNORE CODESTYLE */
+  ret = sharedmemorybase_segxnuaccess_mappingmap(
+      sm_client, *mapping, &range,
+      ^(sharedmemorybase_segaccessbase_mappingmap__result_s result) {
+        sharedmemorybase_accesserror_s *error;
+        error = sharedmemorybase_segaccessbase_mappingmap__result_get_failure(
+            &result);
+        if (error != NULL) {
+          exclaves_debug_printf(show_errors, "%s: failed to map: %u\n",
+                                __func__, *error);
+          return;
+        }
 
-		assert(sharedmemorybase_segaccessbase_mappingmap__result_get_success(&result));
-		success = true;
-	});
-	/* END IGNORE CODESTYLE */
+        assert(sharedmemorybase_segaccessbase_mappingmap__result_get_success(
+            &result));
+        success = true;
+      });
+  /* END IGNORE CODESTYLE */
 
-	if (ret != TB_ERROR_SUCCESS || !success) {
-		return KERN_FAILURE;
-	}
+  if (ret != TB_ERROR_SUCCESS || !success) {
+    return KERN_FAILURE;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
-
 
 kern_return_t
 exclaves_shared_memory_unmap(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_mapping_s *mapping, const uint64_t startpage,
-    const uint64_t endpage)
-{
-	assert3p(sm_client, !=, NULL);
-	assert3p(mapping, !=, NULL);
-	assert3u(startpage, <, endpage);
+                             const sharedmemorybase_mapping_s *mapping,
+                             const uint64_t startpage, const uint64_t endpage) {
+  assert3p(sm_client, !=, NULL);
+  assert3p(mapping, !=, NULL);
+  assert3u(startpage, <, endpage);
 
-	tb_error_t ret = TB_ERROR_SUCCESS;
-	__block bool success = false;
+  tb_error_t ret = TB_ERROR_SUCCESS;
+  __block bool success = false;
 
-	const sharedmemorybase_pagerange_s range = {
-		.startpage = startpage,
-		.endpage = endpage,
-	};
+  const sharedmemorybase_pagerange_s range = {
+      .startpage = startpage,
+      .endpage = endpage,
+  };
 
-	/* BEGIN IGNORE CODESTYLE */
-	ret = sharedmemorybase_segxnuaccess_mappingunmap(sm_client, *mapping,
-	    &range, ^(sharedmemorybase_segaccessbase_mappingunmap__result_s result) {
-		sharedmemorybase_accesserror_s *error;
-		error = sharedmemorybase_segaccessbase_mappingunmap__result_get_failure(&result);
-		if (error != NULL) {
-			exclaves_debug_printf(show_errors, "%s: failed to unmap: %u\n",
-			    __func__, *error);
-			return;
-		}
+  /* BEGIN IGNORE CODESTYLE */
+  ret = sharedmemorybase_segxnuaccess_mappingunmap(
+      sm_client, *mapping, &range,
+      ^(sharedmemorybase_segaccessbase_mappingunmap__result_s result) {
+        sharedmemorybase_accesserror_s *error;
+        error = sharedmemorybase_segaccessbase_mappingunmap__result_get_failure(
+            &result);
+        if (error != NULL) {
+          exclaves_debug_printf(show_errors, "%s: failed to unmap: %u\n",
+                                __func__, *error);
+          return;
+        }
 
-		assert(sharedmemorybase_segaccessbase_mappingunmap__result_get_success(&result));
-		success = true;
-	});
-	/* END IGNORE CODESTYLE */
+        assert(sharedmemorybase_segaccessbase_mappingunmap__result_get_success(
+            &result));
+        success = true;
+      });
+  /* END IGNORE CODESTYLE */
 
-	if (ret != TB_ERROR_SUCCESS || !success) {
-		return KERN_FAILURE;
-	}
+  if (ret != TB_ERROR_SUCCESS || !success) {
+    return KERN_FAILURE;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 kern_return_t
 exclaves_shared_memory_iterate(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_mapping_s *mapping, uint64_t startpage, uint64_t endpage,
-    void (^cb)(uint64_t))
-{
-	assert3p(sm_client, !=, NULL);
-	assert3p(mapping, !=, NULL);
-	assert3u(startpage, <, endpage);
+                               const sharedmemorybase_mapping_s *mapping,
+                               uint64_t startpage, uint64_t endpage,
+                               void (^cb)(uint64_t)) {
+  assert3p(sm_client, !=, NULL);
+  assert3p(mapping, !=, NULL);
+  assert3u(startpage, <, endpage);
 
-	tb_error_t ret = TB_ERROR_SUCCESS;
-	__block bool success = false;
+  tb_error_t ret = TB_ERROR_SUCCESS;
+  __block bool success = false;
 
-	sharedmemorybase_pagerange_s full_range = {
-		.startpage = startpage,
-		.endpage = endpage,
-	};
+  sharedmemorybase_pagerange_s full_range = {
+      .startpage = startpage,
+      .endpage = endpage,
+  };
 
-	/* BEGIN IGNORE CODESTYLE */
-	ret = sharedmemorybase_segxnuaccess_mappinggetphysicaladdresses(sm_client,
-	    *mapping, &full_range,
-	    ^(sharedmemorybase_segaccessbase_mappinggetphysicaladdresses__result_s result) {
-		sharedmemorybase_accesserror_s *error = NULL;
-		error = sharedmemorybase_segaccessbase_mappinggetphysicaladdresses__result_get_failure(&result);
-		if (error != NULL) {
-			exclaves_debug_printf(show_errors,
-			    "%s: failed to get physical address: %u",
-			    __func__, *error);
-			return;
-		}
+  /* BEGIN IGNORE CODESTYLE */
+  ret = sharedmemorybase_segxnuaccess_mappinggetphysicaladdresses(
+      sm_client, *mapping, &full_range,
+      ^(sharedmemorybase_segaccessbase_mappinggetphysicaladdresses__result_s
+            result) {
+        sharedmemorybase_accesserror_s *error = NULL;
+        error =
+            sharedmemorybase_segaccessbase_mappinggetphysicaladdresses__result_get_failure(
+                &result);
+        if (error != NULL) {
+          exclaves_debug_printf(show_errors,
+                                "%s: failed to get physical address: %u",
+                                __func__, *error);
+          return;
+        }
 
-		physicaladdress_v_s *phys_addr = NULL;
-		phys_addr = sharedmemorybase_segaccessbase_mappinggetphysicaladdresses__result_get_success(&result);
-		assert3p(phys_addr, !=, NULL);
+        physicaladdress_v_s *phys_addr = NULL;
+        phys_addr =
+            sharedmemorybase_segaccessbase_mappinggetphysicaladdresses__result_get_success(
+                &result);
+        assert3p(phys_addr, !=, NULL);
 
-		physicaladdress__v_visit(phys_addr,
-		^(__unused size_t i, const sharedmemorybase_physicaladdress_s item) {
-			cb(item);
-		});
+        physicaladdress__v_visit(
+            phys_addr, ^(__unused size_t i,
+                         const sharedmemorybase_physicaladdress_s item) {
+              cb(item);
+            });
 
-		success = true;
-	});
-	/* END IGNORE CODESTYLE */
+        success = true;
+      });
+  /* END IGNORE CODESTYLE */
 
-	if (ret != TB_ERROR_SUCCESS || !success) {
-		return KERN_FAILURE;
-	}
+  if (ret != TB_ERROR_SUCCESS || !success) {
+    return KERN_FAILURE;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 #endif /* CONFIG_EXCLAVES */

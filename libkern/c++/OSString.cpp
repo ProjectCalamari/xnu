@@ -32,18 +32,19 @@
 
 #include <string.h>
 
-#include <libkern/c++/OSString.h>
+#include <libkern/c++/OSData.h>
+#include <libkern/c++/OSLib.h>
 #include <libkern/c++/OSSerialize.h>
 #include <libkern/c++/OSSharedPtr.h>
-#include <libkern/c++/OSLib.h>
-#include <libkern/c++/OSData.h>
+#include <libkern/c++/OSString.h>
 #include <string.h>
 
 #define super OSObject
 
 OSDefineMetaClassAndStructorsWithZone(OSString, OSObject,
-    (zone_create_flags_t) (ZC_CACHING | ZC_ZFREE_CLEARMEM))
-OSMetaClassDefineReservedUnused(OSString, 0);
+                                      (zone_create_flags_t)(ZC_CACHING |
+                                                            ZC_ZFREE_CLEARMEM))
+    OSMetaClassDefineReservedUnused(OSString, 0);
 OSMetaClassDefineReservedUnused(OSString, 1);
 OSMetaClassDefineReservedUnused(OSString, 2);
 OSMetaClassDefineReservedUnused(OSString, 3);
@@ -60,169 +61,152 @@ OSMetaClassDefineReservedUnused(OSString, 13);
 OSMetaClassDefineReservedUnused(OSString, 14);
 OSMetaClassDefineReservedUnused(OSString, 15);
 
-bool
-OSString::initWithString(const OSString *aString)
-{
-	return initWithCString(aString->string);
+bool OSString::initWithString(const OSString *aString) {
+  return initWithCString(aString->string);
 }
 
-bool
-OSString::initWithCString(const char *cString)
-{
-	unsigned int   newLength;
-	char         * newString;
+bool OSString::initWithCString(const char *cString) {
+  unsigned int newLength;
+  char *newString;
 
-	if (!cString || !super::init()) {
-		return false;
-	}
+  if (!cString || !super::init()) {
+    return false;
+  }
 
-	newLength = (unsigned int) strnlen(cString, kMaxStringLength);
-	if (newLength >= kMaxStringLength) {
-		return false;
-	}
+  newLength = (unsigned int)strnlen(cString, kMaxStringLength);
+  if (newLength >= kMaxStringLength) {
+    return false;
+  }
 
-	newLength++;
-	newString = (char *)kalloc_data(newLength,
-	    Z_VM_TAG_BT(Z_WAITOK, VM_KERN_MEMORY_LIBKERN));
-	if (!newString) {
-		return false;
-	}
+  newLength++;
+  newString = (char *)kalloc_data(
+      newLength, Z_VM_TAG_BT(Z_WAITOK, VM_KERN_MEMORY_LIBKERN));
+  if (!newString) {
+    return false;
+  }
 
-	bcopy(cString, newString, newLength);
+  bcopy(cString, newString, newLength);
 
-	if (!(flags & kOSStringNoCopy) && string) {
-		kfree_data(string, length);
-		OSCONTAINER_ACCUMSIZE(-((size_t)length));
-	}
-	string = newString;
-	length = newLength;
-	flags &= ~kOSStringNoCopy;
+  if (!(flags & kOSStringNoCopy) && string) {
+    kfree_data(string, length);
+    OSCONTAINER_ACCUMSIZE(-((size_t)length));
+  }
+  string = newString;
+  length = newLength;
+  flags &= ~kOSStringNoCopy;
 
-	OSCONTAINER_ACCUMSIZE(length);
+  OSCONTAINER_ACCUMSIZE(length);
 
-	return true;
+  return true;
 }
 
-bool
-OSString::initWithStringOfLength(const char *cString, size_t inlength)
-{
-	unsigned int   newLength;
-	unsigned int   cStringLength;
-	char         * newString;
+bool OSString::initWithStringOfLength(const char *cString, size_t inlength) {
+  unsigned int newLength;
+  unsigned int cStringLength;
+  char *newString;
 
-	if (!cString || !super::init()) {
-		return false;
-	}
+  if (!cString || !super::init()) {
+    return false;
+  }
 
-	if (inlength >= kMaxStringLength) {
-		return false;
-	}
+  if (inlength >= kMaxStringLength) {
+    return false;
+  }
 
-	cStringLength = (unsigned int)strnlen(cString, inlength);
+  cStringLength = (unsigned int)strnlen(cString, inlength);
 
-	if (cStringLength < inlength) {
-		inlength = cStringLength;
-	}
+  if (cStringLength < inlength) {
+    inlength = cStringLength;
+  }
 
-	newLength = (unsigned int) (inlength + 1);
-	newString = (char *)kalloc_data(newLength,
-	    Z_VM_TAG_BT(Z_WAITOK, VM_KERN_MEMORY_LIBKERN));
-	if (!newString) {
-		return false;
-	}
+  newLength = (unsigned int)(inlength + 1);
+  newString = (char *)kalloc_data(
+      newLength, Z_VM_TAG_BT(Z_WAITOK, VM_KERN_MEMORY_LIBKERN));
+  if (!newString) {
+    return false;
+  }
 
-	bcopy(cString, newString, inlength);
-	newString[inlength] = 0;
+  bcopy(cString, newString, inlength);
+  newString[inlength] = 0;
 
-	if (!(flags & kOSStringNoCopy) && string) {
-		kfree_data(string, length);
-		OSCONTAINER_ACCUMSIZE(-((size_t)length));
-	}
+  if (!(flags & kOSStringNoCopy) && string) {
+    kfree_data(string, length);
+    OSCONTAINER_ACCUMSIZE(-((size_t)length));
+  }
 
-	string = newString;
-	length = newLength;
-	flags &= ~kOSStringNoCopy;
+  string = newString;
+  length = newLength;
+  flags &= ~kOSStringNoCopy;
 
-	OSCONTAINER_ACCUMSIZE(length);
+  OSCONTAINER_ACCUMSIZE(length);
 
-	return true;
+  return true;
 }
 
-bool
-OSString::initWithCStringNoCopy(const char *cString)
-{
-	if (!cString || !super::init()) {
-		return false;
-	}
+bool OSString::initWithCStringNoCopy(const char *cString) {
+  if (!cString || !super::init()) {
+    return false;
+  }
 
-	length = (unsigned int) strnlen(cString, kMaxStringLength);
-	if (length >= kMaxStringLength) {
-		return false;
-	}
+  length = (unsigned int)strnlen(cString, kMaxStringLength);
+  if (length >= kMaxStringLength) {
+    return false;
+  }
 
-	length++;
-	flags |= kOSStringNoCopy;
-	string = const_cast<char *>(cString);
+  length++;
+  flags |= kOSStringNoCopy;
+  string = const_cast<char *>(cString);
 
-	return true;
+  return true;
 }
 
-OSSharedPtr<OSString>
-OSString::withString(const OSString *aString)
-{
-	OSSharedPtr<OSString> me = OSMakeShared<OSString>();
+OSSharedPtr<OSString> OSString::withString(const OSString *aString) {
+  OSSharedPtr<OSString> me = OSMakeShared<OSString>();
 
-	if (me && !me->initWithString(aString)) {
-		return nullptr;
-	}
+  if (me && !me->initWithString(aString)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSString>
-OSString::withCString(const char *cString)
-{
-	OSSharedPtr<OSString> me = OSMakeShared<OSString>();
+OSSharedPtr<OSString> OSString::withCString(const char *cString) {
+  OSSharedPtr<OSString> me = OSMakeShared<OSString>();
 
-	if (me && !me->initWithCString(cString)) {
-		return nullptr;
-	}
+  if (me && !me->initWithCString(cString)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSString>
-OSString::withCStringNoCopy(const char *cString)
-{
-	OSSharedPtr<OSString> me = OSMakeShared<OSString>();
+OSSharedPtr<OSString> OSString::withCStringNoCopy(const char *cString) {
+  OSSharedPtr<OSString> me = OSMakeShared<OSString>();
 
-	if (me && !me->initWithCStringNoCopy(cString)) {
-		return nullptr;
-	}
+  if (me && !me->initWithCStringNoCopy(cString)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSString>
-OSString::withCString(const char *cString, size_t length)
-{
-	OSSharedPtr<OSString> me = OSMakeShared<OSString>();
+OSSharedPtr<OSString> OSString::withCString(const char *cString,
+                                            size_t length) {
+  OSSharedPtr<OSString> me = OSMakeShared<OSString>();
 
-	if (me && !me->initWithStringOfLength(cString, length)) {
-		return nullptr;
-	}
+  if (me && !me->initWithStringOfLength(cString, length)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
-
-
 
 /* @@@ gvdl */
 #if 0
 OSString *
 OSString::stringWithFormat(const char *format, ...)
 {
-#ifndef KERNEL                  // mach3xxx
+#ifndef KERNEL // mach3xxx
 	OSString *me;
 	va_list argList;
 
@@ -246,151 +230,126 @@ OSString::stringWithFormat(const char *format, ...)
 }
 #endif /* 0 */
 
-void
-OSString::free()
-{
-	if (!(flags & kOSStringNoCopy) && string) {
-		kfree_data(string, length);
-		OSCONTAINER_ACCUMSIZE(-((size_t)length));
-	}
+void OSString::free() {
+  if (!(flags & kOSStringNoCopy) && string) {
+    kfree_data(string, length);
+    OSCONTAINER_ACCUMSIZE(-((size_t)length));
+  }
 
-	super::free();
+  super::free();
 }
 
-unsigned int
-OSString::getLength()  const
-{
-	return length - 1;
+unsigned int OSString::getLength() const { return length - 1; }
+
+const char *OSString::getCStringNoCopy() const { return string; }
+
+bool OSString::setChar(char aChar, unsigned int index) {
+  if (!(flags & kOSStringNoCopy) && index < length - 1) {
+    string[index] = aChar;
+
+    return true;
+  } else {
+    return false;
+  }
 }
 
-const char *
-OSString::getCStringNoCopy() const
-{
-	return string;
+char OSString::getChar(unsigned int index) const {
+  if (index < length) {
+    return string[index];
+  } else {
+    return '\0';
+  }
 }
 
-bool
-OSString::setChar(char aChar, unsigned int index)
-{
-	if (!(flags & kOSStringNoCopy) && index < length - 1) {
-		string[index] = aChar;
-
-		return true;
-	} else {
-		return false;
-	}
+bool OSString::isEqualTo(const OSString *aString) const {
+  if (length != aString->length) {
+    return false;
+  } else {
+    return isEqualTo((const char *)aString->string);
+  }
 }
 
-char
-OSString::getChar(unsigned int index) const
-{
-	if (index < length) {
-		return string[index];
-	} else {
-		return '\0';
-	}
+bool OSString::isEqualTo(const char *aCString) const {
+  return strncmp(string, aCString, length) == 0;
 }
 
+bool OSString::isEqualTo(const OSMetaClassBase *obj) const {
+  OSString *str;
+  OSData *data;
 
-bool
-OSString::isEqualTo(const OSString *aString) const
-{
-	if (length != aString->length) {
-		return false;
-	} else {
-		return isEqualTo((const char *) aString->string);
-	}
+  if ((str = OSDynamicCast(OSString, obj))) {
+    return isEqualTo(str);
+  } else if ((data = OSDynamicCast(OSData, obj))) {
+    return isEqualTo(data);
+  } else {
+    return false;
+  }
 }
 
-bool
-OSString::isEqualTo(const char *aCString) const
-{
-	return strncmp(string, aCString, length) == 0;
+bool OSString::isEqualTo(const OSData *obj) const {
+  if (NULL == obj) {
+    return false;
+  }
+
+  unsigned int dataLen = obj->getLength();
+  const char *dataPtr = (const char *)obj->getBytesNoCopy();
+
+  if (dataLen != length) {
+    // check for the fact that OSData may be a buffer that
+    // that includes a termination byte and will thus have
+    // a length of the actual string length PLUS 1. In this
+    // case we verify that the additional byte is a terminator
+    // and if so count the two lengths as being the same.
+
+    if ((dataLen - length) == 1) {
+      if (dataPtr[dataLen - 1] != 0) {
+        return false;
+      }
+      dataLen--;
+    } else {
+      return false;
+    }
+  }
+
+  for (unsigned int i = 0; i < dataLen; i++) {
+    if (*dataPtr++ != string[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-bool
-OSString::isEqualTo(const OSMetaClassBase *obj) const
-{
-	OSString *  str;
-	OSData *    data;
+bool OSString::serialize(OSSerialize *s) const {
+  char *c = string;
 
-	if ((str = OSDynamicCast(OSString, obj))) {
-		return isEqualTo(str);
-	} else if ((data = OSDynamicCast(OSData, obj))) {
-		return isEqualTo(data);
-	} else {
-		return false;
-	}
-}
+  if (s->previouslySerialized(this)) {
+    return true;
+  }
 
-bool
-OSString::isEqualTo(const OSData *obj) const
-{
-	if (NULL == obj) {
-		return false;
-	}
+  if (!s->addXMLStartTag(this, "string")) {
+    return false;
+  }
+  while (*c) {
+    if (*c == '<') {
+      if (!s->addString("&lt;")) {
+        return false;
+      }
+    } else if (*c == '>') {
+      if (!s->addString("&gt;")) {
+        return false;
+      }
+    } else if (*c == '&') {
+      if (!s->addString("&amp;")) {
+        return false;
+      }
+    } else {
+      if (!s->addChar(*c)) {
+        return false;
+      }
+    }
+    c++;
+  }
 
-	unsigned int dataLen = obj->getLength();
-	const char * dataPtr = (const char *) obj->getBytesNoCopy();
-
-	if (dataLen != length) {
-		// check for the fact that OSData may be a buffer that
-		// that includes a termination byte and will thus have
-		// a length of the actual string length PLUS 1. In this
-		// case we verify that the additional byte is a terminator
-		// and if so count the two lengths as being the same.
-
-		if ((dataLen - length) == 1) {
-			if (dataPtr[dataLen - 1] != 0) {
-				return false;
-			}
-			dataLen--;
-		} else {
-			return false;
-		}
-	}
-
-	for (unsigned int i = 0; i < dataLen; i++) {
-		if (*dataPtr++ != string[i]) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool
-OSString::serialize(OSSerialize *s) const
-{
-	char *c = string;
-
-	if (s->previouslySerialized(this)) {
-		return true;
-	}
-
-	if (!s->addXMLStartTag(this, "string")) {
-		return false;
-	}
-	while (*c) {
-		if (*c == '<') {
-			if (!s->addString("&lt;")) {
-				return false;
-			}
-		} else if (*c == '>') {
-			if (!s->addString("&gt;")) {
-				return false;
-			}
-		} else if (*c == '&') {
-			if (!s->addString("&amp;")) {
-				return false;
-			}
-		} else {
-			if (!s->addChar(*c)) {
-				return false;
-			}
-		}
-		c++;
-	}
-
-	return s->addXMLEndTag("string");
+  return s->addXMLEndTag("string");
 }

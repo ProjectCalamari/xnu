@@ -31,7 +31,7 @@
 
 #include <sys/types.h>
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -46,34 +46,31 @@ extern "C" {
 //      num_bits = ((2.3 * ELEMENT_COUNT) / 0.48)
 
 #define kNetBloomFilterBitsPerTableElement (sizeof(uint32_t) * 8)
-// Define net_bloom_howmany macro without ternary expression to work with __counted_by.
+// Define net_bloom_howmany macro without ternary expression to work with
+// __counted_by.
 #define net_bloom_howmany(x, y) (((x) / (y)) + ((x) % (y) != 0))
 
 struct net_bloom_filter {
-	uint32_t b_table_num_bits;
-	uint32_t b_table[__counted_by(net_bloom_howmany(b_table_num_bits, kNetBloomFilterBitsPerTableElement))];
+  uint32_t b_table_num_bits;
+  uint32_t b_table[__counted_by(
+      net_bloom_howmany(b_table_num_bits, kNetBloomFilterBitsPerTableElement))];
 };
 
-struct net_bloom_filter *
-net_bloom_filter_create(uint32_t num_bits);
+struct net_bloom_filter *net_bloom_filter_create(uint32_t num_bits);
 
-size_t
-net_bloom_filter_get_size(uint32_t num_bits);
+size_t net_bloom_filter_get_size(uint32_t num_bits);
 
-void
-net_bloom_filter_destroy(struct net_bloom_filter *filter);
+void net_bloom_filter_destroy(struct net_bloom_filter *filter);
 
-void
-net_bloom_filter_insert(struct net_bloom_filter *filter,
-    const void * __sized_by(length)buffer,
-    uint32_t length);
+void net_bloom_filter_insert(struct net_bloom_filter *filter,
+                             const void *__sized_by(length) buffer,
+                             uint32_t length);
 
-bool
-net_bloom_filter_contains(struct net_bloom_filter *filter,
-    const void * __sized_by(length)buffer,
-    uint32_t length);
+bool net_bloom_filter_contains(struct net_bloom_filter *filter,
+                               const void *__sized_by(length) buffer,
+                               uint32_t length);
 
-#ifdef  __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

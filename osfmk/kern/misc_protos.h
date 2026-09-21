@@ -38,82 +38,59 @@
 #ifndef _MISC_PROTOS_H_
 #define _MISC_PROTOS_H_
 
-#include <stdarg.h>
-#include <string.h>
-#include <machine/setjmp.h>
-#include <mach/boolean.h>
-#include <mach/message.h>
-#include <mach/machine/vm_types.h>
 #include <ipc/ipc_types.h>
 #include <kern/debug.h>
 #include <libkern/copyio.h>
+#include <mach/boolean.h>
+#include <mach/machine/vm_types.h>
+#include <mach/message.h>
+#include <machine/setjmp.h>
+#include <stdarg.h>
+#include <string.h>
 
 #ifndef MIN
-#define MIN(a, b) (((a)<(b))?(a):(b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif /* MIN */
 #ifndef MAX
-#define MAX(a, b) (((a)>(b))?(a):(b))
-#endif  /* MAX */
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif /* MAX */
 
 /* Set a bit in a bit array */
-extern void setbit(
-	int             which,
-	int             *bitmap);
+extern void setbit(int which, int *bitmap);
 
 /* Clear a bit in a bit array */
-extern void clrbit(
-	int             which,
-	int             *bitmap);
+extern void clrbit(int which, int *bitmap);
 
 /* Find the first set bit in a bit array */
-extern int ffsbit(
-	int             *bitmap);
-extern int ffs(
-	unsigned int    mask);
-extern int ffsll(
-	unsigned long long mask);
+extern int ffsbit(int *bitmap);
+extern int ffs(unsigned int mask);
+extern int ffsll(unsigned long long mask);
 
 /* Find the last set bit in a bit array */
-extern int fls(
-	unsigned int    mask);
-extern int flsll(
-	unsigned long long mask);
+extern int fls(unsigned int mask);
+extern int flsll(unsigned long long mask);
 
 /*
  * Test if indicated bit is set in bit string.
  */
-extern int testbit(
-	int             which,
-	int             *bitmap);
+extern int testbit(int which, int *bitmap);
 
 /*
  * Move an aligned 32 or 64-bit word from user space to kernel space
  * using a single read instruction
  */
-extern int copyin_atomic32(
-	const user_addr_t   user_addr,
-	uint32_t            *kernel_addr);
+extern int copyin_atomic32(const user_addr_t user_addr, uint32_t *kernel_addr);
 
-extern int copyin_atomic64(
-	const user_addr_t   user_addr,
-	uint64_t            *kernel_addr);
+extern int copyin_atomic64(const user_addr_t user_addr, uint64_t *kernel_addr);
 
 #if CONFIG_DTRACE
-extern int dtrace_nofault_copy8(
-	const uintptr_t     kernel_addr,
-	uint8_t             *value);
+extern int dtrace_nofault_copy8(const uintptr_t kernel_addr, uint8_t *value);
 
-extern int dtrace_nofault_copy16(
-	const uintptr_t     kernel_addr,
-	uint16_t            *value);
+extern int dtrace_nofault_copy16(const uintptr_t kernel_addr, uint16_t *value);
 
-extern int dtrace_nofault_copy32(
-	const uintptr_t     kernel_addr,
-	uint32_t            *value);
+extern int dtrace_nofault_copy32(const uintptr_t kernel_addr, uint32_t *value);
 
-extern int dtrace_nofault_copy64(
-	const uintptr_t     kernel_addr,
-	uint64_t            *value);
+extern int dtrace_nofault_copy64(const uintptr_t kernel_addr, uint64_t *value);
 #endif /* CONFIG_DTRACE */
 
 /*
@@ -127,41 +104,28 @@ extern int dtrace_nofault_copy64(
  * ESTALE:  the value didn't match, and it returned immediately
  * other:   the copyin failed (EFAULT, EINVAL, ...)
  */
-extern int copyin_atomic32_wait_if_equals(
-	const user_addr_t   user_addr,
-	uint32_t            value);
+extern int copyin_atomic32_wait_if_equals(const user_addr_t user_addr,
+                                          uint32_t value);
 
 /*
  * Move a 32 or 64-bit word from kernel space to user space
  * using a single write instruction
  */
-extern int copyout_atomic32(
-	uint32_t            u32,
-	user_addr_t         user_addr);
+extern int copyout_atomic32(uint32_t u32, user_addr_t user_addr);
 
-extern int copyout_atomic64(
-	uint64_t            u64,
-	user_addr_t         user_addr);
+extern int copyout_atomic64(uint64_t u64, user_addr_t user_addr);
 
 /* Move a NUL-terminated string from a user space to kernel space */
-extern int copyinstr(
-	const user_addr_t   user_addr,
-	char                *kernel_addr,
-	vm_size_t           max,
-	vm_size_t           *actual);
+extern int copyinstr(const user_addr_t user_addr, char *kernel_addr,
+                     vm_size_t max, vm_size_t *actual);
 
 /* Move arbitrarily-aligned data from a user space to kernel space */
-extern int copyinmsg(
-	const user_addr_t   user_addr,
-	void                *kernel_addr,
-	mach_msg_size_t     nbytes);
+extern int copyinmsg(const user_addr_t user_addr, void *kernel_addr,
+                     mach_msg_size_t nbytes);
 
 /* Move arbitrarily-aligned data from a kernel space to user space */
-extern int copyoutmsg(
-	const void      *kernel_addr,
-	user_addr_t     user_addr,
-	mach_msg_size_t nbytes);
-
+extern int copyoutmsg(const void *kernel_addr, user_addr_t user_addr,
+                      mach_msg_size_t nbytes);
 
 #if (DEBUG || DEVELOPMENT)
 extern int verify_write(const void *source, void *dst, size_t size);
@@ -169,20 +133,23 @@ extern int verify_write(const void *source, void *dst, size_t size);
 extern int sscanf(const char *input, const char *fmt, ...) __scanflike(2, 3);
 
 /* sprintf() is being deprecated. Please use snprintf() instead. */
-extern integer_t sprintf(char *buf, const char *fmt, ...) __printflike(2, 3) __deprecated;
+extern integer_t sprintf(char *buf, const char *fmt, ...)
+    __printflike(2, 3) __deprecated;
 
 extern int printf(const char *format, ...) __printflike(1, 2);
 extern int vprintf(const char *format, va_list ap) __printflike(1, 0);
 
 #if KERNEL_PRIVATE
-int     _consume_printf_args(int, ...);
+int _consume_printf_args(int, ...);
 #endif
 
 #if CONFIG_NO_PRINTF_STRINGS
 #if KERNEL_PRIVATE
-#define printf(x, ...)  _consume_printf_args( 0, ## __VA_ARGS__ )
+#define printf(x, ...) _consume_printf_args(0, ##__VA_ARGS__)
 #else
-#define printf(x, ...)  do {} while (0)
+#define printf(x, ...)                                                         \
+  do {                                                                         \
+  } while (0)
 #endif
 #endif
 
@@ -196,32 +163,19 @@ extern int kdb_printf_unbuffered(const char *format, ...) __printflike(1, 2);
 
 extern int snprintf(char *, size_t, const char *, ...) __printflike(3, 4);
 extern int scnprintf(char *, size_t, const char *, ...) __printflike(3, 4);
-extern const char *tsnprintf(char *, size_t, const char *, ...) __printflike(3, 4);
+extern const char *tsnprintf(char *, size_t, const char *, ...)
+    __printflike(3, 4);
 
 extern void log(int level, char *fmt, ...) __printflike(2, 3);
 
-void
-_doprnt(
-	const char     *fmt,
-	va_list        *argp,
-	void          (*putc)(char),
-	int             radix) __printflike(1, 0);
+void _doprnt(const char *fmt, va_list *argp, void (*putc)(char), int radix)
+    __printflike(1, 0);
 
-void
-_doprnt_log(
-	const char     *fmt,
-	va_list        *argp,
-	void          (*putc)(char),
-	int             radix) __printflike(1, 0);
+void _doprnt_log(const char *fmt, va_list *argp, void (*putc)(char), int radix)
+    __printflike(1, 0);
 
-int
-__doprnt(
-	const char     *fmt,
-	va_list         argp,
-	void          (*putc)(int, void *),
-	void           *arg,
-	int             radix,
-	int             is_log) __printflike(1, 0);
+int __doprnt(const char *fmt, va_list argp, void (*putc)(int, void *),
+             void *arg, int radix, int is_log) __printflike(1, 0);
 
 extern void console_write_char(char);
 
@@ -247,24 +201,17 @@ extern int console_read_char(void);
 
 extern int console_try_read_char(void);
 
-extern int _setjmp(
-	jmp_buf_t       *jmp_buf);
+extern int _setjmp(jmp_buf_t *jmp_buf);
 
-extern int _longjmp(
-	jmp_buf_t       *jmp_buf,
-	int             value);
+extern int _longjmp(jmp_buf_t *jmp_buf, int value);
 
 extern void bootstrap_create(void);
 
-extern kern_return_t    kernel_set_special_port(
-	host_priv_t     host_priv,
-	int             which,
-	ipc_port_t      port);
+extern kern_return_t kernel_set_special_port(host_priv_t host_priv, int which,
+                                             ipc_port_t port);
 
-extern kern_return_t    kernel_get_special_port(
-	host_priv_t     host_priv,
-	int             which,
-	ipc_port_t      *portp);
+extern kern_return_t kernel_get_special_port(host_priv_t host_priv, int which,
+                                             ipc_port_t *portp);
 
 user_addr_t get_useraddr(void);
 
@@ -275,4 +222,4 @@ struct kmod_info_t;
 
 extern uint64_t early_random(void);
 
-#endif  /* _MISC_PROTOS_H_ */
+#endif /* _MISC_PROTOS_H_ */

@@ -62,27 +62,27 @@ static void kperf_kdebug_update(void);
 static uint8_t kperf_kdebug_action = 0;
 
 static struct kperf_kdebug_filter {
-	uint64_t types[2];
-	uint32_t debugids[KPERF_KDEBUG_DEBUGIDS_MAX];
-	uint8_t n_debugids;
+  uint64_t types[2];
+  uint32_t debugids[KPERF_KDEBUG_DEBUGIDS_MAX];
+  uint8_t n_debugids;
 } __attribute__((packed)) *kperf_kdebug_filter = NULL;
 
 enum kperf_kdebug_filter_type {
-	KPERF_KDEBUG_FILTER_CLASS,
-	KPERF_KDEBUG_FILTER_CLASS_FN,
-	KPERF_KDEBUG_FILTER_CSC,
-	KPERF_KDEBUG_FILTER_CSC_FN,
-	KPERF_KDEBUG_FILTER_DEBUGID,
-	KPERF_KDEBUG_FILTER_DEBUGID_FN
+  KPERF_KDEBUG_FILTER_CLASS,
+  KPERF_KDEBUG_FILTER_CLASS_FN,
+  KPERF_KDEBUG_FILTER_CSC,
+  KPERF_KDEBUG_FILTER_CSC_FN,
+  KPERF_KDEBUG_FILTER_DEBUGID,
+  KPERF_KDEBUG_FILTER_DEBUGID_FN
 };
 
 const static uint32_t debugid_masks[] = {
-	[KPERF_KDEBUG_FILTER_CLASS] = KDBG_CLASS_MASK,
-	[KPERF_KDEBUG_FILTER_CLASS_FN] = KDBG_CLASS_MASK | KDBG_FUNC_MASK,
-	[KPERF_KDEBUG_FILTER_CSC] = KDBG_CSC_MASK,
-	[KPERF_KDEBUG_FILTER_CSC_FN] = KDBG_CSC_MASK | KDBG_FUNC_MASK,
-	[KPERF_KDEBUG_FILTER_DEBUGID] = KDBG_EVENTID_MASK,
-	[KPERF_KDEBUG_FILTER_DEBUGID_FN] = UINT32_MAX,
+    [KPERF_KDEBUG_FILTER_CLASS] = KDBG_CLASS_MASK,
+    [KPERF_KDEBUG_FILTER_CLASS_FN] = KDBG_CLASS_MASK | KDBG_FUNC_MASK,
+    [KPERF_KDEBUG_FILTER_CSC] = KDBG_CSC_MASK,
+    [KPERF_KDEBUG_FILTER_CSC_FN] = KDBG_CSC_MASK | KDBG_FUNC_MASK,
+    [KPERF_KDEBUG_FILTER_DEBUGID] = KDBG_EVENTID_MASK,
+    [KPERF_KDEBUG_FILTER_DEBUGID_FN] = UINT32_MAX,
 };
 
 /*
@@ -92,135 +92,114 @@ const static uint32_t debugid_masks[] = {
  */
 
 /* UNSAFE */
-#define DECODE_TYPE(TYPES, I) ((((uint8_t *)(TYPES))[(I) / 2] >> ((I) % 2) * 4) & 0xf)
+#define DECODE_TYPE(TYPES, I)                                                  \
+  ((((uint8_t *)(TYPES))[(I) / 2] >> ((I) % 2) * 4) & 0xf)
 
-void
-kperf_kdebug_setup(void)
-{
-	kperf_kdebug_filter = zalloc_permanent_type(struct kperf_kdebug_filter);
+void kperf_kdebug_setup(void) {
+  kperf_kdebug_filter = zalloc_permanent_type(struct kperf_kdebug_filter);
 }
 
-void
-kperf_kdebug_reset(void)
-{
-	kperf_setup();
+void kperf_kdebug_reset(void) {
+  kperf_setup();
 
-	kperf_kdebug_action = 0;
-	bzero(kperf_kdebug_filter, sizeof(*kperf_kdebug_filter));
-	kperf_kdebug_update();
+  kperf_kdebug_action = 0;
+  bzero(kperf_kdebug_filter, sizeof(*kperf_kdebug_filter));
+  kperf_kdebug_update();
 }
 
-boolean_t
-kperf_kdebug_should_trigger(uint32_t debugid)
-{
-	/* ignore kperf events */
-	if (KDBG_EXTRACT_CLASS(debugid) == DBG_PERF) {
-		return FALSE;
-	}
+boolean_t kperf_kdebug_should_trigger(uint32_t debugid) {
+  /* ignore kperf events */
+  if (KDBG_EXTRACT_CLASS(debugid) == DBG_PERF) {
+    return FALSE;
+  }
 
-	/*
-	 * Search linearly through list of debugids and masks.  If the filter
-	 * gets larger than 128 bytes, change this to either a binary search or
-	 * a sparse bitmap on the uint32_t range, depending on the new size.
-	 */
-	for (uint8_t i = 0; i < kperf_kdebug_filter->n_debugids; i++) {
-		uint32_t check_debugid =
-		    kperf_kdebug_filter->debugids[i];
-		uint32_t mask = debugid_masks[DECODE_TYPE(kperf_kdebug_filter->types, i)];
+  /*
+   * Search linearly through list of debugids and masks.  If the filter
+   * gets larger than 128 bytes, change this to either a binary search or
+   * a sparse bitmap on the uint32_t range, depending on the new size.
+   */
+  for (uint8_t i = 0; i < kperf_kdebug_filter->n_debugids; i++) {
+    uint32_t check_debugid = kperf_kdebug_filter->debugids[i];
+    uint32_t mask = debugid_masks[DECODE_TYPE(kperf_kdebug_filter->types, i)];
 
-		if ((debugid & mask) == check_debugid) {
-			return TRUE;
-		}
-	}
+    if ((debugid & mask) == check_debugid) {
+      return TRUE;
+    }
+  }
 
-	return FALSE;
+  return FALSE;
 }
 
-int
-kperf_kdebug_set_filter(user_addr_t user_filter, uint32_t user_size)
-{
-	uint32_t n_debugids_provided = 0;
-	int err = 0;
+int kperf_kdebug_set_filter(user_addr_t user_filter, uint32_t user_size) {
+  uint32_t n_debugids_provided = 0;
+  int err = 0;
 
-	kperf_setup();
+  kperf_setup();
 
-	n_debugids_provided = (uint32_t)KPERF_KDEBUG_N_DEBUGIDS(user_size);
+  n_debugids_provided = (uint32_t)KPERF_KDEBUG_N_DEBUGIDS(user_size);
 
-	/* detect disabling the filter completely */
-	if (n_debugids_provided == 0) {
-		bzero(kperf_kdebug_filter, sizeof(*kperf_kdebug_filter));
-		goto out;
-	}
+  /* detect disabling the filter completely */
+  if (n_debugids_provided == 0) {
+    bzero(kperf_kdebug_filter, sizeof(*kperf_kdebug_filter));
+    goto out;
+  }
 
-	if ((err = kperf_kdebug_set_n_debugids(n_debugids_provided))) {
-		goto out;
-	}
+  if ((err = kperf_kdebug_set_n_debugids(n_debugids_provided))) {
+    goto out;
+  }
 
-	if ((err = copyin(user_filter, (char *)kperf_kdebug_filter,
-	    KPERF_KDEBUG_FILTER_SIZE(n_debugids_provided)))) {
-		bzero(kperf_kdebug_filter, sizeof(*kperf_kdebug_filter));
-		goto out;
-	}
+  if ((err = copyin(user_filter, (char *)kperf_kdebug_filter,
+                    KPERF_KDEBUG_FILTER_SIZE(n_debugids_provided)))) {
+    bzero(kperf_kdebug_filter, sizeof(*kperf_kdebug_filter));
+    goto out;
+  }
 
 out:
-	kperf_kdebug_update();
+  kperf_kdebug_update();
 
-	return err;
+  return err;
 }
 
-uint32_t
-kperf_kdebug_get_filter(struct kperf_kdebug_filter **filter)
-{
-	kperf_setup();
+uint32_t kperf_kdebug_get_filter(struct kperf_kdebug_filter **filter) {
+  kperf_setup();
 
-	assert(filter != NULL);
+  assert(filter != NULL);
 
-	*filter = kperf_kdebug_filter;
-	return kperf_kdebug_filter->n_debugids;
+  *filter = kperf_kdebug_filter;
+  return kperf_kdebug_filter->n_debugids;
 }
 
-int
-kperf_kdebug_set_n_debugids(uint32_t n_debugids_in)
-{
-	kperf_setup();
+int kperf_kdebug_set_n_debugids(uint32_t n_debugids_in) {
+  kperf_setup();
 
-	if (n_debugids_in > KPERF_KDEBUG_DEBUGIDS_MAX) {
-		return EINVAL;
-	}
+  if (n_debugids_in > KPERF_KDEBUG_DEBUGIDS_MAX) {
+    return EINVAL;
+  }
 
-	kperf_kdebug_filter->n_debugids = n_debugids_in;
+  kperf_kdebug_filter->n_debugids = n_debugids_in;
 
-	return 0;
+  return 0;
 }
 
-int
-kperf_kdebug_set_action(int action_id)
-{
-	if (action_id < 0 || (unsigned int)action_id > kperf_action_get_count()) {
-		return EINVAL;
-	}
+int kperf_kdebug_set_action(int action_id) {
+  if (action_id < 0 || (unsigned int)action_id > kperf_action_get_count()) {
+    return EINVAL;
+  }
 
-	kperf_kdebug_action = action_id;
-	kperf_kdebug_update();
+  kperf_kdebug_action = action_id;
+  kperf_kdebug_update();
 
-	return 0;
+  return 0;
 }
 
-int
-kperf_kdebug_get_action(void)
-{
-	return kperf_kdebug_action;
-}
+int kperf_kdebug_get_action(void) { return kperf_kdebug_action; }
 
-static void
-kperf_kdebug_update(void)
-{
-	kperf_setup();
+static void kperf_kdebug_update(void) {
+  kperf_setup();
 
-	if (kperf_kdebug_action != 0 &&
-	    kperf_kdebug_filter->n_debugids != 0) {
-		kperf_kdebug_active = TRUE;
-	} else {
-		kperf_kdebug_active = FALSE;
-	}
+  if (kperf_kdebug_action != 0 && kperf_kdebug_filter->n_debugids != 0) {
+    kperf_kdebug_active = TRUE;
+  } else {
+    kperf_kdebug_active = FALSE;
+  }
 }

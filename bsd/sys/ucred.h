@@ -70,17 +70,17 @@
 #ifndef _SYS_UCRED_H_
 #define _SYS_UCRED_H_
 
+#include <bsm/audit.h>
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
 #include <sys/param.h>
-#include <bsm/audit.h>
 
 struct label;
 
 #ifdef __APPLE_API_UNSTABLE
 #ifdef KERNEL
-#include <sys/queue.h>
 #include <os/base.h>
+#include <sys/queue.h>
 
 /*!
  * @struct ucred
@@ -145,41 +145,43 @@ struct label;
  */
 struct ucred {
 #if BSD_KERNEL_PRIVATE
-	struct ucred_rw        *cr_rw;
-	void                   *cr_unused;
+  struct ucred_rw *cr_rw;
+  void *cr_unused;
 #else
-	LIST_ENTRY(ucred)       cr_link; /* never modify this without KAUTH_CRED_HASH_LOCK */
+  LIST_ENTRY(ucred)
+  cr_link; /* never modify this without KAUTH_CRED_HASH_LOCK */
 #endif
-	u_long                  cr_ref;  /* reference count */
+  u_long cr_ref; /* reference count */
 
-	struct posix_cred {
-		/*
-		 * The credential hash depends on everything from this point on
-		 * (see kauth_cred_get_hashkey)
-		 */
-		uid_t   cr_uid;         /* effective user id */
-		uid_t   cr_ruid;        /* real user id */
-		uid_t   cr_svuid;       /* saved user id */
-		u_short cr_ngroups;     /* number of groups in advisory list */
+  struct posix_cred {
+    /*
+     * The credential hash depends on everything from this point on
+     * (see kauth_cred_get_hashkey)
+     */
+    uid_t cr_uid;       /* effective user id */
+    uid_t cr_ruid;      /* real user id */
+    uid_t cr_svuid;     /* saved user id */
+    u_short cr_ngroups; /* number of groups in advisory list */
 #if XNU_KERNEL_PRIVATE
-		u_short __cr_padding;
+    u_short __cr_padding;
 #endif
-		gid_t   cr_groups[NGROUPS];/* advisory group list */
-		gid_t   cr_rgid;        /* real group id */
-		gid_t   cr_svgid;       /* saved group id */
-		uid_t   cr_gmuid;       /* UID for group membership purposes */
-		int     cr_flags;       /* flags on credential */
-	} cr_posix;
-	struct label    * OS_PTRAUTH_SIGNED_PTR_AUTH_NULL("ucred.cr_label") cr_label;     /* MAC label */
+    gid_t cr_groups[NGROUPS]; /* advisory group list */
+    gid_t cr_rgid;            /* real group id */
+    gid_t cr_svgid;           /* saved group id */
+    uid_t cr_gmuid;           /* UID for group membership purposes */
+    int cr_flags;             /* flags on credential */
+  } cr_posix;
+  struct label *OS_PTRAUTH_SIGNED_PTR_AUTH_NULL(
+      "ucred.cr_label") cr_label; /* MAC label */
 
-	/*
-	 * NOTE: If anything else (besides the flags)
-	 * added after the label, you must change
-	 * kauth_cred_find().
-	 */
-	struct au_session cr_audit;             /* user auditing data */
+  /*
+   * NOTE: If anything else (besides the flags)
+   * added after the label, you must change
+   * kauth_cred_find().
+   */
+  struct au_session cr_audit; /* user auditing data */
 };
-#else /* KERNEL */
+#else  /* KERNEL */
 struct ucred;
 struct posix_cred;
 #endif /* KERNEL */
@@ -188,38 +190,38 @@ struct posix_cred;
 #define _KAUTH_CRED_T
 typedef struct ucred *kauth_cred_t;
 typedef struct posix_cred *posix_cred_t;
-#endif  /* !_KAUTH_CRED_T */
+#endif /* !_KAUTH_CRED_T */
 
 /*
  * Credential flags that can be set on a credential
  */
-#define CRF_NOMEMBERD   0x00000001      /* memberd opt out by setgroups() */
-#define CRF_MAC_ENFORCE 0x00000002      /* force entry through MAC Framework */
-                                        /* also forces credential cache miss */
+#define CRF_NOMEMBERD 0x00000001   /* memberd opt out by setgroups() */
+#define CRF_MAC_ENFORCE 0x00000002 /* force entry through MAC Framework */
+                                   /* also forces credential cache miss */
 
 /*
  * This is the external representation of struct ucred.
  */
 struct xucred {
-	u_int   cr_version;             /* structure layout version */
-	uid_t   cr_uid;                 /* effective user id */
-	short   cr_ngroups;             /* number of advisory groups */
-	gid_t   cr_groups[NGROUPS];     /* advisory group list */
+  u_int cr_version;         /* structure layout version */
+  uid_t cr_uid;             /* effective user id */
+  short cr_ngroups;         /* number of advisory groups */
+  gid_t cr_groups[NGROUPS]; /* advisory group list */
 };
-#define XUCRED_VERSION  0
+#define XUCRED_VERSION 0
 
 #define cr_gid cr_groups[0]
-#define NOCRED ((kauth_cred_t )0)       /* no credential available */
-#define FSCRED ((kauth_cred_t )-1)      /* filesystem credential */
+#define NOCRED ((kauth_cred_t)0)    /* no credential available */
+#define FSCRED ((kauth_cred_t) - 1) /* filesystem credential */
 
-#define IS_VALID_CRED(_cr)      ((_cr) != NOCRED && (_cr) != FSCRED)
+#define IS_VALID_CRED(_cr) ((_cr) != NOCRED && (_cr) != FSCRED)
 
 #ifdef KERNEL
 #ifdef __APPLE_API_OBSOLETE
 __BEGIN_DECLS
-int             suser(kauth_cred_t cred, u_short *acflag);
-int             set_security_token(struct proc *p, struct ucred *cred);
-void            cru2x(kauth_cred_t cr, struct xucred *xcr);
+int suser(kauth_cred_t cred, u_short *acflag);
+int set_security_token(struct proc *p, struct ucred *cred);
+void cru2x(kauth_cred_t cr, struct xucred *xcr);
 __END_DECLS
 #endif /* __APPLE_API_OBSOLETE */
 #endif /* KERNEL */

@@ -53,18 +53,18 @@ typedef u_char msgid_t[4];
  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 struct isakmp {
-	cookie_t i_ck;          /* Initiator Cookie */
-	cookie_t r_ck;          /* Responder Cookie */
-	uint8_t np;             /* Next Payload Type */
-	uint8_t vers;
-#define ISAKMP_VERS_MAJOR       0xf0
+  cookie_t i_ck; /* Initiator Cookie */
+  cookie_t r_ck; /* Responder Cookie */
+  uint8_t np;    /* Next Payload Type */
+  uint8_t vers;
+#define ISAKMP_VERS_MAJOR 0xf0
 #define ISAKMP_VERS_MAJOR_SHIFT 4
-#define ISAKMP_VERS_MINOR       0x0f
+#define ISAKMP_VERS_MINOR 0x0f
 #define ISAKMP_VERS_MINOR_SHIFT 0
-	uint8_t etype;          /* Exchange Type */
-	uint8_t flags;          /* Flags */
-	msgid_t msgid;
-	uint32_t len;           /* Length */
+  uint8_t etype; /* Exchange Type */
+  uint8_t flags; /* Flags */
+  msgid_t msgid;
+  uint32_t len; /* Length */
 };
 
 /* 3.2 Payload Generic Header
@@ -74,9 +74,9 @@ struct isakmp {
  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 struct isakmp_gen {
-	uint8_t  np;       /* Next Payload */
-	uint8_t  critical; /* bit 7 - critical, rest is RESERVED */
-	uint16_t len;      /* Payload Length */
+  uint8_t np;       /* Next Payload */
+  uint8_t critical; /* bit 7 - critical, rest is RESERVED */
+  uint16_t len;     /* Payload Length */
 };
 
 #endif /* _NETINET_ISAKMP_H_ */

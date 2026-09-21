@@ -77,13 +77,13 @@
  * nonwithstanding).
  */
 struct ttysize {
-	unsigned short  ts_lines;
-	unsigned short  ts_cols;
-	unsigned short  ts_xxx;
-	unsigned short  ts_yyy;
+  unsigned short ts_lines;
+  unsigned short ts_cols;
+  unsigned short ts_xxx;
+  unsigned short ts_yyy;
 };
-#define TIOCGSIZE       TIOCGWINSZ
-#define TIOCSSIZE       TIOCSWINSZ
+#define TIOCGSIZE TIOCGWINSZ
+#define TIOCSSIZE TIOCSWINSZ
 
 #include <sys/ioccom.h>
 
@@ -95,7 +95,7 @@ struct ttysize {
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-int     ioctl(int, unsigned long, ...);
+int ioctl(int, unsigned long, ...);
 __END_DECLS
 #endif /* !KERNEL */
 #endif /* !_SYS_IOCTL_H_ */

@@ -62,9 +62,9 @@
 /*
  * IO register definitions.
  */
-typedef unsigned short  io_reg_t;
+typedef unsigned short io_reg_t;
 
-#define IO_REG_NULL     (0x00ff)        /* reserved */
+#define IO_REG_NULL (0x00ff) /* reserved */
 
 /*
  * Allocate and destroy io port sets for users to map into
@@ -79,4 +79,4 @@ extern void     io_port_destroy(
 	device_t                device);
 
 #endif
-#endif  /* _I386_IO_PORT_H_ */
+#endif /* _I386_IO_PORT_H_ */

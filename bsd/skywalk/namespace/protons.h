@@ -28,7 +28,6 @@
 #ifndef _SKYWALK_NAMESPACE_PROTONS_H_
 #define _SKYWALK_NAMESPACE_PROTONS_H_
 
-
 /*
  * The protons module arbitrates IP protocol number usage across Skywalk and
  * the BSD networking stack. The IP protocol number is managed globally
@@ -46,7 +45,7 @@ struct protons_token;
  * Reserved protocol namespace token is return via @ptp.
  */
 extern int protons_reserve(struct protons_token **ptp, pid_t pid, pid_t epid,
-    uint8_t proto);
+                           uint8_t proto);
 
 /*
  * Release a IP protocol reservation recorded by the provided token.
@@ -57,6 +56,6 @@ extern void protons_release(struct protons_token **ptp);
 extern int protons_token_get_use_count(struct protons_token *pt);
 extern bool protons_token_is_valid(struct protons_token *pt);
 extern bool protons_token_has_matching_pid(struct protons_token *pt, pid_t pid,
-    pid_t epid);
+                                           pid_t epid);
 
 #endif /* !_SKYWALK_NAMESPACE_PROTONS_H_ */

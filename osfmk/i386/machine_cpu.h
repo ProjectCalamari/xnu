@@ -28,35 +28,24 @@
 #ifndef _I386_MACHINE_CPU_H_
 #define _I386_MACHINE_CPU_H_
 
-#include <mach/mach_types.h>
-#include <mach/boolean.h>
 #include <kern/kern_types.h>
+#include <mach/boolean.h>
+#include <mach/mach_types.h>
 #include <pexpert/pexpert.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-void    cpu_machine_init(
-	void);
+void cpu_machine_init(void);
 
-void    handle_pending_TLB_flushes(
-	void);
+void handle_pending_TLB_flushes(void);
 
 int cpu_signal_handler(x86_saved_state_t *regs);
 
-kern_return_t cpu_register(
-	int *slot_nump);
+kern_return_t cpu_register(int *slot_nump);
 __END_DECLS
 
-static inline void
-cpu_halt(void)
-{
-	asm volatile ( "wbinvd; cli; hlt");
-}
+static inline void cpu_halt(void) { asm volatile("wbinvd; cli; hlt"); }
 
-static inline void
-cpu_pause(void)
-{
-	__builtin_ia32_pause();
-}
+static inline void cpu_pause(void) { __builtin_ia32_pause(); }
 
 #endif /* _I386_MACHINE_CPU_H_ */

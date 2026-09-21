@@ -64,12 +64,12 @@
 #ifndef _SYS_TIME_H_
 #define _SYS_TIME_H_
 
-#include <sys/cdefs.h>
 #include <sys/_types.h>
+#include <sys/cdefs.h>
 #ifdef KERNEL
-#include <machine/types.h>      /* user_time_t */
-#include <stdint.h>             /* uint64_t */
-#else /* !KERNEL */
+#include <machine/types.h> /* user_time_t */
+#include <stdint.h>        /* uint64_t */
+#else                      /* !KERNEL */
 #include <Availability.h>
 #endif /* KERNEL */
 
@@ -88,35 +88,35 @@
 #endif /* !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE) */
 
 #ifdef KERNEL
-#include <sys/_types/_user_timespec.h>
-#include <sys/_types/_user32_timespec.h>
-#include <sys/_types/_user64_timespec.h>
-#include <sys/_types/_user_timeval.h>
-#include <sys/_types/_user32_timeval.h>
-#include <sys/_types/_user64_timeval.h>
 #include <sys/_types/_user32_itimerval.h>
+#include <sys/_types/_user32_timespec.h>
+#include <sys/_types/_user32_timeval.h>
 #include <sys/_types/_user64_itimerval.h>
+#include <sys/_types/_user64_timespec.h>
+#include <sys/_types/_user64_timeval.h>
+#include <sys/_types/_user_timespec.h>
+#include <sys/_types/_user_timeval.h>
 #endif /* KERNEL */
 
-#include <sys/_types/_time_t.h>
 #include <sys/_types/_suseconds_t.h>
+#include <sys/_types/_time_t.h>
 
 /*
  * Structure used as a parameter by getitimer(2) and setitimer(2) system
  * calls.
  */
-struct  itimerval {
-	struct  timeval it_interval;    /* timer interval */
-	struct  timeval it_value;       /* current value */
+struct itimerval {
+  struct timeval it_interval; /* timer interval */
+  struct timeval it_value;    /* current value */
 };
 
 /*
  * Names of the interval timers, and structure
  * defining a timer setting.
  */
-#define ITIMER_REAL     0
-#define ITIMER_VIRTUAL  1
-#define ITIMER_PROF     2
+#define ITIMER_REAL 0
+#define ITIMER_VIRTUAL 1
+#define ITIMER_PROF 2
 
 /*
  * Select uses bit masks of file descriptors in longs.  These macros
@@ -124,80 +124,82 @@ struct  itimerval {
  * extra protection here is to permit application redefinition above
  * the default size.
  */
-#include <sys/_types/_fd_setsize.h>
-#include <sys/_types/_fd_set.h>
 #include <sys/_types/_fd_clr.h>
 #include <sys/_types/_fd_isset.h>
+#include <sys/_types/_fd_set.h>
+#include <sys/_types/_fd_setsize.h>
 #include <sys/_types/_fd_zero.h>
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 
 #include <sys/_types/_fd_copy.h>
 
-#define TIMEVAL_TO_TIMESPEC(tv, ts) {                                   \
-	(ts)->tv_sec = (tv)->tv_sec;                                    \
-	(ts)->tv_nsec = (tv)->tv_usec * 1000;                           \
-}
+#define TIMEVAL_TO_TIMESPEC(tv, ts)                                            \
+  {                                                                            \
+    (ts)->tv_sec = (tv)->tv_sec;                                               \
+    (ts)->tv_nsec = (tv)->tv_usec * 1000;                                      \
+  }
 #ifdef KERNEL
-#define TIMEVAL64_TO_TIMESPEC(tv, ts){                                                                  \
-	(ts)->tv_sec = (time_t)((tv)->tv_sec);                                          \
-	(ts)->tv_nsec = (tv)->tv_usec * 1000;                                           \
-}
+#define TIMEVAL64_TO_TIMESPEC(tv, ts)                                          \
+  {                                                                            \
+    (ts)->tv_sec = (time_t)((tv)->tv_sec);                                     \
+    (ts)->tv_nsec = (tv)->tv_usec * 1000;                                      \
+  }
 #endif
-#define TIMESPEC_TO_TIMEVAL(tv, ts) {                                   \
-	(tv)->tv_sec = (ts)->tv_sec;                                    \
-	(tv)->tv_usec = (__darwin_suseconds_t)((ts)->tv_nsec / 1000);   \
-}
+#define TIMESPEC_TO_TIMEVAL(tv, ts)                                            \
+  {                                                                            \
+    (tv)->tv_sec = (ts)->tv_sec;                                               \
+    (tv)->tv_usec = (__darwin_suseconds_t)((ts)->tv_nsec / 1000);              \
+  }
 
 struct timezone {
-	int     tz_minuteswest; /* minutes west of Greenwich */
-	int     tz_dsttime;     /* type of dst correction */
+  int tz_minuteswest; /* minutes west of Greenwich */
+  int tz_dsttime;     /* type of dst correction */
 };
-#define DST_NONE        0       /* not on dst */
-#define DST_USA         1       /* USA style dst */
-#define DST_AUST        2       /* Australian style dst */
-#define DST_WET         3       /* Western European dst */
-#define DST_MET         4       /* Middle European dst */
-#define DST_EET         5       /* Eastern European dst */
-#define DST_CAN         6       /* Canada */
+#define DST_NONE 0 /* not on dst */
+#define DST_USA 1  /* USA style dst */
+#define DST_AUST 2 /* Australian style dst */
+#define DST_WET 3  /* Western European dst */
+#define DST_MET 4  /* Middle European dst */
+#define DST_EET 5  /* Eastern European dst */
+#define DST_CAN 6  /* Canada */
 
 /* Operations on timevals. */
-#define timerclear(tvp)         (tvp)->tv_sec = (tvp)->tv_usec = 0
-#define timerisset(tvp)         ((tvp)->tv_sec || (tvp)->tv_usec)
-#define timercmp(tvp, uvp, cmp)                                         \
-	(((tvp)->tv_sec == (uvp)->tv_sec) ?                             \
-	    ((tvp)->tv_usec cmp (uvp)->tv_usec) :                       \
-	    ((tvp)->tv_sec cmp (uvp)->tv_sec))
-#define timeradd(tvp, uvp, vvp)                                         \
-	do {                                                            \
-	        (vvp)->tv_sec = (tvp)->tv_sec + (uvp)->tv_sec;          \
-	        (vvp)->tv_usec = (tvp)->tv_usec + (uvp)->tv_usec;       \
-	        if ((vvp)->tv_usec >= 1000000) {                        \
-	                (vvp)->tv_sec++;                                \
-	                (vvp)->tv_usec -= 1000000;                      \
-	        }                                                       \
-	} while (0)
-#define timersub(tvp, uvp, vvp)                                         \
-	do {                                                            \
-	        (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;          \
-	        (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;       \
-	        if ((vvp)->tv_usec < 0) {                               \
-	                (vvp)->tv_sec--;                                \
-	                (vvp)->tv_usec += 1000000;                      \
-	        }                                                       \
-	} while (0)
+#define timerclear(tvp) (tvp)->tv_sec = (tvp)->tv_usec = 0
+#define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
+#define timercmp(tvp, uvp, cmp)                                                \
+  (((tvp)->tv_sec == (uvp)->tv_sec) ? ((tvp)->tv_usec cmp(uvp)->tv_usec)       \
+                                    : ((tvp)->tv_sec cmp(uvp)->tv_sec))
+#define timeradd(tvp, uvp, vvp)                                                \
+  do {                                                                         \
+    (vvp)->tv_sec = (tvp)->tv_sec + (uvp)->tv_sec;                             \
+    (vvp)->tv_usec = (tvp)->tv_usec + (uvp)->tv_usec;                          \
+    if ((vvp)->tv_usec >= 1000000) {                                           \
+      (vvp)->tv_sec++;                                                         \
+      (vvp)->tv_usec -= 1000000;                                               \
+    }                                                                          \
+  } while (0)
+#define timersub(tvp, uvp, vvp)                                                \
+  do {                                                                         \
+    (vvp)->tv_sec = (tvp)->tv_sec - (uvp)->tv_sec;                             \
+    (vvp)->tv_usec = (tvp)->tv_usec - (uvp)->tv_usec;                          \
+    if ((vvp)->tv_usec < 0) {                                                  \
+      (vvp)->tv_sec--;                                                         \
+      (vvp)->tv_usec += 1000000;                                               \
+    }                                                                          \
+  } while (0)
 
-#define timevalcmp(l, r, cmp)   timercmp(l, r, cmp) /* freebsd */
+#define timevalcmp(l, r, cmp) timercmp(l, r, cmp) /* freebsd */
 
 /*
  * Getkerninfo clock information structure
  */
 struct clockinfo {
-	int     hz;             /* clock frequency */
-	int     tick;           /* micro-seconds per hz tick */
-	int     tickadj;        /* clock skew rate for adjtime() */
-	int     stathz;         /* statistics clock frequency */
-	int     profhz;         /* profiling clock frequency */
+  int hz;      /* clock frequency */
+  int tick;    /* micro-seconds per hz tick */
+  int tickadj; /* clock skew rate for adjtime() */
+  int stathz;  /* statistics clock frequency */
+  int profhz;  /* profiling clock frequency */
 };
 #endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
@@ -209,24 +211,24 @@ struct clockinfo {
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 __BEGIN_DECLS
-void    microtime(struct timeval *tv);
-void    microtime_with_abstime(struct timeval *tv, uint64_t *abstime);
-void    microuptime(struct timeval *tv);
-#define getmicrotime(a)         microtime(a)
-#define getmicrouptime(a)       microuptime(a)
-void    nanotime(struct timespec *ts);
-void    nanouptime(struct timespec *ts);
-#define getnanotime(a)          nanotime(a)
-#define getnanouptime(a)        nanouptime(a)
-void    timevaladd(struct timeval *t1, struct timeval *t2);
-void    timevalsub(struct timeval *t1, struct timeval *t2);
-void    timevalfix(struct timeval *t1);
-#ifdef  BSD_KERNEL_PRIVATE
-time_t  boottime_sec(void);
-void    boottime_timeval(struct timeval *tv);
-void    inittodr(time_t base);
-int     ratecheck(struct timeval *lasttime, const struct timeval *mininterval);
-int     ppsratecheck(struct timeval *lasttime, int *curpps, int maxpps);
+void microtime(struct timeval *tv);
+void microtime_with_abstime(struct timeval *tv, uint64_t *abstime);
+void microuptime(struct timeval *tv);
+#define getmicrotime(a) microtime(a)
+#define getmicrouptime(a) microuptime(a)
+void nanotime(struct timespec *ts);
+void nanouptime(struct timespec *ts);
+#define getnanotime(a) nanotime(a)
+#define getnanouptime(a) nanouptime(a)
+void timevaladd(struct timeval *t1, struct timeval *t2);
+void timevalsub(struct timeval *t1, struct timeval *t2);
+void timevalfix(struct timeval *t1);
+#ifdef BSD_KERNEL_PRIVATE
+time_t boottime_sec(void);
+void boottime_timeval(struct timeval *tv);
+void inittodr(time_t base);
+int ratecheck(struct timeval *lasttime, const struct timeval *mininterval);
+int ppsratecheck(struct timeval *lasttime, int *curpps, int maxpps);
 #endif /* BSD_KERNEL_PRIVATE */
 
 __END_DECLS
@@ -242,24 +244,25 @@ __END_DECLS
 __BEGIN_DECLS
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-int     adjtime(const struct timeval *, struct timeval *);
-int     futimes(int, const struct timeval *);
-int     lutimes(const char *, const struct timeval *) __OSX_AVAILABLE_STARTING(__MAC_10_5, __IPHONE_2_0);
-int     settimeofday(const struct timeval *, const struct timezone *);
+int adjtime(const struct timeval *, struct timeval *);
+int futimes(int, const struct timeval *);
+int lutimes(const char *, const struct timeval *)
+    __OSX_AVAILABLE_STARTING(__MAC_10_5, __IPHONE_2_0);
+int settimeofday(const struct timeval *, const struct timezone *);
 #endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
-int     getitimer(int, struct itimerval *);
-int     gettimeofday(struct timeval * __restrict, void * __restrict);
+int getitimer(int, struct itimerval *);
+int gettimeofday(struct timeval *__restrict, void *__restrict);
 
 __END_DECLS
 
-#include <sys/_select.h>        /* select() prototype */
+#include <sys/_select.h> /* select() prototype */
 
 __BEGIN_DECLS
 
-int     setitimer(int, const struct itimerval * __restrict,
-    struct itimerval * __restrict);
-int     utimes(const char *, const struct timeval *);
+int setitimer(int, const struct itimerval *__restrict,
+              struct itimerval *__restrict);
+int utimes(const char *, const struct timeval *);
 
 __END_DECLS
 

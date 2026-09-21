@@ -22,8 +22,6 @@
  */
 #include <machine/cpu_capabilities.h>
 
-uint64_t
-mach_boottime_usec(void)
-{
-	return COMM_PAGE_READ(uint64_t, BOOTTIME_USEC);
+uint64_t mach_boottime_usec(void) {
+  return COMM_PAGE_READ(uint64_t, BOOTTIME_USEC);
 }

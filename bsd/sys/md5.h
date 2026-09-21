@@ -33,8 +33,8 @@
  * Warn developers that this header file is kept for legacy reasons.
  * The supported interface resides in <libkern/crypto/md5.h>.
  */
-#warning \
-        "<sys/md5.h> is a legacy header file; use <libkern/crypto/md5.h> instead."
+#warning                                                                       \
+    "<sys/md5.h> is a legacy header file; use <libkern/crypto/md5.h> instead."
 
 #include <libkern/crypto/md5.h>
 

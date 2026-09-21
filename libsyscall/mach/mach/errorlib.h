@@ -65,36 +65,36 @@
 
 #include <mach/error.h>
 
-#define MACH_IPC_SEND_MOD       (err_mach_ipc|err_sub(0))
-#define MACH_IPC_RCV_MOD        (err_mach_ipc|err_sub(1))
-#define MACH_IPC_MIG_MOD        (err_mach_ipc|err_sub(2))
+#define MACH_IPC_SEND_MOD (err_mach_ipc | err_sub(0))
+#define MACH_IPC_RCV_MOD (err_mach_ipc | err_sub(1))
+#define MACH_IPC_MIG_MOD (err_mach_ipc | err_sub(2))
 
-#define IPC_SEND_MOD            (err_ipc|err_sub(0))
-#define IPC_RCV_MOD             (err_ipc|err_sub(1))
-#define IPC_MIG_MOD             (err_ipc|err_sub(2))
+#define IPC_SEND_MOD (err_ipc | err_sub(0))
+#define IPC_RCV_MOD (err_ipc | err_sub(1))
+#define IPC_MIG_MOD (err_ipc | err_sub(2))
 
-#define SERV_NETNAME_MOD        (err_server|err_sub(0))
-#define SERV_ENV_MOD            (err_server|err_sub(1))
-#define SERV_EXECD_MOD          (err_server|err_sub(2))
+#define SERV_NETNAME_MOD (err_server | err_sub(0))
+#define SERV_ENV_MOD (err_server | err_sub(1))
+#define SERV_EXECD_MOD (err_server | err_sub(2))
 
-#define NO_SUCH_ERROR           "unknown error code"
+#define NO_SUCH_ERROR "unknown error code"
 
 struct error_subsystem {
-	const char              *subsys_name;
-	int                     max_code;
-	const char * const      *codes;
+  const char *subsys_name;
+  int max_code;
+  const char *const *codes;
 };
 
 struct error_system {
-	int                             max_sub;
-	const char                      *bad_sub;
-	const struct error_subsystem    *subsystem;
+  int max_sub;
+  const char *bad_sub;
+  const struct error_subsystem *subsystem;
 };
 
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-extern const struct error_system        errors[err_max_system + 1];
+extern const struct error_system errors[err_max_system + 1];
 __END_DECLS
 
-#define errlib_count(s)         (sizeof(s)/sizeof(s[0]))
+#define errlib_count(s) (sizeof(s) / sizeof(s[0]))

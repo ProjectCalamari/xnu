@@ -26,23 +26,26 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/os_log_coprocessor.h>
 #include <strings.h>
+#include <sys/os_log_coprocessor.h>
 
-extern int
-__oslog_coproc(void *buff, uint64_t buff_len, uint32_t type, const char *uuid, uint64_t timestamp, uint32_t offset, uint32_t stream_log);
+extern int __oslog_coproc(void *buff, uint64_t buff_len, uint32_t type,
+                          const char *uuid, uint64_t timestamp, uint32_t offset,
+                          uint32_t stream_log);
 
-extern int
-__oslog_coproc_reg(const char *uuid, const char *file_path, size_t file_path_len);
+extern int __oslog_coproc_reg(const char *uuid, const char *file_path,
+                              size_t file_path_len);
 
-int
-os_log_coprocessor_as_kernel(void *buff, uint64_t buff_len, os_log_type_t type, const char *uuid, uint64_t timestamp, uint32_t offset, bool stream_log)
-{
-	return __oslog_coproc(buff, buff_len, type, uuid, timestamp, offset, stream_log);
+int os_log_coprocessor_as_kernel(void *buff, uint64_t buff_len,
+                                 os_log_type_t type, const char *uuid,
+                                 uint64_t timestamp, uint32_t offset,
+                                 bool stream_log) {
+  return __oslog_coproc(buff, buff_len, type, uuid, timestamp, offset,
+                        stream_log);
 }
 
-int
-os_log_coprocessor_register_as_kernel(const char *uuid, const char *file_path, size_t file_path_len)
-{
-	return __oslog_coproc_reg(uuid, file_path, file_path_len);
+int os_log_coprocessor_register_as_kernel(const char *uuid,
+                                          const char *file_path,
+                                          size_t file_path_len) {
+  return __oslog_coproc_reg(uuid, file_path, file_path_len);
 }

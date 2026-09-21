@@ -29,27 +29,25 @@
 #include <vm/vm_memtag.h>
 
 #if defined(ENABLE_MEMTAG_MANIPULATION_API)
-#include <vm/vm_map_xnu.h>
 #include <vm/pmap.h>
+#include <vm/vm_map_xnu.h>
 
 /* Do the right canonicalization based on the vm_map the address belongs to */
-vm_map_address_t
-vm_memtag_canonicalize(vm_map_t map, vm_map_address_t addr)
-{
-	assert(map);
+vm_map_address_t vm_memtag_canonicalize(vm_map_t map, vm_map_address_t addr) {
+  assert(map);
 
-	/* With no pmap assigned we cannot make a decision. Leave the address as is */
-	if (map->pmap == NULL) {
-		return addr;
-	}
+  /* With no pmap assigned we cannot make a decision. Leave the address as is */
+  if (map->pmap == NULL) {
+    return addr;
+  }
 
-	/* NULL is a frequent enough special case. */
-	if (addr == (vm_map_address_t)NULL) {
-		return addr;
-	}
+  /* NULL is a frequent enough special case. */
+  if (addr == (vm_map_address_t)NULL) {
+    return addr;
+  }
 
-	return (map->pmap == kernel_pmap) ?
-	       (vm_map_address_t)vm_memtag_canonicalize_kernel(addr) :
-	       (vm_map_address_t)vm_memtag_canonicalize_user(addr);
+  return (map->pmap == kernel_pmap)
+             ? (vm_map_address_t)vm_memtag_canonicalize_kernel(addr)
+             : (vm_map_address_t)vm_memtag_canonicalize_user(addr);
 }
 #endif /* ENABLE_MEMTAG_MANIPULATION_API */

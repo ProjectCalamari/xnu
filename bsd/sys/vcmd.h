@@ -66,10 +66,10 @@
 
 #include <sys/ioctl.h>
 
-#define VPRINT          0100
-#define VPLOT           0200
-#define VPRINTPLOT      0400
+#define VPRINT 0100
+#define VPLOT 0200
+#define VPRINTPLOT 0400
 
-#define VGETSTATE       _IOR('v', 0, int)
-#define VSETSTATE       _IOW('v', 1, int)
+#define VGETSTATE _IOR('v', 0, int)
+#define VSETSTATE _IOW('v', 1, int)
 #endif /* !_SYS_VCMD_H_ */

@@ -26,34 +26,29 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-
 #ifndef __NSI_STR_ID__
 #define __NSI_STR_ID__
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
-#include <sys/types.h>
 #include <sys/kernel_types.h>
 #include <sys/queue.h>
+#include <sys/types.h>
 
 struct net_str_id_entry {
-	SLIST_ENTRY(net_str_id_entry) nsi_next;
-	uint32_t nsi_flags;
-	uint32_t nsi_id;
-	uint32_t nsi_length;
-	char nsi_string[__counted_by(nsi_length)];
+  SLIST_ENTRY(net_str_id_entry) nsi_next;
+  uint32_t nsi_flags;
+  uint32_t nsi_id;
+  uint32_t nsi_length;
+  char nsi_string[__counted_by(nsi_length)];
 };
 
-enum {
-	NSI_MBUF_TAG    = 0,
-	NSI_VENDOR_CODE = 1,
-	NSI_IF_FAM_ID   = 2,
-	NSI_MAX_KIND
-};
+enum { NSI_MBUF_TAG = 0, NSI_VENDOR_CODE = 1, NSI_IF_FAM_ID = 2, NSI_MAX_KIND };
 
 extern void net_str_id_first_last(u_int32_t *, u_int32_t *, u_int32_t);
 
-extern errno_t net_str_id_find_internal(const char *, u_int32_t *, u_int32_t, int);
+extern errno_t net_str_id_find_internal(const char *, u_int32_t *, u_int32_t,
+                                        int);
 
 extern void net_str_id_init(void);
 

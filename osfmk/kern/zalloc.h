@@ -62,24 +62,24 @@
  *
  */
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _KERN_ZALLOC_H_
 #define _KERN_ZALLOC_H_
 
+#include <kern/kern_types.h>
 #include <mach/machine/vm_types.h>
 #include <mach_debug/zone_info.h>
-#include <kern/kern_types.h>
-#include <sys/cdefs.h>
 #include <os/alloc_util.h>
 #include <os/atomic.h>
+#include <sys/cdefs.h>
 
 #ifdef XNU_KERNEL_PRIVATE
 #include <kern/startup.h>
 #endif /* XNU_KERNEL_PRIVATE */
 
 #if XNU_KERNEL_PRIVATE && !defined(ZALLOC_ALLOW_DEPRECATED)
-#define __zalloc_deprecated(msg)       __deprecated_msg(msg)
+#define __zalloc_deprecated(msg) __deprecated_msg(msg)
 #else
 #define __zalloc_deprecated(msg)
 #endif
@@ -106,13 +106,13 @@ __BEGIN_DECLS __ASSUME_PTR_ABI_SINGLE_BEGIN
  */
 #define __zpercpu __unsafe_indexable
 
-/*!
- * @typedef zone_id_t
- *
- * @abstract
- * The type for a zone ID.
- */
-typedef uint16_t zone_id_t;
+    /*!
+     * @typedef zone_id_t
+     *
+     * @abstract
+     * The type for a zone ID.
+     */
+    typedef uint16_t zone_id_t;
 
 /**
  * @enum zone_create_flags_t
@@ -124,77 +124,79 @@ typedef uint16_t zone_id_t;
  * Some kernel-wide policies affect all possible created zones.
  * Explicit @c ZC_* win over such policies.
  */
-__options_decl(zone_create_flags_t, uint64_t, {
-	/** The default value to pass to zone_create() */
-	ZC_NONE                 = 0x00000000,
+__options_decl(
+    zone_create_flags_t, uint64_t,
+    {
+        /** The default value to pass to zone_create() */
+        ZC_NONE = 0x00000000,
 
-	/** (obsolete) */
-	ZC_SEQUESTER            = 0x00000001,
-	/** (obsolete) */
-	ZC_NOSEQUESTER          = 0x00000002,
+        /** (obsolete) */
+        ZC_SEQUESTER = 0x00000001,
+        /** (obsolete) */
+        ZC_NOSEQUESTER = 0x00000002,
 
-	/** Enable per-CPU zone caching for this zone */
-	ZC_CACHING              = 0x00000010,
-	/** Disable per-CPU zone caching for this zone */
-	ZC_NOCACHING            = 0x00000020,
+        /** Enable per-CPU zone caching for this zone */
+        ZC_CACHING = 0x00000010,
+        /** Disable per-CPU zone caching for this zone */
+        ZC_NOCACHING = 0x00000020,
 
-	/** Allocate zone pages as Read-only **/
-	ZC_READONLY             = 0x00800000,
+        /** Allocate zone pages as Read-only **/
+        ZC_READONLY = 0x00800000,
 
-	/** Mark zone as a per-cpu zone */
-	ZC_PERCPU               = 0x01000000,
+        /** Mark zone as a per-cpu zone */
+        ZC_PERCPU = 0x01000000,
 
-	/** Force the created zone to clear every allocation on free */
-	ZC_ZFREE_CLEARMEM       = 0x02000000,
+        /** Force the created zone to clear every allocation on free */
+        ZC_ZFREE_CLEARMEM = 0x02000000,
 
-	/** Mark zone as non collectable by zone_gc() */
-	ZC_NOGC                 = 0x04000000,
+        /** Mark zone as non collectable by zone_gc() */
+        ZC_NOGC = 0x04000000,
 
-	/** Do not encrypt this zone during hibernation */
-	ZC_NOENCRYPT            = 0x08000000,
+        /** Do not encrypt this zone during hibernation */
+        ZC_NOENCRYPT = 0x08000000,
 
-	/** Type requires alignment to be preserved */
-	ZC_ALIGNMENT_REQUIRED   = 0x10000000,
+        /** Type requires alignment to be preserved */
+        ZC_ALIGNMENT_REQUIRED = 0x10000000,
 
-	/** Obsolete */
-	ZC_NOGZALLOC            = 0x20000000,
+        /** Obsolete */
+        ZC_NOGZALLOC = 0x20000000,
 
-	/** Don't asynchronously replenish the zone via callouts */
-	ZC_NOCALLOUT            = 0x40000000,
+        /** Don't asynchronously replenish the zone via callouts */
+        ZC_NOCALLOUT = 0x40000000,
 
-	/** Can be zdestroy()ed, not default unlike zinit() */
-	ZC_DESTRUCTIBLE         = 0x80000000,
+        /** Can be zdestroy()ed, not default unlike zinit() */
+        ZC_DESTRUCTIBLE = 0x80000000,
 
 #ifdef XNU_KERNEL_PRIVATE
-	/** This zone contains pure data meant to be shared */
-	ZC_SHARED_DATA          = 0x0040000000000000,
+        /** This zone contains pure data meant to be shared */
+        ZC_SHARED_DATA = 0x0040000000000000,
 
-	/** This zone is a built object cache */
-	ZC_OBJ_CACHE            = 0x0080000000000000,
+        /** This zone is a built object cache */
+        ZC_OBJ_CACHE = 0x0080000000000000,
 
-	// was ZC_PGZ_USE_GUARDS  0x0100000000000000,
+        // was ZC_PGZ_USE_GUARDS  0x0100000000000000,
 
-	/** Zone doesn't support TBI tagging */
-	ZC_NO_TBI_TAG           = 0x0200000000000000,
+        /** Zone doesn't support TBI tagging */
+        ZC_NO_TBI_TAG = 0x0200000000000000,
 
-	/** This zone will back a kalloc type */
-	ZC_KALLOC_TYPE          = 0x0400000000000000,
+        /** This zone will back a kalloc type */
+        ZC_KALLOC_TYPE = 0x0400000000000000,
 
-	// was ZC_NOPGZ         = 0x0800000000000000,
+        // was ZC_NOPGZ         = 0x0800000000000000,
 
-	/** This zone contains pure data */
-	ZC_DATA                 = 0x1000000000000000,
+        /** This zone contains pure data */
+        ZC_DATA = 0x1000000000000000,
 
-	/** This zone belongs to the VM submap */
-	ZC_VM                   = 0x2000000000000000,
+        /** This zone belongs to the VM submap */
+        ZC_VM = 0x2000000000000000,
 
-	/** Disable kasan quarantine for this zone */
-	ZC_KASAN_NOQUARANTINE   = 0x4000000000000000,
+        /** Disable kasan quarantine for this zone */
+        ZC_KASAN_NOQUARANTINE = 0x4000000000000000,
 
-	/** Disable kasan redzones for this zone */
-	ZC_KASAN_NOREDZONE      = 0x8000000000000000,
+        /** Disable kasan redzones for this zone */
+        ZC_KASAN_NOREDZONE = 0x8000000000000000,
 #endif /* XNU_KERNEL_PRIVATE */
-});
+    });
 
 /*!
  * @union zone_or_view
@@ -207,16 +209,13 @@ __options_decl(zone_create_flags_t, uint64_t, {
  * zones and zone views.
  */
 union zone_or_view {
-	struct kalloc_type_view    *zov_kt_heap;
-	struct zone_view           *zov_view;
-	struct zone                *zov_zone;
+  struct kalloc_type_view *zov_kt_heap;
+  struct zone_view *zov_view;
+  struct zone *zov_zone;
 #ifdef __cplusplus
-	inline zone_or_view(struct zone_view *zv) : zov_view(zv) {
-	}
-	inline zone_or_view(struct zone *z) : zov_zone(z) {
-	}
-	inline zone_or_view(struct kalloc_type_view *kth) : zov_kt_heap(kth) {
-	}
+  inline zone_or_view(struct zone_view *zv) : zov_view(zv) {}
+  inline zone_or_view(struct zone *z) : zov_zone(z) {}
+  inline zone_or_view(struct kalloc_type_view *kth) : zov_kt_heap(kth) {}
 #endif
 };
 #ifdef __cplusplus
@@ -239,14 +238,15 @@ typedef union zone_or_view zone_or_view_t __attribute__((transparent_union));
  * 4. Save the zone ID returned from #3 in a SECURITY_READ_ONLY_LATE variable.
  * 5. Use the saved ID for zalloc_ro/zfree_ro, etc.
  */
-__enum_decl(zone_create_ro_id_t, zone_id_t, {
-	ZC_RO_ID_SANDBOX,
-	ZC_RO_ID_PROFILE,
-	ZC_RO_ID_PROTOBOX,
-	ZC_RO_ID_SB_FILTER,
-	ZC_RO_ID_AMFI_OSENTITLEMENTS,
-	ZC_RO_ID__LAST = ZC_RO_ID_AMFI_OSENTITLEMENTS,
-});
+__enum_decl(zone_create_ro_id_t, zone_id_t,
+            {
+                ZC_RO_ID_SANDBOX,
+                ZC_RO_ID_PROFILE,
+                ZC_RO_ID_PROTOBOX,
+                ZC_RO_ID_SB_FILTER,
+                ZC_RO_ID_AMFI_OSENTITLEMENTS,
+                ZC_RO_ID__LAST = ZC_RO_ID_AMFI_OSENTITLEMENTS,
+            });
 
 /*!
  * @function zone_create
@@ -263,10 +263,8 @@ __enum_decl(zone_create_ro_id_t, zone_id_t, {
  *
  * @returns             the created zone, this call never fails.
  */
-extern zone_t   zone_create(
-	const char             *name __unsafe_indexable,
-	vm_size_t               size,
-	zone_create_flags_t     flags);
+extern zone_t zone_create(const char *name __unsafe_indexable, vm_size_t size,
+                          zone_create_flags_t flags);
 
 /*!
  *
@@ -284,7 +282,7 @@ extern zone_t   zone_create(
  *
  * @returns			the size of elements allocated by this zone
  */
-extern vm_size_t    zone_get_elem_size(zone_t zone);
+extern vm_size_t zone_get_elem_size(zone_t zone);
 
 /*!
  * @function zone_create_ro
@@ -303,11 +301,9 @@ extern vm_size_t    zone_get_elem_size(zone_t zone);
  *
  * @returns             the zone ID of the created zone, this call never fails.
  */
-extern zone_id_t   zone_create_ro(
-	const char             *name __unsafe_indexable,
-	vm_size_t               size,
-	zone_create_flags_t     flags,
-	zone_create_ro_id_t     zc_ro_id);
+extern zone_id_t zone_create_ro(const char *name __unsafe_indexable,
+                                vm_size_t size, zone_create_flags_t flags,
+                                zone_create_ro_id_t zc_ro_id);
 
 /*!
  * @function zdestroy
@@ -321,8 +317,7 @@ extern zone_id_t   zone_create_ro(
  *
  * @param zone          the zone to destroy.
  */
-extern void     zdestroy(
-	zone_t          zone);
+extern void zdestroy(zone_t zone);
 
 /*!
  * @function zone_require
@@ -337,9 +332,7 @@ extern void     zdestroy(
  * @param zone          the zone the address needs to belong to.
  * @param addr          the element address to check.
  */
-extern void     zone_require(
-	zone_t          zone,
-	void           *addr __unsafe_indexable);
+extern void zone_require(zone_t zone, void *addr __unsafe_indexable);
 
 /*!
  * @function zone_require_ro
@@ -361,10 +354,8 @@ extern void     zone_require(
  * @param elem_size     the element size for this zone.
  * @param addr          the element address to check.
  */
-extern void     zone_require_ro(
-	zone_id_t       zone_id,
-	vm_size_t       elem_size,
-	void           *addr __unsafe_indexable);
+extern void zone_require_ro(zone_id_t zone_id, vm_size_t elem_size,
+                            void *addr __unsafe_indexable);
 
 /*!
  * @enum zalloc_flags_t
@@ -458,55 +449,58 @@ extern void     zone_require_ro(
  * (used by kalloc for the zone tagging debugging feature).
  #endif
  */
-__options_decl(zalloc_flags_t, uint32_t, {
-	// values smaller than 0xff are shared with the M_* flags from BSD MALLOC
-	Z_WAITOK        = 0x0000,
-	Z_NOWAIT        = 0x0001,
-	Z_NOPAGEWAIT    = 0x0002,
-	Z_ZERO          = 0x0004,
-	Z_REALLOCF      = 0x0008,
+__options_decl(zalloc_flags_t, uint32_t,
+               {
+                   // values smaller than 0xff are shared with the M_* flags
+                   // from BSD MALLOC
+                   Z_WAITOK = 0x0000,
+                   Z_NOWAIT = 0x0001,
+                   Z_NOPAGEWAIT = 0x0002,
+                   Z_ZERO = 0x0004,
+                   Z_REALLOCF = 0x0008,
 
 #if XNU_KERNEL_PRIVATE
-	Z_NOSOFTLIMIT   = 0x0020,
-	Z_SET_NOTEARLY = 0x0040,
-	Z_SPRAYQTN      = 0x0080,
-	Z_KALLOC_ARRAY  = 0x0100,
+                   Z_NOSOFTLIMIT = 0x0020,
+                   Z_SET_NOTEARLY = 0x0040,
+                   Z_SPRAYQTN = 0x0080,
+                   Z_KALLOC_ARRAY = 0x0100,
 #if KASAN_CLASSIC
-	Z_FULLSIZE      = 0x0000,
+                   Z_FULLSIZE = 0x0000,
 #else
-	Z_FULLSIZE      = 0x0200,
+                   Z_FULLSIZE = 0x0200,
 #endif
 #if KASAN_CLASSIC
-	Z_SKIP_KASAN    = 0x0400,
+                   Z_SKIP_KASAN = 0x0400,
 #else
-	Z_SKIP_KASAN    = 0x0000,
+                   Z_SKIP_KASAN = 0x0000,
 #endif
-	Z_MAY_COPYINMAP = 0x0800,
-	Z_VM_TAG_BT_BIT = 0x1000,
-	Z_PCPU          = 0x2000,
-	Z_NOZZC         = 0x4000,
+                   Z_MAY_COPYINMAP = 0x0800,
+                   Z_VM_TAG_BT_BIT = 0x1000,
+                   Z_PCPU = 0x2000,
+                   Z_NOZZC = 0x4000,
 #endif /* XNU_KERNEL_PRIVATE */
-	Z_NOFAIL        = 0x8000,
+                   Z_NOFAIL = 0x8000,
 
-	/* convenient c++ spellings */
-	Z_NOWAIT_ZERO          = Z_NOWAIT | Z_ZERO,
-	Z_WAITOK_ZERO          = Z_WAITOK | Z_ZERO,
-	Z_WAITOK_ZERO_NOFAIL   = Z_WAITOK | Z_ZERO | Z_NOFAIL,
+                   /* convenient c++ spellings */
+                   Z_NOWAIT_ZERO = Z_NOWAIT | Z_ZERO,
+                   Z_WAITOK_ZERO = Z_WAITOK | Z_ZERO,
+                   Z_WAITOK_ZERO_NOFAIL = Z_WAITOK | Z_ZERO | Z_NOFAIL,
 #if XNU_KERNEL_PRIVATE
-	Z_WAITOK_ZERO_SPRAYQTN = Z_WAITOK | Z_ZERO | Z_SPRAYQTN,
+                   Z_WAITOK_ZERO_SPRAYQTN = Z_WAITOK | Z_ZERO | Z_SPRAYQTN,
 #endif
 
-	Z_KPI_MASK             = Z_WAITOK | Z_NOWAIT | Z_NOPAGEWAIT | Z_ZERO,
+                   Z_KPI_MASK = Z_WAITOK | Z_NOWAIT | Z_NOPAGEWAIT | Z_ZERO,
 #if XNU_KERNEL_PRIVATE
-	Z_ZERO_VM_TAG_BT_BIT   = Z_ZERO | Z_VM_TAG_BT_BIT,
-	/** used by kalloc to propagate vm tags for -zt */
-	Z_VM_TAG_MASK   = 0xffff0000,
+                   Z_ZERO_VM_TAG_BT_BIT = Z_ZERO | Z_VM_TAG_BT_BIT,
+                   /** used by kalloc to propagate vm tags for -zt */
+                   Z_VM_TAG_MASK = 0xffff0000,
 
-#define Z_VM_TAG_SHIFT        16
-#define Z_VM_TAG(fl, tag)     ((zalloc_flags_t)((fl) | ((tag) << Z_VM_TAG_SHIFT)))
-#define Z_VM_TAG_BT(fl, tag)  ((zalloc_flags_t)(Z_VM_TAG(fl, tag) | Z_VM_TAG_BT_BIT))
+#define Z_VM_TAG_SHIFT 16
+#define Z_VM_TAG(fl, tag) ((zalloc_flags_t)((fl) | ((tag) << Z_VM_TAG_SHIFT)))
+#define Z_VM_TAG_BT(fl, tag)                                                   \
+  ((zalloc_flags_t)(Z_VM_TAG(fl, tag) | Z_VM_TAG_BT_BIT))
 #endif
-});
+               });
 
 /*
  * This type is used so that kalloc_internal has good calling conventions
@@ -514,8 +508,8 @@ __options_decl(zalloc_flags_t, uint32_t, {
  * and the actual size of the allocation.
  */
 struct kalloc_result {
-	void         *addr __sized_by(size);
-	vm_size_t     size;
+  void *addr __sized_by(size);
+  vm_size_t size;
 };
 
 /*!
@@ -546,10 +540,10 @@ typedef struct zone_stats *__zpercpu zone_stats_t;
  */
 typedef struct zone_view *zone_view_t;
 struct zone_view {
-	zone_t          zv_zone;
-	zone_stats_t    zv_stats;
-	const char     *zv_name __unsafe_indexable;
-	zone_view_t     zv_next;
+  zone_t zv_zone;
+  zone_stats_t zv_stats;
+  const char *zv_name __unsafe_indexable;
+  zone_view_t zv_next;
 };
 
 /*!
@@ -565,52 +559,41 @@ typedef struct kalloc_type_view *kalloc_type_view_t;
 /*
  * kalloc_type/kfree_type implementation functions
  */
-extern void *__unsafe_indexable kalloc_type_impl_internal(
-	kalloc_type_view_t  kt_view,
-	zalloc_flags_t      flags);
+extern void *__unsafe_indexable
+kalloc_type_impl_internal(kalloc_type_view_t kt_view, zalloc_flags_t flags);
 
-extern void kfree_type_impl_internal(
-	kalloc_type_view_t kt_view,
-	void               *ptr __unsafe_indexable);
+extern void kfree_type_impl_internal(kalloc_type_view_t kt_view,
+                                     void *ptr __unsafe_indexable);
 
 static inline void *__unsafe_indexable
-kalloc_type_impl(
-	kalloc_type_view_t      kt_view,
-	zalloc_flags_t          flags)
-{
-	void *__unsafe_indexable addr = kalloc_type_impl_internal(kt_view, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+kalloc_type_impl(kalloc_type_view_t kt_view, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = kalloc_type_impl_internal(kt_view, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
-#define kfree_type_impl(kt_view, ptr) \
-	kfree_type_impl_internal(kt_view, (ptr))
+#define kfree_type_impl(kt_view, ptr) kfree_type_impl_internal(kt_view, (ptr))
 
 #else /* XNU_KERNEL_PRIVATE */
 
-extern void *__unsafe_indexable kalloc_type_impl(
-	kalloc_type_view_t  kt_view,
-	zalloc_flags_t      flags);
+extern void *__unsafe_indexable kalloc_type_impl(kalloc_type_view_t kt_view,
+                                                 zalloc_flags_t flags);
 
 static inline void *__unsafe_indexable
-__kalloc_type_impl(
-	kalloc_type_view_t  kt_view,
-	zalloc_flags_t      flags)
-{
-	void *__unsafe_indexable addr = (kalloc_type_impl)(kt_view, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__kalloc_type_impl(kalloc_type_view_t kt_view, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = (kalloc_type_impl)(kt_view, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
 #define kalloc_type_impl(ktv, fl) __kalloc_type_impl(ktv, fl)
 
-extern void kfree_type_impl(
-	kalloc_type_view_t  kt_view,
-	void                *ptr __unsafe_indexable);
+extern void kfree_type_impl(kalloc_type_view_t kt_view,
+                            void *ptr __unsafe_indexable);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -627,24 +610,18 @@ extern void kfree_type_impl(
  *
  * @returns             NULL or the allocated element
  */
-__attribute__((malloc))
-extern void *__unsafe_indexable zalloc(
-	zone_t          zone);
+__attribute__((malloc)) extern void *__unsafe_indexable zalloc(zone_t zone);
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-zalloc(zone_view_t view)
-{
-	return zalloc((zone_t)view);
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+zalloc(zone_view_t view) {
+  return zalloc((zone_t)view);
 }
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-zalloc(kalloc_type_view_t kt_view)
-{
-	return (kalloc_type_impl)(kt_view, Z_WAITOK);
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+zalloc(kalloc_type_view_t kt_view) {
+  return (kalloc_type_impl)(kt_view, Z_WAITOK);
 }
 
 /*!
@@ -661,24 +638,19 @@ zalloc(kalloc_type_view_t kt_view)
  *
  * @returns             NULL or the allocated element
  */
-__attribute__((malloc))
-extern void *__unsafe_indexable zalloc_noblock(
-	zone_t          zone);
+__attribute__((malloc)) extern void *__unsafe_indexable
+zalloc_noblock(zone_t zone);
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-zalloc_noblock(zone_view_t view)
-{
-	return zalloc_noblock((zone_t)view);
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+zalloc_noblock(zone_view_t view) {
+  return zalloc_noblock((zone_t)view);
 }
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-zalloc_noblock(kalloc_type_view_t kt_view)
-{
-	return (kalloc_type_impl)(kt_view, Z_NOWAIT);
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+zalloc_noblock(kalloc_type_view_t kt_view) {
+  return (kalloc_type_impl)(kt_view, Z_NOWAIT);
 }
 
 /*!
@@ -692,60 +664,42 @@ zalloc_noblock(kalloc_type_view_t kt_view)
  *
  * @returns             NULL or the allocated element
  */
-__attribute__((malloc))
-extern void *__unsafe_indexable zalloc_flags(
-	zone_t          zone,
-	zalloc_flags_t  flags);
+__attribute__((malloc)) extern void *__unsafe_indexable
+zalloc_flags(zone_t zone, zalloc_flags_t flags);
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-__zalloc_flags(
-	zone_t          zone,
-	zalloc_flags_t  flags)
-{
-	void *__unsafe_indexable addr = (zalloc_flags)(zone, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+__zalloc_flags(zone_t zone, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = (zalloc_flags)(zone, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-__zalloc_flags(
-	zone_view_t     view,
-	zalloc_flags_t  flags)
-{
-	return __zalloc_flags((zone_t)view, flags);
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+__zalloc_flags(zone_view_t view, zalloc_flags_t flags) {
+  return __zalloc_flags((zone_t)view, flags);
 }
 
 __attribute__((malloc))
-__attribute__((overloadable))
-static inline void *__unsafe_indexable
-__zalloc_flags(
-	kalloc_type_view_t  kt_view,
-	zalloc_flags_t      flags)
-{
-	void *__unsafe_indexable addr = (kalloc_type_impl)(kt_view, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__attribute__((overloadable)) static inline void *__unsafe_indexable
+__zalloc_flags(kalloc_type_view_t kt_view, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = (kalloc_type_impl)(kt_view, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
-__attribute__((malloc))
-static inline void *__header_indexable
-zalloc_flags_buf(
-	zone_t          zone,
-	zalloc_flags_t  flags)
-{
-	void *__unsafe_indexable addr = __zalloc_flags(zone, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return __unsafe_forge_bidi_indexable(void *, addr, zone_get_elem_size(zone));
+__attribute__((malloc)) static inline void *__header_indexable
+zalloc_flags_buf(zone_t zone, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = __zalloc_flags(zone, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return __unsafe_forge_bidi_indexable(void *, addr, zone_get_elem_size(zone));
 }
 
 #if XNU_KERNEL_PRIVATE && ZALLOC_TYPE_SAFE
@@ -765,22 +719,16 @@ zalloc_flags_buf(
  *
  * @returns             NULL or the allocated element
  */
-__attribute__((malloc))
-extern void *__unsafe_indexable zalloc_id(
-	zone_id_t       zid,
-	zalloc_flags_t  flags);
+__attribute__((malloc)) extern void *__unsafe_indexable
+zalloc_id(zone_id_t zid, zalloc_flags_t flags);
 
-__attribute__((malloc))
-static inline void *__unsafe_indexable
-__zalloc_id(
-	zone_id_t       zid,
-	zalloc_flags_t  flags)
-{
-	void *__unsafe_indexable addr = (zalloc_id)(zid, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__attribute__((malloc)) static inline void *__unsafe_indexable
+__zalloc_id(zone_id_t zid, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = (zalloc_id)(zid, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
 #if XNU_KERNEL_PRIVATE
@@ -800,22 +748,16 @@ __zalloc_id(
  *
  * @returns             NULL or the allocated element
  */
-__attribute__((malloc))
-extern void *__unsafe_indexable zalloc_ro(
-	zone_id_t       zone_id,
-	zalloc_flags_t  flags);
+__attribute__((malloc)) extern void *__unsafe_indexable
+zalloc_ro(zone_id_t zone_id, zalloc_flags_t flags);
 
-__attribute__((malloc))
-static inline void *__unsafe_indexable
-__zalloc_ro(
-	zone_id_t       zone_id,
-	zalloc_flags_t  flags)
-{
-	void *__unsafe_indexable addr = (zalloc_ro)(zone_id, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__attribute__((malloc)) static inline void *__unsafe_indexable
+__zalloc_ro(zone_id_t zone_id, zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = (zalloc_ro)(zone_id, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
 #if XNU_KERNEL_PRIVATE
@@ -842,12 +784,10 @@ __zalloc_ro(
  * @param new_data_size size of modification
  *
  */
-extern void zalloc_ro_mut(
-	zone_id_t       zone_id,
-	void           *elem __unsafe_indexable,
-	vm_offset_t     offset,
-	const void     *new_data __sized_by(new_data_size),
-	vm_size_t       new_data_size);
+extern void zalloc_ro_mut(zone_id_t zone_id, void *elem __unsafe_indexable,
+                          vm_offset_t offset,
+                          const void *new_data __sized_by(new_data_size),
+                          vm_size_t new_data_size);
 
 /*!
  * @function zalloc_ro_update_elem
@@ -860,10 +800,11 @@ extern void zalloc_ro_mut(
  * @param new_data      pointer to new data
  *
  */
-#define zalloc_ro_update_elem(zone_id, elem, new_data)  ({ \
-	const typeof(*(elem)) *__new_data = (new_data);                        \
-	zalloc_ro_mut(zone_id, elem, 0, __new_data, sizeof(*__new_data));      \
-})
+#define zalloc_ro_update_elem(zone_id, elem, new_data)                         \
+  ({                                                                           \
+    const typeof(*(elem)) *__new_data = (new_data);                            \
+    zalloc_ro_mut(zone_id, elem, 0, __new_data, sizeof(*__new_data));          \
+  })
 
 /*!
  * @function zalloc_ro_update_field
@@ -877,11 +818,12 @@ extern void zalloc_ro_mut(
  * @param new_data      pointer to new data
  *
  */
-#define zalloc_ro_update_field(zone_id, elem, field, value)  ({ \
-	const typeof((elem)->field) *__value = (value);                        \
-	zalloc_ro_mut(zone_id, elem, offsetof(typeof(*(elem)), field),         \
-	    __value, sizeof((elem)->field));                                   \
-})
+#define zalloc_ro_update_field(zone_id, elem, field, value)                    \
+  ({                                                                           \
+    const typeof((elem)->field) *__value = (value);                            \
+    zalloc_ro_mut(zone_id, elem, offsetof(typeof(*(elem)), field), __value,    \
+                  sizeof((elem)->field));                                      \
+  })
 
 #define ZRO_ATOMIC_LONG(op) ZRO_ATOMIC_##op##_64
 
@@ -912,39 +854,40 @@ extern void zalloc_ro_mut(
  * To perform an @s os_atomic_xchg
  *
  */
-__enum_decl(zro_atomic_op_t, uint32_t, {
-	ZRO_ATOMIC_OR_8      = 0x00000010 | 1,
-	ZRO_ATOMIC_OR_16     = 0x00000010 | 2,
-	ZRO_ATOMIC_OR_32     = 0x00000010 | 4,
-	ZRO_ATOMIC_OR_64     = 0x00000010 | 8,
+__enum_decl(zro_atomic_op_t, uint32_t,
+            {
+                ZRO_ATOMIC_OR_8 = 0x00000010 | 1,
+                ZRO_ATOMIC_OR_16 = 0x00000010 | 2,
+                ZRO_ATOMIC_OR_32 = 0x00000010 | 4,
+                ZRO_ATOMIC_OR_64 = 0x00000010 | 8,
 
-	ZRO_ATOMIC_XOR_8     = 0x00000020 | 1,
-	ZRO_ATOMIC_XOR_16    = 0x00000020 | 2,
-	ZRO_ATOMIC_XOR_32    = 0x00000020 | 4,
-	ZRO_ATOMIC_XOR_64    = 0x00000020 | 8,
+                ZRO_ATOMIC_XOR_8 = 0x00000020 | 1,
+                ZRO_ATOMIC_XOR_16 = 0x00000020 | 2,
+                ZRO_ATOMIC_XOR_32 = 0x00000020 | 4,
+                ZRO_ATOMIC_XOR_64 = 0x00000020 | 8,
 
-	ZRO_ATOMIC_AND_8     = 0x00000030 | 1,
-	ZRO_ATOMIC_AND_16    = 0x00000030 | 2,
-	ZRO_ATOMIC_AND_32    = 0x00000030 | 4,
-	ZRO_ATOMIC_AND_64    = 0x00000030 | 8,
+                ZRO_ATOMIC_AND_8 = 0x00000030 | 1,
+                ZRO_ATOMIC_AND_16 = 0x00000030 | 2,
+                ZRO_ATOMIC_AND_32 = 0x00000030 | 4,
+                ZRO_ATOMIC_AND_64 = 0x00000030 | 8,
 
-	ZRO_ATOMIC_ADD_8     = 0x00000040 | 1,
-	ZRO_ATOMIC_ADD_16    = 0x00000040 | 2,
-	ZRO_ATOMIC_ADD_32    = 0x00000040 | 4,
-	ZRO_ATOMIC_ADD_64    = 0x00000040 | 8,
+                ZRO_ATOMIC_ADD_8 = 0x00000040 | 1,
+                ZRO_ATOMIC_ADD_16 = 0x00000040 | 2,
+                ZRO_ATOMIC_ADD_32 = 0x00000040 | 4,
+                ZRO_ATOMIC_ADD_64 = 0x00000040 | 8,
 
-	ZRO_ATOMIC_XCHG_8    = 0x00000050 | 1,
-	ZRO_ATOMIC_XCHG_16   = 0x00000050 | 2,
-	ZRO_ATOMIC_XCHG_32   = 0x00000050 | 4,
-	ZRO_ATOMIC_XCHG_64   = 0x00000050 | 8,
+                ZRO_ATOMIC_XCHG_8 = 0x00000050 | 1,
+                ZRO_ATOMIC_XCHG_16 = 0x00000050 | 2,
+                ZRO_ATOMIC_XCHG_32 = 0x00000050 | 4,
+                ZRO_ATOMIC_XCHG_64 = 0x00000050 | 8,
 
-	/* cconvenient spellings */
-	ZRO_ATOMIC_OR_LONG   = ZRO_ATOMIC_LONG(OR),
-	ZRO_ATOMIC_XOR_LONG  = ZRO_ATOMIC_LONG(XOR),
-	ZRO_ATOMIC_AND_LONG  = ZRO_ATOMIC_LONG(AND),
-	ZRO_ATOMIC_ADD_LONG  = ZRO_ATOMIC_LONG(ADD),
-	ZRO_ATOMIC_XCHG_LONG = ZRO_ATOMIC_LONG(XCHG),
-});
+                /* cconvenient spellings */
+                ZRO_ATOMIC_OR_LONG = ZRO_ATOMIC_LONG(OR),
+                ZRO_ATOMIC_XOR_LONG = ZRO_ATOMIC_LONG(XOR),
+                ZRO_ATOMIC_AND_LONG = ZRO_ATOMIC_LONG(AND),
+                ZRO_ATOMIC_ADD_LONG = ZRO_ATOMIC_LONG(ADD),
+                ZRO_ATOMIC_XCHG_LONG = ZRO_ATOMIC_LONG(XCHG),
+            });
 
 /*!
  * @function zalloc_ro_mut_atomic
@@ -960,12 +903,10 @@ __enum_decl(zro_atomic_op_t, uint32_t, {
  * @param value         value for the atomic operation
  *
  */
-extern uint64_t zalloc_ro_mut_atomic(
-	zone_id_t       zone_id,
-	void           *elem __unsafe_indexable,
-	vm_offset_t     offset,
-	zro_atomic_op_t op,
-	uint64_t        value);
+extern uint64_t zalloc_ro_mut_atomic(zone_id_t zone_id,
+                                     void *elem __unsafe_indexable,
+                                     vm_offset_t offset, zro_atomic_op_t op,
+                                     uint64_t value);
 
 /*!
  * @macro zalloc_ro_update_field_atomic
@@ -981,12 +922,14 @@ extern uint64_t zalloc_ro_mut_atomic(
  * @param value         value for the atomic operation
  *
  */
-#define zalloc_ro_update_field_atomic(zone_id, elem, field, op, value)  ({ \
-	const typeof((elem)->field) __value = (value);                         \
-	static_assert(sizeof(__value) == (op & 0xf));                          \
-	(os_atomic_basetypeof(&(elem)->field))zalloc_ro_mut_atomic(zone_id,    \
-	    elem, offsetof(typeof(*(elem)), field), op, (uint64_t)__value);    \
-})
+#define zalloc_ro_update_field_atomic(zone_id, elem, field, op, value)         \
+  ({                                                                           \
+    const typeof((elem)->field) __value = (value);                             \
+    static_assert(sizeof(__value) == (op & 0xf));                              \
+    (os_atomic_basetypeof(&(elem)->field))                                     \
+        zalloc_ro_mut_atomic(zone_id, elem, offsetof(typeof(*(elem)), field),  \
+                             op, (uint64_t)__value);                           \
+  })
 
 /*!
  * @function zalloc_ro_clear
@@ -999,11 +942,8 @@ extern uint64_t zalloc_ro_mut_atomic(
  * @param offset        offset from element
  * @param size          size of modification
  */
-extern void    zalloc_ro_clear(
-	zone_id_t       zone_id,
-	void           *elem __unsafe_indexable,
-	vm_offset_t     offset,
-	vm_size_t       size);
+extern void zalloc_ro_clear(zone_id_t zone_id, void *elem __unsafe_indexable,
+                            vm_offset_t offset, vm_size_t size);
 
 /*!
  * @function zalloc_ro_clear_field
@@ -1015,9 +955,9 @@ extern void    zalloc_ro_clear(
  * @param elem          element to be modified
  * @param field         offset from element
  */
-#define zalloc_ro_clear_field(zone_id, elem, field) \
-	zalloc_ro_clear(zone_id, elem, offsetof(typeof(*(elem)), field), \
-	    sizeof((elem)->field))
+#define zalloc_ro_clear_field(zone_id, elem, field)                            \
+  zalloc_ro_clear(zone_id, elem, offsetof(typeof(*(elem)), field),             \
+                  sizeof((elem)->field))
 
 /*!
  * @function zfree_id()
@@ -1028,14 +968,12 @@ extern void    zalloc_ro_clear(
  * @param zone_id       the zone id to free the element to.
  * @param addr          the address to free
  */
-extern void     zfree_id(
-	zone_id_t       zone_id,
-	void           *addr __unsafe_indexable);
-#define zfree_id(zid, elem) ({ \
-	zone_id_t __zfree_zid = (zid); \
-	(zfree_id)(__zfree_zid, (void *)os_ptr_load_and_erase(elem)); \
-})
-
+extern void zfree_id(zone_id_t zone_id, void *addr __unsafe_indexable);
+#define zfree_id(zid, elem)                                                    \
+  ({                                                                           \
+    zone_id_t __zfree_zid = (zid);                                             \
+    (zfree_id)(__zfree_zid, (void *)os_ptr_load_and_erase(elem));              \
+  })
 
 /*!
  * @function zfree_ro()
@@ -1046,14 +984,12 @@ extern void     zfree_id(
  * @param zone_id       the zone id to free the element to.
  * @param addr          the address to free
  */
-extern void     zfree_ro(
-	zone_id_t       zone_id,
-	void           *addr __unsafe_indexable);
-#define zfree_ro(zid, elem) ({ \
-	zone_id_t __zfree_zid = (zid); \
-	(zfree_ro)(__zfree_zid, (void *)os_ptr_load_and_erase(elem)); \
-})
-
+extern void zfree_ro(zone_id_t zone_id, void *addr __unsafe_indexable);
+#define zfree_ro(zid, elem)                                                    \
+  ({                                                                           \
+    zone_id_t __zfree_zid = (zid);                                             \
+    (zfree_ro)(__zfree_zid, (void *)os_ptr_load_and_erase(elem));              \
+  })
 
 /*!
  * @function zfree
@@ -1068,49 +1004,38 @@ extern void     zfree_ro(
  * @param zone          the zone or zone view to free the element to.
  * @param elem          the element to free
  */
-extern void     zfree(
-	zone_t          zone,
-	void           *elem __unsafe_indexable);
+extern void zfree(zone_t zone, void *elem __unsafe_indexable);
 
-__attribute__((overloadable))
-static inline void
-zfree(
-	zone_view_t     view,
-	void           *elem __unsafe_indexable)
-{
-	zfree((zone_t)view, elem);
+__attribute__((overloadable)) static inline void
+zfree(zone_view_t view, void *elem __unsafe_indexable) {
+  zfree((zone_t)view, elem);
 }
 
-__attribute__((overloadable))
-static inline void
-zfree(
-	kalloc_type_view_t   kt_view,
-	void                *elem __unsafe_indexable)
-{
-	return kfree_type_impl(kt_view, elem);
+__attribute__((overloadable)) static inline void
+zfree(kalloc_type_view_t kt_view, void *elem __unsafe_indexable) {
+  return kfree_type_impl(kt_view, elem);
 }
 
-#define zfree(zone, elem) ({ \
-	__auto_type __zfree_zone = (zone); \
-	(zfree)(__zfree_zone, (void *)os_ptr_load_and_erase(elem)); \
-})
-
+#define zfree(zone, elem)                                                      \
+  ({                                                                           \
+    __auto_type __zfree_zone = (zone);                                         \
+    (zfree)(__zfree_zone, (void *)os_ptr_load_and_erase(elem));                \
+  })
 
 /* deprecated KPIS */
 
-__zalloc_deprecated("use zone_create()")
-extern zone_t   zinit(
-	vm_size_t       size,           /* the size of an element */
-	vm_size_t       maxmem,         /* maximum memory to use */
-	vm_size_t       alloc,          /* allocation size */
-	const char      *name __unsafe_indexable);
+__zalloc_deprecated("use zone_create()") extern zone_t
+    zinit(vm_size_t size,   /* the size of an element */
+          vm_size_t maxmem, /* maximum memory to use */
+          vm_size_t alloc,  /* allocation size */
+          const char *name __unsafe_indexable);
 
-#pragma mark: implementation details
+#pragma mark : implementation details
 
 #define __ZONE_DECLARE_TYPE(var, type_t) __ZONE_DECLARE_TYPE2(var, type_t)
-#define __ZONE_DECLARE_TYPE2(var, type_t) \
-	__attribute__((visibility("hidden"))) \
-	extern type_t *__single __zalloc__##var##__type_name
+#define __ZONE_DECLARE_TYPE2(var, type_t)                                      \
+  __attribute__((visibility(                                                   \
+      "hidden"))) extern type_t *__single __zalloc__##var##__type_name
 
 #ifdef XNU_KERNEL_PRIVATE
 #pragma mark - XNU only interfaces
@@ -1121,38 +1046,34 @@ __exported_push_hidden
 
 #pragma mark XNU only: zalloc (extended)
 
-#define ZALIGN_NONE             (sizeof(uint8_t)  - 1)
-#define ZALIGN_16               (sizeof(uint16_t) - 1)
-#define ZALIGN_32               (sizeof(uint32_t) - 1)
-#define ZALIGN_PTR              (sizeof(void *)   - 1)
-#define ZALIGN_64               (sizeof(uint64_t) - 1)
-#define ZALIGN(t)               (_Alignof(t)      - 1)
+#define ZALIGN_NONE (sizeof(uint8_t) - 1)
+#define ZALIGN_16 (sizeof(uint16_t) - 1)
+#define ZALIGN_32 (sizeof(uint32_t) - 1)
+#define ZALIGN_PTR (sizeof(void *) - 1)
+#define ZALIGN_64 (sizeof(uint64_t) - 1)
+#define ZALIGN(t) (_Alignof(t) - 1)
 
-
-/*!
- * @function zalloc_permanent_tag()
- *
- * @abstract
- * Allocates a permanent element from the permanent zone
- *
- * @discussion
- * Memory returned by this function is always 0-initialized.
- * Note that the size of this allocation can not be determined
- * by zone_element_size so it should not be used for copyio.
- *
- * @param size          the element size (must be smaller than PAGE_SIZE)
- * @param align_mask    the required alignment for this allocation
- * @param tag           the tag to use for allocations larger than a page.
- *
- * @returns             the allocated element
- */
-__attribute__((malloc))
-extern void *__sized_by(size) zalloc_permanent_tag(
-	vm_size_t       size,
-	vm_offset_t     align_mask,
-	vm_tag_t        tag)
-__attribute__((__diagnose_if__((align_mask & (align_mask + 1)),
-    "align mask looks invalid", "error")));
+    /*!
+     * @function zalloc_permanent_tag()
+     *
+     * @abstract
+     * Allocates a permanent element from the permanent zone
+     *
+     * @discussion
+     * Memory returned by this function is always 0-initialized.
+     * Note that the size of this allocation can not be determined
+     * by zone_element_size so it should not be used for copyio.
+     *
+     * @param size          the element size (must be smaller than PAGE_SIZE)
+     * @param align_mask    the required alignment for this allocation
+     * @param tag           the tag to use for allocations larger than a page.
+     *
+     * @returns             the allocated element
+     */
+    __attribute__((malloc)) extern void *__sized_by(size) zalloc_permanent_tag(
+        vm_size_t size, vm_offset_t align_mask, vm_tag_t tag)
+        __attribute__((__diagnose_if__((align_mask & (align_mask + 1)),
+                                       "align mask looks invalid", "error")));
 
 /*!
  * @function zalloc_permanent()
@@ -1170,8 +1091,8 @@ __attribute__((__diagnose_if__((align_mask & (align_mask + 1)),
  *
  * @returns             the allocated element
  */
-#define zalloc_permanent(size, align) \
-	zalloc_permanent_tag(size, align, VM_KERN_MEMORY_KALLOC)
+#define zalloc_permanent(size, align)                                          \
+  zalloc_permanent_tag(size, align, VM_KERN_MEMORY_KALLOC)
 
 /*!
  * @function zalloc_permanent_type()
@@ -1186,9 +1107,9 @@ __attribute__((__diagnose_if__((align_mask & (align_mask + 1)),
  *
  * @returns             the allocated element
  */
-#define zalloc_permanent_type(type_t) \
-	__unsafe_forge_single(type_t *, \
-	    zalloc_permanent(sizeof(type_t), ZALIGN(type_t)))
+#define zalloc_permanent_type(type_t)                                          \
+  __unsafe_forge_single(type_t *,                                              \
+                        zalloc_permanent(sizeof(type_t), ZALIGN(type_t)))
 
 /*!
  * @function zalloc_first_proc_made()
@@ -1218,8 +1139,8 @@ extern void zalloc_iokit_lockdown(void);
  *
  * @returns             the per-CPU slot for @c ptr for the specified CPU.
  */
-#define zpercpu_get_cpu(ptr, cpu) \
-	__zpcpu_cast(ptr, __zpcpu_addr(ptr) + ptoa((unsigned)(cpu)))
+#define zpercpu_get_cpu(ptr, cpu)                                              \
+  __zpcpu_cast(ptr, __zpcpu_addr(ptr) + ptoa((unsigned)(cpu)))
 
 /*!
  * @macro zpercpu_get()
@@ -1231,8 +1152,7 @@ extern void zalloc_iokit_lockdown(void);
  *
  * @returns             the per-CPU slot for @c ptr for the current CPU.
  */
-#define zpercpu_get(ptr) \
-	zpercpu_get_cpu(ptr, cpu_number())
+#define zpercpu_get(ptr) zpercpu_get_cpu(ptr, cpu_number())
 
 /*!
  * @macro zpercpu_foreach()
@@ -1243,10 +1163,10 @@ extern void zalloc_iokit_lockdown(void);
  * @param it            the name for the iterator
  * @param ptr           the per-cpu pointer (returned by @c zalloc_percpu*()).
  */
-#define zpercpu_foreach(it, ptr) \
-	for (typeof(ptr) it = zpercpu_get_cpu(ptr, 0), \
-	    __end_##it = zpercpu_get_cpu(ptr, zpercpu_count()); \
-	    it < __end_##it; it = __zpcpu_next(it))
+#define zpercpu_foreach(it, ptr)                                               \
+  for (typeof(ptr) it = zpercpu_get_cpu(ptr, 0),                               \
+                   __end_##it = zpercpu_get_cpu(ptr, zpercpu_count());         \
+       it < __end_##it; it = __zpcpu_next(it))
 
 /*!
  * @macro zpercpu_foreach_cpu()
@@ -1256,8 +1176,8 @@ extern void zalloc_iokit_lockdown(void);
  *
  * @param cpu           the name for cpu number iterator.
  */
-#define zpercpu_foreach_cpu(cpu) \
-	for (unsigned cpu = 0; cpu < zpercpu_count(); cpu++)
+#define zpercpu_foreach_cpu(cpu)                                               \
+  for (unsigned cpu = 0; cpu < zpercpu_count(); cpu++)
 
 /*!
  * @function zalloc_percpu()
@@ -1274,20 +1194,16 @@ extern void zalloc_iokit_lockdown(void);
  *
  * @returns             NULL or the allocated element
  */
-extern void *__zpercpu zalloc_percpu(
-	zone_or_view_t  zone_or_view,
-	zalloc_flags_t  flags);
+extern void *__zpercpu zalloc_percpu(zone_or_view_t zone_or_view,
+                                     zalloc_flags_t flags);
 
-static inline void *__zpercpu
-__zalloc_percpu(
-	zone_or_view_t  zone_or_view,
-	zalloc_flags_t  flags)
-{
-	void *__unsafe_indexable addr = (zalloc_percpu)(zone_or_view, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+static inline void *__zpercpu __zalloc_percpu(zone_or_view_t zone_or_view,
+                                              zalloc_flags_t flags) {
+  void *__unsafe_indexable addr = (zalloc_percpu)(zone_or_view, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
 #define zalloc_percpu(zov, fl) __zalloc_percpu(zov, fl)
@@ -1301,9 +1217,7 @@ __zalloc_percpu(
  * @param zone_or_view  the zone or zone view to free the element to.
  * @param addr          the address to free
  */
-extern void     zfree_percpu(
-	zone_or_view_t  zone_or_view,
-	void *__zpercpu addr);
+extern void zfree_percpu(zone_or_view_t zone_or_view, void *__zpercpu addr);
 
 /*!
  * @function zalloc_percpu_permanent()
@@ -1319,16 +1233,15 @@ extern void     zfree_percpu(
  *
  * @returns             the allocated element
  */
-extern void *__zpercpu zalloc_percpu_permanent(
-	vm_size_t       size,
-	vm_offset_t     align_mask);
+extern void *__zpercpu zalloc_percpu_permanent(vm_size_t size,
+                                               vm_offset_t align_mask);
 
 /*!
  * @function zalloc_percpu_permanent_type()
  *
  * @abstract
- * Allocates a permanent percpu-element from the permanent percpu zone of a given
- * type with its natural alignment.
+ * Allocates a permanent percpu-element from the permanent percpu zone of a
+ * given type with its natural alignment.
  *
  * @discussion
  * Memory returned by this function is always 0-initialized.
@@ -1337,9 +1250,8 @@ extern void *__zpercpu zalloc_percpu_permanent(
  *
  * @returns             the allocated element
  */
-#define zalloc_percpu_permanent_type(type_t) \
-	((type_t *__zpercpu)zalloc_percpu_permanent(sizeof(type_t), ZALIGN(type_t)))
-
+#define zalloc_percpu_permanent_type(type_t)                                   \
+  ((type_t * __zpercpu) zalloc_percpu_permanent(sizeof(type_t), ZALIGN(type_t)))
 
 #pragma mark XNU only: SMR support for zones
 
@@ -1428,10 +1340,8 @@ typedef void (*zone_smr_free_cb_t)(void *, size_t);
  * @param smr           the smr domain to use
  * @param free_cb       the free callback to use
  */
-extern void     zone_enable_smr(
-	zone_t                  zone,
-	struct smr             *smr,
-	zone_smr_free_cb_t      free_cb);
+extern void zone_enable_smr(zone_t zone, struct smr *smr,
+                            zone_smr_free_cb_t free_cb);
 
 /*!
  * @function zone_id_enable_smr()
@@ -1447,12 +1357,13 @@ extern void     zone_enable_smr(
  * @param smr           the smr domain to use
  * @param free_cb       the free callback to use
  */
-#define zone_id_enable_smr(zone_id, smr, free_cb)  ({ \
-	void (*__cb)(typeof(__zalloc__##zone_id##__type_name), vm_size_t);      \
-                                                                                \
-	__cb = (free_cb);                                                       \
-	zone_enable_smr(zone_by_id(zone_id), smr, (zone_smr_free_cb_t)__cb);    \
-})
+#define zone_id_enable_smr(zone_id, smr, free_cb)                              \
+  ({                                                                           \
+    void (*__cb)(typeof(__zalloc__##zone_id##__type_name), vm_size_t);         \
+                                                                               \
+    __cb = (free_cb);                                                          \
+    zone_enable_smr(zone_by_id(zone_id), smr, (zone_smr_free_cb_t)__cb);       \
+  })
 
 /*!
  * @macro zalloc_smr()
@@ -1468,8 +1379,7 @@ extern void     zone_enable_smr(
  *
  * @returns             NULL or the allocated element
  */
-#define zalloc_smr(zone, flags) \
-	zalloc_flags(zone, flags)
+#define zalloc_smr(zone, flags) zalloc_flags(zone, flags)
 
 /*!
  * @macro zalloc_id_smr()
@@ -1482,8 +1392,7 @@ extern void     zone_enable_smr(
  *
  * @returns             NULL or the allocated element
  */
-#define zalloc_id_smr(zid, flags) \
-	zalloc_id(zid, flags)
+#define zalloc_id_smr(zid, flags) zalloc_id(zid, flags)
 
 /*!
  * @macro zfree_smr()
@@ -1515,14 +1424,12 @@ extern void     zone_enable_smr(
  * @param zone          the zone to free the element to.
  * @param elem          the address to free
  */
-extern void     zfree_smr(
-	zone_t          zone,
-	void           *elem __unsafe_indexable);
-#define zfree_smr(zone, elem) ({ \
-	__auto_type __zfree_zone = (zone); \
-	(zfree_smr)(__zfree_zone, (void *)os_ptr_load_and_erase(elem)); \
-})
-
+extern void zfree_smr(zone_t zone, void *elem __unsafe_indexable);
+#define zfree_smr(zone, elem)                                                  \
+  ({                                                                           \
+    __auto_type __zfree_zone = (zone);                                         \
+    (zfree_smr)(__zfree_zone, (void *)os_ptr_load_and_erase(elem));            \
+  })
 
 /*!
  * @function zfree_id_smr()
@@ -1533,13 +1440,12 @@ extern void     zfree_smr(
  * @param zone_id       the zone id to free the element to.
  * @param addr          the address to free
  */
-extern void     zfree_id_smr(
-	zone_id_t       zone_id,
-	void           *addr __unsafe_indexable);
-#define zfree_id_smr(zid, elem) ({ \
-	zone_id_t __zfree_zid = (zid); \
-	(zfree_id_smr)(__zfree_zid, (void *)os_ptr_load_and_erase(elem)); \
-})
+extern void zfree_id_smr(zone_id_t zone_id, void *addr __unsafe_indexable);
+#define zfree_id_smr(zid, elem)                                                \
+  ({                                                                           \
+    zone_id_t __zfree_zid = (zid);                                             \
+    (zfree_id_smr)(__zfree_zid, (void *)os_ptr_load_and_erase(elem));          \
+  })
 
 /*!
  * @macro zfree_smr_noclear()
@@ -1558,8 +1464,8 @@ extern void     zfree_id_smr(
  * @param zone          the zone to free the element to.
  * @param elem          the address to free
  */
-#define zfree_smr_noclear(zone, elem) \
-	(zfree_smr)(zone, (void *)smr_unsafe_load(&(elem)))
+#define zfree_smr_noclear(zone, elem)                                          \
+  (zfree_smr)(zone, (void *)smr_unsafe_load(&(elem)))
 
 /*!
  * @macro zfree_id_smr_noclear()
@@ -1578,9 +1484,8 @@ extern void     zfree_id_smr(
  * @param zone          the zone to free the element to.
  * @param elem          the address to free
  */
-#define zfree_id_smr_noclear(zone, elem) \
-	(zfree_id_smr)(zone, (void *)smr_unsafe_load(&(elem)))
-
+#define zfree_id_smr_noclear(zone, elem)                                       \
+  (zfree_id_smr)(zone, (void *)smr_unsafe_load(&(elem)))
 
 #pragma mark XNU only: zone creation (extended)
 
@@ -1596,81 +1501,82 @@ extern void     zfree_id_smr(
  * @c ZONE_ID__ZERO reserves zone index 0 so that it can't be used, as 0 is too
  * easy a value to produce (by malice or accident).
  *
- * @c ZONE_ID__FIRST_RO_EXT is the first external read only zone ID that corresponds
- * to the first @c zone_create_ro_id_t. There is a 1:1 mapping between zone IDs
- * belonging to [ZONE_ID__FIRST_RO_EXT - ZONE_ID__LAST_RO_EXT] and zone creations IDs
- * listed in @c zone_create_ro_id_t.
+ * @c ZONE_ID__FIRST_RO_EXT is the first external read only zone ID that
+ * corresponds to the first @c zone_create_ro_id_t. There is a 1:1 mapping
+ * between zone IDs belonging to [ZONE_ID__FIRST_RO_EXT - ZONE_ID__LAST_RO_EXT]
+ * and zone creations IDs listed in @c zone_create_ro_id_t.
  *
  * @c ZONE_ID__FIRST_DYNAMIC is the first dynamic zone ID that can be used by
  * @c zone_create().
  */
-__enum_decl(zone_reserved_id_t, zone_id_t, {
-	ZONE_ID__ZERO,
+__enum_decl(zone_reserved_id_t, zone_id_t,
+            {
+                ZONE_ID__ZERO,
 
-	ZONE_ID_PERMANENT,
-	ZONE_ID_PERCPU_PERMANENT,
+                ZONE_ID_PERMANENT,
+                ZONE_ID_PERCPU_PERMANENT,
 
-	ZONE_ID_THREAD_RO,
-	ZONE_ID_MAC_LABEL,
-	ZONE_ID_PROC_RO,
-	ZONE_ID_PROC_SIGACTS_RO,
-	ZONE_ID_KAUTH_CRED,
-	ZONE_ID_CS_BLOB,
+                ZONE_ID_THREAD_RO,
+                ZONE_ID_MAC_LABEL,
+                ZONE_ID_PROC_RO,
+                ZONE_ID_PROC_SIGACTS_RO,
+                ZONE_ID_KAUTH_CRED,
+                ZONE_ID_CS_BLOB,
 
-	ZONE_ID_SANDBOX_RO,
-	ZONE_ID_PROFILE_RO,
-	ZONE_ID_PROTOBOX,
-	ZONE_ID_SB_FILTER,
-	ZONE_ID_AMFI_OSENTITLEMENTS,
+                ZONE_ID_SANDBOX_RO,
+                ZONE_ID_PROFILE_RO,
+                ZONE_ID_PROTOBOX,
+                ZONE_ID_SB_FILTER,
+                ZONE_ID_AMFI_OSENTITLEMENTS,
 
-	ZONE_ID__FIRST_RO = ZONE_ID_THREAD_RO,
-	ZONE_ID__FIRST_RO_EXT = ZONE_ID_SANDBOX_RO,
-	ZONE_ID__LAST_RO_EXT = ZONE_ID_AMFI_OSENTITLEMENTS,
-	ZONE_ID__LAST_RO = ZONE_ID__LAST_RO_EXT,
+                ZONE_ID__FIRST_RO = ZONE_ID_THREAD_RO,
+                ZONE_ID__FIRST_RO_EXT = ZONE_ID_SANDBOX_RO,
+                ZONE_ID__LAST_RO_EXT = ZONE_ID_AMFI_OSENTITLEMENTS,
+                ZONE_ID__LAST_RO = ZONE_ID__LAST_RO_EXT,
 
-	ZONE_ID_PMAP,
-	ZONE_ID_VM_MAP,
-	ZONE_ID_VM_MAP_ENTRY,
-	ZONE_ID_VM_MAP_HOLES,
-	ZONE_ID_VM_MAP_COPY,
-	ZONE_ID_VM_PAGES,
-	ZONE_ID_IPC_PORT,
-	ZONE_ID_IPC_PORT_SET,
-	ZONE_ID_IPC_KMSG,
-	ZONE_ID_IPC_VOUCHERS,
-	ZONE_ID_PROC_TASK,
-	ZONE_ID_THREAD,
-	ZONE_ID_TURNSTILE,
-	ZONE_ID_SEMAPHORE,
-	ZONE_ID_SELECT_SET,
-	ZONE_ID_FILEPROC,
+                ZONE_ID_PMAP,
+                ZONE_ID_VM_MAP,
+                ZONE_ID_VM_MAP_ENTRY,
+                ZONE_ID_VM_MAP_HOLES,
+                ZONE_ID_VM_MAP_COPY,
+                ZONE_ID_VM_PAGES,
+                ZONE_ID_IPC_PORT,
+                ZONE_ID_IPC_PORT_SET,
+                ZONE_ID_IPC_KMSG,
+                ZONE_ID_IPC_VOUCHERS,
+                ZONE_ID_PROC_TASK,
+                ZONE_ID_THREAD,
+                ZONE_ID_TURNSTILE,
+                ZONE_ID_SEMAPHORE,
+                ZONE_ID_SELECT_SET,
+                ZONE_ID_FILEPROC,
 
 #if !CONFIG_MBUF_MCACHE
-	ZONE_ID_MBUF_REF,
-	ZONE_ID_MBUF,
-	ZONE_ID_CLUSTER_2K,
-	ZONE_ID_CLUSTER_4K,
-	ZONE_ID_CLUSTER_16K,
-	ZONE_ID_MBUF_CLUSTER_2K,
-	ZONE_ID_MBUF_CLUSTER_4K,
-	ZONE_ID_MBUF_CLUSTER_16K,
+                ZONE_ID_MBUF_REF,
+                ZONE_ID_MBUF,
+                ZONE_ID_CLUSTER_2K,
+                ZONE_ID_CLUSTER_4K,
+                ZONE_ID_CLUSTER_16K,
+                ZONE_ID_MBUF_CLUSTER_2K,
+                ZONE_ID_MBUF_CLUSTER_4K,
+                ZONE_ID_MBUF_CLUSTER_16K,
 #endif /* !CONFIG_MBUF_MCACHE */
 
-	ZONE_ID__FIRST_DYNAMIC,
-});
+                ZONE_ID__FIRST_DYNAMIC,
+            });
 
 /*!
  * @const ZONE_ID_ANY
  * The value to pass to @c zone_create_ext() to allocate a non pre-registered
  * Zone ID.
  */
-#define ZONE_ID_ANY ((zone_id_t)-1)
+#define ZONE_ID_ANY ((zone_id_t) - 1)
 
 /*!
  * @const ZONE_ID_INVALID
  * An invalid zone_id_t that corresponds to nothing.
  */
-#define ZONE_ID_INVALID ((zone_id_t)-2)
+#define ZONE_ID_INVALID ((zone_id_t) - 2)
 
 /**!
  * @function zone_by_id
@@ -1678,8 +1584,7 @@ __enum_decl(zone_reserved_id_t, zone_id_t, {
  * @param zid           the specified zone ID.
  * @returns             the zone with that ID.
  */
-zone_t zone_by_id(
-	size_t                  zid) __pure2;
+zone_t zone_by_id(size_t zid) __pure2;
 
 /**!
  * @function zone_name
@@ -1687,8 +1592,7 @@ zone_t zone_by_id(
  * @param zone          the specified zone
  * @returns             the name of the specified zone.
  */
-const char *__unsafe_indexable zone_name(
-	zone_t                  zone);
+const char *__unsafe_indexable zone_name(zone_t zone);
 
 /**!
  * @function zone_heap_name
@@ -1696,8 +1600,7 @@ const char *__unsafe_indexable zone_name(
  * @param zone          the specified zone
  * @returns             the name of the heap this zone is part of, or "".
  */
-const char *__unsafe_indexable zone_heap_name(
-	zone_t                  zone);
+const char *__unsafe_indexable zone_heap_name(zone_t zone);
 
 /*!
  * @function zone_create_ext
@@ -1720,12 +1623,10 @@ const char *__unsafe_indexable zone_heap_name(
  *
  * @returns             the created zone, this call never fails.
  */
-extern zone_t   zone_create_ext(
-	const char             *name __unsafe_indexable,
-	vm_size_t               size,
-	zone_create_flags_t     flags,
-	zone_id_t               desired_zid,
-	void                  (^extra_setup)(zone_t));
+extern zone_t zone_create_ext(const char *name __unsafe_indexable,
+                              vm_size_t size, zone_create_flags_t flags,
+                              zone_id_t desired_zid,
+                              void (^extra_setup)(zone_t));
 
 /*!
  * @macro ZONE_DECLARE
@@ -1736,9 +1637,9 @@ extern zone_t   zone_create_ext(
  * @param var           the name of the variable to declare.
  * @param type_t        the type of elements in the zone.
  */
-#define ZONE_DECLARE(var, type_t) \
-	extern zone_t var; \
-	__ZONE_DECLARE_TYPE(var, type_t)
+#define ZONE_DECLARE(var, type_t)                                              \
+  extern zone_t var;                                                           \
+  __ZONE_DECLARE_TYPE(var, type_t)
 
 /*!
  * @macro ZONE_DECLARE_ID
@@ -1749,8 +1650,7 @@ extern zone_t   zone_create_ext(
  * @param id            the name of zone ID to associate a type with.
  * @param type_t        the type of elements in the zone.
  */
-#define ZONE_DECLARE_ID(id, type_t) \
-	__ZONE_DECLARE_TYPE(id, type_t)
+#define ZONE_DECLARE_ID(id, type_t) __ZONE_DECLARE_TYPE(id, type_t)
 
 /*!
  * @macro ZONE_DEFINE
@@ -1767,14 +1667,14 @@ extern zone_t   zone_create_ext(
  * @param size          the size of the elements returned by this zone.
  * @param flags         a set of @c zone_create_flags_t flags.
  */
-#define ZONE_DEFINE(var, name, size, flags) \
-	SECURITY_READ_ONLY_LATE(zone_t) var; \
-	static_assert(((flags) & ZC_DESTRUCTIBLE) == 0); \
-	static __startup_data struct zone_create_startup_spec \
-	__startup_zone_spec_ ## var = { &var, name, size, flags, \
-	    ZONE_ID_ANY, NULL }; \
-	STARTUP_ARG(ZALLOC, STARTUP_RANK_FOURTH, zone_create_startup, \
-	    &__startup_zone_spec_ ## var)
+#define ZONE_DEFINE(var, name, size, flags)                                    \
+  SECURITY_READ_ONLY_LATE(zone_t) var;                                         \
+  static_assert(((flags) & ZC_DESTRUCTIBLE) == 0);                             \
+  static __startup_data struct zone_create_startup_spec                        \
+      __startup_zone_spec_##var = {                                            \
+          &var, name, size, flags, ZONE_ID_ANY, NULL};                         \
+  STARTUP_ARG(ZALLOC, STARTUP_RANK_FOURTH, zone_create_startup,                \
+              &__startup_zone_spec_##var)
 
 /*!
  * @macro ZONE_DEFINE_TYPE
@@ -1788,9 +1688,9 @@ extern zone_t   zone_create_ext(
  * @param type_t        the type of elements in the zone.
  * @param flags         a set of @c zone_create_flags_t flags.
  */
-#define ZONE_DEFINE_TYPE(var, name, type_t, flags) \
-	ZONE_DEFINE(var, name, sizeof(type_t), flags); \
-	__ZONE_DECLARE_TYPE(var, type_t)
+#define ZONE_DEFINE_TYPE(var, name, type_t, flags)                             \
+  ZONE_DEFINE(var, name, sizeof(type_t), flags);                               \
+  __ZONE_DECLARE_TYPE(var, type_t)
 
 /*!
  * @macro ZONE_DEFINE_ID
@@ -1804,9 +1704,9 @@ extern zone_t   zone_create_ext(
  * @param type_t        the type of elements in the zone.
  * @param flags         a set of @c zone_create_flags_t flags.
  */
-#define ZONE_DEFINE_ID(zid, name, type_t, flags) \
-	ZONE_DECLARE_ID(zid, type_t); \
-	ZONE_INIT(NULL, name, sizeof(type_t), flags, zid, NULL)
+#define ZONE_DEFINE_ID(zid, name, type_t, flags)                               \
+  ZONE_DECLARE_ID(zid, type_t);                                                \
+  ZONE_INIT(NULL, name, sizeof(type_t), flags, zid, NULL)
 
 /*!
  * @macro ZONE_INIT
@@ -1823,8 +1723,8 @@ extern zone_t   zone_create_ext(
  * @param extra_setup   a block that can perform non trivial initialization
  *                      (@see @c zone_create_ext()).
  */
-#define ZONE_INIT(var, name, size, flags, desired_zid, extra_setup) \
-	__ZONE_INIT(__LINE__, var, name, size, flags, desired_zid, extra_setup)
+#define ZONE_INIT(var, name, size, flags, desired_zid, extra_setup)            \
+  __ZONE_INIT(__LINE__, var, name, size, flags, desired_zid, extra_setup)
 
 /*!
  * @function zone_id_require
@@ -1844,10 +1744,8 @@ extern zone_t   zone_create_ext(
  * @param elem_size     the size of elements for this zone.
  * @param addr          the element address to check.
  */
-extern void     zone_id_require(
-	zone_id_t               zone_id,
-	vm_size_t               elem_size,
-	void                   *addr __unsafe_indexable);
+extern void zone_id_require(zone_id_t zone_id, vm_size_t elem_size,
+                            void *addr __unsafe_indexable);
 
 /*!
  * @function zone_id_require_aligned
@@ -1862,15 +1760,12 @@ extern void     zone_id_require(
  * @param zone_id       the zone ID the address needs to belong to.
  * @param addr          the element address to check.
  */
-extern void     zone_id_require_aligned(
-	zone_id_t               zone_id,
-	void                   *addr __unsafe_indexable);
+extern void zone_id_require_aligned(zone_id_t zone_id,
+                                    void *addr __unsafe_indexable);
 
 /* Make zone exhaustible, to be called from the zone_create_ext() setup hook */
-extern void     zone_set_exhaustible(
-	zone_t                  zone,
-	vm_size_t               max_elements,
-	bool                    exhausts_by_design);
+extern void zone_set_exhaustible(zone_t zone, vm_size_t max_elements,
+                                 bool exhausts_by_design);
 
 /*!
  * @function zone_raise_reserve()
@@ -1881,9 +1776,8 @@ extern void     zone_set_exhaustible(
  * @discussion
  * Can be called from any context (zone_create_ext() setup hook or after).
  */
-extern void     zone_raise_reserve(
-	zone_or_view_t          zone_or_view,
-	uint16_t                min_elements);
+extern void zone_raise_reserve(zone_or_view_t zone_or_view,
+                               uint16_t min_elements);
 
 /*!
  * @function zone_fill_initially
@@ -1899,9 +1793,7 @@ extern void     zone_raise_reserve(
  * @param zone          The zone to fill.
  * @param nelems        The number of elements to be able to hold.
  */
-extern void     zone_fill_initially(
-	zone_t                  zone,
-	vm_size_t               nelems);
+extern void zone_fill_initially(zone_t zone, vm_size_t nelems);
 
 /*!
  * @function zone_drain()
@@ -1912,8 +1804,7 @@ extern void     zone_fill_initially(
  *
  * @param zone          the zone id to free the objects to.
  */
-extern void zone_drain(
-	zone_t                  zone);
+extern void zone_drain(zone_t zone);
 
 /*!
  * @struct zone_basic_stats
@@ -1930,11 +1821,11 @@ extern void zone_drain(
  *                      the number of allocation failures.
  */
 struct zone_basic_stats {
-	uint64_t        zbs_avail;
-	uint64_t        zbs_alloc;
-	uint64_t        zbs_free;
-	uint64_t        zbs_cached;
-	uint64_t        zbs_alloc_fail;
+  uint64_t zbs_avail;
+  uint64_t zbs_alloc;
+  uint64_t zbs_free;
+  uint64_t zbs_cached;
+  uint64_t zbs_alloc_fail;
 };
 
 /*!
@@ -1946,10 +1837,7 @@ struct zone_basic_stats {
  * @param zone          the zone to collect stats from.
  * @param stats         the statistics to fill.
  */
-extern void zone_get_stats(
-	zone_t                  zone,
-	struct zone_basic_stats *stats);
-
+extern void zone_get_stats(zone_t zone, struct zone_basic_stats *stats);
 
 /*!
  * @typedef zone_exhausted_cb_t
@@ -1957,12 +1845,12 @@ extern void zone_get_stats(
  * @brief
  * The callback type for the ZONE_EXHAUSTED event.
  */
-typedef void (zone_exhausted_cb_t)(zone_id_t zid, zone_t zone, bool exhausted);
+typedef void(zone_exhausted_cb_t)(zone_id_t zid, zone_t zone, bool exhausted);
 
 /*!
  * @brief
- * The @c ZONE_EXHAUSTED event, which is emited when an exhaustible zone hits its
- * wiring limit.
+ * The @c ZONE_EXHAUSTED event, which is emited when an exhaustible zone hits
+ * its wiring limit.
  *
  * @discussion
  * The @c ZONE_EXHAUSTED event is emitted from a thread that is currently
@@ -1974,7 +1862,6 @@ typedef void (zone_exhausted_cb_t)(zone_id_t zid, zone_t zone, bool exhausted);
  * to perform the actual work (for example via thread call).
  */
 EVENT_DECLARE(ZONE_EXHAUSTED, zone_exhausted_cb_t);
-
 
 #pragma mark XNU only: zone views
 
@@ -2002,32 +1889,26 @@ EVENT_DECLARE(ZONE_EXHAUSTED, zone_exhausted_cb_t);
  * @const KHEAP_ID_KT_VAR
  * Indicates zones part of the KHEAP_KT_VAR heap.
  */
-__enum_decl(zone_kheap_id_t, uint8_t, {
-	KHEAP_ID_NONE,
-	KHEAP_ID_EARLY,
-	KHEAP_ID_DATA_BUFFERS,
-	KHEAP_ID_DATA_SHARED,
-	KHEAP_ID_KT_VAR,
+__enum_decl(zone_kheap_id_t, uint8_t,
+            {
+                KHEAP_ID_NONE,
+                KHEAP_ID_EARLY,
+                KHEAP_ID_DATA_BUFFERS,
+                KHEAP_ID_DATA_SHARED,
+                KHEAP_ID_KT_VAR,
 #define KHEAP_ID_COUNT (KHEAP_ID_KT_VAR + 1)
-});
+            });
 
-static inline bool
-zone_is_data_kheap(zone_kheap_id_t kheap_id)
-{
-	return kheap_id == KHEAP_ID_DATA_BUFFERS ||
-	       kheap_id == KHEAP_ID_DATA_SHARED;
+static inline bool zone_is_data_kheap(zone_kheap_id_t kheap_id) {
+  return kheap_id == KHEAP_ID_DATA_BUFFERS || kheap_id == KHEAP_ID_DATA_SHARED;
 }
 
-static inline bool
-zone_is_data_buffers_kheap(zone_kheap_id_t kheap_id)
-{
-	return kheap_id == KHEAP_ID_DATA_BUFFERS;
+static inline bool zone_is_data_buffers_kheap(zone_kheap_id_t kheap_id) {
+  return kheap_id == KHEAP_ID_DATA_BUFFERS;
 }
 
-static inline bool
-zone_is_data_shared_kheap(zone_kheap_id_t kheap_id)
-{
-	return kheap_id == KHEAP_ID_DATA_SHARED;
+static inline bool zone_is_data_shared_kheap(zone_kheap_id_t kheap_id) {
+  return kheap_id == KHEAP_ID_DATA_SHARED;
 }
 
 /*!
@@ -2038,8 +1919,7 @@ zone_is_data_shared_kheap(zone_kheap_id_t kheap_id)
  *
  * @param var           the name for the zone view.
  */
-#define ZONE_VIEW_DECLARE(var) \
-	extern struct zone_view var[1]
+#define ZONE_VIEW_DECLARE(var) extern struct zone_view var[1]
 
 /*!
  * @macro ZONE_VIEW_DEFINE
@@ -2064,15 +1944,15 @@ zone_is_data_shared_kheap(zone_kheap_id_t kheap_id)
  * @param heap_or_zone  a @c KHEAP_ID_* constant or a pointer to a zone.
  * @param size          the element size to be allocated from this view.
  */
-#define ZONE_VIEW_DEFINE(var, name, heap_or_zone, size) \
-	SECURITY_READ_ONLY_LATE(struct zone_view) var[1] = { { \
-	    .zv_name = (name), \
-	} }; \
-	static __startup_data struct zone_view_startup_spec \
-	__startup_zone_view_spec_ ## var = { var, { heap_or_zone }, size }; \
-	STARTUP_ARG(ZALLOC, STARTUP_RANK_MIDDLE, zone_view_startup_init, \
-	    &__startup_zone_view_spec_ ## var)
-
+#define ZONE_VIEW_DEFINE(var, name, heap_or_zone, size)                        \
+  SECURITY_READ_ONLY_LATE(struct zone_view)                                    \
+  var[1] = {{                                                                  \
+      .zv_name = (name),                                                       \
+  }};                                                                          \
+  static __startup_data struct zone_view_startup_spec                          \
+      __startup_zone_view_spec_##var = {var, {heap_or_zone}, size};            \
+  STARTUP_ARG(ZALLOC, STARTUP_RANK_MIDDLE, zone_view_startup_init,             \
+              &__startup_zone_view_spec_##var)
 
 #pragma mark XNU only: batched allocations
 
@@ -2088,8 +1968,8 @@ zone_is_data_shared_kheap(zone_kheap_id_t kheap_id)
  * element offsets are used instead.
  */
 typedef struct zstack {
-	vm_offset_t     z_head;
-	uint32_t        z_count;
+  vm_offset_t z_head;
+  uint32_t z_count;
 } zstack_t;
 
 /*!
@@ -2098,9 +1978,7 @@ typedef struct zstack {
  * @brief
  * Push a given element onto a zstack.
  */
-extern void zstack_push(
-	zstack_t               *stack,
-	void                   *elem);
+extern void zstack_push(zstack_t *stack, void *elem);
 
 /*!
  * @function zstack_pop
@@ -2108,8 +1986,7 @@ extern void zstack_push(
  * @brief
  * Pops an element from a zstack, the caller must check it's not empty.
  */
-void *zstack_pop(
-	zstack_t               *stack);
+void *zstack_pop(zstack_t *stack);
 
 /*!
  * @function zstack_empty
@@ -2117,11 +1994,7 @@ void *zstack_pop(
  * @brief
  * Returns whether a stack is empty.
  */
-static inline uint32_t
-zstack_count(zstack_t stack)
-{
-	return stack.z_count;
-}
+static inline uint32_t zstack_count(zstack_t stack) { return stack.z_count; }
 
 /*!
  * @function zstack_empty
@@ -2129,19 +2002,15 @@ zstack_count(zstack_t stack)
  * @brief
  * Returns whether a stack is empty.
  */
-static inline bool
-zstack_empty(zstack_t stack)
-{
-	return zstack_count(stack) == 0;
+static inline bool zstack_empty(zstack_t stack) {
+  return zstack_count(stack) == 0;
 }
 
-static inline zstack_t
-zstack_load_and_erase(zstack_t *stackp)
-{
-	zstack_t stack = *stackp;
+static inline zstack_t zstack_load_and_erase(zstack_t *stackp) {
+  zstack_t stack = *stackp;
 
-	*stackp = (zstack_t){ };
-	return stack;
+  *stackp = (zstack_t){};
+  return stack;
 }
 
 /*!
@@ -2156,13 +2025,12 @@ zstack_load_and_erase(zstack_t *stackp)
  * @param zone_id       the zone id to free the element to.
  * @param elem          the element to free
  */
-extern void zfree_nozero(
-	zone_id_t               zone_id,
-	void                   *elem __unsafe_indexable);
-#define zfree_nozero(zone_id, elem) ({ \
-	zone_id_t __zfree_zid = (zone_id); \
-	(zfree_nozero)(__zfree_zid, (void *)os_ptr_load_and_erase(elem)); \
-})
+extern void zfree_nozero(zone_id_t zone_id, void *elem __unsafe_indexable);
+#define zfree_nozero(zone_id, elem)                                            \
+  ({                                                                           \
+    zone_id_t __zfree_zid = (zone_id);                                         \
+    (zfree_nozero)(__zfree_zid, (void *)os_ptr_load_and_erase(elem));          \
+  })
 
 /*!
  * @function zalloc_n
@@ -2177,10 +2045,8 @@ extern void zfree_nozero(
  * @param count         how many elements to allocate (less might be returned)
  * @param flags         a set of @c zone_create_flags_t flags.
  */
-extern zstack_t zalloc_n(
-	zone_id_t               zone_id,
-	uint32_t                count,
-	zalloc_flags_t          flags);
+extern zstack_t zalloc_n(zone_id_t zone_id, uint32_t count,
+                         zalloc_flags_t flags);
 
 /*!
  * @function zfree_n
@@ -2191,13 +2057,12 @@ extern zstack_t zalloc_n(
  * @param zone_id       the zone id to free the element to.
  * @param stack         a stack of elements to free.
  */
-extern void zfree_n(
-	zone_id_t               zone_id,
-	zstack_t                stack);
-#define zfree_n(zone_id, stack) ({ \
-	zone_id_t __zfree_zid = (zone_id); \
-	(zfree_n)(__zfree_zid, zstack_load_and_erase(&(stack))); \
-})
+extern void zfree_n(zone_id_t zone_id, zstack_t stack);
+#define zfree_n(zone_id, stack)                                                \
+  ({                                                                           \
+    zone_id_t __zfree_zid = (zone_id);                                         \
+    (zfree_n)(__zfree_zid, zstack_load_and_erase(&(stack)));                   \
+  })
 
 /*!
  * @function zfree_nozero_n
@@ -2212,13 +2077,12 @@ extern void zfree_n(
  * @param zone_id       the zone id to free the element to.
  * @param stack         a stack of elements to free.
  */
-extern void zfree_nozero_n(
-	zone_id_t               zone_id,
-	zstack_t                stack);
-#define zfree_nozero_n(zone_id, stack) ({ \
-	zone_id_t __zfree_zid = (zone_id); \
-	(zfree_nozero_n)(__zfree_zid, zstack_load_and_erase(&(stack))); \
-})
+extern void zfree_nozero_n(zone_id_t zone_id, zstack_t stack);
+#define zfree_nozero_n(zone_id, stack)                                         \
+  ({                                                                           \
+    zone_id_t __zfree_zid = (zone_id);                                         \
+    (zfree_nozero_n)(__zfree_zid, zstack_load_and_erase(&(stack)));            \
+  })
 
 #pragma mark XNU only: cached objects
 
@@ -2245,31 +2109,30 @@ extern void zfree_nozero_n(
  * The callback to "free" a composite object completely.
  */
 typedef const struct zone_cache_ops {
-	void         *(*zc_op_alloc)(zone_id_t, zalloc_flags_t);
-	void         *(*zc_op_mark_valid)(zone_id_t, void *);
-	void         *(*zc_op_mark_invalid)(zone_id_t, void *);
-	void          (*zc_op_free)(zone_id_t, void *);
+  void *(*zc_op_alloc)(zone_id_t, zalloc_flags_t);
+  void *(*zc_op_mark_valid)(zone_id_t, void *);
+  void *(*zc_op_mark_invalid)(zone_id_t, void *);
+  void (*zc_op_free)(zone_id_t, void *);
 } *zone_cache_ops_t;
 
 #if __has_ptrcheck
 static inline char *__bidi_indexable
-zcache_transpose_bounds(
-	char *__bidi_indexable pointer_with_bounds,
-	char *__unsafe_indexable unsafe_pointer)
-{
-	vm_offset_t offset_from_start = pointer_with_bounds - __ptr_lower_bound(pointer_with_bounds);
-	vm_offset_t offset_to_end = __ptr_upper_bound(pointer_with_bounds) - pointer_with_bounds;
-	vm_offset_t size = offset_from_start + offset_to_end;
-	return __unsafe_forge_bidi_indexable(char *, unsafe_pointer - offset_from_start, size)
-	       + offset_from_start;
+zcache_transpose_bounds(char *__bidi_indexable pointer_with_bounds,
+                        char *__unsafe_indexable unsafe_pointer) {
+  vm_offset_t offset_from_start =
+      pointer_with_bounds - __ptr_lower_bound(pointer_with_bounds);
+  vm_offset_t offset_to_end =
+      __ptr_upper_bound(pointer_with_bounds) - pointer_with_bounds;
+  vm_offset_t size = offset_from_start + offset_to_end;
+  return __unsafe_forge_bidi_indexable(
+             char *, unsafe_pointer - offset_from_start, size) +
+         offset_from_start;
 }
 #else
 static inline char *__header_indexable
-zcache_transpose_bounds(
-	char *__header_indexable pointer_with_bounds __unused,
-	char *__unsafe_indexable unsafe_pointer)
-{
-	return unsafe_pointer;
+zcache_transpose_bounds(char *__header_indexable pointer_with_bounds __unused,
+                        char *__unsafe_indexable unsafe_pointer) {
+  return unsafe_pointer;
 }
 #endif // __has_ptrcheck
 
@@ -2291,24 +2154,17 @@ zcache_transpose_bounds(
  * @param elem          the address of the element
  * @returns             the new address to correctly access @c elem.
  */
-extern void *__unsafe_indexable zcache_mark_valid(
-	zone_t                  zone,
-	void                    *elem __unsafe_indexable);
+extern void *__unsafe_indexable
+zcache_mark_valid(zone_t zone, void *elem __unsafe_indexable);
 
-static inline void *
-zcache_mark_valid_single(
-	zone_t                  zone,
-	void                    *elem)
-{
-	return __unsafe_forge_single(void *, zcache_mark_valid(zone, elem));
+static inline void *zcache_mark_valid_single(zone_t zone, void *elem) {
+  return __unsafe_forge_single(void *, zcache_mark_valid(zone, elem));
 }
 
 static inline void *__header_bidi_indexable
-zcache_mark_valid_indexable(
-	zone_t                  zone,
-	void                    *elem __header_bidi_indexable)
-{
-	return zcache_transpose_bounds((char *)elem, (char *)zcache_mark_valid(zone, elem));
+zcache_mark_valid_indexable(zone_t zone, void *elem __header_bidi_indexable) {
+  return zcache_transpose_bounds((char *)elem,
+                                 (char *)zcache_mark_valid(zone, elem));
 }
 
 /*!
@@ -2330,24 +2186,17 @@ zcache_mark_valid_indexable(
  * @param elem          the address of the element
  * @returns             the new address to correctly access @c elem.
  */
-extern void *__unsafe_indexable zcache_mark_invalid(
-	zone_t                  zone,
-	void                    *elem __unsafe_indexable);
+extern void *__unsafe_indexable
+zcache_mark_invalid(zone_t zone, void *elem __unsafe_indexable);
 
-static inline void *
-zcache_mark_invalid_single(
-	zone_t                  zone,
-	void                    *elem)
-{
-	return __unsafe_forge_single(void *, zcache_mark_invalid(zone, elem));
+static inline void *zcache_mark_invalid_single(zone_t zone, void *elem) {
+  return __unsafe_forge_single(void *, zcache_mark_invalid(zone, elem));
 }
 
 static inline void *__header_bidi_indexable
-zcache_mark_invalid_indexable(
-	zone_t                  zone,
-	void                    *elem __header_bidi_indexable)
-{
-	return zcache_transpose_bounds((char *)elem, (char *)zcache_mark_invalid(zone, elem));
+zcache_mark_invalid_indexable(zone_t zone, void *elem __header_bidi_indexable) {
+  return zcache_transpose_bounds((char *)elem,
+                                 (char *)zcache_mark_invalid(zone, elem));
 }
 
 /*!
@@ -2361,8 +2210,8 @@ zcache_mark_invalid_indexable(
  *
  * @returns             NULL or the allocated element
  */
-#define zcache_alloc(zone_id, fl) \
-	__zalloc_cast(zone_id, zcache_alloc_n(zone_id, 1, fl).z_head)
+#define zcache_alloc(zone_id, fl)                                              \
+  __zalloc_cast(zone_id, zcache_alloc_n(zone_id, 1, fl).z_head)
 
 /*!
  * @function zcache_alloc_n()
@@ -2376,15 +2225,10 @@ zcache_mark_invalid_indexable(
  *
  * @returns             NULL or the allocated composite object
  */
-extern zstack_t zcache_alloc_n(
-	zone_id_t               zone_id,
-	uint32_t                count,
-	zalloc_flags_t          flags,
-	zone_cache_ops_t        ops);
-#define zcache_alloc_n(zone_id, count, flags) \
-	(zcache_alloc_n)(zone_id, count, flags, __zcache_##zone_id##_ops)
-
-
+extern zstack_t zcache_alloc_n(zone_id_t zone_id, uint32_t count,
+                               zalloc_flags_t flags, zone_cache_ops_t ops);
+#define zcache_alloc_n(zone_id, count, flags)                                  \
+  (zcache_alloc_n)(zone_id, count, flags, __zcache_##zone_id##_ops)
 
 /*!
  * @function zcache_free()
@@ -2397,13 +2241,11 @@ extern zstack_t zcache_alloc_n(
  * @param addr          the address to free
  * @param ops           the pointer to the zcache ops for this zcache.
  */
-extern void zcache_free(
-	zone_id_t               zone_id,
-	void                   *addr __unsafe_indexable,
-	zone_cache_ops_t        ops);
-#define zcache_free(zone_id, elem) \
-	(zcache_free)(zone_id, (void *)os_ptr_load_and_erase(elem), \
-	    __zcache_##zone_id##_ops)
+extern void zcache_free(zone_id_t zone_id, void *addr __unsafe_indexable,
+                        zone_cache_ops_t ops);
+#define zcache_free(zone_id, elem)                                             \
+  (zcache_free)(zone_id, (void *)os_ptr_load_and_erase(elem),                  \
+                __zcache_##zone_id##_ops)
 
 /*!
  * @function zcache_free_n()
@@ -2416,14 +2258,11 @@ extern void zcache_free(
  * @param stack         a stack of composite objects
  * @param ops           the pointer to the zcache ops for this zcache.
  */
-extern void zcache_free_n(
-	zone_id_t               zone_id,
-	zstack_t                stack,
-	zone_cache_ops_t        ops);
-#define zcache_free_n(zone_id, stack) \
-	(zcache_free_n)(zone_id, zstack_load_and_erase(&(stack)), \
-	    __zcache_##zone_id##_ops)
-
+extern void zcache_free_n(zone_id_t zone_id, zstack_t stack,
+                          zone_cache_ops_t ops);
+#define zcache_free_n(zone_id, stack)                                          \
+  (zcache_free_n)(zone_id, zstack_load_and_erase(&(stack)),                    \
+                  __zcache_##zone_id##_ops)
 
 /*!
  * @function zcache_drain()
@@ -2434,9 +2273,7 @@ extern void zcache_free_n(
  *
  * @param zone_id       the zcache id to free the objects to.
  */
-extern void zcache_drain(
-	zone_id_t               zone_id);
-
+extern void zcache_drain(zone_id_t zone_id);
 
 /*!
  * @macro ZCACHE_DECLARE
@@ -2447,11 +2284,10 @@ extern void zcache_drain(
  * @param id            the name of zone ID to associate a type with.
  * @param type_t        the type of elements in the zone.
  */
-#define ZCACHE_DECLARE(id, type_t) \
-	__ZONE_DECLARE_TYPE(id, type_t); \
-	__attribute__((visibility("hidden"))) \
-	extern const zone_cache_ops_t __zcache_##id##_ops
-
+#define ZCACHE_DECLARE(id, type_t)                                             \
+  __ZONE_DECLARE_TYPE(id, type_t);                                             \
+  __attribute__((                                                              \
+      visibility("hidden"))) extern const zone_cache_ops_t __zcache_##id##_ops
 
 /*!
  * @macro ZCACHE_DEFINE
@@ -2465,84 +2301,84 @@ extern void zcache_drain(
  * @param size          the size of elements in the cache
  * @param ops           the ops for this zcache.
  */
-#define ZCACHE_DEFINE(zid, name, type_t, size, ops) \
-	ZCACHE_DECLARE(zid, type_t);                                            \
-	ZONE_DECLARE_ID(zid, type_t);                                           \
-	const zone_cache_ops_t __zcache_##zid##_ops = (ops);                    \
-	ZONE_INIT(NULL, name, size, ZC_OBJ_CACHE, zid, ^(zone_t z __unused) {   \
-	        zcache_ops[zid] = (ops);                                        \
-	})
+#define ZCACHE_DEFINE(zid, name, type_t, size, ops)                            \
+  ZCACHE_DECLARE(zid, type_t);                                                 \
+  ZONE_DECLARE_ID(zid, type_t);                                                \
+  const zone_cache_ops_t __zcache_##zid##_ops = (ops);                         \
+  ZONE_INIT(NULL, name, size, ZC_OBJ_CACHE, zid, ^(zone_t z __unused) {        \
+    zcache_ops[zid] = (ops);                                                   \
+  })
 
 extern zone_cache_ops_t zcache_ops[ZONE_ID__FIRST_DYNAMIC];
 
 #pragma mark XNU only: misc & implementation details
 
 struct zone_create_startup_spec {
-	zone_t                 *z_var;
-	const char             *z_name __unsafe_indexable;
-	vm_size_t               z_size;
-	zone_create_flags_t     z_flags;
-	zone_id_t               z_zid;
-	void                  (^z_setup)(zone_t);
+  zone_t *z_var;
+  const char *z_name __unsafe_indexable;
+  vm_size_t z_size;
+  zone_create_flags_t z_flags;
+  zone_id_t z_zid;
+  void (^z_setup)(zone_t);
 };
 
-extern void     zone_create_startup(
-	struct zone_create_startup_spec *spec);
+extern void zone_create_startup(struct zone_create_startup_spec *spec);
 
-#define __ZONE_INIT1(ns, var, name, size, flags, zid, setup) \
-	static __startup_data struct zone_create_startup_spec \
-	__startup_zone_spec_ ## ns = { var, name, size, flags, zid, setup }; \
-	STARTUP_ARG(ZALLOC, STARTUP_RANK_FOURTH, zone_create_startup, \
-	    &__startup_zone_spec_ ## ns)
+#define __ZONE_INIT1(ns, var, name, size, flags, zid, setup)                   \
+  static __startup_data struct zone_create_startup_spec                        \
+      __startup_zone_spec_##ns = {var, name, size, flags, zid, setup};         \
+  STARTUP_ARG(ZALLOC, STARTUP_RANK_FOURTH, zone_create_startup,                \
+              &__startup_zone_spec_##ns)
 
-#define __ZONE_INIT(ns, var, name, size, flags, zid, setup) \
-	__ZONE_INIT1(ns, var, name, size, flags, zid, setup) \
+#define __ZONE_INIT(ns, var, name, size, flags, zid, setup)                    \
+  __ZONE_INIT1(ns, var, name, size, flags, zid, setup)
 
-#define __zalloc_cast(namespace, expr) \
-	((typeof(__zalloc__##namespace##__type_name))__unsafe_forge_single(void *, expr))
+#define __zalloc_cast(namespace, expr)                                         \
+  ((typeof(__zalloc__##namespace##__type_name))__unsafe_forge_single(void *,   \
+                                                                     expr))
 
 #if ZALLOC_TYPE_SAFE
-#define zalloc(zov)             __zalloc_cast(zov, (zalloc)(zov))
-#define zalloc_noblock(zov)     __zalloc_cast(zov, (zalloc_noblock)(zov))
+#define zalloc(zov) __zalloc_cast(zov, (zalloc)(zov))
+#define zalloc_noblock(zov) __zalloc_cast(zov, (zalloc_noblock)(zov))
 #endif /* !ZALLOC_TYPE_SAFE */
 
 struct zone_view_startup_spec {
-	zone_view_t         zv_view;
-	union {
-		zone_kheap_id_t zv_heapid;
-		zone_t         *zv_zone;
-	};
-	vm_size_t           zv_size;
+  zone_view_t zv_view;
+  union {
+    zone_kheap_id_t zv_heapid;
+    zone_t *zv_zone;
+  };
+  vm_size_t zv_size;
 };
 
-extern void zone_view_startup_init(
-	struct zone_view_startup_spec *spec);
+extern void zone_view_startup_init(struct zone_view_startup_spec *spec);
 
 extern void zone_userspace_reboot_checks(void);
 
 #if VM_TAG_SIZECLASSES
-extern void __zone_site_register(
-	vm_allocation_site_t   *site);
+extern void __zone_site_register(vm_allocation_site_t *site);
 
-#define VM_ALLOC_SITE_TAG() ({ \
-	__PLACE_IN_SECTION("__DATA, __data")                                   \
-	static vm_allocation_site_t site = { .refcount = 2, };                 \
-	STARTUP_ARG(ZALLOC, STARTUP_RANK_MIDDLE, __zone_site_register, &site);   \
-	site.tag;                                                              \
-})
+#define VM_ALLOC_SITE_TAG()                                                    \
+  ({                                                                           \
+    __PLACE_IN_SECTION("__DATA, __data")                                       \
+    static vm_allocation_site_t site = {                                       \
+        .refcount = 2,                                                         \
+    };                                                                         \
+    STARTUP_ARG(ZALLOC, STARTUP_RANK_MIDDLE, __zone_site_register, &site);     \
+    site.tag;                                                                  \
+  })
 #else /* VM_TAG_SIZECLASSES */
-#define VM_ALLOC_SITE_TAG()                     VM_KERN_MEMORY_NONE
+#define VM_ALLOC_SITE_TAG() VM_KERN_MEMORY_NONE
 #endif /* !VM_TAG_SIZECLASSES */
 
-static inline zalloc_flags_t
-__zone_flags_mix_tag(zalloc_flags_t flags, vm_tag_t tag)
-{
-	return (flags & Z_VM_TAG_MASK) ? flags : Z_VM_TAG(flags, (uint32_t)tag);
+static inline zalloc_flags_t __zone_flags_mix_tag(zalloc_flags_t flags,
+                                                  vm_tag_t tag) {
+  return (flags & Z_VM_TAG_MASK) ? flags : Z_VM_TAG(flags, (uint32_t)tag);
 }
 
-#define __zpcpu_addr(e)         ((vm_address_t)__unsafe_forge_single(void *, e))
-#define __zpcpu_cast(ptr, e)    __unsafe_forge_single(typeof(*(ptr)) *, e)
-#define __zpcpu_next(ptr)       __zpcpu_cast(ptr, __zpcpu_addr(ptr) + PAGE_SIZE)
+#define __zpcpu_addr(e) ((vm_address_t)__unsafe_forge_single(void *, e))
+#define __zpcpu_cast(ptr, e) __unsafe_forge_single(typeof(*(ptr)) *, e)
+#define __zpcpu_next(ptr) __zpcpu_cast(ptr, __zpcpu_addr(ptr) + PAGE_SIZE)
 
 /**
  * @macro __zpcpu_mangle_for_boot()
@@ -2559,10 +2395,11 @@ __zone_flags_mix_tag(zalloc_flags_t flags, vm_tag_t tag)
  *
  * This is invalid to use after the @c STARTUP_SUB_ZALLOC phase has completed.
  */
-#define __zpcpu_mangle_for_boot(ptr)  ({ \
-	assert(startup_phase < STARTUP_SUB_ZALLOC); \
-	__zpcpu_cast(ptr, __zpcpu_addr(ptr) - ptoa(cpu_number())); \
-})
+#define __zpcpu_mangle_for_boot(ptr)                                           \
+  ({                                                                           \
+    assert(startup_phase < STARTUP_SUB_ZALLOC);                                \
+    __zpcpu_cast(ptr, __zpcpu_addr(ptr) - ptoa(cpu_number()));                 \
+  })
 
 extern unsigned zpercpu_count(void) __pure2;
 
@@ -2574,21 +2411,19 @@ extern size_t zone_pages_wired;
 extern size_t zone_guard_pages;
 #endif /* DEBUG || DEVELOPMENT */
 #if CONFIG_ZLEAKS
-extern uint32_t                 zleak_active;
-extern vm_size_t                zleak_max_zonemap_size;
-extern vm_size_t                zleak_per_zone_tracking_threshold;
+extern uint32_t zleak_active;
+extern vm_size_t zleak_max_zonemap_size;
+extern vm_size_t zleak_per_zone_tracking_threshold;
 
-extern kern_return_t zleak_update_threshold(
-	vm_size_t              *arg,
-	uint64_t                value);
+extern kern_return_t zleak_update_threshold(vm_size_t *arg, uint64_t value);
 #endif /* CONFIG_ZLEAKS */
 
-extern uint32_t                 zone_map_jetsam_limit;
+extern uint32_t zone_map_jetsam_limit;
 
 extern kern_return_t zone_map_jetsam_set_limit(uint32_t value);
 
 /* max length of a zone name we can take from boot-args/sysctl */
-#define MAX_ZONE_NAME   32
+#define MAX_ZONE_NAME 32
 
 #if DEVELOPMENT || DEBUG
 
@@ -2603,29 +2438,31 @@ extern zone_t percpu_u64_zone;
  * @function mach_memory_info_sample
  *
  * @abstract
- * Helper function for mach_memory_info() (MACH) and memorystatus_collect_jetsam_snapshot_zprint() (BSD)
- * to collect wired memory information.
+ * Helper function for mach_memory_info() (MACH) and
+ * memorystatus_collect_jetsam_snapshot_zprint() (BSD) to collect wired memory
+ * information.
  *
  * @param names array with `*zonesCnt` elements.
  * @param info array with `*zonesCnt` elements.
- * @param coalesce array with `*zonesCnt` elements, must be set if `redact_info` is true.
- * @param zonesCnt set to the allocated count of the above, and on return will be the actual count.
- * @param memoryInfo optional, if set must have at least `vm_page_diagnose_estimate()` elements.
- * @param memoryInfoCnt optional, if set must be the count of memoryInfo, otherwise if set to 0 then on return will be `vm_page_diagnose_estimate()`.
- * @param redact_info if true sensitive information about zone allocations will be removed.
+ * @param coalesce array with `*zonesCnt` elements, must be set if `redact_info`
+ * is true.
+ * @param zonesCnt set to the allocated count of the above, and on return will
+ * be the actual count.
+ * @param memoryInfo optional, if set must have at least
+ * `vm_page_diagnose_estimate()` elements.
+ * @param memoryInfoCnt optional, if set must be the count of memoryInfo,
+ * otherwise if set to 0 then on return will be `vm_page_diagnose_estimate()`.
+ * @param redact_info if true sensitive information about zone allocations will
+ * be removed.
  */
 extern kern_return_t
-mach_memory_info_sample(
-	mach_zone_name_t *names,
-	mach_zone_info_t *info,
-	int              *coalesce,
-	unsigned int     *zonesCnt,
-	mach_memory_info_t *memoryInfo,
-	unsigned int       memoryInfoCnt,
-	bool               redact_info);
+mach_memory_info_sample(mach_zone_name_t *names, mach_zone_info_t *info,
+                        int *coalesce, unsigned int *zonesCnt,
+                        mach_memory_info_t *memoryInfo,
+                        unsigned int memoryInfoCnt, bool redact_info);
 
-extern void     zone_gc_trim(void);
-extern void     zone_gc_drain(void);
+extern void zone_gc_trim(void);
+extern void zone_gc_drain(void);
 
 __exported_pop
 #endif /* XNU_KERNEL_PRIVATE */
@@ -2633,11 +2470,10 @@ __exported_pop
 /*
  * This macro is currently used by AppleImage4 (rdar://83924635)
  */
-#define __zalloc_ptr_load_and_erase(elem) \
-	os_ptr_load_and_erase(elem)
+#define __zalloc_ptr_load_and_erase(elem) os_ptr_load_and_erase(elem)
 
-__ASSUME_PTR_ABI_SINGLE_END __END_DECLS
+    __ASSUME_PTR_ABI_SINGLE_END __END_DECLS
 
-#endif  /* _KERN_ZALLOC_H_ */
+#endif /* _KERN_ZALLOC_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

@@ -54,7 +54,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $FreeBSD: src/sys/netinet6/tcp6_var.h,v 1.3.2.1 2000/07/15 07:14:38 kris Exp $
+ * $FreeBSD: src/sys/netinet6/tcp6_var.h,v 1.3.2.1 2000/07/15 07:14:38 kris Exp
+ * $
  */
 
 /*
@@ -90,7 +91,8 @@
  * SUCH DAMAGE.
  *
  *	@(#)tcp_var.h	8.4 (Berkeley) 5/24/95
- * $FreeBSD: src/sys/netinet6/tcp6_var.h,v 1.3.2.1 2000/07/15 07:14:38 kris Exp $
+ * $FreeBSD: src/sys/netinet6/tcp6_var.h,v 1.3.2.1 2000/07/15 07:14:38 kris Exp
+ * $
  */
 
 #ifndef _NETINET_TCP6_VAR_H_
@@ -102,15 +104,15 @@
 SYSCTL_DECL(_net_inet6_tcp6);
 #endif
 
-extern  int tcp_v6mssdflt;      /* XXX */
+extern int tcp_v6mssdflt; /* XXX */
 
-struct  ip6_hdr;
-void    tcp6_ctlinput(int, struct sockaddr *, void *, struct ifnet *);
-void    tcp6_init(void);
-int     tcp6_input(struct mbuf **, int *, int);
-struct  rtentry *tcp_rtlookup6(struct inpcb *, unsigned int);
+struct ip6_hdr;
+void tcp6_ctlinput(int, struct sockaddr *, void *, struct ifnet *);
+void tcp6_init(void);
+int tcp6_input(struct mbuf **, int *, int);
+struct rtentry *tcp_rtlookup6(struct inpcb *, unsigned int);
 
-extern struct   pr_usrreqs tcp6_usrreqs;
+extern struct pr_usrreqs tcp6_usrreqs;
 
 #endif /* BSD_KERNEL_PRIVATE */
 #endif /* _NETINET_TCP6_VAR_H_ */

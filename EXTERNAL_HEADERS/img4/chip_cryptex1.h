@@ -38,11 +38,10 @@ const img4_chip_t _img4_chip_cryptex1_boot;
 IMG4_API_AVAILABLE_20211126
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_reduced;
-#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED \
-		(&_img4_chip_cryptex1_boot_reduced)
+#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED (&_img4_chip_cryptex1_boot_reduced)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED \
-		(img4if->i4if_v17.chip_cryptex1_boot_reduced)
+#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED                                        \
+  (img4if->i4if_v17.chip_cryptex1_boot_reduced)
 #endif
 
 /*!
@@ -61,8 +60,8 @@ OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_proposal;
 #define IMG4_CHIP_CRYPTEX1_BOOT_PROPOSAL (&_img4_chip_cryptex1_boot_proposal)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_PROPOSAL \
-		(img4if->i4if_v18.chip_cryptex1_boot_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_PROPOSAL                                       \
+  (img4if->i4if_v18.chip_cryptex1_boot_proposal)
 #endif
 
 /*!
@@ -79,11 +78,11 @@ const img4_chip_t _img4_chip_cryptex1_boot_proposal;
 IMG4_API_AVAILABLE_20220401
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_reduced_proposal;
-#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED_PROPOSAL \
-		(&_img4_chip_cryptex1_boot_reduced_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED_PROPOSAL                               \
+  (&_img4_chip_cryptex1_boot_reduced_proposal)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED_PROPOSAL \
-		(img4if->i4if_v18.chip_cryptex1_boot_reduced_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_REDUCED_PROPOSAL                               \
+  (img4if->i4if_v18.chip_cryptex1_boot_reduced_proposal)
 #endif
 
 /*!
@@ -110,11 +109,11 @@ const img4_chip_t _img4_chip_cryptex1_boot_x86;
 IMG4_API_AVAILABLE_20220912
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_static_x86;
-#define IMG4_CHIP_CRYPTEX1_BOOT_STATIC_X86 \
-		(&_img4_chip_cryptex1_boot_static_x86)
+#define IMG4_CHIP_CRYPTEX1_BOOT_STATIC_X86                                     \
+  (&_img4_chip_cryptex1_boot_static_x86)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_STATIC_X86 \
-		(img4if->i4if_v19.chip_cryptex1_boot_static_x86)
+#define IMG4_CHIP_CRYPTEX1_BOOT_STATIC_X86                                     \
+  (img4if->i4if_v19.chip_cryptex1_boot_static_x86)
 #endif
 
 /*!
@@ -127,11 +126,11 @@ const img4_chip_t _img4_chip_cryptex1_boot_static_x86;
 IMG4_API_AVAILABLE_20220711
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_relaxed_x86;
-#define IMG4_CHIP_CRYPTEX1_BOOT_RELAXED_X86 \
-		(&_img4_chip_cryptex1_boot_relaxed_x86)
+#define IMG4_CHIP_CRYPTEX1_BOOT_RELAXED_X86                                    \
+  (&_img4_chip_cryptex1_boot_relaxed_x86)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_RELAXED_X86 \
-		(img4if->i4if_v19.chip_cryptex1_boot_relaxed_x86)
+#define IMG4_CHIP_CRYPTEX1_BOOT_RELAXED_X86                                    \
+  (img4if->i4if_v19.chip_cryptex1_boot_relaxed_x86)
 #endif
 
 /*!
@@ -160,11 +159,11 @@ const img4_chip_t _img4_chip_cryptex1_boot_vma2;
 IMG4_API_AVAILABLE_20220322
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_vma2_clone;
-#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE \
-		(&_img4_chip_cryptex1_boot_vma2_clone)
+#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE                                     \
+  (&_img4_chip_cryptex1_boot_vma2_clone)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE \
-		(img4if->i4if_v18.chip_cryptex1_boot_vma2_clone)
+#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE                                     \
+  (img4if->i4if_v18.chip_cryptex1_boot_vma2_clone)
 #endif
 
 /*!
@@ -181,11 +180,11 @@ const img4_chip_t _img4_chip_cryptex1_boot_vma2_clone;
 IMG4_API_AVAILABLE_20220401
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_vma2_proposal;
-#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_PROPOSAL \
-		(&_img4_chip_cryptex1_boot_vma2_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_PROPOSAL                                  \
+  (&_img4_chip_cryptex1_boot_vma2_proposal)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_PROPOSAL \
-		(img4if->i4if_v18.chip_cryptex1_boot_vma2_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_PROPOSAL                                  \
+  (img4if->i4if_v18.chip_cryptex1_boot_vma2_proposal)
 #endif
 
 /*!
@@ -202,11 +201,11 @@ const img4_chip_t _img4_chip_cryptex1_boot_vma2_proposal;
 IMG4_API_AVAILABLE_20220401
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_boot_vma2_clone_proposal;
-#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE_PROPOSAL \
-		(&_img4_chip_cryptex1_boot_vma2_clone_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE_PROPOSAL                            \
+  (&_img4_chip_cryptex1_boot_vma2_clone_proposal)
 #else
-#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE_PROPOSAL \
-		(img4if->i4if_v18.chip_cryptex1_boot_vma2_clone_proposal)
+#define IMG4_CHIP_CRYPTEX1_BOOT_VMA2_CLONE_PROPOSAL                            \
+  (img4if->i4if_v18.chip_cryptex1_boot_vma2_clone_proposal)
 #endif
 
 /*!
@@ -235,11 +234,11 @@ const img4_chip_t _img4_chip_cryptex1_preboot;
 IMG4_API_AVAILABLE_20211126
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_preboot_reduced;
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_REDUCED \
-		(&_img4_chip_cryptex1_preboot_reduced)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_REDUCED                                     \
+  (&_img4_chip_cryptex1_preboot_reduced)
 #else
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_REDUCED \
-		(img4if->i4if_v17.chip_cryptex1_preboot_reduced)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_REDUCED                                     \
+  (img4if->i4if_v17.chip_cryptex1_preboot_reduced)
 #endif
 
 /*!
@@ -252,11 +251,10 @@ const img4_chip_t _img4_chip_cryptex1_preboot_reduced;
 IMG4_API_AVAILABLE_20211126
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_preboot_x86;
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_X86 \
-		(&_img4_chip_cryptex1_preboot_x86)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_X86 (&_img4_chip_cryptex1_preboot_x86)
 #else
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_X86 \
-		(img4if->i4if_v17.chip_cryptex1_preboot_x86)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_X86                                         \
+  (img4if->i4if_v17.chip_cryptex1_preboot_x86)
 #endif
 
 /*!
@@ -270,11 +268,11 @@ const img4_chip_t _img4_chip_cryptex1_preboot_x86;
 IMG4_API_AVAILABLE_20211126
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_preboot_static_x86;
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_STATIC_X86 \
-		(&_img4_chip_cryptex1_preboot_static_x86)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_STATIC_X86                                  \
+  (&_img4_chip_cryptex1_preboot_static_x86)
 #else
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_STATIC_X86 \
-		(img4if->i4if_v19.chip_cryptex1_preboot_static_x86)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_STATIC_X86                                  \
+  (img4if->i4if_v19.chip_cryptex1_preboot_static_x86)
 #endif
 
 /*!
@@ -288,11 +286,11 @@ const img4_chip_t _img4_chip_cryptex1_preboot_static_x86;
 IMG4_API_AVAILABLE_20220711
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_preboot_relaxed_x86;
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_RELAXED_X86 \
-		(&_img4_chip_cryptex1_preboot_relaxed_x86)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_RELAXED_X86                                 \
+  (&_img4_chip_cryptex1_preboot_relaxed_x86)
 #else
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_RELAXED_X86 \
-		(img4if->i4if_v17.chip_cryptex1_preboot_relaxed_x86)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_RELAXED_X86                                 \
+  (img4if->i4if_v17.chip_cryptex1_preboot_relaxed_x86)
 #endif
 
 /*!
@@ -306,11 +304,10 @@ const img4_chip_t _img4_chip_cryptex1_preboot_relaxed_x86;
 IMG4_API_AVAILABLE_20220128
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_preboot_vma2;
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2 \
-		(&_img4_chip_cryptex1_preboot_vma2)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2 (&_img4_chip_cryptex1_preboot_vma2)
 #else
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2 \
-		(img4if->i4if_v17.chip_cryptex1_preboot_vma2)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2                                        \
+  (img4if->i4if_v17.chip_cryptex1_preboot_vma2)
 #endif
 
 /*!
@@ -325,11 +322,11 @@ const img4_chip_t _img4_chip_cryptex1_preboot_vma2;
 IMG4_API_AVAILABLE_20220322
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_preboot_vma2_clone;
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2_CLONE \
-		(&_img4_chip_cryptex1_preboot_vma2_clone)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2_CLONE                                  \
+  (&_img4_chip_cryptex1_preboot_vma2_clone)
 #else
-#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2_CLONE \
-		(img4if->i4if_v18.chip_cryptex1_preboot_vma2_clone)
+#define IMG4_CHIP_CRYPTEX1_PREBOOT_VMA2_CLONE                                  \
+  (img4if->i4if_v18.chip_cryptex1_preboot_vma2_clone)
 #endif
 
 /*!
@@ -372,11 +369,9 @@ const img4_chip_t _img4_chip_cryptex1_asset_x86;
 IMG4_API_AVAILABLE_20221202
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_generic;
-#define IMG4_CHIP_CRYPTEX1_GENERIC \
-		(&_img4_chip_cryptex1_generic)
+#define IMG4_CHIP_CRYPTEX1_GENERIC (&_img4_chip_cryptex1_generic)
 #else
-#define IMG4_CHIP_CRYPTEX1_GENERIC \
-		(img4if->i4if_v20.chip_cryptex1_generic)
+#define IMG4_CHIP_CRYPTEX1_GENERIC (img4if->i4if_v20.chip_cryptex1_generic)
 #endif
 
 /*!
@@ -391,11 +386,11 @@ const img4_chip_t _img4_chip_cryptex1_generic;
 IMG4_API_AVAILABLE_20221202
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_generic_supplemental;
-#define IMG4_CHIP_CRYPTEX1_GENERIC_SUPPLEMENTAL \
-		(&_img4_chip_cryptex1_generic_supplemental)
+#define IMG4_CHIP_CRYPTEX1_GENERIC_SUPPLEMENTAL                                \
+  (&_img4_chip_cryptex1_generic_supplemental)
 #else
-#define IMG4_CHIP_CRYPTEX1_GENERIC_SUPPLEMENTAL \
-		(img4if->i4if_v20.chip_cryptex1_generic_supplemental)
+#define IMG4_CHIP_CRYPTEX1_GENERIC_SUPPLEMENTAL                                \
+  (img4if->i4if_v20.chip_cryptex1_generic_supplemental)
 #endif
 
 /*!
@@ -408,11 +403,10 @@ const img4_chip_t _img4_chip_cryptex1_generic_supplemental;
 IMG4_API_AVAILABLE_20221202
 OS_EXPORT
 const img4_chip_t _img4_chip_cryptex1_generic_x86;
-#define IMG4_CHIP_CRYPTEX1_GENERIC_X86 \
-		(&_img4_chip_cryptex1_generic_x86)
+#define IMG4_CHIP_CRYPTEX1_GENERIC_X86 (&_img4_chip_cryptex1_generic_x86)
 #else
-#define IMG4_CHIP_CRYPTEX1_GENERIC_X86 \
-		(img4if->i4if_v20.chip_cryptex1_generic_x86)
+#define IMG4_CHIP_CRYPTEX1_GENERIC_X86                                         \
+  (img4if->i4if_v20.chip_cryptex1_generic_x86)
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

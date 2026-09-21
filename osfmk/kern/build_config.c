@@ -28,12 +28,10 @@
 
 #include <kern/build_config.h>
 
-bool
-kern_config_is_development(void)
-{
+bool kern_config_is_development(void) {
 #if DEVELOPMENT || DEBUG
-	return true;
+  return true;
 #else
-	return false;
+  return false;
 #endif
 }

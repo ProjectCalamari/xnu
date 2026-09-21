@@ -27,79 +27,72 @@
  */
 
 #include <darwintest.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "net_test_lib.h"
 
 network_interface interface;
 
-static void
-cleanup(void)
-{
-	network_interface_destroy(&interface);
+static void cleanup(void) { network_interface_destroy(&interface); }
+
+T_DECL(net_multicast_igmp_ssm, "IGMP SSM test", T_META_ASROOT(true)) {
+  int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+  T_ATEND(cleanup);
+  network_interface_create(&interface, FETH_NAME);
+  struct in_addr addr;
+  addr.s_addr = inet_addr("192.168.55.1");
+  struct in_addr mask;
+  mask.s_addr = inet_addr("255.255.255.0");
+  ifnet_add_ip_address(interface.if_name, addr, mask);
+
+  struct ip_mreq_source mr = {};
+  mr.imr_sourceaddr.s_addr = inet_addr("192.168.55.2");
+  mr.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
+  mr.imr_interface.s_addr = INADDR_ANY;
+
+  for (int i = 0; i < 20; i++) {
+    mr.imr_sourceaddr.s_addr += i;
+    T_ASSERT_POSIX_SUCCESS(
+        setsockopt(s, IPPROTO_IP, IP_ADD_SOURCE_MEMBERSHIP, &mr, sizeof(mr)),
+        "IP_ADD_SOURCE_MEMBERSHIP");
+  }
+  close(s);
 }
 
-T_DECL(net_multicast_igmp_ssm, "IGMP SSM test", T_META_ASROOT(true))
-{
-	int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+T_DECL(net_multicast_mld_ssm, "MLD SSM test", T_META_ASROOT(true)) {
+  int s6 = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 
-	T_ATEND(cleanup);
-	network_interface_create(&interface, FETH_NAME);
-	struct in_addr addr;
-	addr.s_addr = inet_addr("192.168.55.1");
-	struct in_addr mask;
-	mask.s_addr = inet_addr("255.255.255.0");
-	ifnet_add_ip_address(interface.if_name, addr, mask);
+  T_ATEND(cleanup);
+  network_interface_create(&interface, FETH_NAME);
+  ifnet_start_ipv6(interface.if_name);
 
-	struct ip_mreq_source mr = {};
-	mr.imr_sourceaddr.s_addr = inet_addr("192.168.55.2");
-	mr.imr_multiaddr.s_addr = inet_addr("239.1.2.3");
-	mr.imr_interface.s_addr = INADDR_ANY;
+  struct sockaddr_storage group_storage = {}, source_storage = {};
 
-	for (int i = 0; i < 20; i++) {
-		mr.imr_sourceaddr.s_addr += i;
-		T_ASSERT_POSIX_SUCCESS(setsockopt(s, IPPROTO_IP,
-		    IP_ADD_SOURCE_MEMBERSHIP, &mr,
-		    sizeof(mr)),
-		    "IP_ADD_SOURCE_MEMBERSHIP");
-	}
-	close(s);
-}
+  struct sockaddr_in6 *group = (struct sockaddr_in6 *)&group_storage;
 
-T_DECL(net_multicast_mld_ssm, "MLD SSM test", T_META_ASROOT(true))
-{
-	int s6 = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
+  group->sin6_family = AF_INET6;
+  group->sin6_len = sizeof(*group);
+  char address[128] = {};
+  snprintf(address, sizeof(address), "ff02::1234%%%s", interface.if_name);
+  inet_pton(AF_INET6, address, &group->sin6_addr);
 
-	T_ATEND(cleanup);
-	network_interface_create(&interface, FETH_NAME);
-	ifnet_start_ipv6(interface.if_name);
+  struct sockaddr_in6 *source = (struct sockaddr_in6 *)&source_storage;
+  source->sin6_family = AF_INET6;
+  source->sin6_len = sizeof(*source);
+  inet_pton(AF_INET6, "2001:db8::1", &source->sin6_addr);
 
-	struct sockaddr_storage group_storage = {}, source_storage = {};
+  struct group_source_req gr = {};
+  gr.gsr_interface = interface.if_index;
+  gr.gsr_group = group_storage;
+  gr.gsr_source = source_storage;
 
-	struct sockaddr_in6 *group = (struct sockaddr_in6 *)&group_storage;
-
-	group->sin6_family = AF_INET6;
-	group->sin6_len = sizeof(*group);
-	char address[128] = {};
-	snprintf(address, sizeof(address), "ff02::1234%%%s", interface.if_name);
-	inet_pton(AF_INET6, address, &group->sin6_addr);
-
-	struct sockaddr_in6 *source = (struct sockaddr_in6 *)&source_storage;
-	source->sin6_family = AF_INET6;
-	source->sin6_len = sizeof(*source);
-	inet_pton(AF_INET6, "2001:db8::1", &source->sin6_addr);
-
-	struct group_source_req gr = {};
-	gr.gsr_interface = interface.if_index;
-	gr.gsr_group = group_storage;
-	gr.gsr_source = source_storage;
-
-	for (int i = 0; i < 20; i++) {
-		((struct sockaddr_in6 *)&gr.gsr_source)->sin6_addr.__u6_addr.__u6_addr8[15] += i;
-		T_ASSERT_POSIX_SUCCESS(setsockopt(s6, IPPROTO_IPV6,
-		    MCAST_JOIN_SOURCE_GROUP, &gr,
-		    sizeof(gr)),
-		    "MCAST_JOIN_SOURCE_GROUP");
-	}
+  for (int i = 0; i < 20; i++) {
+    ((struct sockaddr_in6 *)&gr.gsr_source)
+        ->sin6_addr.__u6_addr.__u6_addr8[15] += i;
+    T_ASSERT_POSIX_SUCCESS(
+        setsockopt(s6, IPPROTO_IPV6, MCAST_JOIN_SOURCE_GROUP, &gr, sizeof(gr)),
+        "MCAST_JOIN_SOURCE_GROUP");
+  }
 }

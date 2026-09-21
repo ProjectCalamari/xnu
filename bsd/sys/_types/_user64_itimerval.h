@@ -27,11 +27,10 @@
  */
 #ifdef KERNEL
 #ifndef _STRUCT_USER64_ITIMERVAL
-#define _STRUCT_USER64_ITIMERVAL                struct user64_itimerval
-_STRUCT_USER64_ITIMERVAL
-{
-	_STRUCT_USER64_TIMEVAL  it_interval;    /* timer interval */
-	_STRUCT_USER64_TIMEVAL  it_value;       /* current value */
+#define _STRUCT_USER64_ITIMERVAL struct user64_itimerval
+_STRUCT_USER64_ITIMERVAL {
+  _STRUCT_USER64_TIMEVAL it_interval; /* timer interval */
+  _STRUCT_USER64_TIMEVAL it_value;    /* current value */
 };
 #endif /* _STRUCT_USER64_ITIMERVAL */
 #endif /* KERNEL */

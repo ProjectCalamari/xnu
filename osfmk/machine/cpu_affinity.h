@@ -25,14 +25,14 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _MACHINE_CPU_AFFINITY_H
 #define _MACHINE_CPU_AFFINITY_H
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/cpu_affinity.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm/cpu_affinity.h"
 #else
 #error architecture not supported
@@ -40,4 +40,4 @@
 
 #endif /* _MACHINE_CPU_AFFINITY_H */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

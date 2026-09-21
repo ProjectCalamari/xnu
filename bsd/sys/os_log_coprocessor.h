@@ -34,24 +34,31 @@
 #ifndef _OS_LOG_COPROCESSOR_H_
 #define _OS_LOG_COPROCESSOR_H_
 
-#include <stdbool.h>
 #include <os/log.h>
+#include <stdbool.h>
 #include <sys/types.h>
 
 /*
  * Userspace coprocessor logging
  *
- * Description: sends a syscall ending up at the kernel `os_log_coprocessor` function
+ * Description: sends a syscall ending up at the kernel `os_log_coprocessor`
+ * function
  *
  */
-int os_log_coprocessor_as_kernel(void *buff, uint64_t buff_len, os_log_type_t type, const char *uuid, uint64_t timestamp, uint32_t offset, bool stream_log);
+int os_log_coprocessor_as_kernel(void *buff, uint64_t buff_len,
+                                 os_log_type_t type, const char *uuid,
+                                 uint64_t timestamp, uint32_t offset,
+                                 bool stream_log);
 
 /*
  * Userspace coprocessor logging registration
  *
- * Description: sends a syscall ending up at the kernel `os_log_coprocessor_register_with_type` function
+ * Description: sends a syscall ending up at the kernel
+ * `os_log_coprocessor_register_with_type` function
  *
  */
-int os_log_coprocessor_register_as_kernel(const char *uuid, const char *file_path, size_t file_path_len);
+int os_log_coprocessor_register_as_kernel(const char *uuid,
+                                          const char *file_path,
+                                          size_t file_path_len);
 
 #endif /* _OS_LOG_COPROCESSOR_H_ */

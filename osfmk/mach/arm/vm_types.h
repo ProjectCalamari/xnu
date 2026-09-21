@@ -67,13 +67,13 @@
 #ifndef _MACH_ARM_VM_TYPES_H_
 #define _MACH_ARM_VM_TYPES_H_
 
-#if defined (__arm__) || defined (__arm64__)
+#if defined(__arm__) || defined(__arm64__)
 
 #ifndef ASSEMBLER
 
+#include <Availability.h>
 #include <arm/_types.h>
 #include <stdint.h>
-#include <Availability.h>
 #include <sys/cdefs.h>
 
 /*
@@ -93,32 +93,32 @@
  *
  * New use of these types is discouraged.
  */
-typedef __darwin_natural_t      natural_t;
-typedef int                     integer_t;
+typedef __darwin_natural_t natural_t;
+typedef int integer_t;
 
 /*
  * A vm_offset_t is a type-neutral pointer,
  * e.g. an offset into a virtual memory space.
  */
 #ifdef __LP64__
-typedef uintptr_t               vm_offset_t __kernel_ptr_semantics;
-typedef uintptr_t               vm_size_t;
+typedef uintptr_t vm_offset_t __kernel_ptr_semantics;
+typedef uintptr_t vm_size_t;
 
-typedef uint64_t                mach_vm_address_t __kernel_ptr_semantics;
-typedef uint64_t                mach_vm_offset_t __kernel_ptr_semantics;
-typedef uint64_t                mach_vm_size_t;
+typedef uint64_t mach_vm_address_t __kernel_ptr_semantics;
+typedef uint64_t mach_vm_offset_t __kernel_ptr_semantics;
+typedef uint64_t mach_vm_size_t;
 
-typedef uint64_t                vm_map_offset_t __kernel_ptr_semantics;
-typedef uint64_t                vm_map_address_t __kernel_ptr_semantics;
-typedef uint64_t                vm_map_size_t;
+typedef uint64_t vm_map_offset_t __kernel_ptr_semantics;
+typedef uint64_t vm_map_address_t __kernel_ptr_semantics;
+typedef uint64_t vm_map_size_t;
 #else
-typedef natural_t               vm_offset_t __kernel_ptr_semantics;
+typedef natural_t vm_offset_t __kernel_ptr_semantics;
 /*
  * A vm_size_t is the proper type for e.g.
  * expressing the difference between two
  * vm_offset_t entities.
  */
-typedef natural_t               vm_size_t;
+typedef natural_t vm_size_t;
 
 /*
  * This new type is independent of a particular vm map's
@@ -127,34 +127,34 @@ typedef natural_t               vm_size_t;
  * where the size of the map is not known - or we don't
  * want to have to distinguish.
  */
-#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_5_0)
-typedef uint32_t                mach_vm_address_t;
-typedef uint32_t                mach_vm_offset_t;
-typedef uint32_t                mach_vm_size_t;
+#if defined(__IPHONE_OS_VERSION_MIN_REQUIRED) &&                               \
+    (__IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_5_0)
+typedef uint32_t mach_vm_address_t;
+typedef uint32_t mach_vm_offset_t;
+typedef uint32_t mach_vm_size_t;
 #else
-typedef uint64_t                mach_vm_address_t __kernel_ptr_semantics;
-typedef uint64_t                mach_vm_offset_t __kernel_ptr_semantics;
-typedef uint64_t                mach_vm_size_t;
+typedef uint64_t mach_vm_address_t __kernel_ptr_semantics;
+typedef uint64_t mach_vm_offset_t __kernel_ptr_semantics;
+typedef uint64_t mach_vm_size_t;
 #endif
 
-typedef uint32_t                vm_map_offset_t __kernel_ptr_semantics;
-typedef uint32_t                vm_map_address_t __kernel_ptr_semantics;
-typedef uint32_t                vm_map_size_t;
+typedef uint32_t vm_map_offset_t __kernel_ptr_semantics;
+typedef uint32_t vm_map_address_t __kernel_ptr_semantics;
+typedef uint32_t vm_map_size_t;
 #endif /* __LP64__ */
 
+typedef uint32_t vm32_offset_t;
+typedef uint32_t vm32_address_t;
+typedef uint32_t vm32_size_t;
 
-typedef uint32_t                vm32_offset_t;
-typedef uint32_t                vm32_address_t;
-typedef uint32_t                vm32_size_t;
-
-typedef vm_offset_t             mach_port_context_t;
+typedef vm_offset_t mach_port_context_t;
 
 #ifdef MACH_KERNEL_PRIVATE
-typedef vm32_offset_t           mach_port_context32_t;
-typedef mach_vm_offset_t        mach_port_context64_t;
+typedef vm32_offset_t mach_port_context32_t;
+typedef mach_vm_offset_t mach_port_context64_t;
 #endif
 
-#endif  /* ASSEMBLER */
+#endif /* ASSEMBLER */
 
 /*
  * If composing messages by hand (please do not)
@@ -163,4 +163,4 @@ typedef mach_vm_offset_t        mach_port_context64_t;
 
 #endif /* defined (__arm__) || defined (__arm64__) */
 
-#endif  /* _MACH_ARM_VM_TYPES_H_ */
+#endif /* _MACH_ARM_VM_TYPES_H_ */

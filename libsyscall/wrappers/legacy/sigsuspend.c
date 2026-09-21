@@ -24,7 +24,7 @@
 #ifndef NO_SYSCALL_LEGACY
 
 #define _NONSTD_SOURCE
-#define __SIGSUSPEND    __sigsuspend_nocancel
+#define __SIGSUSPEND __sigsuspend_nocancel
 
 #include "../sigsuspend-base.c"
 

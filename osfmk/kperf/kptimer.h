@@ -48,15 +48,15 @@
  */
 
 /*
- * The minimum allowed timer period depends on the type of client (foreground vs.
- * background) and timer (on-CPU vs. PET).
+ * The minimum allowed timer period depends on the type of client (foreground
+ * vs. background) and timer (on-CPU vs. PET).
  */
 enum kptimer_period_limit {
-	KTPL_FG,
-	KTPL_BG,
-	KTPL_FG_PET,
-	KTPL_BG_PET,
-	KTPL_MAX,
+  KTPL_FG,
+  KTPL_BG,
+  KTPL_FG_PET,
+  KTPL_BG_PET,
+  KTPL_MAX,
 };
 
 /*
@@ -134,7 +134,8 @@ void kptimer_pet_enter(uint64_t sampledur_abs);
 void kptimer_start(void);
 
 /*
- * Stop all active timers, waiting for them to stop.  The ktrace lock must be held.
+ * Stop all active timers, waiting for them to stop.  The ktrace lock must be
+ * held.
  */
 void kptimer_stop(void);
 

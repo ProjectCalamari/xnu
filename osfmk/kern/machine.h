@@ -32,89 +32,69 @@
 #ifndef _KERN_MACHINE_H_
 #define _KERN_MACHINE_H_
 
-#include <mach/kern_return.h>
-#include <mach/processor_info.h>
 #include <kern/kern_types.h>
 #include <kern/sched_urgency.h>
 #include <kern/startup.h>
 #include <kern/thread_group.h>
 #include <kern/work_interval.h>
-
+#include <mach/kern_return.h>
+#include <mach/processor_info.h>
 
 /*
  * Machine support declarations.
  */
 
-extern void processor_up(
-	processor_t processor);
+extern void processor_up(processor_t processor);
 
-extern void processor_start_thread(void *machine_param,
-    wait_result_t result);
+extern void processor_start_thread(void *machine_param, wait_result_t result);
 
 /*
  * Must be implemented in machine dependent code.
  */
 
 /* Initialize machine dependent ast code */
-extern void init_ast_check(
-	processor_t         processor);
+extern void init_ast_check(processor_t processor);
 
 /* Cause check for ast */
-extern void cause_ast_check(
-	processor_t         processor);
+extern void cause_ast_check(processor_t processor);
 
-extern kern_return_t cpu_control(
-	int                 slot_num,
-	processor_info_t    info,
-	unsigned int        count);
+extern kern_return_t cpu_control(int slot_num, processor_info_t info,
+                                 unsigned int count);
 
-extern void     cpu_sleep(void);
+extern void cpu_sleep(void);
 
-extern void cpu_start(
-	int                 slot_num);
+extern void cpu_start(int slot_num);
 
-extern void cpu_exit_wait(
-	int                 slot_num);
+extern void cpu_exit_wait(int slot_num);
 
-extern kern_return_t cpu_info(
-	processor_flavor_t  flavor,
-	int                 slot_num,
-	processor_info_t    info,
-	unsigned int        *count);
+extern kern_return_t cpu_info(processor_flavor_t flavor, int slot_num,
+                              processor_info_t info, unsigned int *count);
 
-extern kern_return_t cpu_info_count(
-	processor_flavor_t  flavor,
-	unsigned int        *count);
+extern kern_return_t cpu_info_count(processor_flavor_t flavor,
+                                    unsigned int *count);
 
-extern thread_t         machine_processor_shutdown(
-	thread_t            thread,
-	void                (*doshutdown)(processor_t),
-	processor_t         processor);
+extern thread_t machine_processor_shutdown(thread_t thread,
+                                           void (*doshutdown)(processor_t),
+                                           processor_t processor);
 
 extern void machine_idle(void);
 
 extern void machine_track_platform_idle(boolean_t);
 
 /* Signals a processor to bring it out of idle */
-extern void machine_signal_idle(
-	processor_t         processor);
+extern void machine_signal_idle(processor_t processor);
 
 /* Signals a processor to bring it out of idle unless canceled */
-extern void machine_signal_idle_deferred(
-	processor_t         processor);
+extern void machine_signal_idle_deferred(processor_t processor);
 
 /* Cancels an outstanding machine_signal_idle_deferred, if this is supported */
-extern void machine_signal_idle_cancel(
-	processor_t         processor);
+extern void machine_signal_idle_cancel(processor_t processor);
 
 extern void halt_cpu(void);
 
-extern void halt_all_cpus(
-	boolean_t           reboot);
+extern void halt_all_cpus(boolean_t reboot);
 
-extern char *machine_boot_info(
-	char                *buf,
-	vm_size_t           buf_len);
+extern char *machine_boot_info(char *buf, vm_size_t buf_len);
 
 extern void consider_machine_collect(void);
 
@@ -123,44 +103,53 @@ extern void consider_machine_collect(void);
  * CPU power management about context switches
  */
 
-extern void     machine_thread_going_on_core(thread_t   new_thread,
-    thread_urgency_t    urgency,
-    uint64_t        sched_latency,
-    uint64_t        same_pri_latency,
-    uint64_t        dispatch_time);
+extern void machine_thread_going_on_core(thread_t new_thread,
+                                         thread_urgency_t urgency,
+                                         uint64_t sched_latency,
+                                         uint64_t same_pri_latency,
+                                         uint64_t dispatch_time);
 
-extern void machine_thread_going_off_core(thread_t old_thread, boolean_t thread_terminating,
-    uint64_t last_dispatch, boolean_t thread_runnable);
+extern void machine_thread_going_off_core(thread_t old_thread,
+                                          boolean_t thread_terminating,
+                                          uint64_t last_dispatch,
+                                          boolean_t thread_runnable);
 
 extern void machine_max_runnable_latency(uint64_t bg_max_latency,
-    uint64_t default_max_latency,
-    uint64_t realtime_max_latency);
+                                         uint64_t default_max_latency,
+                                         uint64_t realtime_max_latency);
 
-extern void machine_work_interval_notify(thread_t thread, struct kern_work_interval_args* kwi_args);
-
+extern void
+machine_work_interval_notify(thread_t thread,
+                             struct kern_work_interval_args *kwi_args);
 
 extern void machine_perfcontrol_deadline_passed(uint64_t deadline);
 
-extern void machine_switch_perfcontrol_context(perfcontrol_event event,
-    uint64_t timestamp,
-    uint32_t flags,
-    uint64_t new_thread_same_pri_latency,
-    thread_t old,
-    thread_t new);
+extern void machine_switch_perfcontrol_context(
+    perfcontrol_event event, uint64_t timestamp, uint32_t flags,
+    uint64_t new_thread_same_pri_latency, thread_t old, thread_t new);
 
 extern void machine_switch_perfcontrol_state_update(perfcontrol_event event,
-    uint64_t timestamp,
-    uint32_t flags,
-    thread_t thread);
+                                                    uint64_t timestamp,
+                                                    uint32_t flags,
+                                                    thread_t thread);
 
 #if CONFIG_THREAD_GROUPS
 extern void machine_thread_group_init(struct thread_group *tg);
 extern void machine_thread_group_deinit(struct thread_group *tg);
-extern void machine_thread_group_flags_update(struct thread_group *tg, uint32_t flags);
-extern void machine_thread_group_blocked(struct thread_group *tg_blocked, struct thread_group *tg_blocking, uint32_t flags, thread_t blocked_thread);
-extern void machine_thread_group_unblocked(struct thread_group *tg_unblocked, struct thread_group *tg_unblocking, uint32_t flags, thread_t unblocked_thread);
+extern void machine_thread_group_flags_update(struct thread_group *tg,
+                                              uint32_t flags);
+extern void machine_thread_group_blocked(struct thread_group *tg_blocked,
+                                         struct thread_group *tg_blocking,
+                                         uint32_t flags,
+                                         thread_t blocked_thread);
+extern void machine_thread_group_unblocked(struct thread_group *tg_unblocked,
+                                           struct thread_group *tg_unblocking,
+                                           uint32_t flags,
+                                           thread_t unblocked_thread);
 #endif
 
-extern void machine_perfcontrol_running_timer_expire(uint64_t now, uint32_t flags, int cpu_id, uint64_t *timeout_ticks);
+extern void machine_perfcontrol_running_timer_expire(uint64_t now,
+                                                     uint32_t flags, int cpu_id,
+                                                     uint64_t *timeout_ticks);
 
-#endif  /* _KERN_MACHINE_H_ */
+#endif /* _KERN_MACHINE_H_ */

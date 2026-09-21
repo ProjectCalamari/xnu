@@ -33,11 +33,11 @@
  */
 
 #ifndef SPDS_ENABLE_STRUCTS
-#define SPDS_ENABLE_STRUCTS                     1       // Enable structure definitions
-#endif /* SPDS_ENABLE_STRUCTS */
+#define SPDS_ENABLE_STRUCTS 1 // Enable structure definitions
+#endif                        /* SPDS_ENABLE_STRUCTS */
 #ifndef SPDS_ENABLE_ENUMS
-#define SPDS_ENABLE_ENUMS                       1       // Enable enumeration definitions
-#endif /* SPDS_ENABLE_ENUMS */
+#define SPDS_ENABLE_ENUMS 1 // Enable enumeration definitions
+#endif                      /* SPDS_ENABLE_ENUMS */
 
 #pragma mark EmbeddedHeaders include macros
 /*
@@ -48,17 +48,24 @@
  * Lifted and adapted from iBoot/platform.h.
  */
 #define NOQUOTE(x) x
-#define COMBINE3(a, b, c)                       NOQUOTE(a)NOQUOTE(b)NOQUOTE(c)
-#define COMBINE5(a, b, c, d, e)                 NOQUOTE(a)NOQUOTE(b)NOQUOTE(c)NOQUOTE(d)NOQUOTE(e)
-#define COMBINE7(a, b, c, d, e, f, g)           NOQUOTE(a)NOQUOTE(b)NOQUOTE(c)NOQUOTE(d)NOQUOTE(e)NOQUOTE(f)NOQUOTE(g)
+#define COMBINE3(a, b, c) NOQUOTE(a) NOQUOTE(b) NOQUOTE(c)
+#define COMBINE5(a, b, c, d, e)                                                \
+  NOQUOTE(a) NOQUOTE(b) NOQUOTE(c) NOQUOTE(d) NOQUOTE(e)
+#define COMBINE7(a, b, c, d, e, f, g)                                          \
+  NOQUOTE(a) NOQUOTE(b) NOQUOTE(c) NOQUOTE(d) NOQUOTE(e) NOQUOTE(f) NOQUOTE(g)
 
-#define SUB_PLATFORM_HEADER(x)                  <COMBINE5(platform/,x,_,ARM64_SOC_NAME,.h)>
-#define SUB_PLATFORM_SOC_HEADER(x)              <COMBINE5(platform/soc/,x,_,ARM64_SOC_NAME,.h)>
-#define SUB_PLATFORM_NONMODULE_HEADER(x)        <COMBINE5(soc/,PLATFORM_SPDS_CHIP_REV_LC,/,x,.h)>
-#define SUB_PLATFORM_SPDS_HEADER(x)             <COMBINE5(soc/,PLATFORM_SPDS_CHIP_REV_LC,/module/,x,.h)>
-#define SUB_PLATFORM_TARGET_HEADER(x)           <COMBINE5(target/,x,_,ARM64_SOC_NAME,.h)>
-#define SUB_PLATFORM_TUNABLE_HEADER(r, x)       <COMBINE7(platform/soc/tunables/,ARM64_SOC_NAME,/,r,/,x,.h)>
-#define SUB_TARGET_TUNABLE_HEADER(r, t, x)      <COMBINE7(target/tunables/,t,/,r,/,x,.h)>
+#define SUB_PLATFORM_HEADER(x) <COMBINE5(platform/,x,_,ARM64_SOC_NAME,.h)>
+#define SUB_PLATFORM_SOC_HEADER(x)                                             \
+<COMBINE5(platform/soc/,x,_,ARM64_SOC_NAME,.h)>
+#define SUB_PLATFORM_NONMODULE_HEADER(x)                                       \
+<COMBINE5(soc/,PLATFORM_SPDS_CHIP_REV_LC,/,x,.h)>
+#define SUB_PLATFORM_SPDS_HEADER(x)                                            \
+<COMBINE5(soc/,PLATFORM_SPDS_CHIP_REV_LC,/module/,x,.h)>
+#define SUB_PLATFORM_TARGET_HEADER(x) <COMBINE5(target/,x,_,ARM64_SOC_NAME,.h)>
+#define SUB_PLATFORM_TUNABLE_HEADER(r, x)                                      \
+<COMBINE7(platform/soc/tunables/,ARM64_SOC_NAME,/,r,/,x,.h)>
+#define SUB_TARGET_TUNABLE_HEADER(r, t, x)                                     \
+<COMBINE7(target/tunables/,t,/,r,/,x,.h)>
 
 #ifndef ARM64_SOC_NAME
 #ifndef CURRENT_MACHINE_CONFIG_LC
@@ -68,6 +75,6 @@
 #endif /* ARM64_SOC_NAME */
 
 #define SPDS_CHIP_REV_LC latest
-#define PLATFORM_SPDS_CHIP_REV_LC ARM64_SOC_NAME/SPDS_CHIP_REV_LC
+#define PLATFORM_SPDS_CHIP_REV_LC ARM64_SOC_NAME / SPDS_CHIP_REV_LC
 
 #endif /* !_PEXPERT_ARM64_PLATFORM_H_ */

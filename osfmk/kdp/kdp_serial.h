@@ -33,7 +33,7 @@
  * for a standard serial console
  */
 
-enum {SERIALIZE_WAIT_START, SERIALIZE_READING};
+enum { SERIALIZE_WAIT_START, SERIALIZE_READING };
 
 /*
  * Take a buffer of specified length and output it with the given

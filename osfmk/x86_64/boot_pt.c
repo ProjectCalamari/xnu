@@ -44,19 +44,19 @@
  * NB: This must be located at the kernel's base address!
  */
 #define PML4_PROT (INTEL_PTE_VALID | INTEL_PTE_WRITE)
-pml4_entry_t    BootPML4[PTE_PER_PAGE]
-__attribute__((section("__HIB, __bootPT"))) = {
-	[0]                     = ((uint64_t)(PAGE_SIZE) | PML4_PROT),
-	[KERNEL_PML4_INDEX]     = ((uint64_t)(PAGE_SIZE) | PML4_PROT),
+pml4_entry_t BootPML4[PTE_PER_PAGE]
+    __attribute__((section("__HIB, __bootPT"))) = {
+        [0] = ((uint64_t)(PAGE_SIZE) | PML4_PROT),
+        [KERNEL_PML4_INDEX] = ((uint64_t)(PAGE_SIZE) | PML4_PROT),
 };
 
 #define PDPT_PROT (INTEL_PTE_VALID | INTEL_PTE_WRITE)
-pdpt_entry_t    BootPDPT[PTE_PER_PAGE]
-__attribute__((section("__HIB, __bootPT"))) = {
-	[0]     = ((uint64_t)(2 * PAGE_SIZE) | PDPT_PROT),
-	[1]     = ((uint64_t)(3 * PAGE_SIZE) | PDPT_PROT),
-	[2]     = ((uint64_t)(4 * PAGE_SIZE) | PDPT_PROT),
-	[3]     = ((uint64_t)(5 * PAGE_SIZE) | PDPT_PROT),
+pdpt_entry_t BootPDPT[PTE_PER_PAGE]
+    __attribute__((section("__HIB, __bootPT"))) = {
+        [0] = ((uint64_t)(2 * PAGE_SIZE) | PDPT_PROT),
+        [1] = ((uint64_t)(3 * PAGE_SIZE) | PDPT_PROT),
+        [2] = ((uint64_t)(4 * PAGE_SIZE) | PDPT_PROT),
+        [3] = ((uint64_t)(5 * PAGE_SIZE) | PDPT_PROT),
 };
 
 #if NPGPTD != 4
@@ -66,25 +66,23 @@ __attribute__((section("__HIB, __bootPT"))) = {
 #if MACHINE_BOOTSTRAPPTD
 
 #define PDT_PROT (INTEL_PTE_PS | INTEL_PTE_VALID | INTEL_PTE_WRITE)
-#define ID_MAP_2MEG(x)  [(x)] = ((((uint64_t)(x)) << 21) | (PDT_PROT)),
+#define ID_MAP_2MEG(x) [(x)] = ((((uint64_t)(x)) << 21) | (PDT_PROT)),
 
-#define L0(x, n)  x(n)
-#define L1(x, n)  L0(x,n-1)     L0(x,n)
-#define L2(x, n)  L1(x,n-2)     L1(x,n)
-#define L3(x, n)  L2(x,n-4)     L2(x,n)
-#define L4(x, n)  L3(x,n-8)     L3(x,n)
-#define L5(x, n)  L4(x,n-16)    L4(x,n)
-#define L6(x, n)  L5(x,n-32)    L5(x,n)
-#define L7(x, n)  L6(x,n-64)    L6(x,n)
-#define L8(x, n)  L7(x,n-128)   L7(x,n)
-#define L9(x, n)  L8(x,n-256)   L8(x,n)
-#define L10(x, n) L9(x,n-512)   L9(x,n)
-#define L11(x, n) L10(x,n-1024) L10(x,n)
+#define L0(x, n) x(n)
+#define L1(x, n) L0(x, n - 1) L0(x, n)
+#define L2(x, n) L1(x, n - 2) L1(x, n)
+#define L3(x, n) L2(x, n - 4) L2(x, n)
+#define L4(x, n) L3(x, n - 8) L3(x, n)
+#define L5(x, n) L4(x, n - 16) L4(x, n)
+#define L6(x, n) L5(x, n - 32) L5(x, n)
+#define L7(x, n) L6(x, n - 64) L6(x, n)
+#define L8(x, n) L7(x, n - 128) L7(x, n)
+#define L9(x, n) L8(x, n - 256) L8(x, n)
+#define L10(x, n) L9(x, n - 512) L9(x, n)
+#define L11(x, n) L10(x, n - 1024) L10(x, n)
 
-#define FOR_0_TO_2047(x) L11(x,2047)
+#define FOR_0_TO_2047(x) L11(x, 2047)
 
-pd_entry_t      BootPTD[2048]
-__attribute__((section("__HIB, __bootPT"))) = {
-	FOR_0_TO_2047(ID_MAP_2MEG)
-};
+pd_entry_t BootPTD[2048]
+    __attribute__((section("__HIB, __bootPT"))) = {FOR_0_TO_2047(ID_MAP_2MEG)};
 #endif /* MACHINE_BOOTSTRAPPTD */

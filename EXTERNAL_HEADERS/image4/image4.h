@@ -86,8 +86,8 @@ typedef int errno_t;
 #include <TargetConditionals.h>
 #endif
 
-#if __has_include(<os/availability.h>)
-#include <os/availability.h>
+#if __has_include(<Availability.h>)
+#include <Availability.h>
 #endif
 
 #if __has_include(<sys/cdefs.h>)
@@ -96,8 +96,8 @@ typedef int errno_t;
 
 #if !defined(__BEGIN_DECLS)
 #if defined(__cplusplus)
-#define __BEGIN_DECLS   extern "C" {
-#define __END_DECLS     }
+#define __BEGIN_DECLS extern "C" {
+#define __END_DECLS }
 #else
 #define __BEGIN_DECLS
 #define __END_DECLS
@@ -157,32 +157,24 @@ typedef int errno_t;
  * @const IMAGE4_API_AVAILABLE_SPRING_2024
  * APIs which first became available in the Spring 2024 set of releases.
  */
-#define IMAGE4_API_AVAILABLE_SPRING_2024 \
-	API_AVAILABLE( \
-		macos(14.3), \
-		ios(17.4), \
-		tvos(17.4), \
-		watchos(10.4), \
-		bridgeos(8.3))
+#define IMAGE4_API_AVAILABLE_SPRING_2024                                       \
+  API_AVAILABLE(macos(14.3), ios(17.4), tvos(17.4), watchos(10.4),             \
+                bridgeos(8.3))
 
 /*!
  * @const IMAGE4_API_AVAILABLE_FALL_2024
  * APIs which first became available in the Fall 2024 set of releases.
  */
-#define IMAGE4_API_AVAILABLE_FALL_2024 \
-	API_AVAILABLE( \
-		macos(15.0), \
-		ios(18.0), \
-		tvos(18.0), \
-		watchos(11.0), \
-		bridgeos(9.0))
+#define IMAGE4_API_AVAILABLE_FALL_2024                                         \
+  API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.0), watchos(11.0),             \
+                bridgeos(9.0))
 
 /*!
  * @const IMAGE4_XNU_AVAILABLE_DIRECT
  * API symbol which is available to xnu via the dlxk mechanism.
  */
 #if XNU_KERNEL_PRIVATE || IMAGE4_DLXK_AVAILABILITY
-#define IMAGE4_XNU_AVAILABLE_DIRECT(_s) typedef typeof(&_s) _ ## _s ## _dlxk_t
+#define IMAGE4_XNU_AVAILABLE_DIRECT(_s) typedef typeof(&_s) _##_s##_dlxk_t
 #else
 #define IMAGE4_XNU_AVAILABLE_DIRECT(_s)
 #endif
@@ -193,7 +185,7 @@ typedef int errno_t;
  * dlxk mechanism.
  */
 #if XNU_KERNEL_PRIVATE || IMAGE4_DLXK_AVAILABILITY
-#define IMAGE4_XNU_AVAILABLE_INDIRECT(_s) typedef typeof(&_s) _s ## _dlxk_t
+#define IMAGE4_XNU_AVAILABLE_INDIRECT(_s) typedef typeof(&_s) _s##_dlxk_t
 #else
 #define IMAGE4_XNU_AVAILABLE_INDIRECT(_s)
 #endif
@@ -203,7 +195,7 @@ typedef int errno_t;
  * API symbol which has been retired.
  */
 #if XNU_KERNEL_PRIVATE || IMAGE4_DLXK_AVAILABILITY
-#define IMAGE4_XNU_RETIRED_DIRECT(_s) typedef void * _ ## _s ## _dlxk_t
+#define IMAGE4_XNU_RETIRED_DIRECT(_s) typedef void *_##_s##_dlxk_t
 #else
 #define IMAGE4_XNU_RETIRED_DIRECT(_s)
 #endif
@@ -213,7 +205,7 @@ typedef int errno_t;
  * API symbol which has been retired.
  */
 #if XNU_KERNEL_PRIVATE || IMAGE4_DLXK_AVAILABILITY
-#define IMAGE4_XNU_RETIRED_INDIRECT(_s) typedef void * _s ## _dlxk_t
+#define IMAGE4_XNU_RETIRED_INDIRECT(_s) typedef void *_s##_dlxk_t
 #else
 #define IMAGE4_XNU_RETIRED_INDIRECT(_s)
 #endif
@@ -223,10 +215,10 @@ typedef int errno_t;
  * Calls a restricted API.
  */
 #if IMAGE4_RESTRICTED_API
-#define image4_call_restricted(_s, ...) image4_ ## _s(__VA_ARGS__)
+#define image4_call_restricted(_s, ...) image4_##_s(__VA_ARGS__)
 #else
-#define image4_call_restricted(_s, ...) \
-	image4_ ## _s(IMAGE4_RESTRICTED_API_VERSION, ## __VA_ARGS__)
+#define image4_call_restricted(_s, ...)                                        \
+  image4_##_s(IMAGE4_RESTRICTED_API_VERSION, ##__VA_ARGS__)
 #endif
 
 #endif // __IMAGE4_API_H

@@ -32,12 +32,10 @@ extern int __kill(pid_t pid, int sig, int posix);
  * case the call is called directly via syscall(), since for most uses,
  * it won't matter to the caller.
  */
-int
-kill(pid_t pid, int sig)
-{
+int kill(pid_t pid, int sig) {
 #if __DARWIN_UNIX03
-	return __kill(pid, sig, 1);
-#else   /* !__DARWIN_UNIX03 */
-	return __kill(pid, sig, 0);
-#endif  /* !__DARWIN_UNIX03 */
+  return __kill(pid, sig, 1);
+#else  /* !__DARWIN_UNIX03 */
+  return __kill(pid, sig, 0);
+#endif /* !__DARWIN_UNIX03 */
 }

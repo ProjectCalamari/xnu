@@ -31,8 +31,8 @@
 #include <sys/_types/_u_int32_t.h> /* u_int32_t */
 
 typedef struct fsobj_id {
-	u_int32_t fid_objno;
-	u_int32_t fid_generation;
+  u_int32_t fid_objno;
+  u_int32_t fid_generation;
 } fsobj_id_t;
 
 #endif /* _FSOBJ_ID_T */

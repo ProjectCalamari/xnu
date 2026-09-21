@@ -28,13 +28,9 @@
 
 extern void iokit_post_constructor_init(void);
 
-static void last_kernel_constructor(void) __attribute__ ((constructor));
+static void last_kernel_constructor(void) __attribute__((constructor));
 
-static void
-last_kernel_constructor(void)
-{
-	iokit_post_constructor_init();
-}
+static void last_kernel_constructor(void) { iokit_post_constructor_init(); }
 
 __asm__(".globl _last_kernel_symbol");
 __asm__(".zerofill __LAST, __last, _last_kernel_symbol, 0");

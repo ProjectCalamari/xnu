@@ -24,12 +24,10 @@
 void __inc_remove_counter(void);
 int __unlink(const char *path);
 
-int
-unlink(const char *path)
-{
-	int res = __unlink(path);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int unlink(const char *path) {
+  int res = __unlink(path);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }

@@ -30,43 +30,44 @@
 
 #include <mach_ldebug.h>
 
-#include <kern/locks.h>
-#include <kern/misc_protos.h>
-#include <kern/thread.h>
-#include <kern/processor.h>
 #include <kern/cpu_data.h>
 #include <kern/cpu_number.h>
-#include <kern/sched_prim.h>
 #include <kern/debug.h>
+#include <kern/locks.h>
+#include <kern/misc_protos.h>
+#include <kern/processor.h>
+#include <kern/sched_prim.h>
+#include <kern/thread.h>
 #include <string.h>
 
+#include <i386/locks_i386_inlines.h>
 #include <i386/machine_routines.h> /* machine_timeout_suspended() */
-#include <machine/atomic.h>
-#include <machine/machine_cpu.h>
 #include <i386/mp.h>
 #include <machine/atomic.h>
+#include <machine/machine_cpu.h>
 #include <sys/kdebug.h>
-#include <i386/locks_i386_inlines.h>
 
 #if LCK_MTX_USE_ARCH
 
 /*
  * Fast path routines for lck_mtx locking and unlocking functions.
- * Fast paths will try a single compare and swap instruction to acquire/release the lock
- * and interlock, and they will fall through the slow path in case it fails.
+ * Fast paths will try a single compare and swap instruction to acquire/release
+ * the lock and interlock, and they will fall through the slow path in case it
+ * fails.
  *
  * These functions were previously implemented in x86 assembly,
  * and some optimizations are in place in this c code to obtain a compiled code
  * as performant and compact as the assembly version.
  *
- * To avoid to inline these functions and increase the kernel text size all functions have
- * the __attribute__((noinline)) specified.
+ * To avoid to inline these functions and increase the kernel text size all
+ * functions have the __attribute__((noinline)) specified.
  *
- * The code is structured in such a way there are no calls to functions that will return
- * on the context of the caller function, i.e. all functions called are or tail call functions
- * or inline functions. The number of arguments of the tail call functions are less then six,
- * so that they can be passed over registers and do not need to be pushed on stack.
- * This allows the compiler to not create a stack frame for the functions.
+ * The code is structured in such a way there are no calls to functions that
+ * will return on the context of the caller function, i.e. all functions called
+ * are or tail call functions or inline functions. The number of arguments of
+ * the tail call functions are less then six, so that they can be passed over
+ * registers and do not need to be pushed on stack. This allows the compiler to
+ * not create a stack frame for the functions.
  *
  * The file is compiled with momit-leaf-frame-pointer and O2.
  */
@@ -80,29 +81,23 @@ TUNABLE(bool, LckDisablePreemptCheck, "-disable_mtx_chk", false);
  * (since a mutex lock may context switch, holding a simplelock
  * is not a good thing).
  */
-void __inline__
-lck_mtx_check_preemption(void)
-{
-	if (get_preemption_level() == 0) {
-		return;
-	}
-	if (LckDisablePreemptCheck) {
-		return;
-	}
-	if (current_cpu_datap()->cpu_hibernate) {
-		return;
-	}
+void __inline__ lck_mtx_check_preemption(void) {
+  if (get_preemption_level() == 0) {
+    return;
+  }
+  if (LckDisablePreemptCheck) {
+    return;
+  }
+  if (current_cpu_datap()->cpu_hibernate) {
+    return;
+  }
 
-	panic("preemption_level(%d) != 0", get_preemption_level());
+  panic("preemption_level(%d) != 0", get_preemption_level());
 }
 
 #else /* DEVELOPMENT || DEBUG */
 
-void __inline__
-lck_mtx_check_preemption(void)
-{
-	return;
-}
+void __inline__ lck_mtx_check_preemption(void) { return; }
 
 #endif /* DEVELOPMENT || DEBUG */
 
@@ -117,41 +112,37 @@ lck_mtx_check_preemption(void)
  * Interlock or mutex cannot be already held by current thread.
  * In case of contention it might sleep.
  */
-__attribute__((noinline))
-void
-lck_mtx_lock(
-	lck_mtx_t       *lock)
-{
-	uint32_t prev, state;
+__attribute__((noinline)) void lck_mtx_lock(lck_mtx_t *lock) {
+  uint32_t prev, state;
 
-	lck_mtx_check_preemption();
-	state = ordered_load_mtx_state(lock);
+  lck_mtx_check_preemption();
+  state = ordered_load_mtx_state(lock);
 
-	/*
-	 * Fast path only if the mutex is not held
-	 * interlock is not contended and there are no waiters.
-	 *
-	 * Mutexes with extensions will fall through the slow path as
-	 * well as destroyed mutexes.
-	 */
+  /*
+   * Fast path only if the mutex is not held
+   * interlock is not contended and there are no waiters.
+   *
+   * Mutexes with extensions will fall through the slow path as
+   * well as destroyed mutexes.
+   */
 
-	prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK |
-	    LCK_MTX_WAITERS_MSK | LCK_MTX_PROFILE_MSK);
-	state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK;
+  prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK |
+                   LCK_MTX_WAITERS_MSK | LCK_MTX_PROFILE_MSK);
+  state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK;
 
-	disable_preemption();
-	if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
-		enable_preemption();
-		return lck_mtx_lock_slow(lock);
-	}
+  disable_preemption();
+  if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
+    enable_preemption();
+    return lck_mtx_lock_slow(lock);
+  }
 
-	/* mutex acquired, interlock acquired and preemption disabled */
+  /* mutex acquired, interlock acquired and preemption disabled */
 
-	/* record owner of mutex */
-	ordered_store_mtx_owner(lock, current_thread()->ctid);
+  /* record owner of mutex */
+  ordered_store_mtx_owner(lock, current_thread()->ctid);
 
-	/* release interlock and re-enable preemption */
-	lck_mtx_lock_finish_inline(lock, state);
+  /* release interlock and re-enable preemption */
+  lck_mtx_lock_finish_inline(lock, state);
 }
 
 /*
@@ -167,42 +158,38 @@ lck_mtx_lock(
  * In case the mutex is held (either as spin or mutex)
  * the function will fail, it will acquire the mutex otherwise.
  */
-__attribute__((noinline))
-boolean_t
-lck_mtx_try_lock(
-	lck_mtx_t       *lock)
-{
-	uint32_t prev, state;
+__attribute__((noinline)) boolean_t lck_mtx_try_lock(lck_mtx_t *lock) {
+  uint32_t prev, state;
 
-	state = ordered_load_mtx_state(lock);
+  state = ordered_load_mtx_state(lock);
 
-	/*
-	 * Fast path only if the mutex is not held
-	 * interlock is not contended and there are no waiters.
-	 *
-	 * Mutexes with extensions will fall through the slow path as
-	 * well as destroyed mutexes.
-	 */
+  /*
+   * Fast path only if the mutex is not held
+   * interlock is not contended and there are no waiters.
+   *
+   * Mutexes with extensions will fall through the slow path as
+   * well as destroyed mutexes.
+   */
 
-	prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK |
-	    LCK_MTX_WAITERS_MSK | LCK_MTX_PROFILE_MSK);
-	state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK;
+  prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK |
+                   LCK_MTX_WAITERS_MSK | LCK_MTX_PROFILE_MSK);
+  state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK;
 
-	disable_preemption();
-	if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
-		enable_preemption();
-		return lck_mtx_try_lock_slow(lock);
-	}
+  disable_preemption();
+  if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
+    enable_preemption();
+    return lck_mtx_try_lock_slow(lock);
+  }
 
-	/* mutex acquired, interlock acquired and preemption disabled */
+  /* mutex acquired, interlock acquired and preemption disabled */
 
-	/* record owner of mutex */
-	ordered_store_mtx_owner(lock, current_thread()->ctid);
+  /* record owner of mutex */
+  ordered_store_mtx_owner(lock, current_thread()->ctid);
 
-	/* release interlock and re-enable preemption */
-	lck_mtx_try_lock_finish_inline(lock, state);
+  /* release interlock and re-enable preemption */
+  lck_mtx_try_lock_finish_inline(lock, state);
 
-	return TRUE;
+  return TRUE;
 }
 
 /*
@@ -223,46 +210,42 @@ lck_mtx_try_lock(
  *
  * In case of contention it might sleep.
  */
-__attribute__((noinline))
-void
-lck_mtx_lock_spin_always(
-	lck_mtx_t       *lock)
-{
-	uint32_t prev, state;
+__attribute__((noinline)) void lck_mtx_lock_spin_always(lck_mtx_t *lock) {
+  uint32_t prev, state;
 
-	state = ordered_load_mtx_state(lock);
+  state = ordered_load_mtx_state(lock);
 
-	/*
-	 * Fast path only if the mutex is not held
-	 * neither as mutex nor as spin and
-	 * interlock is not contended.
-	 *
-	 * Mutexes with extensions will fall through the slow path as
-	 * well as destroyed mutexes.
-	 */
+  /*
+   * Fast path only if the mutex is not held
+   * neither as mutex nor as spin and
+   * interlock is not contended.
+   *
+   * Mutexes with extensions will fall through the slow path as
+   * well as destroyed mutexes.
+   */
 
-	if (state & (LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK | LCK_MTX_PROFILE_MSK)) {
-		return lck_mtx_lock_spin_slow(lock);
-	}
+  if (state & (LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK | LCK_MTX_PROFILE_MSK)) {
+    return lck_mtx_lock_spin_slow(lock);
+  }
 
-	/* Note LCK_MTX_SPIN_MSK is set only if LCK_MTX_ILOCKED_MSK is set */
-	prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK);
-	state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK;
+  /* Note LCK_MTX_SPIN_MSK is set only if LCK_MTX_ILOCKED_MSK is set */
+  prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK);
+  state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK;
 
-	disable_preemption();
-	if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
-		enable_preemption();
-		return lck_mtx_lock_spin_slow(lock);
-	}
+  disable_preemption();
+  if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
+    enable_preemption();
+    return lck_mtx_lock_spin_slow(lock);
+  }
 
-	/* mutex acquired as spinlock, interlock acquired and preemption disabled */
+  /* mutex acquired as spinlock, interlock acquired and preemption disabled */
 
-	/* record owner of mutex */
-	ordered_store_mtx_owner(lock, current_thread()->ctid);
+  /* record owner of mutex */
+  ordered_store_mtx_owner(lock, current_thread()->ctid);
 
-	LCK_MTX_ACQUIRED(lock, lock->lck_mtx_grp, true, false);
-	/* return with the interlock held and preemption disabled */
-	return;
+  LCK_MTX_ACQUIRED(lock, lock->lck_mtx_grp, true, false);
+  /* return with the interlock held and preemption disabled */
+  return;
 }
 
 /*
@@ -283,12 +266,9 @@ lck_mtx_lock_spin_always(
  *
  * In case of contention it might sleep.
  */
-void
-lck_mtx_lock_spin(
-	lck_mtx_t       *lock)
-{
-	lck_mtx_check_preemption();
-	lck_mtx_lock_spin_always(lock);
+void lck_mtx_lock_spin(lck_mtx_t *lock) {
+  lck_mtx_check_preemption();
+  lck_mtx_lock_spin_always(lock);
 }
 
 /*
@@ -306,46 +286,43 @@ lck_mtx_lock_spin(
  * otherwise.
  *
  */
-__attribute__((noinline))
-boolean_t
-lck_mtx_try_lock_spin_always(
-	lck_mtx_t       *lock)
-{
-	uint32_t prev, state;
+__attribute__((noinline)) boolean_t
+lck_mtx_try_lock_spin_always(lck_mtx_t *lock) {
+  uint32_t prev, state;
 
-	state = ordered_load_mtx_state(lock);
+  state = ordered_load_mtx_state(lock);
 
-	/*
-	 * Fast path only if the mutex is not held
-	 * neither as mutex nor as spin and
-	 * interlock is not contended.
-	 *
-	 * Mutexes with extensions will fall through the slow path as
-	 * well as destroyed mutexes.
-	 */
+  /*
+   * Fast path only if the mutex is not held
+   * neither as mutex nor as spin and
+   * interlock is not contended.
+   *
+   * Mutexes with extensions will fall through the slow path as
+   * well as destroyed mutexes.
+   */
 
-	/* Note LCK_MTX_SPIN_MSK is set only if LCK_MTX_ILOCKED_MSK is set */
-	prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK |
-	    LCK_MTX_PROFILE_MSK);
-	state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK;
+  /* Note LCK_MTX_SPIN_MSK is set only if LCK_MTX_ILOCKED_MSK is set */
+  prev = state &
+         ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_MLOCKED_MSK | LCK_MTX_PROFILE_MSK);
+  state = prev | LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK;
 
-	disable_preemption();
-	if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
-		enable_preemption();
-		return lck_mtx_try_lock_spin_slow(lock);
-	}
+  disable_preemption();
+  if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
+    enable_preemption();
+    return lck_mtx_try_lock_spin_slow(lock);
+  }
 
-	/* mutex acquired as spinlock, interlock acquired and preemption disabled */
+  /* mutex acquired as spinlock, interlock acquired and preemption disabled */
 
-	/* record owner of mutex */
-	ordered_store_mtx_owner(lock, current_thread()->ctid);
+  /* record owner of mutex */
+  ordered_store_mtx_owner(lock, current_thread()->ctid);
 
-#if     CONFIG_DTRACE
-	LOCKSTAT_RECORD(LS_LCK_MTX_TRY_LOCK_SPIN_ACQUIRE, lock, 0);
+#if CONFIG_DTRACE
+  LOCKSTAT_RECORD(LS_LCK_MTX_TRY_LOCK_SPIN_ACQUIRE, lock, 0);
 #endif
 
-	/* return with the interlock held and preemption disabled */
-	return TRUE;
+  /* return with the interlock held and preemption disabled */
+  return TRUE;
 }
 
 /*
@@ -363,11 +340,8 @@ lck_mtx_try_lock_spin_always(
  * otherwise.
  *
  */
-boolean_t
-lck_mtx_try_lock_spin(
-	lck_mtx_t       *lock)
-{
-	return lck_mtx_try_lock_spin_always(lock);
+boolean_t lck_mtx_try_lock_spin(lck_mtx_t *lock) {
+  return lck_mtx_try_lock_spin_always(lock);
 }
 
 /*
@@ -381,64 +355,61 @@ lck_mtx_try_lock_spin(
  * Interlock can be held, and the slow path will
  * unlock the mutex for this case.
  */
-__attribute__((noinline))
-void
-lck_mtx_unlock(
-	lck_mtx_t       *lock)
-{
-	uint32_t prev, state;
+__attribute__((noinline)) void lck_mtx_unlock(lck_mtx_t *lock) {
+  uint32_t prev, state;
 
-	state = ordered_load_mtx_state(lock);
+  state = ordered_load_mtx_state(lock);
 
-	if (state & LCK_MTX_SPIN_MSK) {
-		return lck_mtx_unlock_slow(lock);
-	}
+  if (state & LCK_MTX_SPIN_MSK) {
+    return lck_mtx_unlock_slow(lock);
+  }
 
-	/*
-	 * Only full mutex will go through the fast path
-	 * (if the lock was acquired as a spinlock it will
-	 * fall through the slow path).
-	 * If there are waiters it will fall through the slow path.
-	 *
-	 * Mutexes with extensions will fall through the slow path as
-	 * well as destroyed mutexes.
-	 */
+  /*
+   * Only full mutex will go through the fast path
+   * (if the lock was acquired as a spinlock it will
+   * fall through the slow path).
+   * If there are waiters it will fall through the slow path.
+   *
+   * Mutexes with extensions will fall through the slow path as
+   * well as destroyed mutexes.
+   */
 
-	/*
-	 * Fast path state:
-	 * interlock not held, no waiters, no promotion and mutex held.
-	 */
-	prev = state & ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_WAITERS_MSK |
-	    LCK_MTX_PROFILE_MSK);
-	prev |= LCK_MTX_MLOCKED_MSK;
+  /*
+   * Fast path state:
+   * interlock not held, no waiters, no promotion and mutex held.
+   */
+  prev = state &
+         ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_WAITERS_MSK | LCK_MTX_PROFILE_MSK);
+  prev |= LCK_MTX_MLOCKED_MSK;
 
-	state = prev | LCK_MTX_ILOCKED_MSK;
-	state &= ~LCK_MTX_MLOCKED_MSK;
+  state = prev | LCK_MTX_ILOCKED_MSK;
+  state &= ~LCK_MTX_MLOCKED_MSK;
 
-	disable_preemption();
+  disable_preemption();
 
-	/* the memory order needs to be acquire because it is acquiring the interlock */
-	if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
-		enable_preemption();
-		return lck_mtx_unlock_slow(lock);
-	}
+  /* the memory order needs to be acquire because it is acquiring the interlock
+   */
+  if (!os_atomic_cmpxchg(&lock->lck_mtx_state, prev, state, acquire)) {
+    enable_preemption();
+    return lck_mtx_unlock_slow(lock);
+  }
 
-	/* mutex released, interlock acquired and preemption disabled */
+  /* mutex released, interlock acquired and preemption disabled */
 
 #if DEVELOPMENT | DEBUG
-	if (__improbable(lock->lck_mtx_owner != current_thread()->ctid)) {
-		lck_mtx_owner_check_panic(lock);
-	}
+  if (__improbable(lock->lck_mtx_owner != current_thread()->ctid)) {
+    lck_mtx_owner_check_panic(lock);
+  }
 #endif
 
-	/* clear owner */
-	ordered_store_mtx_owner(lock, 0);
-	/* release interlock */
-	state &= ~LCK_MTX_ILOCKED_MSK;
-	ordered_store_mtx_state_release(lock, state);
+  /* clear owner */
+  ordered_store_mtx_owner(lock, 0);
+  /* release interlock */
+  state &= ~LCK_MTX_ILOCKED_MSK;
+  ordered_store_mtx_state_release(lock, state);
 
-	/* re-enable preemption */
-	lck_mtx_unlock_finish_inline(lock, state);
+  /* re-enable preemption */
+  lck_mtx_unlock_finish_inline(lock, state);
 }
 
 #endif /* LCK_MTX_USE_ARCH */

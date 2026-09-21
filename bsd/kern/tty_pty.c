@@ -64,21 +64,21 @@
  * Pseudo-teletype Driver
  * (Actually two drivers, requiring two entries in 'cdevsw')
  */
-#include "pty.h"                /* XXX */
+#include "pty.h" /* XXX */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/ioctl.h>
-#include <sys/proc_internal.h>
-#include <sys/kauth.h>
-#include <sys/tty.h>
 #include <sys/conf.h>
 #include <sys/file_internal.h>
-#include <sys/uio_internal.h>
+#include <sys/ioctl.h>
+#include <sys/kauth.h>
 #include <sys/kernel.h>
-#include <sys/vnode.h>
-#include <sys/user.h>
+#include <sys/param.h>
+#include <sys/proc_internal.h>
 #include <sys/signalvar.h>
+#include <sys/systm.h>
+#include <sys/tty.h>
+#include <sys/uio_internal.h>
+#include <sys/user.h>
+#include <sys/vnode.h>
 
 #if CONFIG_MACF
 #include <security/mac_framework.h>
@@ -88,8 +88,8 @@
 
 #if NPTY == 1
 #undef NPTY
-#define NPTY    32              /* crude XXX */
-#warning        You have only one pty defined, redefining to 32.
+#define NPTY 32 /* crude XXX */
+#warning You have only one pty defined, redefining to 32.
 #endif
 
 /*
@@ -101,83 +101,72 @@ static struct ptmx_ioctl pt_ioctl[NPTY];
 int pty_init(int n_ptys);
 
 #ifndef DEVFS
-int
-pty_init(__unused int n_ptys)
-{
-	return 0;
-}
+int pty_init(__unused int n_ptys) { return 0; }
 #else // DEVFS
 #include <miscfs/devfs/devfs.h>
-#define START_CHAR      'p'
-#define HEX_BASE        16
+#define START_CHAR 'p'
+#define HEX_BASE 16
 
 static struct tty_dev_t _pty_driver;
 
-static struct ptmx_ioctl *
-pty_get_ioctl(int minor, int open_flag)
-{
-	if (minor >= NPTY) {
-		printf("pty_get_ioctl failed because minor number %d exceeded %d\n", minor, NPTY);
-		return NULL;
-	}
-	struct ptmx_ioctl *pti = &pt_ioctl[minor];
-	if (open_flag & (PF_OPEN_M | PF_OPEN_S)) {
-		if (!pti->pt_tty) {
-			pti->pt_tty = ttymalloc();
-		}
-		if (!pti->pt_tty) {
-			return NULL;
-		}
-	}
-	return pti;
+static struct ptmx_ioctl *pty_get_ioctl(int minor, int open_flag) {
+  if (minor >= NPTY) {
+    printf("pty_get_ioctl failed because minor number %d exceeded %d\n", minor,
+           NPTY);
+    return NULL;
+  }
+  struct ptmx_ioctl *pti = &pt_ioctl[minor];
+  if (open_flag & (PF_OPEN_M | PF_OPEN_S)) {
+    if (!pti->pt_tty) {
+      pti->pt_tty = ttymalloc();
+    }
+    if (!pti->pt_tty) {
+      return NULL;
+    }
+  }
+  return pti;
 }
 
-static int
-pty_get_name(int minor, char *buffer, size_t size)
-{
-	return snprintf(buffer, size, "/dev/tty%c%x",
-	           START_CHAR + (minor / HEX_BASE),
-	           minor % HEX_BASE);
+static int pty_get_name(int minor, char *buffer, size_t size) {
+  return snprintf(buffer, size, "/dev/tty%c%x", START_CHAR + (minor / HEX_BASE),
+                  minor % HEX_BASE);
 }
 
-int
-pty_init(int n_ptys)
-{
-	int i;
-	int j;
+int pty_init(int n_ptys) {
+  int i;
+  int j;
 
-	n_ptys = min(n_ptys, NPTY); /* clamp to avoid pt_ioctl overflow */
+  n_ptys = min(n_ptys, NPTY); /* clamp to avoid pt_ioctl overflow */
 
-	/* create the pseudo tty device nodes */
-	for (j = 0; j < 10; j++) {
-		for (i = 0; i < HEX_BASE; i++) {
-			int m = j * HEX_BASE + i;
-			if (m >= n_ptys) {
-				goto done;
-			}
-			pt_ioctl[m].pt_devhandle = devfs_make_node(makedev(PTS_MAJOR, m),
-			    DEVFS_CHAR, UID_ROOT, GID_WHEEL, 0666,
-			    "tty%c%x", j + START_CHAR, i);
-			(void)devfs_make_node(makedev(PTC_MAJOR, m),
-			    DEVFS_CHAR, UID_ROOT, GID_WHEEL, 0666,
-			    "pty%c%x", j + START_CHAR, i);
-		}
-	}
+  /* create the pseudo tty device nodes */
+  for (j = 0; j < 10; j++) {
+    for (i = 0; i < HEX_BASE; i++) {
+      int m = j * HEX_BASE + i;
+      if (m >= n_ptys) {
+        goto done;
+      }
+      pt_ioctl[m].pt_devhandle =
+          devfs_make_node(makedev(PTS_MAJOR, m), DEVFS_CHAR, UID_ROOT,
+                          GID_WHEEL, 0666, "tty%c%x", j + START_CHAR, i);
+      (void)devfs_make_node(makedev(PTC_MAJOR, m), DEVFS_CHAR, UID_ROOT,
+                            GID_WHEEL, 0666, "pty%c%x", j + START_CHAR, i);
+    }
+  }
 
 done:
-	_pty_driver.primary = PTC_MAJOR;
-	_pty_driver.replica = PTS_MAJOR;
-	_pty_driver.open_reset = 1;
-	_pty_driver.open = &pty_get_ioctl;
-	_pty_driver.name = &pty_get_name;
-	tty_dev_register(&_pty_driver);
+  _pty_driver.primary = PTC_MAJOR;
+  _pty_driver.replica = PTS_MAJOR;
+  _pty_driver.open_reset = 1;
+  _pty_driver.open = &pty_get_ioctl;
+  _pty_driver.name = &pty_get_name;
+  tty_dev_register(&_pty_driver);
 
-	if (cdevsw_setkqueueok(PTC_MAJOR, &cdevsw[PTC_MAJOR], CDEVSW_IS_PTC) == -1) {
-		panic("Can't mark ptc as kqueue ok");
-	}
-	if (cdevsw_setkqueueok(PTS_MAJOR, &cdevsw[PTS_MAJOR], CDEVSW_IS_PTS) == -1) {
-		panic("Can't mark pts as kqueue ok");
-	}
-	return 0;
+  if (cdevsw_setkqueueok(PTC_MAJOR, &cdevsw[PTC_MAJOR], CDEVSW_IS_PTC) == -1) {
+    panic("Can't mark ptc as kqueue ok");
+  }
+  if (cdevsw_setkqueueok(PTS_MAJOR, &cdevsw[PTS_MAJOR], CDEVSW_IS_PTS) == -1) {
+    panic("Can't mark pts as kqueue ok");
+  }
+  return 0;
 }
 #endif // DEVFS

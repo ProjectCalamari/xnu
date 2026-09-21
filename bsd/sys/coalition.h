@@ -46,13 +46,16 @@ int coalition_terminate(uint64_t cid, uint32_t flags);
 int coalition_reap(uint64_t cid, uint32_t flags);
 
 /* Wrappers around __coalition_info syscall (with proper struct types) */
-int coalition_info_resource_usage(uint64_t cid, struct coalition_resource_usage *cru, size_t sz);
+int coalition_info_resource_usage(uint64_t cid,
+                                  struct coalition_resource_usage *cru,
+                                  size_t sz);
 int coalition_info_set_name(uint64_t cid, const char *name, size_t size);
 int coalition_info_set_efficiency(uint64_t cid, uint64_t flags);
 int coalition_ledger_set_logical_writes_limit(uint64_t cid, int64_t limit);
 
 #ifdef PRIVATE
-int coalition_info_debug_info(uint64_t cid, struct coalinfo_debuginfo *cru, size_t sz);
+int coalition_info_debug_info(uint64_t cid, struct coalinfo_debuginfo *cru,
+                              size_t sz);
 #endif /* PRIVATE */
 
 #else /* KERNEL */
@@ -65,7 +68,6 @@ int coalition_info_debug_info(uint64_t cid, struct coalinfo_debuginfo *cru, size
  * Get the unique 64-bit identifier associated with the given coalition
  */
 uint64_t coalition_id(coalition_t coal);
-
 
 /*
  * coalitions_get_list:
@@ -87,8 +89,8 @@ uint64_t coalition_id(coalition_t coal);
  *          Otherwise: the number of coalitions whose type matches
  *                     the 'type' parameter (all coalitions if type == -1)
  */
-extern size_t coalitions_get_list(int type, struct procinfo_coalinfo *coal_list, size_t list_sz);
-
+extern size_t coalitions_get_list(int type, struct procinfo_coalinfo *coal_list,
+                                  size_t list_sz);
 
 /*
  * task_get_coalition:
@@ -102,7 +104,6 @@ extern size_t coalitions_get_list(int type, struct procinfo_coalinfo *coal_list,
  * Returns: valid coalition_t or COALITION_NULL
  */
 extern coalition_t task_get_coalition(task_t task, int coal_type);
-
 
 /*
  * coalition_is_leader:
@@ -130,7 +131,6 @@ extern boolean_t coalition_is_leader(task_t task, coalition_t coal);
  *          task_deallocate on the returned value.
  */
 extern task_t coalition_get_leader(coalition_t coal);
-
 
 /*
  * coalition_get_task_count:
@@ -197,7 +197,7 @@ extern uint64_t coalition_get_page_count(coalition_t coal, int *ntasks);
  *
  */
 extern int coalition_get_pid_list(coalition_t coal, uint32_t rolemask,
-    int sort_order, int *pid_list, int list_sz);
+                                  int sort_order, int *pid_list, int list_sz);
 
 /*
  * task_coalition_role_for_type;
@@ -211,55 +211,40 @@ extern int coalition_get_pid_list(coalition_t coal, uint32_t rolemask,
  */
 extern int task_coalition_role_for_type(task_t task, int coalition_type);
 #else /* !CONFIG_COALITIONS */
-static inline uint64_t
-coalition_id(__unused coalition_t coal)
-{
-	return 0;
-}
+static inline uint64_t coalition_id(__unused coalition_t coal) { return 0; }
 
 static inline size_t
 coalitions_get_list(__unused int type,
-    __unused struct procinfo_coalinfo *coal_list,
-    __unused size_t list_sz)
-{
-	return 0;
+                    __unused struct procinfo_coalinfo *coal_list,
+                    __unused size_t list_sz) {
+  return 0;
 }
 
-static inline coalition_t
-coalition_get_leader(__unused task_t task,
-    __unused int coal_type)
-{
-	return COALITION_NULL;
+static inline coalition_t coalition_get_leader(__unused task_t task,
+                                               __unused int coal_type) {
+  return COALITION_NULL;
 }
 
-static inline boolean_t
-coalition_is_leader(__unused task_t task,
-    __unused coalition_t coal)
-{
-	return FALSE;
+static inline boolean_t coalition_is_leader(__unused task_t task,
+                                            __unused coalition_t coal) {
+  return FALSE;
 }
 
-static inline int
-coalition_get_task_count(__unused coalition_t coal)
-{
-	return 0;
+static inline int coalition_get_task_count(__unused coalition_t coal) {
+  return 0;
 }
 
-static inline uint64_t
-coalition_get_page_count(__unused coalition_t coal,
-    __unused int *ntasks)
-{
-	return 0;
+static inline uint64_t coalition_get_page_count(__unused coalition_t coal,
+                                                __unused int *ntasks) {
+  return 0;
 }
 
-static inline int
-coalition_get_pid_list(__unused coalition_t coal,
-    __unused uint32_t rolemask,
-    __unused int sort_order,
-    __unused int *pid_list,
-    __unused int list_sz)
-{
-	return 0;
+static inline int coalition_get_pid_list(__unused coalition_t coal,
+                                         __unused uint32_t rolemask,
+                                         __unused int sort_order,
+                                         __unused int *pid_list,
+                                         __unused int list_sz) {
+  return 0;
 }
 #endif
 

@@ -26,10 +26,10 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include <kern/work_interval.h>
 #include <stdint.h>
 #include <sys/queue.h>
 #include <sys/work_interval.h>
-#include <kern/work_interval.h>
 
 #pragma once
 
@@ -37,7 +37,7 @@
 
 OS_ASSUME_NONNULL_BEGIN
 
-    __BEGIN_DECLS
+__BEGIN_DECLS
 
 typedef struct workload_config_ctx workload_config_ctx_t;
 
@@ -49,16 +49,16 @@ extern workload_config_ctx_t workload_config_devel;
 #define WORKLOAD_CONFIG_ID_NAME_MAX WORK_INTERVAL_WORKLOAD_ID_NAME_MAX
 
 typedef struct workload_config {
-	uint32_t   wc_thread_group_flags;
-	uint32_t   wc_flags;
-	uint32_t   wc_create_flags;
-	uint8_t    wc_class_offset;
-	wi_class_t wc_class;
+  uint32_t wc_thread_group_flags;
+  uint32_t wc_flags;
+  uint32_t wc_create_flags;
+  uint8_t wc_class_offset;
+  wi_class_t wc_class;
 } workload_config_t;
 
 typedef enum {
-	WLC_F_NONE          = 0,
-	WLC_F_THREAD_POLICY = 1, // By default set for new workload configs.
+  WLC_F_NONE = 0,
+  WLC_F_THREAD_POLICY = 1, // By default set for new workload configs.
 } workload_config_flags_t;
 
 /*!
@@ -93,7 +93,8 @@ extern void workload_config_free(workload_config_ctx_t *ctx);
  * @result     KERN_SUCCESS on success or error.
  */
 extern kern_return_t workload_config_insert(workload_config_ctx_t *ctx,
-    const char *id, const char *phase, const workload_config_t *config);
+                                            const char *id, const char *phase,
+                                            const workload_config_t *config);
 
 /*!
  * @function   workload_config_set_default
@@ -105,7 +106,8 @@ extern kern_return_t workload_config_insert(workload_config_ctx_t *ctx,
  * @discussion The configuration for the specified phase must already exist.
  */
 extern kern_return_t workload_config_set_default(workload_config_ctx_t *ctx,
-    const char *id, const char *phase);
+                                                 const char *id,
+                                                 const char *phase);
 
 /*!
  * @function   workload_config_lookup
@@ -116,7 +118,7 @@ extern kern_return_t workload_config_set_default(workload_config_ctx_t *ctx,
  * @result     KERN_SUCCESS on success or error.
  */
 extern kern_return_t workload_config_lookup(const char *id, const char *phase,
-    workload_config_t *config);
+                                            workload_config_t *config);
 
 /*!
  * @function   workload_config_lookup_default
@@ -126,17 +128,18 @@ extern kern_return_t workload_config_lookup(const char *id, const char *phase,
  * @result     KERN_SUCCESS on success or error.
  */
 extern kern_return_t workload_config_lookup_default(const char *id,
-    workload_config_t *config);
+                                                    workload_config_t *config);
 
 /*!
  * @function   workload_config_iterate
  * @abstract   Iterate over the active workload configuration
  * @param      cb     Block called per ID
  * @discussion If cb returns true, the iteration stops.
- *             The phases argument can be passed into workload_config_iterate_phases.
+ *             The phases argument can be passed into
+ * workload_config_iterate_phases.
  */
 extern void workload_config_iterate(bool (^cb)(const char *id,
-    const void *phases));
+                                               const void *phases));
 
 /*!
  * @function   workload_config_iterate_phase
@@ -146,9 +149,9 @@ extern void workload_config_iterate(bool (^cb)(const char *id,
  * @discussion If cb returns true, the iteration stops.
  *             This must always be called from a workload_config_iterate block.
  */
-extern void workload_config_phases_iterate(const void *phases,
-    bool (^cb)(const char *phase, const bool is_default,
-    const workload_config_t *config));
+extern void workload_config_phases_iterate(
+    const void *phases, bool (^cb)(const char *phase, const bool is_default,
+                                   const workload_config_t *config));
 
 /*!
  * @function   workload_config_get_flags
@@ -166,7 +169,7 @@ extern kern_return_t workload_config_get_flags(workload_config_flags_t *flags);
  * @result     KERN_SUCCESS on success or error.
  */
 extern kern_return_t workload_config_clear_flag(workload_config_ctx_t *ctx,
-    workload_config_flags_t flag);
+                                                workload_config_flags_t flag);
 
 /*!
  * @function   workload_config_available
@@ -179,6 +182,6 @@ extern bool workload_config_available(void);
 
 __END_DECLS
 
-    OS_ASSUME_NONNULL_END
+OS_ASSUME_NONNULL_END
 
 #endif /* XNU_KERNEL_PRIVATE */

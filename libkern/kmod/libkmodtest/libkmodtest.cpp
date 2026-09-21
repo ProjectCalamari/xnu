@@ -31,11 +31,7 @@
 #define super IOService
 OSDefineMetaClassAndStructors(testlibkmod, super);
 
-IOService *
-testlibkmod::probe(
-	IOService *provider,
-	SInt32 *score )
-{
-	IOLog("%s\n", __PRETTY_FUNCTION__);
-	return NULL;
+IOService *testlibkmod::probe(IOService *provider, SInt32 *score) {
+  IOLog("%s\n", __PRETTY_FUNCTION__);
+  return NULL;
 }

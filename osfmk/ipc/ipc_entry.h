@@ -67,12 +67,12 @@
 #ifndef _IPC_IPC_ENTRY_H_
 #define _IPC_IPC_ENTRY_H_
 
+#include <mach/kern_return.h>
 #include <mach/mach_types.h>
 #include <mach/port.h>
-#include <mach/kern_return.h>
 
-#include <kern/kern_types.h>
 #include <kern/kalloc.h>
+#include <kern/kern_types.h>
 #include <kern/smr_types.h>
 
 #include <ipc/ipc_types.h>
@@ -101,61 +101,63 @@
  *	It is used as the head of the free list.
  */
 
-#define IPC_ENTRY_DIST_BITS   12
-#define IPC_ENTRY_DIST_MAX    ((1 << IPC_ENTRY_DIST_BITS) - 1)
-#define IPC_ENTRY_INDEX_BITS  32
-#define IPC_ENTRY_INDEX_MAX   (UINT32_MAX)
+#define IPC_ENTRY_DIST_BITS 12
+#define IPC_ENTRY_DIST_MAX ((1 << IPC_ENTRY_DIST_BITS) - 1)
+#define IPC_ENTRY_INDEX_BITS 32
+#define IPC_ENTRY_INDEX_MAX (UINT32_MAX)
 
 struct ipc_entry {
-	union {
-		struct ipc_object *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") ie_object;
-		struct ipc_port   *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") ie_port;
-		struct ipc_pset   *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") ie_pset;
-		struct ipc_object *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") volatile ie_volatile_object;
-		struct ipc_entry_table *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_self") ie_self;
-	};
-	union {
-		struct {
-			ipc_entry_bits_t    ie_bits;
-			union {
-				mach_port_index_t ie_next;         /* next in freelist, or...  */
-				ipc_table_index_t ie_request;      /* dead name request notify */
-			};
+  union {
+    struct ipc_object *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") ie_object;
+    struct ipc_port *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") ie_port;
+    struct ipc_pset *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_object") ie_pset;
+    struct ipc_object *XNU_PTRAUTH_SIGNED_PTR(
+        "ipc_entry.ie_object") volatile ie_volatile_object;
+    struct ipc_entry_table *XNU_PTRAUTH_SIGNED_PTR("ipc_entry.ie_self") ie_self;
+  };
+  union {
+    struct {
+      ipc_entry_bits_t ie_bits;
+      union {
+        mach_port_index_t ie_next;    /* next in freelist, or...  */
+        ipc_table_index_t ie_request; /* dead name request notify */
+      };
 
-			/* hash fields */
-			uint32_t            ie_dist;
-			mach_port_index_t   ie_index;
-		};
-		struct smr_node             ie_smr_node;
-	};
+      /* hash fields */
+      uint32_t ie_dist;
+      mach_port_index_t ie_index;
+    };
+    struct smr_node ie_smr_node;
+  };
 };
 
-typedef struct bool_gen        *ipc_entry_prng_t;
+typedef struct bool_gen *ipc_entry_prng_t;
 
-#define IPC_ENTRY_TABLE_MIN     32
-#define IPC_ENTRY_TABLE_PERIOD  16
+#define IPC_ENTRY_TABLE_MIN 32
+#define IPC_ENTRY_TABLE_PERIOD 16
 KALLOC_ARRAY_TYPE_DECL(ipc_entry_table, struct ipc_entry);
 
-#define IE_REQ_NONE             0               /* no request */
+#define IE_REQ_NONE 0 /* no request */
 
-#define IE_BITS_UREFS_MASK      0x0000ffff      /* 16 bits of user-reference */
-#define IE_BITS_UREFS(bits)     ((bits) & IE_BITS_UREFS_MASK)
+#define IE_BITS_UREFS_MASK 0x0000ffff /* 16 bits of user-reference */
+#define IE_BITS_UREFS(bits) ((bits) & IE_BITS_UREFS_MASK)
 
-#define IE_BITS_TYPE_MASK       0x001f0000      /* 5 bits of capability type */
-#define IE_BITS_TYPE(bits)      ((bits) & IE_BITS_TYPE_MASK)
+#define IE_BITS_TYPE_MASK 0x001f0000 /* 5 bits of capability type */
+#define IE_BITS_TYPE(bits) ((bits) & IE_BITS_TYPE_MASK)
 
-#define IE_BITS_EXTYPE_MASK     0x00e00000      /* 3 bit for extended capability */
-#define IE_BITS_EX_RECEIVE      0x00200000      /* entry used to be a receive right */
-#define IE_BITS_PINNED_SEND     0x00400000      /* last send right can't be destroyed */
-#define IE_BITS_IMMOVABLE_SEND  0x00800000      /* send right can't be moved */
+#define IE_BITS_EXTYPE_MASK 0x00e00000 /* 3 bit for extended capability */
+#define IE_BITS_EX_RECEIVE 0x00200000  /* entry used to be a receive right */
+#define IE_BITS_PINNED_SEND 0x00400000 /* last send right can't be destroyed   \
+                                        */
+#define IE_BITS_IMMOVABLE_SEND 0x00800000 /* send right can't be moved */
 
-#define IE_BITS_ROLL_MASK       0x03000000      /* 2 bits for rollover period */
-#define IE_BITS_GEN_MASK        0xfc000000      /* 6 bits for generation */
-#define IE_BITS_GEN(bits)       (((bits) & IE_BITS_GEN_MASK) | IE_BITS_ROLL_MASK)
-#define IE_BITS_GEN_ONE         0x04000000      /* low bit of generation */
-#define IE_BITS_ROLL_BITS       2               /* number of generation rollover bits */
-#define IE_BITS_GEN_INIT        IE_BITS_GEN_MASK
-#define IE_BITS_RIGHT_MASK      0x00ffffff      /* relevant to the right */
+#define IE_BITS_ROLL_MASK 0x03000000 /* 2 bits for rollover period */
+#define IE_BITS_GEN_MASK 0xfc000000  /* 6 bits for generation */
+#define IE_BITS_GEN(bits) (((bits) & IE_BITS_GEN_MASK) | IE_BITS_ROLL_MASK)
+#define IE_BITS_GEN_ONE 0x04000000 /* low bit of generation */
+#define IE_BITS_ROLL_BITS 2        /* number of generation rollover bits */
+#define IE_BITS_GEN_INIT IE_BITS_GEN_MASK
+#define IE_BITS_RIGHT_MASK 0x00ffffff /* relevant to the right */
 
 /*
  * Exported interfaces
@@ -164,55 +166,39 @@ KALLOC_ARRAY_TYPE_DECL(ipc_entry_table, struct ipc_entry);
 extern unsigned int ipc_entry_table_count_max(void) __pure2;
 
 /* mask on/off default entry generation bits */
-extern mach_port_name_t ipc_entry_name_mask(
-	mach_port_name_t        name);
+extern mach_port_name_t ipc_entry_name_mask(mach_port_name_t name);
 
 /* Search for entry in a space by name */
-extern ipc_entry_t ipc_entry_lookup(
-	ipc_space_t             space,
-	mach_port_name_t        name);
+extern ipc_entry_t ipc_entry_lookup(ipc_space_t space, mach_port_name_t name);
 
 /* Hold a number of entries in a locked space */
-extern kern_return_t ipc_entries_hold(
-	ipc_space_t             space,
-	natural_t               count);
+extern kern_return_t ipc_entries_hold(ipc_space_t space, natural_t count);
 
 /* claim and initialize a held entry in a locked space */
-extern kern_return_t ipc_entry_claim(
-	ipc_space_t             space,
-	ipc_object_t            object,
-	mach_port_name_t        *namep,
-	ipc_entry_t             *entryp);
+extern kern_return_t ipc_entry_claim(ipc_space_t space, ipc_object_t object,
+                                     mach_port_name_t *namep,
+                                     ipc_entry_t *entryp);
 
 /* Allocate an entry in a space, growing the space if necessary */
-extern kern_return_t ipc_entry_alloc(
-	ipc_space_t             space,
-	ipc_object_t            object,
-	mach_port_name_t        *namep,
-	ipc_entry_t             *entryp);
+extern kern_return_t ipc_entry_alloc(ipc_space_t space, ipc_object_t object,
+                                     mach_port_name_t *namep,
+                                     ipc_entry_t *entryp);
 
 /* Allocate/find an entry in a space with a specific name */
-extern kern_return_t ipc_entry_alloc_name(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	ipc_entry_t             *entryp);
+extern kern_return_t ipc_entry_alloc_name(ipc_space_t space,
+                                          mach_port_name_t name,
+                                          ipc_entry_t *entryp);
 
 /* Deallocate an entry from a space */
-extern void ipc_entry_dealloc(
-	ipc_space_t             space,
-	ipc_object_t            object,
-	mach_port_name_t        name,
-	ipc_entry_t             entry);
+extern void ipc_entry_dealloc(ipc_space_t space, ipc_object_t object,
+                              mach_port_name_t name, ipc_entry_t entry);
 
 /* Mark and entry modified in a space */
-extern void ipc_entry_modified(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	ipc_entry_t             entry);
+extern void ipc_entry_modified(ipc_space_t space, mach_port_name_t name,
+                               ipc_entry_t entry);
 
 /* Grow the table in a space */
-extern kern_return_t ipc_entry_grow_table(
-	ipc_space_t             space,
-	ipc_table_elems_t       target_size);
+extern kern_return_t ipc_entry_grow_table(ipc_space_t space,
+                                          ipc_table_elems_t target_size);
 
-#endif  /* _IPC_IPC_ENTRY_H_ */
+#endif /* _IPC_IPC_ENTRY_H_ */

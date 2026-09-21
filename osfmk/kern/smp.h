@@ -29,10 +29,10 @@
 #ifndef _KERN_SMP_H_
 #define _KERN_SMP_H_
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
 #include <machine/smp.h>
 
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
-#endif  /* _KERN_SMP_H_ */
+#endif /* _KERN_SMP_H_ */

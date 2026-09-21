@@ -45,8 +45,8 @@ const char *mach_host_special_port_description(int offset);
 const char *mach_task_special_port_description(int offset);
 
 /*
- * Returns a string describing the thread special port offset provided, or NULL if
- * the provided offset is not a thread special port offset.
+ * Returns a string describing the thread special port offset provided, or NULL
+ * if the provided offset is not a thread special port offset.
  */
 const char *mach_thread_special_port_description(int offset);
 

@@ -57,46 +57,46 @@
  */
 
 #ifndef _NET_IF_VLAN_VAR_H_
-#define _NET_IF_VLAN_VAR_H_     1
+#define _NET_IF_VLAN_VAR_H_ 1
 
 #include <net/ethernet.h>
 #include <net/if_var.h>
 #include <sys/types.h>
 
-#define ETHER_VLAN_ENCAP_LEN    4       /* len of 802.1Q VLAN encapsulation */
+#define ETHER_VLAN_ENCAP_LEN 4 /* len of 802.1Q VLAN encapsulation */
 
 #ifdef KERNEL_PRIVATE
 /* VLAN encapsulation header */
 struct ether_vlan_encap_header {
-	u_int16_t evle_tag;
-	u_int16_t evle_proto;
+  u_int16_t evle_tag;
+  u_int16_t evle_proto;
 };
 #endif /* KERNEL_PRIVATE */
 
-struct  ether_vlan_header {
-	u_char  evl_dhost[ETHER_ADDR_LEN];
-	u_char  evl_shost[ETHER_ADDR_LEN];
-	u_int16_t evl_encap_proto;
-	u_int16_t evl_tag;
-	u_int16_t evl_proto;
+struct ether_vlan_header {
+  u_char evl_dhost[ETHER_ADDR_LEN];
+  u_char evl_shost[ETHER_ADDR_LEN];
+  u_int16_t evl_encap_proto;
+  u_int16_t evl_tag;
+  u_int16_t evl_proto;
 };
 
-#define EVL_VLID_MASK   0x0FFF
+#define EVL_VLID_MASK 0x0FFF
 #define EVL_VLANOFTAG(tag) ((tag) & EVL_VLID_MASK)
 #define EVL_PRIOFTAG(tag) (((tag) >> 13) & 7)
 
 #if 0
 /* sysctl(3) tags, for compatibility purposes */
-#define VLANCTL_PROTO   1
-#define VLANCTL_MAX     2
+#define VLANCTL_PROTO 1
+#define VLANCTL_MAX 2
 #endif
 
 /*
  * Configuration structure for SIOCSETVLAN and SIOCGETVLAN ioctls.
  */
-struct  vlanreq {
-	char    vlr_parent[IFNAMSIZ];
-	u_short vlr_tag;
+struct vlanreq {
+  char vlr_parent[IFNAMSIZ];
+  u_short vlr_tag;
 };
 
 #ifdef KERNEL_PRIVATE

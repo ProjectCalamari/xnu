@@ -37,9 +37,9 @@
 #ifndef __IMAGE4_API_IDENTIFIER_H
 #define __IMAGE4_API_IDENTIFIER_H
 
+#include <image4/coprocessor.h>
 #include <image4/image4.h>
 #include <image4/types.h>
-#include <image4/coprocessor.h>
 
 __BEGIN_DECLS
 OS_ASSUME_NONNULL_BEGIN
@@ -77,15 +77,11 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  * represent a constraint.
  */
 OS_CLOSED_ENUM(image4_identifier_constraint, uint64_t,
-	IMAGE4_IDENTIFIER_CONSTRAINT_EQ,
-	IMAGE4_IDENTIFIER_CONSTRAINT_LT,
-	IMAGE4_IDENTIFIER_CONSTRAINT_LE,
-	IMAGE4_IDENTIFIER_CONSTRAINT_GT,
-	IMAGE4_IDENTIFIER_CONSTRAINT_GE,
-	IMAGE4_IDENTIFIER_CONSTRAINT_NE,
-	IMAGE4_IDENTIFIER_CONSTRAINT_UN,
-	IMAGE4_IDENTIFIER_CONSTRAINT_NA,
-);
+               IMAGE4_IDENTIFIER_CONSTRAINT_EQ, IMAGE4_IDENTIFIER_CONSTRAINT_LT,
+               IMAGE4_IDENTIFIER_CONSTRAINT_LE, IMAGE4_IDENTIFIER_CONSTRAINT_GT,
+               IMAGE4_IDENTIFIER_CONSTRAINT_GE, IMAGE4_IDENTIFIER_CONSTRAINT_NE,
+               IMAGE4_IDENTIFIER_CONSTRAINT_UN,
+               IMAGE4_IDENTIFIER_CONSTRAINT_NA, );
 
 #pragma mark API
 /*!
@@ -99,8 +95,7 @@ OS_CLOSED_ENUM(image4_identifier_constraint, uint64_t,
  * The constraint which the environment places on the identifier.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-image4_identifier_constraint_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 image4_identifier_constraint_t
 image4_identifier_get_constraint(const image4_identifier_t *id4);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_constraint);
 
@@ -116,8 +111,7 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_constraint);
  * the environment.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-const char *
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 const char *
 image4_identifier_get_constraint_cstr(const image4_identifier_t *id4);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_constraint_cstr);
 
@@ -132,8 +126,7 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_constraint_cstr);
  * The four character code which represents the identifier in a manifest.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-uint32_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 uint32_t
 image4_identifier_get_fourcc(const image4_identifier_t *id4);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_fourcc);
 
@@ -150,8 +143,7 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_fourcc);
  * identifier in a manifest.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-const char *
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 const char *
 image4_identifier_get_fourcc_cstr(const image4_identifier_t *id4);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_identifier_get_fourcc_cstr);
 

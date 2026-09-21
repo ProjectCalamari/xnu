@@ -53,13 +53,14 @@ static_assert(MAX_PSETS < UINT8_MAX, "Can store pset ids within 8 bits");
  * that processor until its traversal is complete.
  */
 typedef union {
-	pset_id_t spso_search_order[MAX_PSETS - 1];
-	unsigned __int128 spso_packed;
+  pset_id_t spso_search_order[MAX_PSETS - 1];
+  unsigned __int128 spso_packed;
 } sched_pset_search_order_t;
 
 static_assert(sizeof(sched_pset_search_order_t) <= sizeof(unsigned __int128),
-    "(MAX_PSETS - 1) * 8 bits fits in 128 bits, allowing sched_pset_search_order_t fields "
-    "to be accessed atomically");
+              "(MAX_PSETS - 1) * 8 bits fits in 128 bits, allowing "
+              "sched_pset_search_order_t fields "
+              "to be accessed atomically");
 
 typedef struct processor_set *processor_set_t;
 
@@ -70,9 +71,9 @@ typedef struct processor_set *processor_set_t;
  * populated for each pset before calling sched_pset_search_order_compute()
  */
 typedef struct {
-	processor_set_t spsosd_src_pset;
-	uint64_t spsosd_migration_weight;
-	pset_id_t spsosd_dst_pset_id;
+  processor_set_t spsosd_src_pset;
+  uint64_t spsosd_migration_weight;
+  pset_id_t spsosd_dst_pset_id;
 } sched_pset_search_order_sort_data_t;
 
 /*
@@ -89,8 +90,8 @@ typedef cmpfunc_t sched_pset_search_order_sort_cmpfunc_t;
  * Generates a pset search order by sorting the per-pset search order datas
  * using the given comparator.
  */
-void
-sched_pset_search_order_compute(sched_pset_search_order_t *search_order_out,
+void sched_pset_search_order_compute(
+    sched_pset_search_order_t *search_order_out,
     sched_pset_search_order_sort_data_t *datas, size_t num_datas,
     sched_pset_search_order_sort_cmpfunc_t cmp);
 
@@ -100,8 +101,8 @@ sched_pset_search_order_compute(sched_pset_search_order_t *search_order_out,
  * Generates a search order of all psets sorted by increasing pset id, still
  * excluding the source pset.
  */
-void
-sched_pset_search_order_init(processor_set_t src_pset, sched_pset_search_order_t *search_order_out);
+void sched_pset_search_order_init(processor_set_t src_pset,
+                                  sched_pset_search_order_t *search_order_out);
 
 /*
  * sched_pset_iterate_state_t
@@ -110,12 +111,13 @@ sched_pset_search_order_init(processor_set_t src_pset, sched_pset_search_order_t
  * for the same search order traversal, and for returning the current pset_id.
  */
 typedef struct {
-	int spis_search_index;
-	sched_pset_search_order_t spis_cached_search_order;
-	int spis_pset_id; // out
+  int spis_search_index;
+  sched_pset_search_order_t spis_cached_search_order;
+  int spis_pset_id; // out
 } sched_pset_iterate_state_t;
 
-#define SCHED_PSET_ITERATE_STATE_INIT ((sched_pset_iterate_state_t) { .spis_search_index = -1 })
+#define SCHED_PSET_ITERATE_STATE_INIT                                          \
+  ((sched_pset_iterate_state_t){.spis_search_index = -1})
 
 /*
  * sched_iterate_psets_ordered()
@@ -127,9 +129,10 @@ typedef struct {
  * istate->spis_pset_id of -1 once iteration is complete. Iterate state should
  * start out initialized to SCHED_PSET_ITERATE_STATE_INIT.
  */
-bool
-sched_iterate_psets_ordered(processor_set_t starting_pset, sched_pset_search_order_t *search_order,
-    uint64_t candidate_map, sched_pset_iterate_state_t *istate);
+bool sched_iterate_psets_ordered(processor_set_t starting_pset,
+                                 sched_pset_search_order_t *search_order,
+                                 uint64_t candidate_map,
+                                 sched_pset_iterate_state_t *istate);
 
 #endif /* __AMP__ */
 

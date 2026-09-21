@@ -26,32 +26,32 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/param.h>
-#include <sys/proc.h>
-#include <sys/kauth.h>
 #include <security/mac_framework.h>
 #include <security/mac_internal.h>
+#include <sys/kauth.h>
+#include <sys/param.h>
+#include <sys/proc.h>
 
-int
-mac_skywalk_flow_check_connect(proc_t proc, void *flow, const struct sockaddr *addr, int type, int protocol)
-{
-	int error;
-	kauth_cred_t cred;
+int mac_skywalk_flow_check_connect(proc_t proc, void *flow,
+                                   const struct sockaddr *addr, int type,
+                                   int protocol) {
+  int error;
+  kauth_cred_t cred;
 
-	cred = kauth_cred_proc_ref(proc);
-	MAC_CHECK(skywalk_flow_check_connect, cred, flow, addr, type, protocol);
-	kauth_cred_unref(&cred);
-	return error;
+  cred = kauth_cred_proc_ref(proc);
+  MAC_CHECK(skywalk_flow_check_connect, cred, flow, addr, type, protocol);
+  kauth_cred_unref(&cred);
+  return error;
 }
 
-int
-mac_skywalk_flow_check_listen(proc_t proc, void *flow, const struct sockaddr *addr, int type, int protocol)
-{
-	int error;
-	kauth_cred_t cred;
+int mac_skywalk_flow_check_listen(proc_t proc, void *flow,
+                                  const struct sockaddr *addr, int type,
+                                  int protocol) {
+  int error;
+  kauth_cred_t cred;
 
-	cred = kauth_cred_proc_ref(proc);
-	MAC_CHECK(skywalk_flow_check_listen, cred, flow, addr, type, protocol);
-	kauth_cred_unref(&cred);
-	return error;
+  cred = kauth_cred_proc_ref(proc);
+  MAC_CHECK(skywalk_flow_check_listen, cred, flow, addr, type, protocol);
+  kauth_cred_unref(&cred);
+  return error;
 }

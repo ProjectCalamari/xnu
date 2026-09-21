@@ -26,61 +26,51 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include "std_safe.h"
 #include "dt_proxy.h"
+#include "std_safe.h"
 #include "unit_test_utils.h"
 
 /* This is an implementation of simple fixed size same-size objects pool */
 struct mock_mem_pool {
-	size_t elem_size;
-	char *buffer;
-	char *free_head;
-	uint32_t free_count;
+  size_t elem_size;
+  char *buffer;
+  char *free_head;
+  uint32_t free_count;
 };
 
-void
-mock_mem_init(struct mock_mem_pool* mm, size_t elem_sz, uint32_t count)
-{
-	mm->elem_size = elem_sz;
-	size_t buf_size = elem_sz * count;
-	mm->buffer = aligned_alloc(8, buf_size);
-	PT_QUIET; PT_ASSERT_NOTNULL(mm->buffer, "failed alloc");
-	memset(mm->buffer, 0, buf_size);
-	mm->free_head = mm->buffer;
-	mm->free_count = count;
+void mock_mem_init(struct mock_mem_pool *mm, size_t elem_sz, uint32_t count) {
+  mm->elem_size = elem_sz;
+  size_t buf_size = elem_sz * count;
+  mm->buffer = aligned_alloc(8, buf_size);
+  PT_QUIET;
+  PT_ASSERT_NOTNULL(mm->buffer, "failed alloc");
+  memset(mm->buffer, 0, buf_size);
+  mm->free_head = mm->buffer;
+  mm->free_count = count;
 }
 
-void *
-mock_mem_alloc(struct mock_mem_pool* mm)
-{
-	PT_QUIET; PT_ASSERT_NOTNULL(mm->buffer, "mock mem not allocated");
-	PT_QUIET; PT_ASSERT_TRUE(mm->free_count > 0, "no more space left");
-	void *ret = mm->free_head;
-	mm->free_head += mm->elem_size;
-	mm->free_count--;
-	return ret;
+void *mock_mem_alloc(struct mock_mem_pool *mm) {
+  PT_QUIET;
+  PT_ASSERT_NOTNULL(mm->buffer, "mock mem not allocated");
+  PT_QUIET;
+  PT_ASSERT_TRUE(mm->free_count > 0, "no more space left");
+  void *ret = mm->free_head;
+  mm->free_head += mm->elem_size;
+  mm->free_count--;
+  return ret;
 }
 
-void
-mock_mem_free(struct mock_mem_pool* mm, void *ptr)
-{
-	// not implemeted yet rdar://136915968
+void mock_mem_free(struct mock_mem_pool *mm, void *ptr) {
+  // not implemeted yet rdar://136915968
 }
 
 struct mock_mem_pool mm_vm_objects;
 
-
 // this is used for vm_object and vm_page pointer packing
 uintptr_t mock_page_ptr_base;
 
-void
-mock_mem_init_vm_objects(void)
-{
-	mock_mem_init(&mm_vm_objects, 256, 100);
-	mock_page_ptr_base = (uintptr_t)mm_vm_objects.buffer;
+void mock_mem_init_vm_objects(void) {
+  mock_mem_init(&mm_vm_objects, 256, 100);
+  mock_page_ptr_base = (uintptr_t)mm_vm_objects.buffer;
 }
-void *
-mock_mem_alloc_vm_object(void)
-{
-	return mock_mem_alloc(&mm_vm_objects);
-}
+void *mock_mem_alloc_vm_object(void) { return mock_mem_alloc(&mm_vm_objects); }

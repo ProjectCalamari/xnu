@@ -48,4 +48,4 @@ __END_DECLS
 
 #endif /* OSCPP_DEBUG */
 
-#endif    /* _OSCPPDEBUG_H */
+#endif /* _OSCPPDEBUG_H */

@@ -58,13 +58,13 @@
  * Machine dependant task fields
  */
 
-#include <i386/user_ldt.h>
 #include <i386/fpu.h>
+#include <i386/user_ldt.h>
 
-#define MACHINE_TASK                            \
-	struct user_ldt *       i386_ldt;       \
-	void*                   task_debug;     \
-	uint64_t	uexc_range_start;       \
-	uint64_t	uexc_range_size;        \
-	uint64_t	uexc_handler;           \
-	xstate_t	xstate;
+#define MACHINE_TASK                                                           \
+  struct user_ldt *i386_ldt;                                                   \
+  void *task_debug;                                                            \
+  uint64_t uexc_range_start;                                                   \
+  uint64_t uexc_range_size;                                                    \
+  uint64_t uexc_handler;                                                       \
+  xstate_t xstate;

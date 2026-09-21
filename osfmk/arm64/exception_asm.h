@@ -26,34 +26,34 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "assym.s"
 #include <arm64/pac_asm.h>
 #include <pexpert/arm64/board_config.h>
-#include "assym.s"
-
 
 #if XNU_MONITOR
 /*
  * Exit path defines; for controlling PPL -> kernel transitions.
- * These should fit within a 32-bit integer, as the PPL trampoline packs them into a 32-bit field.
+ * These should fit within a 32-bit integer, as the PPL trampoline packs them
+ * into a 32-bit field.
  */
-#define PPL_EXIT_DISPATCH   0 /* This is a clean exit after a PPL request. */
+#define PPL_EXIT_DISPATCH 0   /* This is a clean exit after a PPL request. */
 #define PPL_EXIT_PANIC_CALL 1 /* The PPL has called panic. */
-#define PPL_EXIT_BAD_CALL   2 /* The PPL request failed. */
-#define PPL_EXIT_EXCEPTION  3 /* The PPL took an exception. */
+#define PPL_EXIT_BAD_CALL 2   /* The PPL request failed. */
+#define PPL_EXIT_EXCEPTION 3  /* The PPL took an exception. */
 
-#define KERNEL_MODE_ELR      ELR_GL11
-#define KERNEL_MODE_FAR      FAR_GL11
-#define KERNEL_MODE_ESR      ESR_GL11
-#define KERNEL_MODE_SPSR     SPSR_GL11
-#define KERNEL_MODE_VBAR     VBAR_GL11
-#define KERNEL_MODE_TPIDR    TPIDR_GL11
+#define KERNEL_MODE_ELR ELR_GL11
+#define KERNEL_MODE_FAR FAR_GL11
+#define KERNEL_MODE_ESR ESR_GL11
+#define KERNEL_MODE_SPSR SPSR_GL11
+#define KERNEL_MODE_VBAR VBAR_GL11
+#define KERNEL_MODE_TPIDR TPIDR_GL11
 
-#define GUARDED_MODE_ELR     ELR_EL1
-#define GUARDED_MODE_FAR     FAR_EL1
-#define GUARDED_MODE_ESR     ESR_EL1
-#define GUARDED_MODE_SPSR    SPSR_EL1
-#define GUARDED_MODE_VBAR    VBAR_EL1
-#define GUARDED_MODE_TPIDR   TPIDR_EL1
+#define GUARDED_MODE_ELR ELR_EL1
+#define GUARDED_MODE_FAR FAR_EL1
+#define GUARDED_MODE_ESR ESR_EL1
+#define GUARDED_MODE_SPSR SPSR_EL1
+#define GUARDED_MODE_VBAR VBAR_EL1
+#define GUARDED_MODE_TPIDR TPIDR_EL1
 
 /*
  * LOAD_PMAP_CPU_DATA
@@ -143,27 +143,27 @@
 #define HIBERNATE_MODE 1
 
 /** When set, the thread will be given an invalid thread signature */
-#define SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE_SHIFT	(0)
-#define SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE \
-	(1 << SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE_SHIFT)
+#define SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE_SHIFT (0)
+#define SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE                         \
+  (1 << SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE_SHIFT)
 /** When set, ELR and FAR will not be spilled */
-#define SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR_SHIFT			(1)
-#define SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR \
-	(1 << SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR_SHIFT)
+#define SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR_SHIFT (1)
+#define SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR                              \
+  (1 << SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR_SHIFT)
 
 #define FLEH_DISPATCH64_OPTION_SYNC_EXCEPTION 0
 #if CONFIG_SPTM
 #undef FLEH_DISPATCH64_OPTION_SYNC_EXCEPTION
-#define FLEH_DISPATCH64_OPTION_SYNC_EXCEPTION \
-	(SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR)
+#define FLEH_DISPATCH64_OPTION_SYNC_EXCEPTION                                  \
+  (SPILL_REGISTERS_OPTION_DONT_SPILL_ELR_FAR)
 #endif /* CONFIG_SPTM */
 
-#define FLEH_DISPATCH64_OPTION_FATAL_EXCEPTION \
-	(SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE)
+#define FLEH_DISPATCH64_OPTION_FATAL_EXCEPTION                                 \
+  (SPILL_REGISTERS_OPTION_POISON_THREAD_SIGNATURE)
 
-#define FLEH_DISPATCH64_OPTION_FATAL_SYNC_EXCEPTION \
-	(FLEH_DISPATCH64_OPTION_FATAL_EXCEPTION | \
-	 FLEH_DISPATCH64_OPTION_SYNC_EXCEPTION)
+#define FLEH_DISPATCH64_OPTION_FATAL_SYNC_EXCEPTION                            \
+  (FLEH_DISPATCH64_OPTION_FATAL_EXCEPTION |                                    \
+   FLEH_DISPATCH64_OPTION_SYNC_EXCEPTION)
 
 #define FLEH_DISPATCH64_OPTION_NONE 0
 

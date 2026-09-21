@@ -64,14 +64,13 @@
 #ifndef _ARM_EXCEPTION_H_
 #define _ARM_EXCEPTION_H_
 
-#define  VECT_RESET               0x0
-#define  VECT_UNDEF_INST          0x4
-#define  VECT_SWI                 0x8
-#define  VECT_PREFECT_ABT         0xC
-#define  VECT_DATA_ABT            0x10
-#define  VECT_IRQ                 0x18
-#define  VECT_FIQ                 0x1C
+#define VECT_RESET 0x0
+#define VECT_UNDEF_INST 0x4
+#define VECT_SWI 0x8
+#define VECT_PREFECT_ABT 0xC
+#define VECT_DATA_ABT 0x10
+#define VECT_IRQ 0x18
+#define VECT_FIQ 0x1C
 /* can put actual code for FIQ here, avoiding extra fetch */
 
-
-#endif  /* _ARM_EXCEPTION_H_ */
+#endif /* _ARM_EXCEPTION_H_ */

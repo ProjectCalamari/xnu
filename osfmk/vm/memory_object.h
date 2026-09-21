@@ -59,21 +59,18 @@
 #ifndef _VM_MEMORY_OBJECT_H_
 #define _VM_MEMORY_OBJECT_H_
 
+#include <ipc/ipc_types.h>
 #include <mach/boolean.h>
 #include <mach/mach_types.h>
 #include <mach/memory_object_types.h>
-#include <ipc/ipc_types.h>
 
 /* Functions used by mig */
-extern mach_port_t convert_memory_object_to_port(
-	memory_object_t         object);
+extern mach_port_t convert_memory_object_to_port(memory_object_t object);
 
-extern memory_object_t convert_port_to_memory_object(
-	mach_port_t             port);
+extern memory_object_t convert_port_to_memory_object(mach_port_t port);
 
-extern upl_t convert_port_to_upl(
-	ipc_port_t      port);
+extern upl_t convert_port_to_upl(ipc_port_t port);
 
-extern ipc_port_t convert_upl_to_port( upl_t );
+extern ipc_port_t convert_upl_to_port(upl_t);
 
-#endif  /* _VM_MEMORY_OBJECT_H_ */
+#endif /* _VM_MEMORY_OBJECT_H_ */

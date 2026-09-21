@@ -29,17 +29,13 @@
 #ifndef _IOPMPowerSource_h_
 #define _IOPMPowerSource_h_
 
-#include <libkern/c++/OSObject.h>
-#include <IOKit/pwr_mgt/IOPM.h>
-#include <IOKit/IOTypes.h>
 #include <IOKit/IOReturn.h>
 #include <IOKit/IOService.h>
+#include <IOKit/IOTypes.h>
+#include <IOKit/pwr_mgt/IOPM.h>
+#include <libkern/c++/OSObject.h>
 
-enum {
-	kSecondsPerHour = 3600,
-	kTenMinutesInSeconds = 600
-};
-
+enum { kSecondsPerHour = 3600, kTenMinutesInSeconds = 600 };
 
 /*! @class IOPMPowerSource
  *
@@ -168,136 +164,134 @@ enum {
  * </pre>
  */
 
-class IOPMPowerSource : public IOService
-{
-	OSDeclareDefaultStructors(IOPMPowerSource);
+class IOPMPowerSource : public IOService {
+  OSDeclareDefaultStructors(IOPMPowerSource);
 
-	friend class IOPMPowerSourceList;
+  friend class IOPMPowerSourceList;
 
 protected:
+  /*! @var settingsChangedSinceLastUpdate
+   * Used by subclasses to determine if any settings have been modified via the
+   * accessors below since last call to update(). true is settings have changed;
+   * false otherwise.
+   */
+  bool settingsChangedSinceUpdate;
 
-/*! @var settingsChangedSinceLastUpdate
- * Used by subclasses to determine if any settings have been modified via the
- * accessors below since last call to update(). true is settings have changed;
- * false otherwise.
- */
-	bool settingsChangedSinceUpdate;
+  /*! @var properties
+   * Stores power source state
+   */
+  OSDictionary *properties;
 
-/*! @var properties
- * Stores power source state
- */
-	OSDictionary            *properties;
+  const OSSymbol *externalConnectedKey;
+  const OSSymbol *externalChargeCapableKey;
+  const OSSymbol *batteryInstalledKey;
+  const OSSymbol *chargingKey;
+  const OSSymbol *warnLevelKey;
+  const OSSymbol *criticalLevelKey;
+  const OSSymbol *currentCapacityKey;
+  const OSSymbol *maxCapacityKey;
+  const OSSymbol *timeRemainingKey;
+  const OSSymbol *amperageKey;
+  const OSSymbol *voltageKey;
+  const OSSymbol *cycleCountKey;
+  const OSSymbol *adapterInfoKey;
+  const OSSymbol *locationKey;
+  const OSSymbol *errorConditionKey;
+  const OSSymbol *manufacturerKey;
+  const OSSymbol *modelKey;
+  const OSSymbol *serialKey;
+  const OSSymbol *batteryInfoKey;
 
-	const OSSymbol *externalConnectedKey;
-	const OSSymbol *externalChargeCapableKey;
-	const OSSymbol *batteryInstalledKey;
-	const OSSymbol *chargingKey;
-	const OSSymbol *warnLevelKey;
-	const OSSymbol *criticalLevelKey;
-	const OSSymbol *currentCapacityKey;
-	const OSSymbol *maxCapacityKey;
-	const OSSymbol *timeRemainingKey;
-	const OSSymbol *amperageKey;
-	const OSSymbol *voltageKey;
-	const OSSymbol *cycleCountKey;
-	const OSSymbol *adapterInfoKey;
-	const OSSymbol *locationKey;
-	const OSSymbol *errorConditionKey;
-	const OSSymbol *manufacturerKey;
-	const OSSymbol *modelKey;
-	const OSSymbol *serialKey;
-	const OSSymbol *batteryInfoKey;
-
-// Tracking for IOPMPowerSourceList
-	IOPMPowerSource         *nextInList;
+  // Tracking for IOPMPowerSourceList
+  IOPMPowerSource *nextInList;
 
 public:
+  /*! @function powerSource
+   *   @abstract Creates a new IOPMPowerSource nub. Must be attached to
+   * IORegistry, and registered by provider.
+   */
+  static IOPMPowerSource *powerSource(void);
 
-/*! @function powerSource
- *   @abstract Creates a new IOPMPowerSource nub. Must be attached to IORegistry,
- *       and registered by provider.
- */
-	static IOPMPowerSource *powerSource(void);
+  virtual bool init(void) APPLE_KEXT_OVERRIDE;
 
-	virtual bool init(void) APPLE_KEXT_OVERRIDE;
+  virtual void free(void) APPLE_KEXT_OVERRIDE;
 
-	virtual void free(void) APPLE_KEXT_OVERRIDE;
+  /*! @function updateStatus
+   *   @abstract Must be called by physical battery controller when battery
+   * state has changed significantly.
+   *   @discussion The system will not poll this object for battery updates.
+   * Rather \
+   *   the battery's controller must call updateStatus() every time state
+   * changes \
+   *   and the settings will be relayed to higher levels of power management. \
+   *   The subclassing driver should override this only if the driver needs to
+   * add \ new settings to the base class.
+   */
+  virtual void updateStatus(void);
 
-/*! @function updateStatus
- *   @abstract Must be called by physical battery controller when battery state
- *               has changed significantly.
- *   @discussion The system will not poll this object for battery updates. Rather \
- *   the battery's controller must call updateStatus() every time state changes \
- *   and the settings will be relayed to higher levels of power management. \
- *   The subclassing driver should override this only if the driver needs to add \
- *   new settings to the base class.
- */
-	virtual void updateStatus(void);
+  /* Public accessors for battery state
+   */
+  bool externalConnected(void);
+  bool externalChargeCapable(void);
+  bool batteryInstalled(void);
+  bool isCharging(void);
+  bool atWarnLevel(void);
+  bool atCriticalLevel(void);
 
-/* Public accessors for battery state
- */
-	bool externalConnected(void);
-	bool externalChargeCapable(void);
-	bool batteryInstalled(void);
-	bool isCharging(void);
-	bool atWarnLevel(void);
-	bool atCriticalLevel(void);
+  unsigned int currentCapacity(void);
+  unsigned int maxCapacity(void);
+  unsigned int capacityPercentRemaining(void);
+  int timeRemaining(void);
+  int amperage(void);
+  unsigned int voltage(void);
+  unsigned int cycleCount(void);
+  int adapterInfo(void);
+  int location(void);
 
-	unsigned int currentCapacity(void);
-	unsigned int maxCapacity(void);
-	unsigned int capacityPercentRemaining(void);
-	int timeRemaining(void);
-	int amperage(void);
-	unsigned int voltage(void);
-	unsigned int cycleCount(void);
-	int adapterInfo(void);
-	int location(void);
+  OSSymbol *errorCondition(void);
+  OSSymbol *manufacturer(void);
+  OSSymbol *model(void);
+  OSSymbol *serial(void);
+  OSDictionary *legacyIOBatteryInfo(void);
 
-	OSSymbol *errorCondition(void);
-	OSSymbol *manufacturer(void);
-	OSSymbol *model(void);
-	OSSymbol *serial(void);
-	OSDictionary *legacyIOBatteryInfo(void);
-
-	OSObject *getPSProperty(const OSSymbol *);
+  OSObject *getPSProperty(const OSSymbol *);
 
 protected:
+  /* Protected "setter" methods for subclasses
+   * Subclasses should use these setters to modify all battery properties.
+   *
+   * Subclasses must follow all property changes with a call to updateStatus()
+   * to flush settings changes to upper level battery API clients.
+   *
+   */
+  void setExternalConnected(bool);
+  void setExternalChargeCapable(bool);
+  void setBatteryInstalled(bool);
+  void setIsCharging(bool);
+  void setAtWarnLevel(bool);
+  void setAtCriticalLevel(bool);
 
-/* Protected "setter" methods for subclasses
- * Subclasses should use these setters to modify all battery properties.
- *
- * Subclasses must follow all property changes with a call to updateStatus()
- * to flush settings changes to upper level battery API clients.
- *
- */
-	void setExternalConnected(bool);
-	void setExternalChargeCapable(bool);
-	void setBatteryInstalled(bool);
-	void setIsCharging(bool);
-	void setAtWarnLevel(bool);
-	void setAtCriticalLevel(bool);
+  void setCurrentCapacity(unsigned int);
+  void setMaxCapacity(unsigned int);
+  void setTimeRemaining(int);
+  void setAmperage(int);
+  void setVoltage(unsigned int);
+  void setCycleCount(unsigned int);
+  void setAdapterInfo(int);
+  void setLocation(int);
 
-	void setCurrentCapacity(unsigned int);
-	void setMaxCapacity(unsigned int);
-	void setTimeRemaining(int);
-	void setAmperage(int);
-	void setVoltage(unsigned int);
-	void setCycleCount(unsigned int);
-	void setAdapterInfo(int);
-	void setLocation(int);
+  void setErrorCondition(OSSymbol *);
+  void setManufacturer(OSSymbol *);
+  void setModel(OSSymbol *);
+  void setSerial(OSSymbol *);
+  void setLegacyIOBatteryInfo(OSDictionary *);
 
-	void setErrorCondition(OSSymbol *);
-	void setManufacturer(OSSymbol *);
-	void setModel(OSSymbol *);
-	void setSerial(OSSymbol *);
-	void setLegacyIOBatteryInfo(OSDictionary *);
-
-/*! All of these methods funnel through the generic accessor method
- *  setPSProperty. Caller can pass in any arbitrary OSSymbol key, and
- *  that value will be stored in the PM settings dictionary, and relayed
- *  onto the IORegistry at update time.
- */
-	void setPSProperty(const OSSymbol *, OSObject *);
+  /*! All of these methods funnel through the generic accessor method
+   *  setPSProperty. Caller can pass in any arbitrary OSSymbol key, and
+   *  that value will be stored in the PM settings dictionary, and relayed
+   *  onto the IORegistry at update time.
+   */
+  void setPSProperty(const OSSymbol *, OSObject *);
 };
 
 #endif

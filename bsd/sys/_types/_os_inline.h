@@ -26,9 +26,9 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #if !defined(OS_INLINE)
-# if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#        define OS_INLINE static inline
-# else
-#        define OS_INLINE static __inline__
-# endif
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define OS_INLINE static inline
+#else
+#define OS_INLINE static __inline__
+#endif
 #endif /* OS_INLINE */

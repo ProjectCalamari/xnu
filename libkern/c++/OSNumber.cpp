@@ -31,20 +31,21 @@
 
 #include <sys/cdefs.h>
 
+#include <libkern/c++/OSLib.h>
 #include <libkern/c++/OSNumber.h>
-#include <libkern/c++/OSString.h>
 #include <libkern/c++/OSSerialize.h>
 #include <libkern/c++/OSSharedPtr.h>
-#include <libkern/c++/OSLib.h>
+#include <libkern/c++/OSString.h>
 
 #define sizeMask (~0ULL >> (64 - size))
 
 #define super OSObject
 
 OSDefineMetaClassAndStructorsWithZone(OSNumber, OSObject,
-    (zone_create_flags_t) (ZC_CACHING | ZC_ZFREE_CLEARMEM))
+                                      (zone_create_flags_t)(ZC_CACHING |
+                                                            ZC_ZFREE_CLEARMEM))
 
-OSMetaClassDefineReservedUnused(OSNumber, 0);
+    OSMetaClassDefineReservedUnused(OSNumber, 0);
 OSMetaClassDefineReservedUnused(OSNumber, 1);
 OSMetaClassDefineReservedUnused(OSNumber, 2);
 OSMetaClassDefineReservedUnused(OSNumber, 3);
@@ -53,217 +54,169 @@ OSMetaClassDefineReservedUnused(OSNumber, 5);
 OSMetaClassDefineReservedUnused(OSNumber, 6);
 OSMetaClassDefineReservedUnused(OSNumber, 7);
 
-bool
-OSNumber::init(unsigned long long inValue, unsigned int newNumberOfBits)
-{
-	if (!super::init()) {
-		return false;
-	}
-	if (newNumberOfBits > 64) {
-		return false;
-	}
+bool OSNumber::init(unsigned long long inValue, unsigned int newNumberOfBits) {
+  if (!super::init()) {
+    return false;
+  }
+  if (newNumberOfBits > 64) {
+    return false;
+  }
 
-	size = newNumberOfBits;
-	value = (inValue & sizeMask);
+  size = newNumberOfBits;
+  value = (inValue & sizeMask);
 
-	return true;
+  return true;
 }
 
-bool
-OSNumber::init(const char *newValue, unsigned int newNumberOfBits)
-{
-	return init((unsigned long long)strtoul(newValue, NULL, 0), newNumberOfBits);
+bool OSNumber::init(const char *newValue, unsigned int newNumberOfBits) {
+  return init((unsigned long long)strtoul(newValue, NULL, 0), newNumberOfBits);
 }
 
-void
-OSNumber::free()
-{
-	super::free();
+void OSNumber::free() { super::free(); }
+
+OSSharedPtr<OSNumber> OSNumber::withNumber(unsigned long long value,
+                                           unsigned int newNumberOfBits) {
+  OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
+
+  if (me && !me->init(value, newNumberOfBits)) {
+    return nullptr;
+  }
+
+  return me;
 }
 
-OSSharedPtr<OSNumber>
-OSNumber::withNumber(unsigned long long value,
-    unsigned int newNumberOfBits)
-{
-	OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
+OSSharedPtr<OSNumber> OSNumber::withNumber(const char *value,
+                                           unsigned int newNumberOfBits) {
+  OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
 
-	if (me && !me->init(value, newNumberOfBits)) {
-		return nullptr;
-	}
+  if (me && !me->init(value, newNumberOfBits)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSNumber>
-OSNumber::withNumber(const char *value, unsigned int newNumberOfBits)
-{
-	OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
+OSSharedPtr<OSNumber> OSNumber::withDouble(double value) {
+  OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
 
-	if (me && !me->init(value, newNumberOfBits)) {
-		return nullptr;
-	}
+  if (me && !me->OSObject::init()) {
+    return nullptr;
+  }
+  me->size = 63;
+  me->fpValue = value;
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSNumber>
-OSNumber::withDouble(
-	double             value)
-{
-	OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
+OSSharedPtr<OSNumber> OSNumber::withFloat(float value) {
+  OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
 
-	if (me && !me->OSObject::init()) {
-		return nullptr;
-	}
-	me->size = 63;
-	me->fpValue = value;
+  if (me && !me->OSObject::init()) {
+    return nullptr;
+  }
+  me->size = 31;
+  me->fpValue = (double)value;
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSNumber>
-OSNumber::withFloat(
-	float             value)
-{
-	OSSharedPtr<OSNumber> me = OSMakeShared<OSNumber>();
-
-	if (me && !me->OSObject::init()) {
-		return nullptr;
-	}
-	me->size = 31;
-	me->fpValue = (double) value;
-
-	return me;
+double OSNumber::doubleValue() const {
+  if ((size != 63) && (size != 31)) {
+    return (double)value;
+  }
+  return fpValue;
 }
 
-double
-OSNumber::doubleValue() const
-{
-	if ((size != 63) && (size != 31)) {
-		return (double) value;
-	}
-	return fpValue;
+float OSNumber::floatValue() const {
+  if ((size != 63) && (size != 31)) {
+    return (float)value;
+  }
+  return (float)fpValue;
 }
 
-float
-OSNumber::floatValue() const
-{
-	if ((size != 63) && (size != 31)) {
-		return (float) value;
-	}
-	return (float) fpValue;
+unsigned int OSNumber::numberOfBits() const { return size; }
+
+unsigned int OSNumber::numberOfBytes() const { return (size + 7) / 8; }
+
+unsigned char OSNumber::unsigned8BitValue() const {
+  if ((size == 63) || (size == 31)) {
+    return (unsigned char)fpValue;
+  }
+  return (unsigned char)value;
 }
 
-unsigned int
-OSNumber::numberOfBits() const
-{
-	return size;
+unsigned short OSNumber::unsigned16BitValue() const {
+  if ((size == 63) || (size == 31)) {
+    return (unsigned short)fpValue;
+  }
+  return (unsigned short)value;
 }
 
-unsigned int
-OSNumber::numberOfBytes() const
-{
-	return (size + 7) / 8;
+unsigned int OSNumber::unsigned32BitValue() const {
+  if ((size == 63) || (size == 31)) {
+    return (unsigned int)fpValue;
+  }
+  return (unsigned int)value;
 }
 
-
-unsigned char
-OSNumber::unsigned8BitValue() const
-{
-	if ((size == 63) || (size == 31)) {
-		return (unsigned char) fpValue;
-	}
-	return (unsigned char) value;
+unsigned long long OSNumber::unsigned64BitValue() const {
+  if ((size == 63) || (size == 31)) {
+    return (unsigned long long)fpValue;
+  }
+  return value;
 }
 
-unsigned short
-OSNumber::unsigned16BitValue() const
-{
-	if ((size == 63) || (size == 31)) {
-		return (unsigned short) fpValue;
-	}
-	return (unsigned short) value;
+void OSNumber::addValue(signed long long inValue) {
+  if ((size == 63) || (size == 31)) {
+    fpValue += inValue;
+  } else {
+    value = ((value + inValue) & sizeMask);
+  }
 }
 
-unsigned int
-OSNumber::unsigned32BitValue() const
-{
-	if ((size == 63) || (size == 31)) {
-		return (unsigned int) fpValue;
-	}
-	return (unsigned int) value;
+void OSNumber::setValue(unsigned long long inValue) {
+  if ((size == 63) || (size == 31)) {
+    fpValue = (double)inValue;
+  } else {
+    value = (inValue & sizeMask);
+  }
 }
 
-unsigned long long
-OSNumber::unsigned64BitValue() const
-{
-	if ((size == 63) || (size == 31)) {
-		return (unsigned long long) fpValue;
-	}
-	return value;
+bool OSNumber::isEqualTo(const OSNumber *integer) const {
+  return unsigned64BitValue() == integer->unsigned64BitValue();
 }
 
-void
-OSNumber::addValue(signed long long inValue)
-{
-	if ((size == 63) || (size == 31)) {
-		fpValue += inValue;
-	} else {
-		value = ((value + inValue) & sizeMask);
-	}
+bool OSNumber::isEqualTo(const OSMetaClassBase *obj) const {
+  OSNumber *offset;
+  if ((offset = OSDynamicCast(OSNumber, obj))) {
+    return isEqualTo(offset);
+  } else {
+    return false;
+  }
 }
 
-void
-OSNumber::setValue(unsigned long long inValue)
-{
-	if ((size == 63) || (size == 31)) {
-		fpValue = (double) inValue;
-	} else {
-		value = (inValue & sizeMask);
-	}
-}
+bool OSNumber::serialize(OSSerialize *s) const {
+  char temp[32];
 
-bool
-OSNumber::isEqualTo(const OSNumber *integer) const
-{
-	return unsigned64BitValue() == integer->unsigned64BitValue();
-}
+  if (s->previouslySerialized(this)) {
+    return true;
+  }
 
-bool
-OSNumber::isEqualTo(const OSMetaClassBase *obj) const
-{
-	OSNumber *  offset;
-	if ((offset = OSDynamicCast(OSNumber, obj))) {
-		return isEqualTo(offset);
-	} else {
-		return false;
-	}
-}
+  snprintf(temp, sizeof(temp), "integer size=\"%d\"", size);
+  if (!s->addXMLStartTag(this, temp)) {
+    return false;
+  }
 
-bool
-OSNumber::serialize(OSSerialize *s) const
-{
-	char temp[32];
+  // XXX    sprintf(temp, "0x%qx", value);
+  if ((value >> 32)) {
+    snprintf(temp, sizeof(temp), "0x%lx%08lx", (unsigned long)(value >> 32),
+             (unsigned long)(value & 0xFFFFFFFF));
+  } else {
+    snprintf(temp, sizeof(temp), "0x%lx", (unsigned long)value);
+  }
+  if (!s->addString(temp)) {
+    return false;
+  }
 
-	if (s->previouslySerialized(this)) {
-		return true;
-	}
-
-	snprintf(temp, sizeof(temp), "integer size=\"%d\"", size);
-	if (!s->addXMLStartTag(this, temp)) {
-		return false;
-	}
-
-	//XXX    sprintf(temp, "0x%qx", value);
-	if ((value >> 32)) {
-		snprintf(temp, sizeof(temp), "0x%lx%08lx", (unsigned long)(value >> 32),
-		    (unsigned long)(value & 0xFFFFFFFF));
-	} else {
-		snprintf(temp, sizeof(temp), "0x%lx", (unsigned long)value);
-	}
-	if (!s->addString(temp)) {
-		return false;
-	}
-
-	return s->addXMLEndTag("integer");
+  return s->addXMLEndTag("integer");
 }

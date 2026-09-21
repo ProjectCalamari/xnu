@@ -26,20 +26,20 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <kern/trap_telemetry.h>
-#include <libkern/coreanalytics/coreanalytics.h>
-#include <kern/percpu.h>
-#include <libkern/tree.h>
-#include <kern/locks.h>
-#include <kern/thread_call.h>
-#include <kern/kalloc.h>
-#include <kern/cpu_data.h>
-#include <kern/telemetry.h>
 #include <kern/assert.h>
 #include <kern/backtrace.h>
-#include <machine/machine_routines.h>
+#include <kern/cpu_data.h>
+#include <kern/kalloc.h>
+#include <kern/locks.h>
+#include <kern/percpu.h>
+#include <kern/telemetry.h>
+#include <kern/thread_call.h>
+#include <kern/trap_telemetry.h>
 #include <libkern/OSKextLibPrivate.h>
+#include <libkern/coreanalytics/coreanalytics.h>
 #include <libkern/kernel_mach_header.h>
+#include <libkern/tree.h>
+#include <machine/machine_routines.h>
 #if __arm64__
 #include <pexpert/arm64/platform.h>
 #endif
@@ -54,7 +54,7 @@
  * Some reporting destinations may use fewer frames than this due to
  * encoding/space restrictions.
  */
-#define TRAP_TELEMETRY_BT_FRAMES  (15)
+#define TRAP_TELEMETRY_BT_FRAMES (15)
 
 /** Static length of various CA telemetry event's backtrace string */
 #define TRAP_TELEMETRY_BT_STR_LEN CA_UBSANBUF_LEN
@@ -78,142 +78,124 @@
  *
  * Local reporting (via trap_telemetry_dump_event) is not impacted.
  */
-static TUNABLE(bool, trap_telemetry_disable_ca, "trap_telemetry_disable_ca", false);
+static TUNABLE(bool, trap_telemetry_disable_ca, "trap_telemetry_disable_ca",
+               false);
 
 /**
  * Disable all trap telemetry reporting (including local reporting)
  */
-static TUNABLE(bool, trap_telemetry_disable_all, "trap_telemetry_disable_all", false);
+static TUNABLE(bool, trap_telemetry_disable_all, "trap_telemetry_disable_all",
+               false);
 
 /**
  * Print matching events to the console. Set to -1 to disable.
  * Setting type but disabling code will match all codes of the given type.
  */
 static TUNABLE(uint32_t, trap_telemetry_dump_type, "trap_telemetry_dump_type",
-    -1);
+               -1);
 static TUNABLE(uint64_t, trap_telemetry_dump_code, "trap_telemetry_dump_code",
-    -1);
+               -1);
 
 /* ~* Data Structures *~ */
 
 typedef struct match_record {
-	/** Slid address at which the exception was thrown */
-	uintptr_t fault_pc;
+  /** Slid address at which the exception was thrown */
+  uintptr_t fault_pc;
 
-	/** The trap type or "class" for the record. */
-	trap_telemetry_type_t trap_type;
+  /** The trap type or "class" for the record. */
+  trap_telemetry_type_t trap_type;
 
-	/** The trap code disambiguates traps within a class. */
-	uint64_t trap_code;
+  /** The trap code disambiguates traps within a class. */
+  uint64_t trap_code;
 } match_record_s;
 
 typedef struct rsb_entry {
-	match_record_s record;
-	trap_telemetry_extra_data_u extra_data;
-	trap_telemetry_options_s options;
-	size_t bt_frames_count;
-	uintptr_t bt_frames[TRAP_TELEMETRY_BT_FRAMES];
+  match_record_s record;
+  trap_telemetry_extra_data_u extra_data;
+  trap_telemetry_options_s options;
+  size_t bt_frames_count;
+  uintptr_t bt_frames[TRAP_TELEMETRY_BT_FRAMES];
 } rsb_entry_s;
 
 typedef struct trap_telemetry_tree_entry {
-	SPLAY_ENTRY(trap_telemetry_tree_entry) link;
-	match_record_s record;
+  SPLAY_ENTRY(trap_telemetry_tree_entry) link;
+  match_record_s record;
 } trap_telemetry_tree_entry_s;
 
 typedef struct trap_debounce_buffer {
-	/**
-	 * Storage array for trap records used to debounce.
-	 *
-	 * We don't have valid bits for entries but rather use zero to implicitly
-	 * indicate an invalid entry (as they should never naturally match any real
-	 * trap).
-	 */
-	match_record_s records[DEBOUNCE_RECORD_COUNT];
+  /**
+   * Storage array for trap records used to debounce.
+   *
+   * We don't have valid bits for entries but rather use zero to implicitly
+   * indicate an invalid entry (as they should never naturally match any real
+   * trap).
+   */
+  match_record_s records[DEBOUNCE_RECORD_COUNT];
 
-	/** The index of the entry to replace next (LIFO) */
-	size_t tail;
+  /** The index of the entry to replace next (LIFO) */
+  size_t tail;
 } trap_debounce_buffer_s;
 
 /* ~* Core Analytics *~ */
-CA_EVENT(kernel_breakpoint_event,
-    CA_INT, brk_type,
-    CA_INT, brk_code,
-    CA_INT, faulting_address,
-    CA_STATIC_STRING(TRAP_TELEMETRY_BT_STR_LEN), backtrace,
-    CA_STATIC_STRING(CA_UUID_LEN), uuid);
+CA_EVENT(kernel_breakpoint_event, CA_INT, brk_type, CA_INT, brk_code, CA_INT,
+         faulting_address, CA_STATIC_STRING(TRAP_TELEMETRY_BT_STR_LEN),
+         backtrace, CA_STATIC_STRING(CA_UUID_LEN), uuid);
 
-CA_EVENT(trap_telemetry_internal,
-    CA_STATIC_STRING(TRAP_TELEMETRY_BT_STR_LEN), backtrace,
-    CA_STATIC_STRING(KERNEL_PLATFORM_STR_LEN), kernel_platform,
-    CA_INT, trap_code,
-    CA_INT, trap_offset,
-    CA_INT, trap_type,
-    CA_STATIC_STRING(CA_UUID_LEN), trap_uuid);
+CA_EVENT(trap_telemetry_internal, CA_STATIC_STRING(TRAP_TELEMETRY_BT_STR_LEN),
+         backtrace, CA_STATIC_STRING(KERNEL_PLATFORM_STR_LEN), kernel_platform,
+         CA_INT, trap_code, CA_INT, trap_offset, CA_INT, trap_type,
+         CA_STATIC_STRING(CA_UUID_LEN), trap_uuid);
 
-CA_EVENT(latency_violations,
-    CA_STATIC_STRING(TRAP_TELEMETRY_BT_STR_LEN), backtrace,
-    CA_STATIC_STRING(KERNEL_PLATFORM_STR_LEN), kernel_platform,
-    CA_STATIC_STRING(CA_UUID_LEN), uuid,
-    CA_INT, violation_code,
-    CA_INT, violation_cpi,
-    CA_STATIC_STRING(2), violation_cpu_type,
-    CA_INT, violation_duration,
-    CA_INT, violation_freq,
-    CA_INT, violation_payload,
-    CA_INT, violation_threshold);
+CA_EVENT(latency_violations, CA_STATIC_STRING(TRAP_TELEMETRY_BT_STR_LEN),
+         backtrace, CA_STATIC_STRING(KERNEL_PLATFORM_STR_LEN), kernel_platform,
+         CA_STATIC_STRING(CA_UUID_LEN), uuid, CA_INT, violation_code, CA_INT,
+         violation_cpi, CA_STATIC_STRING(2), violation_cpu_type, CA_INT,
+         violation_duration, CA_INT, violation_freq, CA_INT, violation_payload,
+         CA_INT, violation_threshold);
 
 /* ~* Splay tree *~ */
-static int
-match_record_compare(match_record_s *r1,
-    match_record_s *r2)
-{
-	if (r1->fault_pc < r2->fault_pc) {
-		return 1;
-	} else if (r1->fault_pc > r2->fault_pc) {
-		return -1;
-	}
+static int match_record_compare(match_record_s *r1, match_record_s *r2) {
+  if (r1->fault_pc < r2->fault_pc) {
+    return 1;
+  } else if (r1->fault_pc > r2->fault_pc) {
+    return -1;
+  }
 
-	if (r1->trap_type < r2->trap_type) {
-		return 1;
-	} else if (r1->trap_type > r2->trap_type) {
-		return -1;
-	}
+  if (r1->trap_type < r2->trap_type) {
+    return 1;
+  } else if (r1->trap_type > r2->trap_type) {
+    return -1;
+  }
 
-	if (r1->trap_code < r2->trap_code) {
-		return 1;
-	} else if (r1->trap_code > r2->trap_code) {
-		return -1;
-	}
+  if (r1->trap_code < r2->trap_code) {
+    return 1;
+  } else if (r1->trap_code > r2->trap_code) {
+    return -1;
+  }
 
-	/* Records match */
-	return 0;
+  /* Records match */
+  return 0;
 }
 
-static int
-trap_telemetry_tree_entry_compare(trap_telemetry_tree_entry_s *r1,
-    trap_telemetry_tree_entry_s *r2)
-{
-	return match_record_compare(&r1->record, &r2->record);
+static int trap_telemetry_tree_entry_compare(trap_telemetry_tree_entry_s *r1,
+                                             trap_telemetry_tree_entry_s *r2) {
+  return match_record_compare(&r1->record, &r2->record);
 }
 
 SPLAY_HEAD(trap_telemetry_tree, trap_telemetry_tree_entry);
 /* These functions generated by SPLAY_PROTOTYPE but are currently unused */
 __unused static struct trap_telemetry_tree_entry *
 trap_telemetry_tree_SPLAY_NEXT(struct trap_telemetry_tree *head,
-    struct trap_telemetry_tree_entry *elm);
+                               struct trap_telemetry_tree_entry *elm);
 __unused static struct trap_telemetry_tree_entry *
 trap_telemetry_tree_SPLAY_SEARCH(struct trap_telemetry_tree *head,
-    struct trap_telemetry_tree_entry *elm);
+                                 struct trap_telemetry_tree_entry *elm);
 __unused static struct trap_telemetry_tree_entry *
 trap_telemetry_tree_SPLAY_MIN_MAX(struct trap_telemetry_tree *head, int val);
-SPLAY_PROTOTYPE(trap_telemetry_tree,
-    trap_telemetry_tree_entry,
-    link,
-    trap_telemetry_tree_entry_compare);
-SPLAY_GENERATE(trap_telemetry_tree,
-    trap_telemetry_tree_entry,
-    link,
-    trap_telemetry_tree_entry_compare);
+SPLAY_PROTOTYPE(trap_telemetry_tree, trap_telemetry_tree_entry, link,
+                trap_telemetry_tree_entry_compare);
+SPLAY_GENERATE(trap_telemetry_tree, trap_telemetry_tree_entry, link,
+               trap_telemetry_tree_entry_compare);
 
 /* ~* Globals *~ */
 /* Lock which protects the event submission queue */
@@ -293,81 +275,75 @@ unsigned long trap_telemetry_capacity_dropped_events = 0;
  * current CPU owns the lock, which can happen if a trap is taken while handling
  * a telemetry operation under the lock).
  */
-static inline bool OS_WARN_RESULT
-safe_telemetry_lock_try_lock(void)
-{
-	uint8_t *telemetry_lock_blocked = NULL;
+static inline bool OS_WARN_RESULT safe_telemetry_lock_try_lock(void) {
+  uint8_t *telemetry_lock_blocked = NULL;
 
-	/*
-	 * Disable preemption to ensure that our block signal always corresponds
-	 * to the CPU we're actually running on.
-	 *
-	 * If we didn't disable preemption, there is a case where we may mark that
-	 * we are trying to acquire the lock on core A, get approved, get preempted,
-	 * get rescheduled on core B, and then take the lock there. If we then take
-	 * another exception on core B while handling the original exception (ex. we
-	 * take an IRQ and a telemetry exception is generated there), we may
-	 * re-enter on core B, (incorrectly) see that we are not blocked, try to
-	 * acquire the lock, and ultimately deadlock.
-	 */
-	disable_preemption();
+  /*
+   * Disable preemption to ensure that our block signal always corresponds
+   * to the CPU we're actually running on.
+   *
+   * If we didn't disable preemption, there is a case where we may mark that
+   * we are trying to acquire the lock on core A, get approved, get preempted,
+   * get rescheduled on core B, and then take the lock there. If we then take
+   * another exception on core B while handling the original exception (ex. we
+   * take an IRQ and a telemetry exception is generated there), we may
+   * re-enter on core B, (incorrectly) see that we are not blocked, try to
+   * acquire the lock, and ultimately deadlock.
+   */
+  disable_preemption();
 
-	/*
-	 * Since we are preemption disabled, we'll get the desired behavior even if
-	 * we take a telemetry trap in the middle of this sequence because the
-	 * interrupting context will never return here while holding the telemetry
-	 * lock.
-	 */
-	telemetry_lock_blocked = PERCPU_GET(per_cpu_telemetry_lock_blocked);
-	if (*telemetry_lock_blocked) {
-		/*
-		 * This CPU has already acquired/is blocked on the telemetry lock.
-		 * Attempting to acquire again on this CPU will deadlock. Refuse the
-		 * operation.
-		 */
-		enable_preemption();
-		return false;
-	}
+  /*
+   * Since we are preemption disabled, we'll get the desired behavior even if
+   * we take a telemetry trap in the middle of this sequence because the
+   * interrupting context will never return here while holding the telemetry
+   * lock.
+   */
+  telemetry_lock_blocked = PERCPU_GET(per_cpu_telemetry_lock_blocked);
+  if (*telemetry_lock_blocked) {
+    /*
+     * This CPU has already acquired/is blocked on the telemetry lock.
+     * Attempting to acquire again on this CPU will deadlock. Refuse the
+     * operation.
+     */
+    enable_preemption();
+    return false;
+  }
 
-	*telemetry_lock_blocked = 1;
+  *telemetry_lock_blocked = 1;
 
-	/* We've been approved to acquire the lock on this core! */
-	lck_spin_lock(&trap_telemetry_lock);
-	return true;
+  /* We've been approved to acquire the lock on this core! */
+  lck_spin_lock(&trap_telemetry_lock);
+  return true;
 }
 
 /**
  * Attempts to acquire the telemetry lock and panic if it cannot be acquired.
  */
-static void
-safe_telemetry_lock_lock(void)
-{
-	if (!safe_telemetry_lock_try_lock()) {
-		panic("Unexpectedly could not acquire telemetry lock "
-		    "(nested acquire will deadlock)");
-	}
+static void safe_telemetry_lock_lock(void) {
+  if (!safe_telemetry_lock_try_lock()) {
+    panic("Unexpectedly could not acquire telemetry lock "
+          "(nested acquire will deadlock)");
+  }
 }
 
 /**
  * Unlock telemetry lock after being locked with safe_telemetry_lock_try_lock
  */
-static inline void
-safe_telemetry_lock_unlock(void)
-{
-	uint8_t *telemetry_lock_blocked = NULL;
+static inline void safe_telemetry_lock_unlock(void) {
+  uint8_t *telemetry_lock_blocked = NULL;
 
-	lck_spin_unlock(&trap_telemetry_lock);
+  lck_spin_unlock(&trap_telemetry_lock);
 
-	/*
-	 * Clear the block only AFTER having dropped the lock so that we can't
-	 * hit a really narrow deadlock race where we get interrupted between
-	 * clearing the block and dropping the lock.
-	 */
-	telemetry_lock_blocked = PERCPU_GET(per_cpu_telemetry_lock_blocked);
-	os_atomic_store(telemetry_lock_blocked, (uint8_t)0, relaxed);
+  /*
+   * Clear the block only AFTER having dropped the lock so that we can't
+   * hit a really narrow deadlock race where we get interrupted between
+   * clearing the block and dropping the lock.
+   */
+  telemetry_lock_blocked = PERCPU_GET(per_cpu_telemetry_lock_blocked);
+  os_atomic_store(telemetry_lock_blocked, (uint8_t)0, relaxed);
 
-	/* Finally, reenable preemption as this thread is now safe to move */
-	enable_preemption();
+  /* Finally, reenable preemption as this thread is now safe to move */
+  enable_preemption();
 }
 
 /**
@@ -375,23 +351,21 @@ safe_telemetry_lock_unlock(void)
  * Returns TRUE if successful, false otherwise.
  * TRAP_TELEMETRY_LOCK must be held during this operation.
  */
-static bool
-rsb_enqueue_locked(rsb_entry_s *rsb_e)
-{
-	if (rsb_count == RECORD_SUBMISSION_BUFFER_LENGTH) {
-		/* We're full. */
-		return false;
-	}
+static bool rsb_enqueue_locked(rsb_entry_s *rsb_e) {
+  if (rsb_count == RECORD_SUBMISSION_BUFFER_LENGTH) {
+    /* We're full. */
+    return false;
+  }
 
-	/* Write the new entry at the write head */
-	rsb_entry_s *dst = record_submission_buffer + rsb_wr_idx;
-	*dst = *rsb_e;
+  /* Write the new entry at the write head */
+  rsb_entry_s *dst = record_submission_buffer + rsb_wr_idx;
+  *dst = *rsb_e;
 
-	/* Update pointers */
-	rsb_count += 1;
-	rsb_wr_idx = (rsb_wr_idx + 1) % RECORD_SUBMISSION_BUFFER_LENGTH;
+  /* Update pointers */
+  rsb_count += 1;
+  rsb_wr_idx = (rsb_wr_idx + 1) % RECORD_SUBMISSION_BUFFER_LENGTH;
 
-	return true;
+  return true;
 }
 
 /**
@@ -399,82 +373,74 @@ rsb_enqueue_locked(rsb_entry_s *rsb_e)
  * being reported again until it falls off. Records are removed from the
  * debounce buffer automatically as newer records are inserted.
  */
-static bool
-trap_debounce_buffer_enter(match_record_s *record)
-{
-	trap_debounce_buffer_s *debounce = NULL;
-	bool match = false;
+static bool trap_debounce_buffer_enter(match_record_s *record) {
+  trap_debounce_buffer_s *debounce = NULL;
+  bool match = false;
 
-	/*
-	 * Since we don't lock the debounce buffers and instead rely on them being
-	 * per-CPU for synchronization, we need to disable preemption to ensure that
-	 * we only access the correct debounce buffer.
-	 */
-	disable_preemption();
-	debounce = PERCPU_GET(per_cpu_trap_debounce_buffer);
+  /*
+   * Since we don't lock the debounce buffers and instead rely on them being
+   * per-CPU for synchronization, we need to disable preemption to ensure that
+   * we only access the correct debounce buffer.
+   */
+  disable_preemption();
+  debounce = PERCPU_GET(per_cpu_trap_debounce_buffer);
 
-	/*
-	 * Enter the record.
-	 * We do this by overwriting the oldest entry, which naturally gives us a
-	 * LIFO replacement policy.
-	 */
-	debounce->records[debounce->tail] = *record;
-	debounce->tail = (debounce->tail + 1) % DEBOUNCE_RECORD_COUNT;
+  /*
+   * Enter the record.
+   * We do this by overwriting the oldest entry, which naturally gives us a
+   * LIFO replacement policy.
+   */
+  debounce->records[debounce->tail] = *record;
+  debounce->tail = (debounce->tail + 1) % DEBOUNCE_RECORD_COUNT;
 
-	enable_preemption();
+  enable_preemption();
 
-	return match;
+  return match;
 }
-
 
 /**
  * Search for RECORD in the per-CPU debounce buffer.
  *
  * This is useful for determining if a trap has triggered recently.
  */
-static bool
-trap_debounce_buffer_has_match(match_record_s *record)
-{
-	trap_debounce_buffer_s *debounce = NULL;
-	bool match = false;
+static bool trap_debounce_buffer_has_match(match_record_s *record) {
+  trap_debounce_buffer_s *debounce = NULL;
+  bool match = false;
 
-	disable_preemption();
-	debounce = PERCPU_GET(per_cpu_trap_debounce_buffer);
+  disable_preemption();
+  debounce = PERCPU_GET(per_cpu_trap_debounce_buffer);
 
-	for (size_t i = 0; i < DEBOUNCE_RECORD_COUNT; i++) {
-		if (match_record_compare(debounce->records + i, record) == 0) {
-			match = true;
-			break;
-		}
-	}
+  for (size_t i = 0; i < DEBOUNCE_RECORD_COUNT; i++) {
+    if (match_record_compare(debounce->records + i, record) == 0) {
+      match = true;
+      break;
+    }
+  }
 
-	enable_preemption();
+  enable_preemption();
 
-	return match;
+  return match;
 }
 
 /**
  * Should the given trap be dumped to the console for debug?
  */
-static inline bool
-should_dump_trap(
-	trap_telemetry_type_t trap_type,
-	uint64_t trap_code)
-{
-	if (trap_telemetry_dump_type == -1 /* type match disabled */ ||
-	    trap_telemetry_dump_type != (uint32_t)trap_type) {
-		/* No match on type */
-		return false;
-	}
+static inline bool should_dump_trap(trap_telemetry_type_t trap_type,
+                                    uint64_t trap_code) {
+  if (trap_telemetry_dump_type == -1 /* type match disabled */ ||
+      trap_telemetry_dump_type != (uint32_t)trap_type) {
+    /* No match on type */
+    return false;
+  }
 
-	if (trap_telemetry_dump_code != -1 /* code match is enabled */ &&
-	    /* but it doesn't match the trap code */
-	    trap_telemetry_dump_code != trap_code) {
-		return false;
-	}
+  if (trap_telemetry_dump_code != -1 /* code match is enabled */ &&
+      /* but it doesn't match the trap code */
+      trap_telemetry_dump_code != trap_code) {
+    return false;
+  }
 
-	/* Matching type and, if applicable, code. */
-	return true;
+  /* Matching type and, if applicable, code. */
+  return true;
 }
 
 /**
@@ -486,40 +452,38 @@ should_dump_trap(
  *
  * Acquires a sleeping lock, do not call while interrupts are disabled.
  */
-static int
-get_uuid_and_text_offset_for_addr(
-	uintptr_t addr, uuid_t **uuid_out, uint64_t *offset_out)
-{
-	kernel_mach_header_t *mh = NULL;
-	kernel_segment_command_t *seg_text = NULL;
-	void *mh_uuid = NULL;
-	unsigned long mh_uuid_len = 0;
+static int get_uuid_and_text_offset_for_addr(uintptr_t addr, uuid_t **uuid_out,
+                                             uint64_t *offset_out) {
+  kernel_mach_header_t *mh = NULL;
+  kernel_segment_command_t *seg_text = NULL;
+  void *mh_uuid = NULL;
+  unsigned long mh_uuid_len = 0;
 #if __arm64__
-	const char *text_segment_label = "__TEXT_EXEC";
+  const char *text_segment_label = "__TEXT_EXEC";
 #else
-	const char *text_segment_label = "__TEXT";
+  const char *text_segment_label = "__TEXT";
 #endif
 
-	if (!(mh = OSKextKextForAddress((void *)addr))) {
-		return -1;
-	}
+  if (!(mh = OSKextKextForAddress((void *)addr))) {
+    return -1;
+  }
 
-	if (!(seg_text = getsegbynamefromheader(mh, text_segment_label))) {
-		return -2;
-	}
+  if (!(seg_text = getsegbynamefromheader(mh, text_segment_label))) {
+    return -2;
+  }
 
-	if (!(mh_uuid = getuuidfromheader(mh, &mh_uuid_len))) {
-		return -3;
-	}
+  if (!(mh_uuid = getuuidfromheader(mh, &mh_uuid_len))) {
+    return -3;
+  }
 
-	if (mh_uuid_len != sizeof(**uuid_out)) {
-		return -4;
-	}
+  if (mh_uuid_len != sizeof(**uuid_out)) {
+    return -4;
+  }
 
-	*uuid_out = (uuid_t *)(mh_uuid);
-	*offset_out = addr - seg_text->vmaddr;
+  *uuid_out = (uuid_t *)(mh_uuid);
+  *offset_out = addr - seg_text->vmaddr;
 
-	return 0;
+  return 0;
 }
 
 /**
@@ -528,36 +492,35 @@ get_uuid_and_text_offset_for_addr(
  * *IDX_OUT and set *IS_NEW_OUT if UUID was inserted.
  *
  */
-static void
-uuid_cache_get_or_insert(uuid_t *uuid, uuid_t **uuid_cache, size_t cache_len,
-    uint32_t *idx_out, bool *is_new_out)
-{
-	for (uint32_t i = 0; i < cache_len; i++) {
-		if (uuid_cache[i] == uuid) {
-			/* Hit on existing entry */
-			*idx_out = i;
-			*is_new_out = false;
-			return;
-		} else if (uuid_cache[i] == NULL) {
-			/*
-			 * Reached the end of the valid entries without finding our UUID.
-			 * Insert it now.
-			 */
-			uuid_cache[i] = uuid;
-			*idx_out = i;
-			*is_new_out = true;
-			return;
-		}
+static void uuid_cache_get_or_insert(uuid_t *uuid, uuid_t **uuid_cache,
+                                     size_t cache_len, uint32_t *idx_out,
+                                     bool *is_new_out) {
+  for (uint32_t i = 0; i < cache_len; i++) {
+    if (uuid_cache[i] == uuid) {
+      /* Hit on existing entry */
+      *idx_out = i;
+      *is_new_out = false;
+      return;
+    } else if (uuid_cache[i] == NULL) {
+      /*
+       * Reached the end of the valid entries without finding our UUID.
+       * Insert it now.
+       */
+      uuid_cache[i] = uuid;
+      *idx_out = i;
+      *is_new_out = true;
+      return;
+    }
 
-		/* No match yet, but there might be more entries. Keep going. */
-	}
+    /* No match yet, but there might be more entries. Keep going. */
+  }
 
-	/*
-	 * We didn't find the UUID but we also couldn't insert it because we never
-	 * found a free space. This shouldn't happen if the UUID cache is correctly
-	 * sized.
-	 */
-	panic("Could not find UUID in cache but cache was full");
+  /*
+   * We didn't find the UUID but we also couldn't insert it because we never
+   * found a free space. This shouldn't happen if the UUID cache is correctly
+   * sized.
+   */
+  panic("Could not find UUID in cache but cache was full");
 }
 
 /**
@@ -611,224 +574,210 @@ uuid_cache_get_or_insert(uuid_t *uuid, uuid_t **uuid_cache, size_t cache_len,
  * used. This means that if the encoder does run out of space, all backtrace
  * entries but the last will always decode correctly.
  */
-static void
-backtrace_to_offset_bt_string(
-	char *buf,
-	size_t buf_len,
-	const uintptr_t *frames,
-	size_t frames_len)
-{
-	size_t written = 0;
-	const size_t uuid_cache_count = TRAP_TELEMETRY_BT_FRAMES;
-	/*
-	 * The UUID cache relies on NULL entries to represent free slots, so clear
-	 * it before use.
-	 */
-	uuid_t *uuid_cache[uuid_cache_count] = {0};
-	assert(frames_len <= uuid_cache_count);
+static void backtrace_to_offset_bt_string(char *buf, size_t buf_len,
+                                          const uintptr_t *frames,
+                                          size_t frames_len) {
+  size_t written = 0;
+  const size_t uuid_cache_count = TRAP_TELEMETRY_BT_FRAMES;
+  /*
+   * The UUID cache relies on NULL entries to represent free slots, so clear
+   * it before use.
+   */
+  uuid_t *uuid_cache[uuid_cache_count] = {0};
+  assert(frames_len <= uuid_cache_count);
 
-	/* Add all frames and store unique UUIDs into the cache */
-	for (size_t frame_i = 0; frame_i < frames_len; frame_i++) {
-		uuid_t *uuid = NULL;
-		uint64_t offset = 0;
+  /* Add all frames and store unique UUIDs into the cache */
+  for (size_t frame_i = 0; frame_i < frames_len; frame_i++) {
+    uuid_t *uuid = NULL;
+    uint64_t offset = 0;
 
-		if (get_uuid_and_text_offset_for_addr(
-			    frames[frame_i], &uuid, &offset) == 0) {
-			/* Success! Insert (or reuse) the UUID and then print the entry. */
-			uint32_t uuid_i;
-			bool is_new;
-			uuid_cache_get_or_insert(
-				uuid, uuid_cache, uuid_cache_count,
-				&uuid_i, &is_new);
+    if (get_uuid_and_text_offset_for_addr(frames[frame_i], &uuid, &offset) ==
+        0) {
+      /* Success! Insert (or reuse) the UUID and then print the entry. */
+      uint32_t uuid_i;
+      bool is_new;
+      uuid_cache_get_or_insert(uuid, uuid_cache, uuid_cache_count, &uuid_i,
+                               &is_new);
 
-			/* Write backtrace record */
-			written += scnprintf(buf + written, buf_len - written,
-			    "%llx@%x\n",
-			    offset, uuid_i);
+      /* Write backtrace record */
+      written += scnprintf(buf + written, buf_len - written, "%llx@%x\n",
+                           offset, uuid_i);
 
-			/* Write UUID record, if needed. */
-			if (is_new) {
-				uuid_string_t uuid_str;
-				uuid_unparse(*uuid, uuid_str);
+      /* Write UUID record, if needed. */
+      if (is_new) {
+        uuid_string_t uuid_str;
+        uuid_unparse(*uuid, uuid_str);
 
-				written += scnprintf(buf + written, buf_len - written,
-				    "%s\n",
-				    uuid_str);
-			}
-		} else {
-			/*
-			 * Could not find an image for the target?
-			 * Just return the offset into the executable region with an error
-			 * UUID ref as it's better than nothing.
-			 */
-			written += scnprintf(buf + written, buf_len - written,
-			    "%lx@!\n",
-			    frames[frame_i] - vm_kernel_stext);
-		}
-	}
+        written +=
+            scnprintf(buf + written, buf_len - written, "%s\n", uuid_str);
+      }
+    } else {
+      /*
+       * Could not find an image for the target?
+       * Just return the offset into the executable region with an error
+       * UUID ref as it's better than nothing.
+       */
+      written += scnprintf(buf + written, buf_len - written, "%lx@!\n",
+                           frames[frame_i] - vm_kernel_stext);
+    }
+  }
 }
-
 
 /**
  * Print RSB_E to the console in a human friendly way.
  */
-static void
-rsb_entry_dump(rsb_entry_s *rsb_e)
-{
-	printf(TAG "Triggered trap at PC=0x%08lx "
-	    "(type=%u, code=0x%04llx). Backtrace:\n",
-	    rsb_e->record.fault_pc,
-	    (uint32_t)rsb_e->record.trap_type, rsb_e->record.trap_code);
+static void rsb_entry_dump(rsb_entry_s *rsb_e) {
+  printf(TAG "Triggered trap at PC=0x%08lx "
+             "(type=%u, code=0x%04llx). Backtrace:\n",
+         rsb_e->record.fault_pc, (uint32_t)rsb_e->record.trap_type,
+         rsb_e->record.trap_code);
 
-	for (size_t frame_i = 0; frame_i < rsb_e->bt_frames_count; frame_i++) {
-		printf(TAG "\t0x%08lx\n", rsb_e->bt_frames[frame_i]);
-	}
+  for (size_t frame_i = 0; frame_i < rsb_e->bt_frames_count; frame_i++) {
+    printf(TAG "\t0x%08lx\n", rsb_e->bt_frames[frame_i]);
+  }
 }
 
 /**
  * Submit RSB_E to CoreAnalytics (or another backing event provider as
  * appropriate).
  */
-static void
-rsb_entry_submit(rsb_entry_s *rsb_e)
-{
-	trap_telemetry_options_s options = rsb_e->options;
+static void rsb_entry_submit(rsb_entry_s *rsb_e) {
+  trap_telemetry_options_s options = rsb_e->options;
 
-	bool matched_dump_bootarg = should_dump_trap(
-		rsb_e->record.trap_type, rsb_e->record.trap_code);
-	if (matched_dump_bootarg) {
-		rsb_entry_dump(rsb_e);
-	}
+  bool matched_dump_bootarg =
+      should_dump_trap(rsb_e->record.trap_type, rsb_e->record.trap_code);
+  if (matched_dump_bootarg) {
+    rsb_entry_dump(rsb_e);
+  }
 
-	ca_event_t ca_event = NULL;
-	switch (options.telemetry_ca_event) {
-	case TRAP_TELEMETRY_CA_EVENT_NONE: {
-		/*
-		 * Unless the event matches the dump boot-arg, we should never see
-		 * unreported events in the backend. Instead, we expect these events
-		 * to be dropped in the frontend without ever being submitted.
-		 */
-		assert(matched_dump_bootarg);
-		break;
-	}
+  ca_event_t ca_event = NULL;
+  switch (options.telemetry_ca_event) {
+  case TRAP_TELEMETRY_CA_EVENT_NONE: {
+    /*
+     * Unless the event matches the dump boot-arg, we should never see
+     * unreported events in the backend. Instead, we expect these events
+     * to be dropped in the frontend without ever being submitted.
+     */
+    assert(matched_dump_bootarg);
+    break;
+  }
 
-	case TRAP_TELEMETRY_CA_EVENT_KERNEL_BRK: {
-		ca_event = CA_EVENT_ALLOCATE(kernel_breakpoint_event);
-		CA_EVENT_TYPE(kernel_breakpoint_event) * event = ca_event->data;
+  case TRAP_TELEMETRY_CA_EVENT_KERNEL_BRK: {
+    ca_event = CA_EVENT_ALLOCATE(kernel_breakpoint_event);
+    CA_EVENT_TYPE(kernel_breakpoint_event) *event = ca_event->data;
 
-		/*
-		 * The BRK telemetry format is somewhat less dense, so to avoid
-		 * truncating (and to maintain the historical backtrace count) report
-		 * five or fewer frames.
-		 */
-		uint32_t reported_bt_count =
-		    MIN((uint32_t)rsb_e->bt_frames_count, 5);
-		telemetry_backtrace_to_string(
-			/* buf      */ event->backtrace,
-			/* buf_size */ TRAP_TELEMETRY_BT_STR_LEN,
-			/* tot      */ reported_bt_count,
-			/* frames   */ rsb_e->bt_frames);
+    /*
+     * The BRK telemetry format is somewhat less dense, so to avoid
+     * truncating (and to maintain the historical backtrace count) report
+     * five or fewer frames.
+     */
+    uint32_t reported_bt_count = MIN((uint32_t)rsb_e->bt_frames_count, 5);
+    telemetry_backtrace_to_string(
+        /* buf      */ event->backtrace,
+        /* buf_size */ TRAP_TELEMETRY_BT_STR_LEN,
+        /* tot      */ reported_bt_count,
+        /* frames   */ rsb_e->bt_frames);
 
-		event->brk_type = (uint32_t)rsb_e->record.trap_type;
-		event->brk_code = (uint64_t)rsb_e->record.trap_code;
-		event->faulting_address = rsb_e->record.fault_pc - vm_kernel_stext;
-		strlcpy(event->uuid, kernel_uuid_string, CA_UUID_LEN);
-		break;
-	}
+    event->brk_type = (uint32_t)rsb_e->record.trap_type;
+    event->brk_code = (uint64_t)rsb_e->record.trap_code;
+    event->faulting_address = rsb_e->record.fault_pc - vm_kernel_stext;
+    strlcpy(event->uuid, kernel_uuid_string, CA_UUID_LEN);
+    break;
+  }
 
-	case TRAP_TELEMETRY_CA_EVENT_INTERNAL: {
-		int result;
-		uuid_t *uuid = NULL;
-		uint64_t offset = 0;
+  case TRAP_TELEMETRY_CA_EVENT_INTERNAL: {
+    int result;
+    uuid_t *uuid = NULL;
+    uint64_t offset = 0;
 
-		ca_event = CA_EVENT_ALLOCATE(trap_telemetry_internal);
-		CA_EVENT_TYPE(trap_telemetry_internal) * event = ca_event->data;
+    ca_event = CA_EVENT_ALLOCATE(trap_telemetry_internal);
+    CA_EVENT_TYPE(trap_telemetry_internal) *event = ca_event->data;
 
-		backtrace_to_offset_bt_string(
-			/* buf */ event->backtrace,
-			/* buf_len */ TRAP_TELEMETRY_BT_STR_LEN,
-			rsb_e->bt_frames,
-			rsb_e->bt_frames_count);
+    backtrace_to_offset_bt_string(
+        /* buf */ event->backtrace,
+        /* buf_len */ TRAP_TELEMETRY_BT_STR_LEN, rsb_e->bt_frames,
+        rsb_e->bt_frames_count);
 
 #if __arm64__
-		/*
-		 * We want the value of ARM64_SOC_NAME define as a string, so we need
-		 * to do a two level indirection of macros to get to it.
-		 */
+    /*
+     * We want the value of ARM64_SOC_NAME define as a string, so we need
+     * to do a two level indirection of macros to get to it.
+     */
 #define tostr(s) __STRINGIFY(s)
-		strlcpy(event->kernel_platform, tostr(ARM64_SOC_NAME), KERNEL_PLATFORM_STR_LEN);
+    strlcpy(event->kernel_platform, tostr(ARM64_SOC_NAME),
+            KERNEL_PLATFORM_STR_LEN);
 #undef tostr
 #endif
 
-		/*
-		 * Internal events report the UUID of the binary containing the
-		 * fault PC and offset of the fault PC into the executable region of
-		 * that binary (__TEXT_EXEC).
-		 */
-		if ((result = get_uuid_and_text_offset_for_addr(
-			    rsb_e->record.fault_pc, &uuid, &offset)) == 0) {
-			/* Success! */
-			event->trap_offset = offset;
-			uuid_unparse(*uuid, event->trap_uuid);
-		} else {
-			/*
-			 * We couldn't get the required data for symbolication for some
-			 * odd reason.
-			 * Report the offset into the executable region and the error as
-			 * the UUID instead.
-			 */
-			event->trap_offset = rsb_e->record.fault_pc - vm_kernel_stext;
-			(void)scnprintf(event->trap_uuid, CA_UUID_LEN, "error:%d\n",
-			    result);
-		}
+    /*
+     * Internal events report the UUID of the binary containing the
+     * fault PC and offset of the fault PC into the executable region of
+     * that binary (__TEXT_EXEC).
+     */
+    if ((result = get_uuid_and_text_offset_for_addr(rsb_e->record.fault_pc,
+                                                    &uuid, &offset)) == 0) {
+      /* Success! */
+      event->trap_offset = offset;
+      uuid_unparse(*uuid, event->trap_uuid);
+    } else {
+      /*
+       * We couldn't get the required data for symbolication for some
+       * odd reason.
+       * Report the offset into the executable region and the error as
+       * the UUID instead.
+       */
+      event->trap_offset = rsb_e->record.fault_pc - vm_kernel_stext;
+      (void)scnprintf(event->trap_uuid, CA_UUID_LEN, "error:%d\n", result);
+    }
 
-		event->trap_type = (uint32_t)rsb_e->record.trap_type;
-		event->trap_code = rsb_e->record.trap_code;
+    event->trap_type = (uint32_t)rsb_e->record.trap_type;
+    event->trap_code = rsb_e->record.trap_code;
 
-		break;
-	}
+    break;
+  }
 
-	case TRAP_TELEMETRY_CA_EVENT_LATENCY: {
-		ca_event = CA_EVENT_ALLOCATE(latency_violations);
-		CA_EVENT_TYPE(latency_violations) * event = ca_event->data;
+  case TRAP_TELEMETRY_CA_EVENT_LATENCY: {
+    ca_event = CA_EVENT_ALLOCATE(latency_violations);
+    CA_EVENT_TYPE(latency_violations) *event = ca_event->data;
 
-		backtrace_to_offset_bt_string(
-			/* buf */ event->backtrace,
-			/* buf_len */ TRAP_TELEMETRY_BT_STR_LEN,
-			rsb_e->bt_frames,
-			rsb_e->bt_frames_count);
+    backtrace_to_offset_bt_string(
+        /* buf */ event->backtrace,
+        /* buf_len */ TRAP_TELEMETRY_BT_STR_LEN, rsb_e->bt_frames,
+        rsb_e->bt_frames_count);
 
 #if __arm64__
-		/*
-		 * We want the value of ARM64_SOC_NAME define as a string, so we need
-		 * to do a two level indirection of macros to get to it.
-		 */
+    /*
+     * We want the value of ARM64_SOC_NAME define as a string, so we need
+     * to do a two level indirection of macros to get to it.
+     */
 #define tostr(s) __STRINGIFY(s)
-		strlcpy(event->kernel_platform, tostr(ARM64_SOC_NAME), KERNEL_PLATFORM_STR_LEN);
+    strlcpy(event->kernel_platform, tostr(ARM64_SOC_NAME),
+            KERNEL_PLATFORM_STR_LEN);
 #undef tostr
 #endif
-		strlcpy(event->uuid, kernel_uuid_string, CA_UUID_LEN);
-		(void)scnprintf(event->violation_cpu_type, 2, "%c",
-		    rsb_e->extra_data.latency_data.violation_cpu_type);
+    strlcpy(event->uuid, kernel_uuid_string, CA_UUID_LEN);
+    (void)scnprintf(event->violation_cpu_type, 2, "%c",
+                    rsb_e->extra_data.latency_data.violation_cpu_type);
 
-		event->violation_code = (uint32_t)rsb_e->record.trap_type;
-		event->violation_cpi = rsb_e->extra_data.latency_data.violation_cpi;
-		event->violation_freq = rsb_e->extra_data.latency_data.violation_freq;
-		event->violation_duration = rsb_e->extra_data.latency_data.violation_duration;
-		event->violation_threshold = rsb_e->extra_data.latency_data.violation_threshold;
-		event->violation_payload = rsb_e->extra_data.latency_data.violation_payload;
+    event->violation_code = (uint32_t)rsb_e->record.trap_type;
+    event->violation_cpi = rsb_e->extra_data.latency_data.violation_cpi;
+    event->violation_freq = rsb_e->extra_data.latency_data.violation_freq;
+    event->violation_duration =
+        rsb_e->extra_data.latency_data.violation_duration;
+    event->violation_threshold =
+        rsb_e->extra_data.latency_data.violation_threshold;
+    event->violation_payload = rsb_e->extra_data.latency_data.violation_payload;
 
-		break;
-	}
-	default: {
-		panic("Unexpected telemetry CA event: %u\n",
-		    options.telemetry_ca_event);
-	}
-	}
+    break;
+  }
+  default: {
+    panic("Unexpected telemetry CA event: %u\n", options.telemetry_ca_event);
+  }
+  }
 
-	if (ca_event) {
-		CA_EVENT_SEND(ca_event);
-	}
+  if (ca_event) {
+    CA_EVENT_SEND(ca_event);
+  }
 }
 
 /**
@@ -837,134 +786,127 @@ rsb_entry_submit(rsb_entry_s *rsb_e)
  */
 static void
 drain_record_submission_buffer_thread_call(__unused thread_call_param_t p0,
-    __unused thread_call_param_t p1)
-{
-	size_t drain_count = 0;
-	size_t drain_rd_idx = 0;
-	trap_telemetry_tree_entry_s *tree_records[RECORD_SUBMISSION_BUFFER_LENGTH];
+                                           __unused thread_call_param_t p1) {
+  size_t drain_count = 0;
+  size_t drain_rd_idx = 0;
+  trap_telemetry_tree_entry_s *tree_records[RECORD_SUBMISSION_BUFFER_LENGTH];
 
-	/*
-	 * We never expect for the submission thread to be scheduled while another
-	 * thread which is attempting to enqueue is suspended above it (acquiring
-	 * disables preemption) or while another submission thread is suspended
-	 * above it (only one submission thread should ever be running).
-	 *
-	 * Thus, failing to acquire the lock anywhere in this function indicates
-	 * that something is seriously wrong.
-	 */
-	safe_telemetry_lock_lock();
+  /*
+   * We never expect for the submission thread to be scheduled while another
+   * thread which is attempting to enqueue is suspended above it (acquiring
+   * disables preemption) or while another submission thread is suspended
+   * above it (only one submission thread should ever be running).
+   *
+   * Thus, failing to acquire the lock anywhere in this function indicates
+   * that something is seriously wrong.
+   */
+  safe_telemetry_lock_lock();
 
-	/*
-	 * If we're already draining, that means we either forgot to update
-	 * rsb_is_draining or we have another thread draining (which should never
-	 * happen).
-	 */
-	assert(!rsb_is_draining);
-	rsb_is_draining = true;
+  /*
+   * If we're already draining, that means we either forgot to update
+   * rsb_is_draining or we have another thread draining (which should never
+   * happen).
+   */
+  assert(!rsb_is_draining);
+  rsb_is_draining = true;
 
-	/*
-	 * Iteratively drain the submission queue until no entries remain.
-	 * Drops and reacquires the telemetry lock.
-	 */
-	while ((drain_count = rsb_count)) {
-		/* LOCKED IN */
-		drain_rd_idx = rsb_rd_idx;
-		safe_telemetry_lock_unlock();
+  /*
+   * Iteratively drain the submission queue until no entries remain.
+   * Drops and reacquires the telemetry lock.
+   */
+  while ((drain_count = rsb_count)) {
+    /* LOCKED IN */
+    drain_rd_idx = rsb_rd_idx;
+    safe_telemetry_lock_unlock();
 
-		/*
-		 * It is safe to read these entries based on snapshots of DRAIN_COUNT
-		 * and DRAIN_RD_IDX without holding the lock because all of the records'
-		 * writes will have already become visible due to the lock's store
-		 * release on the enqueue side. RSB entries are guaranteed to survive
-		 * even when we aren't holding the lock so long as DRAIN_RD_IDX doesn't
-		 * pass them. Since we are the only agent updating it, if we sequence
-		 * the DRAIN_RD_IDX write after, we're fine.
-		 *
-		 * We may miss some records in this pass if other CPUs enqueue after the
-		 * snapshot but we'll just pick them up in the next loop iteration.
-		 * Additionally, since only one instance of this function will be
-		 * running at a time, we don't need to worry about duplicate
-		 * allocations/work.
-		 */
+    /*
+     * It is safe to read these entries based on snapshots of DRAIN_COUNT
+     * and DRAIN_RD_IDX without holding the lock because all of the records'
+     * writes will have already become visible due to the lock's store
+     * release on the enqueue side. RSB entries are guaranteed to survive
+     * even when we aren't holding the lock so long as DRAIN_RD_IDX doesn't
+     * pass them. Since we are the only agent updating it, if we sequence
+     * the DRAIN_RD_IDX write after, we're fine.
+     *
+     * We may miss some records in this pass if other CPUs enqueue after the
+     * snapshot but we'll just pick them up in the next loop iteration.
+     * Additionally, since only one instance of this function will be
+     * running at a time, we don't need to worry about duplicate
+     * allocations/work.
+     */
 
-		for (size_t i = 0; i < drain_count; i++) {
-			size_t rsb_i = (drain_rd_idx + i) % RECORD_SUBMISSION_BUFFER_LENGTH;
-			rsb_entry_s *rsb_e = record_submission_buffer + rsb_i;
+    for (size_t i = 0; i < drain_count; i++) {
+      size_t rsb_i = (drain_rd_idx + i) % RECORD_SUBMISSION_BUFFER_LENGTH;
+      rsb_entry_s *rsb_e = record_submission_buffer + rsb_i;
 
-			/* Finish processing the entry and submit it as needed. */
-			rsb_entry_submit(rsb_e);
+      /* Finish processing the entry and submit it as needed. */
+      rsb_entry_submit(rsb_e);
 
-			if (rsb_e->options.report_once_per_site) {
-				/*
-				 * Though we don't insert it yet since we aren't holding the
-				 * lock, create our tree record from the RSB entry.
-				 */
-				trap_telemetry_tree_entry_s *new_tree_record = kalloc_type(
-					trap_telemetry_tree_entry_s, Z_WAITOK | Z_NOFAIL);
+      if (rsb_e->options.report_once_per_site) {
+        /*
+         * Though we don't insert it yet since we aren't holding the
+         * lock, create our tree record from the RSB entry.
+         */
+        trap_telemetry_tree_entry_s *new_tree_record =
+            kalloc_type(trap_telemetry_tree_entry_s, Z_WAITOK | Z_NOFAIL);
 
-				new_tree_record->record = rsb_e->record;
-				tree_records[i] = new_tree_record;
-			} else {
-				tree_records[i] = NULL;
-			}
-		}
+        new_tree_record->record = rsb_e->record;
+        tree_records[i] = new_tree_record;
+      } else {
+        tree_records[i] = NULL;
+      }
+    }
 
-		safe_telemetry_lock_lock();
-		/* Insert draining entries into the splay as needed */
-		for (size_t i = 0; i < drain_count; i++) {
-			size_t rsb_i = (drain_rd_idx + i) % RECORD_SUBMISSION_BUFFER_LENGTH;
-			rsb_entry_s *rsb_e = record_submission_buffer + rsb_i;
+    safe_telemetry_lock_lock();
+    /* Insert draining entries into the splay as needed */
+    for (size_t i = 0; i < drain_count; i++) {
+      size_t rsb_i = (drain_rd_idx + i) % RECORD_SUBMISSION_BUFFER_LENGTH;
+      rsb_entry_s *rsb_e = record_submission_buffer + rsb_i;
 
-			if (rsb_e->options.report_once_per_site) {
-				trap_telemetry_tree_entry_s *duplicate = SPLAY_INSERT(
-					trap_telemetry_tree,
-					&telemetry_splay_tree,
-					tree_records[i]);
+      if (rsb_e->options.report_once_per_site) {
+        trap_telemetry_tree_entry_s *duplicate = SPLAY_INSERT(
+            trap_telemetry_tree, &telemetry_splay_tree, tree_records[i]);
 
-				/*
-				 * Since we scan both the RSB and the splay tree before
-				 * submitting a report once record, we structurally should never
-				 * have multiple instances of any such record.
-				 */
-				(void)duplicate;
-				assert(!duplicate);
-			}
-		}
+        /*
+         * Since we scan both the RSB and the splay tree before
+         * submitting a report once record, we structurally should never
+         * have multiple instances of any such record.
+         */
+        (void)duplicate;
+        assert(!duplicate);
+      }
+    }
 
-		/* Dequeue the submitted entries from the RSB */
-		rsb_rd_idx =
-		    (rsb_rd_idx + drain_count) % RECORD_SUBMISSION_BUFFER_LENGTH;
-		rsb_count -= drain_count;
-		/* LOCKED OUT */
-	}
+    /* Dequeue the submitted entries from the RSB */
+    rsb_rd_idx = (rsb_rd_idx + drain_count) % RECORD_SUBMISSION_BUFFER_LENGTH;
+    rsb_count -= drain_count;
+    /* LOCKED OUT */
+  }
 
-	/* Done for now, if submitters have entries they'll need to call again. */
-	rsb_is_draining = false;
-	safe_telemetry_lock_unlock();
+  /* Done for now, if submitters have entries they'll need to call again. */
+  rsb_is_draining = false;
+  safe_telemetry_lock_unlock();
 }
 
-__startup_func
-void
-trap_telemetry_init(void)
-{
-	printf(TAG "trap_telemetry_init\n");
-	SPLAY_INIT(&telemetry_splay_tree);
+__startup_func void trap_telemetry_init(void) {
+  printf(TAG "trap_telemetry_init\n");
+  SPLAY_INIT(&telemetry_splay_tree);
 
-	drain_record_submission_buffer_callout = thread_call_allocate_with_options(
-		drain_record_submission_buffer_thread_call, NULL,
-		THREAD_CALL_PRIORITY_KERNEL, THREAD_CALL_OPTIONS_ONCE);
+  drain_record_submission_buffer_callout = thread_call_allocate_with_options(
+      drain_record_submission_buffer_thread_call, NULL,
+      THREAD_CALL_PRIORITY_KERNEL, THREAD_CALL_OPTIONS_ONCE);
 
-	if (!drain_record_submission_buffer_callout) {
-		panic("Failed to allocate drain callout!");
-	}
+  if (!drain_record_submission_buffer_callout) {
+    panic("Failed to allocate drain callout!");
+  }
 
-	{
-		/* Ensure that all telemetry events can be encoded in the bitfield */
-		trap_telemetry_options_s opt = (trap_telemetry_options_s) {0};
-		uint8_t last_event = TRAP_TELEMETRY_CA_EVENT_COUNT - 1;
-		opt.telemetry_ca_event = last_event;
-		assert(opt.telemetry_ca_event == last_event);
-	}
+  {
+    /* Ensure that all telemetry events can be encoded in the bitfield */
+    trap_telemetry_options_s opt = (trap_telemetry_options_s){0};
+    uint8_t last_event = TRAP_TELEMETRY_CA_EVENT_COUNT - 1;
+    opt.telemetry_ca_event = last_event;
+    assert(opt.telemetry_ca_event == last_event);
+  }
 }
 
 /**
@@ -972,275 +914,243 @@ trap_telemetry_init(void)
  * Returns TRUE if the record was accepted (either enqueued or dupe'd), FALSE
  * otherwise.
  */
-static bool
-rsb_enqueue_if_needed(rsb_entry_s *rsb_e)
-{
-	bool record_accepted = true;
-	bool should_flush_submission_buffer = false;
-	trap_telemetry_tree_entry_s *splay_found_entry = NULL;
-	trap_telemetry_tree_entry_s find_tree_e = {0};
+static bool rsb_enqueue_if_needed(rsb_entry_s *rsb_e) {
+  bool record_accepted = true;
+  bool should_flush_submission_buffer = false;
+  trap_telemetry_tree_entry_s *splay_found_entry = NULL;
+  trap_telemetry_tree_entry_s find_tree_e = {0};
 
-	if (trap_debounce_buffer_has_match(&rsb_e->record)) {
-		/* debounce dupe */
-		return true;
-	}
+  if (trap_debounce_buffer_has_match(&rsb_e->record)) {
+    /* debounce dupe */
+    return true;
+  }
 
-	if (!safe_telemetry_lock_try_lock()) {
-		/*
-		 * Failed to acquire the lock!
-		 * We're likely in a nested exception. Since we can't safely do anything
-		 * else with the record, just drop it.
-		 */
-		return false;
-	}
+  if (!safe_telemetry_lock_try_lock()) {
+    /*
+     * Failed to acquire the lock!
+     * We're likely in a nested exception. Since we can't safely do anything
+     * else with the record, just drop it.
+     */
+    return false;
+  }
 
-	if (rsb_e->options.report_once_per_site) {
-		/* First, scan the submission queue for matching, queued records */
-		for (size_t i = 0; i < rsb_count; i++) {
-			size_t rsb_i = (rsb_rd_idx + i) % RECORD_SUBMISSION_BUFFER_LENGTH;
-			rsb_entry_s *rsb_e_i = record_submission_buffer + rsb_i;
-			if (match_record_compare(&rsb_e->record, &rsb_e_i->record) == 0) {
-				/* Match, no need to report again. */
-				goto DONE_LOCKED;
-			}
-		}
+  if (rsb_e->options.report_once_per_site) {
+    /* First, scan the submission queue for matching, queued records */
+    for (size_t i = 0; i < rsb_count; i++) {
+      size_t rsb_i = (rsb_rd_idx + i) % RECORD_SUBMISSION_BUFFER_LENGTH;
+      rsb_entry_s *rsb_e_i = record_submission_buffer + rsb_i;
+      if (match_record_compare(&rsb_e->record, &rsb_e_i->record) == 0) {
+        /* Match, no need to report again. */
+        goto DONE_LOCKED;
+      }
+    }
 
-		/* Next, try for a record in the splay */
-		find_tree_e.record = rsb_e->record;
-		splay_found_entry = SPLAY_FIND(trap_telemetry_tree,
-		    &telemetry_splay_tree,
-		    &find_tree_e);
-		if (splay_found_entry) {
-			/* Match, no need to report again. */
-			goto DONE_LOCKED;
-		}
-	}
+    /* Next, try for a record in the splay */
+    find_tree_e.record = rsb_e->record;
+    splay_found_entry =
+        SPLAY_FIND(trap_telemetry_tree, &telemetry_splay_tree, &find_tree_e);
+    if (splay_found_entry) {
+      /* Match, no need to report again. */
+      goto DONE_LOCKED;
+    }
+  }
 
+  /*
+   * If we haven't hit any disqualifying conditions, this means we have a new
+   * entry which needs to be enqueued for reporting.
+   */
+  record_accepted = rsb_enqueue_locked(rsb_e);
+  should_flush_submission_buffer = record_accepted && !rsb_is_draining;
 
-	/*
-	 * If we haven't hit any disqualifying conditions, this means we have a new
-	 * entry which needs to be enqueued for reporting.
-	 */
-	record_accepted = rsb_enqueue_locked(rsb_e);
-	should_flush_submission_buffer = record_accepted && !rsb_is_draining;
-
-	if (record_accepted) {
-		/* We've handled the record, so mark it for debouncing */
-		trap_debounce_buffer_enter(&rsb_e->record);
+  if (record_accepted) {
+    /* We've handled the record, so mark it for debouncing */
+    trap_debounce_buffer_enter(&rsb_e->record);
 #if DEVELOPMENT || DEBUG
-		os_atomic_inc(&trap_telemetry_reported_events, relaxed);
+    os_atomic_inc(&trap_telemetry_reported_events, relaxed);
 #endif /* DEVELOPMENT || DEBUG */
-	} else {
-		/*
-		 * Failed to enqueue. Since we have no better options, drop the event.
-		 */
+  } else {
+    /*
+     * Failed to enqueue. Since we have no better options, drop the event.
+     */
 #if DEVELOPMENT || DEBUG
-		os_atomic_inc(&trap_telemetry_capacity_dropped_events, relaxed);
+    os_atomic_inc(&trap_telemetry_capacity_dropped_events, relaxed);
 #endif /* DEVELOPMENT || DEBUG */
-	}
+  }
 
 DONE_LOCKED:
-	safe_telemetry_lock_unlock();
+  safe_telemetry_lock_unlock();
 
-	if (should_flush_submission_buffer &&
-	    startup_phase >= STARTUP_SUB_THREAD_CALL) {
-		/*
-		 * We submitted a new entry while the drain thread was either exiting or
-		 * not running. Queue a new flush. Multiple calls here before the drain
-		 * starts running will not result in multiple calls being queued due to
-		 * THREAD_CALL_OPTIONS_ONCE.
-		 */
-		thread_call_enter(drain_record_submission_buffer_callout);
-	}
+  if (should_flush_submission_buffer &&
+      startup_phase >= STARTUP_SUB_THREAD_CALL) {
+    /*
+     * We submitted a new entry while the drain thread was either exiting or
+     * not running. Queue a new flush. Multiple calls here before the drain
+     * starts running will not result in multiple calls being queued due to
+     * THREAD_CALL_OPTIONS_ONCE.
+     */
+    thread_call_enter(drain_record_submission_buffer_callout);
+  }
 
-	return record_accepted;
+  return record_accepted;
 }
 
 /**
  * Should a given trap be ignored/not reported?
  */
-static bool
-should_ignore_trap(
-	trap_telemetry_type_t trap_type,
-	uint64_t trap_code,
-	trap_telemetry_options_s options)
-{
-	if (trap_telemetry_disable_all) {
-		/* Telemetry is disabled, drop all events. */
-		return true;
-	}
+static bool should_ignore_trap(trap_telemetry_type_t trap_type,
+                               uint64_t trap_code,
+                               trap_telemetry_options_s options) {
+  if (trap_telemetry_disable_all) {
+    /* Telemetry is disabled, drop all events. */
+    return true;
+  }
 
-	if ((options.telemetry_ca_event == TRAP_TELEMETRY_CA_EVENT_NONE ||
-	    trap_telemetry_disable_ca) &&
-	    !should_dump_trap(trap_type, trap_code)) {
-		/* Trap won't be reported anywhere, so it can be dropped. */
-		return true;
-	}
+  if ((options.telemetry_ca_event == TRAP_TELEMETRY_CA_EVENT_NONE ||
+       trap_telemetry_disable_ca) &&
+      !should_dump_trap(trap_type, trap_code)) {
+    /* Trap won't be reported anywhere, so it can be dropped. */
+    return true;
+  }
 
-	return false;
+  return false;
 }
 
-bool
-trap_telemetry_report_exception(
-	trap_telemetry_type_t trap_type,
-	uint64_t trap_code,
-	trap_telemetry_options_s options,
-	void *saved_state)
-{
-	if (should_ignore_trap(trap_type, trap_code, options)) {
-		/*
-		 * Don't bother reporting the trap. Since this is not an error, report
-		 * that we handled the trap as expected.
-		 */
-		return true;
-	}
+bool trap_telemetry_report_exception(trap_telemetry_type_t trap_type,
+                                     uint64_t trap_code,
+                                     trap_telemetry_options_s options,
+                                     void *saved_state) {
+  if (should_ignore_trap(trap_type, trap_code, options)) {
+    /*
+     * Don't bother reporting the trap. Since this is not an error, report
+     * that we handled the trap as expected.
+     */
+    return true;
+  }
 
 #if __arm64__
-	arm_saved_state_t *state = (arm_saved_state_t *)saved_state;
+  arm_saved_state_t *state = (arm_saved_state_t *)saved_state;
 
-	uintptr_t faulting_address = get_saved_state_pc(state);
-	uintptr_t saved_fp = get_saved_state_fp(state);
+  uintptr_t faulting_address = get_saved_state_pc(state);
+  uintptr_t saved_fp = get_saved_state_fp(state);
 #else
-	x86_saved_state64_t *state = (x86_saved_state64_t *)saved_state;
+  x86_saved_state64_t *state = (x86_saved_state64_t *)saved_state;
 
-	uintptr_t faulting_address = state->isf.rip;
-	uintptr_t saved_fp = state->rbp;
+  uintptr_t faulting_address = state->isf.rip;
+  uintptr_t saved_fp = state->rbp;
 #endif
 
-	struct backtrace_control ctl = {
-		.btc_frame_addr = (uintptr_t)saved_fp,
-	};
+  struct backtrace_control ctl = {
+      .btc_frame_addr = (uintptr_t)saved_fp,
+  };
 
-	rsb_entry_s submission_e = { 0 };
-	submission_e.record.trap_type = trap_type;
-	submission_e.record.trap_code = trap_code;
-	submission_e.record.fault_pc = faulting_address;
-	submission_e.options = options;
-	submission_e.bt_frames_count = backtrace(
-		submission_e.bt_frames, TRAP_TELEMETRY_BT_FRAMES, &ctl, NULL);
+  rsb_entry_s submission_e = {0};
+  submission_e.record.trap_type = trap_type;
+  submission_e.record.trap_code = trap_code;
+  submission_e.record.fault_pc = faulting_address;
+  submission_e.options = options;
+  submission_e.bt_frames_count =
+      backtrace(submission_e.bt_frames, TRAP_TELEMETRY_BT_FRAMES, &ctl, NULL);
 
-	return rsb_enqueue_if_needed(&submission_e);
+  return rsb_enqueue_if_needed(&submission_e);
 }
 
-__attribute__((always_inline))
-static bool
+__attribute__((always_inline)) static bool
 trap_telemetry_report_simulated_trap_impl(
-	trap_telemetry_type_t trap_type,
-	uint64_t trap_code,
-	trap_telemetry_extra_data_u *extra_data,
-	trap_telemetry_options_s options)
-{
-	if (should_ignore_trap(trap_type, trap_code, options)) {
-		/*
-		 * Don't bother reporting the trap. Since this is not an error, report
-		 * that we did handle the trap as expected.
-		 */
-		return true;
-	}
+    trap_telemetry_type_t trap_type, uint64_t trap_code,
+    trap_telemetry_extra_data_u *extra_data, trap_telemetry_options_s options) {
+  if (should_ignore_trap(trap_type, trap_code, options)) {
+    /*
+     * Don't bother reporting the trap. Since this is not an error, report
+     * that we did handle the trap as expected.
+     */
+    return true;
+  }
 
-	/*
-	 * We want to provide a backtrace as if a trap ocurred at the callsite of
-	 * the simulated trap. Doing this safely is somewhat awkward as
-	 * __builtin_frame_address with a non-zero argument can itself fault (if our
-	 * callers frame pointer is invalid) so instead we take a backtrace starting
-	 * in our own frame and chop it up as expected.
-	 */
+  /*
+   * We want to provide a backtrace as if a trap ocurred at the callsite of
+   * the simulated trap. Doing this safely is somewhat awkward as
+   * __builtin_frame_address with a non-zero argument can itself fault (if our
+   * callers frame pointer is invalid) so instead we take a backtrace starting
+   * in our own frame and chop it up as expected.
+   */
 
-	const size_t frames_count = TRAP_TELEMETRY_BT_FRAMES + 1;
-	uintptr_t frames[frames_count];
+  const size_t frames_count = TRAP_TELEMETRY_BT_FRAMES + 1;
+  uintptr_t frames[frames_count];
 
-	struct backtrace_control ctl = {
-		.btc_frame_addr = (uintptr_t)__builtin_frame_address(0),
-	};
+  struct backtrace_control ctl = {
+      .btc_frame_addr = (uintptr_t)__builtin_frame_address(0),
+  };
 
-	size_t frames_valid_count = backtrace(frames, frames_count, &ctl, NULL);
-	if (frames_valid_count) {
-		/*
-		 * Take the first backtrace entry as the fault address and then place
-		 * all other entries into the backtrace. The first backtrace is our
-		 * caller (due to the noinline attribute), which gives us the fault
-		 * address as the call site (as desired).
-		 */
-		return trap_telemetry_report_simulated_trap_with_backtrace(
-			trap_type,
-			trap_code,
-			options,
-			extra_data,
-			/* fault_pc */ frames[0],
-			/* frames */ frames + 1,
-			/* frames_valid_count */ frames_valid_count - 1);
-	} else {
-		/* Failed to take a backtrace? Report just the return address then. */
-		return trap_telemetry_report_simulated_trap_with_backtrace(
-			trap_type,
-			trap_code,
-			options,
-			extra_data,
-			/* fault_pc */ (uintptr_t)__builtin_return_address(0),
-			/* frames */ NULL,
-			/* frames_valid_count */ 0);
-	}
+  size_t frames_valid_count = backtrace(frames, frames_count, &ctl, NULL);
+  if (frames_valid_count) {
+    /*
+     * Take the first backtrace entry as the fault address and then place
+     * all other entries into the backtrace. The first backtrace is our
+     * caller (due to the noinline attribute), which gives us the fault
+     * address as the call site (as desired).
+     */
+    return trap_telemetry_report_simulated_trap_with_backtrace(
+        trap_type, trap_code, options, extra_data,
+        /* fault_pc */ frames[0],
+        /* frames */ frames + 1,
+        /* frames_valid_count */ frames_valid_count - 1);
+  } else {
+    /* Failed to take a backtrace? Report just the return address then. */
+    return trap_telemetry_report_simulated_trap_with_backtrace(
+        trap_type, trap_code, options, extra_data,
+        /* fault_pc */ (uintptr_t)__builtin_return_address(0),
+        /* frames */ NULL,
+        /* frames_valid_count */ 0);
+  }
 }
 
-__attribute__((noinline))
-bool
-trap_telemetry_report_simulated_trap(
-	trap_telemetry_type_t trap_type,
-	uint64_t trap_code,
-	trap_telemetry_options_s options)
-{
-	return trap_telemetry_report_simulated_trap_impl(trap_type, trap_code, NULL, options);
+__attribute__((noinline)) bool
+trap_telemetry_report_simulated_trap(trap_telemetry_type_t trap_type,
+                                     uint64_t trap_code,
+                                     trap_telemetry_options_s options) {
+  return trap_telemetry_report_simulated_trap_impl(trap_type, trap_code, NULL,
+                                                   options);
 }
 
-__attribute__((noinline))
-bool
-trap_telemetry_report_latency_violation(
-	trap_telemetry_type_t trap_type,
-	trap_telemetry_latency_s latency_data)
-{
-	return trap_telemetry_report_simulated_trap_impl(trap_type, 0,
-	           (trap_telemetry_extra_data_u *)&latency_data,
-	           (trap_telemetry_options_s) {
-		.telemetry_ca_event = TRAP_TELEMETRY_CA_EVENT_LATENCY,
-		.report_once_per_site = false
-	});
+__attribute__((noinline)) bool
+trap_telemetry_report_latency_violation(trap_telemetry_type_t trap_type,
+                                        trap_telemetry_latency_s latency_data) {
+  return trap_telemetry_report_simulated_trap_impl(
+      trap_type, 0, (trap_telemetry_extra_data_u *)&latency_data,
+      (trap_telemetry_options_s){.telemetry_ca_event =
+                                     TRAP_TELEMETRY_CA_EVENT_LATENCY,
+                                 .report_once_per_site = false});
 }
 
-bool
-trap_telemetry_report_simulated_trap_with_backtrace(
-	trap_telemetry_type_t trap_type,
-	uint64_t trap_code,
-	trap_telemetry_options_s options,
-	trap_telemetry_extra_data_u *extra_data,
-	uintptr_t fault_pc,
-	uintptr_t *frames,
-	size_t frames_valid_count)
-{
-	if (should_ignore_trap(trap_type, trap_code, options)) {
-		/*
-		 * Don't bother reporting the trap. Since this is not an error, report
-		 * that we did handle the trap as expected.
-		 */
-		return true;
-	}
+bool trap_telemetry_report_simulated_trap_with_backtrace(
+    trap_telemetry_type_t trap_type, uint64_t trap_code,
+    trap_telemetry_options_s options, trap_telemetry_extra_data_u *extra_data,
+    uintptr_t fault_pc, uintptr_t *frames, size_t frames_valid_count) {
+  if (should_ignore_trap(trap_type, trap_code, options)) {
+    /*
+     * Don't bother reporting the trap. Since this is not an error, report
+     * that we did handle the trap as expected.
+     */
+    return true;
+  }
 
-	rsb_entry_s submission_e = { 0 };
-	submission_e.record.trap_type = trap_type;
-	submission_e.record.trap_code = trap_code;
-	if (extra_data != NULL) {
-		submission_e.extra_data = *extra_data;
-	}
-	submission_e.options = options;
+  rsb_entry_s submission_e = {0};
+  submission_e.record.trap_type = trap_type;
+  submission_e.record.trap_code = trap_code;
+  if (extra_data != NULL) {
+    submission_e.extra_data = *extra_data;
+  }
+  submission_e.options = options;
 
-	// only copy up to TRAP_TELEMETRY_BT_FRAMES frames
-	if (frames_valid_count >= TRAP_TELEMETRY_BT_FRAMES) {
-		frames_valid_count = TRAP_TELEMETRY_BT_FRAMES;
-	}
+  // only copy up to TRAP_TELEMETRY_BT_FRAMES frames
+  if (frames_valid_count >= TRAP_TELEMETRY_BT_FRAMES) {
+    frames_valid_count = TRAP_TELEMETRY_BT_FRAMES;
+  }
 
-	submission_e.bt_frames_count = frames_valid_count;
-	submission_e.record.fault_pc = fault_pc;
+  submission_e.bt_frames_count = frames_valid_count;
+  submission_e.record.fault_pc = fault_pc;
 
-	memcpy(submission_e.bt_frames, frames, frames_valid_count * sizeof(*frames));
+  memcpy(submission_e.bt_frames, frames, frames_valid_count * sizeof(*frames));
 
-	return rsb_enqueue_if_needed(&submission_e);
+  return rsb_enqueue_if_needed(&submission_e);
 }

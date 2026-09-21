@@ -3,7 +3,6 @@
 //  CoreEntitlements
 //
 
-
 #ifndef CORE_ENTITLEMENTS_ENTS_PRIV_H
 #define CORE_ENTITLEMENTS_ENTS_PRIV_H
 
@@ -21,12 +20,13 @@ extern "C" {
 __ptrcheck_abi_assume_single();
 
 struct CEQueryContext {
-    der_vm_context_t der_context;
-    bool managed;
+  der_vm_context_t der_context;
+  bool managed;
 };
 
-
-CEError_t CEAcquireUnmanagedContext(const CERuntime_t rt, CEValidationResult validationResult, struct CEQueryContext* ctx);
+CEError_t CEAcquireUnmanagedContext(const CERuntime_t rt,
+                                    CEValidationResult validationResult,
+                                    struct CEQueryContext *ctx);
 
 /*!
  * @function CEConjureContextFromDER
@@ -35,8 +35,13 @@ CEError_t CEAcquireUnmanagedContext(const CERuntime_t rt, CEValidationResult val
  */
 struct CEQueryContext CEConjureContextFromDER(der_vm_context_t der_context);
 
-CEQueryOperation_t* CECreateStringOpInplace(CEQueryOperation_t* storage, CEQueryOpOpcode_t op, const char *__counted_by(len) data, size_t len);
-CEQueryOperation_t* CECreateNumericOpInplace(CEQueryOperation_t* storage, CEQueryOpOpcode_t op, int64_t param);
+CEQueryOperation_t *CECreateStringOpInplace(CEQueryOperation_t *storage,
+                                            CEQueryOpOpcode_t op,
+                                            const char *__counted_by(len) data,
+                                            size_t len);
+CEQueryOperation_t *CECreateNumericOpInplace(CEQueryOperation_t *storage,
+                                             CEQueryOpOpcode_t op,
+                                             int64_t param);
 
 #ifdef __cplusplus
 }

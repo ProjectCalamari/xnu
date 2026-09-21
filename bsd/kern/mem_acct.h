@@ -33,8 +33,9 @@ struct mem_acct;
  * Add "size" to the memory accounting module of "type".
  */
 __private_extern__ void _mem_acct_add(struct mem_acct *macct, int size);
-__private_extern__ struct mem_acct *mem_acct_register(
-	const char *__null_terminated name, uint64_t hardlimit, uint8_t percent);
+__private_extern__ struct mem_acct *
+mem_acct_register(const char *__null_terminated name, uint64_t hardlimit,
+                  uint8_t percent);
 
 /*
  * pre-softlimit means we are getting close to the softlimit (about 80% of it).
@@ -53,18 +54,13 @@ __private_extern__ struct mem_acct *mem_acct_register(
 
 extern int mem_acct_limited(const struct mem_acct *macct);
 
-static inline void
-mem_acct_add(struct mem_acct *macct, unsigned int size)
-{
-	_mem_acct_add(macct, size);
+static inline void mem_acct_add(struct mem_acct *macct, unsigned int size) {
+  _mem_acct_add(macct, size);
 }
 
-static inline void
-mem_acct_sub(struct mem_acct *macct, unsigned int size)
-{
-	_mem_acct_add(macct, -size);
+static inline void mem_acct_sub(struct mem_acct *macct, unsigned int size) {
+  _mem_acct_add(macct, -size);
 }
-
 
 #endif /* XNU_KERNEL_PRIVATE */
 

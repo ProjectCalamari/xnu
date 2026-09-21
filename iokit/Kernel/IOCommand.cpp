@@ -32,7 +32,8 @@
  *
  *	HISTORY
  *
- *	11/13/2000		CJS		Created IOCommand class and implementation
+ *	11/13/2000		CJS		Created IOCommand class and
+ * implementation
  *
  */
 
@@ -41,18 +42,15 @@
 #define super OSObject
 OSDefineMetaClassAndStructors(IOCommand, OSObject);
 
-
 //--------------------------------------------------------------------------
 //	init -	initialize our data structures
 //--------------------------------------------------------------------------
 
-bool
-IOCommand::init(void)
-{
-	if (super::init()) {
-		queue_init(&fCommandChain);
-		return true;
-	} else {
-		return false;
-	}
+bool IOCommand::init(void) {
+  if (super::init()) {
+    queue_init(&fCommandChain);
+    return true;
+  } else {
+    return false;
+  }
 }

@@ -39,167 +39,145 @@
 
 static TestDevice *sDevice;
 
-static mach_timespec_t hundredMill = { 0, 100000000 };
+static mach_timespec_t hundredMill = {0, 100000000};
 static semaphore_port_t completeSema;
 
 OSDefineMetaClassAndStructors(TestDevice, OSObject)
 
-kern_return_t
-TestDevice::enqueueCommand(bool sleep,
-    TestDeviceAction act, int tag, void *dataP)
-{
-	return commQ->enqueueCommand(sleep, (void *) act, (void *) tag, dataP);
+    kern_return_t TestDevice::enqueueCommand(bool sleep, TestDeviceAction act,
+                                             int tag, void *dataP) {
+  return commQ->enqueueCommand(sleep, (void *)act, (void *)tag, dataP);
 }
 
-bool
-TestDevice::init()
-{
-	if (!super::init()) {
-		return false;
-	}
+bool TestDevice::init() {
+  if (!super::init()) {
+    return false;
+  }
 
-	workLoop = IOWorkLoop::workLoop();
-	if (!workLoop) {
-		return false;
-	}
+  workLoop = IOWorkLoop::workLoop();
+  if (!workLoop) {
+    return false;
+  }
 
-	commQ = IOCommandQueue::commandQueue
-	    (this, (IOCommandQueueAction) & rawCommandOccurred, 8);
-	if (!commQ || kIOReturnSuccess != workLoop->addEventSource(commQ)) {
-		return false;
-	}
+  commQ = IOCommandQueue::commandQueue(
+      this, (IOCommandQueueAction)&rawCommandOccurred, 8);
+  if (!commQ || kIOReturnSuccess != workLoop->addEventSource(commQ)) {
+    return false;
+  }
 
-	intES = IOInterruptEventSource::interruptEventSource
-	    (this, (IOInterruptEventAction) & interruptAction);
-	if (!intES || kIOReturnSuccess != workLoop->addEventSource(intES)) {
-		return false;
-	}
+  intES = IOInterruptEventSource::interruptEventSource(
+      this, (IOInterruptEventAction)&interruptAction);
+  if (!intES || kIOReturnSuccess != workLoop->addEventSource(intES)) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-void
-TestDevice::free()
-{
-	if (intES) {
-		intES->release();
-	}
-	if (commQ) {
-		commQ->release();
-	}
-	if (workLoop) {
-		workLoop->release();
-	}
+void TestDevice::free() {
+  if (intES) {
+    intES->release();
+  }
+  if (commQ) {
+    commQ->release();
+  }
+  if (workLoop) {
+    workLoop->release();
+  }
 
-	super::free();
+  super::free();
 }
 
-void
-TestDevice::rawCommandOccurred
-(void *field0, void *field1, void *field2, void *)
-{
-	(*(TestDeviceAction) field0)(this, (int) field1, field2);
+void TestDevice::rawCommandOccurred(void *field0, void *field1, void *field2,
+                                    void *) {
+  (*(TestDeviceAction)field0)(this, (int)field1, field2);
 }
 
-void
-TestDevice::interruptAction(IOInterruptEventSource *, int count)
-{
-	logPrintf(("I(%d, %d) ", count, ++intCount));
+void TestDevice::interruptAction(IOInterruptEventSource *, int count) {
+  logPrintf(("I(%d, %d) ", count, ++intCount));
 }
 
-void
-TestDevice::producer1Action(int tag)
-{
-	logPrintf(("C1(%d) ", tag));
+void TestDevice::producer1Action(int tag) { logPrintf(("C1(%d) ", tag)); }
+
+void TestDevice::producer2Action(int tag, void *count) {
+  logPrintf(("C2(%d,%d) ", tag, (int)count));
+  if (!(tag % 10)) {
+    IOSleep(1000);
+  }
 }
 
-void
-TestDevice::producer2Action(int tag, void *count)
-{
-	logPrintf(("C2(%d,%d) ", tag, (int) count));
-	if (!(tag % 10)) {
-		IOSleep(1000);
-	}
+void TestDevice::alarm() {
+  intES->interruptOccurred(0, 0, 0);
+  IOScheduleFunc((IOThreadFunc)alarm, (void *)this, hundredMill, 1);
 }
 
-void
-TestDevice::alarm()
-{
-	intES->interruptOccurred(0, 0, 0);
-	IOScheduleFunc((IOThreadFunc) alarm, (void *) this, hundredMill, 1);
+static void producer(void *inProducerId) {
+  int producerId = (int)inProducerId;
+  TestDeviceAction command;
+  int i;
+
+  semaphore_wait(completeSema);
+
+  if (producerId & 1) {
+    command = (TestDeviceAction)sDevice->producer1Action;
+  } else {
+    command = (TestDeviceAction)sDevice->producer2Action;
+  }
+
+  for (i = 0; i < 5 * (producerId << 1); i++) {
+    sDevice->enqueueCommand(true, command, i, (void *)(i % (producerId + 1)));
+    if (!(i % (producerId + 1))) {
+      /* cthread_yield() */;
+    }
+    logPrintf(("TestDevice(%d): %d\n", producerId, i));
+  }
+
+  logPrintf(("TestDevice: producer %d exiting\n", producerId));
+  semaphore_signal(completeSema);
+
+  IOExitThread(producerId);
 }
 
-static void
-producer(void *inProducerId)
-{
-	int producerId = (int) inProducerId;
-	TestDeviceAction command;
-	int i;
+void testWorkLoop() {
+  int i;
 
-	semaphore_wait(completeSema);
+  sDevice = new TestDevice;
+  if (!sDevice || !sDevice->init()) {
+    if (sDevice) {
+      sDevice->free();
+    }
+    logPrintf(("TestDevice: couldn't create device instance\n"));
+    return;
+  }
 
-	if (producerId & 1) {
-		command = (TestDeviceAction) sDevice->producer1Action;
-	} else {
-		command = (TestDeviceAction) sDevice->producer2Action;
-	}
+  IOSleep(1000);
 
-	for (i = 0; i < 5 * (producerId << 1); i++) {
-		sDevice->enqueueCommand
-		(true, command, i, (void *) (i % (producerId + 1)));
-		if (!(i % (producerId + 1))) {
-			/* cthread_yield() */;
-		}
-		logPrintf(("TestDevice(%d): %d\n", producerId, i));
-	}
+  IOScheduleFunc((IOThreadFunc)sDevice->alarm, sDevice, hundredMill, 1);
 
-	logPrintf(("TestDevice: producer %d exiting\n", producerId));
-	semaphore_signal(completeSema);
+  IOSleep(2000);
 
-	IOExitThread(producerId);
-}
+  if (KERN_SUCCESS !=
+      semaphore_create(kernel_task, &completeSema, SYNC_POLICY_FIFO, 4)) {
+    return;
+  }
 
-void
-testWorkLoop()
-{
-	int i;
+  IOCreateThread(producer, (void *)4);
+  IOCreateThread(producer, (void *)3);
+  IOCreateThread(producer, (void *)2);
+  IOCreateThread(producer, (void *)1);
 
-	sDevice = new TestDevice;
-	if (!sDevice || !sDevice->init()) {
-		if (sDevice) {
-			sDevice->free();
-		}
-		logPrintf(("TestDevice: couldn't create device instance\n"));
-		return;
-	}
+  IOSleep(2000);
 
-	IOSleep(1000);
+  for (i = 0; i < 4; i++) {
+    semaphore_wait(completeSema);
+  }
 
-	IOScheduleFunc((IOThreadFunc) sDevice->alarm, sDevice, hundredMill, 1);
+  IOUnscheduleFunc((IOThreadFunc)sDevice->alarm, sDevice);
 
-	IOSleep(2000);
+  sDevice->free();
+  sDevice = 0;
 
-	if (KERN_SUCCESS
-	    != semaphore_create(kernel_task, &completeSema, SYNC_POLICY_FIFO, 4)) {
-		return;
-	}
-
-	IOCreateThread(producer, (void *) 4);
-	IOCreateThread(producer, (void *) 3);
-	IOCreateThread(producer, (void *) 2);
-	IOCreateThread(producer, (void *) 1);
-
-	IOSleep(2000);
-
-	for (i = 0; i < 4; i++) {
-		semaphore_wait(completeSema);
-	}
-
-	IOUnscheduleFunc((IOThreadFunc) sDevice->alarm, sDevice);
-
-	sDevice->free(); sDevice = 0;
-
-	logPrintf(("TestDevice: exiting\n"));
+  logPrintf(("TestDevice: exiting\n"));
 }
 
 #endif /* DEBUG */

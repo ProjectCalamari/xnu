@@ -57,6 +57,6 @@
  */
 #ifndef I386_PIO_H
 #define I386_PIO_H
-#include <mach_assert.h>
 #include <architecture/i386/pio.h>
+#include <mach_assert.h>
 #endif /* I386_PIO_H */

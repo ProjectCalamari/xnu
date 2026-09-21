@@ -47,13 +47,9 @@
 
 namespace os_detail {
 struct panic_trapping_policy {
-	[[noreturn]] static void
-	trap(char const* message)
-	{
-		panic("%s", message);
-	}
+  [[noreturn]] static void trap(char const *message) { panic("%s", message); }
 };
-}
+} // namespace os_detail
 
 // OSBoundedPtr alias is defined in the fwd decl header
 

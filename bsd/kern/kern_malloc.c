@@ -67,13 +67,13 @@
  * Version 2.0.
  */
 
-#include <kern/zalloc.h>
 #include <kern/kalloc.h>
+#include <kern/zalloc.h>
 #include <sys/ubc.h> /* mach_to_bsd_errno */
 
+#include <sys/kauth.h>
 #include <sys/malloc.h>
 #include <sys/sysctl.h>
-#include <sys/kauth.h>
 
 #include <vm/vm_kern_xnu.h>
 
@@ -91,273 +91,241 @@ KALLOC_HEAP_DEFINE(KERN_OS_MALLOC, "kern_os_malloc", KHEAP_ID_KT_VAR);
 #define OSMallocDeprecatedMsg(msg)
 #include <libkern/OSMalloc.h>
 
-void *
-_MALLOC_external(size_t size, int type, int flags);
-void *
-_MALLOC_external(size_t size, int type, int flags)
-{
-	kalloc_heap_t heap = KHEAP_DEFAULT;
-	void    *addr = NULL;
+void *_MALLOC_external(size_t size, int type, int flags);
+void *_MALLOC_external(size_t size, int type, int flags) {
+  kalloc_heap_t heap = KHEAP_DEFAULT;
+  void *addr = NULL;
 
-	if (type == M_SONAME) {
+  if (type == M_SONAME) {
 #if !XNU_TARGET_OS_OSX
-		assert3u(size, <=, UINT8_MAX);
+    assert3u(size, <=, UINT8_MAX);
 #endif /* XNU_TARGET_OS_OSX */
-		heap = KHEAP_SONAME;
-	}
+    heap = KHEAP_SONAME;
+  }
 
-	if (size == 0) {
-		return NULL;
-	}
+  if (size == 0) {
+    return NULL;
+  }
 
-	static_assert(sizeof(vm_size_t) == sizeof(size_t));
-	static_assert(M_WAITOK == Z_WAITOK);
-	static_assert(M_NOWAIT == Z_NOWAIT);
-	static_assert(M_ZERO == Z_ZERO);
+  static_assert(sizeof(vm_size_t) == sizeof(size_t));
+  static_assert(M_WAITOK == Z_WAITOK);
+  static_assert(M_NOWAIT == Z_NOWAIT);
+  static_assert(M_ZERO == Z_ZERO);
 
-	flags = Z_VM_TAG_BT(flags & Z_KPI_MASK, VM_KERN_MEMORY_KALLOC);
-	addr = kalloc_ext(heap, size, flags, NULL).addr;
-	if (__probable(addr)) {
-		return addr;
-	}
+  flags = Z_VM_TAG_BT(flags & Z_KPI_MASK, VM_KERN_MEMORY_KALLOC);
+  addr = kalloc_ext(heap, size, flags, NULL).addr;
+  if (__probable(addr)) {
+    return addr;
+  }
 
-	if (flags & (M_NOWAIT | M_NULL)) {
-		return NULL;
-	}
+  if (flags & (M_NOWAIT | M_NULL)) {
+    return NULL;
+  }
 
-	/*
-	 * We get here when the caller told us to block waiting for memory, but
-	 * kalloc said there's no memory left to get.  Generally, this means there's a
-	 * leak or the caller asked for an impossibly large amount of memory. If the caller
-	 * is expecting a NULL return code then it should explicitly set the flag M_NULL.
-	 * If the caller isn't expecting a NULL return code, we just panic. This is less
-	 * than ideal, but returning NULL when the caller isn't expecting it doesn't help
-	 * since the majority of callers don't check the return value and will just
-	 * dereference the pointer and trap anyway.  We may as well get a more
-	 * descriptive message out while we can.
-	 */
-	panic("_MALLOC: kalloc returned NULL (potential leak), size %llu", (uint64_t) size);
+  /*
+   * We get here when the caller told us to block waiting for memory, but
+   * kalloc said there's no memory left to get.  Generally, this means there's a
+   * leak or the caller asked for an impossibly large amount of memory. If the
+   * caller is expecting a NULL return code then it should explicitly set the
+   * flag M_NULL. If the caller isn't expecting a NULL return code, we just
+   * panic. This is less than ideal, but returning NULL when the caller isn't
+   * expecting it doesn't help since the majority of callers don't check the
+   * return value and will just dereference the pointer and trap anyway.  We may
+   * as well get a more descriptive message out while we can.
+   */
+  panic("_MALLOC: kalloc returned NULL (potential leak), size %llu",
+        (uint64_t)size);
 }
 
-void
-_FREE_external(void *addr, int type);
-void
-_FREE_external(void *addr, int type __unused)
-{
-	kheap_free_addr(KHEAP_DEFAULT, addr);
+void _FREE_external(void *addr, int type);
+void _FREE_external(void *addr, int type __unused) {
+  kheap_free_addr(KHEAP_DEFAULT, addr);
 }
 
-void
-_FREE_ZONE_external(void *elem, size_t size, int type);
-void
-_FREE_ZONE_external(void *elem, size_t size, int type __unused)
-{
-	kheap_free(KHEAP_DEFAULT, elem, size);
+void _FREE_ZONE_external(void *elem, size_t size, int type);
+void _FREE_ZONE_external(void *elem, size_t size, int type __unused) {
+  kheap_free(KHEAP_DEFAULT, elem, size);
 }
 
-char *
-STRDUP_external(const char *string, int type);
-char *
-STRDUP_external(const char *string, int type __unused)
-{
-	size_t len;
-	char *copy;
+char *STRDUP_external(const char *string, int type);
+char *STRDUP_external(const char *string, int type __unused) {
+  size_t len;
+  char *copy;
 
-	len = strlen(string) + 1;
-	copy = kheap_alloc(KHEAP_DEFAULT, len, Z_WAITOK);
-	if (copy) {
-		memcpy(copy, string, len);
-	}
-	return copy;
+  len = strlen(string) + 1;
+  copy = kheap_alloc(KHEAP_DEFAULT, len, Z_WAITOK);
+  if (copy) {
+    memcpy(copy, string, len);
+  }
+  return copy;
 }
 
-static queue_head_t OSMalloc_tag_list = QUEUE_HEAD_INITIALIZER(OSMalloc_tag_list);
+static queue_head_t OSMalloc_tag_list =
+    QUEUE_HEAD_INITIALIZER(OSMalloc_tag_list);
 static LCK_GRP_DECLARE(OSMalloc_tag_lck_grp, "OSMalloc_tag");
 static LCK_SPIN_DECLARE(OSMalloc_tag_lock, &OSMalloc_tag_lck_grp);
 
-#define OSMalloc_tag_spin_lock()        lck_spin_lock(&OSMalloc_tag_lock)
-#define OSMalloc_tag_unlock()           lck_spin_unlock(&OSMalloc_tag_lock)
+#define OSMalloc_tag_spin_lock() lck_spin_lock(&OSMalloc_tag_lock)
+#define OSMalloc_tag_unlock() lck_spin_unlock(&OSMalloc_tag_lock)
 
 extern typeof(OSMalloc_Tagalloc) OSMalloc_Tagalloc_external;
-OSMallocTag
-OSMalloc_Tagalloc_external(const char *str, uint32_t flags)
-{
-	OSMallocTag OSMTag;
+OSMallocTag OSMalloc_Tagalloc_external(const char *str, uint32_t flags) {
+  OSMallocTag OSMTag;
 
-	OSMTag = kalloc_type(struct _OSMallocTag_, Z_WAITOK | Z_ZERO);
+  OSMTag = kalloc_type(struct _OSMallocTag_, Z_WAITOK | Z_ZERO);
 
-	if (flags & OSMT_PAGEABLE) {
-		OSMTag->OSMT_attr = OSMT_ATTR_PAGEABLE;
-	}
+  if (flags & OSMT_PAGEABLE) {
+    OSMTag->OSMT_attr = OSMT_ATTR_PAGEABLE;
+  }
 
-	OSMTag->OSMT_refcnt = 1;
+  OSMTag->OSMT_refcnt = 1;
 
-	strlcpy(OSMTag->OSMT_name, str, OSMT_MAX_NAME);
+  strlcpy(OSMTag->OSMT_name, str, OSMT_MAX_NAME);
 
-	OSMalloc_tag_spin_lock();
-	enqueue_tail(&OSMalloc_tag_list, (queue_entry_t)OSMTag);
-	OSMalloc_tag_unlock();
-	OSMTag->OSMT_state = OSMT_VALID;
-	return OSMTag;
+  OSMalloc_tag_spin_lock();
+  enqueue_tail(&OSMalloc_tag_list, (queue_entry_t)OSMTag);
+  OSMalloc_tag_unlock();
+  OSMTag->OSMT_state = OSMT_VALID;
+  return OSMTag;
 }
 
-static void
-OSMalloc_Tagref(OSMallocTag tag)
-{
-	if (!((tag->OSMT_state & OSMT_VALID_MASK) == OSMT_VALID)) {
-		panic("OSMalloc_Tagref():'%s' has bad state 0x%08X",
-		    tag->OSMT_name, tag->OSMT_state);
-	}
+static void OSMalloc_Tagref(OSMallocTag tag) {
+  if (!((tag->OSMT_state & OSMT_VALID_MASK) == OSMT_VALID)) {
+    panic("OSMalloc_Tagref():'%s' has bad state 0x%08X", tag->OSMT_name,
+          tag->OSMT_state);
+  }
 
-	os_atomic_inc(&tag->OSMT_refcnt, relaxed);
+  os_atomic_inc(&tag->OSMT_refcnt, relaxed);
 }
 
-static void
-OSMalloc_Tagrele(OSMallocTag tag)
-{
-	if (!((tag->OSMT_state & OSMT_VALID_MASK) == OSMT_VALID)) {
-		panic("OSMalloc_Tagref():'%s' has bad state 0x%08X",
-		    tag->OSMT_name, tag->OSMT_state);
-	}
+static void OSMalloc_Tagrele(OSMallocTag tag) {
+  if (!((tag->OSMT_state & OSMT_VALID_MASK) == OSMT_VALID)) {
+    panic("OSMalloc_Tagref():'%s' has bad state 0x%08X", tag->OSMT_name,
+          tag->OSMT_state);
+  }
 
-	if (os_atomic_dec(&tag->OSMT_refcnt, relaxed) != 0) {
-		return;
-	}
+  if (os_atomic_dec(&tag->OSMT_refcnt, relaxed) != 0) {
+    return;
+  }
 
-	if (os_atomic_cmpxchg(&tag->OSMT_state,
-	    OSMT_VALID | OSMT_RELEASED, OSMT_VALID | OSMT_RELEASED, acq_rel)) {
-		OSMalloc_tag_spin_lock();
-		(void)remque((queue_entry_t)tag);
-		OSMalloc_tag_unlock();
-		kfree_type(struct _OSMallocTag_, tag);
-	} else {
-		panic("OSMalloc_Tagrele():'%s' has refcnt 0", tag->OSMT_name);
-	}
+  if (os_atomic_cmpxchg(&tag->OSMT_state, OSMT_VALID | OSMT_RELEASED,
+                        OSMT_VALID | OSMT_RELEASED, acq_rel)) {
+    OSMalloc_tag_spin_lock();
+    (void)remque((queue_entry_t)tag);
+    OSMalloc_tag_unlock();
+    kfree_type(struct _OSMallocTag_, tag);
+  } else {
+    panic("OSMalloc_Tagrele():'%s' has refcnt 0", tag->OSMT_name);
+  }
 }
 
 extern typeof(OSMalloc_Tagfree) OSMalloc_Tagfree_external;
-void
-OSMalloc_Tagfree_external(OSMallocTag tag)
-{
-	if (!os_atomic_cmpxchg(&tag->OSMT_state,
-	    OSMT_VALID, OSMT_VALID | OSMT_RELEASED, acq_rel)) {
-		panic("OSMalloc_Tagfree():'%s' has bad state 0x%08X",
-		    tag->OSMT_name, tag->OSMT_state);
-	}
+void OSMalloc_Tagfree_external(OSMallocTag tag) {
+  if (!os_atomic_cmpxchg(&tag->OSMT_state, OSMT_VALID,
+                         OSMT_VALID | OSMT_RELEASED, acq_rel)) {
+    panic("OSMalloc_Tagfree():'%s' has bad state 0x%08X", tag->OSMT_name,
+          tag->OSMT_state);
+  }
 
-	if (os_atomic_dec(&tag->OSMT_refcnt, relaxed) == 0) {
-		OSMalloc_tag_spin_lock();
-		(void)remque((queue_entry_t)tag);
-		OSMalloc_tag_unlock();
-		kfree_type(struct _OSMallocTag_, tag);
-	}
+  if (os_atomic_dec(&tag->OSMT_refcnt, relaxed) == 0) {
+    OSMalloc_tag_spin_lock();
+    (void)remque((queue_entry_t)tag);
+    OSMalloc_tag_unlock();
+    kfree_type(struct _OSMallocTag_, tag);
+  }
 }
 
 extern typeof(OSMalloc) OSMalloc_external;
-void *
-OSMalloc_external(uint32_t size, OSMallocTag tag)
-{
-	void           *addr = NULL;
-	kern_return_t   kr;
+void *OSMalloc_external(uint32_t size, OSMallocTag tag) {
+  void *addr = NULL;
+  kern_return_t kr;
 
-	OSMalloc_Tagref(tag);
-	if ((tag->OSMT_attr & OSMT_PAGEABLE) && (size & ~PAGE_MASK)) {
-		if ((kr = kmem_alloc(kernel_map, (vm_offset_t *)&addr, size,
-		    KMA_PAGEABLE | KMA_DATA_SHARED, vm_tag_bt())) != KERN_SUCCESS) {
-			addr = NULL;
-		}
-	} else {
-		addr = kheap_alloc(KERN_OS_MALLOC, size,
-		    Z_VM_TAG_BT(Z_WAITOK, VM_KERN_MEMORY_KALLOC));
-	}
+  OSMalloc_Tagref(tag);
+  if ((tag->OSMT_attr & OSMT_PAGEABLE) && (size & ~PAGE_MASK)) {
+    if ((kr = kmem_alloc(kernel_map, (vm_offset_t *)&addr, size,
+                         KMA_PAGEABLE | KMA_DATA_SHARED, vm_tag_bt())) !=
+        KERN_SUCCESS) {
+      addr = NULL;
+    }
+  } else {
+    addr = kheap_alloc(KERN_OS_MALLOC, size,
+                       Z_VM_TAG_BT(Z_WAITOK, VM_KERN_MEMORY_KALLOC));
+  }
 
-	if (!addr) {
-		OSMalloc_Tagrele(tag);
-	}
+  if (!addr) {
+    OSMalloc_Tagrele(tag);
+  }
 
-	return addr;
+  return addr;
 }
 
 extern typeof(OSMalloc_noblock) OSMalloc_noblock_external;
-void *
-OSMalloc_noblock_external(uint32_t size, OSMallocTag tag)
-{
-	void    *addr = NULL;
+void *OSMalloc_noblock_external(uint32_t size, OSMallocTag tag) {
+  void *addr = NULL;
 
-	if (tag->OSMT_attr & OSMT_PAGEABLE) {
-		return NULL;
-	}
+  if (tag->OSMT_attr & OSMT_PAGEABLE) {
+    return NULL;
+  }
 
-	OSMalloc_Tagref(tag);
-	addr = kheap_alloc(KERN_OS_MALLOC, (vm_size_t)size,
-	    Z_VM_TAG_BT(Z_NOWAIT, VM_KERN_MEMORY_KALLOC));
-	if (addr == NULL) {
-		OSMalloc_Tagrele(tag);
-	}
+  OSMalloc_Tagref(tag);
+  addr = kheap_alloc(KERN_OS_MALLOC, (vm_size_t)size,
+                     Z_VM_TAG_BT(Z_NOWAIT, VM_KERN_MEMORY_KALLOC));
+  if (addr == NULL) {
+    OSMalloc_Tagrele(tag);
+  }
 
-	return addr;
+  return addr;
 }
 
 extern typeof(OSFree) OSFree_external;
-void
-OSFree_external(void *addr, uint32_t size, OSMallocTag tag)
-{
-	if ((tag->OSMT_attr & OSMT_PAGEABLE)
-	    && (size & ~PAGE_MASK)) {
-		kmem_free(kernel_map, (vm_offset_t)addr, size);
-	} else {
-		kheap_free(KERN_OS_MALLOC, addr, size);
-	}
+void OSFree_external(void *addr, uint32_t size, OSMallocTag tag) {
+  if ((tag->OSMT_attr & OSMT_PAGEABLE) && (size & ~PAGE_MASK)) {
+    kmem_free(kernel_map, (vm_offset_t)addr, size);
+  } else {
+    kheap_free(KERN_OS_MALLOC, addr, size);
+  }
 
-	OSMalloc_Tagrele(tag);
+  OSMalloc_Tagrele(tag);
 }
 
 #endif /* XNU_PLATFORM_MacOSX */
 #if DEBUG || DEVELOPMENT
 
-static int
-sysctl_zone_map_jetsam_limit SYSCTL_HANDLER_ARGS
-{
+static int sysctl_zone_map_jetsam_limit SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg1, arg2)
-	int oldval = 0, val = 0, error = 0;
+  int oldval = 0, val = 0, error = 0;
 
-	oldval = zone_map_jetsam_limit;
-	error = sysctl_io_number(req, oldval, sizeof(int), &val, NULL);
-	if (error || !req->newptr) {
-		return error;
-	}
+  oldval = zone_map_jetsam_limit;
+  error = sysctl_io_number(req, oldval, sizeof(int), &val, NULL);
+  if (error || !req->newptr) {
+    return error;
+  }
 
-	return mach_to_bsd_errno(zone_map_jetsam_set_limit(val));
+  return mach_to_bsd_errno(zone_map_jetsam_set_limit(val));
 }
-SYSCTL_PROC(_kern, OID_AUTO, zone_map_jetsam_limit,
-    CTLTYPE_INT | CTLFLAG_RW, 0, 0, sysctl_zone_map_jetsam_limit, "I",
-    "Zone map jetsam limit");
-
+SYSCTL_PROC(_kern, OID_AUTO, zone_map_jetsam_limit, CTLTYPE_INT | CTLFLAG_RW, 0,
+            0, sysctl_zone_map_jetsam_limit, "I", "Zone map jetsam limit");
 
 extern void get_zone_map_size(uint64_t *current_size, uint64_t *capacity);
 
-static int
-sysctl_zone_map_size_and_capacity SYSCTL_HANDLER_ARGS
-{
+static int sysctl_zone_map_size_and_capacity SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg1, arg2)
-	uint64_t zstats[2];
-	get_zone_map_size(&zstats[0], &zstats[1]);
+  uint64_t zstats[2];
+  get_zone_map_size(&zstats[0], &zstats[1]);
 
-	return SYSCTL_OUT(req, &zstats, sizeof(zstats));
+  return SYSCTL_OUT(req, &zstats, sizeof(zstats));
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, zone_map_size_and_capacity,
-    CTLTYPE_QUAD | CTLFLAG_RD | CTLFLAG_MASKED | CTLFLAG_LOCKED, 0, 0,
-    &sysctl_zone_map_size_and_capacity, "Q",
-    "Current size and capacity of the zone map");
+            CTLTYPE_QUAD | CTLFLAG_RD | CTLFLAG_MASKED | CTLFLAG_LOCKED, 0, 0,
+            &sysctl_zone_map_size_and_capacity, "Q",
+            "Current size and capacity of the zone map");
 
-SYSCTL_LONG(_kern, OID_AUTO, zone_wired_pages,
-    CTLFLAG_RD | CTLFLAG_LOCKED, &zone_pages_wired,
-    "number of wired pages in zones");
+SYSCTL_LONG(_kern, OID_AUTO, zone_wired_pages, CTLFLAG_RD | CTLFLAG_LOCKED,
+            &zone_pages_wired, "number of wired pages in zones");
 
-SYSCTL_LONG(_kern, OID_AUTO, zone_guard_pages,
-    CTLFLAG_RD | CTLFLAG_LOCKED, &zone_guard_pages,
-    "number of guard pages in zones");
+SYSCTL_LONG(_kern, OID_AUTO, zone_guard_pages, CTLFLAG_RD | CTLFLAG_LOCKED,
+            &zone_guard_pages, "number of guard pages in zones");
 
 #endif /* DEBUG || DEVELOPMENT */
 #if CONFIG_ZLEAKS
@@ -365,8 +333,8 @@ SYSCTL_LONG(_kern, OID_AUTO, zone_guard_pages,
 SYSCTL_DECL(_kern_zleak);
 SYSCTL_NODE(_kern, OID_AUTO, zleak, CTLFLAG_RW | CTLFLAG_LOCKED, 0, "zleak");
 
-SYSCTL_INT(_kern_zleak, OID_AUTO, active, CTLFLAG_RD,
-    &zleak_active, 0, "zleak activity");
+SYSCTL_INT(_kern_zleak, OID_AUTO, active, CTLFLAG_RD, &zleak_active, 0,
+           "zleak activity");
 
 /*
  * kern.zleak.max_zonemap_size
@@ -376,24 +344,21 @@ SYSCTL_INT(_kern_zleak, OID_AUTO, active, CTLFLAG_RD,
  * zleak.zone_threshold should be set to.
  */
 SYSCTL_LONG(_kern_zleak, OID_AUTO, max_zonemap_size,
-    CTLTYPE_QUAD | CTLFLAG_RD | CTLFLAG_LOCKED, &zleak_max_zonemap_size,
-    "zleak max zonemap size");
+            CTLTYPE_QUAD | CTLFLAG_RD | CTLFLAG_LOCKED, &zleak_max_zonemap_size,
+            "zleak max zonemap size");
 
-
-static int
-sysctl_zleak_threshold SYSCTL_HANDLER_ARGS
-{
+static int sysctl_zleak_threshold SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg2)
-	int error;
-	uint64_t value = *(vm_size_t *)arg1;
+  int error;
+  uint64_t value = *(vm_size_t *)arg1;
 
-	error = sysctl_io_number(req, value, sizeof(value), &value, NULL);
+  error = sysctl_io_number(req, value, sizeof(value), &value, NULL);
 
-	if (error || !req->newptr) {
-		return error;
-	}
+  if (error || !req->newptr) {
+    return error;
+  }
 
-	return mach_to_bsd_errno(zleak_update_threshold(arg1, value));
+  return mach_to_bsd_errno(zleak_update_threshold(arg1, value));
 }
 
 /*
@@ -408,75 +373,69 @@ sysctl_zleak_threshold SYSCTL_HANDLER_ARGS
  * activated (See above.)
  */
 SYSCTL_PROC(_kern_zleak, OID_AUTO, zone_threshold,
-    CTLTYPE_QUAD | CTLFLAG_RW | CTLFLAG_LOCKED,
-    &zleak_per_zone_tracking_threshold, 0, sysctl_zleak_threshold, "Q",
-    "zleak per-zone threshold");
+            CTLTYPE_QUAD | CTLFLAG_RW | CTLFLAG_LOCKED,
+            &zleak_per_zone_tracking_threshold, 0, sysctl_zleak_threshold, "Q",
+            "zleak per-zone threshold");
 
-#endif  /* CONFIG_ZLEAKS */
+#endif /* CONFIG_ZLEAKS */
 
 extern uint64_t get_zones_collectable_bytes(void);
 
-static int
-sysctl_zones_collectable_bytes SYSCTL_HANDLER_ARGS
-{
+static int sysctl_zones_collectable_bytes SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg1, arg2)
-	uint64_t zones_free_mem = get_zones_collectable_bytes();
+  uint64_t zones_free_mem = get_zones_collectable_bytes();
 
-	if (!kauth_cred_issuser(kauth_cred_get())) {
-		return EPERM;
-	}
+  if (!kauth_cred_issuser(kauth_cred_get())) {
+    return EPERM;
+  }
 
-	return SYSCTL_OUT(req, &zones_free_mem, sizeof(zones_free_mem));
+  return SYSCTL_OUT(req, &zones_free_mem, sizeof(zones_free_mem));
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, zones_collectable_bytes,
-    CTLTYPE_QUAD | CTLFLAG_RD | CTLFLAG_MASKED | CTLFLAG_LOCKED,
-    0, 0, &sysctl_zones_collectable_bytes, "Q",
-    "Collectable memory in zones");
+            CTLTYPE_QUAD | CTLFLAG_RD | CTLFLAG_MASKED | CTLFLAG_LOCKED, 0, 0,
+            &sysctl_zones_collectable_bytes, "Q",
+            "Collectable memory in zones");
 
 #if DEVELOPMENT || DEBUG
 
-static int
-sysctl_zone_reset_peak SYSCTL_HANDLER_ARGS
-{
+static int sysctl_zone_reset_peak SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg1, arg2)
-	kern_return_t kr;
-	int ret;
-	const size_t name_len = MAX_ZONE_NAME + 1;
-	char zonename[name_len];
+  kern_return_t kr;
+  int ret;
+  const size_t name_len = MAX_ZONE_NAME + 1;
+  char zonename[name_len];
 
-	ret = sysctl_io_string(req, zonename, name_len, 0, NULL);
-	if (ret) {
-		return ret;
-	}
+  ret = sysctl_io_string(req, zonename, name_len, 0, NULL);
+  if (ret) {
+    return ret;
+  }
 
-	kr = zone_reset_peak(zonename);
-	return mach_to_bsd_errno(kr);
+  kr = zone_reset_peak(zonename);
+  return mach_to_bsd_errno(kr);
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, zone_reset_peak,
-    CTLTYPE_STRING | CTLFLAG_WR | CTLFLAG_MASKED | CTLFLAG_LOCKED,
-    0, 0, &sysctl_zone_reset_peak, "-",
-    "Reset the peak size of a kernel zone by name.");
+            CTLTYPE_STRING | CTLFLAG_WR | CTLFLAG_MASKED | CTLFLAG_LOCKED, 0, 0,
+            &sysctl_zone_reset_peak, "-",
+            "Reset the peak size of a kernel zone by name.");
 
-static int
-sysctl_zone_reset_all_peaks SYSCTL_HANDLER_ARGS
-{
+static int sysctl_zone_reset_all_peaks SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg1, arg2)
-	kern_return_t kr;
+  kern_return_t kr;
 
-	if (!req->newptr) {
-		/* Only reset on a write */
-		return EINVAL;
-	}
+  if (!req->newptr) {
+    /* Only reset on a write */
+    return EINVAL;
+  }
 
-	kr = zone_reset_all_peaks();
-	return mach_to_bsd_errno(kr);
+  kr = zone_reset_all_peaks();
+  return mach_to_bsd_errno(kr);
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, zone_reset_all_peaks,
-    CTLTYPE_INT | CTLFLAG_WR | CTLFLAG_MASKED | CTLFLAG_LOCKED,
-    0, 0, &sysctl_zone_reset_all_peaks, "I",
-    "Reset the peak size of all kernel zones.");
+            CTLTYPE_INT | CTLFLAG_WR | CTLFLAG_MASKED | CTLFLAG_LOCKED, 0, 0,
+            &sysctl_zone_reset_all_peaks, "I",
+            "Reset the peak size of all kernel zones.");
 
 #endif /* DEVELOPMENT || DEBUG */

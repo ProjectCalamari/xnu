@@ -77,22 +77,21 @@
  * Version 2.0.
  */
 
-
+#include <sys/acct.h>
+#include <sys/errno.h>
+#include <sys/file_internal.h>
+#include <sys/ioctl.h>
+#include <sys/kauth.h>
+#include <sys/kernel.h>
+#include <sys/mount_internal.h>
+#include <sys/namei.h>
 #include <sys/param.h>
 #include <sys/proc_internal.h>
-#include <sys/kauth.h>
-#include <sys/mount_internal.h>
-#include <sys/vnode_internal.h>
-#include <sys/file_internal.h>
-#include <sys/syslog.h>
-#include <sys/kernel.h>
-#include <sys/namei.h>
-#include <sys/errno.h>
-#include <sys/acct.h>
 #include <sys/resourcevar.h>
-#include <sys/ioctl.h>
-#include <sys/tty.h>
+#include <sys/syslog.h>
 #include <sys/sysproto.h>
+#include <sys/tty.h>
+#include <sys/vnode_internal.h>
 #if CONFIG_MACF
 #include <security/mac_framework.h>
 #endif
@@ -113,8 +112,8 @@
  * The former's operation is described in Leffler, et al., and the latter
  * was provided by UCB with the 4.4BSD-Lite release
  */
-comp_t  encode_comp_t(uint32_t, uint32_t);
-void    acctwatch(void *);
+comp_t encode_comp_t(uint32_t, uint32_t);
+void acctwatch(void *);
 
 /*
  * Accounting vnode pointer, and suspended accounting vnode pointer.  States
@@ -127,16 +126,15 @@ void    acctwatch(void *);
  *	NULL		!NULL		Accounting enabled, but suspended
  *	!NULL		!NULL		<not allowed>
  */
-struct  vnode *acctp;
-struct  vnode *suspend_acctp;
+struct vnode *acctp;
+struct vnode *suspend_acctp;
 
 /*
  * Values associated with enabling and disabling accounting
  */
-int     acctsuspend = 2;        /* stop accounting when < 2% free space left */
-int     acctresume = 4;         /* resume when free space risen to > 4% */
-int     acctchkfreq = 15;       /* frequency (in seconds) to check space */
-
+int acctsuspend = 2;  /* stop accounting when < 2% free space left */
+int acctresume = 4;   /* resume when free space risen to > 4% */
+int acctchkfreq = 15; /* frequency (in seconds) to check space */
 
 static LCK_GRP_DECLARE(acct_subsys_lck_grp, "acct");
 static LCK_MTX_DECLARE(acct_subsys_mutex, &acct_subsys_lck_grp);
@@ -144,84 +142,81 @@ static LCK_MTX_DECLARE(acct_subsys_mutex, &acct_subsys_lck_grp);
 #define ACCT_SUBSYS_LOCK() lck_mtx_lock(&acct_subsys_mutex)
 #define ACCT_SUBSYS_UNLOCK() lck_mtx_unlock(&acct_subsys_mutex)
 
-
 /*
  * Accounting system call.  Written based on the specification and
  * previous implementation done by Mark Tinguely.
  */
-int
-acct(proc_t p, struct acct_args *uap, __unused int *retval)
-{
-	struct nameidata nd;
-	int error;
-	struct vfs_context *ctx;
+int acct(proc_t p, struct acct_args *uap, __unused int *retval) {
+  struct nameidata nd;
+  int error;
+  struct vfs_context *ctx;
 
-	ctx = vfs_context_current();
+  ctx = vfs_context_current();
 
-	/* Make sure that the caller is root. */
-	if ((error = suser(vfs_context_ucred(ctx), &p->p_acflag))) {
-		return error;
-	}
+  /* Make sure that the caller is root. */
+  if ((error = suser(vfs_context_ucred(ctx), &p->p_acflag))) {
+    return error;
+  }
 
-	/*
-	 * If accounting is to be started to a file, open that file for
-	 * writing and make sure it's a 'normal'.
-	 */
-	if (uap->path != USER_ADDR_NULL) {
-		NDINIT(&nd, LOOKUP, OP_OPEN, NOFOLLOW, UIO_USERSPACE, uap->path, ctx);
-		if ((error = vn_open(&nd, FWRITE, 0))) {
-			return error;
-		}
+  /*
+   * If accounting is to be started to a file, open that file for
+   * writing and make sure it's a 'normal'.
+   */
+  if (uap->path != USER_ADDR_NULL) {
+    NDINIT(&nd, LOOKUP, OP_OPEN, NOFOLLOW, UIO_USERSPACE, uap->path, ctx);
+    if ((error = vn_open(&nd, FWRITE, 0))) {
+      return error;
+    }
 #if CONFIG_MACF
-		error = mac_system_check_acct(vfs_context_ucred(ctx), nd.ni_vp);
-		if (error) {
-			vnode_put(nd.ni_vp);
-			vn_close(nd.ni_vp, FWRITE, ctx);
-			return error;
-		}
+    error = mac_system_check_acct(vfs_context_ucred(ctx), nd.ni_vp);
+    if (error) {
+      vnode_put(nd.ni_vp);
+      vn_close(nd.ni_vp, FWRITE, ctx);
+      return error;
+    }
 #endif
-		vnode_put(nd.ni_vp);
+    vnode_put(nd.ni_vp);
 
-		if (nd.ni_vp->v_type != VREG) {
-			vn_close(nd.ni_vp, FWRITE, ctx);
-			return EACCES;
-		}
-	}
+    if (nd.ni_vp->v_type != VREG) {
+      vn_close(nd.ni_vp, FWRITE, ctx);
+      return EACCES;
+    }
+  }
 #if CONFIG_MACF
-	else {
-		error = mac_system_check_acct(vfs_context_ucred(ctx), NULL);
-		if (error) {
-			return error;
-		}
-	}
+  else {
+    error = mac_system_check_acct(vfs_context_ucred(ctx), NULL);
+    if (error) {
+      return error;
+    }
+  }
 #endif
 
-	/*
-	 * If accounting was previously enabled, kill the old space-watcher,
-	 * close the file, and (if no new file was specified, leave).
-	 */
-	ACCT_SUBSYS_LOCK();
-	if (acctp != NULLVP || suspend_acctp != NULLVP) {
-		untimeout(acctwatch, NULL);
-		error = vn_close((acctp != NULLVP ? acctp : suspend_acctp),
-		    FWRITE, vfs_context_current());
+  /*
+   * If accounting was previously enabled, kill the old space-watcher,
+   * close the file, and (if no new file was specified, leave).
+   */
+  ACCT_SUBSYS_LOCK();
+  if (acctp != NULLVP || suspend_acctp != NULLVP) {
+    untimeout(acctwatch, NULL);
+    error = vn_close((acctp != NULLVP ? acctp : suspend_acctp), FWRITE,
+                     vfs_context_current());
 
-		acctp = suspend_acctp = NULLVP;
-	}
-	if (uap->path == USER_ADDR_NULL) {
-		ACCT_SUBSYS_UNLOCK();
-		return error;
-	}
+    acctp = suspend_acctp = NULLVP;
+  }
+  if (uap->path == USER_ADDR_NULL) {
+    ACCT_SUBSYS_UNLOCK();
+    return error;
+  }
 
-	/*
-	 * Save the new accounting file vnode, and schedule the new
-	 * free space watcher.
-	 */
-	acctp = nd.ni_vp;
-	ACCT_SUBSYS_UNLOCK();
+  /*
+   * Save the new accounting file vnode, and schedule the new
+   * free space watcher.
+   */
+  acctp = nd.ni_vp;
+  ACCT_SUBSYS_UNLOCK();
 
-	acctwatch(NULL);
-	return error;
+  acctwatch(NULL);
+  return error;
 }
 
 /*
@@ -230,92 +225,89 @@ acct(proc_t p, struct acct_args *uap, __unused int *retval)
  * and are enumerated below.  (They're also noted in the system
  * "acct.h" header file.)
  */
-int
-acct_process(proc_t p)
-{
-	struct acct an_acct;
-	struct rusage rup, *r;
-	struct timeval ut, st, tmp;
-	int t;
-	int error;
-	struct vnode *vp;
-	kauth_cred_t safecred;
-	struct pgrp *pg;
+int acct_process(proc_t p) {
+  struct acct an_acct;
+  struct rusage rup, *r;
+  struct timeval ut, st, tmp;
+  int t;
+  int error;
+  struct vnode *vp;
+  kauth_cred_t safecred;
+  struct pgrp *pg;
 
-	/* If accounting isn't enabled, don't bother */
-	ACCT_SUBSYS_LOCK();
-	vp = acctp;
-	if (vp == NULLVP) {
-		ACCT_SUBSYS_UNLOCK();
-		return 0;
-	}
+  /* If accounting isn't enabled, don't bother */
+  ACCT_SUBSYS_LOCK();
+  vp = acctp;
+  if (vp == NULLVP) {
+    ACCT_SUBSYS_UNLOCK();
+    return 0;
+  }
 
-	/*
-	 * Get process accounting information.
-	 */
+  /*
+   * Get process accounting information.
+   */
 
-	/* (1) The name of the command that ran */
-	bcopy(p->p_comm, an_acct.ac_comm, sizeof an_acct.ac_comm);
+  /* (1) The name of the command that ran */
+  bcopy(p->p_comm, an_acct.ac_comm, sizeof an_acct.ac_comm);
 
-	/* (2) The amount of user and system time that was used */
-	calcru(p, &ut, &st, NULL);
-	an_acct.ac_utime = encode_comp_t((uint32_t)ut.tv_sec, ut.tv_usec);
-	an_acct.ac_stime = encode_comp_t((uint32_t)st.tv_sec, st.tv_usec);
+  /* (2) The amount of user and system time that was used */
+  calcru(p, &ut, &st, NULL);
+  an_acct.ac_utime = encode_comp_t((uint32_t)ut.tv_sec, ut.tv_usec);
+  an_acct.ac_stime = encode_comp_t((uint32_t)st.tv_sec, st.tv_usec);
 
-	/* (3) The elapsed time the commmand ran (and its starting time) */
-	an_acct.ac_btime = (u_int32_t)p->p_start.tv_sec;
-	microtime(&tmp);
-	timevalsub(&tmp, &p->p_start);
-	an_acct.ac_etime = encode_comp_t((uint32_t)tmp.tv_sec, tmp.tv_usec);
+  /* (3) The elapsed time the commmand ran (and its starting time) */
+  an_acct.ac_btime = (u_int32_t)p->p_start.tv_sec;
+  microtime(&tmp);
+  timevalsub(&tmp, &p->p_start);
+  an_acct.ac_etime = encode_comp_t((uint32_t)tmp.tv_sec, tmp.tv_usec);
 
-	/* (4) The average amount of memory used */
-	proc_lock(p);
-	rup = p->p_stats->p_ru;
-	proc_unlock(p);
-	r = &rup;
-	tmp = ut;
-	timevaladd(&tmp, &st);
-	t = (int)(tmp.tv_sec * hz + tmp.tv_usec / tick);
-	if (t) {
-		an_acct.ac_mem = (u_int16_t)((r->ru_ixrss + r->ru_idrss + r->ru_isrss) / t);
-	} else {
-		an_acct.ac_mem = 0;
-	}
+  /* (4) The average amount of memory used */
+  proc_lock(p);
+  rup = p->p_stats->p_ru;
+  proc_unlock(p);
+  r = &rup;
+  tmp = ut;
+  timevaladd(&tmp, &st);
+  t = (int)(tmp.tv_sec * hz + tmp.tv_usec / tick);
+  if (t) {
+    an_acct.ac_mem = (u_int16_t)((r->ru_ixrss + r->ru_idrss + r->ru_isrss) / t);
+  } else {
+    an_acct.ac_mem = 0;
+  }
 
-	/* (5) The number of disk I/O operations done */
-	an_acct.ac_io = encode_comp_t((uint32_t)(r->ru_inblock + r->ru_oublock), 0);
+  /* (5) The number of disk I/O operations done */
+  an_acct.ac_io = encode_comp_t((uint32_t)(r->ru_inblock + r->ru_oublock), 0);
 
-	/* (6) The UID and GID of the process */
-	safecred = kauth_cred_proc_ref(p);
+  /* (6) The UID and GID of the process */
+  safecred = kauth_cred_proc_ref(p);
 
-	an_acct.ac_uid = kauth_cred_getruid(safecred);
-	an_acct.ac_gid = kauth_cred_getrgid(safecred);
+  an_acct.ac_uid = kauth_cred_getruid(safecred);
+  an_acct.ac_gid = kauth_cred_getrgid(safecred);
 
-	/* (7) The terminal from which the process was started */
+  /* (7) The terminal from which the process was started */
 
-	an_acct.ac_tty = NODEV;
-	if ((p->p_flag & P_CONTROLT) && (pg = proc_pgrp(p, NULL))) {
-		an_acct.ac_tty = os_atomic_load(&pg->pg_session->s_ttydev, relaxed);
-		pgrp_rele(pg);
-	}
+  an_acct.ac_tty = NODEV;
+  if ((p->p_flag & P_CONTROLT) && (pg = proc_pgrp(p, NULL))) {
+    an_acct.ac_tty = os_atomic_load(&pg->pg_session->s_ttydev, relaxed);
+    pgrp_rele(pg);
+  }
 
-	/* (8) The boolean flags that tell how the process terminated, etc. */
-	an_acct.ac_flag = (u_int8_t)p->p_acflag;
+  /* (8) The boolean flags that tell how the process terminated, etc. */
+  an_acct.ac_flag = (u_int8_t)p->p_acflag;
 
-	/*
-	 * Now, just write the accounting information to the file.
-	 */
-	if ((error = vnode_getwithref(vp)) == 0) {
-		error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&an_acct, sizeof(an_acct),
-		    (off_t)0, UIO_SYSSPACE, IO_APPEND | IO_UNIT, safecred,
-		    (int *)0, p);
-		vnode_put(vp);
-	}
+  /*
+   * Now, just write the accounting information to the file.
+   */
+  if ((error = vnode_getwithref(vp)) == 0) {
+    error = vn_rdwr(UIO_WRITE, vp, (caddr_t)&an_acct, sizeof(an_acct), (off_t)0,
+                    UIO_SYSSPACE, IO_APPEND | IO_UNIT, safecred, (int *)0, p);
+    vnode_put(vp);
+  }
 
-	kauth_cred_unref(&safecred);
-	ACCT_SUBSYS_UNLOCK();
+  kauth_cred_unref(&safecred);
+  ACCT_SUBSYS_UNLOCK();
 
-	return error;
+  return error;
 }
 
 /*
@@ -324,36 +316,34 @@ acct_process(proc_t p)
  * Leffler, et al., on page 63.
  */
 
-#define MANTSIZE        13                      /* 13 bit mantissa. */
-#define EXPSIZE         3                       /* Base 8 (3 bit) exponent. */
-#define MAXFRACT        ((1 << MANTSIZE) - 1)   /* Maximum fractional value. */
+#define MANTSIZE 13                    /* 13 bit mantissa. */
+#define EXPSIZE 3                      /* Base 8 (3 bit) exponent. */
+#define MAXFRACT ((1 << MANTSIZE) - 1) /* Maximum fractional value. */
 
-comp_t
-encode_comp_t(uint32_t s, uint32_t us)
-{
-	int exp, rnd;
+comp_t encode_comp_t(uint32_t s, uint32_t us) {
+  int exp, rnd;
 
-	exp = 0;
-	rnd = 0;
-	s *= AHZ;
-	s += us / (1000000 / AHZ);      /* Maximize precision. */
+  exp = 0;
+  rnd = 0;
+  s *= AHZ;
+  s += us / (1000000 / AHZ); /* Maximize precision. */
 
-	while (s > MAXFRACT) {
-		rnd = s & (1 << (EXPSIZE - 1)); /* Round up? */
-		s >>= EXPSIZE;          /* Base 8 exponent == 3 bit shift. */
-		exp++;
-	}
+  while (s > MAXFRACT) {
+    rnd = s & (1 << (EXPSIZE - 1)); /* Round up? */
+    s >>= EXPSIZE;                  /* Base 8 exponent == 3 bit shift. */
+    exp++;
+  }
 
-	/* If we need to round up, do it (and handle overflow correctly). */
-	if (rnd && (++s > MAXFRACT)) {
-		s >>= EXPSIZE;
-		exp++;
-	}
+  /* If we need to round up, do it (and handle overflow correctly). */
+  if (rnd && (++s > MAXFRACT)) {
+    s >>= EXPSIZE;
+    exp++;
+  }
 
-	/* Clean it up and polish it off. */
-	exp <<= MANTSIZE;               /* Shift the exponent into place */
-	exp += s;                       /* and add on the mantissa. */
-	return (comp_t)exp;
+  /* Clean it up and polish it off. */
+  exp <<= MANTSIZE; /* Shift the exponent into place */
+  exp += s;         /* and add on the mantissa. */
+  return (comp_t)exp;
 }
 
 /*
@@ -363,58 +353,56 @@ encode_comp_t(uint32_t s, uint32_t us)
  * system containing the accounting file has been forcibly unmounted.
  */
 /* ARGSUSED */
-void
-acctwatch(__unused void *a)
-{
-	vfs_context_t ctx = vfs_context_current();
-	struct vfs_attr va;
+void acctwatch(__unused void *a) {
+  vfs_context_t ctx = vfs_context_current();
+  struct vfs_attr va;
 
-	VFSATTR_INIT(&va);
-	VFSATTR_WANTED(&va, f_blocks);
-	VFSATTR_WANTED(&va, f_bavail);
+  VFSATTR_INIT(&va);
+  VFSATTR_WANTED(&va, f_blocks);
+  VFSATTR_WANTED(&va, f_bavail);
 
-	ACCT_SUBSYS_LOCK();
-	if (suspend_acctp != NULLVP) {
-		/*
-		 * Resuming accounting when accounting is suspended, and the
-		 * filesystem containing the suspended accounting file goes
-		 * below a low watermark
-		 */
-		if (suspend_acctp->v_type == VBAD) {
-			(void) vn_close(suspend_acctp, FWRITE, vfs_context_kernel());
-			suspend_acctp = NULLVP;
-			ACCT_SUBSYS_UNLOCK();
-			return;
-		}
-		(void)vfs_getattr(suspend_acctp->v_mount, &va, ctx);
-		if (va.f_bavail > acctresume * va.f_blocks / 100) {
-			acctp = suspend_acctp;
-			suspend_acctp = NULLVP;
-			log(LOG_NOTICE, "Accounting resumed\n");
-		}
-	} else if (acctp != NULLVP) {
-		/*
-		 * Suspending accounting when accounting is currently active,
-		 * and the filesystem containing the active accounting file
-		 * goes over a high watermark
-		 */
-		if (acctp->v_type == VBAD) {
-			(void) vn_close(acctp, FWRITE, vfs_context_kernel());
-			acctp = NULLVP;
-			ACCT_SUBSYS_UNLOCK();
-			return;
-		}
-		(void)vfs_getattr(acctp->v_mount, &va, ctx);
-		if (va.f_bavail <= acctsuspend * va.f_blocks / 100) {
-			suspend_acctp = acctp;
-			acctp = NULLVP;
-			log(LOG_NOTICE, "Accounting suspended\n");
-		}
-	} else {
-		ACCT_SUBSYS_UNLOCK();
-		return;
-	}
-	ACCT_SUBSYS_UNLOCK();
+  ACCT_SUBSYS_LOCK();
+  if (suspend_acctp != NULLVP) {
+    /*
+     * Resuming accounting when accounting is suspended, and the
+     * filesystem containing the suspended accounting file goes
+     * below a low watermark
+     */
+    if (suspend_acctp->v_type == VBAD) {
+      (void)vn_close(suspend_acctp, FWRITE, vfs_context_kernel());
+      suspend_acctp = NULLVP;
+      ACCT_SUBSYS_UNLOCK();
+      return;
+    }
+    (void)vfs_getattr(suspend_acctp->v_mount, &va, ctx);
+    if (va.f_bavail > acctresume * va.f_blocks / 100) {
+      acctp = suspend_acctp;
+      suspend_acctp = NULLVP;
+      log(LOG_NOTICE, "Accounting resumed\n");
+    }
+  } else if (acctp != NULLVP) {
+    /*
+     * Suspending accounting when accounting is currently active,
+     * and the filesystem containing the active accounting file
+     * goes over a high watermark
+     */
+    if (acctp->v_type == VBAD) {
+      (void)vn_close(acctp, FWRITE, vfs_context_kernel());
+      acctp = NULLVP;
+      ACCT_SUBSYS_UNLOCK();
+      return;
+    }
+    (void)vfs_getattr(acctp->v_mount, &va, ctx);
+    if (va.f_bavail <= acctsuspend * va.f_blocks / 100) {
+      suspend_acctp = acctp;
+      acctp = NULLVP;
+      log(LOG_NOTICE, "Accounting suspended\n");
+    }
+  } else {
+    ACCT_SUBSYS_UNLOCK();
+    return;
+  }
+  ACCT_SUBSYS_UNLOCK();
 
-	timeout(acctwatch, NULL, acctchkfreq * hz);
+  timeout(acctwatch, NULL, acctchkfreq * hz);
 }

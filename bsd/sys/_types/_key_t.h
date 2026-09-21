@@ -28,5 +28,5 @@
 #ifndef _KEY_T
 #define _KEY_T
 #include <machine/types.h> /* __int32_t */
-typedef __int32_t        key_t;         /* IPC key (for Sys V IPC) */
-#endif  /* _KEY_T */
+typedef __int32_t key_t;   /* IPC key (for Sys V IPC) */
+#endif                     /* _KEY_T */

@@ -30,23 +30,23 @@
 
 #include "fibers.h"
 
-#define FIBERS_RWLOCK_ASSERT_SHARED    0x01
+#define FIBERS_RWLOCK_ASSERT_SHARED 0x01
 #define FIBERS_RWLOCK_ASSERT_EXCLUSIVE 0x02
-#define FIBERS_RWLOCK_ASSERT_HELD      0x03
-#define FIBERS_RWLOCK_ASSERT_NOTHELD   0x04
+#define FIBERS_RWLOCK_ASSERT_HELD 0x03
+#define FIBERS_RWLOCK_ASSERT_NOTHELD 0x04
 #define FIBERS_RWLOCK_ASSERT_NOT_OWNED 0x05
 
-#define FIBERS_RWLOCK_WANT_UPGRADE     0x1
+#define FIBERS_RWLOCK_WANT_UPGRADE 0x1
 
 typedef struct fibers_rwlock fibers_rwlock_t;
 
 struct fibers_rwlock {
-	fiber_t writer_active;
-	unsigned int reader_count;
-	unsigned int flags;
+  fiber_t writer_active;
+  unsigned int reader_count;
+  unsigned int flags;
 
-	struct fibers_queue reader_wait_queue;
-	struct fibers_queue writer_wait_queue;
+  struct fibers_queue reader_wait_queue;
+  struct fibers_queue writer_wait_queue;
 };
 
 extern void fibers_rwlock_init(fibers_rwlock_t *rwlock);

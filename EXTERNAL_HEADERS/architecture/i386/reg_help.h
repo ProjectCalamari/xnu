@@ -2,7 +2,7 @@
  * Copyright (c) 2000 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
- * 
+ *
  * This file contains Original Code and/or Modifications of Original Code
  * as defined in and that are subject to the Apple Public Source License
  * Version 2.0 (the 'License'). You may not use this file except in
@@ -11,10 +11,10 @@
  * unlawful or unlicensed copies of an Apple operating system, or to
  * circumvent, violate, or enable the circumvention or violation of, any
  * terms of an Apple operating system software license agreement.
- * 
+ *
  * Please obtain a copy of the License at
  * http://www.opensource.apple.com/apsl/ and read it before using this file.
- * 
+ *
  * The Original Code and all software distributed under the License are
  * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
  * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
@@ -22,7 +22,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
  * Please see the License for the specific language governing rights and
  * limitations under the License.
- * 
+ *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 /* Copyright (c) 1991 NeXT Computer, Inc.  All rights reserved.
@@ -41,35 +41,35 @@
  *	Created.
  */
 
-#ifndef	_ARCH_I386_REG_HELP_H_
-#define	_ARCH_I386_REG_HELP_H_
+#ifndef _ARCH_I386_REG_HELP_H_
+#define _ARCH_I386_REG_HELP_H_
 
 /* Bitfield definition aid */
-#define	BITS_WIDTH(msb, lsb)	((msb)-(lsb)+1)
-#define	BIT_WIDTH(pos)		(1)	/* mostly to record the position */
+#define BITS_WIDTH(msb, lsb) ((msb) - (lsb) + 1)
+#define BIT_WIDTH(pos) (1) /* mostly to record the position */
 
 /* Mask creation */
-#define	MKMASK(width, offset)	(((unsigned)-1)>>(32-(width))<<(offset))
-#define	BITSMASK(msb, lsb)	MKMASK(BITS_WIDTH(msb, lsb), lsb & 0x1f)
-#define	BITMASK(pos)		MKMASK(BIT_WIDTH(pos), pos & 0x1f)
+#define MKMASK(width, offset) (((unsigned)-1) >> (32 - (width)) << (offset))
+#define BITSMASK(msb, lsb) MKMASK(BITS_WIDTH(msb, lsb), lsb & 0x1f)
+#define BITMASK(pos) MKMASK(BIT_WIDTH(pos), pos & 0x1f)
 
 /* Register addresses */
-#if	__ASSEMBLER__
-# define	REG_ADDR(type, addr)	(addr)
-#else	/* __ASSEMBLER__ */
-# define	REG_ADDR(type, addr)	(*(volatile type *)(addr))
-#endif	/* __ASSEMBLER__ */
+#if __ASSEMBLER__
+#define REG_ADDR(type, addr) (addr)
+#else /* __ASSEMBLER__ */
+#define REG_ADDR(type, addr) (*(volatile type *)(addr))
+#endif /* __ASSEMBLER__ */
 
 /* Cast a register to be an unsigned */
-#define	CONTENTS(foo)	(*(unsigned *) &(foo))
+#define CONTENTS(foo) (*(unsigned *)&(foo))
 
 /* Stack pointer must always be a multiple of 4 */
-#define	STACK_INCR	4
-#define	ROUND_FRAME(x)	((((unsigned)(x)) + STACK_INCR - 1) & ~(STACK_INCR-1))
+#define STACK_INCR 4
+#define ROUND_FRAME(x) ((((unsigned)(x)) + STACK_INCR - 1) & ~(STACK_INCR - 1))
 
 /* STRINGIFY -- perform all possible substitutions, then stringify */
-#define	__STR(x)	#x		/* just a helper macro */
-#define	STRINGIFY(x)	__STR(x)
+#define __STR(x) #x /* just a helper macro */
+#define STRINGIFY(x) __STR(x)
 
 /*
  * REG_PAIR_DEF -- define a register pair
@@ -87,11 +87,11 @@
  * Access to individual entries of the pair is via the REG_PAIR
  * macro (below).
  */
-#define	REG_PAIR_DEF(type0, name0, type1, name1)		\
-	struct {						\
-		type0	name0 __attribute__(( aligned(8) ));	\
-		type1	name1;					\
-	} name0##_##name1
+#define REG_PAIR_DEF(type0, name0, type1, name1)                               \
+  struct {                                                                     \
+    type0 name0 __attribute__((aligned(8)));                                   \
+    type1 name1;                                                               \
+  } name0##_##name1
 
 /*
  * REG_PAIR -- Macro to define names for accessing individual registers
@@ -104,7 +104,6 @@
  * eg:
  *	#define	foo_barp	REG_PAIR(barp, afu, afu)
  */
-#define	REG_PAIR(name0, name1, the_name)			\
-	name0##_##name1.the_name
+#define REG_PAIR(name0, name1, the_name) name0##_##name1.the_name
 
-#endif	/* _ARCH_I386_REG_HELP_H_ */
+#endif /* _ARCH_I386_REG_HELP_H_ */

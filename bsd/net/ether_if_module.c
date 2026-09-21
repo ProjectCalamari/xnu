@@ -59,30 +59,30 @@
  *
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
+#include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/sockio.h>
 #include <sys/sysctl.h>
+#include <sys/systm.h>
 
 #include <pexpert/pexpert.h>
 
-#define etherbroadcastaddr      fugly
+#define etherbroadcastaddr fugly
 #include <net/if.h>
-#include <net/route.h>
-#include <net/if_private.h>
-#include <net/if_llc.h>
 #include <net/if_dl.h>
-#include <net/if_types.h>
 #include <net/if_ether.h>
 #include <net/if_gif.h>
-#include <netinet/if_ether.h>
-#include <netinet/in.h> /* For M_LOOP */
+#include <net/if_llc.h>
+#include <net/if_private.h>
+#include <net/if_types.h>
 #include <net/kpi_interface.h>
 #include <net/kpi_protocol.h>
+#include <net/route.h>
+#include <netinet/if_ether.h>
+#include <netinet/in.h> /* For M_LOOP */
 #undef etherbroadcastaddr
 
 /*
@@ -95,8 +95,8 @@
  #endif
  */
 #include <net/ether_if_module.h>
-#include <sys/socketvar.h>
 #include <net/if_vlan_var.h>
+#include <sys/socketvar.h>
 #if BOND
 #include <net/if_bond_internal.h>
 #endif /* BOND */
@@ -116,18 +116,18 @@ extern void if_headless_init(void);
 
 SYSCTL_DECL(_net_link);
 SYSCTL_NODE(_net_link, IFT_ETHER, ether, CTLFLAG_RW | CTLFLAG_LOCKED, 0,
-    "Ethernet");
+            "Ethernet");
 
 struct en_desc {
-	u_int16_t type;                 /* Type of protocol stored in data */
-	u_int32_t protocol_family;      /* Protocol family */
-	u_int32_t data[2];              /* Protocol data */
+  u_int16_t type;            /* Type of protocol stored in data */
+  u_int32_t protocol_family; /* Protocol family */
+  u_int32_t data[2];         /* Protocol data */
 };
 
 /* descriptors are allocated in blocks of ETHER_DESC_BLK_SIZE */
 #if !XNU_TARGET_OS_OSX
 #define ETHER_DESC_BLK_SIZE (2) /* IP, ARP */
-#else /* XNU_TARGET_OS_OSX */
+#else                           /* XNU_TARGET_OS_OSX */
 #define ETHER_DESC_BLK_SIZE (10)
 #endif /* XNU_TARGET_OS_OSX */
 
@@ -135,462 +135,441 @@ struct en_desc {
  * Header for the demux list, hangs off of IFP at if_family_cookie
  */
 struct ether_desc_blk_str {
-	u_int32_t       n_max_used;
-	u_int32_t       n_count;
-	u_int32_t       n_used;
-	struct en_desc  block_ptr[__counted_by(n_count)];
+  u_int32_t n_max_used;
+  u_int32_t n_count;
+  u_int32_t n_used;
+  struct en_desc block_ptr[__counted_by(n_count)];
 };
 
-static inline
-struct ether_desc_blk_str * __single
-ifnet_ether_blk_str(struct ifnet *ifp)
-{
-	return ifp == NULL
-	       ? NULL
-	       : __unsafe_forge_single(struct ether_desc_blk_str *, ifp->if_family_cookie);
+static inline struct ether_desc_blk_str *__single
+ifnet_ether_blk_str(struct ifnet *ifp) {
+  return ifp == NULL ? NULL
+                     : __unsafe_forge_single(struct ether_desc_blk_str *,
+                                             ifp->if_family_cookie);
 }
 
 /* Size of the above struct before the array of struct en_desc */
-#define ETHER_DESC_HEADER_SIZE  \
-	((size_t) offsetof(struct ether_desc_blk_str, block_ptr))
+#define ETHER_DESC_HEADER_SIZE                                                 \
+  ((size_t)offsetof(struct ether_desc_blk_str, block_ptr))
 
-__private_extern__ u_char etherbroadcastaddr[ETHER_ADDR_LEN] =
-{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+__private_extern__ u_char etherbroadcastaddr[ETHER_ADDR_LEN] = {
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 /*
  * Release all descriptor entries owned by this protocol (there may be several).
  * Setting the type to 0 releases the entry. Eventually we should compact-out
  * the unused entries.
  */
-int
-ether_del_proto(ifnet_t ifp, protocol_family_t protocol_family)
-{
-	struct ether_desc_blk_str *desc_blk = ifnet_ether_blk_str(ifp);
-	u_int32_t current = 0;
-	int found = 0;
+int ether_del_proto(ifnet_t ifp, protocol_family_t protocol_family) {
+  struct ether_desc_blk_str *desc_blk = ifnet_ether_blk_str(ifp);
+  u_int32_t current = 0;
+  int found = 0;
 
-	if (desc_blk == NULL) {
-		return 0;
-	}
+  if (desc_blk == NULL) {
+    return 0;
+  }
 
-	for (current = desc_blk->n_max_used; current > 0; current--) {
-		if (desc_blk->block_ptr[current - 1].protocol_family ==
-		    protocol_family) {
-			found = 1;
-			desc_blk->block_ptr[current - 1].type = 0;
-			desc_blk->n_used--;
-		}
-	}
+  for (current = desc_blk->n_max_used; current > 0; current--) {
+    if (desc_blk->block_ptr[current - 1].protocol_family == protocol_family) {
+      found = 1;
+      desc_blk->block_ptr[current - 1].type = 0;
+      desc_blk->n_used--;
+    }
+  }
 
-	if (desc_blk->n_used == 0) {
-		u_int32_t size = desc_blk->n_count * sizeof(struct en_desc) +
-		    ETHER_DESC_HEADER_SIZE;
-		kfree_data(desc_blk, size);
-		ifp->if_family_cookie = 0;
-	} else {
-		/* Decrement n_max_used */
-		for (; desc_blk->n_max_used > 0 &&
-		    desc_blk->block_ptr[desc_blk->n_max_used - 1].type == 0;
-		    desc_blk->n_max_used--) {
-			;
-		}
-	}
+  if (desc_blk->n_used == 0) {
+    u_int32_t size =
+        desc_blk->n_count * sizeof(struct en_desc) + ETHER_DESC_HEADER_SIZE;
+    kfree_data(desc_blk, size);
+    ifp->if_family_cookie = 0;
+  } else {
+    /* Decrement n_max_used */
+    for (; desc_blk->n_max_used > 0 &&
+           desc_blk->block_ptr[desc_blk->n_max_used - 1].type == 0;
+         desc_blk->n_max_used--) {
+      ;
+    }
+  }
 
-	return 0;
+  return 0;
 }
 
-static int
-ether_add_proto_internal(struct ifnet *ifp, protocol_family_t protocol,
-    const struct ifnet_demux_desc *demux)
-{
-	struct en_desc *ed;
-	struct ether_desc_blk_str *desc_blk = ifnet_ether_blk_str(ifp);
-	u_int32_t i;
+static int ether_add_proto_internal(struct ifnet *ifp,
+                                    protocol_family_t protocol,
+                                    const struct ifnet_demux_desc *demux) {
+  struct en_desc *ed;
+  struct ether_desc_blk_str *desc_blk = ifnet_ether_blk_str(ifp);
+  u_int32_t i;
 
-	switch (demux->type) {
-	/* These types are supported */
-	/* Top three are preferred */
-	case DLIL_DESC_ETYPE2:
-		if (demux->datalen != 2) {
-			return EINVAL;
-		}
-		break;
+  switch (demux->type) {
+  /* These types are supported */
+  /* Top three are preferred */
+  case DLIL_DESC_ETYPE2:
+    if (demux->datalen != 2) {
+      return EINVAL;
+    }
+    break;
 
-	case DLIL_DESC_SAP:
-		if (demux->datalen != 3) {
-			return EINVAL;
-		}
-		break;
+  case DLIL_DESC_SAP:
+    if (demux->datalen != 3) {
+      return EINVAL;
+    }
+    break;
 
-	case DLIL_DESC_SNAP:
-		if (demux->datalen != 5) {
-			return EINVAL;
-		}
-		break;
+  case DLIL_DESC_SNAP:
+    if (demux->datalen != 5) {
+      return EINVAL;
+    }
+    break;
 
-	default:
-		return ENOTSUP;
-	}
+  default:
+    return ENOTSUP;
+  }
 
-	/* Verify a matching descriptor does not exist */
-	if (desc_blk != NULL) {
-		switch (demux->type) {
-		case DLIL_DESC_ETYPE2:
-			for (i = 0; i < desc_blk->n_max_used; i++) {
-				if (desc_blk->block_ptr[i].type ==
-				    DLIL_DESC_ETYPE2 &&
-				    desc_blk->block_ptr[i].data[0] ==
-				    *(u_int16_t*)demux->data) {
-					return EADDRINUSE;
-				}
-			}
-			break;
-		case DLIL_DESC_SAP:
-		case DLIL_DESC_SNAP:
-			for (i = 0; i < desc_blk->n_max_used; i++) {
-				if (desc_blk->block_ptr[i].type == demux->type &&
-				    bcmp(desc_blk->block_ptr[i].data,
-				    demux->data, demux->datalen) == 0) {
-					return EADDRINUSE;
-				}
-			}
-			break;
-		}
-	}
+  /* Verify a matching descriptor does not exist */
+  if (desc_blk != NULL) {
+    switch (demux->type) {
+    case DLIL_DESC_ETYPE2:
+      for (i = 0; i < desc_blk->n_max_used; i++) {
+        if (desc_blk->block_ptr[i].type == DLIL_DESC_ETYPE2 &&
+            desc_blk->block_ptr[i].data[0] == *(u_int16_t *)demux->data) {
+          return EADDRINUSE;
+        }
+      }
+      break;
+    case DLIL_DESC_SAP:
+    case DLIL_DESC_SNAP:
+      for (i = 0; i < desc_blk->n_max_used; i++) {
+        if (desc_blk->block_ptr[i].type == demux->type &&
+            bcmp(desc_blk->block_ptr[i].data, demux->data, demux->datalen) ==
+                0) {
+          return EADDRINUSE;
+        }
+      }
+      break;
+    }
+  }
 
-	/* Check for case where all of the descriptor blocks are in use */
-	if (desc_blk == NULL || desc_blk->n_used == desc_blk->n_count) {
-		struct ether_desc_blk_str *tmp;
-		u_int32_t new_count = ETHER_DESC_BLK_SIZE;
-		u_int32_t new_size;
-		u_int32_t old_size = 0;
+  /* Check for case where all of the descriptor blocks are in use */
+  if (desc_blk == NULL || desc_blk->n_used == desc_blk->n_count) {
+    struct ether_desc_blk_str *tmp;
+    u_int32_t new_count = ETHER_DESC_BLK_SIZE;
+    u_int32_t new_size;
+    u_int32_t old_size = 0;
 
-		i = 0;
+    i = 0;
 
-		if (desc_blk) {
-			new_count += desc_blk->n_count;
-			old_size = desc_blk->n_count * sizeof(struct en_desc) +
-			    ETHER_DESC_HEADER_SIZE;
-			i = desc_blk->n_used;
-		}
+    if (desc_blk) {
+      new_count += desc_blk->n_count;
+      old_size =
+          desc_blk->n_count * sizeof(struct en_desc) + ETHER_DESC_HEADER_SIZE;
+      i = desc_blk->n_used;
+    }
 
-		new_size = new_count * sizeof(struct en_desc) +
-		    ETHER_DESC_HEADER_SIZE;
+    new_size = new_count * sizeof(struct en_desc) + ETHER_DESC_HEADER_SIZE;
 
-		tmp = (struct ether_desc_blk_str *)kalloc_data(new_size, Z_WAITOK);
-		if (tmp == NULL) {
-			/*
-			 * Remove any previous descriptors set in the call.
-			 */
-			return ENOMEM;
-		}
+    tmp = (struct ether_desc_blk_str *)kalloc_data(new_size, Z_WAITOK);
+    if (tmp == NULL) {
+      /*
+       * Remove any previous descriptors set in the call.
+       */
+      return ENOMEM;
+    }
 
-		bzero(((char *)tmp) + old_size, new_size - old_size);
-		if (desc_blk) {
-			bcopy(desc_blk, tmp, old_size);
-			kfree_data(desc_blk, old_size);
-		}
-		desc_blk = tmp;
-		ifp->if_family_cookie = (uintptr_t)desc_blk;
-		desc_blk->n_count = new_count;
-	} else {
-		/* Find a free entry */
-		for (i = 0; i < desc_blk->n_count; i++) {
-			if (desc_blk->block_ptr[i].type == 0) {
-				break;
-			}
-		}
-	}
+    bzero(((char *)tmp) + old_size, new_size - old_size);
+    if (desc_blk) {
+      bcopy(desc_blk, tmp, old_size);
+      kfree_data(desc_blk, old_size);
+    }
+    desc_blk = tmp;
+    ifp->if_family_cookie = (uintptr_t)desc_blk;
+    desc_blk->n_count = new_count;
+  } else {
+    /* Find a free entry */
+    for (i = 0; i < desc_blk->n_count; i++) {
+      if (desc_blk->block_ptr[i].type == 0) {
+        break;
+      }
+    }
+  }
 
-	/* Bump n_max_used if appropriate */
-	if (i + 1 > desc_blk->n_max_used) {
-		desc_blk->n_max_used = i + 1;
-	}
+  /* Bump n_max_used if appropriate */
+  if (i + 1 > desc_blk->n_max_used) {
+    desc_blk->n_max_used = i + 1;
+  }
 
-	ed = &desc_blk->block_ptr[i];
-	ed->protocol_family = protocol;
-	ed->data[0] = 0;
-	ed->data[1] = 0;
+  ed = &desc_blk->block_ptr[i];
+  ed->protocol_family = protocol;
+  ed->data[0] = 0;
+  ed->data[1] = 0;
 
-	switch (demux->type) {
-	case DLIL_DESC_ETYPE2:
-		/* 2 byte ethernet raw protocol type is at native_type */
-		/* prtocol must be in network byte order */
-		ed->type = DLIL_DESC_ETYPE2;
-		ed->data[0] = *(u_int16_t*)demux->data;
-		break;
+  switch (demux->type) {
+  case DLIL_DESC_ETYPE2:
+    /* 2 byte ethernet raw protocol type is at native_type */
+    /* prtocol must be in network byte order */
+    ed->type = DLIL_DESC_ETYPE2;
+    ed->data[0] = *(u_int16_t *)demux->data;
+    break;
 
-	case DLIL_DESC_SAP:
-		ed->type = DLIL_DESC_SAP;
-		bcopy(demux->data, &ed->data[0], 3);
-		break;
+  case DLIL_DESC_SAP:
+    ed->type = DLIL_DESC_SAP;
+    bcopy(demux->data, &ed->data[0], 3);
+    break;
 
-	case DLIL_DESC_SNAP: {
-		u_int8_t*       pDest = ((u_int8_t*)&ed->data[0]) + 3;
-		ed->type = DLIL_DESC_SNAP;
-		bcopy(demux->data, pDest, 5);
-		break;
-	}
-	}
+  case DLIL_DESC_SNAP: {
+    u_int8_t *pDest = ((u_int8_t *)&ed->data[0]) + 3;
+    ed->type = DLIL_DESC_SNAP;
+    bcopy(demux->data, pDest, 5);
+    break;
+  }
+  }
 
-	desc_blk->n_used++;
+  desc_blk->n_used++;
 
-	return 0;
+  return 0;
 }
 
-int
-ether_add_proto(ifnet_t  ifp, protocol_family_t protocol,
-    const struct ifnet_demux_desc *demux_list __counted_by(demux_count), u_int32_t demux_count)
-{
-	int error = 0;
-	u_int32_t i;
+int ether_add_proto(ifnet_t ifp, protocol_family_t protocol,
+                    const struct ifnet_demux_desc *demux_list
+                        __counted_by(demux_count),
+                    u_int32_t demux_count) {
+  int error = 0;
+  u_int32_t i;
 
-	for (i = 0; i < demux_count; i++) {
-		error = ether_add_proto_internal(ifp, protocol, &demux_list[i]);
-		if (error) {
-			ether_del_proto(ifp, protocol);
-			break;
-		}
-	}
+  for (i = 0; i < demux_count; i++) {
+    error = ether_add_proto_internal(ifp, protocol, &demux_list[i]);
+    if (error) {
+      ether_del_proto(ifp, protocol);
+      break;
+    }
+  }
 
-	return error;
+  return error;
 }
 
-static void
-_mbuf_adjust_pkthdr_and_data(mbuf_t m, int len)
-{
-	mbuf_setdata(m, mtodo(m, len), mbuf_len(m) - len);
-	mbuf_pkthdr_adjustlen(m, -len);
+static void _mbuf_adjust_pkthdr_and_data(mbuf_t m, int len) {
+  mbuf_setdata(m, mtodo(m, len), mbuf_len(m) - len);
+  mbuf_pkthdr_adjustlen(m, -len);
 }
 
-static bool
-ether_remove_vlan_encapsulation(ifnet_t ifp, mbuf_t m, char * frame_header,
-    uint16_t * tag_p, uint16_t * ether_type_p)
-{
-	char *                          current;
-	struct ether_header *           eh_p;
-	struct ether_vlan_encap_header  encap;
-	struct ether_header             new_eh;
-	bool                            success = false;
+static bool ether_remove_vlan_encapsulation(ifnet_t ifp, mbuf_t m,
+                                            char *frame_header, uint16_t *tag_p,
+                                            uint16_t *ether_type_p) {
+  char *current;
+  struct ether_header *eh_p;
+  struct ether_vlan_encap_header encap;
+  struct ether_header new_eh;
+  bool success = false;
 
-	if (m->m_pkthdr.len < ETHER_VLAN_ENCAP_LEN) {
-		os_log_debug(OS_LOG_DEFAULT,
-		    "%s: dropping short VLAN packet %d < %d",
-		    ifp->if_xname, m->m_pkthdr.len,
-		    ETHER_VLAN_ENCAP_LEN);
-		goto done;
-	}
-	current = mtod(m, char *);
-	if (frame_header < (char *)mbuf_datastart(m) ||
-	    frame_header > current) {
-		os_log_debug(OS_LOG_DEFAULT,
-		    "%s: dropping VLAN non-contiguous header %p, %p",
-		    ifp->if_xname, current, frame_header);
-		goto done;
-	}
-	if ((current - frame_header) < ETHER_HDR_LEN) {
-		os_log_debug(OS_LOG_DEFAULT,
-		    "%s: dropping VLAN short header %p %p",
-		    ifp->if_xname, current, frame_header);
-		goto done;
-	}
+  if (m->m_pkthdr.len < ETHER_VLAN_ENCAP_LEN) {
+    os_log_debug(OS_LOG_DEFAULT, "%s: dropping short VLAN packet %d < %d",
+                 ifp->if_xname, m->m_pkthdr.len, ETHER_VLAN_ENCAP_LEN);
+    goto done;
+  }
+  current = mtod(m, char *);
+  if (frame_header < (char *)mbuf_datastart(m) || frame_header > current) {
+    os_log_debug(OS_LOG_DEFAULT,
+                 "%s: dropping VLAN non-contiguous header %p, %p",
+                 ifp->if_xname, current, frame_header);
+    goto done;
+  }
+  if ((current - frame_header) < ETHER_HDR_LEN) {
+    os_log_debug(OS_LOG_DEFAULT, "%s: dropping VLAN short header %p %p",
+                 ifp->if_xname, current, frame_header);
+    goto done;
+  }
 
-	/*
-	 * Remove the VLAN encapsulation header by shifting the
-	 * ethernet destination and source addresses over by the
-	 * encapsulation header length (4 bytes).
-	 */
+  /*
+   * Remove the VLAN encapsulation header by shifting the
+   * ethernet destination and source addresses over by the
+   * encapsulation header length (4 bytes).
+   */
 
-	/* copy the VLAN encapsulation header (4 bytes) */
-	if (mbuf_copydata(m, 0, sizeof(encap), (caddr_t)&encap) != 0) {
-		os_log_debug(OS_LOG_DEFAULT,
-		    "%s: mbuf_copydata VLAN encap failed",
-		    ifp->if_xname);
-		goto done;
-	}
+  /* copy the VLAN encapsulation header (4 bytes) */
+  if (mbuf_copydata(m, 0, sizeof(encap), (caddr_t)&encap) != 0) {
+    os_log_debug(OS_LOG_DEFAULT, "%s: mbuf_copydata VLAN encap failed",
+                 ifp->if_xname);
+    goto done;
+  }
 
-	/* create the new ethernet header with encapsulated proto */
-	eh_p = (struct ether_header *)(void *)
-	    (m_mtod_lower_bound(m) + (frame_header - m_mtod_lower_bound(m)));
-	new_eh = *eh_p;
-	*ether_type_p = new_eh.ether_type = encap.evle_proto;
+  /* create the new ethernet header with encapsulated proto */
+  eh_p =
+      (struct ether_header *)(void *)(m_mtod_lower_bound(m) +
+                                      (frame_header - m_mtod_lower_bound(m)));
+  new_eh = *eh_p;
+  *ether_type_p = new_eh.ether_type = encap.evle_proto;
 
-	/* rollback to new ethernet header start (backward 10 bytes) */
-#define ETHER_VLAN_ADJUST_HEADER      (ETHER_HDR_LEN - ETHER_VLAN_ENCAP_LEN)
-	_mbuf_adjust_pkthdr_and_data(m, -ETHER_VLAN_ADJUST_HEADER);
+  /* rollback to new ethernet header start (backward 10 bytes) */
+#define ETHER_VLAN_ADJUST_HEADER (ETHER_HDR_LEN - ETHER_VLAN_ENCAP_LEN)
+  _mbuf_adjust_pkthdr_and_data(m, -ETHER_VLAN_ADJUST_HEADER);
 
-	/* write new ether header */
-	if (mbuf_copyback(m, 0, sizeof(new_eh), &new_eh, MBUF_DONTWAIT) != 0) {
-		os_log_debug(OS_LOG_DEFAULT,
-		    "%s: mbuf_copyback VLAN stripped header failed",
-		    ifp->if_xname);
-		goto done;
-	}
+  /* write new ether header */
+  if (mbuf_copyback(m, 0, sizeof(new_eh), &new_eh, MBUF_DONTWAIT) != 0) {
+    os_log_debug(OS_LOG_DEFAULT,
+                 "%s: mbuf_copyback VLAN stripped header failed",
+                 ifp->if_xname);
+    goto done;
+  }
 
-	/* set new frame header */
-	mbuf_pkthdr_setheader(m, mtod(m, void *));
+  /* set new frame header */
+  mbuf_pkthdr_setheader(m, mtod(m, void *));
 
-	/* skip ethernet header (forward 14 bytes) */
-	_mbuf_adjust_pkthdr_and_data(m, ETHER_HDR_LEN);
+  /* skip ethernet header (forward 14 bytes) */
+  _mbuf_adjust_pkthdr_and_data(m, ETHER_HDR_LEN);
 
-	/* can't trust hardware checksum */
-	m->m_pkthdr.csum_flags = 0;
+  /* can't trust hardware checksum */
+  m->m_pkthdr.csum_flags = 0;
 
-	/* return just the VLAN ID */
-	*tag_p = EVL_VLANOFTAG(ntohs(encap.evle_tag));
-	success = true;
+  /* return just the VLAN ID */
+  *tag_p = EVL_VLANOFTAG(ntohs(encap.evle_tag));
+  success = true;
 
 done:
-	return success;
+  return success;
 }
 
-int
-ether_demux(ifnet_t ifp, mbuf_t m, char *frame_header,
-    protocol_family_t *protocol_family)
-{
-	struct ether_header * __single eh = (struct ether_header *)(void *)frame_header;
-	u_short  ether_type;
-	u_int16_t type;
-	u_int8_t *data;
-	u_int32_t i = 0;
-	struct ether_desc_blk_str *desc_blk = ifnet_ether_blk_str(ifp);
-	u_int32_t maxd = desc_blk ? desc_blk->n_max_used : 0;
-	struct en_desc  *ed = desc_blk ? desc_blk->block_ptr : NULL;
-	u_int32_t extProto1 = 0;
-	u_int32_t extProto2 = 0;
+int ether_demux(ifnet_t ifp, mbuf_t m, char *frame_header,
+                protocol_family_t *protocol_family) {
+  struct ether_header *__single eh =
+      (struct ether_header *)(void *)frame_header;
+  u_short ether_type;
+  u_int16_t type;
+  u_int8_t *data;
+  u_int32_t i = 0;
+  struct ether_desc_blk_str *desc_blk = ifnet_ether_blk_str(ifp);
+  u_int32_t maxd = desc_blk ? desc_blk->n_max_used : 0;
+  struct en_desc *ed = desc_blk ? desc_blk->block_ptr : NULL;
+  u_int32_t extProto1 = 0;
+  u_int32_t extProto2 = 0;
 
-	if (__improbable(eh == NULL)) {
-		return EINVAL;
-	}
-	ether_type = eh->ether_type;
+  if (__improbable(eh == NULL)) {
+    return EINVAL;
+  }
+  ether_type = eh->ether_type;
 
-	if ((eh->ether_dhost[0] & 1) != 0) {
-		/* Check for broadcast */
-		if (_ether_cmp(etherbroadcastaddr, eh->ether_dhost) == 0) {
-			m->m_flags |= M_BCAST;
-		} else {
-			m->m_flags |= M_MCAST;
-		}
-	} else {
-		/*
-		 * When the driver is put into promiscuous mode we may receive
-		 * unicast frames that are not intended for our interfaces.
-		 * They are marked here as being promiscuous so the caller may
-		 * dispose of them after passing the packets to any interface
-		 * filters.
-		 */
-		if (_ether_cmp(eh->ether_dhost, IF_LLADDR(ifp))) {
-			m->m_flags |= M_PROMISC;
-		}
-	}
+  if ((eh->ether_dhost[0] & 1) != 0) {
+    /* Check for broadcast */
+    if (_ether_cmp(etherbroadcastaddr, eh->ether_dhost) == 0) {
+      m->m_flags |= M_BCAST;
+    } else {
+      m->m_flags |= M_MCAST;
+    }
+  } else {
+    /*
+     * When the driver is put into promiscuous mode we may receive
+     * unicast frames that are not intended for our interfaces.
+     * They are marked here as being promiscuous so the caller may
+     * dispose of them after passing the packets to any interface
+     * filters.
+     */
+    if (_ether_cmp(eh->ether_dhost, IF_LLADDR(ifp))) {
+      m->m_flags |= M_PROMISC;
+    }
+  }
 
-	if (m->m_flags & M_HASFCS) {
-		/*
-		 * If the M_HASFCS is set by the driver we want to make sure
-		 * that we strip off the trailing FCS data before handing it
-		 * up the stack.
-		 */
-		m_adj(m, -ETHER_CRC_LEN);
-		m->m_flags &= ~M_HASFCS;
-	}
+  if (m->m_flags & M_HASFCS) {
+    /*
+     * If the M_HASFCS is set by the driver we want to make sure
+     * that we strip off the trailing FCS data before handing it
+     * up the stack.
+     */
+    m_adj(m, -ETHER_CRC_LEN);
+    m->m_flags &= ~M_HASFCS;
+  }
 
-	/* check for BOND */
-	if ((ifnet_eflags(ifp) & IFEF_BOND) != 0) {
-		*protocol_family = PF_BOND;
-		return 0;
-	}
-	/* check for VLAN */
-	if ((m->m_pkthdr.csum_flags & CSUM_VLAN_TAG_VALID) != 0) {
-		if (EVL_VLANOFTAG(m->m_pkthdr.vlan_tag) != 0) {
-			*protocol_family = PF_VLAN;
-			return 0;
-		}
-		/* the packet is just priority-tagged, clear the bit */
-		m->m_pkthdr.csum_flags &= ~CSUM_VLAN_TAG_VALID;
-		m->m_pkthdr.vlan_tag = 0;
-	} else if (ether_type == htons(ETHERTYPE_VLAN)) {
-		uint16_t        tag;
+  /* check for BOND */
+  if ((ifnet_eflags(ifp) & IFEF_BOND) != 0) {
+    *protocol_family = PF_BOND;
+    return 0;
+  }
+  /* check for VLAN */
+  if ((m->m_pkthdr.csum_flags & CSUM_VLAN_TAG_VALID) != 0) {
+    if (EVL_VLANOFTAG(m->m_pkthdr.vlan_tag) != 0) {
+      *protocol_family = PF_VLAN;
+      return 0;
+    }
+    /* the packet is just priority-tagged, clear the bit */
+    m->m_pkthdr.csum_flags &= ~CSUM_VLAN_TAG_VALID;
+    m->m_pkthdr.vlan_tag = 0;
+  } else if (ether_type == htons(ETHERTYPE_VLAN)) {
+    uint16_t tag;
 
-		if (!ether_remove_vlan_encapsulation(ifp, m, frame_header, &tag,
-		    &ether_type)) {
-			m_freem(m);
-			return EJUSTRETURN;
-		}
-		/* check whether a VLAN tag is set */
-		if (tag != 0) {
-			/* make it look like it was hardware tagged */
-			*protocol_family = PF_VLAN;
-			m->m_pkthdr.csum_flags |= CSUM_VLAN_TAG_VALID;
-			m->m_pkthdr.vlan_tag = tag;
-			return 0;
-		}
-		/* just priority-tagged, let packet continue */
-		eh = mbuf_pkthdr_header(m);
-	}
-	if (ether_type == htons(ETHERTYPE_ARP)) {
-		m->m_pkthdr.pkt_flags |= PKTF_INET_RESOLVE; /* ARP packet */
-	}
-	data = mtod(m, u_int8_t*);
+    if (!ether_remove_vlan_encapsulation(ifp, m, frame_header, &tag,
+                                         &ether_type)) {
+      m_freem(m);
+      return EJUSTRETURN;
+    }
+    /* check whether a VLAN tag is set */
+    if (tag != 0) {
+      /* make it look like it was hardware tagged */
+      *protocol_family = PF_VLAN;
+      m->m_pkthdr.csum_flags |= CSUM_VLAN_TAG_VALID;
+      m->m_pkthdr.vlan_tag = tag;
+      return 0;
+    }
+    /* just priority-tagged, let packet continue */
+    eh = mbuf_pkthdr_header(m);
+  }
+  if (ether_type == htons(ETHERTYPE_ARP)) {
+    m->m_pkthdr.pkt_flags |= PKTF_INET_RESOLVE; /* ARP packet */
+  }
+  data = mtod(m, u_int8_t *);
 
-	/*
-	 * Determine the packet's protocol type and stuff the protocol into
-	 * longs for quick compares.
-	 */
-	if (ntohs(ether_type) <= 1500) {
-		bcopy(data, &extProto1, sizeof(u_int32_t));
+  /*
+   * Determine the packet's protocol type and stuff the protocol into
+   * longs for quick compares.
+   */
+  if (ntohs(ether_type) <= 1500) {
+    bcopy(data, &extProto1, sizeof(u_int32_t));
 
-		/* SAP or SNAP */
-		if ((extProto1 & htonl(0xFFFFFF00)) == htonl(0xAAAA0300)) {
-			/* SNAP */
-			type = DLIL_DESC_SNAP;
-			bcopy(data + sizeof(u_int32_t), &extProto2,
-			    sizeof(u_int32_t));
-			extProto1 &= htonl(0x000000FF);
-		} else {
-			type = DLIL_DESC_SAP;
-			extProto1 &= htonl(0xFFFFFF00);
-		}
-	} else {
-		type = DLIL_DESC_ETYPE2;
-	}
+    /* SAP or SNAP */
+    if ((extProto1 & htonl(0xFFFFFF00)) == htonl(0xAAAA0300)) {
+      /* SNAP */
+      type = DLIL_DESC_SNAP;
+      bcopy(data + sizeof(u_int32_t), &extProto2, sizeof(u_int32_t));
+      extProto1 &= htonl(0x000000FF);
+    } else {
+      type = DLIL_DESC_SAP;
+      extProto1 &= htonl(0xFFFFFF00);
+    }
+  } else {
+    type = DLIL_DESC_ETYPE2;
+  }
 
-	/*
-	 * Search through the connected protocols for a match.
-	 */
-	switch (type) {
-	case DLIL_DESC_ETYPE2:
-		for (i = 0; i < maxd; i++) {
-			if ((ed[i].type == type) &&
-			    (ed[i].data[0] == ether_type)) {
-				*protocol_family = ed[i].protocol_family;
-				return 0;
-			}
-		}
-		break;
+  /*
+   * Search through the connected protocols for a match.
+   */
+  switch (type) {
+  case DLIL_DESC_ETYPE2:
+    for (i = 0; i < maxd; i++) {
+      if ((ed[i].type == type) && (ed[i].data[0] == ether_type)) {
+        *protocol_family = ed[i].protocol_family;
+        return 0;
+      }
+    }
+    break;
 
-	case DLIL_DESC_SAP:
-		for (i = 0; i < maxd; i++) {
-			if ((ed[i].type == type) &&
-			    (ed[i].data[0] == extProto1)) {
-				*protocol_family = ed[i].protocol_family;
-				return 0;
-			}
-		}
-		break;
+  case DLIL_DESC_SAP:
+    for (i = 0; i < maxd; i++) {
+      if ((ed[i].type == type) && (ed[i].data[0] == extProto1)) {
+        *protocol_family = ed[i].protocol_family;
+        return 0;
+      }
+    }
+    break;
 
-	case DLIL_DESC_SNAP:
-		for (i = 0; i < maxd; i++) {
-			if ((ed[i].type == type) &&
-			    (ed[i].data[0] == extProto1) &&
-			    (ed[i].data[1] == extProto2)) {
-				*protocol_family = ed[i].protocol_family;
-				return 0;
-			}
-		}
-		break;
-	}
+  case DLIL_DESC_SNAP:
+    for (i = 0; i < maxd; i++) {
+      if ((ed[i].type == type) && (ed[i].data[0] == extProto1) &&
+          (ed[i].data[1] == extProto2)) {
+        *protocol_family = ed[i].protocol_family;
+        return 0;
+      }
+    }
+    break;
+  }
 
-	return ENOENT;
+  return ENOENT;
 }
 
 /*
@@ -600,25 +579,21 @@ ether_demux(ifnet_t ifp, mbuf_t m, char *frame_header,
  * postpend length parameters.)
  */
 #if KPI_INTERFACE_EMBEDDED
-int
-ether_frameout(struct ifnet *ifp, struct mbuf **m,
-    const struct sockaddr *ndest,
-    IFNET_LLADDR_T edst, IFNET_FRAME_TYPE_T ether_type,
-    u_int32_t *prepend_len, u_int32_t *postpend_len)
-#else /* !KPI_INTERFACE_EMBEDDED */
-int
-ether_frameout(struct ifnet *ifp, struct mbuf **m,
-    const struct sockaddr *ndest,
-    IFNET_LLADDR_T edst,
-    IFNET_FRAME_TYPE_T ether_type)
+int ether_frameout(struct ifnet *ifp, struct mbuf **m,
+                   const struct sockaddr *ndest, IFNET_LLADDR_T edst,
+                   IFNET_FRAME_TYPE_T ether_type, u_int32_t *prepend_len,
+                   u_int32_t *postpend_len)
+#else  /* !KPI_INTERFACE_EMBEDDED */
+int ether_frameout(struct ifnet *ifp, struct mbuf **m,
+                   const struct sockaddr *ndest, IFNET_LLADDR_T edst,
+                   IFNET_FRAME_TYPE_T ether_type)
 #endif /* KPI_INTERFACE_EMBEDDED */
 {
 #if KPI_INTERFACE_EMBEDDED
-	return ether_frameout_extended(ifp, m, ndest, edst, ether_type,
-	           prepend_len, postpend_len);
-#else /* !KPI_INTERFACE_EMBEDDED */
-	return ether_frameout_extended(ifp, m, ndest, edst, ether_type,
-	           NULL, NULL);
+  return ether_frameout_extended(ifp, m, ndest, edst, ether_type, prepend_len,
+                                 postpend_len);
+#else  /* !KPI_INTERFACE_EMBEDDED */
+  return ether_frameout_extended(ifp, m, ndest, edst, ether_type, NULL, NULL);
 #endif /* !KPI_INTERFACE_EMBEDDED */
 }
 
@@ -628,145 +603,137 @@ ether_frameout(struct ifnet *ifp, struct mbuf **m,
  * Use trailer local net encapsulation if enough data in first
  * packet leaves a multiple of 512 bytes of data in remainder.
  */
-int
-ether_frameout_extended(struct ifnet *ifp, struct mbuf **m,
-    const struct sockaddr *ndest,
-    IFNET_LLADDR_T dst_laddr, IFNET_FRAME_TYPE_T frame_type,
-    u_int32_t *prepend_len, u_int32_t *postpend_len)
-{
-	struct ether_header *eh;
-	int hlen = ETHER_HDR_LEN; /* link layer header length */
+int ether_frameout_extended(struct ifnet *ifp, struct mbuf **m,
+                            const struct sockaddr *ndest,
+                            IFNET_LLADDR_T dst_laddr,
+                            IFNET_FRAME_TYPE_T frame_type,
+                            u_int32_t *prepend_len, u_int32_t *postpend_len) {
+  struct ether_header *eh;
+  int hlen = ETHER_HDR_LEN; /* link layer header length */
 
-	/*
-	 * If a simplex interface, and the packet is being sent to our
-	 * Ethernet address or a broadcast address, loopback a copy.
-	 * XXX To make a simplex device behave exactly like a duplex
-	 * device, we should copy in the case of sending to our own
-	 * ethernet address (thus letting the original actually appear
-	 * on the wire). However, we don't do that here for security
-	 * reasons and compatibility with the original behavior.
-	 */
-	if ((ifp->if_flags & IFF_SIMPLEX) &&
-	    ((*m)->m_flags & M_LOOP) && lo_ifp != NULL) {
-		if ((*m)->m_flags & M_BCAST) {
-			struct mbuf *n = m_copy(*m, 0, (int)M_COPYALL);
-			if (n != NULL) {
-				dlil_output(lo_ifp, ndest->sa_family,
-				    n, NULL, ndest, DLIL_OUTPUT_FLAGS_NONE,
-				    NULL);
-			}
-		} else if (_ether_cmp(dst_laddr, IF_LLADDR(ifp)) == 0) {
-			dlil_output(lo_ifp, ndest->sa_family, *m,
-			    NULL, ndest, DLIL_OUTPUT_FLAGS_NONE, NULL);
-			return EJUSTRETURN;
-		}
-	}
+  /*
+   * If a simplex interface, and the packet is being sent to our
+   * Ethernet address or a broadcast address, loopback a copy.
+   * XXX To make a simplex device behave exactly like a duplex
+   * device, we should copy in the case of sending to our own
+   * ethernet address (thus letting the original actually appear
+   * on the wire). However, we don't do that here for security
+   * reasons and compatibility with the original behavior.
+   */
+  if ((ifp->if_flags & IFF_SIMPLEX) && ((*m)->m_flags & M_LOOP) &&
+      lo_ifp != NULL) {
+    if ((*m)->m_flags & M_BCAST) {
+      struct mbuf *n = m_copy(*m, 0, (int)M_COPYALL);
+      if (n != NULL) {
+        dlil_output(lo_ifp, ndest->sa_family, n, NULL, ndest,
+                    DLIL_OUTPUT_FLAGS_NONE, NULL);
+      }
+    } else if (_ether_cmp(dst_laddr, IF_LLADDR(ifp)) == 0) {
+      dlil_output(lo_ifp, ndest->sa_family, *m, NULL, ndest,
+                  DLIL_OUTPUT_FLAGS_NONE, NULL);
+      return EJUSTRETURN;
+    }
+  }
 
-	/*
-	 * Add local net header.  If no space in first mbuf,
-	 * allocate another.
-	 */
-	if (ifp->if_type == IFT_L2VLAN) {
-		/* leave room for VLAN encapsulation */
-		hlen += ETHER_VLAN_ENCAP_LEN;
-	}
-	M_PREPEND(*m, hlen, M_DONTWAIT, 0);
-	if (*m == NULL) {
-		return EJUSTRETURN;
-	}
+  /*
+   * Add local net header.  If no space in first mbuf,
+   * allocate another.
+   */
+  if (ifp->if_type == IFT_L2VLAN) {
+    /* leave room for VLAN encapsulation */
+    hlen += ETHER_VLAN_ENCAP_LEN;
+  }
+  M_PREPEND(*m, hlen, M_DONTWAIT, 0);
+  if (*m == NULL) {
+    return EJUSTRETURN;
+  }
 
-	if (prepend_len != NULL) {
-		*prepend_len = ETHER_HDR_LEN;
-	}
-	if (postpend_len != NULL) {
-		*postpend_len = 0;
-	}
-	if (ifp->if_type == IFT_L2VLAN) {
-		m_adj(*m, ETHER_VLAN_ENCAP_LEN);
-	}
-	eh = mtod(*m, struct ether_header *);
-	(void) memcpy(&eh->ether_type, frame_type, sizeof(eh->ether_type));
-	(void) memcpy(eh->ether_dhost, dst_laddr, ETHER_ADDR_LEN);
-	(void) memcpy(eh->ether_shost, IF_LLADDR(ifp), ETHER_ADDR_LEN);
+  if (prepend_len != NULL) {
+    *prepend_len = ETHER_HDR_LEN;
+  }
+  if (postpend_len != NULL) {
+    *postpend_len = 0;
+  }
+  if (ifp->if_type == IFT_L2VLAN) {
+    m_adj(*m, ETHER_VLAN_ENCAP_LEN);
+  }
+  eh = mtod(*m, struct ether_header *);
+  (void)memcpy(&eh->ether_type, frame_type, sizeof(eh->ether_type));
+  (void)memcpy(eh->ether_dhost, dst_laddr, ETHER_ADDR_LEN);
+  (void)memcpy(eh->ether_shost, IF_LLADDR(ifp), ETHER_ADDR_LEN);
 
-	return 0;
+  return 0;
 }
 
-errno_t
-ether_check_multi(ifnet_t ifp, const struct sockaddr *proto_addr)
-{
+errno_t ether_check_multi(ifnet_t ifp, const struct sockaddr *proto_addr) {
 #pragma unused(ifp)
-	errno_t result = EAFNOSUPPORT;
-	const u_char *e_addr;
+  errno_t result = EAFNOSUPPORT;
+  const u_char *e_addr;
 
-	/*
-	 * AF_SPEC and AF_LINK don't require translation. We do
-	 * want to verify that they specify a valid multicast.
-	 */
-	switch (proto_addr->sa_family) {
-	case AF_UNSPEC:
-		e_addr = (const u_char*)&proto_addr->sa_data[0];
-		if ((e_addr[0] & 0x01) != 0x01) {
-			result = EADDRNOTAVAIL;
-		} else {
-			result = 0;
-		}
-		break;
+  /*
+   * AF_SPEC and AF_LINK don't require translation. We do
+   * want to verify that they specify a valid multicast.
+   */
+  switch (proto_addr->sa_family) {
+  case AF_UNSPEC:
+    e_addr = (const u_char *)&proto_addr->sa_data[0];
+    if ((e_addr[0] & 0x01) != 0x01) {
+      result = EADDRNOTAVAIL;
+    } else {
+      result = 0;
+    }
+    break;
 
-	case AF_LINK:
-		e_addr = CONST_LLADDR(SDL(proto_addr));
-		if ((e_addr[0] & 0x01) != 0x01) {
-			result = EADDRNOTAVAIL;
-		} else {
-			result = 0;
-		}
-		break;
-	}
+  case AF_LINK:
+    e_addr = CONST_LLADDR(SDL(proto_addr));
+    if ((e_addr[0] & 0x01) != 0x01) {
+      result = EADDRNOTAVAIL;
+    } else {
+      result = 0;
+    }
+    break;
+  }
 
-	return result;
+  return result;
 }
 
-int
-ether_ioctl(ifnet_t ifp, u_int32_t command, void *data)
-{
+int ether_ioctl(ifnet_t ifp, u_int32_t command, void *data) {
 #pragma unused(ifp, command, data)
-	return EOPNOTSUPP;
+  return EOPNOTSUPP;
 }
 
-__private_extern__ int
-ether_family_init(void)
-{
-	errno_t error = 0;
+__private_extern__ int ether_family_init(void) {
+  errno_t error = 0;
 
-	/* Register protocol registration functions */
-	if ((error = proto_register_plumber(PF_INET, APPLE_IF_FAM_ETHERNET,
-	    ether_attach_inet, ether_detach_inet)) != 0) {
-		printf("proto_register_plumber failed for PF_INET error=%d\n",
-		    error);
-		goto done;
-	}
-	if ((error = proto_register_plumber(PF_INET6, APPLE_IF_FAM_ETHERNET,
-	    ether_attach_inet6, ether_detach_inet6)) != 0) {
-		printf("proto_register_plumber failed for PF_INET6 error=%d\n",
-		    error);
-		goto done;
-	}
+  /* Register protocol registration functions */
+  if ((error = proto_register_plumber(PF_INET, APPLE_IF_FAM_ETHERNET,
+                                      ether_attach_inet, ether_detach_inet)) !=
+      0) {
+    printf("proto_register_plumber failed for PF_INET error=%d\n", error);
+    goto done;
+  }
+  if ((error = proto_register_plumber(PF_INET6, APPLE_IF_FAM_ETHERNET,
+                                      ether_attach_inet6,
+                                      ether_detach_inet6)) != 0) {
+    printf("proto_register_plumber failed for PF_INET6 error=%d\n", error);
+    goto done;
+  }
 #if VLAN
-	vlan_family_init();
+  vlan_family_init();
 #endif /* VLAN */
 #if BOND
-	bond_family_init();
+  bond_family_init();
 #endif /* BOND */
 #if IF_BRIDGE
-	bridgeattach(0);
+  bridgeattach(0);
 #endif /* IF_BRIDGE */
 #if IF_FAKE
-	if_fake_init();
+  if_fake_init();
 #endif /* IF_FAKE */
 #if IF_HEADLESS
-	if_headless_init();
+  if_headless_init();
 #endif /* IF_HEADLESS */
 done:
 
-	return error;
+  return error;
 }

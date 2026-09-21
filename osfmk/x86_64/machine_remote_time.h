@@ -33,7 +33,8 @@
 
 __BEGIN_DECLS
 typedef void (*mach_bridge_regwrite_timestamp_func_t)(uint64_t);
-void mach_bridge_register_regwrite_timestamp_callback(mach_bridge_regwrite_timestamp_func_t func);
+void mach_bridge_register_regwrite_timestamp_callback(
+    mach_bridge_regwrite_timestamp_func_t func);
 __END_DECLS
 
 #endif /* MACHINE_X86_64_REMOTE_TIME_H */

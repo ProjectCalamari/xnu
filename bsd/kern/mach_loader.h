@@ -40,109 +40,97 @@
 #ifndef _BSD_KERN_MACH_LOADER_H_
 #define _BSD_KERN_MACH_LOADER_H_
 
-#include <mach/mach_types.h>
 #include <mach-o/loader.h>
+#include <mach/mach_types.h>
 
 typedef int load_return_t;
 
 /* libmalloc relies on these values not changing. If they change,
  * you need to update the values in that project as well */
-__options_decl(hardened_browser_flags_t, uint32_t, {
-	BrowserHostEntitlementMask       = 0x01,
-	BrowserGPUEntitlementMask        = 0x02,
-	BrowserNetworkEntitlementMask    = 0x04,
-	BrowserWebContentEntitlementMask = 0x08,
-});
- #define HR_FLAGS_NUM_NIBBLES (sizeof(hardened_browser_flags_t) / 2)
+__options_decl(hardened_browser_flags_t, uint32_t,
+               {
+                   BrowserHostEntitlementMask = 0x01,
+                   BrowserGPUEntitlementMask = 0x02,
+                   BrowserNetworkEntitlementMask = 0x04,
+                   BrowserWebContentEntitlementMask = 0x08,
+               });
+#define HR_FLAGS_NUM_NIBBLES (sizeof(hardened_browser_flags_t) / 2)
 
 /*
  * Structure describing the result from calling load_machfile(), if that
  * function returns LOAD_SUCCESS.
  */
 typedef struct _load_result {
-	user_addr_t             mach_header;
-	user_addr_t             entry_point;
+  user_addr_t mach_header;
+  user_addr_t entry_point;
 
-	// The user stack pointer and addressable user stack size.
-	user_addr_t             user_stack;
-	mach_vm_size_t          user_stack_size;
+  // The user stack pointer and addressable user stack size.
+  user_addr_t user_stack;
+  mach_vm_size_t user_stack_size;
 
-	// The allocation containing the stack and guard area.
-	user_addr_t             user_stack_alloc;
-	mach_vm_size_t          user_stack_alloc_size;
+  // The allocation containing the stack and guard area.
+  user_addr_t user_stack_alloc;
+  mach_vm_size_t user_stack_alloc_size;
 
-	mach_vm_address_t       all_image_info_addr;
-	mach_vm_size_t          all_image_info_size;
+  mach_vm_address_t all_image_info_addr;
+  mach_vm_size_t all_image_info_size;
 
-	int                     thread_count;
-	unsigned int
-	    unixproc                : 1,
-	    needs_dynlinker         : 1,
-	    dynlinker               : 1,
-	    validentry              : 1,
-	    has_pagezero            : 1,
-	    using_lcmain            : 1,
+  int thread_count;
+  unsigned int unixproc : 1, needs_dynlinker : 1, dynlinker : 1, validentry : 1,
+      has_pagezero : 1, using_lcmain : 1,
 #if __arm64__
-	    legacy_footprint        : 1,
+      legacy_footprint : 1,
 #endif /* __arm64__ */
-	is_64bit_addr           : 1,
-	    is_64bit_data           : 1,
-	    custom_stack            : 1,
-	    is_rosetta              : 1,
-	    hardened_heap           : 1,
-	    is_hardened_process     : 1;
-	unsigned int            csflags;
-	unsigned char           uuid[16];
-	mach_vm_address_t       min_vm_addr;
-	mach_vm_address_t       max_vm_addr;
-	mach_vm_address_t       ro_vm_start;
-	mach_vm_address_t       ro_vm_end;
-	unsigned int            platform_binary;
+      is_64bit_addr : 1, is_64bit_data : 1, custom_stack : 1, is_rosetta : 1,
+      hardened_heap : 1, is_hardened_process : 1;
+  unsigned int csflags;
+  unsigned char uuid[16];
+  mach_vm_address_t min_vm_addr;
+  mach_vm_address_t max_vm_addr;
+  mach_vm_address_t ro_vm_start;
+  mach_vm_address_t ro_vm_end;
+  unsigned int platform_binary;
 
-	/* Flags denoting which type of platform restrictions binary this is */
-	hardened_browser_flags_t hardened_browser;
+  /* Flags denoting which type of platform restrictions binary this is */
+  hardened_browser_flags_t hardened_browser;
 
-	off_t                   cs_end_offset;
-	void                    *threadstate;
-	size_t                  threadstate_sz;
-	uint32_t                ip_platform;
-	uint32_t                lr_min_sdk;
-	uint32_t                lr_sdk;
-	user_addr_t             dynlinker_mach_header;
-	user_addr_t             dynlinker_max_vm_addr;
-	mach_vm_address_t       dynlinker_ro_vm_start;
-	mach_vm_address_t       dynlinker_ro_vm_end;
-	int                     dynlinker_fd;
-	struct fileproc*        dynlinker_fp;
+  off_t cs_end_offset;
+  void *threadstate;
+  size_t threadstate_sz;
+  uint32_t ip_platform;
+  uint32_t lr_min_sdk;
+  uint32_t lr_sdk;
+  user_addr_t dynlinker_mach_header;
+  user_addr_t dynlinker_max_vm_addr;
+  mach_vm_address_t dynlinker_ro_vm_start;
+  mach_vm_address_t dynlinker_ro_vm_end;
+  int dynlinker_fd;
+  struct fileproc *dynlinker_fp;
 } load_result_t;
 
 struct image_params;
-load_return_t load_machfile(
-	struct image_params     *imgp,
-	struct mach_header      *header,
-	thread_t                thread,
-	vm_map_t                *mapp,
-	load_result_t           *result);
+load_return_t load_machfile(struct image_params *imgp,
+                            struct mach_header *header, thread_t thread,
+                            vm_map_t *mapp, load_result_t *result);
 
-load_return_t
-validate_potential_simulator_binary(
-	cpu_type_t               exectype,
-	struct image_params      *imgp,
-	off_t                    file_offset,
-	off_t                    macho_size);
+load_return_t validate_potential_simulator_binary(cpu_type_t exectype,
+                                                  struct image_params *imgp,
+                                                  off_t file_offset,
+                                                  off_t macho_size);
 
-#define LOAD_SUCCESS            0
-#define LOAD_BADARCH            1       /* CPU type/subtype not found */
-#define LOAD_BADMACHO           2       /* malformed mach-o file */
-#define LOAD_SHLIB              3       /* shlib version mismatch */
-#define LOAD_FAILURE            4       /* Miscellaneous error */
-#define LOAD_NOSPACE            5       /* No VM available */
-#define LOAD_PROTECT            6       /* protection violation */
-#define LOAD_RESOURCE           7       /* resource allocation failure */
-#define LOAD_ENOENT             8       /* resource not found */
-#define LOAD_IOERROR            9       /* IO error */
-#define LOAD_DECRYPTFAIL        10      /* FP decrypt failure */
-#define LOAD_BADMACHO_UPX       11      /* malformed mach-o file */
-#define LOAD_BADARCH_X86        12      /* -no32exec boot-arg + attempted load of 32bit x86 binary */
+#define LOAD_SUCCESS 0
+#define LOAD_BADARCH 1       /* CPU type/subtype not found */
+#define LOAD_BADMACHO 2      /* malformed mach-o file */
+#define LOAD_SHLIB 3         /* shlib version mismatch */
+#define LOAD_FAILURE 4       /* Miscellaneous error */
+#define LOAD_NOSPACE 5       /* No VM available */
+#define LOAD_PROTECT 6       /* protection violation */
+#define LOAD_RESOURCE 7      /* resource allocation failure */
+#define LOAD_ENOENT 8        /* resource not found */
+#define LOAD_IOERROR 9       /* IO error */
+#define LOAD_DECRYPTFAIL 10  /* FP decrypt failure */
+#define LOAD_BADMACHO_UPX 11 /* malformed mach-o file */
+#define LOAD_BADARCH_X86                                                       \
+  12 /* -no32exec boot-arg + attempted load of 32bit x86 binary */
 
-#endif  /* _BSD_KERN_MACH_LOADER_H_ */
+#endif /* _BSD_KERN_MACH_LOADER_H_ */

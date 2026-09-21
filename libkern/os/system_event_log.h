@@ -33,16 +33,18 @@ __BEGIN_DECLS
 
 /* uncrustify weirdly indents the first availability line */
 /* BEGIN IGNORE CODESTYLE */
-__WATCHOS_AVAILABLE(9.0) __OSX_AVAILABLE(13.0) __IOS_AVAILABLE(16.0) __TVOS_AVAILABLE(16.0)
-/* END IGNORE CODESTYLE */
-OS_EXPORT OS_NOTHROW
-void
-record_system_event(uint8_t type, uint8_t subsystem, const char *event, const char *format, ...) __printflike(4, 5);
+__WATCHOS_AVAILABLE(9.0)
+__OSX_AVAILABLE(13.0) __IOS_AVAILABLE(16.0) __TVOS_AVAILABLE(16.0)
+    /* END IGNORE CODESTYLE */
+    OS_EXPORT OS_NOTHROW
+    void record_system_event(uint8_t type, uint8_t subsystem, const char *event,
+                             const char *format, ...) __printflike(4, 5);
 
-__WATCHOS_AVAILABLE(9.0) __OSX_AVAILABLE(13.0) __IOS_AVAILABLE(16.0) __TVOS_AVAILABLE(16.0)
-OS_EXPORT OS_NOTHROW
-void
-record_system_event_no_varargs(uint8_t type, uint8_t subsystem, const char *event, const char *payload);
+__WATCHOS_AVAILABLE(9.0)
+__OSX_AVAILABLE(13.0) __IOS_AVAILABLE(16.0)
+    __TVOS_AVAILABLE(16.0) OS_EXPORT OS_NOTHROW
+    void record_system_event_no_varargs(uint8_t type, uint8_t subsystem,
+                                        const char *event, const char *payload);
 
 __END_DECLS
 

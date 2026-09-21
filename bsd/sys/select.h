@@ -63,9 +63,9 @@
 #ifndef _SYS_SELECT_H_
 #define _SYS_SELECT_H_
 
+#include <sys/_types.h>
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
-#include <sys/_types.h>
 
 /*
  * [XSI] The <sys/select.h> header shall define the fd_set type as a structure.
@@ -81,9 +81,9 @@
  * <sys/types.h>
  * The sigset_t type shall be defined as described in <signal.h>
  */
-#include <sys/_types/_time_t.h>
-#include <sys/_types/_suseconds_t.h>
 #include <sys/_types/_sigset_t.h>
+#include <sys/_types/_suseconds_t.h>
+#include <sys/_types/_time_t.h>
 
 /*
  * [XSI] FD_CLR, FD_ISSET, FD_SET, FD_ZERO may be declared as a function, or
@@ -97,20 +97,20 @@
  * extra protection here is to permit application redefinition above
  * the default size.
  */
-#include <sys/_types/_fd_setsize.h>
-#include <sys/_types/_fd_set.h>
 #include <sys/_types/_fd_clr.h>
 #include <sys/_types/_fd_isset.h>
+#include <sys/_types/_fd_set.h>
+#include <sys/_types/_fd_setsize.h>
 #include <sys/_types/_fd_zero.h>
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 #include <sys/_types/_fd_copy.h>
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
 #ifdef KERNEL
-#include <sys/kernel_types.h>
 #include <kern/waitq.h>
 #include <sys/event.h>
+#include <sys/kernel_types.h>
 
 /*
  * Used to maintain information about processes that wish to be
@@ -118,22 +118,24 @@
  */
 #ifdef KERNEL_PRIVATE
 struct selinfo {
-	union {
-		struct  waitq si_waitq; /* waitq for wait/wakeup */
-		uint8_t si_waitq_storage[WQ_OPAQUE_SIZE]; /* Opaque and "real" versions of waitq has different sizes
-		                                           * defined in Mach and BSD layers,
-		                                           * allocating extra storage to mitigate that */
-	};
-	struct  klist si_note;          /* JMM - temporary separation */
-	u_int   si_flags;               /* see below */
+  union {
+    struct waitq si_waitq; /* waitq for wait/wakeup */
+    uint8_t
+        si_waitq_storage[WQ_OPAQUE_SIZE]; /* Opaque and "real" versions of waitq
+                                           * has different sizes defined in Mach
+                                           * and BSD layers, allocating extra
+                                           * storage to mitigate that */
+  };
+  struct klist si_note; /* JMM - temporary separation */
+  u_int si_flags;       /* see below */
 };
 
-#define SI_COLL         0x0001          /* obsolete */
-#define SI_RECORDED     0x0004          /* obsolete */
-#define SI_INITED       0x0008          /* obsolete */
-#define SI_CLEAR        0x0010          /* obsolete */
-#define SI_KNPOSTING    0x0020          /* posting to knotes */
-#define SI_SELSPEC      0x0040          /* has spec_filtops knote hooked */
+#define SI_COLL 0x0001      /* obsolete */
+#define SI_RECORDED 0x0004  /* obsolete */
+#define SI_INITED 0x0008    /* obsolete */
+#define SI_CLEAR 0x0010     /* obsolete */
+#define SI_KNPOSTING 0x0020 /* posting to knotes */
+#define SI_SELSPEC 0x0040   /* has spec_filtops knote hooked */
 
 #else
 struct selinfo;
@@ -157,16 +159,16 @@ extern int selwait;
  * 5. If there's a `selrecord` and no corresponding `selwakeup`, but the
  *    vnode is going away, call `selthreadclear`.
  */
-void    selrecord(proc_t selector, struct selinfo *, void *);
-void    selwakeup(struct selinfo *);
-void    selthreadclear(struct selinfo *);
+void selrecord(proc_t selector, struct selinfo *, void *);
+void selwakeup(struct selinfo *);
+void selthreadclear(struct selinfo *);
 
 #if XNU_KERNEL_PRIVATE
-struct  knote;
-struct  _select;
-void    select_cleanup_uthread(struct _select *);
+struct knote;
+struct _select;
+void select_cleanup_uthread(struct _select *);
 
-#define SELSPEC_RECORD_MARKER   ((struct select_set *)-1)
+#define SELSPEC_RECORD_MARKER ((struct select_set *)-1)
 typedef void (^selspec_record_hook_t)(struct selinfo *sip);
 void selspec_attach(struct knote *, struct selinfo *);
 void selspec_detach(struct knote *);
@@ -178,25 +180,24 @@ __END_DECLS
 
 __BEGIN_DECLS
 
-#ifndef  __MWERKS__
-int      pselect(int, fd_set * __restrict, fd_set * __restrict,
-    fd_set * __restrict, const struct timespec * __restrict,
-    const sigset_t * __restrict)
+#ifndef __MWERKS__
+int pselect(int, fd_set *__restrict, fd_set *__restrict, fd_set *__restrict,
+            const struct timespec *__restrict, const sigset_t *__restrict)
 #if defined(_DARWIN_C_SOURCE) || defined(_DARWIN_UNLIMITED_SELECT)
-__DARWIN_EXTSN_C(pselect)
+    __DARWIN_EXTSN_C(pselect)
 #else /* !_DARWIN_C_SOURCE && !_DARWIN_UNLIMITED_SELECT */
-#  if defined(__LP64__) && !__DARWIN_NON_CANCELABLE
-__DARWIN_1050(pselect)
-#  else /* !__LP64__ || __DARWIN_NON_CANCELABLE */
-__DARWIN_ALIAS_C(pselect)
-#  endif /* __LP64__ && !__DARWIN_NON_CANCELABLE */
+#if defined(__LP64__) && !__DARWIN_NON_CANCELABLE
+    __DARWIN_1050(pselect)
+#else  /* !__LP64__ || __DARWIN_NON_CANCELABLE */
+    __DARWIN_ALIAS_C(pselect)
+#endif /* __LP64__ && !__DARWIN_NON_CANCELABLE */
 #endif /* _DARWIN_C_SOURCE || _DARWIN_UNLIMITED_SELECT */
-;
+        ;
 #endif /* __MWERKS__ */
 
 __END_DECLS
 
-#include <sys/_select.h>        /* select() prototype */
+#include <sys/_select.h> /* select() prototype */
 
 #endif /* ! KERNEL */
 

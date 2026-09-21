@@ -26,23 +26,23 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/types.h>
-#include <sys/sysctl.h>
 #include <darwintest.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 
-T_DECL(tcp_cache_fill, "Fills the entire tcp_cache hash table")
-{
-	int ret, value = 0;
-	size_t len = sizeof(value);
+T_DECL(tcp_cache_fill, "Fills the entire tcp_cache hash table") {
+  int ret, value = 0;
+  size_t len = sizeof(value);
 
-	ret = sysctlbyname("net.inet.tcp.test_cache", &value, &len, NULL, 0);
-	if (ret == 0) {
-		value = 1;
-		T_ASSERT_POSIX_SUCCESS(sysctlbyname("net.inet.tcp.test_cache", NULL, NULL,
-		    &value, sizeof(value)), NULL);
-		sysctlbyname("net.inet.tcp.clear_tfocache", NULL, NULL,
-		    &value, sizeof(value));
-	} else {
-		T_SKIP("net.inet.tcp.test_cache not available");
-	}
+  ret = sysctlbyname("net.inet.tcp.test_cache", &value, &len, NULL, 0);
+  if (ret == 0) {
+    value = 1;
+    T_ASSERT_POSIX_SUCCESS(sysctlbyname("net.inet.tcp.test_cache", NULL, NULL,
+                                        &value, sizeof(value)),
+                           NULL);
+    sysctlbyname("net.inet.tcp.clear_tfocache", NULL, NULL, &value,
+                 sizeof(value));
+  } else {
+    T_SKIP("net.inet.tcp.test_cache not available");
+  }
 }

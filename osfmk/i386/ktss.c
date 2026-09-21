@@ -62,9 +62,8 @@
  * We don't use the i386 task switch mechanism.  We need a TSS
  * only to hold the kernel stack pointer for the current thread.
  */
-#include <i386/tss.h>
 #include <i386/pmap.h>
-
+#include <i386/tss.h>
 
 /*
  * The transient stack for sysenter.
@@ -72,10 +71,10 @@
  * NB: it also must be large enough to contain a interrupt stack frame
  * due to a single-step trace trap at system call entry.
  */
-struct sysenter_stack master_sstk
-__attribute__ ((section("__HIB, __desc")))
-__attribute__ ((aligned(16)))  = { {0}, 0 };
+struct sysenter_stack master_sstk __attribute__((section("__HIB, __desc")))
+__attribute__((aligned(16))) = {{0}, 0};
 
-struct x86_64_tss master_ktss64 __attribute__ ((aligned(4096))) __attribute__ ((section("__HIB, __desc"))) = {
-	.io_bit_map_offset = 0x0FFF,
+struct x86_64_tss master_ktss64 __attribute__((aligned(4096)))
+__attribute__((section("__HIB, __desc"))) = {
+    .io_bit_map_offset = 0x0FFF,
 };

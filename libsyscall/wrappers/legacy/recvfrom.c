@@ -33,24 +33,25 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/socket.h>
 #include "_errno.h"
+#include <sys/socket.h>
 
-ssize_t __recvfrom_nocancel(int, void *, size_t, int, struct sockaddr * __restrict, socklen_t * __restrict);
+ssize_t __recvfrom_nocancel(int, void *, size_t, int,
+                            struct sockaddr *__restrict, socklen_t *__restrict);
 
 /*
  * recvfrom stub, legacy version
  */
-ssize_t
-recvfrom(int s, void *buf, size_t len, int flags, struct sockaddr * __restrict from, socklen_t * __restrict fromlen)
-{
-	int ret = __recvfrom_nocancel(s, buf, len, flags, from, fromlen);
+ssize_t recvfrom(int s, void *buf, size_t len, int flags,
+                 struct sockaddr *__restrict from,
+                 socklen_t *__restrict fromlen) {
+  int ret = __recvfrom_nocancel(s, buf, len, flags, from, fromlen);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif

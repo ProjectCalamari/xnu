@@ -66,37 +66,36 @@
 #ifdef KERNEL_PRIVATE
 
 void tcp_syncookie_init(void);
-void tcp_syncookie_syn(struct tcp_inp *tpi, struct sockaddr *local, struct sockaddr *remote);
-bool tcp_syncookie_ack(struct tcp_inp *tpi, struct socket **so2, int* dropsocket);
+void tcp_syncookie_syn(struct tcp_inp *tpi, struct sockaddr *local,
+                       struct sockaddr *remote);
+bool tcp_syncookie_ack(struct tcp_inp *tpi, struct socket **so2,
+                       int *dropsocket);
 
 /*
  * Flags for the Accurate ECN setup
  */
-#define SC_ECN_SETUP            0x01  /* send classic ECN setup */
-#define SC_ACE_SETUP_NOT_ECT    0x02  /* send ACE not-ECT setup */
-#define SC_ACE_SETUP_ECT1       0x04  /* send ACE ECT1 setup */
-#define SC_ACE_SETUP_ECT0       0x08  /* send ACE ECT0 setup */
-#define SC_ACE_SETUP_CE         0x10  /* send ACE CE setup */
+#define SC_ECN_SETUP 0x01         /* send classic ECN setup */
+#define SC_ACE_SETUP_NOT_ECT 0x02 /* send ACE not-ECT setup */
+#define SC_ACE_SETUP_ECT1 0x04    /* send ACE ECT1 setup */
+#define SC_ACE_SETUP_ECT0 0x08    /* send ACE ECT0 setup */
+#define SC_ACE_SETUP_CE 0x10      /* send ACE CE setup */
 
-
-#define SYNCOOKIE_SECRET_SIZE   16
-#define SYNCOOKIE_LIFETIME      15              /* seconds */
+#define SYNCOOKIE_SECRET_SIZE 16
+#define SYNCOOKIE_LIFETIME 15 /* seconds */
 
 struct syncookie_secret {
-	volatile u_int oddeven;
-	uint8_t key[2][SYNCOOKIE_SECRET_SIZE];
-	uint32_t last_updated;
+  volatile u_int oddeven;
+  uint8_t key[2][SYNCOOKIE_SECRET_SIZE];
+  uint32_t last_updated;
 };
 
 typedef union {
-	uint8_t cookie;
-	struct {
-		uint8_t odd_even:1,
-		    sack_ok:1,
-		    ecn_ok:1,              /* Only needed for classic ECN */
-		    wscale_idx:3,
-		    mss_idx:2;
-	} flags;
+  uint8_t cookie;
+  struct {
+    uint8_t odd_even : 1, sack_ok : 1,
+        ecn_ok : 1, /* Only needed for classic ECN */
+        wscale_idx : 3, mss_idx : 2;
+  } flags;
 } syncookie;
 #endif /* KERNEL_PRIVATE */
 

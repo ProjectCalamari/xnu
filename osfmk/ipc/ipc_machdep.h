@@ -88,11 +88,11 @@
  */
 
 /* 64 bit machines */
-#if     defined(__alpha)
-#define PORT_T_SIZE_IN_BITS     64
+#if defined(__alpha)
+#define PORT_T_SIZE_IN_BITS 64
 #endif
 
 /* default, 32 bit machines */
-#if     !defined(PORT_T_SIZE_IN_BITS)
-#define PORT_T_SIZE_IN_BITS     32
+#if !defined(PORT_T_SIZE_IN_BITS)
+#define PORT_T_SIZE_IN_BITS 32
 #endif

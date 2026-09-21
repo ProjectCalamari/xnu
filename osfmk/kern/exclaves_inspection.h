@@ -28,11 +28,11 @@
 
 #pragma once
 
+#include <kern/kern_cdata.h>
+#include <kern/kern_types.h>
+#include <kern/thread.h>
 #include <mach/exclaves.h>
 #include <mach/kern_return.h>
-#include <kern/kern_types.h>
-#include <kern/kern_cdata.h>
-#include <kern/thread.h>
 #include <sys/cdefs.h>
 
 #if CONFIG_EXCLAVES
@@ -48,7 +48,8 @@ extern void exclaves_inspection_begin_collecting(void);
 /*
  * Wait for provided queue to drain.
  */
-extern void exclaves_inspection_wait_complete(queue_t exclaves_inspection_queue);
+extern void
+exclaves_inspection_wait_complete(queue_t exclaves_inspection_queue);
 
 extern void exclaves_inspection_check_ast(void);
 
@@ -63,26 +64,27 @@ extern lck_mtx_t exclaves_collect_mtx;
 extern queue_head_t exclaves_inspection_queue_stackshot;
 extern queue_head_t exclaves_inspection_queue_kperf;
 
-static inline void
-exclaves_inspection_queue_add(queue_t queue, queue_entry_t elm)
-{
-	assert(queue == &exclaves_inspection_queue_stackshot || queue == &exclaves_inspection_queue_kperf);
-	lck_mtx_assert(&exclaves_collect_mtx, LCK_ASSERT_OWNED);
+static inline void exclaves_inspection_queue_add(queue_t queue,
+                                                 queue_entry_t elm) {
+  assert(queue == &exclaves_inspection_queue_stackshot ||
+         queue == &exclaves_inspection_queue_kperf);
+  lck_mtx_assert(&exclaves_collect_mtx, LCK_ASSERT_OWNED);
 
-	enqueue_head(queue, elm);
+  enqueue_head(queue, elm);
 }
 
 struct exclaves_panic_stackshot {
-	uint8_t *stackshot_buffer;
-	uint64_t stackshot_buffer_size;
+  uint8_t *stackshot_buffer;
+  uint64_t stackshot_buffer_size;
 };
 
-__enum_decl(exclaves_panic_ss_status_t, uint8_t, {
-	EXCLAVES_PANIC_STACKSHOT_UNKNOWN = 0,
-	EXCLAVES_PANIC_STACKSHOT_FOUND = 1,
-	EXCLAVES_PANIC_STACKSHOT_NOT_FOUND = 2,
-	EXCLAVES_PANIC_STACKSHOT_DECODE_FAILED = 3,
-});
+__enum_decl(exclaves_panic_ss_status_t, uint8_t,
+            {
+                EXCLAVES_PANIC_STACKSHOT_UNKNOWN = 0,
+                EXCLAVES_PANIC_STACKSHOT_FOUND = 1,
+                EXCLAVES_PANIC_STACKSHOT_NOT_FOUND = 2,
+                EXCLAVES_PANIC_STACKSHOT_DECODE_FAILED = 3,
+            });
 
 extern exclaves_panic_ss_status_t exclaves_panic_ss_status;
 
@@ -91,7 +93,8 @@ void kdp_read_panic_exclaves_stackshot(struct exclaves_panic_stackshot *eps);
 
 /* Convert exclaves stackshot data from tightbeam structures into kcdata. */
 kern_return_t
-stackshot_exclaves_process_stackshot(const stackshot_stackshotresult_s *result, void *kcdata_ptr, bool want_raw_addresses);
+stackshot_exclaves_process_stackshot(const stackshot_stackshotresult_s *result,
+                                     void *kcdata_ptr, bool want_raw_addresses);
 
 __END_DECLS
 

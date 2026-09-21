@@ -55,16 +55,14 @@
  * +---------------------------------------------------+
  */
 
-#define EXC_GUARD_DECODE_GUARD_TYPE(code) \
-	((((uint64_t)(code)) >> 61) & 0x7ull)
-#define EXC_GUARD_DECODE_GUARD_FLAVOR(code) \
-	((((uint64_t)(code)) >> 32) & 0x1fffffff)
-#define EXC_GUARD_DECODE_GUARD_TARGET(code) \
-	((uint32_t)(code))
+#define EXC_GUARD_DECODE_GUARD_TYPE(code) ((((uint64_t)(code)) >> 61) & 0x7ull)
+#define EXC_GUARD_DECODE_GUARD_FLAVOR(code)                                    \
+  ((((uint64_t)(code)) >> 32) & 0x1fffffff)
+#define EXC_GUARD_DECODE_GUARD_TARGET(code) ((uint32_t)(code))
 
 /* EXC_GUARD types */
 
-#define GUARD_TYPE_NONE         0x0
+#define GUARD_TYPE_NONE 0x0
 
 /*
  * Mach port guards use the exception codes like this:
@@ -84,7 +82,7 @@
  *   in doc/mach_ipc/guard_exceptions.md
  */
 
-#define GUARD_TYPE_MACH_PORT    0x1      /* guarded mach port */
+#define GUARD_TYPE_MACH_PORT 0x1 /* guarded mach port */
 
 /*
  * File descriptor guards use the exception codes this:
@@ -100,7 +98,7 @@
  * +----------------------------------------------------------------+
  */
 
-#define GUARD_TYPE_FD           0x2     /* guarded file descriptor */
+#define GUARD_TYPE_FD 0x2 /* guarded file descriptor */
 
 /*
  * User generated guards use the exception codes this:
@@ -116,7 +114,7 @@
  * +----------------------------------------------------------------+
  */
 
-#define GUARD_TYPE_USER         0x3     /* Userland assertions */
+#define GUARD_TYPE_USER 0x3 /* Userland assertions */
 
 /*
  * Vnode guards use the exception codes like this:
@@ -132,7 +130,7 @@
  * +----------------------------------------------------------------+
  */
 
-#define GUARD_TYPE_VN           0x4     /* guarded vnode */
+#define GUARD_TYPE_VN 0x4 /* guarded vnode */
 
 /*
  * VM guards use the exception codes like this:
@@ -148,7 +146,7 @@
  * +----------------------------------------------------------------+
  */
 
-#define GUARD_TYPE_VIRT_MEMORY  0x5     /* VM operation violating guard */
+#define GUARD_TYPE_VIRT_MEMORY 0x5 /* VM operation violating guard */
 
 /*
  * Rejected syscalls use the exception codes like this:
@@ -164,16 +162,16 @@
  * +----------------------------------------------------------------+
  */
 
-#define GUARD_TYPE_REJECTED_SC  0x6     /* rejected system call trap */
+#define GUARD_TYPE_REJECTED_SC 0x6 /* rejected system call trap */
 
 #ifdef KERNEL
 
-#define EXC_GUARD_ENCODE_TYPE(code, type) \
-	((code) |= (((uint64_t)(type) & 0x7ull) << 61))
-#define EXC_GUARD_ENCODE_FLAVOR(code, flavor) \
-	((code) |= (((uint64_t)(flavor) & 0x1fffffffull) << 32))
-#define EXC_GUARD_ENCODE_TARGET(code, target) \
-	((code) |= (((uint64_t)(target) & 0xffffffffull)))
+#define EXC_GUARD_ENCODE_TYPE(code, type)                                      \
+  ((code) |= (((uint64_t)(type) & 0x7ull) << 61))
+#define EXC_GUARD_ENCODE_FLAVOR(code, flavor)                                  \
+  ((code) |= (((uint64_t)(flavor) & 0x1fffffffull) << 32))
+#define EXC_GUARD_ENCODE_TARGET(code, target)                                  \
+  ((code) |= (((uint64_t)(target) & 0xffffffffull)))
 
 #endif /* KERNEL */
 

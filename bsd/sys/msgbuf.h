@@ -65,24 +65,24 @@
 
 #include <sys/cdefs.h>
 
-#define MAX_MSG_BSIZE   (1*1024*1024)
-struct  msgbuf {
-#define MSG_MAGIC       0x063061
-	int             msg_magic;
-	int             msg_size;
-	int             msg_bufx;               /* write pointer */
-	int             msg_bufr;               /* read pointer */
-	char    *msg_bufc;              /* buffer */
+#define MAX_MSG_BSIZE (1 * 1024 * 1024)
+struct msgbuf {
+#define MSG_MAGIC 0x063061
+  int msg_magic;
+  int msg_size;
+  int msg_bufx;   /* write pointer */
+  int msg_bufr;   /* read pointer */
+  char *msg_bufc; /* buffer */
 };
 
 #ifdef XNU_KERNEL_PRIVATE
 __BEGIN_DECLS
-extern struct   msgbuf *msgbufp;
-extern struct   msgbuf *aslbufp;
+extern struct msgbuf *msgbufp;
+extern struct msgbuf *aslbufp;
 extern void log_putc(char);
 extern void log_putc_locked(struct msgbuf *, char);
 extern int log_dmesg(user_addr_t, uint32_t, int32_t *);
 __END_DECLS
 #endif /* XNU_KERNEL_PRIVATE */
 
-#endif  /* !_SYS_MSGBUF_H_ */
+#endif /* !_SYS_MSGBUF_H_ */

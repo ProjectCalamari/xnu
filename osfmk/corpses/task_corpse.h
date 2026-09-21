@@ -29,22 +29,21 @@
 #ifndef _TASK_CORPSE_H_
 #define _TASK_CORPSE_H_
 
-#include <stdint.h>
-#include <mach/mach_types.h>
-#include <kern/kern_cdata.h>
 #include <kern/kcdata.h>
+#include <kern/kern_cdata.h>
+#include <mach/mach_types.h>
+#include <stdint.h>
 
-typedef struct kcdata_item      *task_crashinfo_item_t;
+typedef struct kcdata_item *task_crashinfo_item_t;
 
 /* Deprecated: use the KCDATA_* macros for all future use */
-#define CRASHINFO_ITEM_TYPE(item)                 KCDATA_ITEM_TYPE(item)
-#define CRASHINFO_ITEM_SIZE(item)                 KCDATA_ITEM_SIZE(item)
-#define CRASHINFO_ITEM_DATA_PTR(item)     KCDATA_ITEM_DATA_PTR(item)
+#define CRASHINFO_ITEM_TYPE(item) KCDATA_ITEM_TYPE(item)
+#define CRASHINFO_ITEM_SIZE(item) KCDATA_ITEM_SIZE(item)
+#define CRASHINFO_ITEM_DATA_PTR(item) KCDATA_ITEM_DATA_PTR(item)
 
-#define CRASHINFO_ITEM_NEXT_HEADER(item)  KCDATA_ITEM_NEXT_HEADER(item)
+#define CRASHINFO_ITEM_NEXT_HEADER(item) KCDATA_ITEM_NEXT_HEADER(item)
 
-#define CRASHINFO_ITEM_FOREACH(head)      KCDATA_ITEM_FOREACH(head)
-
+#define CRASHINFO_ITEM_FOREACH(head) KCDATA_ITEM_FOREACH(head)
 
 #ifndef KERNEL
 #define task_crashinfo_get_data_with_desc kcdata_get_data_with_desc
@@ -72,66 +71,53 @@ extern bool corpse_for_fatal_memkill;
 
 extern kern_return_t task_mark_corpse(task_t task);
 
-extern kern_return_t task_deliver_crash_notification(task_t, thread_t, exception_type_t, mach_exception_subcode_t);
+extern kern_return_t task_deliver_crash_notification(task_t, thread_t,
+                                                     exception_type_t,
+                                                     mach_exception_subcode_t);
 
 /* In the corpseinfo kcd_user_flags */
-__options_closed_decl(corpse_flags_t, uint16_t, {
-	CORPSE_CRASHINFO_HAS_REF    = 0x1,
-	CORPSE_CRASHINFO_USER_FAULT = 0x2
-});
+__options_closed_decl(corpse_flags_t, uint16_t,
+                      {CORPSE_CRASHINFO_HAS_REF = 0x1,
+                       CORPSE_CRASHINFO_USER_FAULT = 0x2});
 
 extern kcdata_descriptor_t task_get_corpseinfo(task_t task);
 
-extern kcdata_descriptor_t  task_crashinfo_alloc_init(
-	mach_vm_address_t crash_data_p,
-	unsigned size, corpse_flags_t kc_u_flags, unsigned kc_flags);
-extern kcdata_descriptor_t task_btinfo_alloc_init(
-	mach_vm_address_t addr, unsigned size);
+extern kcdata_descriptor_t
+task_crashinfo_alloc_init(mach_vm_address_t crash_data_p, unsigned size,
+                          corpse_flags_t kc_u_flags, unsigned kc_flags);
+extern kcdata_descriptor_t task_btinfo_alloc_init(mach_vm_address_t addr,
+                                                  unsigned size);
 extern kern_return_t task_crashinfo_destroy(kcdata_descriptor_t data);
 
 extern unsigned long total_corpses_count(void) __attribute__((pure));
 extern boolean_t corpses_enabled(void);
 
-extern kern_return_t task_generate_corpse_internal(
-	task_t task,
-	task_t *corpse_task,
-	thread_t *thread,
-	exception_type_t etype,
-	mach_exception_data_type_t code,
-	mach_exception_data_type_t subcode,
-	void *reason);
+extern kern_return_t
+task_generate_corpse_internal(task_t task, task_t *corpse_task,
+                              thread_t *thread, exception_type_t etype,
+                              mach_exception_data_type_t code,
+                              mach_exception_data_type_t subcode, void *reason);
 
 extern void task_clear_corpse(task_t task);
 
-extern kern_return_t task_duplicate_map_and_threads(
-	task_t task,
-	void *p,
-	task_t new_task,
-	thread_t *thread,
-	uint64_t **udata_buffer,
-	int *size,
-	int *num_udata,
-	bool for_exception);
+extern kern_return_t
+task_duplicate_map_and_threads(task_t task, void *p, task_t new_task,
+                               thread_t *thread, uint64_t **udata_buffer,
+                               int *size, int *num_udata, bool for_exception);
 
 extern kern_return_t task_enqueue_exception_with_corpse(
-	task_t task,
-	exception_type_t etype,
-	mach_exception_data_t code,
-	mach_msg_type_number_t codeCnt,
-	void *reason,
-	boolean_t lightweight);
+    task_t task, exception_type_t etype, mach_exception_data_t code,
+    mach_msg_type_number_t codeCnt, void *reason, boolean_t lightweight);
 
 extern kern_return_t current_thread_collect_backtrace_info(
-	kcdata_descriptor_t *new_desc,
-	exception_type_t etype,
-	mach_exception_data_t code,
-	mach_msg_type_number_t codeCnt,
-	void *reason);
+    kcdata_descriptor_t *new_desc, exception_type_t etype,
+    mach_exception_data_t code, mach_msg_type_number_t codeCnt, void *reason);
 
 extern void task_add_to_corpse_task_list(task_t corpse_task);
 void task_remove_from_corpse_task_list(task_t corpse_task);
 void task_purge_all_corpses(void);
-kern_return_t find_corpse_task_by_uniqueid_grp(uint64_t uid, task_t *target, task_grp_t grp);
+kern_return_t find_corpse_task_by_uniqueid_grp(uint64_t uid, task_t *target,
+                                               task_grp_t grp);
 extern uint64_t task_corpse_get_crashed_thread_id(task_t corpse_task);
 
 #endif /* XNU_KERNEL_PRIVATE */

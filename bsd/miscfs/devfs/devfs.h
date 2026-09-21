@@ -59,14 +59,14 @@
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
 
-#define DEVFS_CHAR      0
-#define DEVFS_BLOCK     1
+#define DEVFS_CHAR 0
+#define DEVFS_BLOCK 1
 
 /*
  * Argument to clone callback after dev
  */
-#define DEVFS_CLONE_ALLOC       1       /* Allocate minor number slot */
-#define DEVFS_CLONE_FREE        0       /* Free minor number slot */
+#define DEVFS_CLONE_ALLOC 1 /* Allocate minor number slot */
+#define DEVFS_CLONE_FREE 0  /* Free minor number slot */
 
 __BEGIN_DECLS
 
@@ -89,9 +89,9 @@ __BEGIN_DECLS
  * Returns:
  *   A handle to a device node if successful, NULL otherwise.
  */
-void *  devfs_make_node_clone(dev_t dev, int chrblk, uid_t uid, gid_t gid,
-    int perms, int (*clone)(dev_t dev, int action),
-    const char *fmt, ...) __printflike(7, 8);
+void *devfs_make_node_clone(dev_t dev, int chrblk, uid_t uid, gid_t gid,
+                            int perms, int (*clone)(dev_t dev, int action),
+                            const char *fmt, ...) __printflike(7, 8);
 
 /*
  * Function: devfs_make_node
@@ -108,8 +108,8 @@ void *  devfs_make_node_clone(dev_t dev, int chrblk, uid_t uid, gid_t gid,
  * Returns:
  *   A handle to a device node if successful, NULL otherwise.
  */
-void *  devfs_make_node(dev_t dev, int chrblk, uid_t uid, gid_t gid,
-    int perms, const char *fmt, ...) __printflike(6, 7);
+void *devfs_make_node(dev_t dev, int chrblk, uid_t uid, gid_t gid, int perms,
+                      const char *fmt, ...) __printflike(6, 7);
 
 #ifdef BSD_KERNEL_PRIVATE
 /*
@@ -121,7 +121,7 @@ void *  devfs_make_node(dev_t dev, int chrblk, uid_t uid, gid_t gid,
  * Returns:
  *   0 if successful, -1 if failed
  */
-int     devfs_make_link(void * handle, char *fmt, ...) __printflike(2, 3);
+int devfs_make_link(void *handle, char *fmt, ...) __printflike(2, 3);
 #endif /* BSD_KERNEL_PRIVATE */
 
 /*
@@ -131,27 +131,27 @@ int     devfs_make_link(void * handle, char *fmt, ...) __printflike(2, 3);
  *   Remove the device node returned by devfs_make_node() along with
  *   any links created with devfs_make_link().
  */
-void    devfs_remove(void * handle);
+void devfs_remove(void *handle);
 
 __END_DECLS
 
 #ifdef __APPLE_API_PRIVATE
 /* XXX */
-#define UID_ROOT        0
-#define UID_BIN         3
-#define UID_UUCP        66
-#define UID_LOGD        272
+#define UID_ROOT 0
+#define UID_BIN 3
+#define UID_UUCP 66
+#define UID_LOGD 272
 
 /* XXX */
-#define GID_WHEEL       0
-#define GID_KMEM        2
-#define GID_TTY         4
-#define GID_OPERATOR    5
-#define GID_BIN         7
-#define GID_GAMES       13
-#define GID_DIALER      68
+#define GID_WHEEL 0
+#define GID_KMEM 2
+#define GID_TTY 4
+#define GID_OPERATOR 5
+#define GID_BIN 7
+#define GID_GAMES 13
+#define GID_DIALER 68
 #define GID_WINDOWSERVER 88
-#define GID_LOGD        272
+#define GID_LOGD 272
 #endif /* __APPLE_API_PRIVATE */
 
 #endif /* !_MISCFS_DEVFS_DEVFS_H_ */

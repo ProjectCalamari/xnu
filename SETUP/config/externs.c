@@ -25,7 +25,6 @@
 
 #include <config.h>
 
-
 /*
  * Config has a global notion of which machine type is
  * being used.  It uses the name of the machine in choosing
@@ -33,7 +32,7 @@
  * it will build from ``Makefile.vax'' and use ``../vax/inline''
  * in the makerules, etc.
  */
-const char      *machinename;
+const char *machinename;
 
 /*
  * In order to configure and build outside the kernel source tree,
@@ -50,14 +49,14 @@ char *config_directory;
  */
 struct opt *opt, *mkopt, *opt_tail, *mkopt_tail;
 
-int     do_trace;
+int do_trace;
 
-struct  device *dtab;
+struct device *dtab;
 
-char    errbuf[80];
-int     yyline;
+char errbuf[80];
+int yyline;
 
-struct  file_list *ftab, *conf_list, **confp;
-char    *build_directory;
+struct file_list *ftab, *conf_list, **confp;
+char *build_directory;
 
-int     profiling = 0;
+int profiling = 0;

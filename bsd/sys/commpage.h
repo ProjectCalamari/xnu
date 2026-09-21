@@ -28,19 +28,19 @@
 #ifndef _COMMPAGE_H
 #define _COMMPAGE_H
 
-#ifdef  PRIVATE
+#ifdef PRIVATE
 
 #include <stdint.h>
 
-#define _COMM_PAGE32_SIGNATURE_STRING           "commpage 32-bit"
-#define _COMM_PAGE64_SIGNATURE_STRING           "commpage 64-bit"
+#define _COMM_PAGE32_SIGNATURE_STRING "commpage 32-bit"
+#define _COMM_PAGE64_SIGNATURE_STRING "commpage 64-bit"
 
 typedef volatile struct commpage_timeofday_data {
-	uint64_t        TimeStamp_tick;
-	uint64_t        TimeStamp_sec;
-	uint64_t        TimeStamp_frac;
-	uint64_t        Ticks_scale;
-	uint64_t        Ticks_per_sec;
+  uint64_t TimeStamp_tick;
+  uint64_t TimeStamp_sec;
+  uint64_t TimeStamp_frac;
+  uint64_t Ticks_scale;
+  uint64_t Ticks_per_sec;
 } new_commpage_timeofday_data_t;
 
 /*!
@@ -59,9 +59,10 @@ typedef volatile struct commpage_timeofday_data {
  * @param type   The scalar base type for the slot.
  */
 #if __has_feature(address_sanitizer)
-#define COMM_PAGE_SLOT_TYPE(type_t)     type_t __attribute__((address_space(1))) volatile *
+#define COMM_PAGE_SLOT_TYPE(type_t)                                            \
+  type_t __attribute__((address_space(1))) volatile *
 #else
-#define COMM_PAGE_SLOT_TYPE(type_t)     type_t volatile *
+#define COMM_PAGE_SLOT_TYPE(type_t) type_t volatile *
 #endif
 
 /*!
@@ -73,7 +74,8 @@ typedef volatile struct commpage_timeofday_data {
  * @param type   The scalar base type for the slot.
  * @param name   The slot name, without its @c _COMM_PAGE_ prefix.
  */
-#define COMM_PAGE_SLOT(type_t, name)    ((COMM_PAGE_SLOT_TYPE(type_t))_COMM_PAGE_##name)
+#define COMM_PAGE_SLOT(type_t, name)                                           \
+  ((COMM_PAGE_SLOT_TYPE(type_t))_COMM_PAGE_##name)
 
 /*!
  * @macro COMM_PAGE_READ
@@ -91,7 +93,7 @@ typedef volatile struct commpage_timeofday_data {
  * @param type   The scalar base type for the slot.
  * @param name   The slot name, without its @c _COMM_PAGE_ prefix.
  */
-#define COMM_PAGE_READ(type_t, slot)    (*(COMM_PAGE_SLOT(type_t, slot)))
+#define COMM_PAGE_READ(type_t, slot) (*(COMM_PAGE_SLOT(type_t, slot)))
 
 #endif
 

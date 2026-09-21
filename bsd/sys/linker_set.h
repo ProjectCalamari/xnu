@@ -73,42 +73,42 @@
 #include <sys/cdefs.h> /* __unsafe_indexable */
 
 #ifdef KERNEL
-# include <mach-o/loader.h>
-# include <libkern/kernel_mach_header.h>
+#include <libkern/kernel_mach_header.h>
+#include <mach-o/loader.h>
 
-# define MACH_HEADER_TYPE kernel_mach_header_t
-# define GETSECTIONDATA_VARIANT getsectdatafromheader
-# define SECTDATA_SIZE_TYPE unsigned long
-# define MH_EXECUTE_HEADER &_mh_execute_header
-# define IMAGE_SLIDE_CORRECT 0
+#define MACH_HEADER_TYPE kernel_mach_header_t
+#define GETSECTIONDATA_VARIANT getsectdatafromheader
+#define SECTDATA_SIZE_TYPE unsigned long
+#define MH_EXECUTE_HEADER &_mh_execute_header
+#define IMAGE_SLIDE_CORRECT 0
 #else
-# include <mach-o/ldsyms.h>
-# include <mach-o/getsect.h>
-# include <mach-o/loader.h>
-# include <mach-o/dyld.h>
-# include <crt_externs.h>
+#include <crt_externs.h>
+#include <mach-o/dyld.h>
+#include <mach-o/getsect.h>
+#include <mach-o/ldsyms.h>
+#include <mach-o/loader.h>
 
-# if __LP64__
-#  define MACH_HEADER_TYPE struct mach_header_64
-#  define GETSECTIONDATA_VARIANT getsectdatafromheader_64
-#  define SECTDATA_SIZE_TYPE uint64_t
-#  define MH_EXECUTE_HEADER _NSGetMachExecuteHeader()
-# else
-#  define MACH_HEADER_TYPE struct mach_header
-#  define GETSECTIONDATA_VARIANT getsectdatafromheader
-#  define SECTDATA_SIZE_TYPE uint32_t
-#  define MH_EXECUTE_HEADER _NSGetMachExecuteHeader()
-# endif
+#if __LP64__
+#define MACH_HEADER_TYPE struct mach_header_64
+#define GETSECTIONDATA_VARIANT getsectdatafromheader_64
+#define SECTDATA_SIZE_TYPE uint64_t
+#define MH_EXECUTE_HEADER _NSGetMachExecuteHeader()
+#else
+#define MACH_HEADER_TYPE struct mach_header
+#define GETSECTIONDATA_VARIANT getsectdatafromheader
+#define SECTDATA_SIZE_TYPE uint32_t
+#define MH_EXECUTE_HEADER _NSGetMachExecuteHeader()
+#endif
 #endif
 
 #if __LP64__
-# define LINKER_SET_ENTRY_PACKED
-# define LINKER_SET_SEGMENT __DATA_CONST
-# define LINKER_SET_SEGMENT_CSTR "__DATA_CONST"
+#define LINKER_SET_ENTRY_PACKED
+#define LINKER_SET_SEGMENT __DATA_CONST
+#define LINKER_SET_SEGMENT_CSTR "__DATA_CONST"
 #else
-# define LINKER_SET_ENTRY_PACKED __attribute__((packed))
-# define LINKER_SET_SEGMENT __DATA
-# define LINKER_SET_SEGMENT_CSTR "__DATA"
+#define LINKER_SET_ENTRY_PACKED __attribute__((packed))
+#define LINKER_SET_SEGMENT __DATA
+#define LINKER_SET_SEGMENT_CSTR "__DATA"
 #endif
 
 /*
@@ -117,42 +117,45 @@
  * The objective of this macro stack is to produce the following output,
  * given SET and SYM as arguments:
  *
- *  void const * __set_SET_sym_SYM __attribute__((section("__DATA_CONST,SET"))) = & SYM
+ *  void const * __set_SET_sym_SYM __attribute__((section("__DATA_CONST,SET")))
+ * = & SYM
  */
 
 /* Wrap entries in a type that can be denylisted from KASAN */
 struct linker_set_entry {
-	void *ptr;
+  void *ptr;
 } LINKER_SET_ENTRY_PACKED;
 
 #ifdef __LS_VA_STRINGIFY__
-#  undef __LS_VA_STRINGIFY__
+#undef __LS_VA_STRINGIFY__
 #endif
 #ifdef __LS_VA_STRCONCAT__
-#  undef __LS_VA_STRCONCAT__
+#undef __LS_VA_STRCONCAT__
 #endif
-#define __LS_VA_STRINGIFY(_x ...)        #_x
-#define __LS_VA_STRCONCAT(_x, _y)        __LS_VA_STRINGIFY(_x,_y)
-#define __LINKER_MAKE_SET(_set, _sym)                                   \
-	/*__unused*/ /*static*/ const struct linker_set_entry /*const*/ __set_##_set##_sym_##_sym               \
-	__attribute__ ((section(__LS_VA_STRCONCAT(LINKER_SET_SEGMENT,_set)),used)) = { (void *)&_sym }
+#define __LS_VA_STRINGIFY(_x...) #_x
+#define __LS_VA_STRCONCAT(_x, _y) __LS_VA_STRINGIFY(_x, _y)
+#define __LINKER_MAKE_SET(_set, _sym)                                          \
+  /*__unused*/ /*static*/ const struct linker_set_entry /*const*/              \
+      __set_##_set##_sym_##_sym                                                \
+      __attribute__((section(__LS_VA_STRCONCAT(LINKER_SET_SEGMENT, _set)),     \
+                     used)) = {(void *)&_sym}
 /* the line above is very fragile - if your compiler breaks linker sets,
  *  just play around with "static", "const", "used" etc. :-) */
 
 /*
  * Public macros.
  */
-#define LINKER_SET_ENTRY(_set, _sym)    __LINKER_MAKE_SET(_set, _sym)
+#define LINKER_SET_ENTRY(_set, _sym) __LINKER_MAKE_SET(_set, _sym)
 
 /*
  * FreeBSD compatibility.
  */
 #ifdef __APPLE_API_OBSOLETE
-# define TEXT_SET(_set, _sym)   __LINKER_MAKE_SET(_set, _sym)
-# define DATA_SET(_set, _sym)   __LINKER_MAKE_SET(_set, _sym)
-# define BSS_SET(_set, _sym)    __LINKER_MAKE_SET(_set, _sym)
-# define ABS_SET(_set, _sym)    __LINKER_MAKE_SET(_set, _sym)
-# define SET_ENTRY(_set, _sym)  __LINKER_MAKE_SET(_set, _sym)
+#define TEXT_SET(_set, _sym) __LINKER_MAKE_SET(_set, _sym)
+#define DATA_SET(_set, _sym) __LINKER_MAKE_SET(_set, _sym)
+#define BSS_SET(_set, _sym) __LINKER_MAKE_SET(_set, _sym)
+#define ABS_SET(_set, _sym) __LINKER_MAKE_SET(_set, _sym)
+#define SET_ENTRY(_set, _sym) __LINKER_MAKE_SET(_set, _sym)
 #endif /* __APPLE_API_OBSOLETE */
 
 /*
@@ -170,33 +173,34 @@ struct linker_set_entry {
  * Public interface.
  *
  * void **LINKER_SET_OBJECT_BEGIN(_object, _set)
- *	Preferred interface to linker_set_object_begin(), takes set name unquoted.
- * void **LINKER_SET_OBJECT_LIMIT(_object, _set)
- *	Preferred interface to linker_set_object_begin(), takes set name unquoted.
+ *	Preferred interface to linker_set_object_begin(), takes set name
+ * unquoted. void **LINKER_SET_OBJECT_LIMIT(_object, _set) Preferred interface
+ * to linker_set_object_begin(), takes set name unquoted.
  * LINKER_SET_OBJECT_FOREACH(_object, (set_member_type **)_pvar, _cast, _set)
- *	Iterates over the members of _set within _object.  Since the set contains
- *	pointers to its elements, for a set of elements of type etyp, _pvar must
- *	be (etyp **).
- * LINKER_SET_FOREACH((set_member_type **)_pvar, _cast, _set)
+ *	Iterates over the members of _set within _object.  Since the set
+ * contains pointers to its elements, for a set of elements of type etyp, _pvar
+ * must be (etyp **). LINKER_SET_FOREACH((set_member_type **)_pvar, _cast, _set)
  *
  * Example of _cast: For the _pvar "struct sysctl_oid **oidpp", _cast would be
  *                   "struct sysctl_oid **"
  *
  */
 
-#define LINKER_SET_OBJECT_BEGIN(_object, _set)  __linker_set_object_begin(_object, _set)
-#define LINKER_SET_OBJECT_LIMIT(_object, _set)  __linker_set_object_limit(_object, _set)
+#define LINKER_SET_OBJECT_BEGIN(_object, _set)                                 \
+  __linker_set_object_begin(_object, _set)
+#define LINKER_SET_OBJECT_LIMIT(_object, _set)                                 \
+  __linker_set_object_limit(_object, _set)
 
-#define LINKER_SET_OBJECT_FOREACH(_object, _pvar, _cast, _set)          \
-	for (_pvar = (_cast) LINKER_SET_OBJECT_BEGIN(_object, _set);    \
-	     _pvar < (_cast) LINKER_SET_OBJECT_LIMIT(_object, _set);    \
-	     _pvar++)
+#define LINKER_SET_OBJECT_FOREACH(_object, _pvar, _cast, _set)                 \
+  for (_pvar = (_cast)LINKER_SET_OBJECT_BEGIN(_object, _set);                  \
+       _pvar < (_cast)LINKER_SET_OBJECT_LIMIT(_object, _set); _pvar++)
 
-#define LINKER_SET_OBJECT_ITEM(_object, _cast, _set, _i)                \
-	(((_cast)(LINKER_SET_OBJECT_BEGIN(_object, _set)))[_i])
+#define LINKER_SET_OBJECT_ITEM(_object, _cast, _set, _i)                       \
+  (((_cast)(LINKER_SET_OBJECT_BEGIN(_object, _set)))[_i])
 
-#define LINKER_SET_FOREACH(_pvar, _cast, _set)                                  \
-	LINKER_SET_OBJECT_FOREACH((MACH_HEADER_TYPE *)MH_EXECUTE_HEADER, _pvar, _cast, _set)
+#define LINKER_SET_FOREACH(_pvar, _cast, _set)                                 \
+  LINKER_SET_OBJECT_FOREACH((MACH_HEADER_TYPE *)MH_EXECUTE_HEADER, _pvar,      \
+                            _cast, _set)
 
 /*
  * Implementation.
@@ -207,57 +211,55 @@ struct linker_set_entry {
  *	Returns an upper bound to the linker set (base + size).
  */
 
-static __inline intptr_t
-__linker_get_slide(struct mach_header *_header)
-{
+static __inline intptr_t __linker_get_slide(struct mach_header *_header) {
 #ifndef KERNEL
-	/*
-	 * Gross.
-	 *
-	 * We cannot get the image slide directly from the header, so we need to
-	 * determine the image's index and ask for the slide of that index.
-	 */
-	uint32_t i = 0;
-	for (i = 0; i < _dyld_image_count(); i++) {
-		const struct mach_header *hdr = _dyld_get_image_header(i);
-		if (_header == hdr) {
-			return _dyld_get_image_vmaddr_slide(i);
-		}
-	}
-	return 0;
+  /*
+   * Gross.
+   *
+   * We cannot get the image slide directly from the header, so we need to
+   * determine the image's index and ask for the slide of that index.
+   */
+  uint32_t i = 0;
+  for (i = 0; i < _dyld_image_count(); i++) {
+    const struct mach_header *hdr = _dyld_get_image_header(i);
+    if (_header == hdr) {
+      return _dyld_get_image_vmaddr_slide(i);
+    }
+  }
+  return 0;
 #else
-	(void)_header;
-	return 0;
+  (void)_header;
+  return 0;
 #endif
 }
 
 static __inline void *__unsafe_indexable *__unsafe_indexable
 __linker_set_object_begin(MACH_HEADER_TYPE *_header, const char *_set)
-__attribute__((__const__));
+    __attribute__((__const__));
 static __inline void *__unsafe_indexable *__unsafe_indexable
-__linker_set_object_begin(MACH_HEADER_TYPE *_header, const char *_set)
-{
-	char *__unsafe_indexable _set_begin;
-	SECTDATA_SIZE_TYPE _size;
+__linker_set_object_begin(MACH_HEADER_TYPE *_header, const char *_set) {
+  char *__unsafe_indexable _set_begin;
+  SECTDATA_SIZE_TYPE _size;
 
-	_set_begin = (char *)GETSECTIONDATA_VARIANT(_header, LINKER_SET_SEGMENT_CSTR, _set, &_size);
-	_set_begin += __linker_get_slide((struct mach_header *)_header);
-	return (void **)(uintptr_t)_set_begin;
+  _set_begin = (char *)GETSECTIONDATA_VARIANT(_header, LINKER_SET_SEGMENT_CSTR,
+                                              _set, &_size);
+  _set_begin += __linker_get_slide((struct mach_header *)_header);
+  return (void **)(uintptr_t)_set_begin;
 }
 
 static __inline void *__unsafe_indexable *__unsafe_indexable
 __linker_set_object_limit(MACH_HEADER_TYPE *_header, const char *_set)
-__attribute__((__const__));
+    __attribute__((__const__));
 static __inline void *__unsafe_indexable *__unsafe_indexable
-__linker_set_object_limit(MACH_HEADER_TYPE *_header, const char *_set)
-{
-	char *__unsafe_indexable _set_begin;
-	SECTDATA_SIZE_TYPE _size;
+__linker_set_object_limit(MACH_HEADER_TYPE *_header, const char *_set) {
+  char *__unsafe_indexable _set_begin;
+  SECTDATA_SIZE_TYPE _size;
 
-	_set_begin = (char *)GETSECTIONDATA_VARIANT(_header, LINKER_SET_SEGMENT_CSTR, _set, &_size);
-	_set_begin += __linker_get_slide((struct mach_header *)_header);
+  _set_begin = (char *)GETSECTIONDATA_VARIANT(_header, LINKER_SET_SEGMENT_CSTR,
+                                              _set, &_size);
+  _set_begin += __linker_get_slide((struct mach_header *)_header);
 
-	return (void **) ((uintptr_t) _set_begin + _size);
+  return (void **)((uintptr_t)_set_begin + _size);
 }
 
 #endif /* !KERNEL || __APPLE_API_PRIVATE */

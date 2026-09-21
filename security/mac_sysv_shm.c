@@ -60,127 +60,112 @@
 
 #include <sys/cdefs.h>
 
-#include <sys/param.h>
+#include <sys/file.h>
 #include <sys/kernel.h>
 #include <sys/lock.h>
 #include <sys/malloc.h>
-#include <sys/sbuf.h>
-#include <sys/systm.h>
-#include <sys/vnode.h>
 #include <sys/mount.h>
-#include <sys/file.h>
 #include <sys/namei.h>
-#include <sys/sysctl.h>
+#include <sys/param.h>
+#include <sys/sbuf.h>
 #include <sys/shm.h>
 #include <sys/shm_internal.h>
+#include <sys/sysctl.h>
+#include <sys/systm.h>
+#include <sys/vnode.h>
 
 #include <security/mac_internal.h>
 
-
-void
-mac_sysvshm_label_init(struct shmid_kernel *shmsegptr)
-{
-	mac_labelzone_alloc_owned(&shmsegptr->label, MAC_WAITOK, ^(struct label *label) {
-		MAC_PERFORM(sysvshm_label_init, label);
-	});
+void mac_sysvshm_label_init(struct shmid_kernel *shmsegptr) {
+  mac_labelzone_alloc_owned(&shmsegptr->label, MAC_WAITOK,
+                            ^(struct label *label) {
+                              MAC_PERFORM(sysvshm_label_init, label);
+                            });
 }
 
-struct label *
-mac_sysvshm_label(struct shmid_kernel *shmsegptr)
-{
-	return mac_label_verify(&shmsegptr->label);
+struct label *mac_sysvshm_label(struct shmid_kernel *shmsegptr) {
+  return mac_label_verify(&shmsegptr->label);
 }
 
-void
-mac_sysvshm_label_destroy(struct shmid_kernel *shmsegptr)
-{
-	mac_labelzone_free_owned(&shmsegptr->label, ^(struct label *label) {
-		MAC_PERFORM(sysvshm_label_destroy, label);
-	});
+void mac_sysvshm_label_destroy(struct shmid_kernel *shmsegptr) {
+  mac_labelzone_free_owned(&shmsegptr->label, ^(struct label *label) {
+    MAC_PERFORM(sysvshm_label_destroy, label);
+  });
 }
 
-void
-mac_sysvshm_label_associate(struct ucred *cred, struct shmid_kernel *shmsegptr)
-{
-	MAC_PERFORM(sysvshm_label_associate, cred, shmsegptr, mac_sysvshm_label(shmsegptr));
+void mac_sysvshm_label_associate(struct ucred *cred,
+                                 struct shmid_kernel *shmsegptr) {
+  MAC_PERFORM(sysvshm_label_associate, cred, shmsegptr,
+              mac_sysvshm_label(shmsegptr));
 }
 
-void
-mac_sysvshm_label_recycle(struct shmid_kernel *shmsegptr)
-{
-	MAC_PERFORM(sysvshm_label_recycle, mac_sysvshm_label(shmsegptr));
+void mac_sysvshm_label_recycle(struct shmid_kernel *shmsegptr) {
+  MAC_PERFORM(sysvshm_label_recycle, mac_sysvshm_label(shmsegptr));
 }
 
-int
-mac_sysvshm_check_shmat(struct ucred *cred, struct shmid_kernel *shmsegptr,
-    int shmflg)
-{
-	int error;
+int mac_sysvshm_check_shmat(struct ucred *cred, struct shmid_kernel *shmsegptr,
+                            int shmflg) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvshm_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvshm_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvshm_check_shmat, cred, shmsegptr, mac_sysvshm_label(shmsegptr),
-	    shmflg);
+  MAC_CHECK(sysvshm_check_shmat, cred, shmsegptr, mac_sysvshm_label(shmsegptr),
+            shmflg);
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvshm_check_shmctl(struct ucred *cred, struct shmid_kernel *shmsegptr,
-    int cmd)
-{
-	int error;
+int mac_sysvshm_check_shmctl(struct ucred *cred, struct shmid_kernel *shmsegptr,
+                             int cmd) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvshm_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvshm_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvshm_check_shmctl, cred, shmsegptr, mac_sysvshm_label(shmsegptr),
-	    cmd);
+  MAC_CHECK(sysvshm_check_shmctl, cred, shmsegptr, mac_sysvshm_label(shmsegptr),
+            cmd);
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvshm_check_shmdt(struct ucred *cred, struct shmid_kernel *shmsegptr)
-{
-	int error;
+int mac_sysvshm_check_shmdt(struct ucred *cred,
+                            struct shmid_kernel *shmsegptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvshm_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvshm_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvshm_check_shmdt, cred, shmsegptr, mac_sysvshm_label(shmsegptr));
+  MAC_CHECK(sysvshm_check_shmdt, cred, shmsegptr, mac_sysvshm_label(shmsegptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvshm_check_shmget(struct ucred *cred, struct shmid_kernel *shmsegptr,
-    int shmflg)
-{
-	int error;
+int mac_sysvshm_check_shmget(struct ucred *cred, struct shmid_kernel *shmsegptr,
+                             int shmflg) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvshm_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvshm_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvshm_check_shmget, cred, shmsegptr, mac_sysvshm_label(shmsegptr),
-	    shmflg);
+  MAC_CHECK(sysvshm_check_shmget, cred, shmsegptr, mac_sysvshm_label(shmsegptr),
+            shmflg);
 
-	return error;
+  return error;
 }

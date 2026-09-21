@@ -29,20 +29,20 @@
  * file: pe_kprintf.c
  *    i386 platform expert debugging output initialization.
  */
-#include <stdarg.h>
-#include <machine/machine_routines.h>
-#include <pexpert/pexpert.h>
-#include <kern/debug.h>
-#include <kern/simple_lock.h>
 #include <i386/machine_cpu.h>
 #include <i386/mp.h>
-#include <machine/pal_routines.h>
 #include <i386/proc_reg.h>
-#include <os/log_private.h>
-#include <libkern/section_keywords.h>
-#include <kern/processor.h>
 #include <kern/clock.h>
+#include <kern/debug.h>
+#include <kern/processor.h>
+#include <kern/simple_lock.h>
+#include <libkern/section_keywords.h>
 #include <mach/clock_types.h>
+#include <machine/machine_routines.h>
+#include <machine/pal_routines.h>
+#include <os/log_private.h>
+#include <pexpert/pexpert.h>
+#include <stdarg.h>
 
 extern uint64_t LockTimeOut;
 
@@ -68,30 +68,28 @@ SECURITY_READ_ONLY_LATE(bool) enable_dklog_serial_output = false;
 
 static SIMPLE_LOCK_DECLARE(kprintf_lock, 0);
 
-__startup_func
-static void
-PE_init_kprintf(void)
-{
-	if (PE_state.initialized == FALSE) {
-		panic("Platform Expert not initialized");
-	}
+__startup_func static void PE_init_kprintf(void) {
+  if (PE_state.initialized == FALSE) {
+    panic("Platform Expert not initialized");
+  }
 
-	bool new_disable_serial_output = true;
+  bool new_disable_serial_output = true;
 
-	if (debug_boot_arg & DB_KPRT) {
-		new_disable_serial_output = false;
-	}
+  if (debug_boot_arg & DB_KPRT) {
+    new_disable_serial_output = false;
+  }
 
-	/* If we are newly enabling serial, make sure we only
-	 * call pal_serial_init() if our previous state was
-	 * not enabled */
-	if (!new_disable_serial_output && (!disable_serial_output || pal_serial_init())) {
-		PE_kputc = pal_serial_putc;
-	} else {
-		PE_kputc = console_write_unbuffered;
-	}
+  /* If we are newly enabling serial, make sure we only
+   * call pal_serial_init() if our previous state was
+   * not enabled */
+  if (!new_disable_serial_output &&
+      (!disable_serial_output || pal_serial_init())) {
+    PE_kputc = pal_serial_putc;
+  } else {
+    PE_kputc = console_write_unbuffered;
+  }
 
-	disable_serial_output = new_disable_serial_output;
+  disable_serial_output = new_disable_serial_output;
 }
 STARTUP(KPRINTF, STARTUP_RANK_FIRST, PE_init_kprintf);
 
@@ -101,17 +99,15 @@ STARTUP(KPRINTF, STARTUP_RANK_FIRST, PE_init_kprintf);
 #endif
 
 #ifdef MP_DEBUG
-static void
-_kprintf(const char *format, ...)
-{
-	va_list   listp;
+static void _kprintf(const char *format, ...) {
+  va_list listp;
 
-	va_start(listp, format);
-	_doprnt(format, &listp, PE_kputc, 16);
-	va_end(listp);
+  va_start(listp, format);
+  _doprnt(format, &listp, PE_kputc, 16);
+  va_end(listp);
 }
-#define MP_DEBUG_KPRINTF(x...)  _kprintf(x)
-#else  /* MP_DEBUG */
+#define MP_DEBUG_KPRINTF(x...) _kprintf(x)
+#else /* MP_DEBUG */
 #define MP_DEBUG_KPRINTF(x...)
 #endif /* MP_DEBUG */
 
@@ -120,98 +116,95 @@ static int cpu_last_locked = 0;
 #define KPRINTF_LOCKWAIT_PATIENT (LockTimeOut)
 #define KPRINTF_LOCKWAIT_IMPATIENT (LockTimeOut >> 4)
 
-__attribute__((noinline, not_tail_called))
-void
-kprintf(const char *fmt, ...)
-{
-	va_list    listp;
-	va_list    listp2;
-	boolean_t  state;
-	boolean_t  in_panic_context = FALSE;
-	unsigned int kprintf_lock_grabbed;
-	void      *caller = __builtin_return_address(0);
+__attribute__((noinline, not_tail_called)) void kprintf(const char *fmt, ...) {
+  va_list listp;
+  va_list listp2;
+  boolean_t state;
+  boolean_t in_panic_context = FALSE;
+  unsigned int kprintf_lock_grabbed;
+  void *caller = __builtin_return_address(0);
 
-	if (!disable_serial_output) {
-		boolean_t early = FALSE;
-		uint64_t gsbase = rdmsr64(MSR_IA32_GS_BASE);
-		if (gsbase == EARLY_GSBASE_MAGIC || gsbase == 0) {
-			early = TRUE;
-		}
-		/* If PE_kputc has not yet been initialized, don't
-		 * take any locks, just dump to serial */
-		if (!PE_kputc || early) {
-			va_start(listp, fmt);
-			va_copy(listp2, listp);
+  if (!disable_serial_output) {
+    boolean_t early = FALSE;
+    uint64_t gsbase = rdmsr64(MSR_IA32_GS_BASE);
+    if (gsbase == EARLY_GSBASE_MAGIC || gsbase == 0) {
+      early = TRUE;
+    }
+    /* If PE_kputc has not yet been initialized, don't
+     * take any locks, just dump to serial */
+    if (!PE_kputc || early) {
+      va_start(listp, fmt);
+      va_copy(listp2, listp);
 
-			_doprnt_log(fmt, &listp, pal_serial_putc, 16);
-			va_end(listp);
+      _doprnt_log(fmt, &listp, pal_serial_putc, 16);
+      va_end(listp);
 
-			// If interrupts are enabled
-			if (ml_get_interrupts_enabled()) {
+      // If interrupts are enabled
+      if (ml_get_interrupts_enabled()) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
 #pragma clang diagnostic ignored "-Wformat"
-				os_log_with_args(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT, fmt, listp2, caller);
+        os_log_with_args(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT, fmt, listp2,
+                         caller);
 #pragma clang diagnostic pop
-			}
-			va_end(listp2);
-			return;
-		}
+      }
+      va_end(listp2);
+      return;
+    }
 
-		va_start(listp, fmt);
-		va_copy(listp2, listp);
+    va_start(listp, fmt);
+    va_copy(listp2, listp);
 
-		state = ml_set_interrupts_enabled(FALSE);
+    state = ml_set_interrupts_enabled(FALSE);
 
-		pal_preemption_assert();
+    pal_preemption_assert();
 
-		in_panic_context = debug_is_current_cpu_in_panic_state();
+    in_panic_context = debug_is_current_cpu_in_panic_state();
 
-		// If current CPU is in panic context, be a little more impatient.
-		kprintf_lock_grabbed = simple_lock_try_lock_mp_signal_safe_loop_duration(&kprintf_lock,
-		    in_panic_context ? KPRINTF_LOCKWAIT_IMPATIENT : KPRINTF_LOCKWAIT_PATIENT,
-		    LCK_GRP_NULL);
+    // If current CPU is in panic context, be a little more impatient.
+    kprintf_lock_grabbed = simple_lock_try_lock_mp_signal_safe_loop_duration(
+        &kprintf_lock,
+        in_panic_context ? KPRINTF_LOCKWAIT_IMPATIENT
+                         : KPRINTF_LOCKWAIT_PATIENT,
+        LCK_GRP_NULL);
 
-		if (cpu_number() != cpu_last_locked) {
-			MP_DEBUG_KPRINTF("[cpu%d...]\n", cpu_number());
-			cpu_last_locked = cpu_number();
-		}
+    if (cpu_number() != cpu_last_locked) {
+      MP_DEBUG_KPRINTF("[cpu%d...]\n", cpu_number());
+      cpu_last_locked = cpu_number();
+    }
 
-		_doprnt(fmt, &listp, PE_kputc, 16);
+    _doprnt(fmt, &listp, PE_kputc, 16);
 
-		if (kprintf_lock_grabbed) {
-			simple_unlock(&kprintf_lock);
-		}
+    if (kprintf_lock_grabbed) {
+      simple_unlock(&kprintf_lock);
+    }
 
-		ml_set_interrupts_enabled(state);
+    ml_set_interrupts_enabled(state);
 
-		va_end(listp);
+    va_end(listp);
 
-		// If interrupts are enabled
-		if (ml_get_interrupts_enabled()) {
+    // If interrupts are enabled
+    if (ml_get_interrupts_enabled()) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
 #pragma clang diagnostic ignored "-Wformat"
-			os_log_with_args(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT, fmt, listp2, caller);
+      os_log_with_args(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT, fmt, listp2,
+                       caller);
 #pragma clang diagnostic pop
-		}
-		va_end(listp2);
-	} else {
-		if (ml_get_interrupts_enabled()) {
-			va_start(listp, fmt);
+    }
+    va_end(listp2);
+  } else {
+    if (ml_get_interrupts_enabled()) {
+      va_start(listp, fmt);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
 #pragma clang diagnostic ignored "-Wformat"
-			os_log_with_args(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT, fmt, listp, caller);
+      os_log_with_args(OS_LOG_DEFAULT, OS_LOG_TYPE_DEFAULT, fmt, listp, caller);
 #pragma clang diagnostic pop
-			va_end(listp);
-		}
-	}
+      va_end(listp);
+    }
+  }
 }
 
 extern void kprintf_break_lock(void);
-void
-kprintf_break_lock(void)
-{
-	simple_lock_init(&kprintf_lock, 0);
-}
+void kprintf_break_lock(void) { simple_lock_init(&kprintf_lock, 0); }

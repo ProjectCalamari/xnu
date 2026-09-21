@@ -37,7 +37,7 @@
  * "BUILDING CODE CONTAINING USDT PROBES" in the dtrace(1) manpage
  *
  */
-#include <sys/cdefs.h>
 #include <mach/sdt.h>
+#include <sys/cdefs.h>
 
-#endif  /* _SYS_SDT_H */
+#endif /* _SYS_SDT_H */

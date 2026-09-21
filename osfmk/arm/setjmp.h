@@ -63,7 +63,7 @@
 #define _ARM_SETJMP_H_
 
 typedef struct jmp_buf {
-	int   jmp_buf[28];
+  int jmp_buf[28];
 } jmp_buf_t;
 
-#endif  /* _ARM_SETJMP_H_ */
+#endif /* _ARM_SETJMP_H_ */

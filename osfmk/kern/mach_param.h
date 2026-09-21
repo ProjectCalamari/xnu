@@ -64,29 +64,29 @@
  *
  */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #ifndef _KERN_MACH_PARAM_H_
 #define _KERN_MACH_PARAM_H_
 
 extern int thread_max, task_threadmax, task_max;
 
+#define THREAD_CHUNK 64 /* Allocation chunk */
+#define TASK_CHUNK 64   /* Allocation chunk */
 
-#define THREAD_CHUNK    64              /* Allocation chunk */
-#define TASK_CHUNK              64              /* Allocation chunk */
-
-#define PORT_MAX        ((task_max * 3 + thread_max)    /* kernel */ \
-	                        + (thread_max * 2)      /* user */ \
-	                        + 40000)                /* slop for objects */
+#define PORT_MAX                                                               \
+  ((task_max * 3 + thread_max) /* kernel */                                    \
+   + (thread_max * 2)          /* user */                                      \
+   + 40000)                    /* slop for objects */
 /* Number of ports, system-wide */
 
-#define SET_MAX         (task_max + (thread_max * 2) + 200)
+#define SET_MAX (task_max + (thread_max * 2) + 200)
 /* Max number of port sets */
 
-#define SPACE_MAX       (task_max + 5)  /* Max number of IPC spaces */
+#define SPACE_MAX (task_max + 5) /* Max number of IPC spaces */
 
-#define SEMAPHORE_MAX   (PORT_MAX >> 1) /* Maximum number of semaphores */
+#define SEMAPHORE_MAX (PORT_MAX >> 1) /* Maximum number of semaphores */
 
-#endif  /* _KERN_MACH_PARAM_H_ */
+#endif /* _KERN_MACH_PARAM_H_ */
 
-#endif  /* XNU_KERNEL_PRIVATE */
+#endif /* XNU_KERNEL_PRIVATE */

@@ -26,12 +26,12 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/fcntl.h>
-#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <arpa/inet.h>
+#include <sys/fcntl.h>
+#include <sys/socket.h>
 
 #include <darwintest.h>
 #include <pthread.h>
@@ -43,14 +43,13 @@
 
 /*
  * The test is disabled on platforms that could be limited in term of CPU
- * or memory because this stress test that cycles rapidly through a lot of socket
+ * or memory because this stress test that cycles rapidly through a lot of
+ * socket
  */
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.net"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("networking"),
-	T_META_CHECK_LEAKS(false),
-	T_META_ENABLED(TARGET_OS_OSX || TARGET_OS_IPHONE));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.net"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("networking"),
+              T_META_CHECK_LEAKS(false),
+              T_META_ENABLED(TARGET_OS_OSX || TARGET_OS_IPHONE));
 
 #define SECONDS_TO_SLEEP 3
 
@@ -612,9 +611,8 @@ T_DECL(ipv6_udp_connectx6_connect4_race, "race bind calls with UDP sockets", T_M
 }
 #else
 
-T_DECL(stub, "test suite disabled")
-{
-	T_EXPECT_TRUE(true, "disabled by rdar://137741815");
+T_DECL(stub, "test suite disabled") {
+  T_EXPECT_TRUE(true, "disabled by rdar://137741815");
 }
 
 #endif /* 0 */

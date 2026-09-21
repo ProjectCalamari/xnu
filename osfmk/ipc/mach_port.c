@@ -70,38 +70,36 @@
  *	Exported kernel calls.  See mach/mach_port.defs.
  */
 
-#include <mach/port.h>
-#include <mach/kern_return.h>
-#include <mach/notify.h>
-#include <mach/mach_param.h>
-#include <mach/vm_param.h>
-#include <mach/vm_prot.h>
-#include <mach/vm_map.h>
-#include <kern/task.h>
-#include <kern/thread.h>
-#include <kern/exc_guard.h>
-#include <mach/mach_port_server.h>
-#include <vm/vm_map_xnu.h>
-#include <vm/vm_kern_xnu.h>
-#include <ipc/port.h>
+#include <IOKit/IOBSD.h>
 #include <ipc/ipc_entry.h>
-#include <ipc/ipc_space.h>
-#include <ipc/ipc_object.h>
+#include <ipc/ipc_kmsg.h>
 #include <ipc/ipc_notify.h>
+#include <ipc/ipc_object.h>
 #include <ipc/ipc_policy.h>
 #include <ipc/ipc_pset.h>
 #include <ipc/ipc_right.h>
-#include <ipc/ipc_kmsg.h>
 #include <ipc/ipc_service_port.h>
-#include <ipc/ipc_policy.h>
-#include <kern/misc_protos.h>
-#include <security/mac_mach_internal.h>
-#include <kern/work_interval.h>
-#include <kern/policy_internal.h>
+#include <ipc/ipc_space.h>
+#include <ipc/port.h>
 #include <kern/coalition.h>
-#include <ipc/ipc_service_port.h>
+#include <kern/exc_guard.h>
 #include <kern/mach_filter.h>
-#include <IOKit/IOBSD.h>
+#include <kern/misc_protos.h>
+#include <kern/policy_internal.h>
+#include <kern/task.h>
+#include <kern/thread.h>
+#include <kern/work_interval.h>
+#include <mach/kern_return.h>
+#include <mach/mach_param.h>
+#include <mach/mach_port_server.h>
+#include <mach/notify.h>
+#include <mach/port.h>
+#include <mach/vm_map.h>
+#include <mach/vm_param.h>
+#include <mach/vm_prot.h>
+#include <security/mac_mach_internal.h>
+#include <vm/vm_kern_xnu.h>
+#include <vm/vm_map_xnu.h>
 
 #if IMPORTANCE_INHERITANCE
 #include <ipc/ipc_importance.h>
@@ -111,26 +109,27 @@
 #include <sys/csr.h>
 #endif
 
-extern void qsort(void *a, size_t n, size_t es, int (*cmp)(const void *, const void *));
-static int
-mach_port_name_cmp(const void *_n1, const void *_n2)
-{
-	mach_port_name_t n1 = *(const mach_port_name_t *)_n1;
-	mach_port_name_t n2 = *(const mach_port_name_t *)_n2;
+extern void qsort(void *a, size_t n, size_t es,
+                  int (*cmp)(const void *, const void *));
+static int mach_port_name_cmp(const void *_n1, const void *_n2) {
+  mach_port_name_t n1 = *(const mach_port_name_t *)_n1;
+  mach_port_name_t n2 = *(const mach_port_name_t *)_n2;
 
-	if (n1 == n2) {
-		return 0;
-	}
+  if (n1 == n2) {
+    return 0;
+  }
 
-	return n1 < n2 ? -1 : 1;
+  return n1 < n2 ? -1 : 1;
 }
 
 kern_return_t mach_port_get_attributes(ipc_space_t space, mach_port_name_t name,
-    int flavor, mach_port_info_t info, mach_msg_type_number_t  *count);
+                                       int flavor, mach_port_info_t info,
+                                       mach_msg_type_number_t *count);
 kern_return_t mach_port_get_context(ipc_space_t space, mach_port_name_t name,
-    mach_vm_address_t *context);
+                                    mach_vm_address_t *context);
 kern_return_t mach_port_get_set_status(ipc_space_t space, mach_port_name_t name,
-    mach_port_name_t **members, mach_msg_type_number_t *membersCnt);
+                                       mach_port_name_t **members,
+                                       mach_msg_type_number_t *membersCnt);
 
 /*
  *	Routine:	mach_port_names_helper
@@ -140,63 +139,61 @@ kern_return_t mach_port_get_set_status(ipc_space_t space, mach_port_name_t name,
  *	Conditions:
  *		Space containing entry is [at least] read-locked.
  */
-static void
-mach_port_names_helper(
-	ipc_port_timestamp_t    timestamp,
-	ipc_entry_t             entry,
-	mach_port_name_t        name,
-	mach_port_name_t        *names,
-	mach_port_type_t        *types,
-	ipc_entry_num_t         *actualp)
-{
-	ipc_entry_bits_t bits;
-	ipc_port_request_index_t request;
-	mach_port_type_t type = 0;
-	ipc_entry_num_t actual;
+static void mach_port_names_helper(ipc_port_timestamp_t timestamp,
+                                   ipc_entry_t entry, mach_port_name_t name,
+                                   mach_port_name_t *names,
+                                   mach_port_type_t *types,
+                                   ipc_entry_num_t *actualp) {
+  ipc_entry_bits_t bits;
+  ipc_port_request_index_t request;
+  mach_port_type_t type = 0;
+  ipc_entry_num_t actual;
 
-	bits = entry->ie_bits;
-	request = entry->ie_request;
+  bits = entry->ie_bits;
+  request = entry->ie_request;
 
-	if (bits & MACH_PORT_TYPE_RECEIVE) {
-		if (request != IE_REQ_NONE) {
-			ipc_port_t port = entry->ie_port;
+  if (bits & MACH_PORT_TYPE_RECEIVE) {
+    if (request != IE_REQ_NONE) {
+      ipc_port_t port = entry->ie_port;
 
-			assert(IP_VALID(port));
-			ip_mq_lock(port);
-			require_ip_active(port);
-			type |= ipc_port_request_type(port, name, request);
-			ip_mq_unlock(port);
-		}
-	} else if (bits & MACH_PORT_TYPE_SEND_RIGHTS) {
-		ipc_port_t port = entry->ie_port;
-		mach_port_type_t reqtype;
+      assert(IP_VALID(port));
+      ip_mq_lock(port);
+      require_ip_active(port);
+      type |= ipc_port_request_type(port, name, request);
+      ip_mq_unlock(port);
+    }
+  } else if (bits & MACH_PORT_TYPE_SEND_RIGHTS) {
+    ipc_port_t port = entry->ie_port;
+    mach_port_type_t reqtype;
 
-		assert(IP_VALID(port));
-		ip_mq_lock(port);
+    assert(IP_VALID(port));
+    ip_mq_lock(port);
 
-		reqtype = (request != IE_REQ_NONE) ?
-		    ipc_port_request_type(port, name, request) : 0;
+    reqtype = (request != IE_REQ_NONE)
+                  ? ipc_port_request_type(port, name, request)
+                  : 0;
 
-		/*
-		 * If the port is alive, or was alive when the mach_port_names
-		 * started, then return that fact.  Otherwise, pretend we found
-		 * a dead name entry.
-		 */
-		if (ip_active(port) || IP_TIMESTAMP_ORDER(timestamp, ip_get_death_time(port))) {
-			type |= reqtype;
-		} else {
-			bits &= ~(IE_BITS_TYPE_MASK);
-			bits |= MACH_PORT_TYPE_DEAD_NAME;
-		}
-		ip_mq_unlock(port);
-	}
+    /*
+     * If the port is alive, or was alive when the mach_port_names
+     * started, then return that fact.  Otherwise, pretend we found
+     * a dead name entry.
+     */
+    if (ip_active(port) ||
+        IP_TIMESTAMP_ORDER(timestamp, ip_get_death_time(port))) {
+      type |= reqtype;
+    } else {
+      bits &= ~(IE_BITS_TYPE_MASK);
+      bits |= MACH_PORT_TYPE_DEAD_NAME;
+    }
+    ip_mq_unlock(port);
+  }
 
-	type |= IE_BITS_TYPE(bits);
+  type |= IE_BITS_TYPE(bits);
 
-	actual = *actualp;
-	names[actual] = name;
-	types[actual] = type;
-	*actualp = actual + 1;
+  actual = *actualp;
+  names[actual] = name;
+  types[actual] = type;
+  *actualp = actual + 1;
 }
 
 /*
@@ -216,163 +213,152 @@ mach_port_names_helper(
  *		KERN_RESOURCE_SHORTAGE	Couldn't allocate memory.
  */
 
-kern_return_t
-mach_port_names(
-	ipc_space_t             space,
-	mach_port_name_t        **namesp,
-	mach_msg_type_number_t  *namesCnt,
-	mach_port_type_t        **typesp,
-	mach_msg_type_number_t  *typesCnt)
-{
-	ipc_entry_table_t table;
-	ipc_entry_num_t tsize;
-	mach_port_index_t index;
-	ipc_entry_num_t actual; /* this many names */
-	ipc_port_timestamp_t timestamp; /* logical time of this operation */
-	mach_port_name_t *names;
-	mach_port_type_t *types;
-	kern_return_t kr;
+kern_return_t mach_port_names(ipc_space_t space, mach_port_name_t **namesp,
+                              mach_msg_type_number_t *namesCnt,
+                              mach_port_type_t **typesp,
+                              mach_msg_type_number_t *typesCnt) {
+  ipc_entry_table_t table;
+  ipc_entry_num_t tsize;
+  mach_port_index_t index;
+  ipc_entry_num_t actual;         /* this many names */
+  ipc_port_timestamp_t timestamp; /* logical time of this operation */
+  mach_port_name_t *names;
+  mach_port_type_t *types;
+  kern_return_t kr;
 
-	vm_size_t size;         /* size of allocated memory */
-	vm_offset_t addr1 = 0;      /* allocated memory, for names */
-	vm_offset_t addr2 = 0;      /* allocated memory, for types */
-	vm_map_copy_t memory1;  /* copied-in memory, for names */
-	vm_map_copy_t memory2;  /* copied-in memory, for types */
+  vm_size_t size;        /* size of allocated memory */
+  vm_offset_t addr1 = 0; /* allocated memory, for names */
+  vm_offset_t addr2 = 0; /* allocated memory, for types */
+  vm_map_copy_t memory1; /* copied-in memory, for names */
+  vm_map_copy_t memory2; /* copied-in memory, for types */
 
-	/* safe simplifying assumption */
-	static_assert(sizeof(mach_port_name_t) == sizeof(mach_port_type_t));
+  /* safe simplifying assumption */
+  static_assert(sizeof(mach_port_name_t) == sizeof(mach_port_type_t));
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	size = 0;
+  size = 0;
 
-	for (;;) {
-		ipc_entry_num_t bound;
-		vm_size_t size_needed;
+  for (;;) {
+    ipc_entry_num_t bound;
+    vm_size_t size_needed;
 
-		is_read_lock(space);
-		if (!is_active(space)) {
-			is_read_unlock(space);
-			if (size != 0) {
-				kmem_free(ipc_kernel_map, addr1, size);
-				kmem_free(ipc_kernel_map, addr2, size);
-			}
-			return KERN_INVALID_TASK;
-		}
+    is_read_lock(space);
+    if (!is_active(space)) {
+      is_read_unlock(space);
+      if (size != 0) {
+        kmem_free(ipc_kernel_map, addr1, size);
+        kmem_free(ipc_kernel_map, addr2, size);
+      }
+      return KERN_INVALID_TASK;
+    }
 
-		/* upper bound on number of names in the space */
-		bound = ipc_entry_table_count(is_active_table(space));
-		size_needed = vm_map_round_page(
-			(bound * sizeof(mach_port_name_t)),
-			VM_MAP_PAGE_MASK(ipc_kernel_map));
+    /* upper bound on number of names in the space */
+    bound = ipc_entry_table_count(is_active_table(space));
+    size_needed = vm_map_round_page((bound * sizeof(mach_port_name_t)),
+                                    VM_MAP_PAGE_MASK(ipc_kernel_map));
 
-		if (size_needed <= size) {
-			break;
-		}
+    if (size_needed <= size) {
+      break;
+    }
 
-		is_read_unlock(space);
+    is_read_unlock(space);
 
-		if (size != 0) {
-			kmem_free(ipc_kernel_map, addr1, size);
-			kmem_free(ipc_kernel_map, addr2, size);
-		}
-		size = size_needed;
+    if (size != 0) {
+      kmem_free(ipc_kernel_map, addr1, size);
+      kmem_free(ipc_kernel_map, addr2, size);
+    }
+    size = size_needed;
 
-		kr = kmem_alloc(ipc_kernel_map, &addr1, size,
-		    KMA_DATA, VM_KERN_MEMORY_IPC);
-		if (kr != KERN_SUCCESS) {
-			return KERN_RESOURCE_SHORTAGE;
-		}
+    kr = kmem_alloc(ipc_kernel_map, &addr1, size, KMA_DATA, VM_KERN_MEMORY_IPC);
+    if (kr != KERN_SUCCESS) {
+      return KERN_RESOURCE_SHORTAGE;
+    }
 
-		kr = kmem_alloc(ipc_kernel_map, &addr2, size,
-		    KMA_DATA, VM_KERN_MEMORY_IPC);
-		if (kr != KERN_SUCCESS) {
-			kmem_free(ipc_kernel_map, addr1, size);
-			return KERN_RESOURCE_SHORTAGE;
-		}
-	}
-	/* space is read-locked and active */
+    kr = kmem_alloc(ipc_kernel_map, &addr2, size, KMA_DATA, VM_KERN_MEMORY_IPC);
+    if (kr != KERN_SUCCESS) {
+      kmem_free(ipc_kernel_map, addr1, size);
+      return KERN_RESOURCE_SHORTAGE;
+    }
+  }
+  /* space is read-locked and active */
 
-	names = (mach_port_name_t *) addr1;
-	types = (mach_port_type_t *) addr2;
-	actual = 0;
+  names = (mach_port_name_t *)addr1;
+  types = (mach_port_type_t *)addr2;
+  actual = 0;
 
-	timestamp = ipc_port_timestamp();
+  timestamp = ipc_port_timestamp();
 
-	table = is_active_table(space);
-	tsize = ipc_entry_table_count(table);
+  table = is_active_table(space);
+  tsize = ipc_entry_table_count(table);
 
-	for (index = 1; index < tsize; index++) {
-		ipc_entry_t entry = ipc_entry_table_get_nocheck(table, index);
-		ipc_entry_bits_t bits = entry->ie_bits;
+  for (index = 1; index < tsize; index++) {
+    ipc_entry_t entry = ipc_entry_table_get_nocheck(table, index);
+    ipc_entry_bits_t bits = entry->ie_bits;
 
-		if (IE_BITS_TYPE(bits) != MACH_PORT_TYPE_NONE) {
-			mach_port_name_t name;
+    if (IE_BITS_TYPE(bits) != MACH_PORT_TYPE_NONE) {
+      mach_port_name_t name;
 
-			name = MACH_PORT_MAKE(index, IE_BITS_GEN(bits));
-			mach_port_names_helper(timestamp, entry, name, names,
-			    types, &actual);
-		}
-	}
+      name = MACH_PORT_MAKE(index, IE_BITS_GEN(bits));
+      mach_port_names_helper(timestamp, entry, name, names, types, &actual);
+    }
+  }
 
-	is_read_unlock(space);
+  is_read_unlock(space);
 
-	if (actual == 0) {
-		memory1 = VM_MAP_COPY_NULL;
-		memory2 = VM_MAP_COPY_NULL;
+  if (actual == 0) {
+    memory1 = VM_MAP_COPY_NULL;
+    memory2 = VM_MAP_COPY_NULL;
 
-		if (size != 0) {
-			kmem_free(ipc_kernel_map, addr1, size);
-			kmem_free(ipc_kernel_map, addr2, size);
-		}
-	} else {
-		vm_size_t size_used;
-		vm_size_t vm_size_used;
+    if (size != 0) {
+      kmem_free(ipc_kernel_map, addr1, size);
+      kmem_free(ipc_kernel_map, addr2, size);
+    }
+  } else {
+    vm_size_t size_used;
+    vm_size_t vm_size_used;
 
-		size_used = actual * sizeof(mach_port_name_t);
-		vm_size_used =
-		    vm_map_round_page(size_used,
-		    VM_MAP_PAGE_MASK(ipc_kernel_map));
+    size_used = actual * sizeof(mach_port_name_t);
+    vm_size_used =
+        vm_map_round_page(size_used, VM_MAP_PAGE_MASK(ipc_kernel_map));
 
-		/*
-		 *	Make used memory pageable and get it into
-		 *	copied-in form.  Free any unused memory.
-		 */
+    /*
+     *	Make used memory pageable and get it into
+     *	copied-in form.  Free any unused memory.
+     */
 
-		if (size_used < vm_size_used) {
-			bzero((char *)addr1 + size_used, vm_size_used - size_used);
-			bzero((char *)addr2 + size_used, vm_size_used - size_used);
-		}
+    if (size_used < vm_size_used) {
+      bzero((char *)addr1 + size_used, vm_size_used - size_used);
+      bzero((char *)addr2 + size_used, vm_size_used - size_used);
+    }
 
-		kr = vm_map_unwire(ipc_kernel_map, addr1, addr1 + vm_size_used, FALSE);
-		assert(kr == KERN_SUCCESS);
+    kr = vm_map_unwire(ipc_kernel_map, addr1, addr1 + vm_size_used, FALSE);
+    assert(kr == KERN_SUCCESS);
 
-		kr = vm_map_unwire(ipc_kernel_map, addr2, addr2 + vm_size_used, FALSE);
-		assert(kr == KERN_SUCCESS);
+    kr = vm_map_unwire(ipc_kernel_map, addr2, addr2 + vm_size_used, FALSE);
+    assert(kr == KERN_SUCCESS);
 
-		kr = vm_map_copyin(ipc_kernel_map, (vm_map_address_t)addr1,
-		    (vm_map_size_t)size_used, TRUE, &memory1);
-		assert(kr == KERN_SUCCESS);
+    kr = vm_map_copyin(ipc_kernel_map, (vm_map_address_t)addr1,
+                       (vm_map_size_t)size_used, TRUE, &memory1);
+    assert(kr == KERN_SUCCESS);
 
-		kr = vm_map_copyin(ipc_kernel_map, (vm_map_address_t)addr2,
-		    (vm_map_size_t)size_used, TRUE, &memory2);
-		assert(kr == KERN_SUCCESS);
+    kr = vm_map_copyin(ipc_kernel_map, (vm_map_address_t)addr2,
+                       (vm_map_size_t)size_used, TRUE, &memory2);
+    assert(kr == KERN_SUCCESS);
 
-		if (vm_size_used != size) {
-			kmem_free(ipc_kernel_map,
-			    addr1 + vm_size_used, size - vm_size_used);
-			kmem_free(ipc_kernel_map,
-			    addr2 + vm_size_used, size - vm_size_used);
-		}
-	}
+    if (vm_size_used != size) {
+      kmem_free(ipc_kernel_map, addr1 + vm_size_used, size - vm_size_used);
+      kmem_free(ipc_kernel_map, addr2 + vm_size_used, size - vm_size_used);
+    }
+  }
 
-	*namesp = (mach_port_name_t *) memory1;
-	*namesCnt = actual;
-	*typesp = (mach_port_type_t *) memory2;
-	*typesCnt = actual;
-	return KERN_SUCCESS;
+  *namesp = (mach_port_name_t *)memory1;
+  *namesCnt = actual;
+  *typesp = (mach_port_type_t *)memory2;
+  *typesCnt = actual;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -398,46 +384,42 @@ mach_port_names(
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  */
 
-kern_return_t
-mach_port_type(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_type_t        *typep)
-{
-	mach_port_urefs_t urefs;
-	ipc_entry_t entry;
-	kern_return_t kr;
+kern_return_t mach_port_type(ipc_space_t space, mach_port_name_t name,
+                             mach_port_type_t *typep) {
+  mach_port_urefs_t urefs;
+  ipc_entry_t entry;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (name == MACH_PORT_NULL) {
-		return KERN_INVALID_NAME;
-	}
+  if (name == MACH_PORT_NULL) {
+    return KERN_INVALID_NAME;
+  }
 
-	if (name == MACH_PORT_DEAD) {
-		*typep = MACH_PORT_TYPE_DEAD_NAME;
-		return KERN_SUCCESS;
-	}
+  if (name == MACH_PORT_DEAD) {
+    *typep = MACH_PORT_TYPE_DEAD_NAME;
+    return KERN_SUCCESS;
+  }
 
-	kr = ipc_right_lookup_write(space, name, &entry);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  kr = ipc_right_lookup_write(space, name, &entry);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* space is write-locked and active */
-	kr = ipc_right_info(space, name, entry, typep, &urefs);
-	/* space is unlocked */
+  /* space is write-locked and active */
+  kr = ipc_right_info(space, name, entry, typep, &urefs);
+  /* space is unlocked */
 
 #if 1
-	/* JMM - workaround rdar://problem/9121297 (CF being too picky on these bits). */
-	*typep &= ~(MACH_PORT_TYPE_SPREQUEST | MACH_PORT_TYPE_SPREQUEST_DELAYED);
+  /* JMM - workaround rdar://problem/9121297 (CF being too picky on these bits).
+   */
+  *typep &= ~(MACH_PORT_TYPE_SPREQUEST | MACH_PORT_TYPE_SPREQUEST_DELAYED);
 #endif
 
-	return kr;
+  return kr;
 }
-
 
 /*
  *	Routine:	mach_port_allocate_name [kernel call]
@@ -474,22 +456,18 @@ mach_port_type(
  *	loaded server.
  */
 
-kern_return_t
-mach_port_allocate_name(
-	ipc_space_t             space,
-	mach_port_right_t       right,
-	mach_port_name_t        name)
-{
-	kern_return_t           kr;
-	mach_port_qos_t         qos = { .name = TRUE };
+kern_return_t mach_port_allocate_name(ipc_space_t space,
+                                      mach_port_right_t right,
+                                      mach_port_name_t name) {
+  kern_return_t kr;
+  mach_port_qos_t qos = {.name = TRUE};
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_VALUE;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_VALUE;
+  }
 
-	kr = mach_port_allocate_full(space, right, MACH_PORT_NULL,
-	    &qos, &name);
-	return kr;
+  kr = mach_port_allocate_full(space, right, MACH_PORT_NULL, &qos, &name);
+  return kr;
 }
 
 /*
@@ -510,18 +488,13 @@ mach_port_allocate_name(
  *		KERN_NO_SPACE		No room in space for another right.
  */
 
-kern_return_t
-mach_port_allocate(
-	ipc_space_t             space,
-	mach_port_right_t       right,
-	mach_port_name_t        *namep)
-{
-	kern_return_t           kr;
-	mach_port_qos_t         qos = { };
+kern_return_t mach_port_allocate(ipc_space_t space, mach_port_right_t right,
+                                 mach_port_name_t *namep) {
+  kern_return_t kr;
+  mach_port_qos_t qos = {};
 
-	kr = mach_port_allocate_full(space, right, MACH_PORT_NULL,
-	    &qos, namep);
-	return kr;
+  kr = mach_port_allocate_full(space, right, MACH_PORT_NULL, &qos, namep);
+  return kr;
 }
 
 /*
@@ -543,21 +516,16 @@ mach_port_allocate(
  *		KERN_NO_SPACE		No room in space for another right.
  */
 
-kern_return_t
-mach_port_allocate_qos(
-	ipc_space_t             space,
-	mach_port_right_t       right,
-	mach_port_qos_t         *qosp,
-	mach_port_name_t        *namep)
-{
-	kern_return_t           kr;
+kern_return_t mach_port_allocate_qos(ipc_space_t space, mach_port_right_t right,
+                                     mach_port_qos_t *qosp,
+                                     mach_port_name_t *namep) {
+  kern_return_t kr;
 
-	if (qosp->name) {
-		return KERN_INVALID_ARGUMENT;
-	}
-	kr = mach_port_allocate_full(space, right, MACH_PORT_NULL,
-	    qosp, namep);
-	return kr;
+  if (qosp->name) {
+    return KERN_INVALID_ARGUMENT;
+  }
+  kr = mach_port_allocate_full(space, right, MACH_PORT_NULL, qosp, namep);
+  return kr;
 }
 
 /*
@@ -578,97 +546,89 @@ mach_port_allocate_qos(
  *		KERN_SUCCESS		The right is allocated.
  *		KERN_INVALID_TASK	The space is null.
  *		KERN_INVALID_TASK	The space is dead.
- *		KERN_INVALID_VALUE	"right" isn't a legal kind of right, or supplied port
- *                          name is invalid.
- *		KERN_RESOURCE_SHORTAGE	Couldn't allocate memory.
- *		KERN_NO_SPACE		No room in space for another right.
+ *		KERN_INVALID_VALUE	"right" isn't a legal kind of right, or
+ * supplied port name is invalid. KERN_RESOURCE_SHORTAGE	Couldn't
+ * allocate memory. KERN_NO_SPACE		No room in space for another
+ * right.
  */
 
-kern_return_t
-mach_port_allocate_full(
-	ipc_space_t             space,
-	mach_port_right_t       right,
-	mach_port_t             proto,
-	mach_port_qos_t         *qosp,
-	mach_port_name_t        *namep)
-{
-	kern_return_t           kr;
+kern_return_t mach_port_allocate_full(ipc_space_t space,
+                                      mach_port_right_t right,
+                                      mach_port_t proto, mach_port_qos_t *qosp,
+                                      mach_port_name_t *namep) {
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (proto != MACH_PORT_NULL) {
-		return KERN_INVALID_VALUE;
-	}
+  if (proto != MACH_PORT_NULL) {
+    return KERN_INVALID_VALUE;
+  }
 
-	if (qosp->name) {
-		if (!MACH_PORT_VALID(*namep)) {
-			return KERN_INVALID_VALUE;
-		}
-	}
+  if (qosp->name) {
+    if (!MACH_PORT_VALID(*namep)) {
+      return KERN_INVALID_VALUE;
+    }
+  }
 
-	/*
-	 * Don't actually honor prealloc requests anymore,
-	 * (only mk_timer still uses IP_PREALLOC messages, by hand).
-	 *
-	 * (for security reasons, and because it isn't guaranteed anyway).
-	 * Keep old errors for legacy reasons.
-	 */
-	if (qosp->prealloc) {
-		if (qosp->len > MACH_MSG_SIZE_MAX - MAX_TRAILER_SIZE) {
-			return KERN_RESOURCE_SHORTAGE;
-		}
-		if (right != MACH_PORT_RIGHT_RECEIVE) {
-			return KERN_INVALID_VALUE;
-		}
-		qosp->prealloc = 0;
-	}
+  /*
+   * Don't actually honor prealloc requests anymore,
+   * (only mk_timer still uses IP_PREALLOC messages, by hand).
+   *
+   * (for security reasons, and because it isn't guaranteed anyway).
+   * Keep old errors for legacy reasons.
+   */
+  if (qosp->prealloc) {
+    if (qosp->len > MACH_MSG_SIZE_MAX - MAX_TRAILER_SIZE) {
+      return KERN_RESOURCE_SHORTAGE;
+    }
+    if (right != MACH_PORT_RIGHT_RECEIVE) {
+      return KERN_INVALID_VALUE;
+    }
+    qosp->prealloc = 0;
+  }
 
-	switch (right) {
-	case MACH_PORT_RIGHT_RECEIVE:
-	{
-		ipc_object_label_t label = IPC_OBJECT_LABEL(IOT_PORT);
-		ipc_port_t port;
+  switch (right) {
+  case MACH_PORT_RIGHT_RECEIVE: {
+    ipc_object_label_t label = IPC_OBJECT_LABEL(IOT_PORT);
+    ipc_port_t port;
 
-		if (qosp->name) {
-			kr = ipc_port_alloc_name(space, label,
-			    IP_INIT_NONE, *namep, &port);
-		} else {
-			kr = ipc_port_alloc(space, label,
-			    IP_INIT_NONE, namep, &port);
-		}
-		if (kr == KERN_SUCCESS) {
-			ip_mq_unlock(port);
-		}
-		break;
-	}
+    if (qosp->name) {
+      kr = ipc_port_alloc_name(space, label, IP_INIT_NONE, *namep, &port);
+    } else {
+      kr = ipc_port_alloc(space, label, IP_INIT_NONE, namep, &port);
+    }
+    if (kr == KERN_SUCCESS) {
+      ip_mq_unlock(port);
+    }
+    break;
+  }
 
-	case MACH_PORT_RIGHT_PORT_SET:
-	{
-		ipc_pset_t      pset;
+  case MACH_PORT_RIGHT_PORT_SET: {
+    ipc_pset_t pset;
 
-		if (qosp->name) {
-			kr = ipc_pset_alloc_name(space, *namep, &pset);
-		} else {
-			kr = ipc_pset_alloc(space, namep, &pset);
-		}
-		if (kr == KERN_SUCCESS) {
-			ips_mq_unlock(pset);
-		}
-		break;
-	}
+    if (qosp->name) {
+      kr = ipc_pset_alloc_name(space, *namep, &pset);
+    } else {
+      kr = ipc_pset_alloc(space, namep, &pset);
+    }
+    if (kr == KERN_SUCCESS) {
+      ips_mq_unlock(pset);
+    }
+    break;
+  }
 
-	case MACH_PORT_RIGHT_DEAD_NAME:
-		kr = ipc_object_alloc_dead(space, namep);
-		break;
+  case MACH_PORT_RIGHT_DEAD_NAME:
+    kr = ipc_object_alloc_dead(space, namep);
+    break;
 
-	default:
-		kr = KERN_INVALID_VALUE;
-		break;
-	}
+  default:
+    kr = KERN_INVALID_VALUE;
+    break;
+  }
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -688,30 +648,26 @@ mach_port_allocate_full(
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  */
 
-kern_return_t
-mach_port_destroy(
-	ipc_space_t             space,
-	mach_port_name_t        name)
-{
-	ipc_entry_t entry;
-	kern_return_t kr;
+kern_return_t mach_port_destroy(ipc_space_t space, mach_port_name_t name) {
+  ipc_entry_t entry;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_SUCCESS;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_SUCCESS;
+  }
 
-	kr = ipc_right_lookup_write(space, name, &entry);
-	if (kr != KERN_SUCCESS) {
-		mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
-		return kr;
-	}
-	/* space is write-locked and active */
+  kr = ipc_right_lookup_write(space, name, &entry);
+  if (kr != KERN_SUCCESS) {
+    mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
+    return kr;
+  }
+  /* space is write-locked and active */
 
-	return ipc_right_destroy(space, name, entry); /* unlocks space */
+  return ipc_right_destroy(space, name, entry); /* unlocks space */
 }
 
 /*
@@ -732,51 +688,44 @@ mach_port_destroy(
  *		KERN_INVALID_RIGHT	The right isn't correct.
  */
 
-kern_return_t
-mach_port_deallocate_kernel(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	ipc_object_type_t       otype)
-{
-	ipc_entry_t entry;
-	kern_return_t kr;
+kern_return_t mach_port_deallocate_kernel(ipc_space_t space,
+                                          mach_port_name_t name,
+                                          ipc_object_type_t otype) {
+  ipc_entry_t entry;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_SUCCESS;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_SUCCESS;
+  }
 
-	kr = ipc_right_lookup_write(space, name, &entry);
-	if (kr != KERN_SUCCESS) {
-		mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
-		return kr;
-	}
-	/* space is write-locked */
+  kr = ipc_right_lookup_write(space, name, &entry);
+  if (kr != KERN_SUCCESS) {
+    mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
+    return kr;
+  }
+  /* space is write-locked */
 
-	if (otype != IOT_ANY &&
-	    entry->ie_object &&
-	    io_type(entry->ie_object) != otype) {
-		is_write_unlock(space);
-		mach_port_guard_exception(name,
-		    MPG_PAYLOAD(MPG_FLAGS_INVALID_RIGHT_DEALLOC_KERNEL,
-		    otype, io_type(entry->ie_object)),
-		    kGUARD_EXC_INVALID_RIGHT);
-		return KERN_INVALID_RIGHT;
-	}
+  if (otype != IOT_ANY && entry->ie_object &&
+      io_type(entry->ie_object) != otype) {
+    is_write_unlock(space);
+    mach_port_guard_exception(
+        name,
+        MPG_PAYLOAD(MPG_FLAGS_INVALID_RIGHT_DEALLOC_KERNEL, otype,
+                    io_type(entry->ie_object)),
+        kGUARD_EXC_INVALID_RIGHT);
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_right_dealloc(space, name, entry); /* unlocks space */
-	return kr;
+  kr = ipc_right_dealloc(space, name, entry); /* unlocks space */
+  return kr;
 }
 
-kern_return_t
-mach_port_deallocate(
-	ipc_space_t             space,
-	mach_port_name_t        name)
-{
-	return mach_port_deallocate_kernel(space, name, IOT_ANY);
+kern_return_t mach_port_deallocate(ipc_space_t space, mach_port_name_t name) {
+  return mach_port_deallocate_kernel(space, name, IOT_ANY);
 }
 
 /*
@@ -796,73 +745,68 @@ mach_port_deallocate(
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  */
 
-kern_return_t
-mach_port_get_refs(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_right_t       right,
-	mach_port_urefs_t       *urefsp)
-{
-	mach_port_type_t type;
-	mach_port_urefs_t urefs;
-	ipc_entry_t entry;
-	kern_return_t kr;
+kern_return_t mach_port_get_refs(ipc_space_t space, mach_port_name_t name,
+                                 mach_port_right_t right,
+                                 mach_port_urefs_t *urefsp) {
+  mach_port_type_t type;
+  mach_port_urefs_t urefs;
+  ipc_entry_t entry;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (right >= MACH_PORT_RIGHT_NUMBER) {
-		return KERN_INVALID_VALUE;
-	}
+  if (right >= MACH_PORT_RIGHT_NUMBER) {
+    return KERN_INVALID_VALUE;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		if (right == MACH_PORT_RIGHT_SEND ||
-		    right == MACH_PORT_RIGHT_SEND_ONCE) {
-			*urefsp = 1;
-			return KERN_SUCCESS;
-		}
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    if (right == MACH_PORT_RIGHT_SEND || right == MACH_PORT_RIGHT_SEND_ONCE) {
+      *urefsp = 1;
+      return KERN_SUCCESS;
+    }
+    return KERN_INVALID_NAME;
+  }
 
-	kr = ipc_right_lookup_write(space, name, &entry);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  kr = ipc_right_lookup_write(space, name, &entry);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* space is write-locked and active */
-	kr = ipc_right_info(space, name, entry, &type, &urefs);
-	/* space is unlocked */
+  /* space is write-locked and active */
+  kr = ipc_right_info(space, name, entry, &type, &urefs);
+  /* space is unlocked */
 
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	if (type & MACH_PORT_TYPE(right)) {
-		switch (right) {
-		case MACH_PORT_RIGHT_SEND_ONCE:
-			assert(urefs == 1);
-			OS_FALLTHROUGH;
+  if (type & MACH_PORT_TYPE(right)) {
+    switch (right) {
+    case MACH_PORT_RIGHT_SEND_ONCE:
+      assert(urefs == 1);
+      OS_FALLTHROUGH;
 
-		case MACH_PORT_RIGHT_PORT_SET:
-		case MACH_PORT_RIGHT_RECEIVE:
-			*urefsp = 1;
-			break;
+    case MACH_PORT_RIGHT_PORT_SET:
+    case MACH_PORT_RIGHT_RECEIVE:
+      *urefsp = 1;
+      break;
 
-		case MACH_PORT_RIGHT_DEAD_NAME:
-		case MACH_PORT_RIGHT_SEND:
-			assert(urefs > 0);
-			*urefsp = urefs;
-			break;
+    case MACH_PORT_RIGHT_DEAD_NAME:
+    case MACH_PORT_RIGHT_SEND:
+      assert(urefs > 0);
+      *urefsp = urefs;
+      break;
 
-		default:
-			panic("mach_port_get_refs: strange rights");
-		}
-	} else {
-		*urefsp = 0;
-	}
+    default:
+      panic("mach_port_get_refs: strange rights");
+    }
+  } else {
+    *urefsp = 0;
+  }
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -885,44 +829,38 @@ mach_port_get_refs(
  *		KERN_UREFS_OVERFLOW	Urefs would overflow.
  */
 
-kern_return_t
-mach_port_mod_refs(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_right_t       right,
-	mach_port_delta_t       delta)
-{
-	ipc_entry_t entry;
-	kern_return_t kr;
+kern_return_t mach_port_mod_refs(ipc_space_t space, mach_port_name_t name,
+                                 mach_port_right_t right,
+                                 mach_port_delta_t delta) {
+  ipc_entry_t entry;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (right >= MACH_PORT_RIGHT_NUMBER) {
-		return KERN_INVALID_VALUE;
-	}
+  if (right >= MACH_PORT_RIGHT_NUMBER) {
+    return KERN_INVALID_VALUE;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		if (right == MACH_PORT_RIGHT_SEND ||
-		    right == MACH_PORT_RIGHT_SEND_ONCE) {
-			return KERN_SUCCESS;
-		}
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    if (right == MACH_PORT_RIGHT_SEND || right == MACH_PORT_RIGHT_SEND_ONCE) {
+      return KERN_SUCCESS;
+    }
+    return KERN_INVALID_NAME;
+  }
 
-	kr = ipc_right_lookup_write(space, name, &entry);
-	if (kr != KERN_SUCCESS) {
-		mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
-		return kr;
-	}
+  kr = ipc_right_lookup_write(space, name, &entry);
+  if (kr != KERN_SUCCESS) {
+    mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
+    return kr;
+  }
 
-	/* space is write-locked and active */
+  /* space is write-locked and active */
 
-	kr = ipc_right_delta(space, name, entry, right, delta); /* unlocks */
-	return kr;
+  kr = ipc_right_delta(space, name, entry, right, delta); /* unlocks */
+  return kr;
 }
-
 
 /*
  *	Routine:	mach_port_peek [kernel call]
@@ -954,73 +892,70 @@ mach_port_mod_refs(
  *	Conditions:
  *		Nothing locked.
  *	Returns:
- *		KERN_SUCCESS		Matching message found, out parameters set.
- *		KERN_INVALID_TASK	The space is null or dead.
- *		KERN_INVALID_NAME	The name doesn't denote a right.
- *		KERN_INVALID_RIGHT	Name doesn't denote receive rights.
- *		KERN_INVALID_VALUE	The input parameter values are out of bounds.
- *		KERN_FAILURE		The requested message was not found.
+ *		KERN_SUCCESS		Matching message found, out parameters
+ * set. KERN_INVALID_TASK	The space is null or dead. KERN_INVALID_NAME
+ *	The name doesn't denote a right. KERN_INVALID_RIGHT	Name doesn't
+ * denote receive rights. KERN_INVALID_VALUE	The input parameter values are
+ * out of bounds. KERN_FAILURE		The requested message was not found.
  */
 
-kern_return_t
-mach_port_peek(
-	ipc_space_t                     space,
-	mach_port_name_t                name,
-	mach_msg_trailer_type_t         trailer_type,
-	mach_port_seqno_t               *seqnop,
-	mach_msg_size_t                 *msg_sizep,
-	mach_msg_id_t                   *msg_idp,
-	mach_msg_trailer_info_t         trailer_infop,
-	mach_msg_type_number_t          *trailer_sizep)
-{
-	ipc_port_t port;
-	kern_return_t kr;
-	boolean_t found;
-	mach_msg_max_trailer_t max_trailer;
+kern_return_t mach_port_peek(ipc_space_t space, mach_port_name_t name,
+                             mach_msg_trailer_type_t trailer_type,
+                             mach_port_seqno_t *seqnop,
+                             mach_msg_size_t *msg_sizep, mach_msg_id_t *msg_idp,
+                             mach_msg_trailer_info_t trailer_infop,
+                             mach_msg_type_number_t *trailer_sizep) {
+  ipc_port_t port;
+  kern_return_t kr;
+  boolean_t found;
+  mach_msg_max_trailer_t max_trailer;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	/*
-	 * We don't allow anything greater than the audit trailer - to avoid
-	 * leaking the context pointer and to avoid variable-sized context issues.
-	 */
-	if (GET_RCV_ELEMENTS(trailer_type) > MACH_RCV_TRAILER_AUDIT ||
-	    REQUESTED_TRAILER_SIZE(TRUE, trailer_type) > *trailer_sizep) {
-		mach_port_guard_exception(name,
-		    MPG_PAYLOAD(MPG_FLAGS_INVALID_VALUE_PEEK, trailer_type, *trailer_sizep),
-		    kGUARD_EXC_INVALID_VALUE);
-		return KERN_INVALID_VALUE;
-	}
+  /*
+   * We don't allow anything greater than the audit trailer - to avoid
+   * leaking the context pointer and to avoid variable-sized context issues.
+   */
+  if (GET_RCV_ELEMENTS(trailer_type) > MACH_RCV_TRAILER_AUDIT ||
+      REQUESTED_TRAILER_SIZE(TRUE, trailer_type) > *trailer_sizep) {
+    mach_port_guard_exception(
+        name,
+        MPG_PAYLOAD(MPG_FLAGS_INVALID_VALUE_PEEK, trailer_type, *trailer_sizep),
+        kGUARD_EXC_INVALID_VALUE);
+    return KERN_INVALID_VALUE;
+  }
 
-	*trailer_sizep = REQUESTED_TRAILER_SIZE(TRUE, trailer_type);
+  *trailer_sizep = REQUESTED_TRAILER_SIZE(TRUE, trailer_type);
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		uint64_t payload = (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
-		unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME : kGUARD_EXC_INVALID_RIGHT;
-		mach_port_guard_exception(name, payload, reason);
-		return kr;
-	}
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    uint64_t payload =
+        (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
+    unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME
+                                                : kGUARD_EXC_INVALID_RIGHT;
+    mach_port_guard_exception(name, payload, reason);
+    return kr;
+  }
 
-	/* Port locked and active */
-	found = ipc_mqueue_peek_locked(&port->ip_messages, seqnop,
-	    msg_sizep, msg_idp, &max_trailer, NULL);
-	ip_mq_unlock(port);
+  /* Port locked and active */
+  found = ipc_mqueue_peek_locked(&port->ip_messages, seqnop, msg_sizep, msg_idp,
+                                 &max_trailer, NULL);
+  ip_mq_unlock(port);
 
-	if (found != TRUE) {
-		return KERN_FAILURE;
-	}
+  if (found != TRUE) {
+    return KERN_FAILURE;
+  }
 
-	max_trailer.msgh_seqno = *seqnop;
-	memcpy(trailer_infop, &max_trailer, *trailer_sizep);
+  max_trailer.msgh_seqno = *seqnop;
+  memcpy(trailer_infop, &max_trailer, *trailer_sizep);
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -1037,32 +972,28 @@ mach_port_peek(
  *		KERN_INVALID_RIGHT	Name doesn't denote receive rights.
  */
 
-kern_return_t
-mach_port_set_mscount(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_mscount_t     mscount)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+kern_return_t mach_port_set_mscount(ipc_space_t space, mach_port_name_t name,
+                                    mach_port_mscount_t mscount) {
+  ipc_port_t port;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
-	/* port is locked and active */
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
+  /* port is locked and active */
 
-	port->ip_mscount = mscount;
-	ip_mq_unlock(port);
-	return KERN_SUCCESS;
+  port->ip_mscount = mscount;
+  ip_mq_unlock(port);
+  return KERN_SUCCESS;
 }
 
 /*
@@ -1079,33 +1010,29 @@ mach_port_set_mscount(
  *		KERN_INVALID_RIGHT	Name doesn't denote receive rights.
  */
 
-kern_return_t
-mach_port_set_seqno(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_seqno_t       seqno)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+kern_return_t mach_port_set_seqno(ipc_space_t space, mach_port_name_t name,
+                                  mach_port_seqno_t seqno) {
+  ipc_port_t port;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
-	/* port is locked and active */
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
+  /* port is locked and active */
 
-	ipc_mqueue_set_seqno_locked(&port->ip_messages, seqno);
+  ipc_mqueue_set_seqno_locked(&port->ip_messages, seqno);
 
-	ip_mq_unlock(port);
-	return KERN_SUCCESS;
+  ip_mq_unlock(port);
+  return KERN_SUCCESS;
 }
 
 /*
@@ -1122,59 +1049,52 @@ mach_port_set_seqno(
  *		KERN_INVALID_RIGHT	Name doesn't denote receive rights.
  */
 
-kern_return_t
-mach_port_get_context(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_vm_address_t       *context)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+kern_return_t mach_port_get_context(ipc_space_t space, mach_port_name_t name,
+                                    mach_vm_address_t *context) {
+  ipc_port_t port;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* Port locked and active */
+  /* Port locked and active */
 
-	/* For strictly guarded ports, return empty context (which acts as guard) */
-	if (port->ip_strict_guard) {
-		*context = 0;
-	} else {
-		*context = port->ip_context;
-	}
+  /* For strictly guarded ports, return empty context (which acts as guard) */
+  if (port->ip_strict_guard) {
+    *context = 0;
+  } else {
+    *context = port->ip_context;
+  }
 
-	ip_mq_unlock(port);
-	return KERN_SUCCESS;
+  ip_mq_unlock(port);
+  return KERN_SUCCESS;
 }
 
-kern_return_t
-mach_port_get_context_from_user(
-	mach_port_t             port,
-	mach_port_name_t        name,
-	mach_vm_address_t       *context)
-{
-	kern_return_t kr;
+kern_return_t mach_port_get_context_from_user(mach_port_t port,
+                                              mach_port_name_t name,
+                                              mach_vm_address_t *context) {
+  kern_return_t kr;
 
-	ipc_space_t space = convert_port_to_space_read_no_eval(port);
+  ipc_space_t space = convert_port_to_space_read_no_eval(port);
 
-	if (space == IPC_SPACE_NULL) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (space == IPC_SPACE_NULL) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	kr = mach_port_get_context(space, name, context);
+  kr = mach_port_get_context(space, name, context);
 
-	ipc_space_release(space);
-	return kr;
+  ipc_space_release(space);
+  return kr;
 }
 
 /*
@@ -1191,43 +1111,39 @@ mach_port_get_context_from_user(
  *		KERN_INVALID_RIGHT	Name doesn't denote receive rights.
  */
 
-kern_return_t
-mach_port_set_context(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_vm_address_t       context)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+kern_return_t mach_port_set_context(ipc_space_t space, mach_port_name_t name,
+                                    mach_vm_address_t context) {
+  ipc_port_t port;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* port is locked and active */
-	if (port->ip_strict_guard) {
-		uint64_t portguard = port->ip_context;
-		ip_mq_unlock(port);
-		/* For strictly guarded ports, disallow overwriting context; Raise Exception */
-		mach_port_guard_exception(name, portguard, kGUARD_EXC_SET_CONTEXT);
-		return KERN_INVALID_ARGUMENT;
-	}
+  /* port is locked and active */
+  if (port->ip_strict_guard) {
+    uint64_t portguard = port->ip_context;
+    ip_mq_unlock(port);
+    /* For strictly guarded ports, disallow overwriting context; Raise Exception
+     */
+    mach_port_guard_exception(name, portguard, kGUARD_EXC_SET_CONTEXT);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	port->ip_context = context;
+  port->ip_context = context;
 
-	ip_mq_unlock(port);
-	return KERN_SUCCESS;
+  ip_mq_unlock(port);
+  return KERN_SUCCESS;
 }
-
 
 /*
  *	Routine:	mach_port_get_set_status [kernel call]
@@ -1245,137 +1161,127 @@ mach_port_set_context(
  *		KERN_RESOURCE_SHORTAGE	Couldn't allocate memory.
  */
 
-kern_return_t
-mach_port_get_set_status(
-	ipc_space_t                     space,
-	mach_port_name_t                name,
-	mach_port_name_t                **members,
-	mach_msg_type_number_t          *membersCnt)
-{
-	__block ipc_entry_num_t actual;         /* this many members */
-	ipc_entry_num_t maxnames;       /* space for this many members */
-	kern_return_t kr;
+kern_return_t mach_port_get_set_status(ipc_space_t space, mach_port_name_t name,
+                                       mach_port_name_t **members,
+                                       mach_msg_type_number_t *membersCnt) {
+  __block ipc_entry_num_t actual; /* this many members */
+  ipc_entry_num_t maxnames;       /* space for this many members */
+  kern_return_t kr;
 
-	vm_size_t size;         /* size of allocated memory */
-	vm_offset_t addr;       /* allocated memory */
-	vm_map_copy_t memory;   /* copied-in memory */
+  vm_size_t size;       /* size of allocated memory */
+  vm_offset_t addr;     /* allocated memory */
+  vm_map_copy_t memory; /* copied-in memory */
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	size = VM_MAP_PAGE_SIZE(ipc_kernel_map);        /* initial guess */
-	actual = 0;
+  size = VM_MAP_PAGE_SIZE(ipc_kernel_map); /* initial guess */
+  actual = 0;
 
-	for (;;) {
-		mach_port_name_t *names;
-		ipc_object_t psobj;
-		ipc_pset_t pset;
+  for (;;) {
+    mach_port_name_t *names;
+    ipc_object_t psobj;
+    ipc_pset_t pset;
 
-		kr = kmem_alloc(ipc_kernel_map, &addr, size,
-		    KMA_DATA, VM_KERN_MEMORY_IPC);
-		if (kr != KERN_SUCCESS) {
-			return KERN_RESOURCE_SHORTAGE;
-		}
+    kr = kmem_alloc(ipc_kernel_map, &addr, size, KMA_DATA, VM_KERN_MEMORY_IPC);
+    if (kr != KERN_SUCCESS) {
+      return KERN_RESOURCE_SHORTAGE;
+    }
 
-		kr = ipc_object_translate(space, name, MACH_PORT_RIGHT_PORT_SET, &psobj);
-		if (kr != KERN_SUCCESS) {
-			kmem_free(ipc_kernel_map, addr, size);
-			return kr;
-		}
+    kr = ipc_object_translate(space, name, MACH_PORT_RIGHT_PORT_SET, &psobj);
+    if (kr != KERN_SUCCESS) {
+      kmem_free(ipc_kernel_map, addr, size);
+      return kr;
+    }
 
-		/* just use a portset reference from here on out */
-		pset = ips_object_to_pset(psobj);
-		names = (mach_port_name_t *)addr;
-		maxnames = (ipc_entry_num_t)(size / sizeof(mach_port_name_t));
+    /* just use a portset reference from here on out */
+    pset = ips_object_to_pset(psobj);
+    names = (mach_port_name_t *)addr;
+    maxnames = (ipc_entry_num_t)(size / sizeof(mach_port_name_t));
 
-		waitq_set_foreach_member_locked(&pset->ips_wqset, ^(struct waitq *wq){
-			if (actual < maxnames) {
-			        names[actual] = ip_get_receiver_name(ip_from_waitq(wq));
-			}
-			actual++;
-		});
+    waitq_set_foreach_member_locked(&pset->ips_wqset, ^(struct waitq *wq) {
+      if (actual < maxnames) {
+        names[actual] = ip_get_receiver_name(ip_from_waitq(wq));
+      }
+      actual++;
+    });
 
-		/* release the portset reference */
-		ips_mq_unlock(pset);
+    /* release the portset reference */
+    ips_mq_unlock(pset);
 
-		if (actual <= maxnames) {
-			break;
-		}
+    if (actual <= maxnames) {
+      break;
+    }
 
-		/* didn't have enough memory; allocate more */
-		kmem_free(ipc_kernel_map, addr, size);
-		size = vm_map_round_page(actual * sizeof(mach_port_name_t),
-		    VM_MAP_PAGE_MASK(ipc_kernel_map)) +
-		    VM_MAP_PAGE_SIZE(ipc_kernel_map);
-		actual = 0;
-	}
+    /* didn't have enough memory; allocate more */
+    kmem_free(ipc_kernel_map, addr, size);
+    size = vm_map_round_page(actual * sizeof(mach_port_name_t),
+                             VM_MAP_PAGE_MASK(ipc_kernel_map)) +
+           VM_MAP_PAGE_SIZE(ipc_kernel_map);
+    actual = 0;
+  }
 
-	if (actual == 0) {
-		memory = VM_MAP_COPY_NULL;
+  if (actual == 0) {
+    memory = VM_MAP_COPY_NULL;
 
-		kmem_free(ipc_kernel_map, addr, size);
-	} else {
-		vm_size_t size_used;
-		vm_size_t vm_size_used;
+    kmem_free(ipc_kernel_map, addr, size);
+  } else {
+    vm_size_t size_used;
+    vm_size_t vm_size_used;
 
-		qsort((void *)addr, actual, sizeof(mach_port_name_t),
-		    mach_port_name_cmp);
+    qsort((void *)addr, actual, sizeof(mach_port_name_t), mach_port_name_cmp);
 
-		size_used = actual * sizeof(mach_port_name_t);
-		vm_size_used = vm_map_round_page(size_used,
-		    VM_MAP_PAGE_MASK(ipc_kernel_map));
+    size_used = actual * sizeof(mach_port_name_t);
+    vm_size_used =
+        vm_map_round_page(size_used, VM_MAP_PAGE_MASK(ipc_kernel_map));
 
-		if (size_used < vm_size_used) {
-			bzero((char *)addr + size_used, vm_size_used - size_used);
-		}
+    if (size_used < vm_size_used) {
+      bzero((char *)addr + size_used, vm_size_used - size_used);
+    }
 
-		/*
-		 *	Make used memory pageable and get it into
-		 *	copied-in form.  Free any unused memory.
-		 */
+    /*
+     *	Make used memory pageable and get it into
+     *	copied-in form.  Free any unused memory.
+     */
 
-		kr = vm_map_unwire(ipc_kernel_map, addr, addr + vm_size_used, FALSE);
-		assert(kr == KERN_SUCCESS);
+    kr = vm_map_unwire(ipc_kernel_map, addr, addr + vm_size_used, FALSE);
+    assert(kr == KERN_SUCCESS);
 
-		kr = vm_map_copyin(ipc_kernel_map, (vm_map_address_t)addr,
-		    (vm_map_size_t)size_used, TRUE, &memory);
-		assert(kr == KERN_SUCCESS);
+    kr = vm_map_copyin(ipc_kernel_map, (vm_map_address_t)addr,
+                       (vm_map_size_t)size_used, TRUE, &memory);
+    assert(kr == KERN_SUCCESS);
 
-		if (vm_size_used != size) {
-			kmem_free(ipc_kernel_map,
-			    addr + vm_size_used, size - vm_size_used);
-		}
-	}
+    if (vm_size_used != size) {
+      kmem_free(ipc_kernel_map, addr + vm_size_used, size - vm_size_used);
+    }
+  }
 
-	*members = (mach_port_name_t *) memory;
-	*membersCnt = actual;
-	return KERN_SUCCESS;
+  *members = (mach_port_name_t *)memory;
+  *membersCnt = actual;
+  return KERN_SUCCESS;
 }
 
 kern_return_t
-mach_port_get_set_status_from_user(
-	mach_port_t                     port,
-	mach_port_name_t                name,
-	mach_port_name_t                **members,
-	mach_msg_type_number_t          *membersCnt)
-{
-	kern_return_t kr;
+mach_port_get_set_status_from_user(mach_port_t port, mach_port_name_t name,
+                                   mach_port_name_t **members,
+                                   mach_msg_type_number_t *membersCnt) {
+  kern_return_t kr;
 
-	ipc_space_t space = convert_port_to_space_read_no_eval(port);
+  ipc_space_t space = convert_port_to_space_read_no_eval(port);
 
-	if (space == IPC_SPACE_NULL) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (space == IPC_SPACE_NULL) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	kr = mach_port_get_set_status(space, name, members, membersCnt);
+  kr = mach_port_get_set_status(space, name, members, membersCnt);
 
-	ipc_space_release(space);
-	return kr;
+  ipc_space_release(space);
+  return kr;
 }
 
 /*
@@ -1399,67 +1305,62 @@ mach_port_get_set_status_from_user(
  *			After is MACH_PORT_NULL and Member isn't in a port set.
  */
 
-kern_return_t
-mach_port_move_member(
-	ipc_space_t             space,
-	mach_port_name_t        member,
-	mach_port_name_t        after)
-{
-	ipc_port_t port = IP_NULL;
-	ipc_pset_t nset = IPS_NULL;
-	kern_return_t kr;
-	waitq_link_list_t free_l = { };
-	waitq_link_t link = WQL_NULL;
-	struct waitq_set *keep_waitq_set = NULL;
+kern_return_t mach_port_move_member(ipc_space_t space, mach_port_name_t member,
+                                    mach_port_name_t after) {
+  ipc_port_t port = IP_NULL;
+  ipc_pset_t nset = IPS_NULL;
+  kern_return_t kr;
+  waitq_link_list_t free_l = {};
+  waitq_link_t link = WQL_NULL;
+  struct waitq_set *keep_waitq_set = NULL;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(member)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(member)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	if (after == MACH_PORT_DEAD) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (after == MACH_PORT_DEAD) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	if (after != MACH_PORT_NULL) {
-		link = waitq_link_alloc(WQT_PORT_SET);
-		kr = ipc_object_translate_port_pset(space,
-		    member, &port, after, &nset);
-	} else {
-		kr = ipc_port_translate_receive(space, member, &port);
-	}
-	if (kr != KERN_SUCCESS) {
-		goto done;
-	}
+  if (after != MACH_PORT_NULL) {
+    link = waitq_link_alloc(WQT_PORT_SET);
+    kr = ipc_object_translate_port_pset(space, member, &port, after, &nset);
+  } else {
+    kr = ipc_port_translate_receive(space, member, &port);
+  }
+  if (kr != KERN_SUCCESS) {
+    goto done;
+  }
 
-	if (after != MACH_PORT_NULL) {
-		ipc_mqueue_add_locked(&port->ip_messages, nset, &link);
-		ips_mq_unlock(nset);
+  if (after != MACH_PORT_NULL) {
+    ipc_mqueue_add_locked(&port->ip_messages, nset, &link);
+    ips_mq_unlock(nset);
 
-		keep_waitq_set = &nset->ips_wqset;
-	} else if (!ip_in_pset(port)) {
-		kr = KERN_NOT_IN_SET;
-	}
+    keep_waitq_set = &nset->ips_wqset;
+  } else if (!ip_in_pset(port)) {
+    kr = KERN_NOT_IN_SET;
+  }
 
-	/*
-	 * waitq_unlink_all_locked() doesn't dereference `keep_waitq_set,
-	 * but we wouldn't want an ABA issue. Fortunately, while `port`
-	 * is locked and linked to `nset`, then `nset` can't be reused/freed.
-	 */
-	waitq_unlink_all_locked(&port->ip_waitq, keep_waitq_set, &free_l);
+  /*
+   * waitq_unlink_all_locked() doesn't dereference `keep_waitq_set,
+   * but we wouldn't want an ABA issue. Fortunately, while `port`
+   * is locked and linked to `nset`, then `nset` can't be reused/freed.
+   */
+  waitq_unlink_all_locked(&port->ip_waitq, keep_waitq_set, &free_l);
 
-	ip_mq_unlock(port);
+  ip_mq_unlock(port);
 
-	waitq_link_free_list(WQT_PORT_SET, &free_l);
+  waitq_link_free_list(WQT_PORT_SET, &free_l);
 done:
-	if (link.wqlh) {
-		waitq_link_free(WQT_PORT_SET, link);
-	}
+  if (link.wqlh) {
+    waitq_link_free(WQT_PORT_SET, link);
+  }
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -1498,11 +1399,10 @@ done:
  *		KERN_INVALID_CAPABILITY	The notify port is dead.
  *	MACH_NOTIFY_PORT_DESTROYED:
  *		KERN_INVALID_VALUE	Sync isn't zero.
- *		KERN_FAILURE		Re-registering for this notification or registering for a reply port.
- *							If registering for this notification is not allowed on a service port.
- * MACH_NOTIFY_NO_SENDERS:
- *              KERN_FAILURE		Registering for a reply port.
- *	MACH_NOTIFY_DEAD_NAME:
+ *		KERN_FAILURE		Re-registering for this notification or
+ * registering for a reply port. If registering for this notification is not
+ * allowed on a service port. MACH_NOTIFY_NO_SENDERS: KERN_FAILURE
+ *	Registering for a reply port. MACH_NOTIFY_DEAD_NAME:
  *		KERN_RESOURCE_SHORTAGE	Couldn't allocate memory.
  *		KERN_INVALID_ARGUMENT	Name denotes dead name, but
  *			sync is zero or notify is IP_NULL.
@@ -1511,120 +1411,115 @@ done:
  */
 
 kern_return_t
-mach_port_request_notification(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_msg_id_t           id,
-	mach_port_mscount_t     sync,
-	ipc_port_t              notify,
-	ipc_port_t              *previousp)
-{
-	kern_return_t kr;
+mach_port_request_notification(ipc_space_t space, mach_port_name_t name,
+                               mach_msg_id_t id, mach_port_mscount_t sync,
+                               ipc_port_t notify, ipc_port_t *previousp) {
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (notify == IP_DEAD) {
-		return KERN_INVALID_CAPABILITY;
-	}
+  if (notify == IP_DEAD) {
+    return KERN_INVALID_CAPABILITY;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	switch (id) {
-	case MACH_NOTIFY_PORT_DESTROYED: {
-		ipc_port_t port;
+  switch (id) {
+  case MACH_NOTIFY_PORT_DESTROYED: {
+    ipc_port_t port;
 
-		if (sync != 0) {
-			return KERN_INVALID_VALUE;
-		}
+    if (sync != 0) {
+      return KERN_INVALID_VALUE;
+    }
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
 
-		kr = ipc_allow_register_pd_notification(port, notify);
-		if (kr != KERN_SUCCESS) {
-			ip_mq_unlock(port);
-			return kr;
-		}
+    kr = ipc_allow_register_pd_notification(port, notify);
+    if (kr != KERN_SUCCESS) {
+      ip_mq_unlock(port);
+      return kr;
+    }
 
-		if (port->ip_has_watchport) {
-			port->ip_twe->twe_pdrequest = notify;
-		} else {
-			port->ip_pdrequest = notify;
-		}
-		ip_mq_unlock(port);
-		*previousp = IP_NULL;
-		break;
-	}
+    if (port->ip_has_watchport) {
+      port->ip_twe->twe_pdrequest = notify;
+    } else {
+      port->ip_pdrequest = notify;
+    }
+    ip_mq_unlock(port);
+    *previousp = IP_NULL;
+    break;
+  }
 
-	case MACH_NOTIFY_NO_SENDERS: {
-		ipc_object_label_t label;
-		mach_port_mscount_t mscount;
-		ipc_port_t port;
+  case MACH_NOTIFY_NO_SENDERS: {
+    ipc_object_label_t label;
+    mach_port_mscount_t mscount;
+    ipc_port_t port;
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
 
-		label = ip_label_get(port);
+    label = ip_label_get(port);
 
-		if (!ipc_policy(label)->pol_notif_no_senders) {
-			mach_port_guard_exception(label.io_type, id,
-			    kGUARD_EXC_INVALID_NOTIFICATION_REQ);
-			ip_mq_unlock_label_put(port, &label);
-			return KERN_INVALID_RIGHT;
-		}
+    if (!ipc_policy(label)->pol_notif_no_senders) {
+      mach_port_guard_exception(label.io_type, id,
+                                kGUARD_EXC_INVALID_NOTIFICATION_REQ);
+      ip_mq_unlock_label_put(port, &label);
+      return KERN_INVALID_RIGHT;
+    }
 
-		*previousp = port->ip_nsrequest;
-		mscount    = port->ip_mscount;
+    *previousp = port->ip_nsrequest;
+    mscount = port->ip_mscount;
 
-		if (port->ip_srights == 0 && sync <= mscount && IP_VALID(notify)) {
-			port->ip_nsrequest = IP_NULL;
-		} else {
-			port->ip_nsrequest = notify;
-			notify = IP_NULL;
-		}
+    if (port->ip_srights == 0 && sync <= mscount && IP_VALID(notify)) {
+      port->ip_nsrequest = IP_NULL;
+    } else {
+      port->ip_nsrequest = notify;
+      notify = IP_NULL;
+    }
 
-		ip_mq_unlock_label_put(port, &label);
+    ip_mq_unlock_label_put(port, &label);
 
-		if (notify) {
-			ipc_notify_no_senders_mqueue(notify, mscount);
-		}
+    if (notify) {
+      ipc_notify_no_senders_mqueue(notify, mscount);
+    }
 
-		break;
-	}
+    break;
+  }
 
-	case MACH_NOTIFY_SEND_POSSIBLE:
-	case MACH_NOTIFY_DEAD_NAME: {
-		ipc_port_request_opts_t opts = 0;
+  case MACH_NOTIFY_SEND_POSSIBLE:
+  case MACH_NOTIFY_DEAD_NAME: {
+    ipc_port_request_opts_t opts = 0;
 
-		if (id == MACH_NOTIFY_SEND_POSSIBLE) {
-			opts |= IPR_SOR_SPREQ_MASK;
-			if (sync) {
-				opts |= IPR_SOR_SPARM_MASK;
-			}
-		}
+    if (id == MACH_NOTIFY_SEND_POSSIBLE) {
+      opts |= IPR_SOR_SPREQ_MASK;
+      if (sync) {
+        opts |= IPR_SOR_SPARM_MASK;
+      }
+    }
 
-		kr = ipc_right_request_alloc(space, name, opts, notify, id, previousp);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		break;
-	}
+    kr = ipc_right_request_alloc(space, name, opts, notify, id, previousp);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    break;
+  }
 
-	default:
-		return KERN_INVALID_VALUE;
-	}
+  default:
+    return KERN_INVALID_VALUE;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -1648,27 +1543,22 @@ mach_port_request_notification(
  *		KERN_RESOURCE_SHORTAGE	Couldn't allocate memory.
  */
 
-kern_return_t
-mach_port_insert_right(
-	ipc_space_t                     space,
-	mach_port_name_t                name,
-	ipc_port_t                      poly,
-	mach_msg_type_name_t            polyPoly)
-{
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+kern_return_t mach_port_insert_right(ipc_space_t space, mach_port_name_t name,
+                                     ipc_port_t poly,
+                                     mach_msg_type_name_t polyPoly) {
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name) ||
-	    !MACH_MSG_TYPE_PORT_ANY_RIGHT(polyPoly)) {
-		return KERN_INVALID_VALUE;
-	}
+  if (!MACH_PORT_VALID(name) || !MACH_MSG_TYPE_PORT_ANY_RIGHT(polyPoly)) {
+    return KERN_INVALID_VALUE;
+  }
 
-	if (!IP_VALID(poly)) {
-		return KERN_INVALID_CAPABILITY;
-	}
+  if (!IP_VALID(poly)) {
+    return KERN_INVALID_CAPABILITY;
+  }
 
-	return ipc_object_copyout_name(space, poly, polyPoly, name);
+  return ipc_object_copyout_name(space, poly, polyPoly, name);
 }
 
 /*
@@ -1687,42 +1577,40 @@ mach_port_insert_right(
  *		KERN_INVALID_RIGHT	Name doesn't denote appropriate right.
  */
 
-kern_return_t
-mach_port_extract_right(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_msg_type_name_t    msgt_name,
-	ipc_port_t              *poly,
-	mach_msg_type_name_t    *polyPoly)
-{
-	kern_return_t kr;
+kern_return_t mach_port_extract_right(ipc_space_t space, mach_port_name_t name,
+                                      mach_msg_type_name_t msgt_name,
+                                      ipc_port_t *poly,
+                                      mach_msg_type_name_t *polyPoly) {
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_MSG_TYPE_PORT_ANY(msgt_name)) {
-		return KERN_INVALID_VALUE;
-	}
+  if (!MACH_MSG_TYPE_PORT_ANY(msgt_name)) {
+    return KERN_INVALID_VALUE;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		/*
-		 * really should copy out a dead name, if it is a send or
-		 * send-once right being copied, but instead return an
-		 * error for now.
-		 */
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    /*
+     * really should copy out a dead name, if it is a send or
+     * send-once right being copied, but instead return an
+     * error for now.
+     */
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_object_copyin(space, name, msgt_name,
-	    (space == current_space() && msgt_name == MACH_MSG_TYPE_COPY_SEND) ?
-	    IPC_OBJECT_COPYIN_FLAGS_ALLOW_IMMOVABLE_SEND : IPC_OBJECT_COPYIN_FLAGS_NONE,
-	    IPC_COPYIN_KERNEL_DESTINATION, NULL, poly);
+  kr = ipc_object_copyin(
+      space, name, msgt_name,
+      (space == current_space() && msgt_name == MACH_MSG_TYPE_COPY_SEND)
+          ? IPC_OBJECT_COPYIN_FLAGS_ALLOW_IMMOVABLE_SEND
+          : IPC_OBJECT_COPYIN_FLAGS_NONE,
+      IPC_COPYIN_KERNEL_DESTINATION, NULL, poly);
 
-	if (kr == KERN_SUCCESS) {
-		*polyPoly = ipc_object_copyin_type(msgt_name);
-	}
-	return kr;
+  if (kr == KERN_SUCCESS) {
+    *polyPoly = ipc_object_copyin_type(msgt_name);
+  }
+  return kr;
 }
 
 /*
@@ -1735,392 +1623,377 @@ mach_port_extract_right(
  *	Returns:
  *		None.
  */
-static void
-mach_port_get_status_helper(
-	ipc_port_t              port,
-	mach_port_status_t      *statusp)
-{
-	/* don't leak set IDs, just indicate that the port is in one or not */
-	statusp->mps_pset = ip_in_pset(port);
-	statusp->mps_seqno = port->ip_messages.imq_seqno;
-	statusp->mps_qlimit = port->ip_messages.imq_qlimit;
-	statusp->mps_msgcount = port->ip_messages.imq_msgcount;
+static void mach_port_get_status_helper(ipc_port_t port,
+                                        mach_port_status_t *statusp) {
+  /* don't leak set IDs, just indicate that the port is in one or not */
+  statusp->mps_pset = ip_in_pset(port);
+  statusp->mps_seqno = port->ip_messages.imq_seqno;
+  statusp->mps_qlimit = port->ip_messages.imq_qlimit;
+  statusp->mps_msgcount = port->ip_messages.imq_msgcount;
 
-	statusp->mps_mscount = port->ip_mscount;
-	statusp->mps_sorights = port->ip_sorights;
-	statusp->mps_srights = port->ip_srights > 0;
-	statusp->mps_pdrequest = ipc_port_has_prdrequest(port);
-	if (!ip_is_kobject(port)) {
-		statusp->mps_nsrequest = port->ip_nsrequest != IP_NULL;
-	}
-	statusp->mps_flags = 0;
-	if (port->ip_impdonation) {
-		statusp->mps_flags |= MACH_PORT_STATUS_FLAG_IMP_DONATION;
-		if (port->ip_tempowner) {
-			statusp->mps_flags |= MACH_PORT_STATUS_FLAG_TEMPOWNER;
-			if (IIT_NULL != ip_get_imp_task(port)) {
-				statusp->mps_flags |= MACH_PORT_STATUS_FLAG_TASKPTR;
-			}
-		}
-	}
-	if (port->ip_guarded) {
-		statusp->mps_flags |= MACH_PORT_STATUS_FLAG_GUARDED;
-		if (port->ip_strict_guard) {
-			statusp->mps_flags |= MACH_PORT_STATUS_FLAG_STRICT_GUARD;
-		}
-		if (ip_is_immovable_receive(port)) {
-			statusp->mps_flags |= MACH_PORT_STATUS_FLAG_GUARD_IMMOVABLE_RECEIVE;
-		}
-	}
+  statusp->mps_mscount = port->ip_mscount;
+  statusp->mps_sorights = port->ip_sorights;
+  statusp->mps_srights = port->ip_srights > 0;
+  statusp->mps_pdrequest = ipc_port_has_prdrequest(port);
+  if (!ip_is_kobject(port)) {
+    statusp->mps_nsrequest = port->ip_nsrequest != IP_NULL;
+  }
+  statusp->mps_flags = 0;
+  if (port->ip_impdonation) {
+    statusp->mps_flags |= MACH_PORT_STATUS_FLAG_IMP_DONATION;
+    if (port->ip_tempowner) {
+      statusp->mps_flags |= MACH_PORT_STATUS_FLAG_TEMPOWNER;
+      if (IIT_NULL != ip_get_imp_task(port)) {
+        statusp->mps_flags |= MACH_PORT_STATUS_FLAG_TASKPTR;
+      }
+    }
+  }
+  if (port->ip_guarded) {
+    statusp->mps_flags |= MACH_PORT_STATUS_FLAG_GUARDED;
+    if (port->ip_strict_guard) {
+      statusp->mps_flags |= MACH_PORT_STATUS_FLAG_STRICT_GUARD;
+    }
+    if (ip_is_immovable_receive(port)) {
+      statusp->mps_flags |= MACH_PORT_STATUS_FLAG_GUARD_IMMOVABLE_RECEIVE;
+    }
+  }
+}
+
+kern_return_t mach_port_get_attributes(ipc_space_t space, mach_port_name_t name,
+                                       int flavor, mach_port_info_t info,
+                                       mach_msg_type_number_t *count) {
+  ipc_port_t port;
+  kern_return_t kr;
+
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
+
+  switch (flavor) {
+  case MACH_PORT_LIMITS_INFO: {
+    mach_port_limits_t *lp = (mach_port_limits_t *)info;
+
+    if (*count < MACH_PORT_LIMITS_INFO_COUNT) {
+      return KERN_FAILURE;
+    }
+
+    if (!MACH_PORT_VALID(name)) {
+      *count = 0;
+      break;
+    }
+
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
+
+    lp->mpl_qlimit = port->ip_messages.imq_qlimit;
+    *count = MACH_PORT_LIMITS_INFO_COUNT;
+    ip_mq_unlock(port);
+    break;
+  }
+
+  case MACH_PORT_RECEIVE_STATUS: {
+    mach_port_status_t *statusp = (mach_port_status_t *)info;
+
+    if (*count < MACH_PORT_RECEIVE_STATUS_COUNT) {
+      return KERN_FAILURE;
+    }
+
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
+
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
+    mach_port_get_status_helper(port, statusp);
+    *count = MACH_PORT_RECEIVE_STATUS_COUNT;
+    ip_mq_unlock(port);
+    break;
+  }
+
+  case MACH_PORT_DNREQUESTS_SIZE: {
+    ipc_port_request_table_t table;
+
+    if (*count < MACH_PORT_DNREQUESTS_SIZE_COUNT) {
+      return KERN_FAILURE;
+    }
+
+    if (!MACH_PORT_VALID(name)) {
+      *(int *)info = 0;
+      break;
+    }
+
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
+
+    table = port->ip_requests;
+    if (table == NULL) {
+      *(int *)info = 0;
+    } else {
+      *(int *)info = (int)ipc_port_request_table_count(table);
+    }
+    *count = MACH_PORT_DNREQUESTS_SIZE_COUNT;
+    ip_mq_unlock(port);
+    break;
+  }
+
+  case MACH_PORT_INFO_EXT: {
+    mach_port_info_ext_t *mp_info = (mach_port_info_ext_t *)info;
+    if (*count < MACH_PORT_INFO_EXT_COUNT) {
+      return KERN_FAILURE;
+    }
+
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
+
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
+    mach_port_get_status_helper(port, &mp_info->mpie_status);
+    mp_info->mpie_boost_cnt = port->ip_impcount;
+    *count = MACH_PORT_INFO_EXT_COUNT;
+    ip_mq_unlock(port);
+    break;
+  }
+
+  case MACH_PORT_SERVICE_THROTTLED: {
+    boolean_t *is_throttled = info;
+    ipc_object_label_t label;
+
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
+
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
+
+    label = ip_label_get(port);
+    if (ip_is_any_service_port_type(label.io_type)) {
+      *is_throttled = label.iol_service->ispl_throttled;
+      *count = MACH_PORT_SERVICE_THROTTLED_COUNT;
+    } else {
+      kr = KERN_INVALID_CAPABILITY;
+    }
+
+    ip_mq_unlock_label_put(port, &label);
+    return kr;
+  }
+
+  default:
+    return KERN_INVALID_ARGUMENT;
+    /*NOTREACHED*/
+  }
+
+  return KERN_SUCCESS;
 }
 
 kern_return_t
-mach_port_get_attributes(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	int                     flavor,
-	mach_port_info_t        info,
-	mach_msg_type_number_t  *count)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+mach_port_get_attributes_from_user(mach_port_t port, mach_port_name_t name,
+                                   int flavor, mach_port_info_t info,
+                                   mach_msg_type_number_t *count) {
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  ipc_space_t space = convert_port_to_space_read_no_eval(port);
 
-	switch (flavor) {
-	case MACH_PORT_LIMITS_INFO: {
-		mach_port_limits_t *lp = (mach_port_limits_t *)info;
+  if (space == IPC_SPACE_NULL) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-		if (*count < MACH_PORT_LIMITS_INFO_COUNT) {
-			return KERN_FAILURE;
-		}
+  kr = mach_port_get_attributes(space, name, flavor, info, count);
 
-		if (!MACH_PORT_VALID(name)) {
-			*count = 0;
-			break;
-		}
-
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-
-		lp->mpl_qlimit = port->ip_messages.imq_qlimit;
-		*count = MACH_PORT_LIMITS_INFO_COUNT;
-		ip_mq_unlock(port);
-		break;
-	}
-
-	case MACH_PORT_RECEIVE_STATUS: {
-		mach_port_status_t *statusp = (mach_port_status_t *)info;
-
-		if (*count < MACH_PORT_RECEIVE_STATUS_COUNT) {
-			return KERN_FAILURE;
-		}
-
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
-
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-		mach_port_get_status_helper(port, statusp);
-		*count = MACH_PORT_RECEIVE_STATUS_COUNT;
-		ip_mq_unlock(port);
-		break;
-	}
-
-	case MACH_PORT_DNREQUESTS_SIZE: {
-		ipc_port_request_table_t table;
-
-		if (*count < MACH_PORT_DNREQUESTS_SIZE_COUNT) {
-			return KERN_FAILURE;
-		}
-
-		if (!MACH_PORT_VALID(name)) {
-			*(int *)info = 0;
-			break;
-		}
-
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-
-		table = port->ip_requests;
-		if (table == NULL) {
-			*(int *)info = 0;
-		} else {
-			*(int *)info = (int)ipc_port_request_table_count(table);
-		}
-		*count = MACH_PORT_DNREQUESTS_SIZE_COUNT;
-		ip_mq_unlock(port);
-		break;
-	}
-
-	case MACH_PORT_INFO_EXT: {
-		mach_port_info_ext_t *mp_info = (mach_port_info_ext_t *)info;
-		if (*count < MACH_PORT_INFO_EXT_COUNT) {
-			return KERN_FAILURE;
-		}
-
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
-
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-		mach_port_get_status_helper(port, &mp_info->mpie_status);
-		mp_info->mpie_boost_cnt = port->ip_impcount;
-		*count = MACH_PORT_INFO_EXT_COUNT;
-		ip_mq_unlock(port);
-		break;
-	}
-
-	case MACH_PORT_SERVICE_THROTTLED: {
-		boolean_t *is_throttled = info;
-		ipc_object_label_t label;
-
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
-
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-
-		label = ip_label_get(port);
-		if (ip_is_any_service_port_type(label.io_type)) {
-			*is_throttled = label.iol_service->ispl_throttled;
-			*count = MACH_PORT_SERVICE_THROTTLED_COUNT;
-		} else {
-			kr = KERN_INVALID_CAPABILITY;
-		}
-
-		ip_mq_unlock_label_put(port, &label);
-		return kr;
-	}
-
-	default:
-		return KERN_INVALID_ARGUMENT;
-		/*NOTREACHED*/
-	}
-
-	return KERN_SUCCESS;
+  ipc_space_release(space);
+  return kr;
 }
 
-kern_return_t
-mach_port_get_attributes_from_user(
-	mach_port_t             port,
-	mach_port_name_t        name,
-	int                     flavor,
-	mach_port_info_t        info,
-	mach_msg_type_number_t  *count)
-{
-	kern_return_t kr;
+kern_return_t mach_port_set_attributes(ipc_space_t space, mach_port_name_t name,
+                                       int flavor, mach_port_info_t info,
+                                       mach_msg_type_number_t count) {
+  ipc_port_t port;
+  kern_return_t kr;
 
-	ipc_space_t space = convert_port_to_space_read_no_eval(port);
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (space == IPC_SPACE_NULL) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  switch (flavor) {
+  case MACH_PORT_LIMITS_INFO: {
+    mach_port_limits_t *mplp = (mach_port_limits_t *)info;
 
-	kr = mach_port_get_attributes(space, name, flavor, info, count);
+    if (count < MACH_PORT_LIMITS_INFO_COUNT) {
+      return KERN_FAILURE;
+    }
 
-	ipc_space_release(space);
-	return kr;
-}
+    if (mplp->mpl_qlimit > MACH_PORT_QLIMIT_MAX) {
+      return KERN_INVALID_VALUE;
+    }
 
-kern_return_t
-mach_port_set_attributes(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	int                     flavor,
-	mach_port_info_t        info,
-	mach_msg_type_number_t  count)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
 
-	switch (flavor) {
-	case MACH_PORT_LIMITS_INFO: {
-		mach_port_limits_t *mplp = (mach_port_limits_t *)info;
+    ipc_mqueue_set_qlimit_locked(&port->ip_messages, mplp->mpl_qlimit);
+    ip_mq_unlock(port);
+    break;
+  }
+  case MACH_PORT_DNREQUESTS_SIZE: {
+    if (count < MACH_PORT_DNREQUESTS_SIZE_COUNT) {
+      return KERN_FAILURE;
+    }
 
-		if (count < MACH_PORT_LIMITS_INFO_COUNT) {
-			return KERN_FAILURE;
-		}
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
 
-		if (mplp->mpl_qlimit > MACH_PORT_QLIMIT_MAX) {
-			return KERN_INVALID_VALUE;
-		}
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
+    ip_mq_unlock(port);
+    break;
+  }
+  case MACH_PORT_TEMPOWNER: {
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
 
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
+    ipc_importance_task_t release_imp_task = IIT_NULL;
+    natural_t assertcnt = 0;
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
 
-		ipc_mqueue_set_qlimit_locked(&port->ip_messages, mplp->mpl_qlimit);
-		ip_mq_unlock(port);
-		break;
-	}
-	case MACH_PORT_DNREQUESTS_SIZE: {
-		if (count < MACH_PORT_DNREQUESTS_SIZE_COUNT) {
-			return KERN_FAILURE;
-		}
+    /*
+     * don't allow temp-owner importance donation if user
+     * associated it with a kobject already (timer, host_notify target),
+     * or is a special reply port.
+     */
+    if (ip_is_kobject(port) || ip_is_special_reply_port(port)) {
+      ip_mq_unlock(port);
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
+    if (port->ip_tempowner != 0) {
+      if (IIT_NULL != ip_get_imp_task(port)) {
+        release_imp_task = ip_get_imp_task(port);
+        port->ip_imp_task = IIT_NULL;
+        assertcnt = port->ip_impcount;
+      }
+    } else {
+      assertcnt = port->ip_impcount;
+    }
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-		ip_mq_unlock(port);
-		break;
-	}
-	case MACH_PORT_TEMPOWNER: {
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
-
-		ipc_importance_task_t release_imp_task = IIT_NULL;
-		natural_t assertcnt = 0;
-
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
-
-		/*
-		 * don't allow temp-owner importance donation if user
-		 * associated it with a kobject already (timer, host_notify target),
-		 * or is a special reply port.
-		 */
-		if (ip_is_kobject(port) || ip_is_special_reply_port(port)) {
-			ip_mq_unlock(port);
-			return KERN_INVALID_ARGUMENT;
-		}
-
-		if (port->ip_tempowner != 0) {
-			if (IIT_NULL != ip_get_imp_task(port)) {
-				release_imp_task = ip_get_imp_task(port);
-				port->ip_imp_task = IIT_NULL;
-				assertcnt = port->ip_impcount;
-			}
-		} else {
-			assertcnt = port->ip_impcount;
-		}
-
-		port->ip_impdonation = 1;
-		port->ip_tempowner = 1;
-		ip_mq_unlock(port);
+    port->ip_impdonation = 1;
+    port->ip_tempowner = 1;
+    ip_mq_unlock(port);
 
 #if IMPORTANCE_INHERITANCE
-		/* drop assertions from previous destination task */
-		if (release_imp_task != IIT_NULL) {
-			assert(ipc_importance_task_is_any_receiver_type(release_imp_task));
-			if (assertcnt > 0) {
-				ipc_importance_task_drop_internal_assertion(release_imp_task, assertcnt);
-			}
-			ipc_importance_task_release(release_imp_task);
-		} else if (assertcnt > 0) {
-			release_imp_task = current_task()->task_imp_base;
-			if (release_imp_task != IIT_NULL &&
-			    ipc_importance_task_is_any_receiver_type(release_imp_task)) {
-				ipc_importance_task_drop_internal_assertion(release_imp_task, assertcnt);
-			}
-		}
+    /* drop assertions from previous destination task */
+    if (release_imp_task != IIT_NULL) {
+      assert(ipc_importance_task_is_any_receiver_type(release_imp_task));
+      if (assertcnt > 0) {
+        ipc_importance_task_drop_internal_assertion(release_imp_task,
+                                                    assertcnt);
+      }
+      ipc_importance_task_release(release_imp_task);
+    } else if (assertcnt > 0) {
+      release_imp_task = current_task()->task_imp_base;
+      if (release_imp_task != IIT_NULL &&
+          ipc_importance_task_is_any_receiver_type(release_imp_task)) {
+        ipc_importance_task_drop_internal_assertion(release_imp_task,
+                                                    assertcnt);
+      }
+    }
 #else
-		if (release_imp_task != IIT_NULL) {
-			ipc_importance_task_release(release_imp_task);
-		}
+    if (release_imp_task != IIT_NULL) {
+      ipc_importance_task_release(release_imp_task);
+    }
 #endif /* IMPORTANCE_INHERITANCE */
 
-		break;
+    break;
 
 #if IMPORTANCE_INHERITANCE
-	case MACH_PORT_DENAP_RECEIVER:
-	case MACH_PORT_IMPORTANCE_RECEIVER:
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
+  case MACH_PORT_DENAP_RECEIVER:
+  case MACH_PORT_IMPORTANCE_RECEIVER:
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
 
-		/*
-		 * don't allow importance donation if user associated
-		 * it with a kobject already (timer, host_notify target),
-		 * or is a special reply port.
-		 */
-		if (ip_is_kobject(port) || ip_is_special_reply_port(port)) {
-			ip_mq_unlock(port);
-			return KERN_INVALID_ARGUMENT;
-		}
+    /*
+     * don't allow importance donation if user associated
+     * it with a kobject already (timer, host_notify target),
+     * or is a special reply port.
+     */
+    if (ip_is_kobject(port) || ip_is_special_reply_port(port)) {
+      ip_mq_unlock(port);
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		/* port is locked and active */
-		port->ip_impdonation = 1;
-		ip_mq_unlock(port);
+    /* port is locked and active */
+    port->ip_impdonation = 1;
+    ip_mq_unlock(port);
 
-		break;
+    break;
 #endif /* IMPORTANCE_INHERITANCE */
-	}
+  }
 
-	case MACH_PORT_SERVICE_THROTTLED: {
-		ipc_object_label_t label;
+  case MACH_PORT_SERVICE_THROTTLED: {
+    ipc_object_label_t label;
 
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
 
-		label = ip_label_get(port);
-		if (ip_is_any_service_port_type(label.io_type)) {
-			label.iol_service->ispl_throttled = (*info != 0);
-		} else {
-			kr = KERN_INVALID_CAPABILITY;
-		}
+    label = ip_label_get(port);
+    if (ip_is_any_service_port_type(label.io_type)) {
+      label.iol_service->ispl_throttled = (*info != 0);
+    } else {
+      kr = KERN_INVALID_CAPABILITY;
+    }
 
-		ip_mq_unlock_label_put(port, &label);
-		return kr;
-	}
+    ip_mq_unlock_label_put(port, &label);
+    return kr;
+  }
 
-	default:
-		return KERN_INVALID_ARGUMENT;
-		/*NOTREACHED*/
-	}
-	return KERN_SUCCESS;
+  default:
+    return KERN_INVALID_ARGUMENT;
+    /*NOTREACHED*/
+  }
+  return KERN_SUCCESS;
 }
 
 /*
@@ -2142,45 +2015,41 @@ mach_port_set_attributes(
  *		KERN_ALREADY_IN_SET	name was already a member of pset.
  */
 
-kern_return_t
-mach_port_insert_member(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_name_t        psname)
-{
-	ipc_port_t port = IP_NULL;
-	ipc_pset_t pset = IPS_NULL;
-	waitq_link_t link;
-	kern_return_t kr;
+kern_return_t mach_port_insert_member(ipc_space_t space, mach_port_name_t name,
+                                      mach_port_name_t psname) {
+  ipc_port_t port = IP_NULL;
+  ipc_pset_t pset = IPS_NULL;
+  waitq_link_t link;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name) || !MACH_PORT_VALID(psname)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name) || !MACH_PORT_VALID(psname)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	link = waitq_link_alloc(WQT_PORT_SET);
+  link = waitq_link_alloc(WQT_PORT_SET);
 
-	kr = ipc_object_translate_port_pset(space, name, &port, psname, &pset);
-	if (kr != KERN_SUCCESS) {
-		goto done;
-	}
+  kr = ipc_object_translate_port_pset(space, name, &port, psname, &pset);
+  if (kr != KERN_SUCCESS) {
+    goto done;
+  }
 
-	/* port and pset are locked (and were locked in that order) */
+  /* port and pset are locked (and were locked in that order) */
 
-	kr = ipc_mqueue_add_locked(&port->ip_messages, pset, &link);
+  kr = ipc_mqueue_add_locked(&port->ip_messages, pset, &link);
 
-	ips_mq_unlock(pset);
-	ip_mq_unlock(port);
+  ips_mq_unlock(pset);
+  ip_mq_unlock(port);
 
 done:
-	if (link.wqlh) {
-		waitq_link_free(WQT_PORT_SET, link);
-	}
+  if (link.wqlh) {
+    waitq_link_free(WQT_PORT_SET, link);
+  }
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -2201,43 +2070,39 @@ done:
  *			After is MACH_PORT_NULL and Member isn't in a port set.
  */
 
-kern_return_t
-mach_port_extract_member(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_name_t        psname)
-{
-	ipc_port_t port = IP_NULL;
-	ipc_pset_t pset = IPS_NULL;
-	waitq_link_t link;
-	kern_return_t kr;
+kern_return_t mach_port_extract_member(ipc_space_t space, mach_port_name_t name,
+                                       mach_port_name_t psname) {
+  ipc_port_t port = IP_NULL;
+  ipc_pset_t pset = IPS_NULL;
+  waitq_link_t link;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name) || !MACH_PORT_VALID(psname)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name) || !MACH_PORT_VALID(psname)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_object_translate_port_pset(space, name, &port, psname, &pset);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  kr = ipc_object_translate_port_pset(space, name, &port, psname, &pset);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* port and pset are locked (and were locked in that order) */
+  /* port and pset are locked (and were locked in that order) */
 
-	link = waitq_unlink_locked(&port->ip_waitq, &pset->ips_wqset);
+  link = waitq_unlink_locked(&port->ip_waitq, &pset->ips_wqset);
 
-	ips_mq_unlock(pset);
-	ip_mq_unlock(port);
+  ips_mq_unlock(pset);
+  ip_mq_unlock(port);
 
-	if (link.wqlh) {
-		waitq_link_free(WQT_PORT_SET, link);
-		return KERN_SUCCESS;
-	}
+  if (link.wqlh) {
+    waitq_link_free(WQT_PORT_SET, link);
+    return KERN_SUCCESS;
+  }
 
-	return KERN_NOT_IN_SET;
+  return KERN_NOT_IN_SET;
 }
 
 /*
@@ -2245,16 +2110,13 @@ mach_port_extract_member(
  *
  *	Obsolete. Set port name space of task to specified size.
  */
-kern_return_t
-task_set_port_space(
-	ipc_space_t     space,
-	__unused int    table_entries)
-{
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+kern_return_t task_set_port_space(ipc_space_t space,
+                                  __unused int table_entries) {
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -2267,32 +2129,28 @@ task_set_port_space(
  *		KERN_SUCCESS		Port Guarded.
  *		KERN_INVALID_ARGUMENT	Port already contains a context/guard.
  */
-static kern_return_t
-mach_port_guard_locked(
-	mach_port_name_t        name,
-	ipc_port_t              port,
-	uint64_t                guard,
-	uint64_t                flags)
-{
-	if (port->ip_context) {
-		mach_port_guard_exception(name, port->ip_context,
-		    kGUARD_EXC_INVALID_ARGUMENT);
-		return KERN_INVALID_ARGUMENT;
-	}
+static kern_return_t mach_port_guard_locked(mach_port_name_t name,
+                                            ipc_port_t port, uint64_t guard,
+                                            uint64_t flags) {
+  if (port->ip_context) {
+    mach_port_guard_exception(name, port->ip_context,
+                              kGUARD_EXC_INVALID_ARGUMENT);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	port->ip_context = guard;
-	port->ip_guarded = 1;
-	port->ip_strict_guard = (flags & MPG_STRICT) != 0;
+  port->ip_context = guard;
+  port->ip_guarded = 1;
+  port->ip_strict_guard = (flags & MPG_STRICT) != 0;
 
-	if ((flags & MPG_IMMOVABLE_RECEIVE) && !ip_is_immovable_receive(port)) {
-		ipc_object_label_t label = ip_label_get(port);
+  if ((flags & MPG_IMMOVABLE_RECEIVE) && !ip_is_immovable_receive(port)) {
+    ipc_object_label_t label = ip_label_get(port);
 
-		ipc_release_assert(label.io_state == IO_STATE_IN_SPACE);
-		label.io_state = IO_STATE_IN_SPACE_IMMOVABLE;
-		io_label_set_and_put(&port->ip_object, &label);
-	}
+    ipc_release_assert(label.io_state == IO_STATE_IN_SPACE);
+    label.io_state = IO_STATE_IN_SPACE_IMMOVABLE;
+    io_label_set_and_put(&port->ip_object, &label);
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -2303,92 +2161,88 @@ mach_port_guard_locked(
  *		Port Locked.
  *	Returns:
  *		KERN_SUCCESS		Port Unguarded.
- *		KERN_INVALID_ARGUMENT	Port is either unguarded already or guard mismatch.
- *					This also raises a EXC_GUARD exception.
+ *		KERN_INVALID_ARGUMENT	Port is either unguarded already or
+ * guard mismatch. This also raises a EXC_GUARD exception.
  */
-static kern_return_t
-mach_port_unguard_locked(
-	ipc_port_t              port,
-	mach_port_name_t        name,
-	uint64_t                guard)
-{
-	/* Port locked and active */
-	if (!port->ip_guarded) {
-		/* Port already unguarded; Raise exception */
-		mach_port_guard_exception(name, 0, kGUARD_EXC_UNGUARDED);
-		return KERN_INVALID_ARGUMENT;
-	}
+static kern_return_t mach_port_unguard_locked(ipc_port_t port,
+                                              mach_port_name_t name,
+                                              uint64_t guard) {
+  /* Port locked and active */
+  if (!port->ip_guarded) {
+    /* Port already unguarded; Raise exception */
+    mach_port_guard_exception(name, 0, kGUARD_EXC_UNGUARDED);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (port->ip_context != guard) {
-		/* Incorrect guard; Raise exception */
-		mach_port_guard_exception(name, port->ip_context, kGUARD_EXC_INCORRECT_GUARD);
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (port->ip_context != guard) {
+    /* Incorrect guard; Raise exception */
+    mach_port_guard_exception(name, port->ip_context,
+                              kGUARD_EXC_INCORRECT_GUARD);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	port->ip_context = 0;
-	port->ip_guarded = port->ip_strict_guard = 0;
+  port->ip_context = 0;
+  port->ip_guarded = port->ip_strict_guard = 0;
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
-
 static kern_return_t
-mach_port_construct_check_service_port(
-	mach_port_options_t     *options,
-	struct mach_service_port_info *sp_info)
-{
-	user_addr_t service_port_info = 0;
-	size_t sp_name_length = 0;
+mach_port_construct_check_service_port(mach_port_options_t *options,
+                                       struct mach_service_port_info *sp_info) {
+  user_addr_t service_port_info = 0;
+  size_t sp_name_length = 0;
 
-	/*
-	 * Allow only launchd to add the service port labels
-	 * Not enforcing on development/debug kernels to
-	 * support testing
-	 */
+  /*
+   * Allow only launchd to add the service port labels
+   * Not enforcing on development/debug kernels to
+   * support testing
+   */
 #if !(DEVELOPMENT || DEBUG)
 #if CONFIG_COALITIONS
-	if (!task_is_in_privileged_coalition(current_task(), COALITION_TYPE_JETSAM)) {
-		return KERN_DENIED;
-	}
-#else /* CONFIG_COALITIONS */
-	if (task_is_initproc(current_task())) {
-		return KERN_DENIED;
-	}
+  if (!task_is_in_privileged_coalition(current_task(), COALITION_TYPE_JETSAM)) {
+    return KERN_DENIED;
+  }
+#else  /* CONFIG_COALITIONS */
+  if (task_is_initproc(current_task())) {
+    return KERN_DENIED;
+  }
 #endif /* CONFIG_COALITIONS */
 #endif /* !(DEVELOPMENT || DEBUG) */
 
-	if (task_has_64Bit_addr(current_task())) {
-		service_port_info = CAST_USER_ADDR_T(options->service_port_info64);
-	} else {
-		service_port_info = CAST_USER_ADDR_T(options->service_port_info32);
-	}
+  if (task_has_64Bit_addr(current_task())) {
+    service_port_info = CAST_USER_ADDR_T(options->service_port_info64);
+  } else {
+    service_port_info = CAST_USER_ADDR_T(options->service_port_info32);
+  }
 
-	if (!service_port_info) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (!service_port_info) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (copyin(service_port_info, (void *)sp_info, sizeof(*sp_info))) {
-		return KERN_MEMORY_ERROR;
-	}
+  if (copyin(service_port_info, (void *)sp_info, sizeof(*sp_info))) {
+    return KERN_MEMORY_ERROR;
+  }
 
-	sp_name_length = strnlen(sp_info->mspi_string_name, MACH_SERVICE_PORT_INFO_STRING_NAME_MAX_BUF_LEN);
-	if (sp_name_length >= (MACH_SERVICE_PORT_INFO_STRING_NAME_MAX_BUF_LEN)) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  sp_name_length = strnlen(sp_info->mspi_string_name,
+                           MACH_SERVICE_PORT_INFO_STRING_NAME_MAX_BUF_LEN);
+  if (sp_name_length >= (MACH_SERVICE_PORT_INFO_STRING_NAME_MAX_BUF_LEN)) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	/*
-	 * Setting the guard on a service port triggers a special port
-	 * destroyed notification that restores the guard when the
-	 * receive right moves back to launchd.
-	 *
-	 * This must be a strict guard.
-	 */
-	if ((options->flags & MPO_CONTEXT_AS_GUARD) != 0 &&
-	    (options->flags & MPO_STRICT) == 0) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  /*
+   * Setting the guard on a service port triggers a special port
+   * destroyed notification that restores the guard when the
+   * receive right moves back to launchd.
+   *
+   * This must be a strict guard.
+   */
+  if ((options->flags & MPO_CONTEXT_AS_GUARD) != 0 &&
+      (options->flags & MPO_STRICT) == 0) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -2409,254 +2263,251 @@ mach_port_construct_check_service_port(
  *              KERN_FAILURE            Illegal option values requested.
  */
 
-kern_return_t
-mach_port_construct(
-	ipc_space_t             space,
-	mach_port_options_t     *options,
-	uint64_t                context,
-	mach_port_name_t        *name)
-{
-	ipc_port_t              port;
-	kern_return_t           kr = KERN_SUCCESS;
-	ipc_port_init_flags_t   init_flags = IP_INIT_NONE;
-	/* new port labels start in IO_STATE_IN_SPACE */
-	ipc_object_label_t      label = IPC_OBJECT_LABEL(IOT_PORT);
-	ipc_space_policy_t      policy = ipc_space_policy(space);
-	struct mach_service_port_info sp_info = {};
+kern_return_t mach_port_construct(ipc_space_t space,
+                                  mach_port_options_t *options,
+                                  uint64_t context, mach_port_name_t *name) {
+  ipc_port_t port;
+  kern_return_t kr = KERN_SUCCESS;
+  ipc_port_init_flags_t init_flags = IP_INIT_NONE;
+  /* new port labels start in IO_STATE_IN_SPACE */
+  ipc_object_label_t label = IPC_OBJECT_LABEL(IOT_PORT);
+  ipc_space_policy_t policy = ipc_space_policy(space);
+  struct mach_service_port_info sp_info = {};
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (options->flags & MPO_UNUSED_BITS) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (options->flags & MPO_UNUSED_BITS) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	/* exactly one port type must be set */
-	mpo_flags_t port_type_flag = options->flags & MPO_PORT_TYPE_MASK;
-	switch (port_type_flag) {
-	case MPO_PORT:
-	case MPO_SERVICE_PORT:
-	case MPO_CONNECTION_PORT:
-	case MPO_REPLY_PORT:
-	case MPO_PROVISIONAL_REPLY_PORT:
-	case MPO_EXCEPTION_PORT:
-	case MPO_CONNECTION_PORT_WITH_PORT_ARRAY:
-		break;
+  /* exactly one port type must be set */
+  mpo_flags_t port_type_flag = options->flags & MPO_PORT_TYPE_MASK;
+  switch (port_type_flag) {
+  case MPO_PORT:
+  case MPO_SERVICE_PORT:
+  case MPO_CONNECTION_PORT:
+  case MPO_REPLY_PORT:
+  case MPO_PROVISIONAL_REPLY_PORT:
+  case MPO_EXCEPTION_PORT:
+  case MPO_CONNECTION_PORT_WITH_PORT_ARRAY:
+    break;
 
-	default:
-		return KERN_INVALID_ARGUMENT;
-	}
+  default:
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	/*
-	 *	Step 1.  Determine port type
-	 */
-	switch (port_type_flag) {
-	case MPO_PORT:
-		label.io_type = IOT_PORT;
-		break;
-	case MPO_SERVICE_PORT:
-		kr = mach_port_construct_check_service_port(options, &sp_info);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		if ((options->flags & MPO_ENFORCE_REPLY_PORT_SEMANTICS) &&
-		    !(policy & IPC_SPACE_POLICY_SIMULATED)) {
-			label.io_type = IOT_SERVICE_PORT;
-		} else {
-			label.io_type = IOT_WEAK_SERVICE_PORT;
-		}
-		break;
-	case MPO_CONNECTION_PORT:
-		if (!options->service_port_name) {
-			return KERN_INVALID_ARGUMENT;
-		}
-		label.io_type = IOT_CONNECTION_PORT;
-		break;
-	case MPO_EXCEPTION_PORT:
-		label.io_type = IOT_EXCEPTION_PORT;
-		break;
-	case MPO_REPLY_PORT:
-		label.io_type = IOT_REPLY_PORT;
-		if (!ipc_should_apply_policy(policy, IPC_POLICY_ENHANCED_V1)) {
-			/*
-			 * non-hardened tasks won't adopt reply port semantics,
-			 * opt them out with provisional reply ports
-			 */
-			label.io_type = IOT_PROVISIONAL_REPLY_PORT;
-		}
-		break;
-	case MPO_PROVISIONAL_REPLY_PORT:
-		label.io_type = IOT_PROVISIONAL_REPLY_PORT;
-		break;
-	case MPO_CONNECTION_PORT_WITH_PORT_ARRAY:
-		label.io_type = IOT_CONNECTION_PORT_WITH_PORT_ARRAY;
-		break;
-	}
+  /*
+   *	Step 1.  Determine port type
+   */
+  switch (port_type_flag) {
+  case MPO_PORT:
+    label.io_type = IOT_PORT;
+    break;
+  case MPO_SERVICE_PORT:
+    kr = mach_port_construct_check_service_port(options, &sp_info);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    if ((options->flags & MPO_ENFORCE_REPLY_PORT_SEMANTICS) &&
+        !(policy & IPC_SPACE_POLICY_SIMULATED)) {
+      label.io_type = IOT_SERVICE_PORT;
+    } else {
+      label.io_type = IOT_WEAK_SERVICE_PORT;
+    }
+    break;
+  case MPO_CONNECTION_PORT:
+    if (!options->service_port_name) {
+      return KERN_INVALID_ARGUMENT;
+    }
+    label.io_type = IOT_CONNECTION_PORT;
+    break;
+  case MPO_EXCEPTION_PORT:
+    label.io_type = IOT_EXCEPTION_PORT;
+    break;
+  case MPO_REPLY_PORT:
+    label.io_type = IOT_REPLY_PORT;
+    if (!ipc_should_apply_policy(policy, IPC_POLICY_ENHANCED_V1)) {
+      /*
+       * non-hardened tasks won't adopt reply port semantics,
+       * opt them out with provisional reply ports
+       */
+      label.io_type = IOT_PROVISIONAL_REPLY_PORT;
+    }
+    break;
+  case MPO_PROVISIONAL_REPLY_PORT:
+    label.io_type = IOT_PROVISIONAL_REPLY_PORT;
+    break;
+  case MPO_CONNECTION_PORT_WITH_PORT_ARRAY:
+    label.io_type = IOT_CONNECTION_PORT_WITH_PORT_ARRAY;
+    break;
+  }
 
+  /*
+   * If the port type policy requires an entitlement,
+   * enforce it here before proceeding any further.
+   */
+  const char *port_policy_entitlement =
+      ipc_policy(label.io_type)->pol_construct_entitlement;
+  if (port_policy_entitlement &&
+      ipc_should_apply_policy(policy, IPC_POLICY_ENHANCED_V1) &&
+      !IOCurrentTaskHasEntitlement(port_policy_entitlement)) {
+    /*
+     * enforce the policy construct entitlement on all
+     * port types, besides provisional reply port (yet).
+     */
+    if (!(options->flags & MPO_PROVISIONAL_REPLY_PORT)) {
+      mach_port_guard_exception(options->flags, 0,
+                                kGUARD_EXC_INVALID_MPO_ENTITLEMENT);
+      return KERN_DENIED;
+    }
 
-	/*
-	 * If the port type policy requires an entitlement,
-	 * enforce it here before proceeding any further.
-	 */
-	const char *port_policy_entitlement = ipc_policy(label.io_type)->pol_construct_entitlement;
-	if (port_policy_entitlement &&
-	    ipc_should_apply_policy(policy, IPC_POLICY_ENHANCED_V1) &&
-	    !IOCurrentTaskHasEntitlement(port_policy_entitlement)) {
-		/*
-		 * enforce the policy construct entitlement on all
-		 * port types, besides provisional reply port (yet).
-		 */
-		if (!(options->flags & MPO_PROVISIONAL_REPLY_PORT)) {
-			mach_port_guard_exception(options->flags, 0,
-			    kGUARD_EXC_INVALID_MPO_ENTITLEMENT);
-			return KERN_DENIED;
-		}
-
-		/* emit telemetry if needed */
-		if (ipcpv_telemetry_enabled &&
+    /* emit telemetry if needed */
+    if (ipcpv_telemetry_enabled &&
 #if XNU_TARGET_OS_OSX && CONFIG_CSR
-		    (csr_check(CSR_ALLOW_UNRESTRICTED_FS) != 0) && /* SIP enabled */
+        (csr_check(CSR_ALLOW_UNRESTRICTED_FS) != 0) && /* SIP enabled */
 #endif /* XNU_TARGET_OS_OSX && CONFIG_CSR */
-		    !ipc_space_has_telemetry_type(space, IS_HAS_CREATE_PRP_TELEMETRY)) {
-			mach_port_guard_exception(0, 0, kGUARD_EXC_PROVISIONAL_REPLY_PORT);
-		}
+        !ipc_space_has_telemetry_type(space, IS_HAS_CREATE_PRP_TELEMETRY)) {
+      mach_port_guard_exception(0, 0, kGUARD_EXC_PROVISIONAL_REPLY_PORT);
+    }
 
-		/* If we have enforcement */
-		if (prp_enforcement_enabled) {
-			mach_port_guard_exception(options->flags, 0,
-			    kGUARD_EXC_INVALID_MPO_ENTITLEMENT);
-			return KERN_DENIED;
-		}
-	}
+    /* If we have enforcement */
+    if (prp_enforcement_enabled) {
+      mach_port_guard_exception(options->flags, 0,
+                                kGUARD_EXC_INVALID_MPO_ENTITLEMENT);
+      return KERN_DENIED;
+    }
+  }
 
-	/*
-	 *	Step 2.  Handle and verify flags
-	 */
-	if (options->flags & MPO_IMMOVABLE_RECEIVE) {
-		label.io_state = IO_STATE_IN_SPACE_IMMOVABLE;
-	}
+  /*
+   *	Step 2.  Handle and verify flags
+   */
+  if (options->flags & MPO_IMMOVABLE_RECEIVE) {
+    label.io_state = IO_STATE_IN_SPACE_IMMOVABLE;
+  }
 
-	if (options->flags & MPO_INSERT_SEND_RIGHT) {
-		init_flags |= IP_INIT_MAKE_SEND_RIGHT;
-	}
+  if (options->flags & MPO_INSERT_SEND_RIGHT) {
+    init_flags |= IP_INIT_MAKE_SEND_RIGHT;
+  }
 
-	if (options->flags & MPO_QLIMIT) {
-		if (options->mpl.mpl_qlimit > MACH_PORT_QLIMIT_MAX) {
-			return KERN_INVALID_VALUE;
-		}
-	}
+  if (options->flags & MPO_QLIMIT) {
+    if (options->mpl.mpl_qlimit > MACH_PORT_QLIMIT_MAX) {
+      return KERN_INVALID_VALUE;
+    }
+  }
 
-	if (options->flags & MPO_TG_BLOCK_TRACKING) {
-		/*
-		 * Check the task role to allow only TASK_GRAPHICS_SERVER
-		 * to set this option
-		 */
-		if (proc_get_effective_task_policy(current_task(),
-		    TASK_POLICY_ROLE) != TASK_GRAPHICS_SERVER) {
-			return KERN_DENIED;
-		}
+  if (options->flags & MPO_TG_BLOCK_TRACKING) {
+    /*
+     * Check the task role to allow only TASK_GRAPHICS_SERVER
+     * to set this option
+     */
+    if (proc_get_effective_task_policy(current_task(), TASK_POLICY_ROLE) !=
+        TASK_GRAPHICS_SERVER) {
+      return KERN_DENIED;
+    }
 
-		/*
-		 * Check the work interval port passed in to make sure it is
-		 * the render server type.
-		 *
-		 * Since the creation of the render server work interval is
-		 * privileged, this check acts as a guard to make sure only
-		 * the render server is setting the thread group blocking
-		 * behavior on the port.
-		 */
-		mach_port_name_t wi_port_name = options->work_interval_port;
-		if (work_interval_port_type_render_server(wi_port_name) == false) {
-			return KERN_INVALID_ARGUMENT;
-		}
-	}
+    /*
+     * Check the work interval port passed in to make sure it is
+     * the render server type.
+     *
+     * Since the creation of the render server work interval is
+     * privileged, this check acts as a guard to make sure only
+     * the render server is setting the thread group blocking
+     * behavior on the port.
+     */
+    mach_port_name_t wi_port_name = options->work_interval_port;
+    if (work_interval_port_type_render_server(wi_port_name) == false) {
+      return KERN_INVALID_ARGUMENT;
+    }
+  }
 
-	/*
-	 *	Step 3.  Allocate labels and ports.
-	 *
-	 *	Code past this point has side effects,
-	 *	and early returns for errors is fraught with peril.
-	 */
+  /*
+   *	Step 3.  Allocate labels and ports.
+   *
+   *	Code past this point has side effects,
+   *	and early returns for errors is fraught with peril.
+   */
 
-	if (ip_is_any_service_port_type(label.io_type)) {
-		kr = ipc_service_port_label_alloc(&sp_info, &label);
-	} else if (label.io_type == IOT_CONNECTION_PORT &&
-	    options->service_port_name != MPO_ANONYMOUS_SERVICE) {
-		kr = ipc_service_port_derive_sblabel(options->service_port_name,
-		    (options->flags & MPO_FILTER_MSG), &label);
-	}
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  if (ip_is_any_service_port_type(label.io_type)) {
+    kr = ipc_service_port_label_alloc(&sp_info, &label);
+  } else if (label.io_type == IOT_CONNECTION_PORT &&
+             options->service_port_name != MPO_ANONYMOUS_SERVICE) {
+    kr = ipc_service_port_derive_sblabel(
+        options->service_port_name, (options->flags & MPO_FILTER_MSG), &label);
+  }
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* Allocate a new port in the IPC space */
-	kr = ipc_port_alloc(space, label, init_flags, name, &port);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
-	/* Port locked and active */
+  /* Allocate a new port in the IPC space */
+  kr = ipc_port_alloc(space, label, init_flags, name, &port);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
+  /* Port locked and active */
 
-	/*
-	 *	Step 4.  Apply configuration to our newly minted port.
-	 *
-	 *	This is the point of no return, failure isn't allowed
-	 *	past this point.
-	 */
+  /*
+   *	Step 4.  Apply configuration to our newly minted port.
+   *
+   *	This is the point of no return, failure isn't allowed
+   *	past this point.
+   */
 
-	if (options->flags & MPO_QLIMIT) {
-		ipc_mqueue_set_qlimit_locked(&port->ip_messages, options->mpl.mpl_qlimit);
-	}
+  if (options->flags & MPO_QLIMIT) {
+    ipc_mqueue_set_qlimit_locked(&port->ip_messages, options->mpl.mpl_qlimit);
+  }
 
-	if (options->flags & MPO_TG_BLOCK_TRACKING) {
-		port->ip_tg_block_tracking = true;
-	}
+  if (options->flags & MPO_TG_BLOCK_TRACKING) {
+    port->ip_tg_block_tracking = true;
+  }
 
-	if (options->flags & (MPO_IMPORTANCE_RECEIVER | MPO_DENAP_RECEIVER | MPO_TEMPOWNER)) {
-		assert(!ip_is_special_reply_port(port));
+  if (options->flags &
+      (MPO_IMPORTANCE_RECEIVER | MPO_DENAP_RECEIVER | MPO_TEMPOWNER)) {
+    assert(!ip_is_special_reply_port(port));
 
-		port->ip_impdonation = 1;
-		if (options->flags & MPO_TEMPOWNER) {
-			port->ip_tempowner = 1;
-		}
-	}
+    port->ip_impdonation = 1;
+    if (options->flags & MPO_TEMPOWNER) {
+      port->ip_tempowner = 1;
+    }
+  }
 
-	if (options->flags & MPO_CONTEXT_AS_GUARD) {
-		/* MPO_IMMOVABLE_RECEIVE was dealt with already */
+  if (options->flags & MPO_CONTEXT_AS_GUARD) {
+    /* MPO_IMMOVABLE_RECEIVE was dealt with already */
 
-		kr = mach_port_guard_locked(*name, port, context,
-		    (options->flags & MPO_STRICT) ? MPG_STRICT : 0);
-		assert(kr == KERN_SUCCESS);
+    kr = mach_port_guard_locked(*name, port, context,
+                                (options->flags & MPO_STRICT) ? MPG_STRICT : 0);
+    assert(kr == KERN_SUCCESS);
 
-		if (ip_is_any_service_port_type(label.io_type)) {
-			/*
-			 * Guarded service ports remember their name,
-			 * and are re-guarded when port-destroyed notifications
-			 * are received by launchd.
-			 * See ipc_right_copyout_recv_and_unlock_space()
-			 */
-			label.iol_service->ispl_launchd_name = *name;
-			label.iol_service->ispl_launchd_context = context;
-		}
-	} else {
-		port->ip_context = context;
-	}
+    if (ip_is_any_service_port_type(label.io_type)) {
+      /*
+       * Guarded service ports remember their name,
+       * and are re-guarded when port-destroyed notifications
+       * are received by launchd.
+       * See ipc_right_copyout_recv_and_unlock_space()
+       */
+      label.iol_service->ispl_launchd_name = *name;
+      label.iol_service->ispl_launchd_context = context;
+    }
+  } else {
+    port->ip_context = context;
+  }
 
-	/*
-	 * Set ip_bootstrap for bootstrap ports to avoid holding the port lock
-	 * in ipc_validate_local_port(). Lock needed to access port label.
-	 */
-	if (ip_is_any_service_port_type(label.io_type)) {
-		ipc_service_port_label_t sp_label = label.iol_service;
-		if (sp_label->ispl_bootstrap_port) {
-			port->ip_bootstrap = 1;
-		}
-	}
+  /*
+   * Set ip_bootstrap for bootstrap ports to avoid holding the port lock
+   * in ipc_validate_local_port(). Lock needed to access port label.
+   */
+  if (ip_is_any_service_port_type(label.io_type)) {
+    ipc_service_port_label_t sp_label = label.iol_service;
+    if (sp_label->ispl_bootstrap_port) {
+      port->ip_bootstrap = 1;
+    }
+  }
 
-	/* Unlock port */
-	ip_mq_unlock(port);
+  /* Unlock port */
+  ip_mq_unlock(port);
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -2672,38 +2523,33 @@ mach_port_construct(
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  *		KERN_INVALID_RIGHT	The right isn't correct.
  *		KERN_INVALID_VALUE	The delta for send right is incorrect.
- *		KERN_INVALID_ARGUMENT	Port is either unguarded already or guard mismatch.
- *					This also raises a EXC_GUARD exception.
+ *		KERN_INVALID_ARGUMENT	Port is either unguarded already or
+ * guard mismatch. This also raises a EXC_GUARD exception.
  */
 
-kern_return_t
-mach_port_destruct(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	mach_port_delta_t       srdelta,
-	uint64_t                guard)
-{
-	kern_return_t           kr;
-	ipc_entry_t             entry;
+kern_return_t mach_port_destruct(ipc_space_t space, mach_port_name_t name,
+                                 mach_port_delta_t srdelta, uint64_t guard) {
+  kern_return_t kr;
+  ipc_entry_t entry;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_NAME;
+  }
 
-	/* Remove reference for receive right */
-	kr = ipc_right_lookup_write(space, name, &entry);
-	if (kr != KERN_SUCCESS) {
-		mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
-		return kr;
-	}
-	/* space is write-locked and active */
-	kr = ipc_right_destruct(space, name, entry, srdelta, guard);    /* unlocks */
+  /* Remove reference for receive right */
+  kr = ipc_right_lookup_write(space, name, &entry);
+  if (kr != KERN_SUCCESS) {
+    mach_port_guard_exception(name, 0, kGUARD_EXC_INVALID_NAME);
+    return kr;
+  }
+  /* space is write-locked and active */
+  kr = ipc_right_destruct(space, name, entry, srdelta, guard); /* unlocks */
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -2721,42 +2567,39 @@ mach_port_destruct(
  *		KERN_INVALID_RIGHT	The right isn't correct.
  *		KERN_INVALID_ARGUMENT	Port already contains a context/guard.
  */
-kern_return_t
-mach_port_guard(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	uint64_t                guard,
-	boolean_t               strict)
-{
-	kern_return_t           kr;
-	ipc_port_t              port;
-	uint64_t flags = 0;
+kern_return_t mach_port_guard(ipc_space_t space, mach_port_name_t name,
+                              uint64_t guard, boolean_t strict) {
+  kern_return_t kr;
+  ipc_port_t port;
+  uint64_t flags = 0;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_NAME;
+  }
 
-	/* Guard can be applied only to receive rights */
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		uint64_t payload = (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
-		unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME : kGUARD_EXC_INVALID_RIGHT;
-		mach_port_guard_exception(name, payload, reason);
-		return kr;
-	}
+  /* Guard can be applied only to receive rights */
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    uint64_t payload =
+        (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
+    unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME
+                                                : kGUARD_EXC_INVALID_RIGHT;
+    mach_port_guard_exception(name, payload, reason);
+    return kr;
+  }
 
-	/* Port locked and active */
-	if (strict) {
-		flags = MPG_STRICT;
-	}
+  /* Port locked and active */
+  if (strict) {
+    flags = MPG_STRICT;
+  }
 
-	kr = mach_port_guard_locked(name, port, guard, flags);
-	ip_mq_unlock(port);
-	return kr;
+  kr = mach_port_guard_locked(name, port, guard, flags);
+  ip_mq_unlock(port);
+  return kr;
 }
 
 /*
@@ -2771,39 +2614,37 @@ mach_port_guard(
  *		KERN_INVALID_TASK	The space is dead.
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  *		KERN_INVALID_RIGHT	The right isn't correct.
- *		KERN_INVALID_ARGUMENT	Port is either unguarded already or guard mismatch.
- *					This also raises a EXC_GUARD exception.
+ *		KERN_INVALID_ARGUMENT	Port is either unguarded already or
+ * guard mismatch. This also raises a EXC_GUARD exception.
  */
-kern_return_t
-mach_port_unguard(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	uint64_t                guard)
-{
-	kern_return_t           kr;
-	ipc_port_t              port;
+kern_return_t mach_port_unguard(ipc_space_t space, mach_port_name_t name,
+                                uint64_t guard) {
+  kern_return_t kr;
+  ipc_port_t port;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_NAME;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		uint64_t payload = (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
-		unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME : kGUARD_EXC_INVALID_RIGHT;
-		mach_port_guard_exception(name, payload, reason);
-		return kr;
-	}
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    uint64_t payload =
+        (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
+    unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME
+                                                : kGUARD_EXC_INVALID_RIGHT;
+    mach_port_guard_exception(name, payload, reason);
+    return kr;
+  }
 
-	/* Port locked and active */
-	kr = mach_port_unguard_locked(port, name, guard);
-	ip_mq_unlock(port);
+  /* Port locked and active */
+  kr = mach_port_unguard_locked(port, name, guard);
+  ip_mq_unlock(port);
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -2820,39 +2661,37 @@ mach_port_unguard(
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  *		KERN_INVALID_RIGHT	The right isn't correct.
  *		KERN_INVALID_ARGUMENT	Port already contains a context/guard.
- *		KERN_INVALID_CAPABILITY Cannot set MPG_IMMOVABLE_RECEIVE flag for a port with
- *					a movable port-destroyed notification port
+ *		KERN_INVALID_CAPABILITY Cannot set MPG_IMMOVABLE_RECEIVE flag
+ * for a port with a movable port-destroyed notification port
  */
-kern_return_t
-mach_port_guard_with_flags(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	uint64_t                guard,
-	uint64_t                flags)
-{
-	kern_return_t           kr;
-	ipc_port_t              port;
+kern_return_t mach_port_guard_with_flags(ipc_space_t space,
+                                         mach_port_name_t name, uint64_t guard,
+                                         uint64_t flags) {
+  kern_return_t kr;
+  ipc_port_t port;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_NAME;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		uint64_t payload = (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
-		unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME : kGUARD_EXC_INVALID_RIGHT;
-		mach_port_guard_exception(name, payload, reason);
-		return kr;
-	}
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    uint64_t payload =
+        (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
+    unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME
+                                                : kGUARD_EXC_INVALID_RIGHT;
+    mach_port_guard_exception(name, payload, reason);
+    return kr;
+  }
 
-	/* Port locked and active */
-	kr = mach_port_guard_locked(name, port, guard, flags);
-	ip_mq_unlock(port);
-	return kr;
+  /* Port locked and active */
+  kr = mach_port_guard_locked(name, port, guard, flags);
+  ip_mq_unlock(port);
+  return kr;
 }
 
 /*
@@ -2867,247 +2706,235 @@ mach_port_guard_with_flags(
  *		KERN_INVALID_TASK	The space is dead.
  *		KERN_INVALID_NAME	The name doesn't denote a right.
  *		KERN_INVALID_RIGHT	The right isn't correct.
- *		KERN_INVALID_ARGUMENT	Port doesn't contain a guard; is strictly guarded
- *					or the old_guard doesnt match the context
+ *		KERN_INVALID_ARGUMENT	Port doesn't contain a guard; is
+ * strictly guarded or the old_guard doesnt match the context
  */
-kern_return_t
-mach_port_swap_guard(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	uint64_t                old_guard,
-	uint64_t                new_guard)
-{
-	kern_return_t           kr;
-	ipc_port_t              port;
+kern_return_t mach_port_swap_guard(ipc_space_t space, mach_port_name_t name,
+                                   uint64_t old_guard, uint64_t new_guard) {
+  kern_return_t kr;
+  ipc_port_t port;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_NAME;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		uint64_t payload = (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
-		unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME : kGUARD_EXC_INVALID_RIGHT;
-		mach_port_guard_exception(name, payload, reason);
-		return kr;
-	}
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    uint64_t payload =
+        (KERN_INVALID_NAME == kr) ? 0 : MPG_FLAGS_INVALID_RIGHT_RECV;
+    unsigned reason = (KERN_INVALID_NAME == kr) ? kGUARD_EXC_INVALID_NAME
+                                                : kGUARD_EXC_INVALID_RIGHT;
+    mach_port_guard_exception(name, payload, reason);
+    return kr;
+  }
 
-	/* Port locked and active */
-	if (!port->ip_guarded) {
-		ip_mq_unlock(port);
-		mach_port_guard_exception(name, 0, kGUARD_EXC_UNGUARDED);
-		return KERN_INVALID_ARGUMENT;
-	}
+  /* Port locked and active */
+  if (!port->ip_guarded) {
+    ip_mq_unlock(port);
+    mach_port_guard_exception(name, 0, kGUARD_EXC_UNGUARDED);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (port->ip_strict_guard) {
-		uint64_t portguard = port->ip_context;
-		ip_mq_unlock(port);
-		/* For strictly guarded ports, disallow overwriting context; Raise Exception */
-		mach_port_guard_exception(name, portguard, kGUARD_EXC_SET_CONTEXT);
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (port->ip_strict_guard) {
+    uint64_t portguard = port->ip_context;
+    ip_mq_unlock(port);
+    /* For strictly guarded ports, disallow overwriting context; Raise Exception
+     */
+    mach_port_guard_exception(name, portguard, kGUARD_EXC_SET_CONTEXT);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (port->ip_context != old_guard) {
-		uint64_t portguard = port->ip_context;
-		ip_mq_unlock(port);
-		mach_port_guard_exception(name, portguard, kGUARD_EXC_INCORRECT_GUARD);
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (port->ip_context != old_guard) {
+    uint64_t portguard = port->ip_context;
+    ip_mq_unlock(port);
+    mach_port_guard_exception(name, portguard, kGUARD_EXC_INCORRECT_GUARD);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	port->ip_context = new_guard;
+  port->ip_context = new_guard;
 
-	ip_mq_unlock(port);
+  ip_mq_unlock(port);
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
-kern_return_t
-mach_port_is_connection_for_service(
-	ipc_space_t space,
-	mach_port_name_t connection_port_name,
-	mach_port_name_t service_port_name,
-	uint64_t *filter_policy_id)
-{
-	ipc_object_label_t label;
-	mach_port_t service_port;
-	mach_port_t connection_port;
-	struct ipc_conn_port_label *service_port_sblabel = NULL;
-	struct ipc_conn_port_label *conn_port_sblabel = NULL;
+kern_return_t mach_port_is_connection_for_service(
+    ipc_space_t space, mach_port_name_t connection_port_name,
+    mach_port_name_t service_port_name, uint64_t *filter_policy_id) {
+  ipc_object_label_t label;
+  mach_port_t service_port;
+  mach_port_t connection_port;
+  struct ipc_conn_port_label *service_port_sblabel = NULL;
+  struct ipc_conn_port_label *conn_port_sblabel = NULL;
 
-	kern_return_t ret;
+  kern_return_t ret;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (!MACH_PORT_VALID(connection_port_name) || !MACH_PORT_VALID(service_port_name)) {
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(connection_port_name) ||
+      !MACH_PORT_VALID(service_port_name)) {
+    return KERN_INVALID_NAME;
+  }
 
-	if (!filter_policy_id) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (!filter_policy_id) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (!mach_msg_filter_at_least(MACH_MSG_FILTER_CALLBACKS_VERSION_1)) {
-		return KERN_NOT_SUPPORTED;
-	}
+  if (!mach_msg_filter_at_least(MACH_MSG_FILTER_CALLBACKS_VERSION_1)) {
+    return KERN_NOT_SUPPORTED;
+  }
 
-	ret = ipc_port_translate_receive(space, service_port_name, &service_port);
-	if (ret) {
-		return ret;
-	}
+  ret = ipc_port_translate_receive(space, service_port_name, &service_port);
+  if (ret) {
+    return ret;
+  }
 
-	label = ip_label_get(service_port);
-	if (!ip_is_any_service_port_type(label.io_type)) {
-		ip_mq_unlock_label_put(service_port, &label);
-		return KERN_INVALID_CAPABILITY;
-	}
+  label = ip_label_get(service_port);
+  if (!ip_is_any_service_port_type(label.io_type)) {
+    ip_mq_unlock_label_put(service_port, &label);
+    return KERN_INVALID_CAPABILITY;
+  }
 
-	/* Port is locked and active */
-	service_port_sblabel = label.iol_service->ispl_sblabel;
-	if (service_port_sblabel) {
-		mach_msg_filter_retain_sblabel_callback(service_port_sblabel);
-	}
-	ip_mq_unlock_label_put(service_port, &label);
+  /* Port is locked and active */
+  service_port_sblabel = label.iol_service->ispl_sblabel;
+  if (service_port_sblabel) {
+    mach_msg_filter_retain_sblabel_callback(service_port_sblabel);
+  }
+  ip_mq_unlock_label_put(service_port, &label);
 
-	if (!service_port_sblabel) {
-		/* Nothing to check */
-		*filter_policy_id = 0;
-		return KERN_SUCCESS;
-	}
+  if (!service_port_sblabel) {
+    /* Nothing to check */
+    *filter_policy_id = 0;
+    return KERN_SUCCESS;
+  }
 
-	ret = ipc_port_translate_receive(space, connection_port_name, &connection_port);
-	if (ret) {
-		mach_msg_filter_dealloc_service_port_sblabel_callback(service_port_sblabel);
-		return ret;
-	}
+  ret =
+      ipc_port_translate_receive(space, connection_port_name, &connection_port);
+  if (ret) {
+    mach_msg_filter_dealloc_service_port_sblabel_callback(service_port_sblabel);
+    return ret;
+  }
 
-	/* Port is locked and active */
-	label = ip_label_get(connection_port);
-	if (label.io_type == IOT_CONNECTION_PORT && label.iol_connection) {
-		conn_port_sblabel = label.iol_connection;
-		mach_msg_filter_retain_sblabel_callback(conn_port_sblabel);
-	}
-	ip_mq_unlock_label_put(connection_port, &label);
+  /* Port is locked and active */
+  label = ip_label_get(connection_port);
+  if (label.io_type == IOT_CONNECTION_PORT && label.iol_connection) {
+    conn_port_sblabel = label.iol_connection;
+    mach_msg_filter_retain_sblabel_callback(conn_port_sblabel);
+  }
+  ip_mq_unlock_label_put(connection_port, &label);
 
-	/* This callback will release the sblabel references */
-	ret = mach_msg_filter_get_connection_port_filter_policy_callback(service_port_sblabel,
-	    conn_port_sblabel, filter_policy_id);
+  /* This callback will release the sblabel references */
+  ret = mach_msg_filter_get_connection_port_filter_policy_callback(
+      service_port_sblabel, conn_port_sblabel, filter_policy_id);
 
-	return ret;
+  return ret;
 }
 
 #if CONFIG_SERVICE_PORT_INFO
 kern_return_t
-mach_port_get_service_port_info(
-	ipc_space_read_t           space,
-	mach_port_name_t           name,
-	mach_service_port_info_t   sp_info)
-{
-	ipc_object_label_t label;
-	ipc_port_t port;
-	kern_return_t kr;
+mach_port_get_service_port_info(ipc_space_read_t space, mach_port_name_t name,
+                                mach_service_port_info_t sp_info) {
+  ipc_object_label_t label;
+  ipc_port_t port;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	if (sp_info == NULL) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (sp_info == NULL) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (!MACH_PORT_VALID(name)) {
-		return KERN_INVALID_RIGHT;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    return KERN_INVALID_RIGHT;
+  }
 
-	kr = ipc_port_translate_receive(space, name, &port);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
-	/* port is locked and active */
+  kr = ipc_port_translate_receive(space, name, &port);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
+  /* port is locked and active */
 
-	label = ip_label_get(port);
-	if (ip_is_any_service_port_type(label.io_type)) {
-		ipc_service_port_label_get_info(label.iol_service, sp_info);
-	} else {
-		kr = KERN_INVALID_CAPABILITY;
-	}
+  label = ip_label_get(port);
+  if (ip_is_any_service_port_type(label.io_type)) {
+    ipc_service_port_label_get_info(label.iol_service, sp_info);
+  } else {
+    kr = KERN_INVALID_CAPABILITY;
+  }
 
-	ip_mq_unlock_label_put(port, &label);
+  ip_mq_unlock_label_put(port, &label);
 
-	return kr;
+  return kr;
 }
 
-#else /* CONFIG_SERVICE_PORT_INFO */
+#else  /* CONFIG_SERVICE_PORT_INFO */
 
 kern_return_t
-mach_port_get_service_port_info(
-	__unused ipc_space_read_t           space,
-	__unused mach_port_name_t           name,
-	__unused mach_service_port_info_t   sp_info)
-{
-	return KERN_NOT_SUPPORTED;
+mach_port_get_service_port_info(__unused ipc_space_read_t space,
+                                __unused mach_port_name_t name,
+                                __unused mach_service_port_info_t sp_info) {
+  return KERN_NOT_SUPPORTED;
 }
 #endif /* CONFIG_SERVICE_PORT_INFO */
 
-kern_return_t
-mach_port_assert_attributes(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	int                     flavor,
-	mach_port_info_t        info,
-	mach_msg_type_number_t  count)
-{
-	ipc_port_t port;
-	kern_return_t kr;
+kern_return_t mach_port_assert_attributes(ipc_space_t space,
+                                          mach_port_name_t name, int flavor,
+                                          mach_port_info_t info,
+                                          mach_msg_type_number_t count) {
+  ipc_port_t port;
+  kern_return_t kr;
 
-	if (space == IS_NULL) {
-		return KERN_INVALID_TASK;
-	}
+  if (space == IS_NULL) {
+    return KERN_INVALID_TASK;
+  }
 
-	switch (flavor) {
-	case MACH_PORT_GUARD_INFO: {
-		mach_port_guard_info_t *mpgi = (mach_port_guard_info_t *)(void *)info;
+  switch (flavor) {
+  case MACH_PORT_GUARD_INFO: {
+    mach_port_guard_info_t *mpgi = (mach_port_guard_info_t *)(void *)info;
 
-		if (count < MACH_PORT_GUARD_INFO_COUNT) {
-			return KERN_FAILURE;
-		}
+    if (count < MACH_PORT_GUARD_INFO_COUNT) {
+      return KERN_FAILURE;
+    }
 
-		if (!MACH_PORT_VALID(name)) {
-			return KERN_INVALID_RIGHT;
-		}
+    if (!MACH_PORT_VALID(name)) {
+      return KERN_INVALID_RIGHT;
+    }
 
-		kr = ipc_port_translate_receive(space, name, &port);
-		if (kr != KERN_SUCCESS) {
-			return kr;
-		}
-		/* port is locked and active */
+    kr = ipc_port_translate_receive(space, name, &port);
+    if (kr != KERN_SUCCESS) {
+      return kr;
+    }
+    /* port is locked and active */
 
-		/* Check if guard value matches else kill the process using fatal guard exception */
-		if (!port->ip_guarded) {
-			ip_mq_unlock(port);
-			/* Port already unguarded; Raise exception */
-			mach_port_guard_exception(name, 0, kGUARD_EXC_UNGUARDED);
-			return KERN_INVALID_ARGUMENT;
-		}
+    /* Check if guard value matches else kill the process using fatal guard
+     * exception */
+    if (!port->ip_guarded) {
+      ip_mq_unlock(port);
+      /* Port already unguarded; Raise exception */
+      mach_port_guard_exception(name, 0, kGUARD_EXC_UNGUARDED);
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (!port->ip_strict_guard || (port->ip_context != mpgi->mpgi_guard)) {
-			uint64_t portguard = port->ip_context;
-			ip_mq_unlock(port);
-			/* Incorrect guard; Raise exception */
-			mach_port_guard_exception(name, portguard, kGUARD_EXC_INCORRECT_GUARD);
-			return KERN_INVALID_ARGUMENT;
-		}
+    if (!port->ip_strict_guard || (port->ip_context != mpgi->mpgi_guard)) {
+      uint64_t portguard = port->ip_context;
+      ip_mq_unlock(port);
+      /* Incorrect guard; Raise exception */
+      mach_port_guard_exception(name, portguard, kGUARD_EXC_INCORRECT_GUARD);
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		ip_mq_unlock(port);
-		break;
-	}
-	default:
-		return KERN_INVALID_ARGUMENT;
-	}
-	return KERN_SUCCESS;
+    ip_mq_unlock(port);
+    break;
+  }
+  default:
+    return KERN_INVALID_ARGUMENT;
+  }
+  return KERN_SUCCESS;
 }

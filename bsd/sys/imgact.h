@@ -66,107 +66,114 @@
 #ifndef _SYS_IMGACT_H_
 #define _SYS_IMGACT_H_
 
-#define IMG_SHSIZE      512     /* largest shell interpreter, in bytes */
+#define IMG_SHSIZE 512 /* largest shell interpreter, in bytes */
 
 struct label;
 struct proc;
 struct nameidata;
 
 struct image_params {
-	user_addr_t     ip_user_fname;          /* argument */
-	user_addr_t     ip_user_argv;           /* argument */
-	user_addr_t     ip_user_envv;           /* argument */
-	int             ip_seg;                 /* segment for arguments */
-	struct vnode    *ip_vp;                 /* file */
-	struct vnode_attr       *ip_vattr;      /* run file attributes */
-	struct vnode_attr       *ip_origvattr;  /* invocation file attributes */
-	cpu_type_t      ip_origcputype;         /* cputype of invocation file */
-	cpu_subtype_t   ip_origcpusubtype;      /* subtype of invocation file */
-	char            *ip_vdata;              /* file data (up to one page) */
-	int             ip_flags;               /* image flags */
-	int             ip_argc;                /* argument count */
-	int             ip_envc;                /* environment count */
-	int             ip_applec;              /* apple vector count */
+  user_addr_t ip_user_fname;       /* argument */
+  user_addr_t ip_user_argv;        /* argument */
+  user_addr_t ip_user_envv;        /* argument */
+  int ip_seg;                      /* segment for arguments */
+  struct vnode *ip_vp;             /* file */
+  struct vnode_attr *ip_vattr;     /* run file attributes */
+  struct vnode_attr *ip_origvattr; /* invocation file attributes */
+  cpu_type_t ip_origcputype;       /* cputype of invocation file */
+  cpu_subtype_t ip_origcpusubtype; /* subtype of invocation file */
+  char *ip_vdata;                  /* file data (up to one page) */
+  int ip_flags;                    /* image flags */
+  int ip_argc;                     /* argument count */
+  int ip_envc;                     /* environment count */
+  int ip_applec;                   /* apple vector count */
 
-	char            *ip_startargv;          /* argument vector beginning */
-	char            *ip_endargv;    /* end of argv/start of envv */
-	char            *ip_endenvv;    /* end of envv/start of applev */
+  char *ip_startargv; /* argument vector beginning */
+  char *ip_endargv;   /* end of argv/start of envv */
+  char *ip_endenvv;   /* end of envv/start of applev */
 
-	char            *ip_strings;            /* base address for strings */
-	char            *ip_strendp;            /* current end pointer */
+  char *ip_strings; /* base address for strings */
+  char *ip_strendp; /* current end pointer */
 
-	char            *ip_subsystem_root_path;        /* filepath for the subsystem root */
+  char *ip_subsystem_root_path; /* filepath for the subsystem root */
 
-	int             ip_argspace;    /* remaining space of NCARGS limit (argv+envv) */
-	int             ip_strspace;            /* remaining total string space */
+  int ip_argspace; /* remaining space of NCARGS limit (argv+envv) */
+  int ip_strspace; /* remaining total string space */
 
-	user_size_t     ip_arch_offset;         /* subfile offset in ip_vp */
-	user_size_t     ip_arch_size;           /* subfile length in ip_vp */
-	char            ip_interp_buffer[IMG_SHSIZE];   /* interpreter buffer space */
-	int             ip_interp_sugid_fd;             /* fd for sugid script */
+  user_size_t ip_arch_offset;        /* subfile offset in ip_vp */
+  user_size_t ip_arch_size;          /* subfile length in ip_vp */
+  char ip_interp_buffer[IMG_SHSIZE]; /* interpreter buffer space */
+  int ip_interp_sugid_fd;            /* fd for sugid script */
 
-	/* Next two fields are for support of architecture translation... */
-	struct vfs_context      *ip_vfs_context;        /* VFS context */
-	struct nameidata *ip_ndp;               /* current nameidata */
-	thread_t        ip_new_thread;          /* thread for spawn */
+  /* Next two fields are for support of architecture translation... */
+  struct vfs_context *ip_vfs_context; /* VFS context */
+  struct nameidata *ip_ndp;           /* current nameidata */
+  thread_t ip_new_thread;             /* thread for spawn */
 
-	struct label    *ip_execlabelp;         /* label of the executable */
-	struct label    *ip_scriptlabelp;       /* label of the script */
-	struct vnode    *ip_scriptvp;           /* script */
-	unsigned int    ip_csflags;             /* code signing flags */
-	int             ip_mac_return;          /* return code from mac policy checks */
-	void            *ip_px_sa;              /* posix_spawn attrs */
-	void            *ip_px_sfa;             /* posix_spawn file actions */
-	void            *ip_px_spa;             /* posix_spawn port actions */
-	vm_map_t        ip_free_map;            /* map to free once iocount is dropped on vnode */
-	struct ip_px_smpx_s {
-		void        *array;
-		void        *data;
-		uint64_t    datalen;
-	}               ip_px_smpx;             /* MAC-specific spawn attrs. */
-	void            *ip_px_persona;         /* persona args */
-	void            *ip_px_pcred_info;      /* posix cred args */
-	void            *ip_cs_error;           /* codesigning error reason */
-	char            *ip_inherited_shared_region_id;  /* inherited shared region id for ptr auth */
+  struct label *ip_execlabelp;   /* label of the executable */
+  struct label *ip_scriptlabelp; /* label of the script */
+  struct vnode *ip_scriptvp;     /* script */
+  unsigned int ip_csflags;       /* code signing flags */
+  int ip_mac_return;             /* return code from mac policy checks */
+  void *ip_px_sa;                /* posix_spawn attrs */
+  void *ip_px_sfa;               /* posix_spawn file actions */
+  void *ip_px_spa;               /* posix_spawn port actions */
+  vm_map_t ip_free_map; /* map to free once iocount is dropped on vnode */
+  struct ip_px_smpx_s {
+    void *array;
+    void *data;
+    uint64_t datalen;
+  } ip_px_smpx;                        /* MAC-specific spawn attrs. */
+  void *ip_px_persona;                 /* persona args */
+  void *ip_px_pcred_info;              /* posix cred args */
+  void *ip_cs_error;                   /* codesigning error reason */
+  char *ip_inherited_shared_region_id; /* inherited shared region id for ptr
+                                          auth */
 
-	uint64_t ip_dyld_fsid;
-	uint64_t ip_dyld_fsobjid;
-	uint64_t ip_inherited_jop_pid;
-	unsigned int    ip_simulator_binary;    /* simulator binary flags */
+  uint64_t ip_dyld_fsid;
+  uint64_t ip_dyld_fsobjid;
+  uint64_t ip_inherited_jop_pid;
+  unsigned int ip_simulator_binary; /* simulator binary flags */
 };
 
 /*
  * Image flags
  */
-#define IMGPF_NONE              0x00000000      /* No flags */
-#define IMGPF_INTERPRET         0x00000001      /* Interpreter invoked */
-#define IMGPF_RESERVED          0x00000002
-#define IMGPF_WAS_64BIT_ADDR    0x00000004      /* exec from a 64Bit address space */
-#define IMGPF_IS_64BIT_ADDR     0x00000008      /* exec to a 64Bit address space */
-#define IMGPF_SPAWN             0x00000010      /* spawn (without setexec) */
-#define IMGPF_DISABLE_ASLR      0x00000020      /* disable ASLR */
-#define IMGPF_ALLOW_DATA_EXEC   0x00000040      /* forcibly disallow data execution */
+#define IMGPF_NONE 0x00000000      /* No flags */
+#define IMGPF_INTERPRET 0x00000001 /* Interpreter invoked */
+#define IMGPF_RESERVED 0x00000002
+#define IMGPF_WAS_64BIT_ADDR 0x00000004  /* exec from a 64Bit address space */
+#define IMGPF_IS_64BIT_ADDR 0x00000008   /* exec to a 64Bit address space */
+#define IMGPF_SPAWN 0x00000010           /* spawn (without setexec) */
+#define IMGPF_DISABLE_ASLR 0x00000020    /* disable ASLR */
+#define IMGPF_ALLOW_DATA_EXEC 0x00000040 /* forcibly disallow data execution   \
+                                          */
 #if XNU_TARGET_OS_OSX
-#define IMGPF_3P_PLUGINS        0x00000080      /* this platform binary might load third party plugins */
-#endif /* XNU_TARGET_OS_OSX */
-#define IMGPF_EXEC              0x00000100      /* exec */
-#define IMGPF_HIGH_BITS_ASLR    0x00000200      /* randomize high bits of ASLR slide */
-#define IMGPF_IS_64BIT_DATA     0x00000400      /* exec to a 64Bit register state */
-#define IMGPF_DRIVER            0x00000800      /* exec of a driver binary (no LC_MAIN) */
-#define IMGPF_RESLIDE           0x00001000      /* reslide the shared cache */
-#define IMGPF_PLUGIN_HOST_DISABLE_A_KEYS  0x00002000     /* process hosts plugins, disable ptr auth A keys */
-#define IMGPF_HW_TPRO           0x00004000      /* HW support for read-only/read-write trusted paths  */
-#define IMGPF_HARDENED_HEAP     0x00008000      /* enable hardened-heap for the process */
-#define IMGPF_ROSETTA           0x10000000      /* load rosetta runtime */
-#define IMGPF_ALT_ROSETTA       0x20000000      /* load alternative rosetta runtime */
-#define IMGPF_NOJOP             0x80000000
+#define IMGPF_3P_PLUGINS                                                       \
+  0x00000080 /* this platform binary might load third party plugins */
+#endif       /* XNU_TARGET_OS_OSX */
+#define IMGPF_EXEC 0x00000100           /* exec */
+#define IMGPF_HIGH_BITS_ASLR 0x00000200 /* randomize high bits of ASLR slide   \
+                                         */
+#define IMGPF_IS_64BIT_DATA 0x00000400  /* exec to a 64Bit register state */
+#define IMGPF_DRIVER 0x00000800  /* exec of a driver binary (no LC_MAIN) */
+#define IMGPF_RESLIDE 0x00001000 /* reslide the shared cache */
+#define IMGPF_PLUGIN_HOST_DISABLE_A_KEYS                                       \
+  0x00002000 /* process hosts plugins, disable ptr auth A keys */
+#define IMGPF_HW_TPRO                                                          \
+  0x00004000 /* HW support for read-only/read-write trusted paths  */
+#define IMGPF_HARDENED_HEAP                                                    \
+  0x00008000                         /* enable hardened-heap for the process */
+#define IMGPF_ROSETTA 0x10000000     /* load rosetta runtime */
+#define IMGPF_ALT_ROSETTA 0x20000000 /* load alternative rosetta runtime */
+#define IMGPF_NOJOP 0x80000000
 
 /*
  * Simulator binary flags
  */
-#define IMGPF_SB_DEFAULT         0               /* Default value, did not check if it is a simulator binary */
-#define IMGPF_SB_TRUE            1               /* Binary is a simulator binary */
-#define IMGPF_SB_FALSE           2               /* Binary is not a simulator binary */
+#define IMGPF_SB_DEFAULT                                                       \
+  0 /* Default value, did not check if it is a simulator binary */
+#define IMGPF_SB_TRUE 1  /* Binary is a simulator binary */
+#define IMGPF_SB_FALSE 2 /* Binary is not a simulator binary */
 
-
-#endif  /* !_SYS_IMGACT */
+#endif /* !_SYS_IMGACT */

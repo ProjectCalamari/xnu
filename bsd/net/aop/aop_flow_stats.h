@@ -33,28 +33,28 @@
 #include <netinet/tcp_private.h>
 
 typedef struct aop_buffer {
-	uint32_t bufsize;       /* Transport buffer size */
-	uint32_t bufused;       /* Transport buffer used count */
+  uint32_t bufsize; /* Transport buffer size */
+  uint32_t bufused; /* Transport buffer used count */
 } aop_buffer_t;
 
 typedef struct aop_tcp_info {
-	struct tcp_info tcp_info;       /* TCP information */
-	uint8_t tcp_cc_algo;            /* TCP congestion control algo from tcp_cc.h */
+  struct tcp_info tcp_info; /* TCP information */
+  uint8_t tcp_cc_algo;      /* TCP congestion control algo from tcp_cc.h */
 } aop_tcp_info_t;
 
 struct aop_flow_stats {
-	uint32_t flow_id;                       /* Flow ID */
-	uint32_t reserved;
-	uint64_t rxbytes;                       /* Total Rx bytes */
-	uint64_t txbytes;                       /* Total Tx bytes */
-	uint64_t rxpkts;                        /* Total Rx packets */
-	uint64_t txpkts;                        /* Total Tx packets */
-	aop_buffer_t tx_buffer_stats;           /* Transport Tx buffer stats */
-	aop_buffer_t rx_buffer_stats;           /* Transport Rx buffer stats */
-	activity_bitmap_t activity_bitmap;      /* Activity bitmap */
-	union {
-		aop_tcp_info_t tcp_stats;       /* TCP stats */
-	} transport;
+  uint32_t flow_id; /* Flow ID */
+  uint32_t reserved;
+  uint64_t rxbytes;                  /* Total Rx bytes */
+  uint64_t txbytes;                  /* Total Tx bytes */
+  uint64_t rxpkts;                   /* Total Rx packets */
+  uint64_t txpkts;                   /* Total Tx packets */
+  aop_buffer_t tx_buffer_stats;      /* Transport Tx buffer stats */
+  aop_buffer_t rx_buffer_stats;      /* Transport Rx buffer stats */
+  activity_bitmap_t activity_bitmap; /* Activity bitmap */
+  union {
+    aop_tcp_info_t tcp_stats; /* TCP stats */
+  } transport;
 };
 
 #endif /* _NET_AOP_FLOW_STATS_H_ */

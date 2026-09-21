@@ -33,37 +33,33 @@
 
 __BEGIN_DECLS
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 typedef struct _lck_attr_ {
-	unsigned int    lck_attr_val;
+  unsigned int lck_attr_val;
 } lck_attr_t;
 
-extern lck_attr_t       lck_attr_default;
+extern lck_attr_t lck_attr_default;
 
-#define LCK_ATTR_NONE                   0
-#define LCK_ATTR_DEBUG                  0x00000001
-#define LCK_ATTR_RW_SHARED_PRIORITY     0x00010000
-#else /* !XNU_KERNEL_PRIVATE */
+#define LCK_ATTR_NONE 0
+#define LCK_ATTR_DEBUG 0x00000001
+#define LCK_ATTR_RW_SHARED_PRIORITY 0x00010000
+#else  /* !XNU_KERNEL_PRIVATE */
 typedef struct __lck_attr__ lck_attr_t;
 #endif /* !XNU_KERNEL_PRIVATE */
 
 #define LCK_ATTR_NULL ((lck_attr_t *)NULL)
 
-extern  lck_attr_t      *lck_attr_alloc_init(void);
+extern lck_attr_t *lck_attr_alloc_init(void);
 
-extern  void            lck_attr_setdefault(
-	lck_attr_t              *attr);
+extern void lck_attr_setdefault(lck_attr_t *attr);
 
-extern  void            lck_attr_setdebug(
-	lck_attr_t              *attr);
+extern void lck_attr_setdebug(lck_attr_t *attr);
 
-extern  void            lck_attr_cleardebug(
-	lck_attr_t              *attr);
+extern void lck_attr_cleardebug(lck_attr_t *attr);
 
-extern  void            lck_attr_free(
-	lck_attr_t              *attr);
+extern void lck_attr_free(lck_attr_t *attr);
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 /*!
  * @function lck_attr_rw_shared_priority
  *
@@ -72,14 +68,14 @@ extern  void            lck_attr_free(
  *
  * @discussion
  * The attribute needs to be set before calling lck_rw_init().
- * This attribute changes the locking behaviour by possibly starving the writers.
- * Readers will always be able to lock the lock as long as a writer is not holding it.
- * This attribute was added to allow recursive locking in shared mode.
+ * This attribute changes the locking behaviour by possibly starving the
+ * writers. Readers will always be able to lock the lock as long as a writer is
+ * not holding it. This attribute was added to allow recursive locking in shared
+ * mode.
  *
  * @param attr	attr to modify
  */
-extern  void            lck_attr_rw_shared_priority(
-	lck_attr_t              *attr);
+extern void lck_attr_rw_shared_priority(lck_attr_t *attr);
 #endif /* XNU_KERNEL_PRIVATE */
 
 __END_DECLS

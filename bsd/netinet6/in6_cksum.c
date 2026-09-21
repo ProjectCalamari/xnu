@@ -119,14 +119,14 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <machine/endian.h>
-#include <sys/mbuf.h>
-#include <sys/systm.h>
 #include <kern/debug.h>
+#include <machine/endian.h>
 #include <netinet/in.h>
 #include <netinet/ip6.h>
 #include <netinet6/ip6_var.h>
+#include <sys/mbuf.h>
+#include <sys/param.h>
+#include <sys/systm.h>
 
 /*
  * Checksum routine for Internet Protocol family headers (Portable Version).
@@ -138,46 +138,53 @@
 /*
  * Compute IPv6 pseudo-header checksum; assumes 16-bit aligned pointers.
  */
-uint16_t
-in6_pseudo(const struct in6_addr *src, const struct in6_addr *dst, uint32_t x)
-{
-	uint32_t sum = 0;
-	const uint16_t *w;
+uint16_t in6_pseudo(const struct in6_addr *src, const struct in6_addr *dst,
+                    uint32_t x) {
+  uint32_t sum = 0;
+  const uint16_t *w;
 
-	/*
-	 * IPv6 source address
-	 */
-	w = (const uint16_t *)(const struct in6_addr *__bidi_indexable)src;
-	sum += w[0];
-	if (!IN6_IS_SCOPE_EMBED(src)) {
-		sum += w[1];
-	}
-	sum += w[2]; sum += w[3]; sum += w[4]; sum += w[5];
-	sum += w[6]; sum += w[7];
+  /*
+   * IPv6 source address
+   */
+  w = (const uint16_t *)(const struct in6_addr *__bidi_indexable)src;
+  sum += w[0];
+  if (!IN6_IS_SCOPE_EMBED(src)) {
+    sum += w[1];
+  }
+  sum += w[2];
+  sum += w[3];
+  sum += w[4];
+  sum += w[5];
+  sum += w[6];
+  sum += w[7];
 
-	/*
-	 * IPv6 destination address
-	 */
-	w = (const uint16_t *)(const struct in6_addr *__bidi_indexable)dst;
-	sum += w[0];
-	if (!IN6_IS_SCOPE_EMBED(dst)) {
-		sum += w[1];
-	}
-	sum += w[2]; sum += w[3]; sum += w[4]; sum += w[5];
-	sum += w[6]; sum += w[7];
+  /*
+   * IPv6 destination address
+   */
+  w = (const uint16_t *)(const struct in6_addr *__bidi_indexable)dst;
+  sum += w[0];
+  if (!IN6_IS_SCOPE_EMBED(dst)) {
+    sum += w[1];
+  }
+  sum += w[2];
+  sum += w[3];
+  sum += w[4];
+  sum += w[5];
+  sum += w[6];
+  sum += w[7];
 
-	/*
-	 * Caller-supplied value; 'x' could be one of:
-	 *
-	 *	htonl(proto + length), or
-	 *	htonl(proto + length + sum)
-	 **/
-	sum += x;
+  /*
+   * Caller-supplied value; 'x' could be one of:
+   *
+   *	htonl(proto + length), or
+   *	htonl(proto + length + sum)
+   **/
+  sum += x;
 
-	/* fold in carry bits */
-	ADDCARRY(sum);
+  /* fold in carry bits */
+  ADDCARRY(sum);
 
-	return (uint16_t)sum;
+  return (uint16_t)sum;
 }
 
 /*
@@ -186,53 +193,50 @@ in6_pseudo(const struct in6_addr *src, const struct in6_addr *dst, uint32_t x)
  * off is an offset where TCP/UDP/ICMP6 header starts;
  * len is a total length of a transport segment (e.g. TCP header + TCP payload)
  */
-u_int16_t
-inet6_cksum(struct mbuf *m, uint32_t nxt, uint32_t off, uint32_t len)
-{
-	uint32_t sum;
+u_int16_t inet6_cksum(struct mbuf *m, uint32_t nxt, uint32_t off,
+                      uint32_t len) {
+  uint32_t sum;
 
-	sum = m_sum16(m, off, len);
+  sum = m_sum16(m, off, len);
 
-	if (nxt != 0) {
-		struct ip6_hdr *__single ip6;
-		unsigned char buf[sizeof(*ip6)] __attribute__((aligned(8)));
-		uint32_t mlen;
+  if (nxt != 0) {
+    struct ip6_hdr *__single ip6;
+    unsigned char buf[sizeof(*ip6)] __attribute__((aligned(8)));
+    uint32_t mlen;
 
-		/*
-		 * Sanity check
-		 *
-		 * Use m_length2() instead of m_length(), as we cannot rely on
-		 * the caller setting m_pkthdr.len correctly, if the mbuf is
-		 * a M_PKTHDR one.
-		 */
-		if ((mlen = m_length2(m, NULL)) < sizeof(*ip6)) {
-			panic("%s: mbuf %p pkt too short (%d) for IPv6 header",
-			    __func__, m, mlen);
-			/* NOTREACHED */
-		}
+    /*
+     * Sanity check
+     *
+     * Use m_length2() instead of m_length(), as we cannot rely on
+     * the caller setting m_pkthdr.len correctly, if the mbuf is
+     * a M_PKTHDR one.
+     */
+    if ((mlen = m_length2(m, NULL)) < sizeof(*ip6)) {
+      panic("%s: mbuf %p pkt too short (%d) for IPv6 header", __func__, m,
+            mlen);
+      /* NOTREACHED */
+    }
 
-		/*
-		 * In case the IPv6 header is not contiguous, or not 32-bit
-		 * aligned, copy it to a local buffer.  Note here that we
-		 * expect the data pointer to point to the IPv6 header.
-		 */
-		if ((sizeof(*ip6) > m->m_len) ||
-		    !IP6_HDR_ALIGNED_P(mtod(m, caddr_t))) {
-			m_copydata(m, 0, sizeof(*ip6), (caddr_t)buf);
-			ip6 = (struct ip6_hdr *)(void *)buf;
-		} else {
-			ip6 = (struct ip6_hdr *)m_mtod_current(m);
-		}
+    /*
+     * In case the IPv6 header is not contiguous, or not 32-bit
+     * aligned, copy it to a local buffer.  Note here that we
+     * expect the data pointer to point to the IPv6 header.
+     */
+    if ((sizeof(*ip6) > m->m_len) || !IP6_HDR_ALIGNED_P(mtod(m, caddr_t))) {
+      m_copydata(m, 0, sizeof(*ip6), (caddr_t)buf);
+      ip6 = (struct ip6_hdr *)(void *)buf;
+    } else {
+      ip6 = (struct ip6_hdr *)m_mtod_current(m);
+    }
 
-		/* add pseudo header checksum */
-		sum += in6_pseudo(&ip6->ip6_src, &ip6->ip6_dst,
-		    htonl(nxt + len));
+    /* add pseudo header checksum */
+    sum += in6_pseudo(&ip6->ip6_src, &ip6->ip6_dst, htonl(nxt + len));
 
-		/* fold in carry bits */
-		ADDCARRY(sum);
-	}
+    /* fold in carry bits */
+    ADDCARRY(sum);
+  }
 
-	return ~sum & 0xffff;
+  return ~sum & 0xffff;
 }
 
 /*
@@ -241,62 +245,58 @@ inet6_cksum(struct mbuf *m, uint32_t nxt, uint32_t off, uint32_t len)
  * off is an offset where TCP/UDP/ICMP6 header starts;
  * len is a total length of a transport segment (e.g. TCP header + TCP payload)
  */
-u_int16_t
-inet6_cksum_buffer(const uint8_t *__sized_by(buffer_len)buffer, uint32_t nxt, uint32_t off,
-    uint32_t len, uint32_t buffer_len)
-{
-	uint32_t sum;
-	uint32_t tmp;
+u_int16_t inet6_cksum_buffer(const uint8_t *__sized_by(buffer_len) buffer,
+                             uint32_t nxt, uint32_t off, uint32_t len,
+                             uint32_t buffer_len) {
+  uint32_t sum;
+  uint32_t tmp;
 
-	if (__improbable(off >= buffer_len)) {
-		panic("%s: off (%u) >=  buffer_len (%u)",
-		    __func__, off, buffer_len);
-		/* NOTREACHED */
-	}
+  if (__improbable(off >= buffer_len)) {
+    panic("%s: off (%u) >=  buffer_len (%u)", __func__, off, buffer_len);
+    /* NOTREACHED */
+  }
 
-	if (__improbable(len == 0 || len > buffer_len)) {
-		panic("%s: len == 0 OR len (%u) >=  buffer_len (%u)",
-		    __func__, len, buffer_len);
-		/* NOTREACHED */
-	}
+  if (__improbable(len == 0 || len > buffer_len)) {
+    panic("%s: len == 0 OR len (%u) >=  buffer_len (%u)", __func__, len,
+          buffer_len);
+    /* NOTREACHED */
+  }
 
-	if (__improbable(os_add_overflow(off, len, &tmp))) {
-		panic("%s: off(%u), len(%u) add overflow",
-		    __func__, off, len);
-		/* NOTREACHED */
-	}
+  if (__improbable(os_add_overflow(off, len, &tmp))) {
+    panic("%s: off(%u), len(%u) add overflow", __func__, off, len);
+    /* NOTREACHED */
+  }
 
-	if (__improbable(tmp > buffer_len)) {
-		panic("%s: off(%u) + len(%u) >=  buffer_len (%u)",
-		    __func__, off, len, buffer_len);
-		/* NOTREACHED */
-	}
+  if (__improbable(tmp > buffer_len)) {
+    panic("%s: off(%u) + len(%u) >=  buffer_len (%u)", __func__, off, len,
+          buffer_len);
+    /* NOTREACHED */
+  }
 
-	sum = b_sum16(&((const uint8_t *)buffer)[off], len);
+  sum = b_sum16(&((const uint8_t *)buffer)[off], len);
 
-	if (nxt != 0) {
-		const struct ip6_hdr *ip6;
-		unsigned char buf[sizeof(*ip6)] __attribute__((aligned(8)));
+  if (nxt != 0) {
+    const struct ip6_hdr *ip6;
+    unsigned char buf[sizeof(*ip6)] __attribute__((aligned(8)));
 
-		/*
-		 * In case the IPv6 header is not contiguous, or not 32-bit
-		 * aligned, copy it to a local buffer.  Note here that we
-		 * expect the data pointer to point to the IPv6 header.
-		 */
-		if (!IP6_HDR_ALIGNED_P(buffer)) {
-			memcpy(buf, buffer, sizeof(*ip6));
-			ip6 = (const struct ip6_hdr *)(const void *)buf;
-		} else {
-			ip6 = (const struct ip6_hdr *)buffer;
-		}
+    /*
+     * In case the IPv6 header is not contiguous, or not 32-bit
+     * aligned, copy it to a local buffer.  Note here that we
+     * expect the data pointer to point to the IPv6 header.
+     */
+    if (!IP6_HDR_ALIGNED_P(buffer)) {
+      memcpy(buf, buffer, sizeof(*ip6));
+      ip6 = (const struct ip6_hdr *)(const void *)buf;
+    } else {
+      ip6 = (const struct ip6_hdr *)buffer;
+    }
 
-		/* add pseudo header checksum */
-		sum += in6_pseudo(&ip6->ip6_src, &ip6->ip6_dst,
-		    htonl(nxt + len));
+    /* add pseudo header checksum */
+    sum += in6_pseudo(&ip6->ip6_src, &ip6->ip6_dst, htonl(nxt + len));
 
-		/* fold in carry bits */
-		ADDCARRY(sum);
-	}
+    /* fold in carry bits */
+    ADDCARRY(sum);
+  }
 
-	return ~sum & 0xffff;
+  return ~sum & 0xffff;
 }

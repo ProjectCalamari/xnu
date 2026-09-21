@@ -31,53 +31,41 @@
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-IODeviceMemory *
-IODeviceMemory::withRange(
-	IOPhysicalAddress       start,
-	IOPhysicalLength        length )
-{
-	return (IODeviceMemory *) IOMemoryDescriptor::withAddressRange(
-		start, length, kIODirectionNone | kIOMemoryMapperNone, NULL );
+IODeviceMemory *IODeviceMemory::withRange(IOPhysicalAddress start,
+                                          IOPhysicalLength length) {
+  return (IODeviceMemory *)IOMemoryDescriptor::withAddressRange(
+      start, length, kIODirectionNone | kIOMemoryMapperNone, NULL);
 }
 
-
-IODeviceMemory *
-IODeviceMemory::withSubRange(
-	IODeviceMemory *        of,
-	IOPhysicalAddress       offset,
-	IOPhysicalLength        length )
-{
-	return (IODeviceMemory *) IOSubMemoryDescriptor::withSubRange(
-		of, offset, length, kIODirectionNone );
+IODeviceMemory *IODeviceMemory::withSubRange(IODeviceMemory *of,
+                                             IOPhysicalAddress offset,
+                                             IOPhysicalLength length) {
+  return (IODeviceMemory *)IOSubMemoryDescriptor::withSubRange(
+      of, offset, length, kIODirectionNone);
 }
 
+OSArray *IODeviceMemory::arrayFromList(InitElement list[], IOItemCount count) {
+  OSArray *array;
+  IODeviceMemory *range;
+  IOItemCount i;
 
-OSArray *
-IODeviceMemory::arrayFromList(
-	InitElement             list[],
-	IOItemCount             count )
-{
-	OSArray *           array;
-	IODeviceMemory *    range;
-	IOItemCount         i;
+  array = OSArray::withCapacity(count);
+  if (NULL == array) {
+    return NULL;
+  }
 
-	array = OSArray::withCapacity( count );
-	if (NULL == array) {
-		return NULL;
-	}
+  for (i = 0; i < count; i++) {
+    range = IODeviceMemory::withRange(list[i].start, list[i].length);
+    if (range) {
+      range->setTag(list[i].tag);
+      array->setObject(range);
+      range->release();
+    } else {
+      array->release();
+      array = NULL;
+      break;
+    }
+  }
 
-	for (i = 0; i < count; i++) {
-		range = IODeviceMemory::withRange( list[i].start, list[i].length );
-		if (range) {
-			range->setTag( list[i].tag );
-			array->setObject( range);
-			range->release();
-		} else {
-			array->release();
-			array = NULL;
-			break;
-		}
-	}
-
-	return array;
+  return array;
 }

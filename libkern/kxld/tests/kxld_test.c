@@ -30,14 +30,12 @@
 #include "kxld_test.h"
 #include "kxld_util.h"
 
-void
-kxld_test_log(KXLDLogSubsystem sys __unused, KXLDLogLevel level __unused,
-    const char *format, va_list ap, void *user_data __unused)
-{
-	va_list args;
+void kxld_test_log(KXLDLogSubsystem sys __unused, KXLDLogLevel level __unused,
+                   const char *format, va_list ap, void *user_data __unused) {
+  va_list args;
 
-	va_copy(args, ap);
-	vfprintf(stderr, format, args);
-	fprintf(stderr, "\n");
-	va_end(args);
+  va_copy(args, ap);
+  vfprintf(stderr, format, args);
+  fprintf(stderr, "\n");
+  va_end(args);
 }

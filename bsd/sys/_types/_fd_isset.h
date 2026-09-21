@@ -27,5 +27,5 @@
  */
 #ifndef FD_ISSET
 #include <sys/_types/_fd_def.h>
-#define FD_ISSET(n, p)  __DARWIN_FD_ISSET(n, p)
+#define FD_ISSET(n, p) __DARWIN_FD_ISSET(n, p)
 #endif /* FD_ISSET */

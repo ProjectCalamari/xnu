@@ -31,16 +31,17 @@
 #include <vm/vm_kern.h>
 
 struct thread_kernel_state {
-	machine_thread_kernel_state  machine;       /* must be first */
-	kern_allocation_name_t       allocation_name;
+  machine_thread_kernel_state machine; /* must be first */
+  kern_allocation_name_t allocation_name;
 } __attribute__((aligned(16)));
 
-typedef struct thread_kernel_state * thread_kernel_state_t;
+typedef struct thread_kernel_state *thread_kernel_state_t;
 
-#define thread_get_kernel_state(thread) ((thread_kernel_state_t) \
-    ((thread)->kernel_stack + kernel_stack_size - sizeof(struct thread_kernel_state)))
+#define thread_get_kernel_state(thread)                                        \
+  ((thread_kernel_state_t)((thread)->kernel_stack + kernel_stack_size -        \
+                           sizeof(struct thread_kernel_state)))
 
-#define thread_initialize_kernel_state(thread)  \
-    thread_get_kernel_state((thread))->allocation_name = NULL;
+#define thread_initialize_kernel_state(thread)                                 \
+  thread_get_kernel_state((thread))->allocation_name = NULL;
 
 #endif /* _KERN_THREAD_KERNEL_STATE_H_ */

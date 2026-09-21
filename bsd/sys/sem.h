@@ -37,17 +37,15 @@
 #ifndef _SYS_SEM_H_
 #define _SYS_SEM_H_
 
-
-#include <sys/cdefs.h>
-#include <sys/_types.h>
 #include <machine/types.h> /* __int32_t */
+#include <sys/_types.h>
+#include <sys/cdefs.h>
 
 /*
  * [XSI]	All of the symbols from <sys/ipc.h> SHALL be defined
  *		when this header is included
  */
 #include <sys/ipc.h>
-
 
 /*
  * [XSI] The pid_t, time_t, key_t, and size_t types shall be defined as
@@ -57,8 +55,8 @@
  *		inclusion of <sys/ipc.h>
  */
 #include <sys/_types/_pid_t.h>
-#include <sys/_types/_time_t.h>
 #include <sys/_types/_size_t.h>
+#include <sys/_types/_time_t.h>
 
 /*
  * Technically, we should force all code references to the new structure
@@ -81,76 +79,73 @@
 #if (defined(_POSIX_C_SOURCE) && !defined(_DARWIN_C_SOURCE))
 struct semid_ds
 #else
-#define semid_ds        __semid_ds_new
+#define semid_ds __semid_ds_new
 struct __semid_ds_new
 #endif
 {
-	struct __ipc_perm_new sem_perm; /* [XSI] operation permission struct */
-	__int32_t       sem_base;       /* 32 bit base ptr for semaphore set */
-	unsigned short  sem_nsems;      /* [XSI] number of sems in set */
-	time_t          sem_otime;      /* [XSI] last operation time */
-	__int32_t       sem_pad1;       /* RESERVED: DO NOT USE! */
-	time_t          sem_ctime;      /* [XSI] last change time */
-	                                /* Times measured in secs since */
-	                                /* 00:00:00 GMT, Jan. 1, 1970 */
-	__int32_t       sem_pad2;       /* RESERVED: DO NOT USE! */
-	__int32_t       sem_pad3[4];    /* RESERVED: DO NOT USE! */
+  struct __ipc_perm_new sem_perm; /* [XSI] operation permission struct */
+  __int32_t sem_base;             /* 32 bit base ptr for semaphore set */
+  unsigned short sem_nsems;       /* [XSI] number of sems in set */
+  time_t sem_otime;               /* [XSI] last operation time */
+  __int32_t sem_pad1;             /* RESERVED: DO NOT USE! */
+  time_t sem_ctime;               /* [XSI] last change time */
+                                  /* Times measured in secs since */
+                                  /* 00:00:00 GMT, Jan. 1, 1970 */
+  __int32_t sem_pad2;             /* RESERVED: DO NOT USE! */
+  __int32_t sem_pad3[4];          /* RESERVED: DO NOT USE! */
 };
 #pragma pack()
-#else   /* !__DARWIN_UNIX03 */
-#define semid_ds        __semid_ds_old
-#endif  /* __DARWIN_UNIX03 */
+#else /* !__DARWIN_UNIX03 */
+#define semid_ds __semid_ds_old
+#endif /* __DARWIN_UNIX03 */
 
 #if !__DARWIN_UNIX03
 struct __semid_ds_old {
-	struct __ipc_perm_old sem_perm; /* [XSI] operation permission struct */
-	__int32_t       sem_base;       /* 32 bit base ptr for semaphore set */
-	unsigned short  sem_nsems;      /* [XSI] number of sems in set */
-	time_t          sem_otime;      /* [XSI] last operation time */
-	__int32_t       sem_pad1;       /* RESERVED: DO NOT USE! */
-	time_t          sem_ctime;      /* [XSI] last change time */
-	                                /* Times measured in secs since */
-	                                /* 00:00:00 GMT, Jan. 1, 1970 */
-	__int32_t       sem_pad2;       /* RESERVED: DO NOT USE! */
-	__int32_t       sem_pad3[4];    /* RESERVED: DO NOT USE! */
+  struct __ipc_perm_old sem_perm; /* [XSI] operation permission struct */
+  __int32_t sem_base;             /* 32 bit base ptr for semaphore set */
+  unsigned short sem_nsems;       /* [XSI] number of sems in set */
+  time_t sem_otime;               /* [XSI] last operation time */
+  __int32_t sem_pad1;             /* RESERVED: DO NOT USE! */
+  time_t sem_ctime;               /* [XSI] last change time */
+                                  /* Times measured in secs since */
+                                  /* 00:00:00 GMT, Jan. 1, 1970 */
+  __int32_t sem_pad2;             /* RESERVED: DO NOT USE! */
+  __int32_t sem_pad3[4];          /* RESERVED: DO NOT USE! */
 };
-#endif  /* !__DARWIN_UNIX03 */
+#endif /* !__DARWIN_UNIX03 */
 
 /*
  * Possible values for the third argument to semctl()
  */
-#define GETNCNT 3       /* [XSI] Return the value of semncnt {READ} */
-#define GETPID  4       /* [XSI] Return the value of sempid {READ} */
-#define GETVAL  5       /* [XSI] Return the value of semval {READ} */
-#define GETALL  6       /* [XSI] Return semvals into arg.array {READ} */
-#define GETZCNT 7       /* [XSI] Return the value of semzcnt {READ} */
-#define SETVAL  8       /* [XSI] Set the value of semval to arg.val {ALTER} */
-#define SETALL  9       /* [XSI] Set semvals from arg.array {ALTER} */
-
+#define GETNCNT 3 /* [XSI] Return the value of semncnt {READ} */
+#define GETPID 4  /* [XSI] Return the value of sempid {READ} */
+#define GETVAL 5  /* [XSI] Return the value of semval {READ} */
+#define GETALL 6  /* [XSI] Return semvals into arg.array {READ} */
+#define GETZCNT 7 /* [XSI] Return the value of semzcnt {READ} */
+#define SETVAL 8  /* [XSI] Set the value of semval to arg.val {ALTER} */
+#define SETALL 9  /* [XSI] Set semvals from arg.array {ALTER} */
 
 /* A semaphore; this is an anonymous structure, not for external use */
 struct sem {
-	unsigned short  semval;         /* semaphore value */
-	pid_t           sempid;         /* pid of last operation */
-	unsigned short  semncnt;        /* # awaiting semval > cval */
-	unsigned short  semzcnt;        /* # awaiting semval == 0 */
+  unsigned short semval;  /* semaphore value */
+  pid_t sempid;           /* pid of last operation */
+  unsigned short semncnt; /* # awaiting semval > cval */
+  unsigned short semzcnt; /* # awaiting semval == 0 */
 };
-
 
 /*
  * Structure of array element for second argument to semop()
  */
 struct sembuf {
-	unsigned short  sem_num;        /* [XSI] semaphore # */
-	short           sem_op;         /* [XSI] semaphore operation */
-	short           sem_flg;        /* [XSI] operation flags */
+  unsigned short sem_num; /* [XSI] semaphore # */
+  short sem_op;           /* [XSI] semaphore operation */
+  short sem_flg;          /* [XSI] operation flags */
 };
 
 /*
  * Possible flag values for sem_flg
  */
-#define SEM_UNDO        010000          /* [XSI] Set up adjust on exit entry */
-
+#define SEM_UNDO 010000 /* [XSI] Set up adjust on exit entry */
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 
@@ -175,32 +170,29 @@ struct sembuf {
  *	not function correctly
  */
 union semun {
-	int             val;            /* value for SETVAL */
-	struct semid_ds *buf;           /* buffer for IPC_STAT & IPC_SET */
-	unsigned short  *array;         /* array for GETALL & SETALL */
+  int val;               /* value for SETVAL */
+  struct semid_ds *buf;  /* buffer for IPC_STAT & IPC_SET */
+  unsigned short *array; /* array for GETALL & SETALL */
 };
 typedef union semun semun_t;
-
 
 /*
  * Permissions
  */
-#define SEM_A           0200    /* alter permission */
-#define SEM_R           0400    /* read permission */
+#define SEM_A 0200 /* alter permission */
+#define SEM_R 0400 /* read permission */
 
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-
-
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
 #ifndef KERNEL
 
 __BEGIN_DECLS
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-int     semsys(int, ...);
+int semsys(int, ...);
 #endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-int     semctl(int, int, int, ...) __DARWIN_ALIAS(semctl);
-int     semget(key_t, int, int);
-int     semop(int, struct sembuf *, size_t);
+int semctl(int, int, int, ...) __DARWIN_ALIAS(semctl);
+int semget(key_t, int, int);
+int semop(int, struct sembuf *, size_t);
 __END_DECLS
 
 #endif /* !KERNEL */

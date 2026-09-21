@@ -26,13 +26,11 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <IOKit/IOService.h>
 #include <IOKit/IOLib.h>
+#include <IOKit/IOService.h>
 
 class testlibkmod : public IOService {
-	OSDeclareDefaultStructors(testlibkmod);
+  OSDeclareDefaultStructors(testlibkmod);
 
-	virtual IOService * probe(
-		IOService *provider,
-		SInt32 *score );
+  virtual IOService *probe(IOService *provider, SInt32 *score);
 };

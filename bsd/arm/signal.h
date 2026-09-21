@@ -9,7 +9,7 @@
 #ifndef _ARM_SIGNAL_
 #define _ARM_SIGNAL_ 1
 
-#if defined (__arm__) || defined (__arm64__)
+#if defined(__arm__) || defined(__arm64__)
 
 #include <sys/cdefs.h>
 
@@ -19,4 +19,4 @@ typedef int sig_atomic_t;
 
 #endif /* defined (__arm__) || defined (__arm64__) */
 
-#endif  /* _ARM_SIGNAL_ */
+#endif /* _ARM_SIGNAL_ */

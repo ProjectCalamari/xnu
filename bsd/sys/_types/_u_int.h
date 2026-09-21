@@ -27,5 +27,5 @@
  */
 #ifndef _U_INT
 #define _U_INT
-typedef unsigned int    u_int;
+typedef unsigned int u_int;
 #endif /* _U_INT */

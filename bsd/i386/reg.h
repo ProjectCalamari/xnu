@@ -32,12 +32,11 @@
  *
  */
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _BSD_I386_REG_H_
 #define _BSD_I386_REG_H_
 
+#endif /* _BSD_I386_REG_H_ */
 
-#endif  /* _BSD_I386_REG_H_ */
-
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

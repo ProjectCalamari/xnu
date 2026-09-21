@@ -4,35 +4,32 @@
 //  T* operator->() const noexcept;
 //
 
-#include <libkern/c++/intrusive_shared_ptr.h>
-#include <darwintest.h>
 #include "test_policy.h"
+#include <darwintest.h>
+#include <libkern/c++/intrusive_shared_ptr.h>
 
 struct T {
-	int i;
+  int i;
 };
 
-template <typename T>
-static void
-tests()
-{
-	T obj{3};
-	tracked_shared_ptr<T> ptr(&obj, libkern::no_retain);
+template <typename T> static void tests() {
+  T obj{3};
+  tracked_shared_ptr<T> ptr(&obj, libkern::no_retain);
 
-	{
-		T& ref = *ptr;
-		CHECK(&ref == &obj);
-		CHECK(ref.i == 3);
-	}
+  {
+    T &ref = *ptr;
+    CHECK(&ref == &obj);
+    CHECK(ref.i == 3);
+  }
 
-	{
-		int const& ref = ptr->i;
-		CHECK(&ref == &obj.i);
-		CHECK(ref == 3);
-	}
+  {
+    int const &ref = ptr->i;
+    CHECK(&ref == &obj.i);
+    CHECK(ref == 3);
+  }
 }
 
 T_DECL(deref, "intrusive_shared_ptr.deref", T_META_TAG_VM_PREFERRED) {
-	tests<T>();
-	tests<T const>();
+  tests<T>();
+  tests<T const>();
 }

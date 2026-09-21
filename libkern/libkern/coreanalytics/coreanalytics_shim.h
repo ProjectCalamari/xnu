@@ -31,15 +31,15 @@
 
 /*
  * Shim between xnu and CoreAnalyticsFamily kext.
- * If you're trying to use CoreAnalytics from within xnu, you're in the wrong place.
- * See libkern/libkern/coreanalytics/coreanalytics.h instead.
+ * If you're trying to use CoreAnalytics from within xnu, you're in the wrong
+ * place. See libkern/libkern/coreanalytics/coreanalytics.h instead.
  */
 
 #ifdef __cplusplus
-#include <libkern/c++/OSDictionary.h>
-#include <libkern/c++/OSString.h>
-#include <libkern/c++/OSObject.h>
 #include <IOKit/IOService.h>
+#include <libkern/c++/OSDictionary.h>
+#include <libkern/c++/OSObject.h>
+#include <libkern/c++/OSString.h>
 #endif /* __cplusplus */
 
 #include <os/base.h>
@@ -54,20 +54,23 @@
 
 #ifdef __cplusplus
 typedef const struct core_analytics_hub_functions_s {
-	int version;
-	bool (*analytics_send_event_lazy)(IOService *core_analytics_hub, OSString *event_name, OSObject *event_payload);
+  int version;
+  bool (*analytics_send_event_lazy)(IOService *core_analytics_hub,
+                                    OSString *event_name,
+                                    OSObject *event_payload);
 } core_analytics_hub_functions_t;
 #else
 typedef const struct core_analytics_hub_functions_s {
-	int version;
-	bool (*analytics_send_event_lazy)(void *core_analytics_hub, void *event_name, void *event_payload);
+  int version;
+  bool (*analytics_send_event_lazy)(void *core_analytics_hub, void *event_name,
+                                    void *event_payload);
 } core_analytics_hub_functions_t;
 #endif /* __cplusplus */
 
 __BEGIN_DECLS
 
-OS_EXPORT OS_NONNULL1
-void core_analytics_hub_register(core_analytics_hub_functions_t *fns);
+OS_EXPORT OS_NONNULL1 void
+core_analytics_hub_register(core_analytics_hub_functions_t *fns);
 
 __END_DECLS
 
@@ -97,12 +100,15 @@ core_analytics_family_service_t *core_analytics_family_match(void);
  * Release the reference retained by core_analytics_family_match
  */
 #ifdef __cplusplus
-void core_analytics_family_release(LIBKERN_CONSUMED core_analytics_family_service_t *);
+void core_analytics_family_release(
+    LIBKERN_CONSUMED core_analytics_family_service_t *);
 #else
 void core_analytics_family_release(core_analytics_family_service_t *);
 #endif
 
-int core_analytics_send_event_lazy(core_analytics_family_service_t *core_analytics_hub, const char *event_spec, const ca_event_t event);
+int core_analytics_send_event_lazy(
+    core_analytics_family_service_t *core_analytics_hub, const char *event_spec,
+    const ca_event_t event);
 
 /*
  * Checks if field spec is string. If yes, it returns size of the string buffer,

@@ -28,50 +28,52 @@
 
 #ifndef _VSOCK_TRANSPORT_H_
 #define _VSOCK_TRANSPORT_H_
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
-#include <sys/queue.h>
 #include <sys/kernel_types.h>
+#include <sys/queue.h>
 #include <sys/vsock_private.h>
 
 #define VSOCK_MAX_PACKET_SIZE 65536
 
 enum vsock_operation {
-	VSOCK_REQUEST = 0,
-	VSOCK_RESPONSE = 1,
-	VSOCK_PAYLOAD = 2,
-	VSOCK_SHUTDOWN = 3,
-	VSOCK_SHUTDOWN_RECEIVE = 4,
-	VSOCK_SHUTDOWN_SEND = 5,
-	VSOCK_RESET = 6,
-	VSOCK_CREDIT_UPDATE = 7,
-	VSOCK_CREDIT_REQUEST = 8,
+  VSOCK_REQUEST = 0,
+  VSOCK_RESPONSE = 1,
+  VSOCK_PAYLOAD = 2,
+  VSOCK_SHUTDOWN = 3,
+  VSOCK_SHUTDOWN_RECEIVE = 4,
+  VSOCK_SHUTDOWN_SEND = 5,
+  VSOCK_RESET = 6,
+  VSOCK_CREDIT_UPDATE = 7,
+  VSOCK_CREDIT_REQUEST = 8,
 };
 
 struct vsock_address {
-	uint32_t cid;
-	uint32_t port;
+  uint32_t cid;
+  uint32_t port;
 };
 
 struct vsock_transport {
-	uint16_t protocol;
-	void *provider;
-	int (*get_cid)(void *provider, uint32_t *cid);
-	int (*attach_socket)(void *provider);
-	int (*detach_socket)(void *provider);
-	int (*put_message)(void *provider, struct vsock_address src, struct vsock_address dst,
-	    enum vsock_operation op, uint32_t buf_alloc, uint32_t fwd_cnt, mbuf_t m);
+  uint16_t protocol;
+  void *provider;
+  int (*get_cid)(void *provider, uint32_t *cid);
+  int (*attach_socket)(void *provider);
+  int (*detach_socket)(void *provider);
+  int (*put_message)(void *provider, struct vsock_address src,
+                     struct vsock_address dst, enum vsock_operation op,
+                     uint32_t buf_alloc, uint32_t fwd_cnt, mbuf_t m);
 };
 
 extern int vsock_add_transport(struct vsock_transport *transport);
 extern int vsock_remove_transport(struct vsock_transport *transport);
 extern int vsock_reset_transport(struct vsock_transport *transport);
 extern int vsock_put_message(struct vsock_address src, struct vsock_address dst,
-    enum vsock_operation op, uint32_t buf_alloc, uint32_t fwd_cnt, mbuf_t m, uint16_t protocol);
+                             enum vsock_operation op, uint32_t buf_alloc,
+                             uint32_t fwd_cnt, mbuf_t m, uint16_t protocol);
 
 __END_DECLS
 

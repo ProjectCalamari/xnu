@@ -32,18 +32,15 @@
 
 #include <machine/memory_types.h>
 
-#define VM_MEM_GUARDED          0x1             /* (G) Guarded Storage */
-#define VM_MEM_COHERENT         0x2             /* (M) Memory Coherency */
-#define VM_MEM_NOT_CACHEABLE    0x4             /* (I) Cache Inhibit */
-#define VM_MEM_WRITE_THROUGH    0x8             /* (W) Write-Through */
+#define VM_MEM_GUARDED 0x1       /* (G) Guarded Storage */
+#define VM_MEM_COHERENT 0x2      /* (M) Memory Coherency */
+#define VM_MEM_NOT_CACHEABLE 0x4 /* (I) Cache Inhibit */
+#define VM_MEM_WRITE_THROUGH 0x8 /* (W) Write-Through */
 
-#define VM_WIMG_USE_DEFAULT     0x80
-#define VM_WIMG_MASK            0xFF
+#define VM_WIMG_USE_DEFAULT 0x80
+#define VM_WIMG_MASK 0xFF
 
-#define HAS_DEFAULT_CACHEABILITY(attr)                                  \
-	                        (                                       \
-	                        ((attr) == VM_WIMG_USE_DEFAULT) ||      \
-	                        ((attr) == VM_WIMG_DEFAULT)             \
-	                        )
+#define HAS_DEFAULT_CACHEABILITY(attr)                                         \
+  (((attr) == VM_WIMG_USE_DEFAULT) || ((attr) == VM_WIMG_DEFAULT))
 
 #endif /* _VM_MEMORY_TYPES_H_ */

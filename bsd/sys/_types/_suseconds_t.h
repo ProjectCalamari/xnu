@@ -28,5 +28,5 @@
 #ifndef _SUSECONDS_T
 #define _SUSECONDS_T
 #include <sys/_types.h> /* __darwin_suseconds_t */
-typedef __darwin_suseconds_t    suseconds_t;
-#endif  /* _SUSECONDS_T */
+typedef __darwin_suseconds_t suseconds_t;
+#endif /* _SUSECONDS_T */

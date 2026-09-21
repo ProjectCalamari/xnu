@@ -40,14 +40,14 @@
 #define TO_BT_FRAMES 3
 
 typedef struct kern_timeout {
-	uint64_t        start_mt;
-	uint64_t        end_mt;
-	uint64_t        int_mt;
-	uint64_t        start_cycles;
-	uint64_t        int_cycles;
-	uint64_t        start_instrs;
-	uint64_t        int_instrs;
-	uintptr_t       bt[TO_BT_FRAMES];
+  uint64_t start_mt;
+  uint64_t end_mt;
+  uint64_t int_mt;
+  uint64_t start_cycles;
+  uint64_t int_cycles;
+  uint64_t start_instrs;
+  uint64_t int_instrs;
+  uintptr_t bt[TO_BT_FRAMES];
 } kern_timeout_t;
 
 #endif /* _KERN_TIMEOUT_DECL_H_ */

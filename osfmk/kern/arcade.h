@@ -28,11 +28,10 @@
 #ifndef _KERN_ARCADE_H_
 #define _KERN_ARCADE_H_
 
-#include <mach/mach_types.h>
 #include <kern/kern_types.h>
+#include <mach/mach_types.h>
 
 #include <libkern/section_keywords.h>
-
 
 #if XNU_KERNEL_PRIVATE
 
@@ -50,7 +49,8 @@ extern void arcade_register_reference(arcade_register_t arcade_reg);
 
 extern void arcade_register_release(arcade_register_t arcade_reg);
 
-extern mach_port_t convert_arcade_register_to_port(arcade_register_t arcade_reg);
+extern mach_port_t
+convert_arcade_register_to_port(arcade_register_t arcade_reg);
 
 extern arcade_register_t convert_port_to_arcade_register(mach_port_t port);
 

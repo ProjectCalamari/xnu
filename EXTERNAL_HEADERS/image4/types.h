@@ -33,8 +33,8 @@
 #define __IMAGE4_API_TYPES_H
 
 #include <image4/image4.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 OS_ASSUME_NONNULL_BEGIN
@@ -94,13 +94,9 @@ typedef uint64_t image4_coprocessor_handle_t;
  * @const IMAGE4_SECURE_BOOT_NONE
  * Secure Boot does not meaningfully exist.
  */
-OS_CLOSED_ENUM(image4_secure_boot, uint64_t,
-	IMAGE4_SECURE_BOOT_FULL,
-	IMAGE4_SECURE_BOOT_REDUCED,
-	IMAGE4_SECURE_BOOT_LEAST,
-	IMAGE4_SECURE_BOOT_NONE,
-	_IMAGE4_SECURE_BOOT_CNT,
-);
+OS_CLOSED_ENUM(image4_secure_boot, uint64_t, IMAGE4_SECURE_BOOT_FULL,
+               IMAGE4_SECURE_BOOT_REDUCED, IMAGE4_SECURE_BOOT_LEAST,
+               IMAGE4_SECURE_BOOT_NONE, _IMAGE4_SECURE_BOOT_CNT, );
 
 /*!
  * @function image4_secure_boot_check
@@ -114,17 +110,15 @@ OS_CLOSED_ENUM(image4_secure_boot, uint64_t,
  * If the {@link sb} is a valid secure boot level, zero is returned. Otherwise,
  * a non-zero value is returned.
  */
-OS_ALWAYS_INLINE OS_WARN_RESULT
-static inline int
-image4_secure_boot_check(image4_secure_boot_t sb)
-{
-	if (sb > _IMAGE4_SECURE_BOOT_CNT) {
-		__builtin_trap();
-	}
-	if (sb == _IMAGE4_SECURE_BOOT_CNT) {
-		return 1;
-	}
-	return 0;
+OS_ALWAYS_INLINE OS_WARN_RESULT static inline int
+image4_secure_boot_check(image4_secure_boot_t sb) {
+  if (sb > _IMAGE4_SECURE_BOOT_CNT) {
+    __builtin_trap();
+  }
+  if (sb == _IMAGE4_SECURE_BOOT_CNT) {
+    return 1;
+  }
+  return 0;
 }
 
 #pragma mark API Objects

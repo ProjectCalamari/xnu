@@ -27,5 +27,5 @@
  */
 #ifndef FD_SETSIZE
 #include <sys/_types/_fd_def.h>
-#define FD_SETSIZE      __DARWIN_FD_SETSIZE
+#define FD_SETSIZE __DARWIN_FD_SETSIZE
 #endif /* FD_SETSIZE */

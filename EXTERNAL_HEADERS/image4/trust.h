@@ -37,8 +37,8 @@
 
 #include <image4/image4.h>
 #include <image4/types.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #if __has_include(<sys/types.h>)
 #include <sys/types.h>
@@ -63,10 +63,8 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  * Upon encountering a violation during trust evaluation, the implementation
  * should abort the current context.
  */
-OS_CLOSED_OPTIONS(image4_trust_flags, uint64_t,
-	IMAGE4_TRUST_FLAG_INIT = 0,
-	IMAGE4_TRUST_FLAG_VIOLATION_PANIC = (1 << 0),
-);
+OS_CLOSED_OPTIONS(image4_trust_flags, uint64_t, IMAGE4_TRUST_FLAG_INIT = 0,
+                  IMAGE4_TRUST_FLAG_VIOLATION_PANIC = (1 << 0), );
 
 /*!
  * @typedef image4_trust_section_t
@@ -99,14 +97,11 @@ OS_CLOSED_OPTIONS(image4_trust_flags, uint64_t,
  * @availability
  * This constant first became available in API version 20231103.
  */
-OS_CLOSED_ENUM(image4_trust_section, uint64_t,
-	IMAGE4_TRUST_SECTION_CERTIFICATE,
-	IMAGE4_TRUST_SECTION_MANIFEST,
-	IMAGE4_TRUST_SECTION_OBJECT,
-	IMAGE4_TRUST_SECTION_RESTORE_INFO,
-	IMAGE4_TRUST_SECTION_PAYLOAD_PROPERTIES,
-	_IMAGE4_TRUST_SECTION_CNT,
-);
+OS_CLOSED_ENUM(image4_trust_section, uint64_t, IMAGE4_TRUST_SECTION_CERTIFICATE,
+               IMAGE4_TRUST_SECTION_MANIFEST, IMAGE4_TRUST_SECTION_OBJECT,
+               IMAGE4_TRUST_SECTION_RESTORE_INFO,
+               IMAGE4_TRUST_SECTION_PAYLOAD_PROPERTIES,
+               _IMAGE4_TRUST_SECTION_CNT, );
 
 /*!
  * @typedef image4_trust_evaluation_result_t
@@ -152,12 +147,9 @@ OS_CLOSED_ENUM(image4_trust_section, uint64_t,
  * be passed.
  */
 typedef void (*image4_trust_evaluation_result_t)(
-	const image4_trust_t *trst,
-	const void *_Nullable __sized_by(result_len) result,
-	size_t result_len,
-	errno_t error,
-	void *_Nullable context
-);
+    const image4_trust_t *trst,
+    const void *_Nullable __sized_by(result_len) result, size_t result_len,
+    errno_t error, void *_Nullable context);
 
 /*!
  * @const IMAGE4_TRUST_STRUCT_VERSION
@@ -178,16 +170,15 @@ typedef void (*image4_trust_evaluation_result_t)(
  * The size of this object was set in API version 20231103.
  */
 typedef struct _image4_trust_storage {
-	uint8_t __opaque[2048];
+  uint8_t __opaque[2048];
 } image4_trust_storage_t;
 
 /*!
  * @const IMAGE4_TRUST_STORAGE_INIT
  * Initializer for a {@link image4_trust_storage_t} object.
  */
-#define IMAGE4_TRUST_STORAGE_INIT (image4_trust_storage_t){ \
-	.__opaque = { 0x00 }, \
-}
+#define IMAGE4_TRUST_STORAGE_INIT                                              \
+  (image4_trust_storage_t) { .__opaque = {0x00}, }
 
 #pragma mark API
 /*!
@@ -223,26 +214,18 @@ typedef struct _image4_trust_storage {
  * An initialized {@link image4_trust_t} object.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3 OS_NONNULL4
-image4_trust_t *
-_image4_trust_init(
-	image4_trust_storage_t *storage,
-	const image4_environment_t *nv,
-	const image4_trust_evaluation_t *evaluation,
-	const void *__sized_by(manifest_len) manifest,
-	size_t manifest_len,
-	image4_trust_flags_t flags,
-	image4_struct_version_t v);
-#define image4_trust_init(_storage, _environment, _evaluation, \
-		_manifest, _manifest_len, _flags) \
-	_image4_trust_init( \
-		(_storage), \
-		(_environment), \
-		(_evaluation), \
-		(_manifest), \
-		(_manifest_len), \
-		(_flags), \
-		IMAGE4_TRUST_STRUCT_VERSION)
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3
+    OS_NONNULL4 image4_trust_t *
+    _image4_trust_init(image4_trust_storage_t *storage,
+                       const image4_environment_t *nv,
+                       const image4_trust_evaluation_t *evaluation,
+                       const void *__sized_by(manifest_len) manifest,
+                       size_t manifest_len, image4_trust_flags_t flags,
+                       image4_struct_version_t v);
+#define image4_trust_init(_storage, _environment, _evaluation, _manifest,      \
+                          _manifest_len, _flags)                               \
+  _image4_trust_init((_storage), (_environment), (_evaluation), (_manifest),   \
+                     (_manifest_len), (_flags), IMAGE4_TRUST_STRUCT_VERSION)
 IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_trust_init);
 
 /*!
@@ -279,14 +262,11 @@ IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_trust_init);
  * host runtime does not have an allocator, NULL is returned.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3
-image4_trust_t *_Nullable
-image4_trust_new(
-	const image4_environment_t *nv,
-	const image4_trust_evaluation_t *eval,
-	const void *__sized_by(manifest_len) manifest,
-	size_t manifest_len,
-	image4_trust_flags_t flags);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
+    OS_NONNULL3 image4_trust_t *_Nullable image4_trust_new(
+        const image4_environment_t *nv, const image4_trust_evaluation_t *eval,
+        const void *__sized_by(manifest_len) manifest, size_t manifest_len,
+        image4_trust_flags_t flags);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_new);
 
 /*!
@@ -316,13 +296,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_new);
  * The length of the buffer referenced by {@link bytes}.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL3
-void
-image4_trust_set_payload(
-	image4_trust_t *trst,
-	uint32_t type,
-	const void *__sized_by(len) bytes,
-	size_t len);
+OS_EXPORT OS_NONNULL1 OS_NONNULL3 void
+image4_trust_set_payload(image4_trust_t *trst, uint32_t type,
+                         const void *__sized_by(len) bytes, size_t len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_set_payload);
 
 /*!
@@ -358,11 +334,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_set_payload);
  * requirements of the manifest without modifications being required.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL2
-void
-image4_trust_set_booter(
-	image4_trust_t *trst,
-	const image4_trust_t *booter);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 void
+image4_trust_set_booter(image4_trust_t *trst, const image4_trust_t *booter);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_set_booter);
 
 /*!
@@ -392,12 +365,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_set_booter);
  * This function first became available in API version 20240503.
  */
 IMAGE4_API_AVAILABLE_FALL_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL2
-void
-image4_trust_set_result_buffer(
-	image4_trust_t *trst,
-	void *_Nullable __sized_by(p_len) p,
-	size_t p_len);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 void image4_trust_set_result_buffer(
+    image4_trust_t *trst, void *_Nullable __sized_by(p_len) p, size_t p_len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_set_result_buffer);
 
 /*!
@@ -437,14 +406,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_set_result_buffer);
  * Boolean, the implementation will not record its value.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL4
-void
-image4_trust_record_property_bool(
-	image4_trust_t *trst,
-	image4_trust_section_t type,
-	uint32_t tag,
-	bool *vp,
-	const bool *_Nullable *_Nullable vpp);
+OS_EXPORT OS_NONNULL1 OS_NONNULL4 void image4_trust_record_property_bool(
+    image4_trust_t *trst, image4_trust_section_t type, uint32_t tag, bool *vp,
+    const bool *_Nullable *_Nullable vpp);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_record_property_bool);
 
 /*!
@@ -488,14 +452,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_record_property_bool);
  * integer, the implementation will not record its value.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL4
-void
-image4_trust_record_property_integer(
-	image4_trust_t *trst,
-	image4_trust_section_t type,
-	uint32_t tag,
-	uint64_t *vp,
-	const uint64_t *_Nullable *_Nullable vpp);
+OS_EXPORT OS_NONNULL1 OS_NONNULL4 void image4_trust_record_property_integer(
+    image4_trust_t *trst, image4_trust_section_t type, uint32_t tag,
+    uint64_t *vp, const uint64_t *_Nullable *_Nullable vpp);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_record_property_integer);
 
 /*!
@@ -539,14 +498,11 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_record_property_integer);
  * e.g. by copying the data into a local buffer using strlcpy(3).
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL4 OS_NONNULL5
-void
-image4_trust_record_property_data(
-	image4_trust_t *trst,
-	image4_trust_section_t type,
-	uint32_t tag,
-	const void *_Nullable *_Nonnull vp,
-	size_t *vp_len);
+OS_EXPORT OS_NONNULL1 OS_NONNULL4 OS_NONNULL5 void
+image4_trust_record_property_data(image4_trust_t *trst,
+                                  image4_trust_section_t type, uint32_t tag,
+                                  const void *_Nullable *_Nonnull vp,
+                                  size_t *vp_len);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_record_property_data);
 
 /*!
@@ -565,12 +521,9 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_record_property_data);
  * calling scope.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1 OS_NONNULL3
-void
-image4_trust_evaluate(
-	const image4_trust_t *trst,
-	void *_Nullable _ctx,
-	image4_trust_evaluation_result_t result);
+OS_EXPORT OS_NONNULL1 OS_NONNULL3 void
+image4_trust_evaluate(const image4_trust_t *trst, void *_Nullable _ctx,
+                      image4_trust_evaluation_result_t result);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_evaluate);
 
 /*!
@@ -586,10 +539,8 @@ IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_evaluate);
  * it is a no-op.
  */
 IMAGE4_API_AVAILABLE_SPRING_2024
-OS_EXPORT OS_NONNULL1
-void
-image4_trust_destroy(
-	image4_trust_t *_Nonnull *_Nullable trst);
+OS_EXPORT OS_NONNULL1 void
+image4_trust_destroy(image4_trust_t *_Nonnull *_Nullable trst);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_trust_destroy);
 
 OS_ASSUME_PTR_ABI_SINGLE_END

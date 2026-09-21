@@ -90,16 +90,17 @@
 #ifndef _I386___ENDIAN_H_
 #define _I386___ENDIAN_H_
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 
 #include <sys/__endian.h>
 
-#define __DARWIN_BYTE_ORDER     __DARWIN_LITTLE_ENDIAN
+#define __DARWIN_BYTE_ORDER __DARWIN_LITTLE_ENDIAN
 
-#if     defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#if defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 
-#define BYTE_ORDER      __DARWIN_BYTE_ORDER
+#define BYTE_ORDER __DARWIN_BYTE_ORDER
 
-#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) */
+#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) ||                     \
+          defined(_DARWIN_C_SOURCE)) */
 #endif /* defined (__i386__) || defined (__x86_64__) */
 #endif /* !_I386___ENDIAN_H_ */

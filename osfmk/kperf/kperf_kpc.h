@@ -35,12 +35,12 @@
 
 /* KPC sample data */
 struct kpcdata {
-	int      curcpu;
-	uint32_t running;
-	uint32_t counterc;
-	uint64_t counterv[KPC_MAX_COUNTERS + 1];
-	uint32_t configc;
-	uint64_t configv[KPC_MAX_COUNTERS];
+  int curcpu;
+  uint32_t running;
+  uint32_t counterc;
+  uint64_t counterv[KPC_MAX_COUNTERS + 1];
+  uint32_t configc;
+  uint64_t configv[KPC_MAX_COUNTERS];
 };
 
 void kperf_kpc_thread_sample(struct kpcdata *, int);

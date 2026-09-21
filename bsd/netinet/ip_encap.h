@@ -61,16 +61,16 @@
 #ifdef BSD_KERNEL_PRIVATE
 
 struct encaptab {
-	LIST_ENTRY(encaptab) chain;
-	int af;
-	int proto;                      /* -1: don't care, I'll check myself */
-	struct sockaddr_storage src;    /* my addr */
-	struct sockaddr_storage srcmask;
-	struct sockaddr_storage dst;    /* remote addr */
-	struct sockaddr_storage dstmask;
-	int (*func)(const struct mbuf *, int, int, void *);
-	const struct protosw *psw;      /* only pr_input will be used */
-	void *arg;                      /* passed via m->m_pkthdr.aux */
+  LIST_ENTRY(encaptab) chain;
+  int af;
+  int proto;                   /* -1: don't care, I'll check myself */
+  struct sockaddr_storage src; /* my addr */
+  struct sockaddr_storage srcmask;
+  struct sockaddr_storage dst; /* remote addr */
+  struct sockaddr_storage dstmask;
+  int (*func)(const struct mbuf *, int, int, void *);
+  const struct protosw *psw; /* only pr_input will be used */
+  void *arg;                 /* passed via m->m_pkthdr.aux */
 };
 
 struct protosw;
@@ -78,17 +78,19 @@ struct ip6protosw;
 struct domain;
 
 __BEGIN_DECLS
-void    encap4_input(struct mbuf *, int);
-int     encap6_input(struct mbuf **, int *, int);
+void encap4_input(struct mbuf *, int);
+int encap6_input(struct mbuf **, int *, int);
 const struct encaptab *encap_attach(int, int, const struct sockaddr *,
-    const struct sockaddr *, const struct sockaddr *,
-    const struct sockaddr *, const struct protosw *, void *);
-const struct encaptab *encap_attach_func(int, int,
-    int (*)(const struct mbuf *, int, int, void *),
-    const struct protosw *, void *);
-int     encap_detach(const struct encaptab *);
-void    *encap_getarg(struct mbuf *);
-void    encap_init(void);
+                                    const struct sockaddr *,
+                                    const struct sockaddr *,
+                                    const struct sockaddr *,
+                                    const struct protosw *, void *);
+const struct encaptab *
+encap_attach_func(int, int, int (*)(const struct mbuf *, int, int, void *),
+                  const struct protosw *, void *);
+int encap_detach(const struct encaptab *);
+void *encap_getarg(struct mbuf *);
+void encap_init(void);
 
 void encap_register_m_tag(void);
 

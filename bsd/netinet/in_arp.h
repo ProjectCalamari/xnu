@@ -63,14 +63,16 @@ struct sockaddr_in;
 #ifdef BSD_KERNEL_PRIVATE
 extern boolean_t arp_is_entry_probing(route_t p_route);
 extern errno_t arp_lookup_ip(ifnet_t interface,
-    const struct sockaddr_in *ip_dest,
-    struct sockaddr_dl *__sized_by(ll_dest_len)ll_dest,
-    size_t ll_dest_len, route_t hint, mbuf_t packet);
+                             const struct sockaddr_in *ip_dest,
+                             struct sockaddr_dl *__sized_by(ll_dest_len)
+                                 ll_dest,
+                             size_t ll_dest_len, route_t hint, mbuf_t packet);
 #define inet_arp_lookup arp_lookup_ip
 #else
 extern errno_t inet_arp_lookup(ifnet_t interface,
-    const struct sockaddr_in *ip_dest, struct sockaddr_dl *ll_dest,
-    size_t ll_dest_len, route_t hint, mbuf_t packet);
+                               const struct sockaddr_in *ip_dest,
+                               struct sockaddr_dl *ll_dest, size_t ll_dest_len,
+                               route_t hint, mbuf_t packet);
 #endif /* !BSD_KERNEL_PRIVATE */
 
 /*!
@@ -92,13 +94,15 @@ extern errno_t inet_arp_lookup(ifnet_t interface,
  */
 #ifdef BSD_KERNEL_PRIVATE
 extern errno_t arp_ip_handle_input(ifnet_t ifp, u_int16_t arpop,
-    const struct sockaddr_dl *sender_hw, const struct sockaddr_in *sender_ip,
-    const struct sockaddr_in *target_ip);
+                                   const struct sockaddr_dl *sender_hw,
+                                   const struct sockaddr_in *sender_ip,
+                                   const struct sockaddr_in *target_ip);
 #define inet_arp_handle_input arp_ip_handle_input
 #else
 extern errno_t inet_arp_handle_input(ifnet_t ifp, u_int16_t arpop,
-    const struct sockaddr_dl *sender_hw, const struct sockaddr_in *sender_ip,
-    const struct sockaddr_in *target_ip);
+                                     const struct sockaddr_dl *sender_hw,
+                                     const struct sockaddr_in *sender_ip,
+                                     const struct sockaddr_in *target_ip);
 #endif /* !BSD_KERNEL_PRIVATE */
 
 /*!
@@ -125,7 +129,7 @@ extern errno_t inet_arp_handle_input(ifnet_t ifp, u_int16_t arpop,
  */
 #ifdef BSD_KERNEL_PRIVATE
 /* inet_arp_init_ifaddr is aliased to arp_ifinit (if_ether.h) */
-#define inet_arp_init_ifaddr    arp_ifinit
+#define inet_arp_init_ifaddr arp_ifinit
 #else
 extern void inet_arp_init_ifaddr(ifnet_t interface, ifaddr_t ipaddr);
 #endif /* !BSD_KERNEL_PRIVATE */
@@ -133,7 +137,8 @@ extern void inet_arp_init_ifaddr(ifnet_t interface, ifaddr_t ipaddr);
 #ifdef BSD_KERNEL_PRIVATE
 extern void in_arpdrain(void *);
 extern void arp_llreach_set_reachable(struct ifnet *,
-    void *__sized_by(alen) addr, unsigned int alen);
+                                      void *__sized_by(alen) addr,
+                                      unsigned int alen);
 #endif /* BSD_KERNEL_PRIVATE */
 #endif /* KERNEL */
 #endif /* _NETINET_IN_ARP_H_ */

@@ -32,60 +32,53 @@
  *
  */
 
-
 #ifndef _IOKIT_APPLEPLATFORM_H
 #define _IOKIT_APPLEPLATFORM_H
 
 #include <IOKit/IOPlatformExpert.h>
 
-enum {
-	kBootROMTypeOldWorld = 0,
-	kBootROMTypeNewWorld
-};
+enum { kBootROMTypeOldWorld = 0, kBootROMTypeNewWorld };
 
 enum {
-	kChipSetTypePowerSurge = 0,
-	kChipSetTypePowerStar,
-	kChipSetTypeGossamer,
-	kChipSetTypePowerExpress,
-	kChipSetTypeCore99,
-	kChipSetTypeCore2001
+  kChipSetTypePowerSurge = 0,
+  kChipSetTypePowerStar,
+  kChipSetTypeGossamer,
+  kChipSetTypePowerExpress,
+  kChipSetTypeCore99,
+  kChipSetTypeCore2001
 };
 
-enum {
-	kMachineTypeUnknown = 0
-};
+enum { kMachineTypeUnknown = 0 };
 
 extern const OSSymbol *gGetDefaultBusSpeedsKey;
 
-class ApplePlatformExpert : public IODTPlatformExpert
-{
-	OSDeclareAbstractStructors(ApplePlatformExpert);
+class ApplePlatformExpert : public IODTPlatformExpert {
+  OSDeclareAbstractStructors(ApplePlatformExpert);
 
 private:
-	SInt32 _timeToGMT;
+  SInt32 _timeToGMT;
 
-	struct ExpansionData { };
-	ExpansionData *reserved;
+  struct ExpansionData {};
+  ExpansionData *reserved;
 
 public:
-	virtual bool start( IOService * provider ) APPLE_KEXT_OVERRIDE;
-	virtual bool configure( IOService * provider ) APPLE_KEXT_OVERRIDE;
-	virtual const char * deleteList( void ) APPLE_KEXT_OVERRIDE;
-	virtual const char * excludeList( void ) APPLE_KEXT_OVERRIDE;
+  virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
+  virtual bool configure(IOService *provider) APPLE_KEXT_OVERRIDE;
+  virtual const char *deleteList(void) APPLE_KEXT_OVERRIDE;
+  virtual const char *excludeList(void) APPLE_KEXT_OVERRIDE;
 
-	virtual void registerNVRAMController( IONVRAMController * nvram ) APPLE_KEXT_OVERRIDE;
+  virtual void
+  registerNVRAMController(IONVRAMController *nvram) APPLE_KEXT_OVERRIDE;
 
-	virtual long getGMTTimeOfDay(void) APPLE_KEXT_OVERRIDE;
-	virtual void setGMTTimeOfDay(long secs) APPLE_KEXT_OVERRIDE;
+  virtual long getGMTTimeOfDay(void) APPLE_KEXT_OVERRIDE;
+  virtual void setGMTTimeOfDay(long secs) APPLE_KEXT_OVERRIDE;
 
-	virtual bool getMachineName(char *name, int maxLength) APPLE_KEXT_OVERRIDE;
+  virtual bool getMachineName(char *name, int maxLength) APPLE_KEXT_OVERRIDE;
 
-	OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 0);
-	OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 1);
-	OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 2);
-	OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 3);
+  OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 0);
+  OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 1);
+  OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 2);
+  OSMetaClassDeclareReservedUnused(ApplePlatformExpert, 3);
 };
-
 
 #endif /* ! _IOKIT_APPLEPLATFORM_H */

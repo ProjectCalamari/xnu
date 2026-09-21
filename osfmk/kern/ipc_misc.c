@@ -25,17 +25,17 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <mach/mach_types.h>
-#include <mach/notify.h>
 #include <ipc/ipc_port.h>
 #include <ipc/ipc_space.h>
 #include <kern/ipc_kobject.h>
 #include <kern/ipc_misc.h>
+#include <mach/mach_types.h>
+#include <mach/notify.h>
 
 #include <mach/mach_port.h>
 #include <mach/vm_map.h>
-#include <vm/vm_map.h>
 #include <vm/vm_kern.h>
+#include <vm/vm_map.h>
 
 extern void fileport_releasefg(struct fileglob *);
 
@@ -50,13 +50,9 @@ extern void fileport_releasefg(struct fileglob *);
  * Returns:     Port of type IKOT_FILEPORT with fileglob set as its kobject.
  *              Port is returned with a send right.
  */
-ipc_port_t
-fileport_alloc(struct fileglob *fg)
-{
-	return ipc_kobject_alloc_port(fg, IKOT_FILEPORT,
-	           IPC_KOBJECT_ALLOC_MAKE_SEND);
+ipc_port_t fileport_alloc(struct fileglob *fg) {
+  return ipc_kobject_alloc_port(fg, IKOT_FILEPORT, IPC_KOBJECT_ALLOC_MAKE_SEND);
 }
-
 
 /*
  * fileport_get_fileglob
@@ -72,15 +68,12 @@ fileport_alloc(struct fileglob *fg)
  *
  * Notes: The caller must have a reference on the fileport.
  */
-struct fileglob *
-fileport_port_to_fileglob(ipc_port_t port)
-{
-	if (IP_VALID(port)) {
-		return ipc_kobject_get_stable(port, IKOT_FILEPORT);
-	}
-	return NULL;
+struct fileglob *fileport_port_to_fileglob(ipc_port_t port) {
+  if (IP_VALID(port)) {
+    return ipc_kobject_get_stable(port, IKOT_FILEPORT);
+  }
+  return NULL;
 }
-
 
 /*
  * fileport_no_senders
@@ -91,20 +84,17 @@ fileport_port_to_fileglob(ipc_port_t port)
  *
  * Parameters: msg		A Mach no-senders notification message.
  */
-static void
-fileport_no_senders(ipc_port_t port, mach_port_mscount_t mscount)
-{
-	struct fileglob *fg;
+static void fileport_no_senders(ipc_port_t port, mach_port_mscount_t mscount) {
+  struct fileglob *fg;
 
-	fg = ipc_kobject_dealloc_port(port, mscount, IKOT_FILEPORT);
+  fg = ipc_kobject_dealloc_port(port, mscount, IKOT_FILEPORT);
 
-	fileport_releasefg(fg);
+  fileport_releasefg(fg);
 }
 
-IPC_KOBJECT_DEFINE(IKOT_FILEPORT,
-    .iko_op_movable_send = true,
-    .iko_op_stable     = true,
-    .iko_op_no_senders = fileport_no_senders);
+IPC_KOBJECT_DEFINE(IKOT_FILEPORT, .iko_op_movable_send = true,
+                   .iko_op_stable = true,
+                   .iko_op_no_senders = fileport_no_senders);
 
 /*
  * fileport_invoke
@@ -117,28 +107,27 @@ IPC_KOBJECT_DEFINE(IKOT_FILEPORT,
  *		arg		Anonymous pointer to caller state
  *		rval		The value returned from calling 'action'
  */
-kern_return_t
-fileport_invoke(task_t task, mach_port_name_t name,
-    int (*action)(mach_port_name_t, struct fileglob *, void *),
-    void *arg, int *rval)
-{
-	kern_return_t kr;
-	ipc_port_t fileport;
-	struct fileglob *fg;
+kern_return_t fileport_invoke(task_t task, mach_port_name_t name,
+                              int (*action)(mach_port_name_t, struct fileglob *,
+                                            void *),
+                              void *arg, int *rval) {
+  kern_return_t kr;
+  ipc_port_t fileport;
+  struct fileglob *fg;
 
-	kr = ipc_typed_port_copyin_send(task->itk_space, name,
-	    IKOT_FILEPORT, &fileport);
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  kr = ipc_typed_port_copyin_send(task->itk_space, name, IKOT_FILEPORT,
+                                  &fileport);
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	if ((fg = fileport_port_to_fileglob(fileport)) != NULL) {
-		*rval = (*action)(name, fg, arg);
-	} else {
-		kr = KERN_FAILURE;
-	}
-	ipc_typed_port_release_send(fileport, IKOT_FILEPORT);
-	return kr;
+  if ((fg = fileport_port_to_fileglob(fileport)) != NULL) {
+    *rval = (*action)(name, fg, arg);
+  } else {
+    kr = KERN_FAILURE;
+  }
+  ipc_typed_port_release_send(fileport, IKOT_FILEPORT);
+  return kr;
 }
 
 /*
@@ -150,80 +139,79 @@ fileport_invoke(task_t task, mach_port_name_t name,
  *		countp		Returns how many ports were found
  *		action		The function to invoke on each fileport
  */
-kern_return_t
-fileport_walk(task_t task, size_t *countp,
-    bool (^cb)(size_t i, mach_port_name_t, struct fileglob *))
-{
-	const uint32_t BATCH_SIZE = 4 << 10;
-	ipc_space_t space = task->itk_space;
-	ipc_entry_table_t table;
-	ipc_entry_num_t index;
-	ipc_entry_t entry;
-	size_t count = 0;
+kern_return_t fileport_walk(task_t task, size_t *countp,
+                            bool (^cb)(size_t i, mach_port_name_t,
+                                       struct fileglob *)) {
+  const uint32_t BATCH_SIZE = 4 << 10;
+  ipc_space_t space = task->itk_space;
+  ipc_entry_table_t table;
+  ipc_entry_num_t index;
+  ipc_entry_t entry;
+  size_t count = 0;
 
-	is_read_lock(space);
-	if (!is_active(space)) {
-		is_read_unlock(space);
-		return KERN_INVALID_TASK;
-	}
+  is_read_lock(space);
+  if (!is_active(space)) {
+    is_read_unlock(space);
+    return KERN_INVALID_TASK;
+  }
 
-	table = is_active_table(space);
-	entry = ipc_entry_table_base(table);
+  table = is_active_table(space);
+  entry = ipc_entry_table_base(table);
 
-	/* skip the first element which is not a real entry */
-	index = 1;
-	entry = ipc_entry_table_next_elem(table, entry);
+  /* skip the first element which is not a real entry */
+  index = 1;
+  entry = ipc_entry_table_next_elem(table, entry);
 
-	for (;;) {
-		ipc_entry_bits_t bits = entry->ie_bits;
-		mach_port_name_t name;
-		struct fileglob *fg;
+  for (;;) {
+    ipc_entry_bits_t bits = entry->ie_bits;
+    mach_port_name_t name;
+    struct fileglob *fg;
 
-		if (IE_BITS_TYPE(bits) & MACH_PORT_TYPE_SEND) {
-			ipc_port_t port = entry->ie_port;
+    if (IE_BITS_TYPE(bits) & MACH_PORT_TYPE_SEND) {
+      ipc_port_t port = entry->ie_port;
 
-			name = MACH_PORT_MAKE(index, IE_BITS_GEN(bits));
-			fg   = fileport_port_to_fileglob(port);
+      name = MACH_PORT_MAKE(index, IE_BITS_GEN(bits));
+      fg = fileport_port_to_fileglob(port);
 
-			if (fg) {
-				if (cb && !cb(count, name, fg)) {
-					cb = NULL;
-					if (countp == NULL) {
-						break;
-					}
-				}
-				count++;
-			}
-		}
+      if (fg) {
+        if (cb && !cb(count, name, fg)) {
+          cb = NULL;
+          if (countp == NULL) {
+            break;
+          }
+        }
+        count++;
+      }
+    }
 
-		index++;
-		entry = ipc_entry_table_next_elem(table, entry);
-		if (!entry) {
-			break;
-		}
-		if (index % BATCH_SIZE == 0) {
-			/*
-			 * Give the system some breathing room,
-			 * validate that the space is still valid,
-			 * and reload the pointer and length.
-			 */
-			is_read_unlock(space);
-			is_read_lock(space);
-			if (!is_active(space)) {
-				is_read_unlock(space);
-				return KERN_INVALID_TASK;
-			}
+    index++;
+    entry = ipc_entry_table_next_elem(table, entry);
+    if (!entry) {
+      break;
+    }
+    if (index % BATCH_SIZE == 0) {
+      /*
+       * Give the system some breathing room,
+       * validate that the space is still valid,
+       * and reload the pointer and length.
+       */
+      is_read_unlock(space);
+      is_read_lock(space);
+      if (!is_active(space)) {
+        is_read_unlock(space);
+        return KERN_INVALID_TASK;
+      }
 
-			table = is_active_table(space);
-			entry = ipc_entry_table_get_nocheck(table, index);
-		}
-	}
+      table = is_active_table(space);
+      entry = ipc_entry_table_get_nocheck(table, index);
+    }
+  }
 
-	is_read_unlock(space);
+  is_read_unlock(space);
 
-	if (countp) {
-		*countp = count;
-	}
+  if (countp) {
+    *countp = count;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }

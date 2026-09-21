@@ -10,14 +10,14 @@
 #endif // __IMG4_INDIRECT
 
 #if !XNU_KERNEL_PRIVATE
+#include <Availability.h>
 #include <TargetConditionals.h>
-#include <os/availability.h>
 #endif
 
 #include <os/base.h>
-#include <sys/linker_set.h>
-#include <sys/cdefs.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <sys/cdefs.h>
+#include <sys/linker_set.h>
 
 #endif // __IMG4_SHIM_XNU_H

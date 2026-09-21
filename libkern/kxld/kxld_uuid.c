@@ -25,8 +25,8 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <string.h>
 #include <mach-o/loader.h>
+#include <string.h>
 #include <sys/types.h>
 
 #define DEBUG_ASSERT_COMPONENT_NAME_STRING "kxld"
@@ -37,56 +37,47 @@
 
 /*******************************************************************************
 *******************************************************************************/
-void
-kxld_uuid_init_from_macho(KXLDuuid *uuid, struct uuid_command *src)
-{
-	check(uuid);
-	check(src);
+void kxld_uuid_init_from_macho(KXLDuuid *uuid, struct uuid_command *src) {
+  check(uuid);
+  check(src);
 
-	memcpy(uuid->uuid, src->uuid, sizeof(uuid->uuid));
-	uuid->has_uuid = TRUE;
+  memcpy(uuid->uuid, src->uuid, sizeof(uuid->uuid));
+  uuid->has_uuid = TRUE;
 }
 
 /*******************************************************************************
 *******************************************************************************/
-void
-kxld_uuid_clear(KXLDuuid *uuid)
-{
-	bzero(uuid, sizeof(*uuid));
+void kxld_uuid_clear(KXLDuuid *uuid) { bzero(uuid, sizeof(*uuid)); }
+
+/*******************************************************************************
+*******************************************************************************/
+u_long kxld_uuid_get_macho_header_size(void) {
+  return sizeof(struct uuid_command);
 }
 
 /*******************************************************************************
 *******************************************************************************/
-u_long
-kxld_uuid_get_macho_header_size(void)
-{
-	return sizeof(struct uuid_command);
-}
+kern_return_t kxld_uuid_export_macho(const KXLDuuid *uuid, u_char *buf,
+                                     u_long *header_offset,
+                                     u_long header_size) {
+  kern_return_t rval = KERN_FAILURE;
+  struct uuid_command *uuidhdr = NULL;
 
-/*******************************************************************************
-*******************************************************************************/
-kern_return_t
-kxld_uuid_export_macho(const KXLDuuid *uuid, u_char *buf,
-    u_long *header_offset, u_long header_size)
-{
-	kern_return_t rval = KERN_FAILURE;
-	struct uuid_command *uuidhdr = NULL;
+  check(uuid);
+  check(buf);
+  check(header_offset);
 
-	check(uuid);
-	check(buf);
-	check(header_offset);
+  require_action(sizeof(*uuidhdr) <= header_size - *header_offset, finish,
+                 rval = KERN_FAILURE);
+  uuidhdr = (struct uuid_command *)((void *)(buf + *header_offset));
+  *header_offset += sizeof(*uuidhdr);
 
-	require_action(sizeof(*uuidhdr) <= header_size - *header_offset, finish,
-	    rval = KERN_FAILURE);
-	uuidhdr = (struct uuid_command *) ((void *) (buf + *header_offset));
-	*header_offset += sizeof(*uuidhdr);
+  uuidhdr->cmd = LC_UUID;
+  uuidhdr->cmdsize = (uint32_t)sizeof(*uuidhdr);
+  memcpy(uuidhdr->uuid, uuid->uuid, sizeof(uuidhdr->uuid));
 
-	uuidhdr->cmd = LC_UUID;
-	uuidhdr->cmdsize = (uint32_t) sizeof(*uuidhdr);
-	memcpy(uuidhdr->uuid, uuid->uuid, sizeof(uuidhdr->uuid));
-
-	rval = KERN_SUCCESS;
+  rval = KERN_SUCCESS;
 
 finish:
-	return rval;
+  return rval;
 }

@@ -2,7 +2,7 @@
  * Copyright (c) 2008 Apple Inc. All rights reserved.
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
- * 
+ *
  * This file contains Original Code and/or Modifications of Original Code
  * as defined in and that are subject to the Apple Public Source License
  * Version 2.0 (the 'License'). You may not use this file except in
@@ -11,10 +11,10 @@
  * unlawful or unlicensed copies of an Apple operating system, or to
  * circumvent, violate, or enable the circumvention or violation of, any
  * terms of an Apple operating system software license agreement.
- * 
+ *
  * Please obtain a copy of the License at
  * http://www.opensource.apple.com/apsl/ and read it before using this file.
- * 
+ *
  * The Original Code and all software distributed under the License are
  * distributed on an 'AS IS' basis, WITHOUT WARRANTY OF ANY KIND, EITHER
  * EXPRESS OR IMPLIED, AND APPLE HEREBY DISCLAIMS ALL SUCH WARRANTIES,
@@ -22,7 +22,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE, QUIET ENJOYMENT OR NON-INFRINGEMENT.
  * Please see the License for the specific language governing rights and
  * limitations under the License.
- * 
+ *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 /* inftrees.h -- header to use inftrees.c
@@ -49,9 +49,9 @@
    of a literal, the base length or distance, or the offset from
    the current table to the next table.  Each entry is four bytes. */
 typedef struct {
-    unsigned char op;           /* operation, extra bits, table bits */
-    unsigned char bits;         /* bits in this part of the code */
-    unsigned short val;         /* offset in table or code value */
+  unsigned char op;   /* operation, extra bits, table bits */
+  unsigned char bits; /* bits in this part of the code */
+  unsigned short val; /* offset in table or code value */
 } code;
 
 /* op values as set by inflate_table():
@@ -71,12 +71,8 @@ typedef struct {
 #define MAXD 592
 
 /* Type of code to build for inftable() */
-typedef enum {
-    CODES,
-    LENS,
-    DISTS
-} codetype;
+typedef enum { CODES, LENS, DISTS } codetype;
 
 extern int inflate_table OF((codetype type, unsigned short FAR *lens,
-                             unsigned codes, code FAR * FAR *table,
+                             unsigned codes, code FAR * FAR * table,
                              unsigned FAR *bits, unsigned short FAR *work));

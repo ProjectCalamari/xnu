@@ -36,20 +36,21 @@
 /**
  * Defines the core type of the executing CPU.
  */
-__enum_closed_decl(arm64_core_type_t, unsigned int, {
-	E_CORE = MPIDR_CORETYPE_ACC_E,
-	P_CORE = MPIDR_CORETYPE_ACC_P,
-});
+__enum_closed_decl(arm64_core_type_t, unsigned int,
+                   {
+                       E_CORE = MPIDR_CORETYPE_ACC_E,
+                       P_CORE = MPIDR_CORETYPE_ACC_P,
+                   });
 
 /*
  * Get the core type of the executing CPU.
  *
  * @return Whether the executing CPU is an E-core, P-core, or non-PE core.
  */
-static inline arm64_core_type_t
-arm64_core_type(void)
-{
-	return (arm64_core_type_t)((__builtin_arm_rsr64("MPIDR_EL1") >> MPIDR_CORETYPE_SHIFT) & MPIDR_CORETYPE_MASK);
+static inline arm64_core_type_t arm64_core_type(void) {
+  return (arm64_core_type_t)((__builtin_arm_rsr64("MPIDR_EL1") >>
+                              MPIDR_CORETYPE_SHIFT) &
+                             MPIDR_CORETYPE_MASK);
 }
 
 /*
@@ -58,12 +59,7 @@ arm64_core_type(void)
  *
  * @return Whether the executing CPU is an E-core.
  */
-static inline bool
-arm64_is_e_core(void)
-{
-	return arm64_core_type() == E_CORE;
-}
-
+static inline bool arm64_is_e_core(void) { return arm64_core_type() == E_CORE; }
 
 /*
  * Convenience wrapper around arm64_core_type() which determines whether the
@@ -71,11 +67,7 @@ arm64_is_e_core(void)
  *
  * @return Whether the executing CPU is a P-core.
  */
-static inline bool
-arm64_is_p_core(void)
-{
-	return arm64_core_type() == P_CORE;
-}
+static inline bool arm64_is_p_core(void) { return arm64_core_type() == P_CORE; }
 
 /*
  * Convert a core type to a printable string.
@@ -86,16 +78,15 @@ arm64_is_p_core(void)
  *         E-core, P-core, or non-PE core.
  */
 static inline const char *
-arm64_core_type_to_string(arm64_core_type_t core_type)
-{
-	switch (core_type) {
-	case E_CORE:
-		return "E-core";
-	case P_CORE:
-		return "P-core";
-	default:
-		return "<< UNKNOWN OR INVALID CORE TYPE >>";
-	}
+arm64_core_type_to_string(arm64_core_type_t core_type) {
+  switch (core_type) {
+  case E_CORE:
+    return "E-core";
+  case P_CORE:
+    return "P-core";
+  default:
+    return "<< UNKNOWN OR INVALID CORE TYPE >>";
+  }
 }
 
 /*
@@ -105,10 +96,8 @@ arm64_core_type_to_string(arm64_core_type_t core_type)
  * @return String describing whether the executing CPU is an E-core, P-core,
  *         or non-PE core.
  */
-static inline const char *
-arm64_core_type_as_string(void)
-{
-	return arm64_core_type_to_string(arm64_core_type());
+static inline const char *arm64_core_type_as_string(void) {
+  return arm64_core_type_to_string(arm64_core_type());
 }
 
 #endif /* !defined(__ASSEMBLER__) */

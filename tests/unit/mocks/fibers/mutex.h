@@ -33,8 +33,8 @@
 typedef struct fibers_mutex fibers_mutex_t;
 
 struct fibers_mutex {
-	fiber_t holder;
-	struct fibers_queue wait_queue;
+  fiber_t holder;
+  struct fibers_queue wait_queue;
 };
 
 extern void fibers_mutex_init(fibers_mutex_t *mtx);

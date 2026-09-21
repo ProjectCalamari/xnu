@@ -31,8 +31,8 @@
 
 /* only kernel-private interfaces */
 #ifdef XNU_KERNEL_PRIVATE
-#include <mach/coalition.h>
 #include <kern/thread_group.h>
+#include <mach/coalition.h>
 
 __BEGIN_DECLS
 
@@ -41,8 +41,9 @@ __BEGIN_DECLS
 void coalitions_init(void);
 
 /* These may return:
- * KERN_ALREADY_IN_SET	task is already in a coalition (maybe this one, maybe a different one)
- * KERN_TERMINATED	coalition is already terminated (so it may not adopt any more tasks)
+ * KERN_ALREADY_IN_SET	task is already in a coalition (maybe this one, maybe a
+ * different one) KERN_TERMINATED	coalition is already terminated (so it
+ * may not adopt any more tasks)
  */
 kern_return_t coalitions_adopt_task(coalition_t *coaltions, task_t task);
 kern_return_t coalitions_adopt_init_task(task_t task);
@@ -52,31 +53,36 @@ kern_return_t coalitions_adopt_corpse_task(task_t task);
  * KERN_SUCCESS is returned because removing it did not fail.
  */
 kern_return_t coalitions_remove_task(task_t task);
-void          task_release_coalitions(task_t task);
+void task_release_coalitions(task_t task);
 
 /*
  *
  */
 kern_return_t coalitions_set_roles(coalition_t coalitions[COALITION_NUM_TYPES],
-    task_t task, int roles[COALITION_NUM_TYPES]);
+                                   task_t task, int roles[COALITION_NUM_TYPES]);
 
 uint64_t coalition_id(coalition_t coal);
-void     task_coalition_ids(task_t task, uint64_t ids[COALITION_NUM_TYPES]);
-void     task_coalition_roles(task_t task, int roles[COALITION_NUM_TYPES]);
-int      task_coalition_role_for_type(task_t task, int coalition_type);
-int      coalition_type(coalition_t coal);
+void task_coalition_ids(task_t task, uint64_t ids[COALITION_NUM_TYPES]);
+void task_coalition_roles(task_t task, int roles[COALITION_NUM_TYPES]);
+int task_coalition_role_for_type(task_t task, int coalition_type);
+int coalition_type(coalition_t coal);
 
 coalition_t task_get_coalition(task_t task, int type);
 
-void     task_coalition_update_gpu_stats(task_t task, uint64_t gpu_ns_delta);
-void     coalition_update_ane_stats(coalition_t coalition, uint64_t ane_mach_time, uint64_t ane_energy_nj);
-boolean_t task_coalition_adjust_focal_count(task_t task, int count, uint32_t *new_count);
+void task_coalition_update_gpu_stats(task_t task, uint64_t gpu_ns_delta);
+void coalition_update_ane_stats(coalition_t coalition, uint64_t ane_mach_time,
+                                uint64_t ane_energy_nj);
+boolean_t task_coalition_adjust_focal_count(task_t task, int count,
+                                            uint32_t *new_count);
 uint32_t task_coalition_focal_count(task_t task);
 uint32_t task_coalition_game_mode_count(task_t task);
-bool task_coalition_adjust_game_mode_count(task_t task, int count, uint32_t *new_count);
+bool task_coalition_adjust_game_mode_count(task_t task, int count,
+                                           uint32_t *new_count);
 uint32_t task_coalition_carplay_mode_count(task_t task);
-bool task_coalition_adjust_carplay_mode_count(task_t task, int count, uint32_t *new_count);
-boolean_t task_coalition_adjust_nonfocal_count(task_t task, int count, uint32_t *new_count);
+bool task_coalition_adjust_carplay_mode_count(task_t task, int count,
+                                              uint32_t *new_count);
+boolean_t task_coalition_adjust_nonfocal_count(task_t task, int count,
+                                               uint32_t *new_count);
 uint32_t task_coalition_nonfocal_count(task_t task);
 
 #if CONFIG_THREAD_GROUPS
@@ -85,7 +91,7 @@ uint32_t task_coalition_nonfocal_count(task_t task);
 struct thread_group *task_coalition_get_thread_group(task_t task);
 
 /* Donates the thread group reference to the coalition */
-void     coalition_set_thread_group(coalition_t coal, struct thread_group *tg);
+void coalition_set_thread_group(coalition_t coal, struct thread_group *tg);
 struct thread_group *kdp_coalition_get_thread_group(coalition_t coal);
 
 /* Thread group lives as long as the coalition reference is held */
@@ -100,18 +106,21 @@ void task_coalition_thread_group_application_set(task_t task);
 typedef bool (^coalition_for_each_task_block_t)(task_t task);
 
 void coalition_for_each_task(coalition_t coal,
-    coalition_for_each_task_block_t block);
+                             coalition_for_each_task_block_t block);
 
 /*  Coalition ledger  */
 struct coalition_ledger_indices {
-	int logical_writes;
+  int logical_writes;
 };
 void init_coalition_ledgers(void);
 int coalition_ledger_set_logical_writes_limit(coalition_t coal, int64_t limit);
-void coalition_io_monitor_ctl(struct coalition *coalition, uint32_t flags, int64_t limit);
+void coalition_io_monitor_ctl(struct coalition *coalition, uint32_t flags,
+                              int64_t limit);
 ledger_t coalition_ledger_get_from_task(task_t task);
-void coalition_io_rate_exceeded(int warning, const void *param0, __unused const void *param1);
-void coalition_io_ledger_update(task_t task, int32_t flavor, boolean_t is_credit, uint32_t io_size);
+void coalition_io_rate_exceeded(int warning, const void *param0,
+                                __unused const void *param1);
+void coalition_io_ledger_update(task_t task, int32_t flavor,
+                                boolean_t is_credit, uint32_t io_size);
 /*
  * Mark this coalition as eligible for swap.
  * All tasks currently in this coalition will become swap enabled
@@ -134,9 +143,9 @@ bool coalition_is_swappable(coalition_t coal);
 /* logical_writes ledger's refill time interval */
 #define COALITION_LEDGER_MONITOR_INTERVAL_SECS (24 * 60 * 60)
 
-
-typedef void (*coalition_iterate_fn_t)(void*, int, coalition_t);
-kern_return_t coalition_iterate_stackshot(coalition_iterate_fn_t callout, void *arg, uint32_t coalition_type);
+typedef void (*coalition_iterate_fn_t)(void *, int, coalition_t);
+kern_return_t coalition_iterate_stackshot(coalition_iterate_fn_t callout,
+                                          void *arg, uint32_t coalition_type);
 
 /* Returns with a reference, or COALITION_NULL.
  * There is no coalition with id 0.
@@ -163,7 +172,8 @@ void coalition_release(coalition_t coal);
  * KERN_DEFAULT_SET	The default coalition, which contains the kernel, may
  *			not be terminated.
  * KERN_TERMINATED	The coalition was already reaped.
- * KERN_FAILURE		The coalition was not empty or has never been terminated.
+ * KERN_FAILURE		The coalition was not empty or has never been
+ * terminated.
  */
 kern_return_t coalition_reap_internal(coalition_t coal);
 
@@ -179,7 +189,10 @@ kern_return_t coalition_request_terminate_internal(coalition_t coal);
  * KERN_RESOURCE_SHORTAGE	Unable to allocate kernel resources for a
  *				new coalition.
  */
-kern_return_t coalition_create_internal(int type, int role, boolean_t privileged, boolean_t efficient, coalition_t *out, uint64_t *cid);
+kern_return_t coalition_create_internal(int type, int role,
+                                        boolean_t privileged,
+                                        boolean_t efficient, coalition_t *out,
+                                        uint64_t *cid);
 
 boolean_t coalition_term_requested(coalition_t coal);
 boolean_t coalition_is_terminated(coalition_t coal);
@@ -187,16 +200,20 @@ boolean_t coalition_is_reaped(coalition_t coal);
 boolean_t coalition_is_privileged(coalition_t coal);
 boolean_t task_is_in_privileged_coalition(task_t task, int type);
 
-kern_return_t coalition_resource_usage_internal(coalition_t coal, struct coalition_resource_usage *cru_out);
+kern_return_t
+coalition_resource_usage_internal(coalition_t coal,
+                                  struct coalition_resource_usage *cru_out);
 
-kern_return_t coalition_debug_info_internal(coalition_t coal,
-    struct coalinfo_debuginfo *c_debuginfo);
+kern_return_t
+coalition_debug_info_internal(coalition_t coal,
+                              struct coalinfo_debuginfo *c_debuginfo);
 
 task_t kdp_coalition_get_leader(coalition_t coal);
 
-kern_return_t jetsam_coalition_set_policy(coalition_t coal, int flavor, int value);
-kern_return_t jetsam_coalition_get_policy(coalition_t coal, int flavor, int *value);
-
+kern_return_t jetsam_coalition_set_policy(coalition_t coal, int flavor,
+                                          int value);
+kern_return_t jetsam_coalition_get_policy(coalition_t coal, int flavor,
+                                          int *value);
 
 /*
  * development/debug interfaces
@@ -210,64 +227,49 @@ void coalition_set_notify(coalition_t coal, int notify);
 
 static inline void
 task_coalition_update_gpu_stats(__unused task_t task,
-    __unused uint64_t gpu_ns_delta)
-{
-	return;
+                                __unused uint64_t gpu_ns_delta) {
+  return;
 }
 
 static inline boolean_t
-task_coalition_adjust_focal_count(__unused task_t task,
-    __unused int count,
-    __unused uint32_t *new_count)
-{
-	return FALSE;
+task_coalition_adjust_focal_count(__unused task_t task, __unused int count,
+                                  __unused uint32_t *new_count) {
+  return FALSE;
 }
 
 static inline boolean_t
-task_coalition_adjust_nonfocal_count(__unused task_t task,
-    __unused int count,
-    __unused uint32_t *new_count)
-{
-	return FALSE;
+task_coalition_adjust_nonfocal_count(__unused task_t task, __unused int count,
+                                     __unused uint32_t *new_count) {
+  return FALSE;
 }
 
-static inline uint32_t
-task_coalition_focal_count(__unused task_t task)
-{
-	return 0;
+static inline uint32_t task_coalition_focal_count(__unused task_t task) {
+  return 0;
 }
 
 static inline void
 coalition_for_each_task(__unused coalition_t coal,
-    __unused coalition_for_each_task_block_t callback)
-{
-	return;
+                        __unused coalition_for_each_task_block_t callback) {
+  return;
 }
 
-static inline void
-coalition_mark_swappable(__unused coalition_t coal)
-{
-	return;
+static inline void coalition_mark_swappable(__unused coalition_t coal) {
+  return;
 }
 
-static inline bool
-coalition_is_swappable(__unused coalition_t coal)
-{
-	return false;
+static inline bool coalition_is_swappable(__unused coalition_t coal) {
+  return false;
 }
 
-static inline kern_return_t
-jetsam_coalition_set_policy(coalition_t coal, int flavor, int value)
-{
-	return KERN_NOT_SUPPORTED;
+static inline kern_return_t jetsam_coalition_set_policy(coalition_t coal,
+                                                        int flavor, int value) {
+  return KERN_NOT_SUPPORTED;
 }
 
 static inline kern_return_t
-jetsam_coalition_get_policy(coalition_t coal, int flavor, int *value)
-{
-	return KERN_NOT_SUPPORTED;
+jetsam_coalition_get_policy(coalition_t coal, int flavor, int *value) {
+  return KERN_NOT_SUPPORTED;
 }
-
 
 #endif /* CONFIG_COALITIONS */
 

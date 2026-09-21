@@ -6,11 +6,7 @@
 
 namespace {
 struct test_policy {
-	static void
-	trap(char const*)
-	{
-		assert(false);
-	}
+  static void trap(char const *) { assert(false); }
 };
 
 template <typename T>

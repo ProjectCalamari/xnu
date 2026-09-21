@@ -57,44 +57,42 @@ __END_DECLS
 __BEGIN_DECLS
 
 struct monotonic_config {
-	uint64_t event;
-	uint64_t allowed_ctr_mask;
-	uint64_t cpu_mask;
+  uint64_t event;
+  uint64_t allowed_ctr_mask;
+  uint64_t cpu_mask;
 };
 
 union monotonic_ctl_add {
-	struct {
-		struct monotonic_config config;
-	} in;
+  struct {
+    struct monotonic_config config;
+  } in;
 
-	struct {
-		uint32_t ctr;
-	} out;
+  struct {
+    uint32_t ctr;
+  } out;
 };
 
 union monotonic_ctl_enable {
-	struct {
-		bool enable;
-	} in;
+  struct {
+    bool enable;
+  } in;
 };
-
 
 union monotonic_ctl_counts {
-	struct {
-		uint64_t ctr_mask;
-	} in;
+  struct {
+    uint64_t ctr_mask;
+  } in;
 
-	struct {
-		uint64_t counts[1];
-	} out;
+  struct {
+    uint64_t counts[1];
+  } out;
 };
 
-
 union monotonic_ctl_info {
-	struct {
-		unsigned int nmonitors;
-		unsigned int ncounters;
-	} out;
+  struct {
+    unsigned int nmonitors;
+    unsigned int ncounters;
+  } out;
 };
 
 __END_DECLS
@@ -103,10 +101,10 @@ __END_DECLS
 
 #if CONFIG_CPU_COUNTERS
 
+#include <kern/locks.h>
 #include <kern/monotonic.h>
 #include <machine/monotonic.h>
 #include <sys/kdebug.h>
-#include <kern/locks.h>
 
 __BEGIN_DECLS
 
@@ -120,19 +118,18 @@ __BEGIN_DECLS
  *
  * Preemption must be disabled.
  */
-#define MT_KDBG_TMPCPU_EVT(CODE) \
-	KDBG_EVENTID(DBG_MONOTONIC, DBG_MT_TMPCPU, CODE)
+#define MT_KDBG_TMPCPU_EVT(CODE)                                               \
+  KDBG_EVENTID(DBG_MONOTONIC, DBG_MT_TMPCPU, CODE)
 
-#define MT_KDBG_TMPCPU_(CODE, FUNC) \
-	do { \
-	        if (kdebug_enable && \
-	                        kdebug_debugid_enabled(MT_KDBG_TMPCPU_EVT(CODE))) { \
-	                uint64_t __counts[MT_CORE_NFIXED]; \
-	                mt_fixed_counts(__counts); \
-	                KDBG(MT_KDBG_TMPCPU_EVT(CODE) | (FUNC), __counts[MT_CORE_INSTRS], \
-	                                __counts[MT_CORE_CYCLES]); \
-	        } \
-	} while (0)
+#define MT_KDBG_TMPCPU_(CODE, FUNC)                                            \
+  do {                                                                         \
+    if (kdebug_enable && kdebug_debugid_enabled(MT_KDBG_TMPCPU_EVT(CODE))) {   \
+      uint64_t __counts[MT_CORE_NFIXED];                                       \
+      mt_fixed_counts(__counts);                                               \
+      KDBG(MT_KDBG_TMPCPU_EVT(CODE) | (FUNC), __counts[MT_CORE_INSTRS],        \
+           __counts[MT_CORE_CYCLES]);                                          \
+    }                                                                          \
+  } while (0)
 
 #define MT_KDBG_TMPCPU(CODE) MT_KDBG_TMPCPU_(CODE, DBG_FUNC_NONE)
 #define MT_KDBG_TMPCPU_START(CODE) MT_KDBG_TMPCPU_(CODE, DBG_FUNC_START)
@@ -143,17 +140,17 @@ extern lck_grp_t mt_lock_grp;
 int mt_dev_init(void);
 
 struct mt_device {
-	const char *mtd_name;
-	int(*const mtd_init)(struct mt_device *dev);
-	int(*const mtd_add)(struct monotonic_config *config, uint32_t *ctr_out);
-	void(*const mtd_reset)(void);
-	void(*const mtd_enable)(bool enable);
-	int(*const mtd_read)(uint64_t ctr_mask, uint64_t *counts_out);
-	decl_lck_mtx_data(, mtd_lock);
+  const char *mtd_name;
+  int (*const mtd_init)(struct mt_device *dev);
+  int (*const mtd_add)(struct monotonic_config *config, uint32_t *ctr_out);
+  void (*const mtd_reset)(void);
+  void (*const mtd_enable)(bool enable);
+  int (*const mtd_read)(uint64_t ctr_mask, uint64_t *counts_out);
+  decl_lck_mtx_data(, mtd_lock);
 
-	uint8_t mtd_nmonitors;
-	uint8_t mtd_ncounters;
-	bool mtd_inuse;
+  uint8_t mtd_nmonitors;
+  uint8_t mtd_ncounters;
+  bool mtd_inuse;
 };
 typedef struct mt_device *mt_device_t;
 

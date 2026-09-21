@@ -61,7 +61,7 @@
  *	Higher Level Locking primitives definitions
  */
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _KERN_LOCK_H_
 #define _KERN_LOCK_H_
@@ -70,6 +70,6 @@
 
 #warning This header is deprecated. Use <kern/locks.h> instead.
 
-#endif  /* _KERN_LOCK_H_ */
+#endif /* _KERN_LOCK_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

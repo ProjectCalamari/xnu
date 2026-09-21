@@ -6,11 +6,11 @@
  *
  */
 
-#if     KERNEL_PRIVATE
+#if KERNEL_PRIVATE
 
 #ifndef _BSD_ARM_PSL_H_
 #define _BSD_ARM_PSL_H_
 
-#endif  /* _BSD_ARM_PSL_H_ */
+#endif /* _BSD_ARM_PSL_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

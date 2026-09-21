@@ -34,72 +34,50 @@
 #include <sys/_types.h>
 
 #if !defined(__DARWIN_OS_INLINE)
-# if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#        define __DARWIN_OS_INLINE static inline
-# elif defined(__MWERKS__) || defined(__cplusplus)
-#        define __DARWIN_OS_INLINE static inline
-# else
-#        define __DARWIN_OS_INLINE static __inline__
-# endif
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define __DARWIN_OS_INLINE static inline
+#elif defined(__MWERKS__) || defined(__cplusplus)
+#define __DARWIN_OS_INLINE static inline
+#else
+#define __DARWIN_OS_INLINE static __inline__
+#endif
 #endif
 
 /* Generic byte swapping functions. */
 
 __DARWIN_OS_INLINE
-__uint16_t
-_OSSwapInt16(
-	__uint16_t        _data
-	)
-{
-	return (__uint16_t)((_data << 8) | (_data >> 8));
+__uint16_t _OSSwapInt16(__uint16_t _data) {
+  return (__uint16_t)((_data << 8) | (_data >> 8));
 }
 
 __DARWIN_OS_INLINE
-__uint32_t
-_OSSwapInt32(
-	__uint32_t        _data
-	)
-{
+__uint32_t _OSSwapInt32(__uint32_t _data) {
 #if defined(__llvm__)
-	return __builtin_bswap32(_data);
+  return __builtin_bswap32(_data);
 #else
-	__asm__ ("bswap   %0" : "+r" (_data));
-	return _data;
+  __asm__("bswap   %0" : "+r"(_data));
+  return _data;
 #endif
 }
 
 #if defined(__llvm__)
 __DARWIN_OS_INLINE
-__uint64_t
-_OSSwapInt64(
-	__uint64_t        _data
-	)
-{
-	return __builtin_bswap64(_data);
-}
+__uint64_t _OSSwapInt64(__uint64_t _data) { return __builtin_bswap64(_data); }
 
 #elif defined(__i386__)
 __DARWIN_OS_INLINE
-__uint64_t
-_OSSwapInt64(
-	__uint64_t        _data
-	)
-{
-	__asm__ ("bswap   %%eax\n\t"
-                 "bswap   %%edx\n\t"
-                 "xchgl   %%eax, %%edx"
-                 : "+A" (_data));
-	return _data;
+__uint64_t _OSSwapInt64(__uint64_t _data) {
+  __asm__("bswap   %%eax\n\t"
+          "bswap   %%edx\n\t"
+          "xchgl   %%eax, %%edx"
+          : "+A"(_data));
+  return _data;
 }
 #elif defined(__x86_64__)
 __DARWIN_OS_INLINE
-__uint64_t
-_OSSwapInt64(
-	__uint64_t        _data
-	)
-{
-	__asm__ ("bswap   %0" : "+r" (_data));
-	return _data;
+__uint64_t _OSSwapInt64(__uint64_t _data) {
+  __asm__("bswap   %0" : "+r"(_data));
+  return _data;
 }
 #else
 #error Unknown architecture

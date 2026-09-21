@@ -25,7 +25,8 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-/*	$FreeBSD: src/sys/netinet/ip_encap.c,v 1.1.2.2 2001/07/03 11:01:46 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet/ip_encap.c,v 1.1.2.2 2001/07/03 11:01:46 ume
+ * Exp $	*/
 /*	$KAME: ip_encap.c,v 1.41 2001/03/15 08:35:08 itojun Exp $	*/
 
 /*
@@ -83,16 +84,16 @@
  */
 /* XXX is M_NETADDR correct? */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/socket.h>
-#include <sys/sockio.h>
+#include <sys/domain.h>
+#include <sys/errno.h>
 #include <sys/mbuf.h>
 #include <sys/mcache.h>
-#include <sys/errno.h>
-#include <sys/domain.h>
+#include <sys/param.h>
 #include <sys/protosw.h>
 #include <sys/queue.h>
+#include <sys/socket.h>
+#include <sys/sockio.h>
+#include <sys/systm.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -100,8 +101,8 @@
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
-#include <netinet/ip_var.h>
 #include <netinet/ip_encap.h>
+#include <netinet/ip_var.h>
 
 #include <netinet/ip6.h>
 #include <netinet6/ip6_var.h>
@@ -118,7 +119,7 @@ MALLOC_DEFINE(M_NETADDR, "Export Host", "Export host address structure");
 
 static void encap_add_locked(struct encaptab *);
 static int mask_match(const struct encaptab *, const struct sockaddr *,
-    const struct sockaddr *);
+                      const struct sockaddr *);
 static void encap_fillarg(struct mbuf *, void *arg);
 
 LIST_HEAD(, encaptab) encaptab = LIST_HEAD_INITIALIZER(&encaptab);
@@ -127,186 +128,180 @@ static LCK_GRP_DECLARE(encaptab_lock_grp, "encaptab lock");
 static LCK_RW_DECLARE(encaptab_lock, &encaptab_lock_grp);
 
 #if INET
-void
-encap4_input(struct mbuf *m, int off)
-{
-	int proto;
-	struct ip *__single ip;
-	struct sockaddr_in s, d;
-	const struct protosw *psw;
-	struct encaptab *__single ep, *__single match;
-	int prio, matchprio;
-	void *__single match_arg = NULL;
+void encap4_input(struct mbuf *m, int off) {
+  int proto;
+  struct ip *__single ip;
+  struct sockaddr_in s, d;
+  const struct protosw *psw;
+  struct encaptab *__single ep, *__single match;
+  int prio, matchprio;
+  void *__single match_arg = NULL;
 
 #ifndef __APPLE__
-	va_start(ap, m);
-	off = va_arg(ap, int);
-	proto = va_arg(ap, int);
-	va_end(ap);
+  va_start(ap, m);
+  off = va_arg(ap, int);
+  proto = va_arg(ap, int);
+  va_end(ap);
 #endif
 
-	/* Expect 32-bit aligned data pointer on strict-align platforms */
-	MBUF_STRICT_DATA_ALIGNMENT_CHECK_32(m);
+  /* Expect 32-bit aligned data pointer on strict-align platforms */
+  MBUF_STRICT_DATA_ALIGNMENT_CHECK_32(m);
 
-	ip = mtod(m, struct ip *);
+  ip = mtod(m, struct ip *);
 #ifdef __APPLE__
-	proto = ip->ip_p;
+  proto = ip->ip_p;
 #endif
 
-	SOCKADDR_ZERO(&s, sizeof(s));
-	s.sin_family = AF_INET;
-	s.sin_len = sizeof(struct sockaddr_in);
-	s.sin_addr = ip->ip_src;
-	SOCKADDR_ZERO(&d, sizeof(d));
-	d.sin_family = AF_INET;
-	d.sin_len = sizeof(struct sockaddr_in);
-	d.sin_addr = ip->ip_dst;
+  SOCKADDR_ZERO(&s, sizeof(s));
+  s.sin_family = AF_INET;
+  s.sin_len = sizeof(struct sockaddr_in);
+  s.sin_addr = ip->ip_src;
+  SOCKADDR_ZERO(&d, sizeof(d));
+  d.sin_family = AF_INET;
+  d.sin_len = sizeof(struct sockaddr_in);
+  d.sin_addr = ip->ip_dst;
 
-	match = NULL;
-	matchprio = 0;
+  match = NULL;
+  matchprio = 0;
 
-	lck_rw_lock_shared(&encaptab_lock);
-	for (ep = LIST_FIRST(&encaptab); ep; ep = LIST_NEXT(ep, chain)) {
-		if (ep->af != AF_INET) {
-			continue;
-		}
-		if (ep->proto >= 0 && ep->proto != proto) {
-			continue;
-		}
-		if (ep->func) {
-			prio = (*ep->func)(m, off, proto, ep->arg);
-		} else {
-			/*
-			 * it's inbound traffic, we need to match in reverse
-			 * order
-			 */
-			prio = mask_match(ep, SA(&d), SA(&s));
-		}
+  lck_rw_lock_shared(&encaptab_lock);
+  for (ep = LIST_FIRST(&encaptab); ep; ep = LIST_NEXT(ep, chain)) {
+    if (ep->af != AF_INET) {
+      continue;
+    }
+    if (ep->proto >= 0 && ep->proto != proto) {
+      continue;
+    }
+    if (ep->func) {
+      prio = (*ep->func)(m, off, proto, ep->arg);
+    } else {
+      /*
+       * it's inbound traffic, we need to match in reverse
+       * order
+       */
+      prio = mask_match(ep, SA(&d), SA(&s));
+    }
 
-		/*
-		 * We prioritize the matches by using bit length of the
-		 * matches.  mask_match() and user-supplied matching function
-		 * should return the bit length of the matches (for example,
-		 * if both src/dst are matched for IPv4, 64 should be returned).
-		 * 0 or negative return value means "it did not match".
-		 *
-		 * The question is, since we have two "mask" portion, we
-		 * cannot really define total order between entries.
-		 * For example, which of these should be preferred?
-		 * mask_match() returns 48 (32 + 16) for both of them.
-		 *	src=3ffe::/16, dst=3ffe:501::/32
-		 *	src=3ffe:501::/32, dst=3ffe::/16
-		 *
-		 * We need to loop through all the possible candidates
-		 * to get the best match - the search takes O(n) for
-		 * n attachments (i.e. interfaces).
-		 */
-		if (prio <= 0) {
-			continue;
-		}
-		if (prio > matchprio) {
-			matchprio = prio;
-			match = ep;
-			psw = (const struct protosw *)match->psw;
-			match_arg = ep->arg;
-		}
-	}
-	lck_rw_unlock_shared(&encaptab_lock);
+    /*
+     * We prioritize the matches by using bit length of the
+     * matches.  mask_match() and user-supplied matching function
+     * should return the bit length of the matches (for example,
+     * if both src/dst are matched for IPv4, 64 should be returned).
+     * 0 or negative return value means "it did not match".
+     *
+     * The question is, since we have two "mask" portion, we
+     * cannot really define total order between entries.
+     * For example, which of these should be preferred?
+     * mask_match() returns 48 (32 + 16) for both of them.
+     *	src=3ffe::/16, dst=3ffe:501::/32
+     *	src=3ffe:501::/32, dst=3ffe::/16
+     *
+     * We need to loop through all the possible candidates
+     * to get the best match - the search takes O(n) for
+     * n attachments (i.e. interfaces).
+     */
+    if (prio <= 0) {
+      continue;
+    }
+    if (prio > matchprio) {
+      matchprio = prio;
+      match = ep;
+      psw = (const struct protosw *)match->psw;
+      match_arg = ep->arg;
+    }
+  }
+  lck_rw_unlock_shared(&encaptab_lock);
 
-	if (match) {
-		/* found a match, "match" has the best one */
-		if (psw && psw->pr_input) {
-			encap_fillarg(m, match_arg);
-			(*psw->pr_input)(m, off);
-		} else {
-			m_freem(m);
-		}
-		return;
-	}
+  if (match) {
+    /* found a match, "match" has the best one */
+    if (psw && psw->pr_input) {
+      encap_fillarg(m, match_arg);
+      (*psw->pr_input)(m, off);
+    } else {
+      m_freem(m);
+    }
+    return;
+  }
 
-	/* last resort: inject to raw socket */
-	rip_input(m, off);
+  /* last resort: inject to raw socket */
+  rip_input(m, off);
 }
 #endif
 
-int
-encap6_input(struct mbuf **mp, int *offp, int proto)
-{
-	mbuf_ref_t m = *mp;
-	struct ip6_hdr *__single ip6;
-	struct sockaddr_in6 s, d;
-	const struct ip6protosw *__single psw;
-	struct encaptab *__single ep, *__single match;
-	int prio, matchprio;
-	void *__single match_arg = NULL;
+int encap6_input(struct mbuf **mp, int *offp, int proto) {
+  mbuf_ref_t m = *mp;
+  struct ip6_hdr *__single ip6;
+  struct sockaddr_in6 s, d;
+  const struct ip6protosw *__single psw;
+  struct encaptab *__single ep, *__single match;
+  int prio, matchprio;
+  void *__single match_arg = NULL;
 
-	/* Expect 32-bit aligned data pointer on strict-align platforms */
-	MBUF_STRICT_DATA_ALIGNMENT_CHECK_32(m);
+  /* Expect 32-bit aligned data pointer on strict-align platforms */
+  MBUF_STRICT_DATA_ALIGNMENT_CHECK_32(m);
 
-	ip6 = mtod(m, struct ip6_hdr *);
-	SOCKADDR_ZERO(&s, sizeof(s));
-	s.sin6_family = AF_INET6;
-	s.sin6_len = sizeof(struct sockaddr_in6);
-	s.sin6_addr = ip6->ip6_src;
-	SOCKADDR_ZERO(&d, sizeof(d));
-	d.sin6_family = AF_INET6;
-	d.sin6_len = sizeof(struct sockaddr_in6);
-	d.sin6_addr = ip6->ip6_dst;
+  ip6 = mtod(m, struct ip6_hdr *);
+  SOCKADDR_ZERO(&s, sizeof(s));
+  s.sin6_family = AF_INET6;
+  s.sin6_len = sizeof(struct sockaddr_in6);
+  s.sin6_addr = ip6->ip6_src;
+  SOCKADDR_ZERO(&d, sizeof(d));
+  d.sin6_family = AF_INET6;
+  d.sin6_len = sizeof(struct sockaddr_in6);
+  d.sin6_addr = ip6->ip6_dst;
 
-	match = NULL;
-	matchprio = 0;
+  match = NULL;
+  matchprio = 0;
 
-	lck_rw_lock_shared(&encaptab_lock);
-	for (ep = LIST_FIRST(&encaptab); ep; ep = LIST_NEXT(ep, chain)) {
-		if (ep->af != AF_INET6) {
-			continue;
-		}
-		if (ep->proto >= 0 && ep->proto != proto) {
-			continue;
-		}
-		if (ep->func) {
-			prio = (*ep->func)(m, *offp, proto, ep->arg);
-		} else {
-			/*
-			 * it's inbound traffic, we need to match in reverse
-			 * order
-			 */
-			prio = mask_match(ep, SA(&d), SA(&s));
-		}
+  lck_rw_lock_shared(&encaptab_lock);
+  for (ep = LIST_FIRST(&encaptab); ep; ep = LIST_NEXT(ep, chain)) {
+    if (ep->af != AF_INET6) {
+      continue;
+    }
+    if (ep->proto >= 0 && ep->proto != proto) {
+      continue;
+    }
+    if (ep->func) {
+      prio = (*ep->func)(m, *offp, proto, ep->arg);
+    } else {
+      /*
+       * it's inbound traffic, we need to match in reverse
+       * order
+       */
+      prio = mask_match(ep, SA(&d), SA(&s));
+    }
 
-		/* see encap4_input() for issues here */
-		if (prio <= 0) {
-			continue;
-		}
-		if (prio > matchprio) {
-			matchprio = prio;
-			match = ep;
-			psw = (const struct ip6protosw *)match->psw;
-			match_arg = ep->arg;
-		}
-	}
-	lck_rw_unlock_shared(&encaptab_lock);
+    /* see encap4_input() for issues here */
+    if (prio <= 0) {
+      continue;
+    }
+    if (prio > matchprio) {
+      matchprio = prio;
+      match = ep;
+      psw = (const struct ip6protosw *)match->psw;
+      match_arg = ep->arg;
+    }
+  }
+  lck_rw_unlock_shared(&encaptab_lock);
 
-	if (match) {
-		/* found a match */
-		if (psw && psw->pr_input) {
-			encap_fillarg(m, match_arg);
-			return (*psw->pr_input)(mp, offp, proto);
-		} else {
-			m_freem(m);
-			return IPPROTO_DONE;
-		}
-	}
+  if (match) {
+    /* found a match */
+    if (psw && psw->pr_input) {
+      encap_fillarg(m, match_arg);
+      return (*psw->pr_input)(mp, offp, proto);
+    } else {
+      m_freem(m);
+      return IPPROTO_DONE;
+    }
+  }
 
-	/* last resort: inject to raw socket */
-	return rip6_input(mp, offp, proto);
+  /* last resort: inject to raw socket */
+  return rip6_input(mp, offp, proto);
 }
 
-static void
-encap_add_locked(struct encaptab *ep)
-{
-	LCK_RW_ASSERT(&encaptab_lock, LCK_RW_ASSERT_EXCLUSIVE);
-	LIST_INSERT_HEAD(&encaptab, ep, chain);
+static void encap_add_locked(struct encaptab *ep) {
+  LCK_RW_ASSERT(&encaptab_lock, LCK_RW_ASSERT_EXCLUSIVE);
+  LIST_INSERT_HEAD(&encaptab, ep, chain);
 }
 
 /*
@@ -316,272 +311,257 @@ encap_add_locked(struct encaptab *ep)
  */
 const struct encaptab *
 encap_attach(int af, int proto, const struct sockaddr *sp,
-    const struct sockaddr *sm, const struct sockaddr *dp,
-    const struct sockaddr *dm, const struct protosw *psw, void *arg)
-{
-	struct encaptab *ep = NULL;
-	struct encaptab *new_ep = NULL;
-	int error;
+             const struct sockaddr *sm, const struct sockaddr *dp,
+             const struct sockaddr *dm, const struct protosw *psw, void *arg) {
+  struct encaptab *ep = NULL;
+  struct encaptab *new_ep = NULL;
+  int error;
 
-	/* sanity check on args */
-	if (sp->sa_len > sizeof(new_ep->src) || dp->sa_len > sizeof(new_ep->dst)) {
-		error = EINVAL;
-		goto fail;
-	}
-	if (sp->sa_len != dp->sa_len) {
-		error = EINVAL;
-		goto fail;
-	}
-	if (af != sp->sa_family || af != dp->sa_family) {
-		error = EINVAL;
-		goto fail;
-	}
+  /* sanity check on args */
+  if (sp->sa_len > sizeof(new_ep->src) || dp->sa_len > sizeof(new_ep->dst)) {
+    error = EINVAL;
+    goto fail;
+  }
+  if (sp->sa_len != dp->sa_len) {
+    error = EINVAL;
+    goto fail;
+  }
+  if (af != sp->sa_family || af != dp->sa_family) {
+    error = EINVAL;
+    goto fail;
+  }
 
-	new_ep = kalloc_type(struct encaptab, Z_WAITOK | Z_ZERO | Z_NOFAIL);
+  new_ep = kalloc_type(struct encaptab, Z_WAITOK | Z_ZERO | Z_NOFAIL);
 
-	/* check if anyone have already attached with exactly same config */
-	lck_rw_lock_exclusive(&encaptab_lock);
-	for (ep = LIST_FIRST(&encaptab); ep; ep = LIST_NEXT(ep, chain)) {
-		if (ep->af != af) {
-			continue;
-		}
-		if (ep->proto != proto) {
-			continue;
-		}
-		if (ep->src.ss_len != sp->sa_len ||
-		    SOCKADDR_CMP(&ep->src, sp, sp->sa_len) != 0 ||
-		    SOCKADDR_CMP(&ep->srcmask, sm, sp->sa_len) != 0) {
-			continue;
-		}
-		if (ep->dst.ss_len != dp->sa_len ||
-		    SOCKADDR_CMP(&ep->dst, dp, dp->sa_len) != 0 ||
-		    SOCKADDR_CMP(&ep->dstmask, dm, dp->sa_len) != 0) {
-			continue;
-		}
+  /* check if anyone have already attached with exactly same config */
+  lck_rw_lock_exclusive(&encaptab_lock);
+  for (ep = LIST_FIRST(&encaptab); ep; ep = LIST_NEXT(ep, chain)) {
+    if (ep->af != af) {
+      continue;
+    }
+    if (ep->proto != proto) {
+      continue;
+    }
+    if (ep->src.ss_len != sp->sa_len ||
+        SOCKADDR_CMP(&ep->src, sp, sp->sa_len) != 0 ||
+        SOCKADDR_CMP(&ep->srcmask, sm, sp->sa_len) != 0) {
+      continue;
+    }
+    if (ep->dst.ss_len != dp->sa_len ||
+        SOCKADDR_CMP(&ep->dst, dp, dp->sa_len) != 0 ||
+        SOCKADDR_CMP(&ep->dstmask, dm, dp->sa_len) != 0) {
+      continue;
+    }
 
-		error = EEXIST;
-		goto fail_locked;
-	}
+    error = EEXIST;
+    goto fail_locked;
+  }
 
-	new_ep->af = af;
-	new_ep->proto = proto;
-	SOCKADDR_COPY(sp, &new_ep->src, sp->sa_len);
-	SOCKADDR_COPY(sm, &new_ep->srcmask, sp->sa_len);
-	SOCKADDR_COPY(dp, &new_ep->dst, dp->sa_len);
-	SOCKADDR_COPY(dm, &new_ep->dstmask, dp->sa_len);
-	new_ep->psw = psw;
-	new_ep->arg = arg;
+  new_ep->af = af;
+  new_ep->proto = proto;
+  SOCKADDR_COPY(sp, &new_ep->src, sp->sa_len);
+  SOCKADDR_COPY(sm, &new_ep->srcmask, sp->sa_len);
+  SOCKADDR_COPY(dp, &new_ep->dst, dp->sa_len);
+  SOCKADDR_COPY(dm, &new_ep->dstmask, dp->sa_len);
+  new_ep->psw = psw;
+  new_ep->arg = arg;
 
-	encap_add_locked(new_ep);
-	lck_rw_unlock_exclusive(&encaptab_lock);
+  encap_add_locked(new_ep);
+  lck_rw_unlock_exclusive(&encaptab_lock);
 
-	error = 0;
-	return new_ep;
+  error = 0;
+  return new_ep;
 
 fail_locked:
-	lck_rw_unlock_exclusive(&encaptab_lock);
-	if (new_ep != NULL) {
-		kfree_type(struct encaptab, new_ep);
-	}
+  lck_rw_unlock_exclusive(&encaptab_lock);
+  if (new_ep != NULL) {
+    kfree_type(struct encaptab, new_ep);
+  }
 fail:
-	return NULL;
+  return NULL;
 }
 
-const struct encaptab *
-encap_attach_func( int af, int proto,
-    int (*func)(const struct mbuf *, int, int, void *),
-    const struct protosw *psw, void *arg)
-{
-	struct encaptab *ep;
-	int error;
+const struct encaptab *encap_attach_func(int af, int proto,
+                                         int (*func)(const struct mbuf *, int,
+                                                     int, void *),
+                                         const struct protosw *psw, void *arg) {
+  struct encaptab *ep;
+  int error;
 
-	/* sanity check on args */
-	if (!func) {
-		error = EINVAL;
-		goto fail;
-	}
+  /* sanity check on args */
+  if (!func) {
+    error = EINVAL;
+    goto fail;
+  }
 
-	ep = kalloc_type(struct encaptab, Z_WAITOK | Z_ZERO | Z_NOFAIL); /* XXX */
+  ep = kalloc_type(struct encaptab, Z_WAITOK | Z_ZERO | Z_NOFAIL); /* XXX */
 
-	ep->af = af;
-	ep->proto = proto;
-	ep->func = func;
-	ep->psw = psw;
-	ep->arg = arg;
+  ep->af = af;
+  ep->proto = proto;
+  ep->func = func;
+  ep->psw = psw;
+  ep->arg = arg;
 
-	lck_rw_lock_exclusive(&encaptab_lock);
-	encap_add_locked(ep);
-	lck_rw_unlock_exclusive(&encaptab_lock);
+  lck_rw_lock_exclusive(&encaptab_lock);
+  encap_add_locked(ep);
+  lck_rw_unlock_exclusive(&encaptab_lock);
 
-	error = 0;
-	return ep;
+  error = 0;
+  return ep;
 
 fail:
-	return NULL;
+  return NULL;
 }
 
-int
-encap_detach(const struct encaptab *cookie)
-{
-	const struct encaptab *ep = cookie;
-	struct encaptab *p;
+int encap_detach(const struct encaptab *cookie) {
+  const struct encaptab *ep = cookie;
+  struct encaptab *p;
 
-	lck_rw_lock_exclusive(&encaptab_lock);
-	for (p = LIST_FIRST(&encaptab); p; p = LIST_NEXT(p, chain)) {
-		if (p == ep) {
-			LIST_REMOVE(p, chain);
-			lck_rw_unlock_exclusive(&encaptab_lock);
-			kfree_type(struct encaptab, p);    /*XXX*/
-			return 0;
-		}
-	}
-	lck_rw_unlock_exclusive(&encaptab_lock);
+  lck_rw_lock_exclusive(&encaptab_lock);
+  for (p = LIST_FIRST(&encaptab); p; p = LIST_NEXT(p, chain)) {
+    if (p == ep) {
+      LIST_REMOVE(p, chain);
+      lck_rw_unlock_exclusive(&encaptab_lock);
+      kfree_type(struct encaptab, p); /*XXX*/
+      return 0;
+    }
+  }
+  lck_rw_unlock_exclusive(&encaptab_lock);
 
-	return EINVAL;
+  return EINVAL;
 }
 
-static int
-mask_match(const struct encaptab *ep, const struct sockaddr *sp,
-    const struct sockaddr *dp)
-{
-	struct sockaddr_storage s;
-	struct sockaddr_storage d;
-	int i;
-	const u_int8_t *p, *q;
-	u_int8_t *r;
-	int matchlen;
+static int mask_match(const struct encaptab *ep, const struct sockaddr *sp,
+                      const struct sockaddr *dp) {
+  struct sockaddr_storage s;
+  struct sockaddr_storage d;
+  int i;
+  const u_int8_t *p, *q;
+  u_int8_t *r;
+  int matchlen;
 
-	if (sp->sa_len > sizeof(s) || dp->sa_len > sizeof(d)) {
-		return 0;
-	}
-	if (sp->sa_family != ep->af || dp->sa_family != ep->af) {
-		return 0;
-	}
-	if (sp->sa_len != ep->src.ss_len || dp->sa_len != ep->dst.ss_len) {
-		return 0;
-	}
+  if (sp->sa_len > sizeof(s) || dp->sa_len > sizeof(d)) {
+    return 0;
+  }
+  if (sp->sa_family != ep->af || dp->sa_family != ep->af) {
+    return 0;
+  }
+  if (sp->sa_len != ep->src.ss_len || dp->sa_len != ep->dst.ss_len) {
+    return 0;
+  }
 
-	matchlen = 0;
+  matchlen = 0;
 
-	p = SA_BYTES(sp);
-	q = SA_BYTES(&ep->srcmask);
-	r = SA_BYTES(&s);
-	for (i = 0; i < sp->sa_len; i++) {
-		r[i] = p[i] & q[i];
-		/* XXX estimate */
-		matchlen += (q[i] ? 8 : 0);
-	}
+  p = SA_BYTES(sp);
+  q = SA_BYTES(&ep->srcmask);
+  r = SA_BYTES(&s);
+  for (i = 0; i < sp->sa_len; i++) {
+    r[i] = p[i] & q[i];
+    /* XXX estimate */
+    matchlen += (q[i] ? 8 : 0);
+  }
 
-	p = SA_BYTES(dp);
-	q = SA_BYTES(&ep->dstmask);
-	r = SA_BYTES(&s);
-	for (i = 0; i < dp->sa_len; i++) {
-		r[i] = p[i] & q[i];
-		/* XXX rough estimate */
-		matchlen += (q[i] ? 8 : 0);
-	}
+  p = SA_BYTES(dp);
+  q = SA_BYTES(&ep->dstmask);
+  r = SA_BYTES(&s);
+  for (i = 0; i < dp->sa_len; i++) {
+    r[i] = p[i] & q[i];
+    /* XXX rough estimate */
+    matchlen += (q[i] ? 8 : 0);
+  }
 
-	/* need to overwrite len/family portion as we don't compare them */
-	s.ss_len = sp->sa_len;
-	s.ss_family = sp->sa_family;
-	d.ss_len = dp->sa_len;
-	d.ss_family = dp->sa_family;
+  /* need to overwrite len/family portion as we don't compare them */
+  s.ss_len = sp->sa_len;
+  s.ss_family = sp->sa_family;
+  d.ss_len = dp->sa_len;
+  d.ss_family = dp->sa_family;
 
-	if (bcmp(&s, &ep->src, ep->src.ss_len) == 0 &&
-	    bcmp(&d, &ep->dst, ep->dst.ss_len) == 0) {
-		return matchlen;
-	} else {
-		return 0;
-	}
+  if (bcmp(&s, &ep->src, ep->src.ss_len) == 0 &&
+      bcmp(&d, &ep->dst, ep->dst.ss_len) == 0) {
+    return matchlen;
+  } else {
+    return 0;
+  }
 }
 
 struct encaptabtag {
-	void*                   *arg;
+  void **arg;
 };
 
-static void
-encap_fillarg(
-	struct mbuf *m,
-	void *arg)
-{
-	struct m_tag    *tag;
-	struct encaptabtag *et;
+static void encap_fillarg(struct mbuf *m, void *arg) {
+  struct m_tag *tag;
+  struct encaptabtag *et;
 
-	tag = m_tag_create(KERNEL_MODULE_TAG_ID, KERNEL_TAG_TYPE_ENCAP,
-	    sizeof(struct encaptabtag), M_WAITOK, m);
+  tag = m_tag_create(KERNEL_MODULE_TAG_ID, KERNEL_TAG_TYPE_ENCAP,
+                     sizeof(struct encaptabtag), M_WAITOK, m);
 
-	if (tag != NULL) {
-		et = (struct encaptabtag*)(tag->m_tag_data);
-		et->arg = arg;
-		m_tag_prepend(m, tag);
-	}
+  if (tag != NULL) {
+    et = (struct encaptabtag *)(tag->m_tag_data);
+    et->arg = arg;
+    m_tag_prepend(m, tag);
+  }
 }
 
-void *
-encap_getarg(struct mbuf *m)
-{
-	struct m_tag *__single tag;
-	struct encaptabtag *__single et;
-	void *__single p = NULL;
+void *encap_getarg(struct mbuf *m) {
+  struct m_tag *__single tag;
+  struct encaptabtag *__single et;
+  void *__single p = NULL;
 
-	tag = m_tag_locate(m, KERNEL_MODULE_TAG_ID, KERNEL_TAG_TYPE_ENCAP);
-	if (tag) {
-		et = (struct encaptabtag*)(tag->m_tag_data);
-		p = et->arg;
-		m_tag_delete(m, tag);
-	}
+  tag = m_tag_locate(m, KERNEL_MODULE_TAG_ID, KERNEL_TAG_TYPE_ENCAP);
+  if (tag) {
+    et = (struct encaptabtag *)(tag->m_tag_data);
+    p = et->arg;
+    m_tag_delete(m, tag);
+  }
 
-	return p;
+  return p;
 }
 
 struct encaptab_tag_container {
-	struct m_tag            encaptab_m_tag;
-	struct encaptabtag      encaptab_tag;
+  struct m_tag encaptab_m_tag;
+  struct encaptabtag encaptab_tag;
 };
 
-static struct m_tag *
-m_tag_kalloc_encap(u_int32_t id, u_int16_t type, uint16_t len, int wait)
-{
-	struct encaptab_tag_container *tag_container;
-	struct m_tag *tag = NULL;
+static struct m_tag *m_tag_kalloc_encap(u_int32_t id, u_int16_t type,
+                                        uint16_t len, int wait) {
+  struct encaptab_tag_container *tag_container;
+  struct m_tag *tag = NULL;
 
-	assert3u(id, ==, KERNEL_MODULE_TAG_ID);
-	assert3u(type, ==, KERNEL_TAG_TYPE_ENCAP);
-	assert3u(len, ==, sizeof(struct encaptabtag));
+  assert3u(id, ==, KERNEL_MODULE_TAG_ID);
+  assert3u(type, ==, KERNEL_TAG_TYPE_ENCAP);
+  assert3u(len, ==, sizeof(struct encaptabtag));
 
-	if (len != sizeof(struct encaptabtag)) {
-		return NULL;
-	}
+  if (len != sizeof(struct encaptabtag)) {
+    return NULL;
+  }
 
-	tag_container = kalloc_type(struct encaptab_tag_container, wait | M_ZERO);
-	if (tag_container != NULL) {
-		tag = &tag_container->encaptab_m_tag;
+  tag_container = kalloc_type(struct encaptab_tag_container, wait | M_ZERO);
+  if (tag_container != NULL) {
+    tag = &tag_container->encaptab_m_tag;
 
-		assert3p(tag, ==, tag_container);
+    assert3p(tag, ==, tag_container);
 
-		M_TAG_INIT(tag, id, type, len, &tag_container->encaptab_tag, NULL);
-	}
+    M_TAG_INIT(tag, id, type, len, &tag_container->encaptab_tag, NULL);
+  }
 
-	return tag;
+  return tag;
 }
 
-static void
-m_tag_kfree_encap(struct m_tag *tag)
-{
-	struct encaptab_tag_container *__single tag_container = (struct encaptab_tag_container *)tag;
+static void m_tag_kfree_encap(struct m_tag *tag) {
+  struct encaptab_tag_container *__single tag_container =
+      (struct encaptab_tag_container *)tag;
 
-	assert3u(tag->m_tag_len, ==, sizeof(struct encaptabtag));
+  assert3u(tag->m_tag_len, ==, sizeof(struct encaptabtag));
 
-	kfree_type(struct encaptab_tag_container, tag_container);
+  kfree_type(struct encaptab_tag_container, tag_container);
 }
 
-void
-encap_register_m_tag(void)
-{
-	int error;
+void encap_register_m_tag(void) {
+  int error;
 
-	error = m_register_internal_tag_type(KERNEL_TAG_TYPE_ENCAP, sizeof(struct encaptabtag),
-	    m_tag_kalloc_encap, m_tag_kfree_encap);
+  error = m_register_internal_tag_type(KERNEL_TAG_TYPE_ENCAP,
+                                       sizeof(struct encaptabtag),
+                                       m_tag_kalloc_encap, m_tag_kfree_encap);
 
-	assert3u(error, ==, 0);
+  assert3u(error, ==, 0);
 }

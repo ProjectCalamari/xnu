@@ -43,4 +43,4 @@ extern void extmod_statistics_incr_task_for_pid(task_t target);
 extern void extmod_statistics_incr_thread_set_state(thread_t target);
 extern void extmod_statistics_incr_thread_create(task_t target);
 
-#endif  /* _KERN_EXTMOD_STATISTICS_H_ */
+#endif /* _KERN_EXTMOD_STATISTICS_H_ */

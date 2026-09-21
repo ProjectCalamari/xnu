@@ -34,33 +34,27 @@
 
 static dsmos_page_transform_hook_t dsmos_hook;
 
-void
-dsmos_page_transform_hook(dsmos_page_transform_hook_t hook)
-{
-	printf("DSMOS has arrived\n");
-	/* set the hook now - new callers will run with it */
-	dsmos_hook = hook;
+void dsmos_page_transform_hook(dsmos_page_transform_hook_t hook) {
+  printf("DSMOS has arrived\n");
+  /* set the hook now - new callers will run with it */
+  dsmos_hook = hook;
 }
 
-int
-dsmos_page_transform(const void* from, void *to, unsigned long long src_offset, void *ops)
-{
-	static boolean_t first_wait = TRUE;
+int dsmos_page_transform(const void *from, void *to,
+                         unsigned long long src_offset, void *ops) {
+  static boolean_t first_wait = TRUE;
 
-	if (dsmos_hook == NULL) {
-		if (first_wait) {
-			first_wait = FALSE;
-			printf("Waiting for DSMOS...\n");
-		}
-		return KERN_ABORTED;
-	}
-	return (*dsmos_hook)(from, to, src_offset, ops);
+  if (dsmos_hook == NULL) {
+    if (first_wait) {
+      first_wait = FALSE;
+      printf("Waiting for DSMOS...\n");
+    }
+    return KERN_ABORTED;
+  }
+  return (*dsmos_hook)(from, to, src_offset, ops);
 }
-
 
 text_crypter_create_hook_t text_crypter_create;
-void
-text_crypter_create_hook_set(text_crypter_create_hook_t hook)
-{
-	text_crypter_create = hook;
+void text_crypter_create_hook_set(text_crypter_create_hook_t hook) {
+  text_crypter_create = hook;
 }

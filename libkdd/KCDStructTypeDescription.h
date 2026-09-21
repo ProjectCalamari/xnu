@@ -26,8 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#import <Foundation/Foundation.h>
 #import "KCDBasicTypeDescription.h"
+#import <Foundation/Foundation.h>
 
 @interface KCDStructTypeDescription : KCDataType
 

@@ -47,62 +47,61 @@
 #ifndef _MACH_TYPES_H_
 #define _MACH_TYPES_H_
 
-#include <stddef.h>
 #include "libsa/machine/types.h"
+#include <stddef.h>
 
 #ifndef _SIZE_T
 #define _SIZE_T
-typedef unsigned long   size_t;
-#endif  /* _SIZE_T */
+typedef unsigned long size_t;
+#endif /* _SIZE_T */
 
 /*
  * Common type definitions that lots of old files seem to want.
  */
 
-typedef unsigned char   u_char;         /* unsigned char */
-typedef unsigned short  u_short;        /* unsigned short */
-typedef unsigned int    u_int;          /* unsigned int */
-typedef unsigned long   u_long;         /* unsigned long */
+typedef unsigned char u_char;   /* unsigned char */
+typedef unsigned short u_short; /* unsigned short */
+typedef unsigned int u_int;     /* unsigned int */
+typedef unsigned long u_long;   /* unsigned long */
 
 typedef struct _quad_ {
-	unsigned int    val[2];         /* 2 32-bit values make... */
-} quad;                                 /* an 8-byte item */
+  unsigned int val[2]; /* 2 32-bit values make... */
+} quad;                /* an 8-byte item */
 
-typedef char *          caddr_t;        /* address of a (signed) char */
+typedef char *caddr_t; /* address of a (signed) char */
 
-typedef unsigned int    daddr_t;        /* an unsigned 32 */
-#if 0 /* off_t should be 64-bit ! */
+typedef unsigned int daddr_t; /* an unsigned 32 */
+#if 0                         /* off_t should be 64-bit ! */
 typedef unsigned int    off_t;          /* another unsigned 32 */
 #endif
 
-
-#define major(i)        (((i) >> 8) & 0xFF)
-#define minor(i)        ((i) & 0xFF)
-#define makedev(i, j)    ((((i) & 0xFF) << 8) | ((j) & 0xFF))
+#define major(i) (((i) >> 8) & 0xFF)
+#define minor(i) ((i) & 0xFF)
+#define makedev(i, j) ((((i) & 0xFF) << 8) | ((j) & 0xFF))
 
 #ifndef NULL
-#define NULL            ((void *) 0)    /* the null pointer */
+#define NULL ((void *)0) /* the null pointer */
 #endif
 
 /*
  * Shorthand type definitions for unsigned storage classes
  */
-typedef unsigned char   uchar_t;
-typedef unsigned short  ushort_t;
-typedef unsigned int    uint_t;
-typedef unsigned long   ulong_t;
-typedef volatile unsigned char  vuchar_t;
+typedef unsigned char uchar_t;
+typedef unsigned short ushort_t;
+typedef unsigned int uint_t;
+typedef unsigned long ulong_t;
+typedef volatile unsigned char vuchar_t;
 typedef volatile unsigned short vushort_t;
-typedef volatile unsigned int   vuint_t;
-typedef volatile unsigned long  vulong_t;
+typedef volatile unsigned int vuint_t;
+typedef volatile unsigned long vulong_t;
 
 /*
  * Deprecation macro
  */
 #if __GNUC__ >= 3
-#define __deprecated    __attribute__((__deprecated__))
+#define __deprecated __attribute__((__deprecated__))
 #else
 #define __deprecated /* nothing */
 #endif
 
-#endif  /* _MACH_TYPES_H_ */
+#endif /* _MACH_TYPES_H_ */

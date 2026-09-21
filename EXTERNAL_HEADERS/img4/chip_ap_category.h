@@ -60,8 +60,8 @@ OS_EXPORT
 const img4_chip_t _img4_chip_ap_category_ff04_f0;
 #define IMG4_CHIP_AP_CATEGORY_FF04_F0 (&_img4_chip_ap_category_ff04_f0)
 #else
-#define IMG4_CHIP_AP_CATEGORY_FF04_F0 \
-		(img4if->i4if_v12.chip_ap_category_ff04_f0)
+#define IMG4_CHIP_AP_CATEGORY_FF04_F0                                          \
+  (img4if->i4if_v12.chip_ap_category_ff04_f0)
 #endif
 
 /*!
@@ -77,8 +77,8 @@ OS_EXPORT
 const img4_chip_t _img4_chip_ap_category_ff04_f1;
 #define IMG4_CHIP_AP_CATEGORY_FF04_F1 (&_img4_chip_ap_category_ff04_f1)
 #else
-#define IMG4_CHIP_AP_CATEGORY_FF04_F1 \
-		(img4if->i4if_v12.chip_ap_category_ff04_f1)
+#define IMG4_CHIP_AP_CATEGORY_FF04_F1                                          \
+  (img4if->i4if_v12.chip_ap_category_ff04_f1)
 #endif
 
 /*!
@@ -93,8 +93,8 @@ OS_EXPORT
 const img4_chip_t _img4_chip_ap_category_ff04_f2;
 #define IMG4_CHIP_AP_CATEGORY_FF04_F2 (&_img4_chip_ap_category_ff04_f2)
 #else
-#define IMG4_CHIP_AP_CATEGORY_FF04_F2 \
-		(img4if->i4if_v12.chip_ap_category_ff04_f2)
+#define IMG4_CHIP_AP_CATEGORY_FF04_F2                                          \
+  (img4if->i4if_v12.chip_ap_category_ff04_f2)
 #endif
 
 /*!
@@ -109,8 +109,8 @@ OS_EXPORT
 const img4_chip_t _img4_chip_ap_category_ff04_f3;
 #define IMG4_CHIP_AP_CATEGORY_FF04_F3 (&_img4_chip_ap_category_ff04_f3)
 #else
-#define IMG4_CHIP_AP_CATEGORY_FF04_F3 \
-		(img4if->i4if_v12.chip_ap_category_ff04_f3)
+#define IMG4_CHIP_AP_CATEGORY_FF04_F3                                          \
+  (img4if->i4if_v12.chip_ap_category_ff04_f3)
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

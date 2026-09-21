@@ -29,12 +29,12 @@
 #ifndef _I386_VMX_SHIMS_H_
 #define _I386_VMX_SHIMS_H_
 
-#include <mach/machine/vm_types.h>
 #include <mach/boolean.h>
+#include <mach/machine/vm_types.h>
 #include <mach/vm_types.h>
 
 void *vmx_pcalloc(void);
 addr64_t vmx_paddr(void *);
 void vmx_pfree(void *);
 
-#endif  /* _I386_VMX_SHIMS_H_ */
+#endif /* _I386_VMX_SHIMS_H_ */

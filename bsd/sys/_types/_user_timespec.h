@@ -32,11 +32,10 @@
  */
 
 #ifndef _STRUCT_USER_TIMESPEC
-#define _STRUCT_USER_TIMESPEC   struct user_timespec
-_STRUCT_USER_TIMESPEC
-{
-	user_time_t     tv_sec;         /* seconds */
-	user_long_t     tv_nsec;        /* and nanoseconds */
+#define _STRUCT_USER_TIMESPEC struct user_timespec
+_STRUCT_USER_TIMESPEC {
+  user_time_t tv_sec;  /* seconds */
+  user_long_t tv_nsec; /* and nanoseconds */
 };
 #endif /* _STRUCT_USER_TIMESPEC */
 #endif /* KERNEL */

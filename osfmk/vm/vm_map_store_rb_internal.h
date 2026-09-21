@@ -29,36 +29,30 @@
 #ifndef _VM_VM_MAP_STORE_H_RB
 #define _VM_VM_MAP_STORE_H_RB
 
-RB_PROTOTYPE_SC(__private_extern__, rb_head, vm_map_store, entry, rb_node_compare);
+RB_PROTOTYPE_SC(__private_extern__, rb_head, vm_map_store, entry,
+                rb_node_compare);
 
-extern void vm_map_store_init_rb(
-	struct vm_map_header   *header);
+extern void vm_map_store_init_rb(struct vm_map_header *header);
 
-extern int rb_node_compare(
-	struct vm_map_store    *first,
-	struct vm_map_store    *second);
+extern int rb_node_compare(struct vm_map_store *first,
+                           struct vm_map_store *second);
 
-extern bool vm_map_store_lookup_entry_rb(
-	struct _vm_map         *map,
-	vm_map_offset_t         address,
-	struct vm_map_entry   **entryp);
+extern bool vm_map_store_lookup_entry_rb(struct _vm_map *map,
+                                         vm_map_offset_t address,
+                                         struct vm_map_entry **entryp);
 
-extern void vm_map_store_entry_link_rb(
-	struct vm_map_header   *header,
-	struct vm_map_entry    *entry);
+extern void vm_map_store_entry_link_rb(struct vm_map_header *header,
+                                       struct vm_map_entry *entry);
 
-extern void vm_map_store_entry_unlink_rb(
-	struct vm_map_header   *header,
-	struct vm_map_entry    *entry);
+extern void vm_map_store_entry_unlink_rb(struct vm_map_header *header,
+                                         struct vm_map_entry *entry);
 
-extern void vm_map_store_copy_reset_rb(
-	struct vm_map_copy     *copy_map,
-	struct vm_map_entry    *entry,
-	int                     nentries);
+extern void vm_map_store_copy_reset_rb(struct vm_map_copy *copy_map,
+                                       struct vm_map_entry *entry,
+                                       int nentries);
 
-extern void update_first_free_rb(
-	struct _vm_map         *map,
-	struct vm_map_entry    *entry,
-	bool                    new_entry_creation);
+extern void update_first_free_rb(struct _vm_map *map,
+                                 struct vm_map_entry *entry,
+                                 bool new_entry_creation);
 
 #endif /* _VM_VM_MAP_STORE_RB_H */

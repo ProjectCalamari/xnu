@@ -48,33 +48,35 @@
 #error "Please include <libkern/image4/dlxk.h> instead of this file"
 #endif
 
-
 #pragma mark Macros
-#define image4_xnu_callable(_f, _v, _rv, ...) ({ \
-	const image4_dlxk_interface_t *dlxk = NULL; \
-	dlxk = image4_dlxk_get(_v); \
-	dlxk ? (dlxk->dlxk_ ## _f(__VA_ARGS__)) : (_rv); \
-})
+#define image4_xnu_callable(_f, _v, _rv, ...)                                  \
+  ({                                                                           \
+    const image4_dlxk_interface_t *dlxk = NULL;                                \
+    dlxk = image4_dlxk_get(_v);                                                \
+    dlxk ? (dlxk->dlxk_##_f(__VA_ARGS__)) : (_rv);                             \
+  })
 
-#define image4_xnu_callable_ptr(_f, _v, ...) \
-	image4_xnu_callable(_f, _v, NULL, ## __VA_ARGS__)
+#define image4_xnu_callable_ptr(_f, _v, ...)                                   \
+  image4_xnu_callable(_f, _v, NULL, ##__VA_ARGS__)
 
-#define image4_xnu_callable_posix(_f, _v, ...) \
-	image4_xnu_callable(_f, _v, ENOSYS, ## __VA_ARGS__)
+#define image4_xnu_callable_posix(_f, _v, ...)                                 \
+  image4_xnu_callable(_f, _v, ENOSYS, ##__VA_ARGS__)
 
-#define image4_xnu_callable_void(_f, _v, ...) ({ \
-	const image4_dlxk_interface_t *dlxk = NULL; \
-	dlxk = image4_dlxk_get(_v); \
-	if (dlxk) { \
-	    dlxk->dlxk_ ## _f(__VA_ARGS__); \
-	} \
-})
+#define image4_xnu_callable_void(_f, _v, ...)                                  \
+  ({                                                                           \
+    const image4_dlxk_interface_t *dlxk = NULL;                                \
+    dlxk = image4_dlxk_get(_v);                                                \
+    if (dlxk) {                                                                \
+      dlxk->dlxk_##_f(__VA_ARGS__);                                            \
+    }                                                                          \
+  })
 
-#define image4_xnu_const(_s, _v) ({ \
-	const image4_dlxk_interface_t *dlxk = NULL; \
-	dlxk = image4_dlxk_get(_v); \
-	dlxk ? (dlxk->dlxk_ ## _s) : NULL; \
-})
+#define image4_xnu_const(_s, _v)                                               \
+  ({                                                                           \
+    const image4_dlxk_interface_t *dlxk = NULL;                                \
+    dlxk = image4_dlxk_get(_v);                                                \
+    dlxk ? (dlxk->dlxk_##_s) : NULL;                                           \
+  })
 
 #pragma mark Coprocessors
 #undef IMAGE4_COPROCESSOR_HOST
@@ -104,87 +106,82 @@
 #undef IMAGE4_COPROCESSOR_VMA3
 #define IMAGE4_COPROCESSOR_VMA3 image4_xnu_const(coprocessor_vma3, 2)
 
-#define image4_coprocessor_resolve_from_manifest(...) \
-	image4_xnu_callable_posix(coprocessor_resolve_from_manifest, \
-	    1, ## __VA_ARGS__)
+#define image4_coprocessor_resolve_from_manifest(...)                          \
+  image4_xnu_callable_posix(coprocessor_resolve_from_manifest, 1, ##__VA_ARGS__)
 
 #pragma mark Trust Evaluations
 #undef IMAGE4_TRUST_EVALUATION_EXEC
-#define IMAGE4_TRUST_EVALUATION_EXEC \
-	image4_xnu_const(trust_evaluation_exec, 0)
+#define IMAGE4_TRUST_EVALUATION_EXEC image4_xnu_const(trust_evaluation_exec, 0)
 
 #undef IMAGE4_TRUST_EVALUATION_PREFLIGHT
-#define IMAGE4_TRUST_EVALUATION_PREFLIGHT \
-	image4_xnu_const(trust_evaluation_preflight, 0)
+#define IMAGE4_TRUST_EVALUATION_PREFLIGHT                                      \
+  image4_xnu_const(trust_evaluation_preflight, 0)
 
 #undef IMAGE4_TRUST_EVALUATION_SIGN
-#define IMAGE4_TRUST_EVALUATION_SIGN \
-	image4_xnu_const(trust_evaluation_sign, 0)
+#define IMAGE4_TRUST_EVALUATION_SIGN image4_xnu_const(trust_evaluation_sign, 0)
 
 #undef IMAGE4_TRUST_EVALUATION_BOOT
-#define IMAGE4_TRUST_EVALUATION_BOOT \
-	image4_xnu_const(trust_evaluation_boot, 0)
+#define IMAGE4_TRUST_EVALUATION_BOOT image4_xnu_const(trust_evaluation_boot, 0)
 
 #undef IMAGE4_TRUST_EVALUATION_NORMALIZE
-#define IMAGE4_TRUST_EVALUATION_NORMALIZE \
-	image4_xnu_const(trust_evaluation_boot, 1)
+#define IMAGE4_TRUST_EVALUATION_NORMALIZE                                      \
+  image4_xnu_const(trust_evaluation_boot, 1)
 
 #pragma mark Environment
-#define _image4_environment_init(...) \
-	image4_xnu_callable_ptr(environment_init, 0, ## __VA_ARGS__)
-#define image4_environment_new(...) \
-	image4_xnu_callable_ptr(environment_new, 0, ## __VA_ARGS__)
-#define image4_environment_set_secure_boot(...) \
-	image4_xnu_callable_void(environment_set_secure_boot, 0, ## __VA_ARGS__)
-#define image4_environment_set_callbacks(...) \
-	image4_xnu_callable_void(environment_set_callbacks, 0, ## __VA_ARGS__)
-#define image4_environment_identify(...) \
-	image4_xnu_callable_posix(environment_identify, 1, ## __VA_ARGS__)
-#define image4_environment_get_digest_info(...) \
-	image4_xnu_callable_posix(environment_get_digest_info, 1, ## __VA_ARGS__)
-#define image4_environment_copy_nonce_digest(...) \
-	image4_xnu_callable_posix(environment_copy_nonce_digest, 0, ## __VA_ARGS__)
-#define image4_environment_roll_nonce(...) \
-	image4_xnu_callable_posix(environment_roll_nonce, 0, ## __VA_ARGS__)
-#define image4_environment_generate_nonce_proposal(...) \
-	image4_xnu_callable_posix(environment_generate_nonce_proposal, \
-	    0, ## __VA_ARGS__)
-#define image4_environment_commit_nonce_proposal(...) \
-	image4_xnu_callable_posix(environment_commit_nonce_proposal, \
-	    0, ## __VA_ARGS__)
-#define image4_environment_get_nonce_handle(...) \
-	image4_xnu_callable_posix(environment_get_nonce_handle, 0, ## __VA_ARGS__)
-#define image4_environment_flash(...) \
-	image4_xnu_callable_posix(environment_flash, 1, ## __VA_ARGS__)
-#define image4_environment_destroy(...) \
-	image4_xnu_callable_void(environment_destroy, 0, ## __VA_ARGS__)
+#define _image4_environment_init(...)                                          \
+  image4_xnu_callable_ptr(environment_init, 0, ##__VA_ARGS__)
+#define image4_environment_new(...)                                            \
+  image4_xnu_callable_ptr(environment_new, 0, ##__VA_ARGS__)
+#define image4_environment_set_secure_boot(...)                                \
+  image4_xnu_callable_void(environment_set_secure_boot, 0, ##__VA_ARGS__)
+#define image4_environment_set_callbacks(...)                                  \
+  image4_xnu_callable_void(environment_set_callbacks, 0, ##__VA_ARGS__)
+#define image4_environment_identify(...)                                       \
+  image4_xnu_callable_posix(environment_identify, 1, ##__VA_ARGS__)
+#define image4_environment_get_digest_info(...)                                \
+  image4_xnu_callable_posix(environment_get_digest_info, 1, ##__VA_ARGS__)
+#define image4_environment_copy_nonce_digest(...)                              \
+  image4_xnu_callable_posix(environment_copy_nonce_digest, 0, ##__VA_ARGS__)
+#define image4_environment_roll_nonce(...)                                     \
+  image4_xnu_callable_posix(environment_roll_nonce, 0, ##__VA_ARGS__)
+#define image4_environment_generate_nonce_proposal(...)                        \
+  image4_xnu_callable_posix(environment_generate_nonce_proposal, 0,            \
+                            ##__VA_ARGS__)
+#define image4_environment_commit_nonce_proposal(...)                          \
+  image4_xnu_callable_posix(environment_commit_nonce_proposal, 0, ##__VA_ARGS__)
+#define image4_environment_get_nonce_handle(...)                               \
+  image4_xnu_callable_posix(environment_get_nonce_handle, 0, ##__VA_ARGS__)
+#define image4_environment_flash(...)                                          \
+  image4_xnu_callable_posix(environment_flash, 1, ##__VA_ARGS__)
+#define image4_environment_destroy(...)                                        \
+  image4_xnu_callable_void(environment_destroy, 0, ##__VA_ARGS__)
 
 #pragma mark Trust
-#define _image4_trust_init(...) \
-	image4_xnu_callable_ptr(trust_init, 0, ## __VA_ARGS__)
-#define image4_trust_new(...) \
-	image4_xnu_callable_ptr(trust_new, 0, ## __VA_ARGS__)
-#define image4_trust_set_payload(...) \
-	image4_xnu_callable_void(trust_set_payload, 0, ## __VA_ARGS__)
-#define image4_trust_set_booter(...) \
-	image4_xnu_callable_void(trust_set_booter, 0, ## __VA_ARGS__)
-#define image4_trust_set_result_buffer(...) \
-	image4_xnu_callable_void(trust_set_result_buffer, 2, ## __VA_ARGS__)
-#define image4_trust_record_property_bool(...) \
-	image4_xnu_callable_void(trust_record_property_bool, 0, ## __VA_ARGS__)
-#define image4_trust_record_property_integer(...) \
-	image4_xnu_callable_void(trust_record_property_integer, 0, ## __VA_ARGS__)
-#define image4_trust_record_property_data(...) \
-	image4_xnu_callable_void(trust_record_property_data, 0, ## __VA_ARGS__)
-#define image4_trust_evaluate(...) \
-	image4_xnu_callable_void(trust_evaluate, 0, ## __VA_ARGS__)
-#define image4_trust_destroy(...) \
-	image4_xnu_callable_void(trust_destroy, 0, ## __VA_ARGS__)
+#define _image4_trust_init(...)                                                \
+  image4_xnu_callable_ptr(trust_init, 0, ##__VA_ARGS__)
+#define image4_trust_new(...)                                                  \
+  image4_xnu_callable_ptr(trust_new, 0, ##__VA_ARGS__)
+#define image4_trust_set_payload(...)                                          \
+  image4_xnu_callable_void(trust_set_payload, 0, ##__VA_ARGS__)
+#define image4_trust_set_booter(...)                                           \
+  image4_xnu_callable_void(trust_set_booter, 0, ##__VA_ARGS__)
+#define image4_trust_set_result_buffer(...)                                    \
+  image4_xnu_callable_void(trust_set_result_buffer, 2, ##__VA_ARGS__)
+#define image4_trust_record_property_bool(...)                                 \
+  image4_xnu_callable_void(trust_record_property_bool, 0, ##__VA_ARGS__)
+#define image4_trust_record_property_integer(...)                              \
+  image4_xnu_callable_void(trust_record_property_integer, 0, ##__VA_ARGS__)
+#define image4_trust_record_property_data(...)                                 \
+  image4_xnu_callable_void(trust_record_property_data, 0, ##__VA_ARGS__)
+#define image4_trust_evaluate(...)                                             \
+  image4_xnu_callable_void(trust_evaluate, 0, ##__VA_ARGS__)
+#define image4_trust_destroy(...)                                              \
+  image4_xnu_callable_void(trust_destroy, 0, ##__VA_ARGS__)
 
 #pragma mark Kernel-Specific
-#define image4_cs_trap_resolve_handler(...) \
-	image4_xnu_callable_ptr(cs_trap_resolve_handler, 0, ## __VA_ARGS__)
-#define image4_cs_trap_vector_size(...) \
-	image4_xnu_callable(cs_trap_vector_size, 0, -1, ## __VA_ARGS__)
+#define image4_cs_trap_resolve_handler(...)                                    \
+  image4_xnu_callable_ptr(cs_trap_resolve_handler, 0, ##__VA_ARGS__)
+#define image4_cs_trap_vector_size(...)                                        \
+  image4_xnu_callable(cs_trap_vector_size, 0, -1, ##__VA_ARGS__)
 
 #endif // __IMAGE4_DLXK_API_H

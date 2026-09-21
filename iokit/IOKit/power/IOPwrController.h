@@ -31,9 +31,8 @@
 
 #include <IOKit/IOService.h>
 
-class IOPwrController : public IOService
-{
-	OSDeclareAbstractStructors(IOPwrController);
+class IOPwrController : public IOService {
+  OSDeclareAbstractStructors(IOPwrController);
 
 public:
 };

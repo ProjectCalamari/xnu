@@ -21,11 +21,9 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
-#include <sys/clonefile.h>
 #include <fcntl.h>
+#include <sys/clonefile.h>
 
-int
-clonefile(const char *old, const char *new, uint32_t flags)
-{
-	return clonefileat(AT_FDCWD, old, AT_FDCWD, new, flags);
+int clonefile(const char *old, const char *new, uint32_t flags) {
+  return clonefileat(AT_FDCWD, old, AT_FDCWD, new, flags);
 }

@@ -26,82 +26,81 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <skywalk/nexus/flowswitch/nx_flowswitch.h>
 #include <skywalk/nexus/flowswitch/fsw_var.h>
+#include <skywalk/nexus/flowswitch/nx_flowswitch.h>
 #include <skywalk/nexus/netif/nx_netif.h>
 
-void
-fsw_classq_setup(struct nx_flowswitch *fsw, struct nexus_adapter *hostna)
-{
-	FSW_WLOCK_ASSERT_HELD(fsw);
-	ASSERT(hostna->na_ifp->if_snd->ifcq_type != PKTSCHEDT_NONE);
-	ASSERT(hostna->na_ifp->if_eflags & IFEF_TXSTART);
-	if (hostna->na_type == NA_NETIF_COMPAT_HOST) {
-		fsw->fsw_classq_enq_ptype = QP_MBUF;
-	} else {
-		ASSERT(hostna->na_type == NA_NETIF_HOST);
-		fsw->fsw_classq_enq_ptype = QP_PACKET;
-	}
+void fsw_classq_setup(struct nx_flowswitch *fsw, struct nexus_adapter *hostna) {
+  FSW_WLOCK_ASSERT_HELD(fsw);
+  ASSERT(hostna->na_ifp->if_snd->ifcq_type != PKTSCHEDT_NONE);
+  ASSERT(hostna->na_ifp->if_eflags & IFEF_TXSTART);
+  if (hostna->na_type == NA_NETIF_COMPAT_HOST) {
+    fsw->fsw_classq_enq_ptype = QP_MBUF;
+  } else {
+    ASSERT(hostna->na_type == NA_NETIF_HOST);
+    fsw->fsw_classq_enq_ptype = QP_PACKET;
+  }
 }
 
-void
-fsw_classq_teardown(struct nx_flowswitch *fsw, struct nexus_adapter *hostna)
-{
+void fsw_classq_teardown(struct nx_flowswitch *fsw,
+                         struct nexus_adapter *hostna) {
 #if !(DEVELOPMENT || DEBUG)
 #pragma unused(fsw)
 #endif
-	FSW_WLOCK_ASSERT_HELD(fsw);
-	ASSERT(hostna->na_ifp->if_snd->ifcq_type != PKTSCHEDT_NONE);
-	ASSERT(hostna->na_ifp->if_eflags & IFEF_TXSTART);
-	if (hostna->na_type == NA_NETIF_COMPAT_HOST) {
-		ASSERT(fsw->fsw_classq_enq_ptype == QP_MBUF);
-	} else {
-		ASSERT(hostna->na_type == NA_NETIF_HOST);
-		ASSERT(fsw->fsw_classq_enq_ptype == QP_PACKET);
-	}
-	/* flush the interface queues */
-	if_qflush(hostna->na_ifp, hostna->na_ifp->if_snd);
+  FSW_WLOCK_ASSERT_HELD(fsw);
+  ASSERT(hostna->na_ifp->if_snd->ifcq_type != PKTSCHEDT_NONE);
+  ASSERT(hostna->na_ifp->if_eflags & IFEF_TXSTART);
+  if (hostna->na_type == NA_NETIF_COMPAT_HOST) {
+    ASSERT(fsw->fsw_classq_enq_ptype == QP_MBUF);
+  } else {
+    ASSERT(hostna->na_type == NA_NETIF_HOST);
+    ASSERT(fsw->fsw_classq_enq_ptype == QP_PACKET);
+  }
+  /* flush the interface queues */
+  if_qflush(hostna->na_ifp, hostna->na_ifp->if_snd);
 }
 
-struct mbuf *
-fsw_classq_kpkt_to_mbuf(struct nx_flowswitch *fsw, struct __kern_packet *pkt)
-{
-	mbuf_ref_t m = NULL;
-	unsigned int one = 1;
-	int error;
+struct mbuf *fsw_classq_kpkt_to_mbuf(struct nx_flowswitch *fsw,
+                                     struct __kern_packet *pkt) {
+  mbuf_ref_t m = NULL;
+  unsigned int one = 1;
+  int error;
 
-	error = mbuf_allocpacket(MBUF_WAITOK, pkt->pkt_length, &one, &m);
-	VERIFY(error == 0);
+  error = mbuf_allocpacket(MBUF_WAITOK, pkt->pkt_length, &one, &m);
+  VERIFY(error == 0);
 
-	STATS_INC(&fsw->fsw_stats, FSW_STATS_TX_COPY_PKT2MBUF);
-	if (PACKET_HAS_PARTIAL_CHECKSUM(pkt)) {
-		STATS_INC(&fsw->fsw_stats, FSW_STATS_TX_COPY_SUM);
-	}
+  STATS_INC(&fsw->fsw_stats, FSW_STATS_TX_COPY_PKT2MBUF);
+  if (PACKET_HAS_PARTIAL_CHECKSUM(pkt)) {
+    STATS_INC(&fsw->fsw_stats, FSW_STATS_TX_COPY_SUM);
+  }
 
-	/* copy packet data */
-	fsw->fsw_pkt_copy_to_mbuf(NR_TX, SK_PTR_ENCODE(pkt,
-	    METADATA_TYPE(pkt), METADATA_SUBTYPE(pkt)), pkt->pkt_headroom,
-	    m, 0, pkt->pkt_length, PACKET_HAS_PARTIAL_CHECKSUM(pkt),
-	    pkt->pkt_csum_tx_start_off);
+  /* copy packet data */
+  fsw->fsw_pkt_copy_to_mbuf(
+      NR_TX, SK_PTR_ENCODE(pkt, METADATA_TYPE(pkt), METADATA_SUBTYPE(pkt)),
+      pkt->pkt_headroom, m, 0, pkt->pkt_length,
+      PACKET_HAS_PARTIAL_CHECKSUM(pkt), pkt->pkt_csum_tx_start_off);
 
-	static_assert(sizeof(m->m_pkthdr.pkt_flowid) == sizeof(pkt->pkt_flow_token));
-	static_assert(sizeof(m->m_pkthdr.pkt_mpriv_srcid) == sizeof(pkt->pkt_flowsrc_token));
-	static_assert(sizeof(m->m_pkthdr.pkt_mpriv_fidx) == sizeof(pkt->pkt_flowsrc_fidx));
-	static_assert(sizeof(m->m_pkthdr.comp_gencnt) == sizeof(pkt->pkt_comp_gencnt));
+  static_assert(sizeof(m->m_pkthdr.pkt_flowid) == sizeof(pkt->pkt_flow_token));
+  static_assert(sizeof(m->m_pkthdr.pkt_mpriv_srcid) ==
+                sizeof(pkt->pkt_flowsrc_token));
+  static_assert(sizeof(m->m_pkthdr.pkt_mpriv_fidx) ==
+                sizeof(pkt->pkt_flowsrc_fidx));
+  static_assert(sizeof(m->m_pkthdr.comp_gencnt) ==
+                sizeof(pkt->pkt_comp_gencnt));
 
-	m->m_pkthdr.pkt_flowid = pkt->pkt_flow_token;
-	m->m_pkthdr.comp_gencnt = pkt->pkt_comp_gencnt;
-	m->m_pkthdr.pkt_mpriv_srcid = pkt->pkt_flowsrc_token;
-	m->m_pkthdr.pkt_mpriv_fidx = pkt->pkt_flowsrc_fidx;
+  m->m_pkthdr.pkt_flowid = pkt->pkt_flow_token;
+  m->m_pkthdr.comp_gencnt = pkt->pkt_comp_gencnt;
+  m->m_pkthdr.pkt_mpriv_srcid = pkt->pkt_flowsrc_token;
+  m->m_pkthdr.pkt_mpriv_fidx = pkt->pkt_flowsrc_fidx;
 
-	SK_PDF(SK_VERB_TX | SK_VERB_DUMP, current_proc(), "%s",
-	    sk_dump("buf", m_mtod_current(m), m->m_len, 128));
+  SK_PDF(SK_VERB_TX | SK_VERB_DUMP, current_proc(), "%s",
+         sk_dump("buf", m_mtod_current(m), m->m_len, 128));
 
-	if (__improbable((error != 0))) {
-		if (m != NULL) {
-			m_freem(m);
-			m = NULL;
-		}
-	}
-	return m;
+  if (__improbable((error != 0))) {
+    if (m != NULL) {
+      m_freem(m);
+      m = NULL;
+    }
+  }
+  return m;
 }

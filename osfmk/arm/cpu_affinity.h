@@ -29,16 +29,10 @@
 #ifndef _ARM_CPU_AFFINITY_H_
 #define _ARM_CPU_AFFINITY_H_
 
-static inline int
-ml_get_max_affinity_sets(void)
-{
-	return 0;
-}
+static inline int ml_get_max_affinity_sets(void) { return 0; }
 
-static inline processor_set_t
-ml_affinity_to_pset(__unused int affinity_num)
-{
-	return PROCESSOR_SET_NULL;
+static inline processor_set_t ml_affinity_to_pset(__unused int affinity_num) {
+  return PROCESSOR_SET_NULL;
 }
 
 #endif /* _ARM_CPU_AFFINITY_H_ */

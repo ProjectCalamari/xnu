@@ -31,98 +31,90 @@
 #include <mach/error.h>
 #include <mach/mach.h>
 #include <mach/task.h>
-#include <stdbool.h>
 #include <signal.h>
 #include <spawn.h>
 #include <spawn_private.h>
+#include <stdbool.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.vm.corpse"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("VM"),
-	T_META_CHECK_LEAKS(false));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.vm.corpse"),
+              T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("VM"), T_META_CHECK_LEAKS(false));
 
-static pid_t
-spawn_munch(size_t footprint)
-{
-	char **launch_tool_args;
-	pid_t child_pid;
-	int ret;
+static pid_t spawn_munch(size_t footprint) {
+  char **launch_tool_args;
+  pid_t child_pid;
+  int ret;
 
-	char size_arg[64];
+  char size_arg[64];
 
-	T_LOG("Spawning munch with size %lu MiB", footprint >> 20);
+  T_LOG("Spawning munch with size %lu MiB", footprint >> 20);
 
-	T_QUIET; T_ASSERT_POSIX_SUCCESS(
-		snprintf(size_arg, sizeof(size_arg), "--lim-size=%lub", footprint),
-		"snprintf()");
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(
+      snprintf(size_arg, sizeof(size_arg), "--lim-size=%lub", footprint),
+      "snprintf()");
 
-	launch_tool_args = (char *[]){
-		"/usr/local/bin/munch",
-		"--cfg-inprocess",
-		"--fill-cr=2.5",
-		"--type=malloc",
-		size_arg,
-		NULL
-	};
+  launch_tool_args =
+      (char *[]){"/usr/local/bin/munch", "--cfg-inprocess", "--fill-cr=2.5",
+                 "--type=malloc",        size_arg,          NULL};
 
-	/* Spawn the child process. */
-	ret = dt_launch_tool(&child_pid, launch_tool_args, false, NULL, NULL);
-	T_QUIET; T_ASSERT_POSIX_SUCCESS(ret, "dt_launch_tool");
-	T_QUIET; T_ASSERT_GT(child_pid, 0, "child pid");
+  /* Spawn the child process. */
+  ret = dt_launch_tool(&child_pid, launch_tool_args, false, NULL, NULL);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "dt_launch_tool");
+  T_QUIET;
+  T_ASSERT_GT(child_pid, 0, "child pid");
 
-	return child_pid;
+  return child_pid;
 }
 
 static pid_t munch_pid = 0;
 
-static void
-perf_fork_corpse_teardown(void)
-{
-	int ret;
-	bool exited;
+static void perf_fork_corpse_teardown(void) {
+  int ret;
+  bool exited;
 
-	ret = kill(munch_pid, SIGINT);
-	T_QUIET; T_ASSERT_POSIX_SUCCESS(ret, "kill()");
+  ret = kill(munch_pid, SIGINT);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "kill()");
 
-	exited = dt_waitpid(munch_pid, NULL, NULL, 30);
-	T_QUIET; T_ASSERT_TRUE(exited, "dt_wait_pid()");
+  exited = dt_waitpid(munch_pid, NULL, NULL, 30);
+  T_QUIET;
+  T_ASSERT_TRUE(exited, "dt_wait_pid()");
 }
 
-T_DECL(perf_fork_corpse,
-    "Performance test for forking corpses",
+T_DECL(
+    perf_fork_corpse, "Performance test for forking corpses",
     // T_META_ENABLED(!(TARGET_OS_WATCH || TARGET_OS_BRIDGE || TARGET_OS_TV)),
     T_META_ENABLED(false), /* rdar://148736982 */
-    T_META_BOOTARGS_SET("amfi_unrestrict_task_for_pid=1"),
-    T_META_TAG_PERF,
-    T_META_TAG_VM_NOT_PREFERRED,
-    T_META_RUN_CONCURRENTLY(false))
-{
-	size_t footprint = 512 << 20; // 512 MiB
-	mach_port_t corpse_port;
-	mach_port_t task_port;
-	kern_return_t kr;
+    T_META_BOOTARGS_SET("amfi_unrestrict_task_for_pid=1"), T_META_TAG_PERF,
+    T_META_TAG_VM_NOT_PREFERRED, T_META_RUN_CONCURRENTLY(false)) {
+  size_t footprint = 512 << 20; // 512 MiB
+  mach_port_t corpse_port;
+  mach_port_t task_port;
+  kern_return_t kr;
 
-	pid_t pid = spawn_munch(footprint);
+  pid_t pid = spawn_munch(footprint);
 
-	T_ATEND(perf_fork_corpse_teardown);
+  T_ATEND(perf_fork_corpse_teardown);
 
-	kr = task_for_pid(mach_task_self(), pid, &task_port);
-	T_QUIET; T_ASSERT_MACH_SUCCESS(kr, "task_for_pid()");
-	T_QUIET; T_ASSERT_NE(task_port, MACH_PORT_NULL, "task_for_pid");
+  kr = task_for_pid(mach_task_self(), pid, &task_port);
+  T_QUIET;
+  T_ASSERT_MACH_SUCCESS(kr, "task_for_pid()");
+  T_QUIET;
+  T_ASSERT_NE(task_port, MACH_PORT_NULL, "task_for_pid");
 
-	dt_stat_time_t stat = dt_stat_time_create("duration");
+  dt_stat_time_t stat = dt_stat_time_create("duration");
 
-	T_LOG("Collecting measurements...");
-	while (!dt_stat_stable(stat)) {
-		T_STAT_MEASURE(stat) {
-			kr = task_generate_corpse(task_port, &corpse_port);
-		}
-		if (kr != KERN_SUCCESS) {
-			T_SKIP("Unable to generate a corpse (%d | %s)", kr, mach_error_string(kr));
-		}
+  T_LOG("Collecting measurements...");
+  while (!dt_stat_stable(stat)) {
+    T_STAT_MEASURE(stat) { kr = task_generate_corpse(task_port, &corpse_port); }
+    if (kr != KERN_SUCCESS) {
+      T_SKIP("Unable to generate a corpse (%d | %s)", kr,
+             mach_error_string(kr));
+    }
 
-		mach_port_deallocate(mach_task_self(), corpse_port);
-	}
-	dt_stat_finalize(stat);
+    mach_port_deallocate(mach_task_self(), corpse_port);
+  }
+  dt_stat_finalize(stat);
 }

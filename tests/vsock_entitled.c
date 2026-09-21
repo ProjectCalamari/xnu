@@ -28,38 +28,36 @@
 
 #include <vsock_helpers.h>
 
-T_GLOBAL_META(
-	T_META_RUN_CONCURRENTLY(true),
-	T_META_NAMESPACE("xnu.vsock")
-	);
+T_GLOBAL_META(T_META_RUN_CONCURRENTLY(true), T_META_NAMESPACE("xnu.vsock"));
 
-T_DECL(vsock_private_connect_with_entitlement, "vsock private connect should succeed with entitlement")
-{
-	const uint32_t port = 1234;
+T_DECL(vsock_private_connect_with_entitlement,
+       "vsock private connect should succeed with entitlement") {
+  const uint32_t port = 1234;
 
-	struct sockaddr_vm listen_addr;
-	int listen_socket;
-	int result = vsock_private_listen(VMADDR_CID_ANY, port, &listen_addr, 1, &listen_socket);
-	T_ASSERT_POSIX_SUCCESS(result, "vsock listen with entitlement");
+  struct sockaddr_vm listen_addr;
+  int listen_socket;
+  int result = vsock_private_listen(VMADDR_CID_ANY, port, &listen_addr, 1,
+                                    &listen_socket);
+  T_ASSERT_POSIX_SUCCESS(result, "vsock listen with entitlement");
 
-	const uint32_t connection_cid = vsock_get_local_cid(listen_socket);
+  const uint32_t connection_cid = vsock_get_local_cid(listen_socket);
 
-	int connected_socket = vsock_private_new_socket();
-	struct sockaddr_vm addr = (struct sockaddr_vm) {
-		.svm_cid = connection_cid,
-		.svm_port = port,
-	};
-	result = connect(connected_socket, (struct sockaddr *)&addr, sizeof(addr));
-	T_ASSERT_POSIX_SUCCESS(result, "vsock connection  with entitlement");
+  int connected_socket = vsock_private_new_socket();
+  struct sockaddr_vm addr = (struct sockaddr_vm){
+      .svm_cid = connection_cid,
+      .svm_port = port,
+  };
+  result = connect(connected_socket, (struct sockaddr *)&addr, sizeof(addr));
+  T_ASSERT_POSIX_SUCCESS(result, "vsock connection  with entitlement");
 
-	vsock_close(connected_socket);
-	vsock_close(listen_socket);
+  vsock_close(connected_socket);
+  vsock_close(listen_socket);
 }
 
-T_DECL(vsock_private_bind_with_entitlement, "vsock private bind should succeed with entitlement")
-{
-	int socket;
-	struct sockaddr_vm addr;
-	int result = vsock_private_bind(VMADDR_CID_ANY, 1234, &addr, &socket);
-	T_ASSERT_POSIX_SUCCESS(result, "vsock bind with entitlement");
+T_DECL(vsock_private_bind_with_entitlement,
+       "vsock private bind should succeed with entitlement") {
+  int socket;
+  struct sockaddr_vm addr;
+  int result = vsock_private_bind(VMADDR_CID_ANY, 1234, &addr, &socket);
+  T_ASSERT_POSIX_SUCCESS(result, "vsock bind with entitlement");
 }

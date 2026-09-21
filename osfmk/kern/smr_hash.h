@@ -26,7 +26,6 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-
 #ifndef _KERN_SMR_HASH_H_
 #define _KERN_SMR_HASH_H_
 
@@ -35,12 +34,11 @@
 #include <os/hash.h>
 #include <vm/vm_memtag.h>
 #if XNU_KERNEL_PRIVATE
-#include <kern/lock_ptr.h>
 #include <kern/counter.h>
+#include <kern/lock_ptr.h>
 #endif
 
 __BEGIN_DECLS
-
 
 /*!
  * @typedef smrh_key_t
@@ -53,14 +51,13 @@ __BEGIN_DECLS
  * For scalars (using the smrk_u64 field), the length is more advisory.
  */
 typedef struct {
-	union {
-		const char     *smrk_string;
-		const void     *smrk_opaque;
-		uint64_t        smrk_u64;
-	};
-	size_t                  smrk_len;
+  union {
+    const char *smrk_string;
+    const void *smrk_opaque;
+    uint64_t smrk_u64;
+  };
+  size_t smrk_len;
 } smrh_key_t;
-
 
 /*!
  * @struct smrh_traits
@@ -91,16 +88,15 @@ typedef struct {
  *                      verbs.
  */
 struct smrh_traits {
-	unsigned long           link_offset;
-	smr_t                   domain;
-	uint32_t              (*key_hash)(smrh_key_t, uint32_t);
-	bool                  (*key_equ)(smrh_key_t, smrh_key_t);
-	uint32_t              (*obj_hash)(const struct smrq_slink *, uint32_t);
-	bool                  (*obj_equ)(const struct smrq_slink *, smrh_key_t);
-	bool                  (*obj_try_get)(void *);
+  unsigned long link_offset;
+  smr_t domain;
+  uint32_t (*key_hash)(smrh_key_t, uint32_t);
+  bool (*key_equ)(smrh_key_t, smrh_key_t);
+  uint32_t (*obj_hash)(const struct smrq_slink *, uint32_t);
+  bool (*obj_equ)(const struct smrq_slink *, smrh_key_t);
+  bool (*obj_try_get)(void *);
 };
 typedef const struct smrh_traits *smrh_traits_t;
-
 
 #pragma mark SMR hash keys
 
@@ -110,9 +106,8 @@ typedef const struct smrh_traits *smrh_traits_t;
  * @brief
  * Generates a @c smrh_key_t value out of a scalar.
  */
-#define SMRH_SCALAR_KEY(e) \
-	(smrh_key_t){ .smrk_u64 = (e), .smrk_len = sizeof(e) }
-
+#define SMRH_SCALAR_KEY(e)                                                     \
+  (smrh_key_t) { .smrk_u64 = (e), .smrk_len = sizeof(e) }
 
 /*!
  * @function smrh_key_hash_u32
@@ -120,19 +115,17 @@ typedef const struct smrh_traits *smrh_traits_t;
  * @brief
  * Hashing function to use as a @c key_hash trait for 32bit scalars.
  */
-__pure2
-static inline uint32_t
-smrh_key_hash_u32(smrh_key_t key, uint32_t seed)
-{
-	uint32_t x = (uint32_t)key.smrk_u64 + seed;
+__pure2 static inline uint32_t smrh_key_hash_u32(smrh_key_t key,
+                                                 uint32_t seed) {
+  uint32_t x = (uint32_t)key.smrk_u64 + seed;
 
-	x ^= x >> 16;
-	x *= 0x7feb352dU;
-	x ^= x >> 15;
-	x *= 0x846ca68bU;
-	x ^= x >> 16;
+  x ^= x >> 16;
+  x *= 0x7feb352dU;
+  x ^= x >> 15;
+  x *= 0x846ca68bU;
+  x ^= x >> 16;
 
-	return x;
+  return x;
 }
 
 /*!
@@ -141,19 +134,17 @@ smrh_key_hash_u32(smrh_key_t key, uint32_t seed)
  * @brief
  * Hashing function to use as a @c key_hash trait for 64bit scalars.
  */
-__pure2
-static inline uint32_t
-smrh_key_hash_u64(smrh_key_t key, uint32_t seed)
-{
-	uint64_t x = key.smrk_u64 + seed;
+__pure2 static inline uint32_t smrh_key_hash_u64(smrh_key_t key,
+                                                 uint32_t seed) {
+  uint64_t x = key.smrk_u64 + seed;
 
-	x ^= x >> 30;
-	x *= 0xbf58476d1ce4e5b9U;
-	x ^= x >> 27;
-	x *= 0x94d049bb133111ebU;
-	x ^= x >> 31;
+  x ^= x >> 30;
+  x *= 0xbf58476d1ce4e5b9U;
+  x ^= x >> 27;
+  x *= 0x94d049bb133111ebU;
+  x ^= x >> 31;
 
-	return (uint32_t)x;
+  return (uint32_t)x;
 }
 
 /*!
@@ -162,11 +153,9 @@ smrh_key_hash_u64(smrh_key_t key, uint32_t seed)
  * @brief
  * Hashing function to use as a @c key_hash trait for byte arrays.
  */
-__stateful_pure
-static inline uint32_t
-smrh_key_hash_mem(smrh_key_t key, uint32_t seed)
-{
-	return os_hash_jenkins(key.smrk_opaque, key.smrk_len, seed);
+__stateful_pure static inline uint32_t smrh_key_hash_mem(smrh_key_t key,
+                                                         uint32_t seed) {
+  return os_hash_jenkins(key.smrk_opaque, key.smrk_len, seed);
 }
 
 /*!
@@ -175,13 +164,10 @@ smrh_key_hash_mem(smrh_key_t key, uint32_t seed)
  * @brief
  * Hashing function to use as a @c key_hash trait for C strings.
  */
-__stateful_pure
-static inline uint32_t
-smrh_key_hash_str(smrh_key_t key, uint32_t seed)
-{
-	return os_hash_jenkins(key.smrk_opaque, key.smrk_len, seed);
+__stateful_pure static inline uint32_t smrh_key_hash_str(smrh_key_t key,
+                                                         uint32_t seed) {
+  return os_hash_jenkins(key.smrk_opaque, key.smrk_len, seed);
 }
-
 
 /*!
  * @function smrh_key_equ_scalar
@@ -189,10 +175,8 @@ smrh_key_hash_str(smrh_key_t key, uint32_t seed)
  * @brief
  * Equality function to use as @c key_equ for scalars.
  */
-static inline bool
-smrh_key_equ_scalar(smrh_key_t k1, smrh_key_t k2)
-{
-	return k1.smrk_u64 == k2.smrk_u64;
+static inline bool smrh_key_equ_scalar(smrh_key_t k1, smrh_key_t k2) {
+  return k1.smrk_u64 == k2.smrk_u64;
 }
 
 /*!
@@ -201,11 +185,9 @@ smrh_key_equ_scalar(smrh_key_t k1, smrh_key_t k2)
  * @brief
  * Equality function to use as @c key_equ for byte arrays.
  */
-static inline bool
-smrh_key_equ_mem(smrh_key_t k1, smrh_key_t k2)
-{
-	assert(k1.smrk_len == k2.smrk_len);
-	return memcmp(k1.smrk_opaque, k2.smrk_opaque, k1.smrk_len) == 0;
+static inline bool smrh_key_equ_mem(smrh_key_t k1, smrh_key_t k2) {
+  assert(k1.smrk_len == k2.smrk_len);
+  return memcmp(k1.smrk_opaque, k2.smrk_opaque, k1.smrk_len) == 0;
 }
 
 /*!
@@ -214,13 +196,10 @@ smrh_key_equ_mem(smrh_key_t k1, smrh_key_t k2)
  * @brief
  * Equality function to use as @c key_equ for strings.
  */
-static inline bool
-smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
-{
-	return k1.smrk_len == k2.smrk_len &&
-	       memcmp(k1.smrk_opaque, k2.smrk_opaque, k1.smrk_len) == 0;
+static inline bool smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2) {
+  return k1.smrk_len == k2.smrk_len &&
+         memcmp(k1.smrk_opaque, k2.smrk_opaque, k1.smrk_len) == 0;
 }
-
 
 #pragma mark SMR hash traits
 
@@ -251,14 +230,11 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * @param type_t        the type of objects that will be hashed
  * @param link_field    the linkage used to link elements
  */
-#define SMRH_TRAITS_DEFINE(name, type_t, link_field, ...) \
-	__smrh_traits_storage struct name {                                     \
-	        type_t *smrht_obj_type[0];                                      \
-	        struct smrh_traits smrht;                                       \
-	} name = { .smrht = {                                                   \
-	        .link_offset = offsetof(type_t, link_field),                    \
-	        __VA_ARGS__                                                     \
-	} }
+#define SMRH_TRAITS_DEFINE(name, type_t, link_field, ...)                      \
+  __smrh_traits_storage struct name {                                          \
+    type_t *smrht_obj_type[0];                                                 \
+    struct smrh_traits smrht;                                                  \
+  } name = {.smrht = {.link_offset = offsetof(type_t, link_field), __VA_ARGS__}}
 
 /*!
  * @macro SMRH_TRAITS_DEFINE_SCALAR()
@@ -278,36 +254,31 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * @param key_field     the field holding the key
  * @param link_field    the linkage used to link elements
  */
-#define SMRH_TRAITS_DEFINE_SCALAR(name, type_t, key_field, link_field, ...) \
-	static uint32_t                                                         \
-	name ## _obj_hash(const struct smrq_slink *link, uint32_t seed)         \
-	{                                                                       \
-	        __auto_type o = __container_of(link, const type_t, link_field); \
-	        smrh_key_t  k = SMRH_SCALAR_KEY(o->key_field);                  \
-                                                                                \
-	        if (k.smrk_len > sizeof(uint32_t)) {                            \
-	                return smrh_key_hash_u64(k, seed);                      \
-	        } else {                                                        \
-	                return smrh_key_hash_u32(k, seed);                      \
-	        }                                                               \
-	}                                                                       \
-                                                                                \
-	static bool                                                             \
-	name ## _obj_equ(const struct smrq_slink *link, smrh_key_t key)         \
-	{                                                                       \
-	        __auto_type o = __container_of(link, const type_t, link_field); \
-                                                                                \
-	        return smrh_key_equ_scalar(SMRH_SCALAR_KEY(o->key_field), key); \
-	}                                                                       \
-                                                                                \
-	SMRH_TRAITS_DEFINE(name, type_t, link_field,                            \
-	        .key_hash    = sizeof(((type_t *)NULL)->key_field) > 4          \
-	            ? smrh_key_hash_u64 : smrh_key_hash_u32,                    \
-	        .key_equ     = smrh_key_equ_scalar,                             \
-	        .obj_hash    = name ## _obj_hash,                               \
-	        .obj_equ     = name ## _obj_equ,                                \
-	        __VA_ARGS__                                                     \
-	)
+#define SMRH_TRAITS_DEFINE_SCALAR(name, type_t, key_field, link_field, ...)    \
+  static uint32_t name##_obj_hash(const struct smrq_slink *link,               \
+                                  uint32_t seed) {                             \
+    __auto_type o = __container_of(link, const type_t, link_field);            \
+    smrh_key_t k = SMRH_SCALAR_KEY(o->key_field);                              \
+                                                                               \
+    if (k.smrk_len > sizeof(uint32_t)) {                                       \
+      return smrh_key_hash_u64(k, seed);                                       \
+    } else {                                                                   \
+      return smrh_key_hash_u32(k, seed);                                       \
+    }                                                                          \
+  }                                                                            \
+                                                                               \
+  static bool name##_obj_equ(const struct smrq_slink *link, smrh_key_t key) {  \
+    __auto_type o = __container_of(link, const type_t, link_field);            \
+                                                                               \
+    return smrh_key_equ_scalar(SMRH_SCALAR_KEY(o->key_field), key);            \
+  }                                                                            \
+                                                                               \
+  SMRH_TRAITS_DEFINE(                                                          \
+      name, type_t, link_field,                                                \
+      .key_hash = sizeof(((type_t *)NULL)->key_field) > 4 ? smrh_key_hash_u64  \
+                                                          : smrh_key_hash_u32, \
+      .key_equ = smrh_key_equ_scalar, .obj_hash = name##_obj_hash,             \
+      .obj_equ = name##_obj_equ, __VA_ARGS__)
 
 /*!
  * @macro SMRH_TRAITS_DEFINE_STR()
@@ -328,12 +299,9 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * @param type_t        the type of objects that will be hashed
  * @param link_field    the linkage used to link elements
  */
-#define SMRH_TRAITS_DEFINE_STR(name, type_t, link_field, ...) \
-	SMRH_TRAITS_DEFINE(name, type_t, link_field,                            \
-	        .key_hash = smrh_key_hash_str,                                  \
-	        .key_equ  = smrh_key_equ_str,                                   \
-	        __VA_ARGS__                                                     \
-	)
+#define SMRH_TRAITS_DEFINE_STR(name, type_t, link_field, ...)                  \
+  SMRH_TRAITS_DEFINE(name, type_t, link_field, .key_hash = smrh_key_hash_str,  \
+                     .key_equ = smrh_key_equ_str, __VA_ARGS__)
 
 /*!
  * @macro SMRH_TRAITS_DEFINE_MEM()
@@ -354,12 +322,9 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * @param type_t        the type of objects that will be hashed
  * @param link_field    the linkage used to link elements
  */
-#define SMRH_TRAITS_DEFINE_MEM(name, type_t, link_field, ...) \
-	SMRH_TRAITS_DEFINE(name, type_t, link_field,                            \
-	        .key_hash = smrh_key_hash_mem,                                  \
-	        .key_equ  = smrh_key_equ_mem,                                   \
-	        __VA_ARGS__                                                     \
-	)
+#define SMRH_TRAITS_DEFINE_MEM(name, type_t, link_field, ...)                  \
+  SMRH_TRAITS_DEFINE(name, type_t, link_field, .key_hash = smrh_key_hash_mem,  \
+                     .key_equ = smrh_key_equ_mem, __VA_ARGS__)
 
 /*!
  * @macro smrht_enter()
@@ -368,8 +333,7 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * Conveniency macro to enter the domain associated
  * with a specified hash table traits
  */
-#define smrht_enter(traits) \
-	smr_enter((traits)->smrht.domain)
+#define smrht_enter(traits) smr_enter((traits)->smrht.domain)
 
 /*!
  * @macro smrht_leave()
@@ -378,12 +342,9 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * Conveniency macro to leave the domain associated
  * with a specified hash table traits
  */
-#define smrht_leave(traits) \
-	smr_leave((traits)->smrht.domain)
-
+#define smrht_leave(traits) smr_leave((traits)->smrht.domain)
 
 #pragma mark - SMR hash tables
-
 
 /*!
  * @struct smr_hash
@@ -406,13 +367,13 @@ smrh_key_equ_str(smrh_key_t k1, smrh_key_t k2)
  * (https://www.usenix.org/legacy/event/atc11/tech/final_files/Triplett.pdf)
  */
 struct smr_hash {
-#define SMRH_ARRAY_ORDER_SHIFT  (48)
-#define SMRH_ARRAY_ORDER_MASK   (0x00fful << SMRH_ARRAY_ORDER_SHIFT)
-	uintptr_t               smrh_array;
-	uint32_t                smrh_count;
-	bool                    smrh_resizing;
-	uint8_t                 smrh_unused1;
-	uint16_t                smrh_unused2;
+#define SMRH_ARRAY_ORDER_SHIFT (48)
+#define SMRH_ARRAY_ORDER_MASK (0x00fful << SMRH_ARRAY_ORDER_SHIFT)
+  uintptr_t smrh_array;
+  uint32_t smrh_count;
+  bool smrh_resizing;
+  uint8_t smrh_unused1;
+  uint16_t smrh_unused2;
 };
 
 #pragma mark SMR hash tables: initialization and accessors
@@ -435,8 +396,7 @@ struct smr_hash {
  * Whether the hash table is empty-initialized can be tested with
  * @c smr_hash_is_empty_initialized().
  */
-extern void smr_hash_init_empty(
-	struct smr_hash        *smrh);
+extern void smr_hash_init_empty(struct smr_hash *smrh);
 
 /*!
  * @function smr_hash_init()
@@ -449,9 +409,7 @@ extern void smr_hash_init_empty(
  * smaller than KALLOC_SAFE_ALLOC_SIZE / sizeof(struct smrq_slist_head)
  * (or to be called during early boot).
  */
-extern void smr_hash_init(
-	struct smr_hash        *smrh,
-	size_t                  size);
+extern void smr_hash_init(struct smr_hash *smrh, size_t size);
 
 /*!
  * @function smr_hash_destroy()
@@ -463,8 +421,7 @@ extern void smr_hash_init(
  * This doesn't clean up the table from any elements it still contains.
  * @c smr_hash_serialized_clear() must be called first if needed.
  */
-extern void smr_hash_destroy(
-	struct smr_hash        *smrh);
+extern void smr_hash_destroy(struct smr_hash *smrh);
 
 /*!
  * @function smr_hash_is_empty_initialized()
@@ -473,8 +430,7 @@ extern void smr_hash_destroy(
  * Returns whether the smr hash is empty as a result of calling
  * smr_hash_init_empty().
  */
-extern bool smr_hash_is_empty_initialized(
-	struct smr_hash        *smrh);
+extern bool smr_hash_is_empty_initialized(struct smr_hash *smrh);
 
 /*!
  * @struct smr_array
@@ -484,8 +440,8 @@ extern bool smr_hash_is_empty_initialized(
  * this type is used for decoding / setting this pointer.
  */
 struct smr_hash_array {
-	struct smrq_slist_head *smrh_array;
-	uint16_t                smrh_order;
+  struct smrq_slist_head *smrh_array;
+  uint16_t smrh_order;
 };
 
 /*!
@@ -495,22 +451,21 @@ struct smr_hash_array {
  * Decodes the array pointer of a hash table.
  */
 static inline struct smr_hash_array
-smr_hash_array_decode(const struct smr_hash *smrh)
-{
-	struct smr_hash_array array;
-	uintptr_t ptr = os_atomic_load(&smrh->smrh_array, relaxed);
+smr_hash_array_decode(const struct smr_hash *smrh) {
+  struct smr_hash_array array;
+  uintptr_t ptr = os_atomic_load(&smrh->smrh_array, relaxed);
 
-	array.smrh_order = (uint8_t)(ptr >> SMRH_ARRAY_ORDER_SHIFT);
+  array.smrh_order = (uint8_t)(ptr >> SMRH_ARRAY_ORDER_SHIFT);
 #ifndef __BUILDING_XNU_LIBRARY__
-	/* when running in kernel space, top bits are supposed to be 0xff*/
-	ptr |= SMRH_ARRAY_ORDER_MASK;
+  /* when running in kernel space, top bits are supposed to be 0xff*/
+  ptr |= SMRH_ARRAY_ORDER_MASK;
 #else
-	/* in user-mode top bits need to be 00 */
-	ptr &= ~SMRH_ARRAY_ORDER_MASK;
+  /* in user-mode top bits need to be 00 */
+  ptr &= ~SMRH_ARRAY_ORDER_MASK;
 #endif
-	array.smrh_array = (struct smrq_slist_head *)ptr;
+  array.smrh_array = (struct smrq_slist_head *)ptr;
 
-	return array;
+  return array;
 }
 
 /*!
@@ -519,17 +474,13 @@ smr_hash_array_decode(const struct smr_hash *smrh)
  * @brief
  * Returns the number of buckets in the hash table.
  */
-__attribute__((overloadable, always_inline))
-static inline unsigned long
-smr_hash_size(struct smr_hash_array array)
-{
-	return 1ul << (64 - array.smrh_order);
+__attribute__((overloadable, always_inline)) static inline unsigned long
+smr_hash_size(struct smr_hash_array array) {
+  return 1ul << (64 - array.smrh_order);
 }
-__attribute__((overloadable, always_inline))
-static inline unsigned long
-smr_hash_size(const struct smr_hash *smrh)
-{
-	return smr_hash_size(smr_hash_array_decode(smrh));
+__attribute__((overloadable, always_inline)) static inline unsigned long
+smr_hash_size(const struct smr_hash *smrh) {
+  return smr_hash_size(smr_hash_array_decode(smrh));
 }
 
 /*!
@@ -542,13 +493,10 @@ smr_hash_size(const struct smr_hash *smrh)
  * It can be called without serialization held,
  * but the value is then racy.
  */
-__attribute__((always_inline))
-static inline unsigned long
-smr_hash_serialized_count(const struct smr_hash *smrh)
-{
-	return smrh->smrh_count;
+__attribute__((always_inline)) static inline unsigned long
+smr_hash_serialized_count(const struct smr_hash *smrh) {
+  return smrh->smrh_count;
 }
-
 
 #pragma mark SMR hash tables: read operations
 
@@ -570,9 +518,8 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param key           the key to lookup
  * @param traits        the traits for the hash table
  */
-#define smr_hash_get(smrh, key, traits)  ({ \
-	(smrht_obj_t(traits))__smr_hash_get(smrh, key, &(traits)->smrht);       \
-})
+#define smr_hash_get(smrh, key, traits)                                        \
+  ({ (smrht_obj_t(traits)) __smr_hash_get(smrh, key, &(traits)->smrht); })
 
 /*!
  * @function smr_hash_contains()
@@ -589,18 +536,19 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param key           the key to lookup
  * @param traits        the traits for the hash table
  */
-#define smr_hash_contains(smrh, key, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	struct smrq_slist_head *__hd;                                           \
-	bool __contains;                                                        \
-                                                                                \
-	smr_enter(__smrht->domain);                                             \
-	__hd = __smr_hash_bucket(smrh, key, __smrht);                           \
-	__contains = (__smr_hash_entered_find(__hd, key, __smrht) != NULL);     \
-	smr_leave(__smrht->domain);                                             \
-                                                                                \
-	__contains;                                                             \
-})
+#define smr_hash_contains(smrh, key, traits)                                   \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    struct smrq_slist_head *__hd;                                              \
+    bool __contains;                                                           \
+                                                                               \
+    smr_enter(__smrht->domain);                                                \
+    __hd = __smr_hash_bucket(smrh, key, __smrht);                              \
+    __contains = (__smr_hash_entered_find(__hd, key, __smrht) != NULL);        \
+    smr_leave(__smrht->domain);                                                \
+                                                                               \
+    __contains;                                                                \
+  })
 
 /*!
  * @function smr_hash_entered_find()
@@ -623,12 +571,13 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param key           the key to lookup
  * @param traits        the traits for the hash table
  */
-#define smr_hash_entered_find(smrh, key, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	struct smrq_slist_head *__hd = __smr_hash_bucket(smrh, key, __smrht);   \
-                                                                                \
-	(smrht_obj_t(traits))__smr_hash_entered_find(__hd, key, __smrht);       \
-})
+#define smr_hash_entered_find(smrh, key, traits)                               \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    struct smrq_slist_head *__hd = __smr_hash_bucket(smrh, key, __smrht);      \
+                                                                               \
+    (smrht_obj_t(traits)) __smr_hash_entered_find(__hd, key, __smrht);         \
+  })
 
 /*!
  * @function smr_hash_serialized_find()
@@ -652,13 +601,13 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param key           the key to lookup
  * @param traits        the traits for the hash table
  */
-#define smr_hash_serialized_find(smrh, key, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	struct smrq_slist_head *__hd = __smr_hash_bucket(smrh, key, __smrht);   \
-                                                                                \
-	(smrht_obj_t(traits))__smr_hash_serialized_find(__hd, key, __smrht);    \
-})
-
+#define smr_hash_serialized_find(smrh, key, traits)                            \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    struct smrq_slist_head *__hd = __smr_hash_bucket(smrh, key, __smrht);      \
+                                                                               \
+    (smrht_obj_t(traits)) __smr_hash_serialized_find(__hd, key, __smrht);      \
+  })
 
 #pragma mark SMR hash tables: mutations
 
@@ -679,16 +628,17 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param link          the pointer to the linkage to insert.
  * @param traits        the traits for the hash table
  */
-#define smr_hash_serialized_insert(smrh, link, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	struct smr_hash *__h = (smrh);                                          \
-	struct smrq_slink *__link = (link);                                     \
-	struct smrq_slist_head *__hd;                                           \
-                                                                                \
-	__hd = __smr_hash_bucket(__h, __link, __smrht);                         \
-	__h->smrh_count++;                                                      \
-	smrq_serialized_insert_head(__hd, __link);                              \
-})
+#define smr_hash_serialized_insert(smrh, link, traits)                         \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    struct smr_hash *__h = (smrh);                                             \
+    struct smrq_slink *__link = (link);                                        \
+    struct smrq_slist_head *__hd;                                              \
+                                                                               \
+    __hd = __smr_hash_bucket(__h, __link, __smrht);                            \
+    __h->smrh_count++;                                                         \
+    smrq_serialized_insert_head(__hd, __link);                                 \
+  })
 
 /*!
  * @function smr_hash_serialized_get_or_insert()
@@ -704,10 +654,11 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param link          the pointer to the linkage to insert.
  * @param traits        the traits for the hash table
  */
-#define smr_hash_serialized_get_or_insert(smrh, key, link, traits)  ({ \
-	(smrht_obj_t(traits))__smr_hash_serialized_get_or_insert(smrh, key,     \
-	    link, &(traits)->smrht);                                            \
-})
+#define smr_hash_serialized_get_or_insert(smrh, key, link, traits)             \
+  ({                                                                           \
+    (smrht_obj_t(traits)) __smr_hash_serialized_get_or_insert(                 \
+        smrh, key, link, &(traits)->smrht);                                    \
+  })
 
 /*!
  * @function smr_hash_serialized_remove()
@@ -729,16 +680,17 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param link          the pointer to the linkage to remove.
  * @param traits        the traits for the hash table
  */
-#define smr_hash_serialized_remove(smrh, link, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	struct smr_hash *__h = (smrh);                                          \
-	struct smrq_slink *__link = (link);                                     \
-	struct smrq_slist_head *__hd;                                           \
-                                                                                \
-	__hd = __smr_hash_bucket(__h, __link, __smrht);                         \
-	__h->smrh_count--;                                                      \
-	smrq_serialized_remove(__hd, __link);                                   \
-})
+#define smr_hash_serialized_remove(smrh, link, traits)                         \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    struct smr_hash *__h = (smrh);                                             \
+    struct smrq_slink *__link = (link);                                        \
+    struct smrq_slist_head *__hd;                                              \
+                                                                               \
+    __hd = __smr_hash_bucket(__h, __link, __smrht);                            \
+    __h->smrh_count--;                                                         \
+    smrq_serialized_remove(__hd, __link);                                      \
+  })
 
 /*!
  * @function smr_hash_serialized_replace()
@@ -764,14 +716,15 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param new_link      the pointer to the linkage to insert.
  * @param traits        the traits for the hash table
  */
-#define smr_hash_serialized_replace(smrh, old_link, new_link, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	struct smrq_slink *__link = (old_link);                                 \
-	struct smrq_slist_head *__hd;                                           \
-                                                                                \
-	__hd = __smr_hash_bucket(smrh, __link, __smrht);                        \
-	smrq_serialized_replace(__hd, __link, (new_link));                      \
-})
+#define smr_hash_serialized_replace(smrh, old_link, new_link, traits)          \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    struct smrq_slink *__link = (old_link);                                    \
+    struct smrq_slist_head *__hd;                                              \
+                                                                               \
+    __hd = __smr_hash_bucket(smrh, __link, __smrht);                           \
+    smrq_serialized_replace(__hd, __link, (new_link));                         \
+  })
 
 /*!
  * @function smr_hash_serialized_clear()
@@ -786,9 +739,8 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * @param traits        the traits for this hash table
  * @param free          a block to call on each element in the table.
  */
-#define smr_hash_serialized_clear(smrh, traits, free...) \
-	__smr_hash_serialized_clear(smrh, &(traits)->smrht, free)
-
+#define smr_hash_serialized_clear(smrh, traits, free...)                       \
+  __smr_hash_serialized_clear(smrh, &(traits)->smrht, free)
 
 #pragma mark SMR hash tables: resizing
 
@@ -812,18 +764,15 @@ smr_hash_serialized_count(const struct smr_hash *smrh)
  * per @c count_factor elements.
  */
 static inline bool
-smr_hash_serialized_should_shrink(
-	const struct smr_hash  *smrh,
-	uint32_t                min_size,
-	uint32_t                size_factor,
-	uint32_t                count_factor)
-{
-	size_t size = smr_hash_size(smrh);
+smr_hash_serialized_should_shrink(const struct smr_hash *smrh,
+                                  uint32_t min_size, uint32_t size_factor,
+                                  uint32_t count_factor) {
+  size_t size = smr_hash_size(smrh);
 
-	if (size > min_size && !smrh->smrh_resizing) {
-		return size * count_factor > smrh->smrh_count * size_factor;
-	}
-	return false;
+  if (size > min_size && !smrh->smrh_resizing) {
+    return size * count_factor > smrh->smrh_count * size_factor;
+  }
+  return false;
 }
 
 /*!
@@ -836,18 +785,15 @@ smr_hash_serialized_should_shrink(
  * Returns whether the table has less than @c size_factor buckets
  * per @c count_factor elements.
  */
-static inline bool
-smr_hash_serialized_should_grow(
-	const struct smr_hash  *smrh,
-	uint32_t                size_factor,
-	uint32_t                count_factor)
-{
-	size_t size = smr_hash_size(smrh);
+static inline bool smr_hash_serialized_should_grow(const struct smr_hash *smrh,
+                                                   uint32_t size_factor,
+                                                   uint32_t count_factor) {
+  size_t size = smr_hash_size(smrh);
 
-	if (!smrh->smrh_resizing) {
-		return size * count_factor < smrh->smrh_count * size_factor;
-	}
-	return false;
+  if (!smrh->smrh_resizing) {
+    return size * count_factor < smrh->smrh_count * size_factor;
+  }
+  return false;
 }
 
 /*!
@@ -874,9 +820,8 @@ smr_hash_serialized_should_grow(
  * - KERN_RESOURCE_SHORTAGE: the system was out of memory.
  * - KERN_FAILURE: the hash table was already resizing.
  */
-#define smr_hash_shrink_and_unlock(smrh, mutex, traits) \
-	__smr_hash_shrink_and_unlock(smrh, mutex, &(traits)->smrht)
-
+#define smr_hash_shrink_and_unlock(smrh, mutex, traits)                        \
+  __smr_hash_shrink_and_unlock(smrh, mutex, &(traits)->smrht)
 
 /*!
  * @function smr_hash_grow_and_unlock()
@@ -904,9 +849,8 @@ smr_hash_serialized_should_grow(
  * - KERN_RESOURCE_SHORTAGE: the system was out of memory.
  * - KERN_FAILURE: the hash table was already resizing.
  */
-#define smr_hash_grow_and_unlock(smrh, mutex, traits) \
-	__smr_hash_grow_and_unlock(smrh, mutex, &(traits)->smrht)
-
+#define smr_hash_grow_and_unlock(smrh, mutex, traits)                          \
+  __smr_hash_grow_and_unlock(smrh, mutex, &(traits)->smrht)
 
 #pragma mark SMR hash tables: iteration
 
@@ -930,11 +874,11 @@ smr_hash_serialized_should_grow(
  * to concurrent deletions) or elements twice (due to concurrent resizes).
  */
 struct smr_hash_iterator {
-	struct smr_hash        *smrh;
-	struct smrq_slist_head *hd_next;
-	struct smrq_slist_head *hd_last;
-	__smrq_slink_t         *prev;
-	struct smrq_slink      *link;
+  struct smr_hash *smrh;
+  struct smrq_slist_head *hd_next;
+  struct smrq_slist_head *hd_last;
+  __smrq_slink_t *prev;
+  struct smrq_slink *link;
 };
 
 /*!
@@ -947,22 +891,21 @@ struct smr_hash_iterator {
  * This function must be used in either serialized or entered context.
  */
 static inline struct smr_hash_iterator
-smr_hash_iter_begin(struct smr_hash *smrh)
-{
-	struct smr_hash_array array = smr_hash_array_decode(smrh);
-	struct smr_hash_iterator it = {
-		.smrh    = smrh,
-		.hd_next = array.smrh_array,
-		.hd_last = array.smrh_array + smr_hash_size(array),
-	};
+smr_hash_iter_begin(struct smr_hash *smrh) {
+  struct smr_hash_array array = smr_hash_array_decode(smrh);
+  struct smr_hash_iterator it = {
+      .smrh = smrh,
+      .hd_next = array.smrh_array,
+      .hd_last = array.smrh_array + smr_hash_size(array),
+  };
 
-	do {
-		it.prev = &it.hd_next->first;
-		it.link = smr_entered_load(it.prev);
-		it.hd_next++;
-	} while (it.link == NULL && it.hd_next < it.hd_last);
+  do {
+    it.prev = &it.hd_next->first;
+    it.link = smr_entered_load(it.prev);
+    it.hd_next++;
+  } while (it.link == NULL && it.hd_next < it.hd_last);
 
-	return it;
+  return it;
 }
 
 /*!
@@ -974,16 +917,17 @@ smr_hash_iter_begin(struct smr_hash *smrh)
  * @discussion
  * This function must be used in either serialized or entered context.
  */
-#define smr_hash_iter_get(it, traits)  ({ \
-	struct smr_hash_iterator __smrh_it = (it);                              \
-	void *__obj = NULL;                                                     \
-                                                                                \
-	if (__smrh_it.link) {                                                   \
-	        __obj = __smrht_link_to_obj(&(traits)->smrht, __smrh_it.link);  \
-	}                                                                       \
-                                                                                \
-	(smrht_obj_t(traits))__obj;                                             \
-})
+#define smr_hash_iter_get(it, traits)                                          \
+  ({                                                                           \
+    struct smr_hash_iterator __smrh_it = (it);                                 \
+    void *__obj = NULL;                                                        \
+                                                                               \
+    if (__smrh_it.link) {                                                      \
+      __obj = __smrht_link_to_obj(&(traits)->smrht, __smrh_it.link);           \
+    }                                                                          \
+                                                                               \
+    (smrht_obj_t(traits)) __obj;                                               \
+  })
 
 /*!
  * @function smr_hash_iter_advance()
@@ -994,18 +938,16 @@ smr_hash_iter_begin(struct smr_hash *smrh)
  * @description
  * This function must be used in either serialized or entered context.
  */
-static inline void
-smr_hash_iter_advance(struct smr_hash_iterator *it)
-{
-	it->prev = &it->link->next;
+static inline void smr_hash_iter_advance(struct smr_hash_iterator *it) {
+  it->prev = &it->link->next;
 
-	while ((it->link = smr_entered_load(it->prev)) == NULL) {
-		if (it->hd_next == it->hd_last) {
-			break;
-		}
-		it->prev = &it->hd_next->first;
-		it->hd_next++;
-	}
+  while ((it->link = smr_entered_load(it->prev)) == NULL) {
+    if (it->hd_next == it->hd_last) {
+      break;
+    }
+    it->prev = &it->hd_next->first;
+    it->hd_next++;
+  }
 }
 
 /*!
@@ -1021,20 +963,19 @@ smr_hash_iter_advance(struct smr_hash_iterator *it)
  * and not freed immediately.
  */
 static inline void
-smr_hash_iter_serialized_erase(struct smr_hash_iterator *it)
-{
-	it->link = smr_serialized_load(&it->link->next);
-	it->smrh->smrh_count--;
-	smr_serialized_store_relaxed(it->prev, it->link);
+smr_hash_iter_serialized_erase(struct smr_hash_iterator *it) {
+  it->link = smr_serialized_load(&it->link->next);
+  it->smrh->smrh_count--;
+  smr_serialized_store_relaxed(it->prev, it->link);
 
-	while (it->link == NULL) {
-		if (it->hd_next == it->hd_last) {
-			break;
-		}
-		it->prev = &it->hd_next->first;
-		it->link = smr_serialized_load(it->prev);
-		it->hd_next++;
-	}
+  while (it->link == NULL) {
+    if (it->hd_next == it->hd_last) {
+      break;
+    }
+    it->prev = &it->hd_next->first;
+    it->link = smr_serialized_load(it->prev);
+    it->hd_next++;
+  }
 }
 
 /*!
@@ -1057,15 +998,13 @@ smr_hash_iter_serialized_erase(struct smr_hash_iterator *it)
  * @param smrh          the hash table to enumerate
  * @param traits        the traits for the hash table
  */
-#define smr_hash_foreach(obj, smrh, traits) \
-	for (struct smr_hash_iterator __it = smr_hash_iter_begin(smrh);         \
-	    ((obj) = smr_hash_iter_get(__it, traits));                          \
-	    smr_hash_iter_advance(&__it))
-
+#define smr_hash_foreach(obj, smrh, traits)                                    \
+  for (struct smr_hash_iterator __it = smr_hash_iter_begin(smrh);              \
+       ((obj) = smr_hash_iter_get(__it, traits));                              \
+       smr_hash_iter_advance(&__it))
 
 #if XNU_KERNEL_PRIVATE
 #pragma mark - SMR scalable hash tables
-
 
 /*!
  * @typedef smrsh_state_t
@@ -1081,12 +1020,11 @@ smr_hash_iter_serialized_erase(struct smr_hash_iterator *it)
  * and set of seed/array atomically by changing the state.
  */
 typedef struct {
-	uint8_t                 curidx;
-	uint8_t                 curshift;
-	uint8_t                 newidx;
-	uint8_t                 newshift;
+  uint8_t curidx;
+  uint8_t curshift;
+  uint8_t newidx;
+  uint8_t newshift;
 } smrsh_state_t;
-
 
 /*!
  * @typedef smrsh_rehash_t
@@ -1094,14 +1032,14 @@ typedef struct {
  * @brief
  * Internal state management for various rehashing operations.
  */
-__options_closed_decl(smrsh_rehash_t, uint8_t, {
-	SMRSH_REHASH_NONE     = 0x00,
-	SMRSH_REHASH_RESEED   = 0x01,
-	SMRSH_REHASH_SHRINK   = 0x02,
-	SMRSH_REHASH_GROW     = 0x04,
-	SMRSH_REHASH_RUNNING  = 0x08,
-});
-
+__options_closed_decl(smrsh_rehash_t, uint8_t,
+                      {
+                          SMRSH_REHASH_NONE = 0x00,
+                          SMRSH_REHASH_RESEED = 0x01,
+                          SMRSH_REHASH_SHRINK = 0x02,
+                          SMRSH_REHASH_GROW = 0x04,
+                          SMRSH_REHASH_RUNNING = 0x08,
+                      });
 
 /*!
  * @enum smrsh_policy_t
@@ -1133,13 +1071,13 @@ __options_closed_decl(smrsh_rehash_t, uint8_t, {
  * This policy grows aggressively, only tolerating relatively short
  * hash chains, and will never shrink.
  */
-__enum_closed_decl(smrsh_policy_t, uint32_t, {
-	SMRSH_COMPACT,
-	SMRSH_BALANCED,
-	SMRSH_BALANCED_NOSHRINK,
-	SMRSH_FASTEST,
-});
-
+__enum_closed_decl(smrsh_policy_t, uint32_t,
+                   {
+                       SMRSH_COMPACT,
+                       SMRSH_BALANCED,
+                       SMRSH_BALANCED_NOSHRINK,
+                       SMRSH_FASTEST,
+                   });
 
 /*!
  * @struct smr_shash
@@ -1162,20 +1100,18 @@ __enum_closed_decl(smrsh_policy_t, uint32_t, {
  *   counter).
  */
 struct smr_shash {
-	hw_lck_ptr_t *_Atomic   smrsh_array[2];
-	uint32_t _Atomic        smrsh_seed[2];
-	smrsh_state_t _Atomic   smrsh_state;
-	smrsh_rehash_t _Atomic  smrsh_rehashing;
-	smrsh_policy_t          smrsh_policy;
-	uint16_t                smrsh_min_shift : 5;
-	uint16_t                __unused_bits : 11;
-	scalable_counter_t      smrsh_count;
-	struct thread_call     *smrsh_callout;
+  hw_lck_ptr_t *_Atomic smrsh_array[2];
+  uint32_t _Atomic smrsh_seed[2];
+  smrsh_state_t _Atomic smrsh_state;
+  smrsh_rehash_t _Atomic smrsh_rehashing;
+  smrsh_policy_t smrsh_policy;
+  uint16_t smrsh_min_shift : 5;
+  uint16_t __unused_bits : 11;
+  scalable_counter_t smrsh_count;
+  struct thread_call *smrsh_callout;
 };
 
-#define SMRSH_BUCKET_STOP_BIT   0x1ul
-
-
+#define SMRSH_BUCKET_STOP_BIT 0x1ul
 
 #pragma mark SMR scalable hash tables: initialization and accessors
 
@@ -1189,10 +1125,8 @@ struct smr_shash {
  * @param policy        the growth policy to use (see @c smrsh_policy_t).
  * @param min_size      the number of buckets the table should not shrink below.
  */
-extern void smr_shash_init(
-	struct smr_shash       *smrh,
-	smrsh_policy_t          policy,
-	size_t                  min_size);
+extern void smr_shash_init(struct smr_shash *smrh, smrsh_policy_t policy,
+                           size_t min_size);
 
 /*!
  * @function smr_shash_destroy()
@@ -1205,9 +1139,8 @@ extern void smr_shash_init(
  * @param free          an optional callback to call on each element
  *                      still in the hash table.
  */
-#define smr_shash_destroy(smrh, traits, free...) \
-	__smr_shash_destroy(smrh, &(traits)->smrht, free)
-
+#define smr_shash_destroy(smrh, traits, free...)                               \
+  __smr_shash_destroy(smrh, &(traits)->smrht, free)
 
 #pragma mark SMR scalable hash tables: read operations
 
@@ -1232,14 +1165,14 @@ extern void smr_shash_init(
  *
  * @returns             the first found element or NULL.
  */
-#define smr_shash_entered_find(smrh, key, traits)  ({ \
-	void *__obj;                                                            \
-                                                                                \
-	__obj = __smr_shash_entered_find(smrh, key, &(traits)->smrht);          \
-                                                                                \
-	(smrht_obj_t(traits))__obj;                                             \
-})
-
+#define smr_shash_entered_find(smrh, key, traits)                              \
+  ({                                                                           \
+    void *__obj;                                                               \
+                                                                               \
+    __obj = __smr_shash_entered_find(smrh, key, &(traits)->smrht);             \
+                                                                               \
+    (smrht_obj_t(traits)) __obj;                                               \
+  })
 
 /*!
  * @function smr_shash_entered_get()
@@ -1261,13 +1194,14 @@ extern void smr_shash_init(
  *
  * @returns             the first found element or NULL.
  */
-#define smr_shash_entered_get(smrh, key, traits)  ({ \
-	void *__obj;                                                            \
-                                                                                \
-	__obj = __smr_shash_entered_get(smrh, key, &(traits)->smrht);           \
-                                                                                \
-	(smrht_obj_t(traits))__obj;                                             \
-})
+#define smr_shash_entered_get(smrh, key, traits)                               \
+  ({                                                                           \
+    void *__obj;                                                               \
+                                                                               \
+    __obj = __smr_shash_entered_get(smrh, key, &(traits)->smrht);              \
+                                                                               \
+    (smrht_obj_t(traits)) __obj;                                               \
+  })
 
 /*!
  * @function smr_shash_get()
@@ -1288,16 +1222,16 @@ extern void smr_shash_init(
  *
  * @returns             the first found element or NULL.
  */
-#define smr_shash_get(smrh, key, traits)  ({ \
-	void *__obj;                                                            \
-                                                                                \
-	smrht_enter(traits);                                                    \
-	__obj = __smr_shash_entered_get(smrh, key, &(traits)->smrht);           \
-	smrht_leave(traits);                                                    \
-                                                                                \
-	(smrht_obj_t(traits))__obj;                                             \
-})
-
+#define smr_shash_get(smrh, key, traits)                                       \
+  ({                                                                           \
+    void *__obj;                                                               \
+                                                                               \
+    smrht_enter(traits);                                                       \
+    __obj = __smr_shash_entered_get(smrh, key, &(traits)->smrht);              \
+    smrht_leave(traits);                                                       \
+                                                                               \
+    (smrht_obj_t(traits)) __obj;                                               \
+  })
 
 #pragma mark SMR scalable hash tables: mutations
 
@@ -1323,15 +1257,16 @@ extern void smr_shash_init(
  * @returns             NULL if the insertion happened,
  *                      or the "retained" colliding element otherwise.
  */
-#define smr_shash_entered_get_or_insert(smrh, key, link, traits)  ({ \
-	smrh_traits_t __smrht = &(traits)->smrht;                               \
-	void *__obj;                                                            \
-                                                                                \
-	__obj = __smr_shash_entered_get_or_insert(smrh, key, link,              \
-	    &(traits)->smrht);                                                  \
-                                                                                \
-	(smrht_obj_t(traits))__obj;                                             \
-})
+#define smr_shash_entered_get_or_insert(smrh, key, link, traits)               \
+  ({                                                                           \
+    smrh_traits_t __smrht = &(traits)->smrht;                                  \
+    void *__obj;                                                               \
+                                                                               \
+    __obj =                                                                    \
+        __smr_shash_entered_get_or_insert(smrh, key, link, &(traits)->smrht);  \
+                                                                               \
+    (smrht_obj_t(traits)) __obj;                                               \
+  })
 
 /*!
  * @function smr_shash_get_or_insert()
@@ -1354,17 +1289,17 @@ extern void smr_shash_init(
  * @returns             NULL if the insertion happened,
  *                      or the "retained" colliding element otherwise.
  */
-#define smr_shash_get_or_insert(smrh, key, link, traits)  ({ \
-	void *__obj;                                                            \
-                                                                                \
-	smrht_enter(traits);                                                    \
-	__obj = __smr_shash_entered_get_or_insert(smrh, key, link,              \
-	    &(traits)->smrht);                                                  \
-	smrht_leave(traits);                                                    \
-                                                                                \
-	(smrht_obj_t(traits))__obj;                                             \
-})
-
+#define smr_shash_get_or_insert(smrh, key, link, traits)                       \
+  ({                                                                           \
+    void *__obj;                                                               \
+                                                                               \
+    smrht_enter(traits);                                                       \
+    __obj =                                                                    \
+        __smr_shash_entered_get_or_insert(smrh, key, link, &(traits)->smrht);  \
+    smrht_leave(traits);                                                       \
+                                                                               \
+    (smrht_obj_t(traits)) __obj;                                               \
+  })
 
 /*!
  * @function smr_shash_entered_remove()
@@ -1383,14 +1318,15 @@ extern void smr_shash_init(
  * @param link          the element to remove from the hash table.
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_entered_remove(smrh, link, traits)  ({ \
-	smr_shash_mut_cursor_t __cursor;                                        \
-	struct smrq_slink *__link = (link);                                     \
-	struct smr_shash *__smrh = (smrh);                                      \
-                                                                                \
-	__cursor = smr_shash_entered_mut_begin(__smrh, __link, traits);         \
-	smr_shash_entered_mut_erase(__smrh, __cursor, __link, traits);          \
-})
+#define smr_shash_entered_remove(smrh, link, traits)                           \
+  ({                                                                           \
+    smr_shash_mut_cursor_t __cursor;                                           \
+    struct smrq_slink *__link = (link);                                        \
+    struct smr_shash *__smrh = (smrh);                                         \
+                                                                               \
+    __cursor = smr_shash_entered_mut_begin(__smrh, __link, traits);            \
+    smr_shash_entered_mut_erase(__smrh, __cursor, __link, traits);             \
+  })
 
 /*!
  * @function smr_shash_remove()
@@ -1412,12 +1348,12 @@ extern void smr_shash_init(
  * @param link          the element to remove from the hash table.
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_remove(smrh, link, traits)  ({ \
-	smrht_enter(traits);                                                    \
-	smr_shash_entered_remove(smrh, link, traits);                           \
-	smrht_leave(traits);                                                    \
-})
-
+#define smr_shash_remove(smrh, link, traits)                                   \
+  ({                                                                           \
+    smrht_enter(traits);                                                       \
+    smr_shash_entered_remove(smrh, link, traits);                              \
+    smrht_leave(traits);                                                       \
+  })
 
 /*!
  * @function smr_shash_entered_replace()
@@ -1439,13 +1375,14 @@ extern void smr_shash_init(
  * @param new_link      the element to insert in the hash table.
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_entered_replace(smrh, old_link, new_link, traits)  ({ \
-	smr_shash_mut_cursor_t __cursor;                                        \
-	struct smrq_slink *__link = (old_link);                                 \
-                                                                                \
-	__cursor = smr_shash_entered_mut_begin(smrh, __link, traits);           \
-	smr_shash_entered_mut_replace(__cursor, __link, new_link);              \
-})
+#define smr_shash_entered_replace(smrh, old_link, new_link, traits)            \
+  ({                                                                           \
+    smr_shash_mut_cursor_t __cursor;                                           \
+    struct smrq_slink *__link = (old_link);                                    \
+                                                                               \
+    __cursor = smr_shash_entered_mut_begin(smrh, __link, traits);              \
+    smr_shash_entered_mut_replace(__cursor, __link, new_link);                 \
+  })
 
 /*!
  * @function smr_shash_replace()
@@ -1470,12 +1407,12 @@ extern void smr_shash_init(
  * @param new_link      the element to insert in the hash table.
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_replace(smrh, old_link, new_link, traits)  ({ \
-	smrht_enter(traits);                                                    \
-	smr_shash_entered_replace(smrh, old_link, new_link, traits);            \
-	smrht_leave(traits);                                                    \
-})
-
+#define smr_shash_replace(smrh, old_link, new_link, traits)                    \
+  ({                                                                           \
+    smrht_enter(traits);                                                       \
+    smr_shash_entered_replace(smrh, old_link, new_link, traits);               \
+    smrht_leave(traits);                                                       \
+  })
 
 #pragma mark SMR scalable hash tables: advanced mutations
 
@@ -1486,10 +1423,9 @@ extern void smr_shash_init(
  * Cursor used for advanced mutations.
  */
 typedef struct {
-	hw_lck_ptr_t           *head;
-	__smrq_slink_t         *prev;
+  hw_lck_ptr_t *head;
+  __smrq_slink_t *prev;
 } smr_shash_mut_cursor_t;
-
 
 /*!
  * @macro smr_shash_entered_mut_begin()
@@ -1517,12 +1453,12 @@ typedef struct {
  * - smr_shash_entered_mut_abort() to abandon the cursor without mutation.
  *
  * @param smrh          the scalable hash table.
- * @param link          the element to create a cursor for (must be in the hash).
+ * @param link          the element to create a cursor for (must be in the
+ * hash).
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_entered_mut_begin(smrh, link, traits) \
-	__smr_shash_entered_mut_begin(smrh, link, &(traits)->smrht)
-
+#define smr_shash_entered_mut_begin(smrh, link, traits)                        \
+  __smr_shash_entered_mut_begin(smrh, link, &(traits)->smrht)
 
 /*!
  * @macro smr_shash_entered_mut_erase()
@@ -1546,9 +1482,8 @@ typedef struct {
  * @param link          the element used to create @c cursor.
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_entered_mut_erase(smrh, cursor, link, traits) \
-	__smr_shash_entered_mut_erase(smrh, cursor, link, &(traits)->smrht)
-
+#define smr_shash_entered_mut_erase(smrh, cursor, link, traits)                \
+  __smr_shash_entered_mut_erase(smrh, cursor, link, &(traits)->smrht)
 
 /*!
  * @macro smr_shash_entered_mut_replace()
@@ -1576,9 +1511,8 @@ typedef struct {
  * @param new_link      the element to replace @c old_link with.
  * @param traits        the SMR hash traits for this table.
  */
-#define smr_shash_entered_mut_replace(cursor, old_link, new_link, traits) \
-	__smr_shash_entered_mut_replace(cursor, old_link, new_link, &(traits)->smrht)
-
+#define smr_shash_entered_mut_replace(cursor, old_link, new_link, traits)      \
+  __smr_shash_entered_mut_replace(cursor, old_link, new_link, &(traits)->smrht)
 
 /*!
  * @macro smr_shash_entered_mut_abort()
@@ -1592,337 +1526,267 @@ typedef struct {
  *
  * @param cursor        the cursor to invalidate.
  */
-#define smr_shash_entered_mut_abort(cursor) \
-	__smr_shash_entered_mut_abort(cursor)
-
+#define smr_shash_entered_mut_abort(cursor)                                    \
+  __smr_shash_entered_mut_abort(cursor)
 
 #endif /* XNU_KERNEL_PRIVATE */
 #pragma mark - implementation details
 #pragma mark SMR hash traits
 
-#define smrht_obj_t(traits) \
-	typeof((traits)->smrht_obj_type[0])
+#define smrht_obj_t(traits) typeof((traits)->smrht_obj_type[0])
 
-static inline void *
-__smrht_link_to_obj(smrh_traits_t traits, const struct smrq_slink *link)
-{
-	void *ptr = (void *)((uintptr_t)link - traits->link_offset);
+static inline void *__smrht_link_to_obj(smrh_traits_t traits,
+                                        const struct smrq_slink *link) {
+  void *ptr = (void *)((uintptr_t)link - traits->link_offset);
 
-	__builtin_assume(ptr != NULL);
-	return ptr;
+  __builtin_assume(ptr != NULL);
+  return ptr;
 }
-
 
 #pragma mark SMR hash tables
 
-static inline unsigned long
-__smr_hash_mask(struct smr_hash_array array)
-{
-	return ~0ul >> array.smrh_order;
+static inline unsigned long __smr_hash_mask(struct smr_hash_array array) {
+  return ~0ul >> array.smrh_order;
 }
 
+__attribute__((overloadable)) static inline struct smrq_slist_head *
+__smr_hash_bucket(const struct smr_hash *smrh, struct smrq_slink *link,
+                  smrh_traits_t smrht) {
+  struct smr_hash_array array = smr_hash_array_decode(smrh);
+  uint32_t index = __smr_hash_mask(array) & smrht->obj_hash(link, 0);
 
-__attribute__((overloadable))
-static inline struct smrq_slist_head *
-__smr_hash_bucket(
-	const struct smr_hash  *smrh,
-	struct smrq_slink      *link,
-	smrh_traits_t           smrht)
-{
-	struct smr_hash_array array = smr_hash_array_decode(smrh);
-	uint32_t index = __smr_hash_mask(array) & smrht->obj_hash(link, 0);
-
-	return &array.smrh_array[index];
+  return &array.smrh_array[index];
 }
 
-__attribute__((overloadable))
-static inline struct smrq_slist_head *
-__smr_hash_bucket(
-	const struct smr_hash  *smrh,
-	smrh_key_t              key,
-	smrh_traits_t           smrht)
-{
-	struct smr_hash_array array = smr_hash_array_decode(smrh);
-	uint32_t index = __smr_hash_mask(array) & smrht->key_hash(key, 0);
+__attribute__((overloadable)) static inline struct smrq_slist_head *
+__smr_hash_bucket(const struct smr_hash *smrh, smrh_key_t key,
+                  smrh_traits_t smrht) {
+  struct smr_hash_array array = smr_hash_array_decode(smrh);
+  uint32_t index = __smr_hash_mask(array) & smrht->key_hash(key, 0);
 
-	return &array.smrh_array[index];
+  return &array.smrh_array[index];
 }
 
-static inline void *
-__smr_hash_entered_find(
-	const struct smrq_slist_head *head,
-	smrh_key_t              key,
-	smrh_traits_t           smrht)
-{
-	for (struct smrq_slink *link = smr_entered_load(&head->first);
-	    link; link = smr_entered_load(&link->next)) {
-		if (smrht->obj_equ(link, key)) {
-			return __smrht_link_to_obj(smrht, link);
-		}
-	}
+static inline void *__smr_hash_entered_find(const struct smrq_slist_head *head,
+                                            smrh_key_t key,
+                                            smrh_traits_t smrht) {
+  for (struct smrq_slink *link = smr_entered_load(&head->first); link;
+       link = smr_entered_load(&link->next)) {
+    if (smrht->obj_equ(link, key)) {
+      return __smrht_link_to_obj(smrht, link);
+    }
+  }
 
-	return NULL;
+  return NULL;
 }
 
 static inline void *
-__smr_hash_serialized_find(
-	const struct smrq_slist_head *head,
-	smrh_key_t              key,
-	smrh_traits_t           smrht)
-{
-	for (struct smrq_slink *link = smr_serialized_load(&head->first);
-	    link; link = smr_serialized_load(&link->next)) {
-		if (smrht->obj_equ(link, key)) {
-			return __smrht_link_to_obj(smrht, link);
-		}
-	}
+__smr_hash_serialized_find(const struct smrq_slist_head *head, smrh_key_t key,
+                           smrh_traits_t smrht) {
+  for (struct smrq_slink *link = smr_serialized_load(&head->first); link;
+       link = smr_serialized_load(&link->next)) {
+    if (smrht->obj_equ(link, key)) {
+      return __smrht_link_to_obj(smrht, link);
+    }
+  }
 
-	return NULL;
+  return NULL;
 }
 
-static inline void *
-__smr_hash_get(
-	const struct smr_hash  *smrh,
-	smrh_key_t              key,
-	smrh_traits_t           smrht)
-{
-	struct smrq_slist_head *head;
-	void *obj = NULL;
+static inline void *__smr_hash_get(const struct smr_hash *smrh, smrh_key_t key,
+                                   smrh_traits_t smrht) {
+  struct smrq_slist_head *head;
+  void *obj = NULL;
 
-	smr_enter(smrht->domain);
-	head = __smr_hash_bucket(smrh, key, smrht);
-	obj  = __smr_hash_entered_find(head, key, smrht);
-	if (obj && !smrht->obj_try_get(obj)) {
-		obj = NULL;
-	}
-	smr_leave(smrht->domain);
+  smr_enter(smrht->domain);
+  head = __smr_hash_bucket(smrh, key, smrht);
+  obj = __smr_hash_entered_find(head, key, smrht);
+  if (obj && !smrht->obj_try_get(obj)) {
+    obj = NULL;
+  }
+  smr_leave(smrht->domain);
 
-	return obj;
+  return obj;
 }
 
-static inline void *
-__smr_hash_serialized_get_or_insert(
-	struct smr_hash        *smrh,
-	smrh_key_t              key,
-	struct smrq_slink      *link,
-	smrh_traits_t           smrht)
-{
-	struct smrq_slist_head *head;
-	void *obj = NULL;
+static inline void *__smr_hash_serialized_get_or_insert(struct smr_hash *smrh,
+                                                        smrh_key_t key,
+                                                        struct smrq_slink *link,
+                                                        smrh_traits_t smrht) {
+  struct smrq_slist_head *head;
+  void *obj = NULL;
 
-	head = __smr_hash_bucket(smrh, key, smrht);
-	obj  = __smr_hash_serialized_find(head, key, smrht);
-	if (!obj || !smrht->obj_try_get(obj)) {
-		smrh->smrh_count++;
-		smrq_serialized_insert_head(head, link);
-		obj = NULL;
-	}
+  head = __smr_hash_bucket(smrh, key, smrht);
+  obj = __smr_hash_serialized_find(head, key, smrht);
+  if (!obj || !smrht->obj_try_get(obj)) {
+    smrh->smrh_count++;
+    smrq_serialized_insert_head(head, link);
+    obj = NULL;
+  }
 
-	return obj;
+  return obj;
 }
 
-extern void __smr_hash_serialized_clear(
-	struct smr_hash        *smrh,
-	smrh_traits_t           smrht,
-	void                  (^free)(void *obj));
+extern void __smr_hash_serialized_clear(struct smr_hash *smrh,
+                                        smrh_traits_t smrht,
+                                        void (^free)(void *obj));
 
-extern kern_return_t __smr_hash_shrink_and_unlock(
-	struct smr_hash        *smrh,
-	lck_mtx_t              *lock,
-	smrh_traits_t           smrht);
+extern kern_return_t __smr_hash_shrink_and_unlock(struct smr_hash *smrh,
+                                                  lck_mtx_t *lock,
+                                                  smrh_traits_t smrht);
 
-extern kern_return_t __smr_hash_grow_and_unlock(
-	struct smr_hash        *smrh,
-	lck_mtx_t              *lock,
-	smrh_traits_t           smrht);
+extern kern_return_t __smr_hash_grow_and_unlock(struct smr_hash *smrh,
+                                                lck_mtx_t *lock,
+                                                smrh_traits_t smrht);
 
 #if XNU_KERNEL_PRIVATE
 #pragma GCC visibility push(hidden)
 
 #pragma mark SMR scalable hash tables
 
-__enum_closed_decl(smrsh_sel_t, uint8_t, {
-	SMRSH_CUR,
-	SMRSH_NEW,
-});
+__enum_closed_decl(smrsh_sel_t, uint8_t,
+                   {
+                       SMRSH_CUR,
+                       SMRSH_NEW,
+                   });
 
-__attribute__((always_inline))
-static inline uint32_t
-__smr_shash_load_seed(
-	const struct smr_shash *smrh,
-	size_t                  idx)
-{
-	uintptr_t addr = (uintptr_t)smrh->smrsh_seed;
+__attribute__((always_inline)) static inline uint32_t
+__smr_shash_load_seed(const struct smr_shash *smrh, size_t idx) {
+  uintptr_t addr = (uintptr_t)smrh->smrsh_seed;
 
-	/*
-	 * prevent the optimizer from thinking it knows _anything_
-	 * about `smrsh_seed` to avoid codegen like this:
-	 *
-	 *    return idx ? smrh->smrsh_seed[1] : smrh->smrsh_seed[0]
-	 *
-	 * This only has a control dependency which doesn't provide
-	 * the proper ordering. (control dependencies order
-	 * writes-after-dependency and not loads).
-	 */
+  /*
+   * prevent the optimizer from thinking it knows _anything_
+   * about `smrsh_seed` to avoid codegen like this:
+   *
+   *    return idx ? smrh->smrsh_seed[1] : smrh->smrsh_seed[0]
+   *
+   * This only has a control dependency which doesn't provide
+   * the proper ordering. (control dependencies order
+   * writes-after-dependency and not loads).
+   */
 
-	return os_atomic_load(&((const uint32_t _Atomic *)addr)[idx], relaxed);
+  return os_atomic_load(&((const uint32_t _Atomic *)addr)[idx], relaxed);
 }
 
-__attribute__((always_inline))
-static inline hw_lck_ptr_t *
-__smr_shash_load_array(
-	const struct smr_shash *smrh,
-	size_t                  idx)
-{
-	uintptr_t addr = (uintptr_t)smrh->smrsh_array;
+__attribute__((always_inline)) static inline hw_lck_ptr_t *
+__smr_shash_load_array(const struct smr_shash *smrh, size_t idx) {
+  uintptr_t addr = (uintptr_t)smrh->smrsh_array;
 
-	/*
-	 * prevent the optimizer from thinking it knows _anything_
-	 * about `smrsh_array` to avoid codegen like this:
-	 *
-	 *    return idx ? smrh->smrsh_array[1] : smrh->smrsh_array[0]
-	 *
-	 * This only has a control dependency which doesn't provide
-	 * the proper ordering. (control dependencies order
-	 * writes-after-dependency and not loads).
-	 */
+  /*
+   * prevent the optimizer from thinking it knows _anything_
+   * about `smrsh_array` to avoid codegen like this:
+   *
+   *    return idx ? smrh->smrsh_array[1] : smrh->smrsh_array[0]
+   *
+   * This only has a control dependency which doesn't provide
+   * the proper ordering. (control dependencies order
+   * writes-after-dependency and not loads).
+   */
 
-	return os_atomic_load(&((hw_lck_ptr_t * _Atomic const *)addr)[idx], relaxed);
+  return os_atomic_load(&((hw_lck_ptr_t * _Atomic const *)addr)[idx], relaxed);
 }
 
-__attribute__((always_inline, overloadable))
-static inline uint32_t
-__smr_shash_hash(
-	const struct smr_shash *smrh,
-	size_t                  idx,
-	smrh_key_t              key,
-	smrh_traits_t           traits)
-{
-	return traits->key_hash(key, __smr_shash_load_seed(smrh, idx));
+__attribute__((always_inline, overloadable)) static inline uint32_t
+__smr_shash_hash(const struct smr_shash *smrh, size_t idx, smrh_key_t key,
+                 smrh_traits_t traits) {
+  return traits->key_hash(key, __smr_shash_load_seed(smrh, idx));
 }
 
-__attribute__((always_inline, overloadable))
-static inline uint32_t
-__smr_shash_hash(
-	const struct smr_shash *smrh,
-	size_t                  idx,
-	const struct smrq_slink *link,
-	smrh_traits_t           traits)
-{
-	return traits->obj_hash(link, __smr_shash_load_seed(smrh, idx));
+__attribute__((always_inline, overloadable)) static inline uint32_t
+__smr_shash_hash(const struct smr_shash *smrh, size_t idx,
+                 const struct smrq_slink *link, smrh_traits_t traits) {
+  return traits->obj_hash(link, __smr_shash_load_seed(smrh, idx));
 }
 
-static inline hw_lck_ptr_t *
-__smr_shash_bucket(
-	const struct smr_shash *smrh,
-	smrsh_state_t           state,
-	smrsh_sel_t             sel,
-	uint32_t                hash)
-{
-	hw_lck_ptr_t *array;
-	uint8_t shift;
+static inline hw_lck_ptr_t *__smr_shash_bucket(const struct smr_shash *smrh,
+                                               smrsh_state_t state,
+                                               smrsh_sel_t sel, uint32_t hash) {
+  hw_lck_ptr_t *array;
+  uint8_t shift;
 
-	switch (sel) {
-	case SMRSH_CUR:
-		array = __smr_shash_load_array(smrh, state.curidx);
-		shift = state.curshift;
-		break;
-	case SMRSH_NEW:
-		array = __smr_shash_load_array(smrh, state.newidx);
-		shift = state.newshift;
-		break;
-	}
+  switch (sel) {
+  case SMRSH_CUR:
+    array = __smr_shash_load_array(smrh, state.curidx);
+    shift = state.curshift;
+    break;
+  case SMRSH_NEW:
+    array = __smr_shash_load_array(smrh, state.newidx);
+    shift = state.newshift;
+    break;
+  }
 
-	return &array[hash >> shift];
+  return &array[hash >> shift];
 }
 
-static inline bool
-__smr_shash_is_stop(struct smrq_slink *link)
-{
-	return (uintptr_t)link & SMRSH_BUCKET_STOP_BIT;
+static inline bool __smr_shash_is_stop(struct smrq_slink *link) {
+  return (uintptr_t)link & SMRSH_BUCKET_STOP_BIT;
 }
 
 static inline struct smrq_slink *
-__smr_shash_bucket_stop(const hw_lck_ptr_t *head)
-{
-	return (struct smrq_slink *)((uintptr_t)head | SMRSH_BUCKET_STOP_BIT);
+__smr_shash_bucket_stop(const hw_lck_ptr_t *head) {
+  return (struct smrq_slink *)((uintptr_t)head | SMRSH_BUCKET_STOP_BIT);
 }
 
-extern void *__smr_shash_entered_find_slow(
-	const struct smr_shash *smrh,
-	smrh_key_t              key,
-	hw_lck_ptr_t           *head,
-	smrh_traits_t           traits);
+extern void *__smr_shash_entered_find_slow(const struct smr_shash *smrh,
+                                           smrh_key_t key, hw_lck_ptr_t *head,
+                                           smrh_traits_t traits);
 
-static inline void *
-__smr_shash_entered_find(
-	const struct smr_shash *smrh,
-	smrh_key_t              key,
-	smrh_traits_t           traits)
-{
-	struct smrq_slink *link;
-	smrsh_state_t state;
-	hw_lck_ptr_t *head;
-	uint32_t hash;
+static inline void *__smr_shash_entered_find(const struct smr_shash *smrh,
+                                             smrh_key_t key,
+                                             smrh_traits_t traits) {
+  struct smrq_slink *link;
+  smrsh_state_t state;
+  hw_lck_ptr_t *head;
+  uint32_t hash;
 
-	state = os_atomic_load(&smrh->smrsh_state, dependency);
-	hash  = __smr_shash_hash(smrh, state.curidx, key, traits);
-	head  = __smr_shash_bucket(smrh, state, SMRSH_CUR, hash);
+  state = os_atomic_load(&smrh->smrsh_state, dependency);
+  hash = __smr_shash_hash(smrh, state.curidx, key, traits);
+  head = __smr_shash_bucket(smrh, state, SMRSH_CUR, hash);
 
-	link  = (struct smrq_slink *)hw_lck_ptr_value(head);
-	while (!__smr_shash_is_stop(link)) {
-		if (traits->obj_equ(link, key)) {
-			return __smrht_link_to_obj(traits, link);
-		}
-		link = smr_entered_load(&link->next);
-	}
+  link = (struct smrq_slink *)hw_lck_ptr_value(head);
+  while (!__smr_shash_is_stop(link)) {
+    if (traits->obj_equ(link, key)) {
+      return __smrht_link_to_obj(traits, link);
+    }
+    link = smr_entered_load(&link->next);
+  }
 
-	if (__probable(link == __smr_shash_bucket_stop(head))) {
-		return NULL;
-	}
-	return __smr_shash_entered_find_slow(smrh, key, head, traits);
+  if (__probable(link == __smr_shash_bucket_stop(head))) {
+    return NULL;
+  }
+  return __smr_shash_entered_find_slow(smrh, key, head, traits);
 }
 
-static inline void *
-__smr_shash_entered_get(
-	const struct smr_shash *smrh,
-	smrh_key_t              key,
-	smrh_traits_t           traits)
-{
-	void *obj = __smr_shash_entered_find(smrh, key, traits);
+static inline void *__smr_shash_entered_get(const struct smr_shash *smrh,
+                                            smrh_key_t key,
+                                            smrh_traits_t traits) {
+  void *obj = __smr_shash_entered_find(smrh, key, traits);
 
-	return obj && traits->obj_try_get(obj) ? obj : NULL;
+  return obj && traits->obj_try_get(obj) ? obj : NULL;
 }
 
-extern void __smr_shash_destroy(
-	struct smr_shash       *smrh,
-	smrh_traits_t           traits,
-	void                  (^free)(void *));
+extern void __smr_shash_destroy(struct smr_shash *smrh, smrh_traits_t traits,
+                                void (^free)(void *));
 
-extern void *__smr_shash_entered_get_or_insert(
-	struct smr_shash       *smrh,
-	smrh_key_t              key,
-	struct smrq_slink      *link,
-	smrh_traits_t           traits);
+extern void *__smr_shash_entered_get_or_insert(struct smr_shash *smrh,
+                                               smrh_key_t key,
+                                               struct smrq_slink *link,
+                                               smrh_traits_t traits);
 
-extern smr_shash_mut_cursor_t __smr_shash_entered_mut_begin(
-	struct smr_shash       *smrh,
-	struct smrq_slink      *link,
-	smrh_traits_t           traits);
+extern smr_shash_mut_cursor_t
+__smr_shash_entered_mut_begin(struct smr_shash *smrh, struct smrq_slink *link,
+                              smrh_traits_t traits);
 
-extern void __smr_shash_entered_mut_erase(
-	struct smr_shash       *smrh,
-	smr_shash_mut_cursor_t  cursor,
-	struct smrq_slink      *link,
-	smrh_traits_t           traits);
+extern void __smr_shash_entered_mut_erase(struct smr_shash *smrh,
+                                          smr_shash_mut_cursor_t cursor,
+                                          struct smrq_slink *link,
+                                          smrh_traits_t traits);
 
-extern void __smr_shash_entered_mut_replace(
-	smr_shash_mut_cursor_t  cursor,
-	struct smrq_slink      *old_link,
-	struct smrq_slink      *new_link);
+extern void __smr_shash_entered_mut_replace(smr_shash_mut_cursor_t cursor,
+                                            struct smrq_slink *old_link,
+                                            struct smrq_slink *new_link);
 
-extern void __smr_shash_entered_mut_abort(
-	smr_shash_mut_cursor_t  cursor);
+extern void __smr_shash_entered_mut_abort(smr_shash_mut_cursor_t cursor);
 
 #pragma GCC visibility pop
 #endif /* XNU_KERNEL_PRIVATE */

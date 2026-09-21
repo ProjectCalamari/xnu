@@ -29,47 +29,47 @@
 #ifndef KPERF_SAMPLE_H
 #define KPERF_SAMPLE_H
 
-#include <kperf/thread_samplers.h>
-#include <kperf/task_samplers.h>
 #include "callstack.h"
 #include "kperf_kpc.h"
 #include "meminfo.h"
+#include <kperf/task_samplers.h>
+#include <kperf/thread_samplers.h>
 
 /*
  * Dispatch sampling may need to read from compressed, file-backed pages, which
  * incurs a steep stack usage penalty.
  */
 struct kperf_usample_min {
-	struct kperf_thread_dispatch th_dispatch;
+  struct kperf_thread_dispatch th_dispatch;
 };
 
 /*
  * For data that must be sampled in a fault-able context.
  */
 struct kperf_usample {
-	struct kperf_usample_min *usample_min;
-	struct kp_ucallstack ucallstack;
-	struct kperf_thread_info th_info;
+  struct kperf_usample_min *usample_min;
+  struct kp_ucallstack ucallstack;
+  struct kperf_thread_info th_info;
 };
 
 struct kperf_sample {
-	struct kperf_thread_info       th_info;
-	struct kperf_thread_scheduling th_scheduling;
-	struct kperf_thread_snapshot   th_snapshot;
+  struct kperf_thread_info th_info;
+  struct kperf_thread_scheduling th_scheduling;
+  struct kperf_thread_snapshot th_snapshot;
 
-	struct kperf_task_snapshot tk_snapshot;
+  struct kperf_task_snapshot tk_snapshot;
 
-	struct kp_kcallstack kcallstack;
-	struct meminfo     meminfo;
+  struct kp_kcallstack kcallstack;
+  struct meminfo meminfo;
 
-	struct kperf_usample usample;
+  struct kperf_usample usample;
 
 #if CONFIG_CPU_COUNTERS
-	struct kpcdata    kpcdata;
+  struct kpcdata kpcdata;
 #endif /* CONFIG_CPU_COUNTERS */
 
 #if DEVELOPMENT || DEBUG
-	uint64_t sample_time;
+  uint64_t sample_time;
 #endif /* DEVELOPMENT || DEBUG */
 };
 

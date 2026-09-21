@@ -63,19 +63,19 @@
  *	Initialize the Virtual Memory subsystem.
  */
 
-#include <mach/machine/vm_types.h>
-#include <mach/vm_map.h>
+#include <kern/kext_alloc.h>
 #include <kern/startup.h>
 #include <kern/zalloc_internal.h>
-#include <kern/kext_alloc.h>
+#include <mach/machine/vm_types.h>
+#include <mach/vm_map.h>
 #include <sys/kdebug.h>
-#include <vm/vm_object_internal.h>
-#include <vm/vm_map_internal.h>
-#include <vm/vm_page_internal.h>
-#include <vm/vm_kern.h>
 #include <vm/memory_object.h>
 #include <vm/vm_fault_xnu.h>
 #include <vm/vm_init_xnu.h>
+#include <vm/vm_kern.h>
+#include <vm/vm_map_internal.h>
+#include <vm/vm_object_internal.h>
+#include <vm/vm_page_internal.h>
 
 #include <pexpert/pexpert.h>
 
@@ -85,61 +85,56 @@ const vm_offset_t vm_min_kernel_address = VM_MIN_KERNEL_AND_KEXT_ADDRESS;
 const vm_offset_t vm_max_kernel_address = VM_MAX_KERNEL_ADDRESS;
 
 TUNABLE(bool, iokit_iomd_setownership_enabled,
-    "iokit_iomd_setownership_enabled", true);
+        "iokit_iomd_setownership_enabled", true);
 
-static inline void
-vm_mem_bootstrap_log(const char *message)
-{
-//	kprintf("vm_mem_bootstrap: %s\n", message);
-	kernel_debug_string_early(message);
+static inline void vm_mem_bootstrap_log(const char *message) {
+  //	kprintf("vm_mem_bootstrap: %s\n", message);
+  kernel_debug_string_early(message);
 }
 
 /*
  *	vm_mem_bootstrap initializes the virtual memory system.
  *	This is done only by the first cpu up.
  */
-__startup_func
-void
-vm_mem_bootstrap(void)
-{
-	vm_offset_t start, end;
+__startup_func void vm_mem_bootstrap(void) {
+  vm_offset_t start, end;
 
-	/*
-	 *	Initializes resident memory structures.
-	 *	From here on, all physical memory is accounted for,
-	 *	and we use only virtual addresses.
-	 */
-	vm_mem_bootstrap_log("vm_page_bootstrap");
-	vm_page_bootstrap(&start, &end);
+  /*
+   *	Initializes resident memory structures.
+   *	From here on, all physical memory is accounted for,
+   *	and we use only virtual addresses.
+   */
+  vm_mem_bootstrap_log("vm_page_bootstrap");
+  vm_page_bootstrap(&start, &end);
 
-	/*
-	 *	Initialize other VM packages
-	 */
+  /*
+   *	Initialize other VM packages
+   */
 
-	vm_mem_bootstrap_log("zone_bootstrap");
-	zone_bootstrap();
+  vm_mem_bootstrap_log("zone_bootstrap");
+  zone_bootstrap();
 
-	vm_mem_bootstrap_log("vm_object_bootstrap");
-	vm_object_bootstrap();
+  vm_mem_bootstrap_log("vm_object_bootstrap");
+  vm_object_bootstrap();
 
-	vm_retire_boot_pages();
+  vm_retire_boot_pages();
 
-	vm_mem_bootstrap_log("vm_map_init");
-	vm_map_init();
+  vm_mem_bootstrap_log("vm_map_init");
+  vm_map_init();
 
-	vm_mem_bootstrap_log("kmem_init");
-	kmem_init(start, end);
+  vm_mem_bootstrap_log("kmem_init");
+  kmem_init(start, end);
 
-	kernel_startup_initialize_upto(STARTUP_SUB_KMEM);
+  kernel_startup_initialize_upto(STARTUP_SUB_KMEM);
 
-	vm_mem_bootstrap_log("vm_fault_init");
-	vm_fault_init();
+  vm_mem_bootstrap_log("vm_fault_init");
+  vm_fault_init();
 
-	kernel_startup_initialize_upto(STARTUP_SUB_ZALLOC);
+  kernel_startup_initialize_upto(STARTUP_SUB_ZALLOC);
 
-	if (iokit_iomd_setownership_enabled) {
-		kprintf("IOKit IOMD setownership ENABLED\n");
-	} else {
-		kprintf("IOKit IOMD setownership DISABLED\n");
-	}
+  if (iokit_iomd_setownership_enabled) {
+    kprintf("IOKit IOMD setownership ENABLED\n");
+  } else {
+    kprintf("IOKit IOMD setownership DISABLED\n");
+  }
 }

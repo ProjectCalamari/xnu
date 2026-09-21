@@ -63,12 +63,12 @@
  * 16 is correspondent to 4bit multicast scope field.
  * i.e. from node-local to global with some reserved/unassigned types.
  */
-#define SCOPE6_ID_MAX   16
+#define SCOPE6_ID_MAX 16
 
 #ifdef BSD_KERNEL_PRIVATE
 
 struct scope6_id {
-	u_int32_t s6id_list[SCOPE6_ID_MAX];
+  u_int32_t s6id_list[SCOPE6_ID_MAX];
 };
 
 extern int in6_embedded_scope;
@@ -86,9 +86,12 @@ extern int in6_setscope(struct in6_addr *, struct ifnet *, u_int32_t *);
 extern int in6_clearscope(struct in6_addr *);
 extern void rtkey_to_sa6(struct rtentry *, struct sockaddr_in6 *);
 extern void rtgw_to_sa6(struct rtentry *, struct sockaddr_in6 *);
-extern bool in6_are_addr_equal_scoped(const struct in6_addr *, const struct in6_addr *,
-    uint32_t, uint32_t);
-extern bool in6_are_masked_addr_scope_equal(const struct in6_addr *, uint32_t, const struct in6_addr *, uint32_t, const struct in6_addr *);
+extern bool in6_are_addr_equal_scoped(const struct in6_addr *,
+                                      const struct in6_addr *, uint32_t,
+                                      uint32_t);
+extern bool in6_are_masked_addr_scope_equal(const struct in6_addr *, uint32_t,
+                                            const struct in6_addr *, uint32_t,
+                                            const struct in6_addr *);
 
 extern void in6_verify_ifscope(const struct in6_addr *, uint32_t);
 

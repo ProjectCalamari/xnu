@@ -28,24 +28,28 @@
 
 #include <sys/types.h>
 
-#define MEM_ACCT_PEAK                       1       /* reset/get peak value for a subsystem */
-#define MEM_ACCT_SOFT_LIMIT                 2       /* set/get soft limit for a subsystem */
-#define MEM_ACCT_HARD_LIMIT                 3       /* set/get hard limit for a subsystem */
-#define MEM_ACCT_ALLOCATED                  4       /* set/get currently allocated memory for a subsystem */
-#define MEM_ACCT_SUBSYSTEMS                 5       /* get all subsystem names */
-#define MEM_ACCT_ALL_SUBSYSTEM_STATISTICS   6       /* returns all statistics for all subsystems */
-#define MEM_ACCT_ALL_STATISTICS             7       /* returns all statistics for a specific subsystem */
+#define MEM_ACCT_PEAK 1       /* reset/get peak value for a subsystem */
+#define MEM_ACCT_SOFT_LIMIT 2 /* set/get soft limit for a subsystem */
+#define MEM_ACCT_HARD_LIMIT 3 /* set/get hard limit for a subsystem */
+#define MEM_ACCT_ALLOCATED                                                     \
+  4 /* set/get currently allocated memory for a subsystem */
+#define MEM_ACCT_SUBSYSTEMS 5 /* get all subsystem names */
+#define MEM_ACCT_ALL_SUBSYSTEM_STATISTICS                                      \
+  6 /* returns all statistics for all subsystems */
+#define MEM_ACCT_ALL_STATISTICS                                                \
+  7 /* returns all statistics for a specific subsystem */
 
-#define MEM_ACCT_MAX                        8       /* Current maximum number of accounting objects we allow */
+#define MEM_ACCT_MAX                                                           \
+  8 /* Current maximum number of accounting objects we allow */
 
-#define MEM_ACCT_NAME_LENGTH                16      /* max size for subsystem name */
+#define MEM_ACCT_NAME_LENGTH 16 /* max size for subsystem name */
 
 struct memacct_statistics {
-	uint64_t peak;
-	int64_t allocated;
-	uint64_t softlimit;
-	uint64_t hardlimit;
-	char ma_name[MEM_ACCT_NAME_LENGTH];
+  uint64_t peak;
+  int64_t allocated;
+  uint64_t softlimit;
+  uint64_t hardlimit;
+  char ma_name[MEM_ACCT_NAME_LENGTH];
 };
 
 #endif /* _SYS_MEM_ACCT_PRIVATE_H */

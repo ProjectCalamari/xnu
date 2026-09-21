@@ -30,62 +30,63 @@
  * default and is writeable by userspace.
  */
 #include <darwintest.h>
+#include <inttypes.h>
+#include <mach/mach.h>
+#include <mach/thread_status.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mach/mach.h>
-#include <mach/thread_status.h>
 #include <sys/sysctl.h>
-#include <inttypes.h>
 
+T_GLOBAL_META(T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("arm"),
+              T_META_OWNER("dmitry_grinberg"), T_META_RUN_CONCURRENTLY(true));
 
-T_GLOBAL_META(
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("arm"),
-	T_META_OWNER("dmitry_grinberg"),
-	T_META_RUN_CONCURRENTLY(true));
-
-
-#define PSR64_SSBS              (0x1000)
-#define REG_SSBS                "S3_3_C4_C2_6" /* clang will not emit MRS/MSR to "SSBS" itself since it doesnt always exist */
+#define PSR64_SSBS (0x1000)
+#define REG_SSBS                                                               \
+  "S3_3_C4_C2_6" /* clang will not emit MRS/MSR to "SSBS" itself since it      \
+                    doesnt always exist */
 
 T_DECL(armv85_ssbs,
-    "Test that ARMv8.5 SSBS is off by default (PSTATE.SSBS==1, don't ask!) and can be enabled by userspace.", T_META_TAG_VM_NOT_ELIGIBLE)
-{
+       "Test that ARMv8.5 SSBS is off by default (PSTATE.SSBS==1, don't ask!) "
+       "and can be enabled by userspace.",
+       T_META_TAG_VM_NOT_ELIGIBLE) {
 #ifndef __arm64__
-	T_SKIP("Running on non-arm64 target, skipping...");
+  T_SKIP("Running on non-arm64 target, skipping...");
 #else
-	uint32_t ssbs_support = 19180;
-	size_t ssbs_support_len = sizeof(ssbs_support);
-	if (sysctlbyname("hw.optional.arm.FEAT_SSBS", &ssbs_support, &ssbs_support_len, NULL, 0)) {
-		T_SKIP("Could not get SSBS support sysctl, skipping...");
-	} else if (!ssbs_support) {
-		T_SKIP("HW has no SSBS support, skipping...");
-	} else if (ssbs_support != 1) {
-		T_FAIL("SSBS support sysctl contains garbage: %u!", ssbs_support);
-	} else {
-		uint64_t ssbs_state = __builtin_arm_rsr64(REG_SSBS);
+  uint32_t ssbs_support = 19180;
+  size_t ssbs_support_len = sizeof(ssbs_support);
+  if (sysctlbyname("hw.optional.arm.FEAT_SSBS", &ssbs_support,
+                   &ssbs_support_len, NULL, 0)) {
+    T_SKIP("Could not get SSBS support sysctl, skipping...");
+  } else if (!ssbs_support) {
+    T_SKIP("HW has no SSBS support, skipping...");
+  } else if (ssbs_support != 1) {
+    T_FAIL("SSBS support sysctl contains garbage: %u!", ssbs_support);
+  } else {
+    uint64_t ssbs_state = __builtin_arm_rsr64(REG_SSBS);
 
-		if (!(ssbs_state & PSR64_SSBS)) {
-			T_FAIL("SSBS does not default to off (value seen: 0x%" PRIx64 ")!", ssbs_state);
-		}
+    if (!(ssbs_state & PSR64_SSBS)) {
+      T_FAIL("SSBS does not default to off (value seen: 0x%" PRIx64 ")!",
+             ssbs_state);
+    }
 
-		__builtin_arm_wsr64(REG_SSBS, 0);
-		ssbs_state = __builtin_arm_rsr64(REG_SSBS);
+    __builtin_arm_wsr64(REG_SSBS, 0);
+    ssbs_state = __builtin_arm_rsr64(REG_SSBS);
 
-		if (ssbs_state & PSR64_SSBS) {
-			T_FAIL("SSBS did not turn on (value seen: 0x%" PRIx64 ")!", ssbs_state);
-		}
+    if (ssbs_state & PSR64_SSBS) {
+      T_FAIL("SSBS did not turn on (value seen: 0x%" PRIx64 ")!", ssbs_state);
+    }
 
-		__builtin_arm_wsr64(REG_SSBS, PSR64_SSBS);
-		ssbs_state = __builtin_arm_rsr64(REG_SSBS);
+    __builtin_arm_wsr64(REG_SSBS, PSR64_SSBS);
+    ssbs_state = __builtin_arm_rsr64(REG_SSBS);
 
-		if (!(ssbs_state & PSR64_SSBS)) {
-			T_FAIL("SSBS did not turn off (value seen: 0x%" PRIx64 ")!", ssbs_state);
-		}
+    if (!(ssbs_state & PSR64_SSBS)) {
+      T_FAIL("SSBS did not turn off (value seen: 0x%" PRIx64 ")!", ssbs_state);
+    }
 
-		T_PASS("SSBS test passes");
-	}
+    T_PASS("SSBS test passes");
+  }
 #endif /* __arm64__ */
 }

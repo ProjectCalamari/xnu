@@ -61,7 +61,6 @@
  *	@(#)vadvise.h	8.1 (Berkeley) 6/2/93
  */
 
-
 #ifndef _SYS_VADVISE_H_
 #define _SYS_VADVISE_H_
 
@@ -78,11 +77,11 @@
  *	VA_SEQL		Sequential behaviour expected.
  *	VA_FLUSH	Invalidate all page table entries.
  */
-#define VA_NORM         0
-#define VA_ANOM         1
-#define VA_SEQL         2
-#define VA_FLUSH        3
+#define VA_NORM 0
+#define VA_ANOM 1
+#define VA_SEQL 2
+#define VA_FLUSH 3
 
 #endif /* __APPLE_API_OBSOLETE */
 
-#endif  /* !_SYS_VADVISE_H_ */
+#endif /* !_SYS_VADVISE_H_ */

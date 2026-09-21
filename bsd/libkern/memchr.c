@@ -26,18 +26,16 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/param.h>
 #include <libkern/libkern.h>
+#include <sys/param.h>
 
-void *
-memchr(const void *bigptr, int ch, size_t length)
-{
-	const char *big = (const char *)bigptr;
-	size_t n;
-	for (n = 0; n < length; n++) {
-		if (big[n] == ch) {
-			return __DECONST(void *, &big[n]);
-		}
-	}
-	return NULL;
+void *memchr(const void *bigptr, int ch, size_t length) {
+  const char *big = (const char *)bigptr;
+  size_t n;
+  for (n = 0; n < length; n++) {
+    if (big[n] == ch) {
+      return __DECONST(void *, &big[n]);
+    }
+  }
+  return NULL;
 }

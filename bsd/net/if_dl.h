@@ -69,7 +69,7 @@
 #include <sys/types.h>
 
 #ifdef BSD_KERNEL_PRIVATE
-#define DLIL_SDLMAXLEN  64
+#define DLIL_SDLMAXLEN 64
 #endif /* BSD_KERNEL_PRIVATE */
 
 /*
@@ -94,26 +94,29 @@
  * Structure of a Link-Level sockaddr:
  */
 struct sockaddr_dl {
-	u_char  sdl_len;        /* Total length of sockaddr */
-	u_char  sdl_family;     /* AF_LINK */
-	u_short sdl_index;      /* if != 0, system given index for interface */
-	u_char  sdl_type;       /* interface type */
-	u_char  sdl_nlen;       /* interface name length, no trailing 0 reqd. */
-	u_char  sdl_alen;       /* link level address length */
-	u_char  sdl_slen;       /* link layer selector length */
-	char    sdl_data[12];
-	/* minimum work area, can be larger;
-	 *  contains both if name and ll address */
+  u_char sdl_len;    /* Total length of sockaddr */
+  u_char sdl_family; /* AF_LINK */
+  u_short sdl_index; /* if != 0, system given index for interface */
+  u_char sdl_type;   /* interface type */
+  u_char sdl_nlen;   /* interface name length, no trailing 0 reqd. */
+  u_char sdl_alen;   /* link level address length */
+  u_char sdl_slen;   /* link layer selector length */
+  char sdl_data[12];
+  /* minimum work area, can be larger;
+   *  contains both if name and ll address */
 #ifndef __APPLE__
-	/* For TokenRing */
-	u_short sdl_rcf;        /* source routing control */
-	u_short sdl_route[16];  /* source routing information */
+  /* For TokenRing */
+  u_short sdl_rcf;       /* source routing control */
+  u_short sdl_route[16]; /* source routing information */
 #endif
 };
 
-#define LLADDR(s) ((caddr_t)(s) + __offsetof(struct sockaddr_dl, sdl_data) + (s)->sdl_nlen)
+#define LLADDR(s)                                                              \
+  ((caddr_t)(s) + __offsetof(struct sockaddr_dl, sdl_data) + (s)->sdl_nlen)
 #ifdef KERNEL_PRIVATE
-#define CONST_LLADDR(s) ((const u_char*)(s) + __offsetof(struct sockaddr_dl, sdl_data) + (s)->sdl_nlen)
+#define CONST_LLADDR(s)                                                        \
+  ((const u_char *)(s) + __offsetof(struct sockaddr_dl, sdl_data) +            \
+   (s)->sdl_nlen)
 #endif
 
 #ifdef BSD_KERNEL_PRIVATE
@@ -125,8 +128,8 @@ struct sockaddr_dl {
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
-void    link_addr(const char *, struct sockaddr_dl *);
-char    *link_ntoa(const struct sockaddr_dl *);
+void link_addr(const char *, struct sockaddr_dl *);
+char *link_ntoa(const struct sockaddr_dl *);
 __END_DECLS
 
 #endif /* !KERNEL */

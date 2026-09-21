@@ -59,10 +59,11 @@
 static char sccsid[] = "@(#)strsep.c	8.1 (Berkeley) 6/4/93";
 #endif /* LIBC_SCCS and not lint */
 #include <sys/cdefs.h>
-/* __FBSDID("$FreeBSD: src/sys/libkern/strsep.c,v 1.7 2004/04/07 20:46:10 imp Exp $"); */
+/* __FBSDID("$FreeBSD: src/sys/libkern/strsep.c,v 1.7 2004/04/07 20:46:10 imp
+ * Exp $"); */
 
-#include <sys/param.h>
 #include <libkern/libkern.h>
+#include <sys/param.h>
 
 /*
  * Get next token from string *stringp, where tokens are possibly-empty
@@ -75,31 +76,29 @@ static char sccsid[] = "@(#)strsep.c	8.1 (Berkeley) 6/4/93";
  *
  * If *stringp is NULL, strsep returns NULL.
  */
-char *
-strsep(char **stringp, const char *delim)
-{
-	char *s;
-	const char *spanp;
-	int c, sc;
-	char *tok;
+char *strsep(char **stringp, const char *delim) {
+  char *s;
+  const char *spanp;
+  int c, sc;
+  char *tok;
 
-	if ((s = *stringp) == NULL) {
-		return NULL;
-	}
-	for (tok = s;;) {
-		c = *s++;
-		spanp = delim;
-		do {
-			if ((sc = *spanp++) == c) {
-				if (c == 0) {
-					s = NULL;
-				} else {
-					s[-1] = 0;
-				}
-				*stringp = s;
-				return tok;
-			}
-		} while (sc != 0);
-	}
-	/* NOTREACHED */
+  if ((s = *stringp) == NULL) {
+    return NULL;
+  }
+  for (tok = s;;) {
+    c = *s++;
+    spanp = delim;
+    do {
+      if ((sc = *spanp++) == c) {
+        if (c == 0) {
+          s = NULL;
+        } else {
+          s[-1] = 0;
+        }
+        *stringp = s;
+        return tok;
+      }
+    } while (sc != 0);
+  }
+  /* NOTREACHED */
 }

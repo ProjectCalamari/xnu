@@ -29,8 +29,8 @@
 /*	Copyright (c) 1984, 1986, 1987, 1988, 1989 AT&T		*/
 /*	All Rights Reserved	*/
 
-#ifndef	_FASTTRAP_REGSET_H
-#define	_FASTTRAP_REGSET_H
+#ifndef _FASTTRAP_REGSET_H
+#define _FASTTRAP_REGSET_H
 
 /*
  * APPLE NOTE: This file was orginally uts/intel/sys/regset.h
@@ -57,69 +57,69 @@ extern "C" {
  * descriptor table base address) can be achieved with _lwp_setprivate.
  */
 
-#define	REG_GSBASE	27
-#define	REG_FSBASE	26
-#define	REG_DS		25
-#define	REG_ES		24
+#define REG_GSBASE 27
+#define REG_FSBASE 26
+#define REG_DS 25
+#define REG_ES 24
 
-#define	REG_GS		23
-#define	REG_FS		22
-#define	REG_SS		21
-#define	REG_RSP		20
-#define	REG_RFL		19
-#define	REG_CS		18
-#define	REG_RIP		17
-#define	REG_ERR		16
-#define	REG_TRAPNO	15
-#define	REG_RAX		14
-#define	REG_RCX		13
-#define	REG_RDX		12
-#define	REG_RBX		11
-#define	REG_RBP		10
-#define	REG_RSI		9
-#define	REG_RDI		8
-#define	REG_R8		7
-#define	REG_R9		6
-#define	REG_R10		5
-#define	REG_R11		4
-#define	REG_R12		3
-#define	REG_R13		2
-#define	REG_R14		1
-#define	REG_R15		0
+#define REG_GS 23
+#define REG_FS 22
+#define REG_SS 21
+#define REG_RSP 20
+#define REG_RFL 19
+#define REG_CS 18
+#define REG_RIP 17
+#define REG_ERR 16
+#define REG_TRAPNO 15
+#define REG_RAX 14
+#define REG_RCX 13
+#define REG_RDX 12
+#define REG_RBX 11
+#define REG_RBP 10
+#define REG_RSI 9
+#define REG_RDI 8
+#define REG_R8 7
+#define REG_R9 6
+#define REG_R10 5
+#define REG_R11 4
+#define REG_R12 3
+#define REG_R13 2
+#define REG_R14 1
+#define REG_R15 0
 
 /*
  * The names and offsets defined here are specified by i386 ABI suppl.
  */
 
-#define	SS		18	/* only stored on a privilege transition */
-#define	UESP		17	/* only stored on a privilege transition */
-#define	EFL		16
-#define	CS		15
-#define	EIP		14
-#define	ERR		13
-#define	TRAPNO		12
-#define	EAX		11
-#define	ECX		10
-#define	EDX		9
-#define	EBX		8
-#define	ESP		7
-#define	EBP		6
-#define	ESI		5
-#define	EDI		4
-#define	DS		3
-#define	ES		2
-#define	FS		1
-#define	GS		0
+#define SS 18   /* only stored on a privilege transition */
+#define UESP 17 /* only stored on a privilege transition */
+#define EFL 16
+#define CS 15
+#define EIP 14
+#define ERR 13
+#define TRAPNO 12
+#define EAX 11
+#define ECX 10
+#define EDX 9
+#define EBX 8
+#define ESP 7
+#define EBP 6
+#define ESI 5
+#define EDI 4
+#define DS 3
+#define ES 2
+#define FS 1
+#define GS 0
 
-#define REG_PC  EIP
-#define REG_FP  EBP
-#define REG_SP  UESP
-#define REG_PS  EFL
-#define REG_R0  EAX
-#define REG_R1  EDX
+#define REG_PC EIP
+#define REG_FP EBP
+#define REG_SP UESP
+#define REG_PS EFL
+#define REG_R0 EAX
+#define REG_R1 EDX
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _FASTTRAP_REGSET_H */
+#endif /* _FASTTRAP_REGSET_H */

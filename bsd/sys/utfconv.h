@@ -38,21 +38,20 @@
 /*
  * UTF-8 encode/decode flags
  */
-#define UTF_REVERSE_ENDIAN   0x0001   /* reverse UCS-2 byte order */
-#define UTF_NO_NULL_TERM     0x0002   /* do not add null termination */
-#define UTF_DECOMPOSED       0x0004   /* generate fully decomposed UCS-2 */
-#define UTF_PRECOMPOSED      0x0008   /* generate precomposed UCS-2 */
-#define UTF_ESCAPE_ILLEGAL   0x0010   /* escape illegal UTF-8 */
-#define UTF_SFM_CONVERSIONS  0x0020   /* Use SFM mappings for illegal NTFS chars */
+#define UTF_REVERSE_ENDIAN 0x0001  /* reverse UCS-2 byte order */
+#define UTF_NO_NULL_TERM 0x0002    /* do not add null termination */
+#define UTF_DECOMPOSED 0x0004      /* generate fully decomposed UCS-2 */
+#define UTF_PRECOMPOSED 0x0008     /* generate precomposed UCS-2 */
+#define UTF_ESCAPE_ILLEGAL 0x0010  /* escape illegal UTF-8 */
+#define UTF_SFM_CONVERSIONS 0x0020 /* Use SFM mappings for illegal NTFS chars  \
+                                    */
 
-#define UTF_BIG_ENDIAN       \
-	((BYTE_ORDER == BIG_ENDIAN) ? 0 : UTF_REVERSE_ENDIAN)
+#define UTF_BIG_ENDIAN ((BYTE_ORDER == BIG_ENDIAN) ? 0 : UTF_REVERSE_ENDIAN)
 
-#define UTF_LITTLE_ENDIAN    \
-	((BYTE_ORDER == LITTLE_ENDIAN) ? 0 : UTF_REVERSE_ENDIAN)
+#define UTF_LITTLE_ENDIAN                                                      \
+  ((BYTE_ORDER == LITTLE_ENDIAN) ? 0 : UTF_REVERSE_ENDIAN)
 
 __BEGIN_DECLS
-
 
 /*
  * unicode_combinable - Test for a combining unicode character.
@@ -70,7 +69,6 @@ int unicode_combinable(u_int16_t character);
  */
 
 int unicode_decomposeable(u_int16_t character);
-
 
 /*
  * utf8_encodelen - Calculate the UTF-8 encoding length
@@ -91,10 +89,8 @@ int unicode_decomposeable(u_int16_t character);
  * ERRORS
  *    None
  */
-size_t
-utf8_encodelen(const u_int16_t * ucsp, size_t ucslen, u_int16_t altslash,
-    int flags);
-
+size_t utf8_encodelen(const u_int16_t *ucsp, size_t ucslen, u_int16_t altslash,
+                      int flags);
 
 /*
  * utf8_encodestr - Encodes a Unicode string into UTF-8
@@ -124,10 +120,9 @@ utf8_encodelen(const u_int16_t * ucsp, size_t ucslen, u_int16_t altslash,
  *
  *    EINVAL:  illegal Unicode char encountered
  */
-int
-utf8_encodestr(const u_int16_t * ucsp, size_t ucslen, u_int8_t * utf8p,
-    size_t * utf8len, size_t buflen, u_int16_t altslash, int flags);
-
+int utf8_encodestr(const u_int16_t *ucsp, size_t ucslen, u_int8_t *utf8p,
+                   size_t *utf8len, size_t buflen, u_int16_t altslash,
+                   int flags);
 
 /*
  * utf8_decodestr - Decodes a UTF-8 string into Unicode
@@ -159,10 +154,9 @@ utf8_encodestr(const u_int16_t * ucsp, size_t ucslen, u_int8_t * utf8p,
  *
  *    EINVAL:  illegal UTF-8 sequence encountered.
  */
-int
-utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
-    size_t *ucslen, size_t buflen, u_int16_t altslash, int flags);
-
+int utf8_decodestr(const u_int8_t *utf8p, size_t utf8len, u_int16_t *ucsp,
+                   size_t *ucslen, size_t buflen, u_int16_t altslash,
+                   int flags);
 
 /*
  * utf8_normalizestr - Normalize a UTF-8 string (NFC or NFD)
@@ -188,10 +182,8 @@ utf8_decodestr(const u_int8_t* utf8p, size_t utf8len, u_int16_t* ucsp,
  *
  *    EINVAL:  illegal UTF-8 sequence encountered or invalid flags
  */
-int
-utf8_normalizestr(const u_int8_t* instr, size_t inlen, u_int8_t* outstr,
-    size_t *outlen, size_t buflen, int flags);
-
+int utf8_normalizestr(const u_int8_t *instr, size_t inlen, u_int8_t *outstr,
+                      size_t *outlen, size_t buflen, int flags);
 
 /*
  * utf8_validatestr - validates a UTF-8 string
@@ -203,9 +195,7 @@ utf8_normalizestr(const u_int8_t* instr, size_t inlen, u_int8_t* outstr,
  * ERRORS
  *    EINVAL:  illegal UTF-8 sequence encountered.
  */
-int
-utf8_validatestr(const u_int8_t* utf8p, size_t utf8len);
-
+int utf8_validatestr(const u_int8_t *utf8p, size_t utf8len);
 
 __END_DECLS
 

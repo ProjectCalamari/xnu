@@ -7,10 +7,12 @@ include $(MakeInc_cmd)
 include $(MakeInc_def)
 
 EXPORT_FILES = \
+	arch.h		\
 	fat.h		\
 	fixup-chains.h	\
 	loader.h	\
 	nlist.h		\
+	swap.h		\
 	reloc.h
 
 INSTALL_MI_LIST =

@@ -49,7 +49,7 @@ void kppet_reset(void);
  * Notify PET that new threads are switching on-CPU.
  */
 void kppet_on_cpu(thread_t thread, thread_continue_t continuation,
-    uintptr_t *starting_frame);
+                  uintptr_t *starting_frame);
 
 /*
  * Mark a thread as sampled by PET.

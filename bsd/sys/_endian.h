@@ -90,8 +90,8 @@
 #ifndef _SYS__ENDIAN_H_
 #define _SYS__ENDIAN_H_
 
-#include <sys/cdefs.h>
 #include <machine/_endian.h>
+#include <sys/cdefs.h>
 
 /*
  * Macros for network/external number representation conversion.
@@ -100,66 +100,68 @@
 #if defined(lint)
 
 __BEGIN_DECLS
-__uint16_t      ntohs(__uint16_t);
-__uint16_t      htons(__uint16_t);
-__uint32_t      ntohl(__uint32_t);
-__uint32_t      htonl(__uint32_t);
+__uint16_t ntohs(__uint16_t);
+__uint16_t htons(__uint16_t);
+__uint32_t ntohl(__uint32_t);
+__uint32_t htonl(__uint32_t);
 __END_DECLS
 
 #elif __DARWIN_BYTE_ORDER == __DARWIN_BIG_ENDIAN
 
-#define ntohl(x)        ((__uint32_t)(x))
-#define ntohs(x)        ((__uint16_t)(x))
-#define htonl(x)        ((__uint32_t)(x))
-#define htons(x)        ((__uint16_t)(x))
+#define ntohl(x) ((__uint32_t)(x))
+#define ntohs(x) ((__uint16_t)(x))
+#define htonl(x) ((__uint32_t)(x))
+#define htons(x) ((__uint16_t)(x))
 
-#if     defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#if defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 
-#define ntohll(x)       ((__uint64_t)(x))
-#define htonll(x)       ((__uint64_t)(x))
+#define ntohll(x) ((__uint64_t)(x))
+#define htonll(x) ((__uint64_t)(x))
 
-#define NTOHL(x)        (x) = (x)
-#define NTOHS(x)        (x) = (x)
-#define NTOHLL(x)       (x) = (x)
-#define HTONL(x)        (x) = (x)
-#define HTONS(x)        (x) = (x)
-#define HTONLL(x)       (x) = (x)
-#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) */
+#define NTOHL(x) (x) = (x)
+#define NTOHS(x) (x) = (x)
+#define NTOHLL(x) (x) = (x)
+#define HTONL(x) (x) = (x)
+#define HTONS(x) (x) = (x)
+#define HTONLL(x) (x) = (x)
+#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) ||                     \
+          defined(_DARWIN_C_SOURCE)) */
 
-#else   /* __DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN */
+#else /* __DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN */
 
 #ifndef DRIVERKIT
 #include <libkern/_OSByteOrder.h>
 
-#define ntohs(x)        __DARWIN_OSSwapInt16(x)
-#define htons(x)        __DARWIN_OSSwapInt16(x)
+#define ntohs(x) __DARWIN_OSSwapInt16(x)
+#define htons(x) __DARWIN_OSSwapInt16(x)
 
-#define ntohl(x)        __DARWIN_OSSwapInt32(x)
-#define htonl(x)        __DARWIN_OSSwapInt32(x)
+#define ntohl(x) __DARWIN_OSSwapInt32(x)
+#define htonl(x) __DARWIN_OSSwapInt32(x)
 #else /* DRIVERKIT */
-#define ntohs(x)        ((__uint16_t)__builtin_bswap16((__uint16_t)(x)))
-#define htons(x)        ((__uint16_t)__builtin_bswap16((__uint16_t)(x)))
+#define ntohs(x) ((__uint16_t)__builtin_bswap16((__uint16_t)(x)))
+#define htons(x) ((__uint16_t)__builtin_bswap16((__uint16_t)(x)))
 
-#define ntohl(x)        ((__uint32_t)__builtin_bswap32((__uint32_t)(x)))
-#define htonl(x)        ((__uint32_t)__builtin_bswap32((__uint32_t)(x)))
+#define ntohl(x) ((__uint32_t)__builtin_bswap32((__uint32_t)(x)))
+#define htonl(x) ((__uint32_t)__builtin_bswap32((__uint32_t)(x)))
 #endif /* DRIVERKIT */
 
-#if     defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#if defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 
 #ifndef DRIVERKIT
-#define ntohll(x)       __DARWIN_OSSwapInt64(x)
-#define htonll(x)       __DARWIN_OSSwapInt64(x)
+#define ntohll(x) __DARWIN_OSSwapInt64(x)
+#define htonll(x) __DARWIN_OSSwapInt64(x)
 #else /* DRIVERKIT */
-#define ntohll(x)       ((__uint64_t)__builtin_bswap64((__uint64_t)(x)))
-#define htonll(x)       ((__uint64_t)__builtin_bswap64((__uint64_t)(x)))
+#define ntohll(x) ((__uint64_t)__builtin_bswap64((__uint64_t)(x)))
+#define htonll(x) ((__uint64_t)__builtin_bswap64((__uint64_t)(x)))
 #endif /* DRIVERKIT */
 
-#define NTOHL(x)        (x) = ntohl((__uint32_t)x)
-#define NTOHS(x)        (x) = ntohs((__uint16_t)x)
-#define NTOHLL(x)       (x) = ntohll((__uint64_t)x)
-#define HTONL(x)        (x) = htonl((__uint32_t)x)
-#define HTONS(x)        (x) = htons((__uint16_t)x)
-#define HTONLL(x)       (x) = htonll((__uint64_t)x)
-#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) */
+#define NTOHL(x) (x) = ntohl((__uint32_t)x)
+#define NTOHS(x) (x) = ntohs((__uint16_t)x)
+#define NTOHLL(x) (x) = ntohll((__uint64_t)x)
+#define HTONL(x) (x) = htonl((__uint32_t)x)
+#define HTONS(x) (x) = htons((__uint16_t)x)
+#define HTONLL(x) (x) = htonll((__uint64_t)x)
+#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) ||                     \
+          defined(_DARWIN_C_SOURCE)) */
 #endif /* __DARWIN_BYTE_ORDER */
 #endif /* !_SYS__ENDIAN_H_ */

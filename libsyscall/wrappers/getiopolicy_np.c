@@ -21,50 +21,47 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 #include <errno.h>
-#include <sys/resource.h>
 #include <mach/port.h>
+#include <sys/resource.h>
 
 extern int __iopolicysys(int, struct _iopol_param_t *);
 extern void _pthread_clear_qos_tsd(mach_port_t);
 
-int
-getiopolicy_np(int iotype, int scope)
-{
-	int policy, error;
-	struct _iopol_param_t iop_param;
+int getiopolicy_np(int iotype, int scope) {
+  int policy, error;
+  struct _iopol_param_t iop_param;
 
-	/* Do not sanity check iotype and scope, leave it to kernel. */
+  /* Do not sanity check iotype and scope, leave it to kernel. */
 
-	iop_param.iop_scope = scope;
-	iop_param.iop_iotype = iotype;
-	error = __iopolicysys(IOPOL_CMD_GET, &iop_param);
-	if (error != 0) {
-		policy = -1;
-		goto exit;
-	}
+  iop_param.iop_scope = scope;
+  iop_param.iop_iotype = iotype;
+  error = __iopolicysys(IOPOL_CMD_GET, &iop_param);
+  if (error != 0) {
+    policy = -1;
+    goto exit;
+  }
 
-	policy = iop_param.iop_policy;
+  policy = iop_param.iop_policy;
 
 exit:
-	return policy;
+  return policy;
 }
 
-int
-setiopolicy_np(int iotype, int scope, int policy)
-{
-	/* kernel validates the indiv values, no need to repeat it */
-	struct _iopol_param_t iop_param;
+int setiopolicy_np(int iotype, int scope, int policy) {
+  /* kernel validates the indiv values, no need to repeat it */
+  struct _iopol_param_t iop_param;
 
-	iop_param.iop_scope = scope;
-	iop_param.iop_iotype = iotype;
-	iop_param.iop_policy = policy;
+  iop_param.iop_scope = scope;
+  iop_param.iop_iotype = iotype;
+  iop_param.iop_policy = policy;
 
-	int rv = __iopolicysys(IOPOL_CMD_SET, &iop_param);
-	if (rv == -2) {
-		/* not an actual error but indication that __iopolicysys removed the thread QoS */
-		_pthread_clear_qos_tsd(MACH_PORT_NULL);
-		rv = 0;
-	}
+  int rv = __iopolicysys(IOPOL_CMD_SET, &iop_param);
+  if (rv == -2) {
+    /* not an actual error but indication that __iopolicysys removed the thread
+     * QoS */
+    _pthread_clear_qos_tsd(MACH_PORT_NULL);
+    rv = 0;
+  }
 
-	return rv;
+  return rv;
 }

@@ -52,9 +52,9 @@
  */
 
 #ifndef OS_OBJECT_HAVE_OBJC_SUPPORT
-#if defined(__OBJC__) && defined(__OBJC2__) && !defined(__OBJC_GC__) && ( \
-	__MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_8 || \
-	__IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_6_0)
+#if defined(__OBJC__) && defined(__OBJC2__) && !defined(__OBJC_GC__) &&        \
+    (__MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_8 ||                          \
+     __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_6_0)
 #define OS_OBJECT_HAVE_OBJC_SUPPORT 1
 #else
 #define OS_OBJECT_HAVE_OBJC_SUPPORT 0
@@ -84,15 +84,13 @@
 #define OS_OBJC_INDEPENDENT_CLASS
 #endif
 #define OS_OBJECT_CLASS(name) OS_##name
-#define OS_OBJECT_DECL_IMPL(name, ...) \
-	        @protocol OS_OBJECT_CLASS(name) __VA_ARGS__ \
-	        @end \
-	        typedef NSObject<OS_OBJECT_CLASS(name)> \
-	                        * OS_OBJC_INDEPENDENT_CLASS name##_t
-#define OS_OBJECT_DECL(name, ...) \
-	        OS_OBJECT_DECL_IMPL(name, <NSObject>)
-#define OS_OBJECT_DECL_SUBCLASS(name, super) \
-	        OS_OBJECT_DECL_IMPL(name, <OS_OBJECT_CLASS(super)>)
+#define OS_OBJECT_DECL_IMPL(name, ...)                                         \
+  @protocol OS_OBJECT_CLASS                                                    \
+  (name) __VA_ARGS__ @end                                                      \
+  typedef NSObject<OS_OBJECT_CLASS(name)> *OS_OBJC_INDEPENDENT_CLASS name##_t
+#define OS_OBJECT_DECL(name, ...) OS_OBJECT_DECL_IMPL(name, <NSObject>)
+#define OS_OBJECT_DECL_SUBCLASS(name, super)                                   \
+  OS_OBJECT_DECL_IMPL(name, <OS_OBJECT_CLASS(super)>)
 #if defined(__has_attribute)
 #if __has_attribute(ns_returns_retained)
 #define OS_OBJECT_RETURNS_RETAINED __attribute__((__ns_returns_retained__))
@@ -145,7 +143,8 @@
 #define OS_OBJECT_USE_OBJC_RETAIN_RELEASE 0
 #endif
 
-#define OS_OBJECT_GLOBAL_OBJECT(type, object) ((OS_OBJECT_BRIDGE type)&(object))
+#define OS_OBJECT_GLOBAL_OBJECT(type, object)                                  \
+  ((OS_OBJECT_BRIDGE type) & (object))
 
 __BEGIN_DECLS
 
@@ -167,8 +166,7 @@ __BEGIN_DECLS
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_12, __IPHONE_10_0)
 OS_EXPORT
-void*
-os_retain(void *object);
+void *os_retain(void *object);
 #if OS_OBJECT_USE_OBJC
 #undef os_retain
 #define os_retain(object) [object retain]
@@ -189,8 +187,7 @@ os_retain(void *object);
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_12, __IPHONE_10_0)
 OS_EXPORT
-void
-os_release(void *object);
+void os_release(void *object);
 #if OS_OBJECT_USE_OBJC
 #undef os_release
 #define os_release(object) [object release]

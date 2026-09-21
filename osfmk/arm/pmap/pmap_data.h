@@ -71,10 +71,8 @@ extern pmap_paddr_t vm_first_phys, vm_last_phys;
  *
  * @param pa The physical address to check.
  */
-static inline bool
-pa_valid(pmap_paddr_t pa)
-{
-	return (pa >= vm_first_phys) && (pa < vm_last_phys);
+static inline bool pa_valid(pmap_paddr_t pa) {
+  return (pa >= vm_first_phys) && (pa < vm_last_phys);
 }
 
 /**
@@ -95,17 +93,15 @@ pa_valid(pmap_paddr_t pa)
  *       kernel-managed.
  */
 
-static inline unsigned int
-pa_index(pmap_paddr_t pa)
-{
-	return (unsigned int)atop(pa - vm_first_phys);
+static inline unsigned int pa_index(pmap_paddr_t pa) {
+  return (unsigned int)atop(pa - vm_first_phys);
 }
 
 /* See the definition of pv_head_table for more information. */
 extern pv_entry_t **pv_head_table;
 
 /* Represents a NULL entry in the pv_head_table. */
-#define PV_ENTRY_NULL ((pv_entry_t *) 0)
+#define PV_ENTRY_NULL ((pv_entry_t *)0)
 
 /**
  * Given a physical address index, return the corresponding pv_head_table entry.
@@ -118,10 +114,8 @@ extern pv_entry_t **pv_head_table;
  * @param pai The index returned by pa_index() for the page whose pv_head_table
  *            entry should be retrieved.
  */
-static inline pv_entry_t **
-pai_to_pvh(unsigned int pai)
-{
-	return &pv_head_table[pai];
+static inline pv_entry_t **pai_to_pvh(unsigned int pai) {
+  return &pv_head_table[pai];
 }
 
 /**
@@ -151,12 +145,13 @@ pai_to_pvh(unsigned int pai)
  * type needs to be checked before dereferencing the pointer to determine which
  * pointer type to dereference as.
  */
-__enum_closed_decl(pvh_type_t, uint8_t, {
-	PVH_TYPE_NULL = 0b00,
-	PVH_TYPE_PVEP = 0b01,
-	PVH_TYPE_PTEP = 0b10,
-	PVH_TYPE_PTDP = 0b11,
-});
+__enum_closed_decl(pvh_type_t, uint8_t,
+                   {
+                       PVH_TYPE_NULL = 0b00,
+                       PVH_TYPE_PVEP = 0b01,
+                       PVH_TYPE_PTEP = 0b10,
+                       PVH_TYPE_PTDP = 0b11,
+                   });
 
 #define PVH_TYPE_MASK (0x3UL)
 
@@ -267,13 +262,13 @@ __enum_closed_decl(pvh_type_t, uint8_t, {
 #define PVH_FLAG_FLUSH_NEEDED (1ULL << 54)
 
 /**
- * Marking a pv_head_table entry with any bit in this mask denotes that this page
- * has been locked down by the PPL.  Locked down pages can't have new mappings
- * created or existing mappings removed, and all existing mappings will have been
- * converted to read-only.  This essentially makes the page immutable.
+ * Marking a pv_head_table entry with any bit in this mask denotes that this
+ * page has been locked down by the PPL.  Locked down pages can't have new
+ * mappings created or existing mappings removed, and all existing mappings will
+ * have been converted to read-only.  This essentially makes the page immutable.
  */
-#define PVH_FLAG_LOCKDOWN_MASK (PVH_FLAG_LOCKDOWN_KC | PVH_FLAG_LOCKDOWN_CS | PVH_FLAG_LOCKDOWN_RO)
-
+#define PVH_FLAG_LOCKDOWN_MASK                                                 \
+  (PVH_FLAG_LOCKDOWN_KC | PVH_FLAG_LOCKDOWN_CS | PVH_FLAG_LOCKDOWN_RO)
 
 /**
  * These bits need to be set to safely dereference a pv_head_table
@@ -282,18 +277,20 @@ __enum_closed_decl(pvh_type_t, uint8_t, {
  * Any change to this #define should also update the copy located in the pmap.py
  * LLDB macros file.
  */
-#define PVH_HIGH_FLAGS (PVH_FLAG_CPU | PVH_FLAG_LOCK | PVH_FLAG_EXEC | PVH_FLAG_LOCKDOWN_MASK | \
-    PVH_FLAG_HASHED | PVH_FLAG_FLUSH_NEEDED | PVH_FLAG_RETIRED)
+#define PVH_HIGH_FLAGS                                                         \
+  (PVH_FLAG_CPU | PVH_FLAG_LOCK | PVH_FLAG_EXEC | PVH_FLAG_LOCKDOWN_MASK |     \
+   PVH_FLAG_HASHED | PVH_FLAG_FLUSH_NEEDED | PVH_FLAG_RETIRED)
 
 #endif /* defined(__arm64__) */
 
 /* Mask used to clear out the TYPE bits from a pv_head_table entry/pointer. */
 #define PVH_LIST_MASK (~PVH_TYPE_MASK)
 
-/* Which 32-bit word in each pv_head_table entry/pointer contains the LOCK bit. */
+/* Which 32-bit word in each pv_head_table entry/pointer contains the LOCK bit.
+ */
 #if defined(__arm64__)
 #define PVH_LOCK_WORD 1 /* Assumes little-endian */
-#endif /* defined(__arm64__) */
+#endif                  /* defined(__arm64__) */
 
 /**
  * Assert that a pv_head_table entry is locked. Will panic if the lock isn't
@@ -301,23 +298,18 @@ __enum_closed_decl(pvh_type_t, uint8_t, {
  *
  * @param index The physical address index to check.
  */
-static inline void
-pvh_assert_locked(__assert_only unsigned int index)
-{
-	assert((vm_offset_t)(pv_head_table[index]) & PVH_FLAG_LOCK);
+static inline void pvh_assert_locked(__assert_only unsigned int index) {
+  assert((vm_offset_t)(pv_head_table[index]) & PVH_FLAG_LOCK);
 }
-
 
 /**
  * Lock a pv_head_table entry.
  *
  * @param index The physical address index of the pv_head_table entry to lock.
  */
-static inline void
-pvh_lock(unsigned int index)
-{
-	pmap_lock_bit((uint32_t*)(&pv_head_table[index]) + PVH_LOCK_WORD,
-	    PVH_LOCK_BIT - (PVH_LOCK_WORD * 32));
+static inline void pvh_lock(unsigned int index) {
+  pmap_lock_bit((uint32_t *)(&pv_head_table[index]) + PVH_LOCK_WORD,
+                PVH_LOCK_BIT - (PVH_LOCK_WORD * 32));
 }
 
 /**
@@ -325,13 +317,11 @@ pvh_lock(unsigned int index)
  *
  * @param index The physical address index of the pv_head_table entry to unlock.
  */
-static inline void
-pvh_unlock(unsigned int index)
-{
-	pvh_assert_locked(index);
+static inline void pvh_unlock(unsigned int index) {
+  pvh_assert_locked(index);
 
-	pmap_unlock_bit((uint32_t*)(&pv_head_table[index]) + PVH_LOCK_WORD,
-	    PVH_LOCK_BIT - (PVH_LOCK_WORD * 32));
+  pmap_unlock_bit((uint32_t *)(&pv_head_table[index]) + PVH_LOCK_WORD,
+                  PVH_LOCK_BIT - (PVH_LOCK_WORD * 32));
 }
 
 /**
@@ -343,10 +333,8 @@ pvh_unlock(unsigned int index)
  * @return True if the pv_head_table entry is of the passed in type, false
  *         otherwise.
  */
-static inline bool
-pvh_test_type(pv_entry_t **pvh, pvh_type_t type)
-{
-	return ((*(vm_offset_t *)pvh) & PVH_TYPE_MASK) == type;
+static inline bool pvh_test_type(pv_entry_t **pvh, pvh_type_t type) {
+  return ((*(vm_offset_t *)pvh) & PVH_TYPE_MASK) == type;
 }
 
 /**
@@ -359,10 +347,9 @@ pvh_test_type(pv_entry_t **pvh, pvh_type_t type)
  *         physical page by masking off the TYPE bits and adding any missing
  *         flags to the upper portion of the pointer.
  */
-static inline pt_entry_t*
-pvh_ptep(pv_entry_t **pvh)
-{
-	return (pt_entry_t *)(((*(vm_offset_t *)pvh) & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
+static inline pt_entry_t *pvh_ptep(pv_entry_t **pvh) {
+  return (pt_entry_t *)(((*(vm_offset_t *)pvh) & PVH_LIST_MASK) |
+                        PVH_HIGH_FLAGS);
 }
 
 /**
@@ -376,10 +363,9 @@ pvh_ptep(pv_entry_t **pvh)
  *         physical page by masking off the TYPE bits and adding any missing
  *         flags to the upper portion of the pointer.
  */
-static inline pv_entry_t*
-pvh_pve_list(pv_entry_t **pvh)
-{
-	return (pv_entry_t *)(((*(vm_offset_t *)pvh) & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
+static inline pv_entry_t *pvh_pve_list(pv_entry_t **pvh) {
+  return (pv_entry_t *)(((*(vm_offset_t *)pvh) & PVH_LIST_MASK) |
+                        PVH_HIGH_FLAGS);
 }
 
 /**
@@ -387,10 +373,8 @@ pvh_pve_list(pv_entry_t **pvh)
  *
  * @param pvh The pv_head_table entry whose flags to get.
  */
-static inline vm_offset_t
-pvh_get_flags(pv_entry_t **pvh)
-{
-	return (*(vm_offset_t *)pvh) & PVH_HIGH_FLAGS;
+static inline vm_offset_t pvh_get_flags(pv_entry_t **pvh) {
+  return (*(vm_offset_t *)pvh) & PVH_HIGH_FLAGS;
 }
 
 /**
@@ -398,10 +382,9 @@ pvh_get_flags(pv_entry_t **pvh)
  *
  * @param pvh The pv_head_table entry whose flags are getting set.
  */
-static inline void
-pvh_set_flags(pv_entry_t **pvh, vm_offset_t flags)
-{
-	os_atomic_store((vm_offset_t *)pvh, ((*(vm_offset_t *)pvh) & ~PVH_HIGH_FLAGS) | flags, relaxed);
+static inline void pvh_set_flags(pv_entry_t **pvh, vm_offset_t flags) {
+  os_atomic_store((vm_offset_t *)pvh,
+                  ((*(vm_offset_t *)pvh) & ~PVH_HIGH_FLAGS) | flags, relaxed);
 }
 
 /**
@@ -420,11 +403,11 @@ pvh_set_flags(pv_entry_t **pvh, vm_offset_t flags)
  *             pv_entry_t*, or pt_desc_t* depending on the type.
  * @param type The type of the new entry.
  */
-static inline void
-pvh_update_head(pv_entry_t **pvh, void *pvep, unsigned int type)
-{
-	assert((*(vm_offset_t *)pvh) & PVH_FLAG_LOCK);
-	os_atomic_store((vm_offset_t *)pvh, (vm_offset_t)pvep | type | PVH_FLAG_LOCK, relaxed);
+static inline void pvh_update_head(pv_entry_t **pvh, void *pvep,
+                                   unsigned int type) {
+  assert((*(vm_offset_t *)pvh) & PVH_FLAG_LOCK);
+  os_atomic_store((vm_offset_t *)pvh, (vm_offset_t)pvep | type | PVH_FLAG_LOCK,
+                  relaxed);
 }
 
 /**
@@ -443,11 +426,10 @@ pvh_update_head(pv_entry_t **pvh, void *pvep, unsigned int type)
  *             pv_entry_t*, or pt_desc_t* depending on the type.
  * @param type The type of the new entry.
  */
-static inline void
-pvh_update_head_unlocked(pv_entry_t **pvh, void *pvep, unsigned int type)
-{
-	assert(!((*(vm_offset_t *)pvh) & PVH_FLAG_LOCK));
-	*(vm_offset_t *)pvh = ((vm_offset_t)pvep | type) & ~PVH_FLAG_LOCK;
+static inline void pvh_update_head_unlocked(pv_entry_t **pvh, void *pvep,
+                                            unsigned int type) {
+  assert(!((*(vm_offset_t *)pvh) & PVH_FLAG_LOCK));
+  *(vm_offset_t *)pvh = ((vm_offset_t)pvep | type) & ~PVH_FLAG_LOCK;
 }
 
 /**
@@ -467,15 +449,21 @@ pvh_update_head_unlocked(pv_entry_t **pvh, void *pvep, unsigned int type)
  *
  * @return True if the entry is an IOMMU mapping, false otherwise.
  */
-static inline bool
-pvh_ptep_is_iommu(const pt_entry_t *ptep)
-{
+static inline bool pvh_ptep_is_iommu(const pt_entry_t *ptep) {
 #ifdef PVH_FLAG_IOMMU
-	return (vm_offset_t)ptep & PVH_FLAG_IOMMU;
+  return (vm_offset_t)ptep & PVH_FLAG_IOMMU;
 #else /* PVH_FLAG_IOMMU */
-	#pragma unused(ptep)
-	return false;
+#pragma unused(ptep)
+  return false;
 #endif /* PVH_FLAG_IOMMU */
+}
+
+static inline const void *ptep_get_iommu(const pt_entry_t *ptep) {
+#ifdef PVH_FLAG_IOMMU
+  return (const void *)((vm_offset_t)ptep & ~PVH_FLAG_IOMMU);
+#else
+  return ptep;
+#endif
 }
 
 /**
@@ -487,14 +475,13 @@ pvh_ptep_is_iommu(const pt_entry_t *ptep)
  *
  * @return A valid dereferencable pointer to the page table entry.
  */
-static inline const pt_entry_t*
-pvh_strip_ptep(const pt_entry_t *ptep)
-{
+static inline const pt_entry_t *pvh_strip_ptep(const pt_entry_t *ptep) {
 #ifdef PVH_FLAG_IOMMU
-	const vm_offset_t pte_va = (vm_offset_t)ptep;
-	return (const pt_entry_t*)((pte_va & ~PVH_FLAG_IOMMU) | PVH_FLAG_IOMMU_TABLE);
-#else /* PVH_FLAG_IOMMU */
-	return ptep;
+  const vm_offset_t pte_va = (vm_offset_t)ptep;
+  return (const pt_entry_t *)((pte_va & ~PVH_FLAG_IOMMU) |
+                              PVH_FLAG_IOMMU_TABLE);
+#else  /* PVH_FLAG_IOMMU */
+  return ptep;
 #endif /* PVH_FLAG_IOMMU */
 }
 
@@ -513,8 +500,8 @@ pvh_strip_ptep(const pt_entry_t *ptep)
  * differently depending on whether there's a single mapping to a page
  * (PVH_TYPE_PTEP) or multiple (PVH_TYPE_PVEP). For single mappings, the bit is
  * tracked in the pp_attr_table. But when there are multiple mappings, the least
- * significant bit of the corresponding "pve_pte" pointer in each pv_entry object
- * is used as a marker for pages using alternate accounting.
+ * significant bit of the corresponding "pve_pte" pointer in each pv_entry
+ * object is used as a marker for pages using alternate accounting.
  *
  * @note See the definition for PP_ATTR_ALTACCT for a more detailed description
  *       of what "alternate accounting" actually means in respect to the
@@ -527,8 +514,8 @@ pvh_strip_ptep(const pt_entry_t *ptep)
  * When there are multiple mappings, we use the next least significant bit of
  * the corresponding "pve_pte" pointer for that.
  */
-#define PVE_PTEP_ALTACCT ((uintptr_t) 0x1)
-#define PVE_PTEP_INTERNAL ((uintptr_t) 0x2)
+#define PVE_PTEP_ALTACCT ((uintptr_t)0x1)
+#define PVE_PTEP_INTERNAL ((uintptr_t)0x2)
 #define PVE_PTEP_FLAGS (PVE_PTEP_ALTACCT | PVE_PTEP_INTERNAL)
 
 /**
@@ -538,11 +525,10 @@ pvh_strip_ptep(const pt_entry_t *ptep)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_set_altacct(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_ALTACCT);
+static inline void pve_set_altacct(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_ALTACCT);
 }
 /**
  * Set the INTERNAL bit for a specific PTE pointer.
@@ -551,11 +537,10 @@ pve_set_altacct(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_set_internal(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_INTERNAL);
+static inline void pve_set_internal(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_INTERNAL);
 }
 
 /**
@@ -565,11 +550,10 @@ pve_set_internal(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_clr_altacct(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_ALTACCT);
+static inline void pve_clr_altacct(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_ALTACCT);
 }
 /**
  * Clear the INTERNAL bit for a specific PTE pointer.
@@ -578,11 +562,10 @@ pve_clr_altacct(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_clr_internal(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_INTERNAL);
+static inline void pve_clr_internal(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_INTERNAL);
 }
 
 /**
@@ -592,11 +575,9 @@ pve_clr_internal(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline bool
-pve_get_altacct(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_ALTACCT;
+static inline bool pve_get_altacct(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_ALTACCT;
 }
 /**
  * Return the INTERNAL bit for a specific PTE pointer.
@@ -605,11 +586,9 @@ pve_get_altacct(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline bool
-pve_get_internal(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_INTERNAL;
+static inline bool pve_get_internal(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_INTERNAL;
 }
 
 /**
@@ -622,11 +601,7 @@ pve_get_internal(pv_entry_t *pvep, unsigned idx)
  * @return The next virtual mapping for a physical page, or PV_ENTRY_NULL if the
  *         end of the list has been reached.
  */
-static inline pv_entry_t *
-pve_next(pv_entry_t *pvep)
-{
-	return pvep->pve_next;
-}
+static inline pv_entry_t *pve_next(pv_entry_t *pvep) { return pvep->pve_next; }
 
 /**
  * Return a pointer to the pve_next field in a pv_entry. This value is used
@@ -636,10 +611,8 @@ pve_next(pv_entry_t *pvep)
  *
  * @return Pointer to the pve_next field.
  */
-static inline pv_entry_t **
-pve_next_ptr(pv_entry_t *pvep)
-{
-	return &pvep->pve_next;
+static inline pv_entry_t **pve_next_ptr(pv_entry_t *pvep) {
+  return &pvep->pve_next;
 }
 
 /**
@@ -650,11 +623,9 @@ pve_next_ptr(pv_entry_t *pvep)
  *
  * @return Pointer to the page table entry.
  */
-static inline pt_entry_t *
-pve_get_ptep(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	return (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_FLAGS);
+static inline pt_entry_t *pve_get_ptep(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  return (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_FLAGS);
 }
 
 /**
@@ -664,11 +635,10 @@ pve_get_ptep(pv_entry_t *pvep, unsigned idx)
  * @param idx Index of the chosen PTE pointer inside the PVE.
  * @param ptep_new The new page table entry.
  */
-static inline void
-pve_set_ptep(pv_entry_t *pvep, unsigned idx, pt_entry_t *ptep_new)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = ptep_new;
+static inline void pve_set_ptep(pv_entry_t *pvep, unsigned idx,
+                                pt_entry_t *ptep_new) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] = ptep_new;
 }
 
 /**
@@ -676,13 +646,11 @@ pve_set_ptep(pv_entry_t *pvep, unsigned idx, pt_entry_t *ptep_new)
  *
  * @param pvep The pv_entry to initialize.
  */
-static inline void
-pve_init(pv_entry_t *pvep)
-{
-	pvep->pve_next = PV_ENTRY_NULL;
-	for (int i = 0; i < PTE_PER_PVE; i++) {
-		pvep->pve_ptep[i] = PT_ENTRY_NULL;
-	}
+static inline void pve_init(pv_entry_t *pvep) {
+  pvep->pve_next = PV_ENTRY_NULL;
+  for (int i = 0; i < PTE_PER_PVE; i++) {
+    pvep->pve_ptep[i] = PT_ENTRY_NULL;
+  }
 }
 
 /**
@@ -693,16 +661,14 @@ pve_init(pv_entry_t *pvep)
  *
  * @return Index of the found entry, or -1 if no entry exists.
  */
-static inline int
-pve_find_ptep_index(pv_entry_t *pvep, pt_entry_t *ptep)
-{
-	for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
-		if (pve_get_ptep(pvep, i) == ptep) {
-			return (int)i;
-		}
-	}
+static inline int pve_find_ptep_index(pv_entry_t *pvep, pt_entry_t *ptep) {
+  for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
+    if (pve_get_ptep(pvep, i) == ptep) {
+      return (int)i;
+    }
+  }
 
-	return -1;
+  return -1;
 }
 
 /**
@@ -712,16 +678,14 @@ pve_find_ptep_index(pv_entry_t *pvep, pt_entry_t *ptep)
  *
  * @return True if no PTEs are currently associated with this PVE, or false.
  */
-static inline bool
-pve_is_empty(pv_entry_t *pvep)
-{
-	for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
-		if (pve_get_ptep(pvep, i) != PT_ENTRY_NULL) {
-			return false;
-		}
-	}
+static inline bool pve_is_empty(pv_entry_t *pvep) {
+  for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
+    if (pve_get_ptep(pvep, i) != PT_ENTRY_NULL) {
+      return false;
+    }
+  }
 
-	return true;
+  return true;
 }
 
 /**
@@ -735,13 +699,11 @@ pve_is_empty(pv_entry_t *pvep)
  * @param pvh The linked list of mappings to update.
  * @param pvep The new mapping to add to the linked list.
  */
-static inline void
-pve_add(pv_entry_t **pvh, pv_entry_t *pvep)
-{
-	assert(pvh_test_type(pvh, PVH_TYPE_PVEP));
+static inline void pve_add(pv_entry_t **pvh, pv_entry_t *pvep) {
+  assert(pvh_test_type(pvh, PVH_TYPE_PVEP));
 
-	pvep->pve_next = pvh_pve_list(pvh);
-	pvh_update_head(pvh, pvep, PVH_TYPE_PVEP);
+  pvep->pve_next = pvh_pve_list(pvh);
+  pvh_update_head(pvh, pvep, PVH_TYPE_PVEP);
 }
 
 /**
@@ -762,29 +724,28 @@ pve_add(pv_entry_t **pvh, pv_entry_t *pvep)
  *             dereference of the pvepp parameter (unless it's the pv_head_table
  *             entry).
  */
-static inline void
-pve_remove(pv_entry_t **pvh, pv_entry_t **pvepp, pv_entry_t *pvep)
-{
-	assert(pvh_test_type(pvh, PVH_TYPE_PVEP));
+static inline void pve_remove(pv_entry_t **pvh, pv_entry_t **pvepp,
+                              pv_entry_t *pvep) {
+  assert(pvh_test_type(pvh, PVH_TYPE_PVEP));
 
-	if (pvepp == pvh) {
-		if (pve_next(pvep) == PV_ENTRY_NULL) {
-			/* The last mapping to this page is being removed. */
-			pvh_update_head(pvh, PV_ENTRY_NULL, PVH_TYPE_NULL);
-		} else {
-			/**
-			 * There are still mappings left, make the next one the new head of
-			 * the list. This effectively removes the first entry from the list.
-			 */
-			pvh_update_head(pvh, pve_next(pvep), PVH_TYPE_PVEP);
-		}
-	} else {
-		/**
-		 * Move the previous entry's next field to the entry after the one being
-		 * removed. This will clobber the ALTACCT and INTERNAL bits.
-		 */
-		*pvepp = pve_next(pvep);
-	}
+  if (pvepp == pvh) {
+    if (pve_next(pvep) == PV_ENTRY_NULL) {
+      /* The last mapping to this page is being removed. */
+      pvh_update_head(pvh, PV_ENTRY_NULL, PVH_TYPE_NULL);
+    } else {
+      /**
+       * There are still mappings left, make the next one the new head of
+       * the list. This effectively removes the first entry from the list.
+       */
+      pvh_update_head(pvh, pve_next(pvep), PVH_TYPE_PVEP);
+    }
+  } else {
+    /**
+     * Move the previous entry's next field to the entry after the one being
+     * removed. This will clobber the ALTACCT and INTERNAL bits.
+     */
+    *pvepp = pve_next(pvep);
+  }
 }
 
 /**
@@ -820,7 +781,6 @@ pve_remove(pv_entry_t **pvh, pv_entry_t **pvepp, pv_entry_t *pvep)
 #error Unsupported ARM_PGSHIFT
 #endif /* __ARM_MIXED_PAGE_SIZE__ || ARM_PGSHIFT == 14 || ARM_PGSHIFT == 12 */
 
-
 /**
  * Page table descriptor (PTD) info structure.
  *
@@ -838,30 +798,30 @@ pve_remove(pv_entry_t **pvh, pv_entry_t **pvepp, pv_entry_t *pvep)
  * the fields were within the same structure.
  */
 typedef struct {
-	/**
-	 * Pre-defined sentinel values for ptd_info_t.refcnt. If these refcnt values
-	 * change, make sure to update the showpte LLDB macro to reflect the
-	 * changes.
-	 */
-	#define PT_DESC_REFCOUNT                0x4000U
-	#define PT_DESC_IOMMU_GRANTED_REFCOUNT  0x8000U
-	#define PT_DESC_IOMMU_ACCEPTED_REFCOUNT 0x8001U
+/**
+ * Pre-defined sentinel values for ptd_info_t.refcnt. If these refcnt values
+ * change, make sure to update the showpte LLDB macro to reflect the
+ * changes.
+ */
+#define PT_DESC_REFCOUNT 0x4000U
+#define PT_DESC_IOMMU_GRANTED_REFCOUNT 0x8000U
+#define PT_DESC_IOMMU_ACCEPTED_REFCOUNT 0x8001U
 
-	/*
-	 * For non-leaf pagetables, should always be PT_DESC_REFCOUNT.
-	 * For leaf pagetables, should reflect the number of non-empty PTEs.
-	 * For IOMMU pages, should always be either PT_DESC_IOMMU_GRANTED_REFCOUNT
-	 * or PT_DESC_IOMMU_ACCEPTED_REFCOUNT.
-	 */
-	unsigned short refcnt;
+  /*
+   * For non-leaf pagetables, should always be PT_DESC_REFCOUNT.
+   * For leaf pagetables, should reflect the number of non-empty PTEs.
+   * For IOMMU pages, should always be either PT_DESC_IOMMU_GRANTED_REFCOUNT
+   * or PT_DESC_IOMMU_ACCEPTED_REFCOUNT.
+   */
+  unsigned short refcnt;
 
-	/*
-	 * For non-leaf pagetables, should be 0.
-	 * For leaf pagetables, should reflect the number of wired entries.
-	 * For IOMMU pages, may optionally reflect a driver-defined refcount (IOMMU
-	 * operations are implicitly wired).
-	 */
-	unsigned short wiredcnt;
+  /*
+   * For non-leaf pagetables, should be 0.
+   * For leaf pagetables, should reflect the number of wired entries.
+   * For IOMMU pages, may optionally reflect a driver-defined refcount (IOMMU
+   * operations are implicitly wired).
+   */
+  unsigned short wiredcnt;
 } ptd_info_t;
 
 /**
@@ -878,42 +838,42 @@ typedef struct {
  * IOMMU driver.
  */
 typedef struct pt_desc {
-	/**
-	 * This queue chain provides a mechanism for keeping a list of pages
-	 * being used as page tables. This is used to potentially reclaim userspace
-	 * page tables as a fast way of "allocating" a page.
-	 *
-	 * Refer to osfmk/kern/queue.h for more information about queue chains.
-	 */
-	queue_chain_t pt_page;
+  /**
+   * This queue chain provides a mechanism for keeping a list of pages
+   * being used as page tables. This is used to potentially reclaim userspace
+   * page tables as a fast way of "allocating" a page.
+   *
+   * Refer to osfmk/kern/queue.h for more information about queue chains.
+   */
+  queue_chain_t pt_page;
 
-	/* Each page table is either owned by a pmap or a specific IOMMU. */
-	union {
-		struct pmap *pmap;
-	};
+  /* Each page table is either owned by a pmap or a specific IOMMU. */
+  union {
+    struct pmap *pmap;
+  };
 
-	/**
-	 * The following fields contain per-page-table properties, and as such,
-	 * might have multiple elements each. This is due to a single PTD
-	 * potentially representing multiple page tables (in address spaces where
-	 * the VM page size differs from the hardware page size). Use the
-	 * ptd_get_index() function to get the correct index for a specific page
-	 * table.
-	 */
+  /**
+   * The following fields contain per-page-table properties, and as such,
+   * might have multiple elements each. This is due to a single PTD
+   * potentially representing multiple page tables (in address spaces where
+   * the VM page size differs from the hardware page size). Use the
+   * ptd_get_index() function to get the correct index for a specific page
+   * table.
+   */
 
-	/**
-	 * The first address of the virtual address space this page table is
-	 * translating for, or a value set by an IOMMU driver if this PTD is being
-	 * used to track an IOMMU page.
-	 */
-	vm_offset_t va[PT_INDEX_MAX];
+  /**
+   * The first address of the virtual address space this page table is
+   * translating for, or a value set by an IOMMU driver if this PTD is being
+   * used to track an IOMMU page.
+   */
+  vm_offset_t va[PT_INDEX_MAX];
 
-	/**
-	 * ptd_info_t's are allocated separately so as to reduce false sharing
-	 * with the va field. This is desirable because ptd_info_t's are updated
-	 * atomically from all CPUs.
-	 */
-	ptd_info_t *ptd_info;
+  /**
+   * ptd_info_t's are allocated separately so as to reduce false sharing
+   * with the va field. This is desirable because ptd_info_t's are updated
+   * atomically from all CPUs.
+   */
+  ptd_info_t *ptd_info;
 } pt_desc_t;
 
 /**
@@ -927,10 +887,9 @@ typedef struct pt_desc {
  *         for this physical page by masking off the TYPE bits and adding any
  *         missing flags to the upper portion of the pointer.
  */
-static inline pt_desc_t*
-pvh_ptd(pv_entry_t **pvh)
-{
-	return (pt_desc_t *)(((*(vm_offset_t *)pvh) & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
+static inline pt_desc_t *pvh_ptd(pv_entry_t **pvh) {
+  return (pt_desc_t *)(((*(vm_offset_t *)pvh) & PVH_LIST_MASK) |
+                       PVH_HIGH_FLAGS);
 }
 
 /**
@@ -941,19 +900,18 @@ pvh_ptd(pv_entry_t **pvh)
  *
  * @return The PTD object for the passed in page table.
  */
-static inline pt_desc_t *
-ptep_get_ptd(const pt_entry_t *ptep)
-{
-	assert(ptep != NULL);
+static inline pt_desc_t *ptep_get_ptd(const pt_entry_t *ptep) {
+  assert(ptep != NULL);
 
-	const vm_offset_t pt_base_va = (vm_offset_t)ptep;
-	pv_entry_t **pvh = pai_to_pvh(pa_index(ml_static_vtop(pt_base_va)));
+  const vm_offset_t pt_base_va = (vm_offset_t)ptep;
+  pv_entry_t **pvh = pai_to_pvh(pa_index(ml_static_vtop(pt_base_va)));
 
-	if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
-		panic("%s: invalid PV head 0x%llx for PTE %p", __func__, (uint64_t)(*pvh), ptep);
-	}
+  if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
+    panic("%s: invalid PV head 0x%llx for PTE %p", __func__, (uint64_t)(*pvh),
+          ptep);
+  }
 
-	return pvh_ptd(pvh);
+  return pvh_ptd(pvh);
 }
 
 /**
@@ -967,12 +925,9 @@ ptep_get_ptd(const pt_entry_t *ptep)
  *
  * @return The pmap that owns the given page table entry.
  */
-static inline struct pmap *
-ptep_get_pmap(const pt_entry_t *ptep)
-{
-	return ptep_get_ptd(ptep)->pmap;
+static inline struct pmap *ptep_get_pmap(const pt_entry_t *ptep) {
+  return ptep_get_ptd(ptep)->pmap;
 }
-
 
 /**
  * Given an arbitrary translation table entry, get the page table descriptor
@@ -985,17 +940,16 @@ ptep_get_pmap(const pt_entry_t *ptep)
  * @return The page table descriptor (PTD) for the page table pointed to by this
  *         TTE.
  */
-static inline pt_desc_t *
-tte_get_ptd(const tt_entry_t tte)
-{
-	const vm_offset_t pt_base_va = (vm_offset_t)(tte & ~((tt_entry_t)PAGE_MASK));
-	pv_entry_t **pvh = pai_to_pvh(pa_index(pt_base_va));
+static inline pt_desc_t *tte_get_ptd(const tt_entry_t tte) {
+  const vm_offset_t pt_base_va = (vm_offset_t)(tte & ~((tt_entry_t)PAGE_MASK));
+  pv_entry_t **pvh = pai_to_pvh(pa_index(pt_base_va));
 
-	if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
-		panic("%s: invalid PV head 0x%llx for TTE 0x%llx", __func__, (uint64_t)(*pvh), (uint64_t)tte);
-	}
+  if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
+    panic("%s: invalid PV head 0x%llx for TTE 0x%llx", __func__,
+          (uint64_t)(*pvh), (uint64_t)tte);
+  }
 
-	return pvh_ptd(pvh);
+  return pvh_ptd(pvh);
 }
 
 /**
@@ -1015,28 +969,29 @@ tte_get_ptd(const tt_entry_t tte)
  * @return The correct index value for a specific, hardware-sized page
  *         table.
  */
-static inline unsigned
-ptd_get_index(__unused const pt_desc_t *ptd, __unused const tt_entry_t *ttep)
-{
+static inline unsigned ptd_get_index(__unused const pt_desc_t *ptd,
+                                     __unused const tt_entry_t *ttep) {
 #if PT_INDEX_MAX == 1
-	return 0;
+  return 0;
 #else
-	assert(ptd != NULL);
+  assert(ptd != NULL);
 
-	const uint64_t pmap_page_shift = pt_attr_leaf_shift(pmap_get_pt_attr(ptd->pmap));
-	const vm_offset_t ttep_page = (vm_offset_t)ttep >> pmap_page_shift;
+  const uint64_t pmap_page_shift =
+      pt_attr_leaf_shift(pmap_get_pt_attr(ptd->pmap));
+  const vm_offset_t ttep_page = (vm_offset_t)ttep >> pmap_page_shift;
 
-	/**
-	 * Use the difference between the VM page shift and the hardware page shift
-	 * to get the index of the correct page table. In practice, this equates to
-	 * masking out the bottom two bits of the L3 table index in address spaces
-	 * where the VM page size is greater than the hardware page size. In address
-	 * spaces where they're identical, the index will always be zero.
-	 */
-	const unsigned int ttep_index = ttep_page & ((1U << (PAGE_SHIFT - pmap_page_shift)) - 1);
-	assert(ttep_index < PT_INDEX_MAX);
+  /**
+   * Use the difference between the VM page shift and the hardware page shift
+   * to get the index of the correct page table. In practice, this equates to
+   * masking out the bottom two bits of the L3 table index in address spaces
+   * where the VM page size is greater than the hardware page size. In address
+   * spaces where they're identical, the index will always be zero.
+   */
+  const unsigned int ttep_index =
+      ttep_page & ((1U << (PAGE_SHIFT - pmap_page_shift)) - 1);
+  assert(ttep_index < PT_INDEX_MAX);
 
-	return ttep_index;
+  return ttep_index;
 #endif
 }
 
@@ -1056,12 +1011,11 @@ ptd_get_index(__unused const pt_desc_t *ptd, __unused const tt_entry_t *ttep)
  * @return The correct ptd_info_t structure for a specific, hardware-sized page
  *         table.
  */
-static inline ptd_info_t *
-ptd_get_info(pt_desc_t *ptd, const tt_entry_t *ttep)
-{
-	assert((ptd != NULL) && (ptd->ptd_info[0].refcnt < PT_DESC_IOMMU_GRANTED_REFCOUNT));
+static inline ptd_info_t *ptd_get_info(pt_desc_t *ptd, const tt_entry_t *ttep) {
+  assert((ptd != NULL) &&
+         (ptd->ptd_info[0].refcnt < PT_DESC_IOMMU_GRANTED_REFCOUNT));
 
-	return &ptd->ptd_info[ptd_get_index(ptd, ttep)];
+  return &ptd->ptd_info[ptd_get_index(ptd, ttep)];
 }
 
 /**
@@ -1073,10 +1027,8 @@ ptd_get_info(pt_desc_t *ptd, const tt_entry_t *ttep)
  * @return The ptd_info object for the page table that contains the passed in
  *         page table entry.
  */
-static inline ptd_info_t *
-ptep_get_info(const pt_entry_t *ptep)
-{
-	return ptd_get_info(ptep_get_ptd(ptep), ptep);
+static inline ptd_info_t *ptep_get_info(const pt_entry_t *ptep) {
+  return ptd_get_info(ptep_get_ptd(ptep), ptep);
 }
 
 /**
@@ -1086,17 +1038,17 @@ ptep_get_info(const pt_entry_t *ptep)
  * @param ptdp pointer to the descriptor for the pagetable containing ptep
  * @param ptep Pointer to a PTE to parse
  */
-static inline vm_map_address_t
-ptd_get_va(const pt_desc_t *ptdp, const pt_entry_t *ptep)
-{
-	const pt_attr_t * const pt_attr = pmap_get_pt_attr(ptdp->pmap);
+static inline vm_map_address_t ptd_get_va(const pt_desc_t *ptdp,
+                                          const pt_entry_t *ptep) {
+  const pt_attr_t *const pt_attr = pmap_get_pt_attr(ptdp->pmap);
 
-	vm_map_address_t va = ptdp->va[ptd_get_index(ptdp, ptep)];
-	vm_offset_t ptep_index = ((vm_offset_t)ptep & pt_attr_leaf_offmask(pt_attr)) / sizeof(*ptep);
+  vm_map_address_t va = ptdp->va[ptd_get_index(ptdp, ptep)];
+  vm_offset_t ptep_index =
+      ((vm_offset_t)ptep & pt_attr_leaf_offmask(pt_attr)) / sizeof(*ptep);
 
-	va += (ptep_index << pt_attr_leaf_shift(pt_attr));
+  va += (ptep_index << pt_attr_leaf_shift(pt_attr));
 
-	return va;
+  return va;
 }
 
 /**
@@ -1105,10 +1057,8 @@ ptd_get_va(const pt_desc_t *ptdp, const pt_entry_t *ptep)
  *
  * @param ptep Pointer to a PTE to parse.
  */
-static inline vm_map_address_t
-ptep_get_va(const pt_entry_t *ptep)
-{
-	return ptd_get_va(ptep_get_ptd(ptep), ptep);
+static inline vm_map_address_t ptep_get_va(const pt_entry_t *ptep) {
+  return ptd_get_va(ptep_get_ptd(ptep), ptep);
 }
 
 /**
@@ -1119,7 +1069,7 @@ ptep_get_va(const pt_entry_t *ptep)
 typedef uint16_t pp_attr_t;
 
 /* See the definition of pp_attr_table for more information. */
-extern volatile pp_attr_t* pp_attr_table;
+extern volatile pp_attr_t *pp_attr_table;
 
 /**
  * Flags stored in the pp_attr_table on a per-physical-page basis.
@@ -1144,7 +1094,7 @@ extern volatile pp_attr_t* pp_attr_table;
  * enforce policy decisions in the VM layer.
  */
 #define PP_ATTR_REFERENCED 0x0040
-#define PP_ATTR_MODIFIED   0x0080
+#define PP_ATTR_MODIFIED 0x0080
 
 /**
  * This physical page is being used as anonymous memory that's internally
@@ -1189,7 +1139,8 @@ extern volatile pp_attr_t* pp_attr_table;
  * as a debugging aid on internal builds.
  *
  * TODO: This bit can probably be reclaimed:
- * rdar://70740650 (PMAP Cleanup: Potentially reclaim the PP_ATTR_NOENCRYPT bit on ARM)
+ * rdar://70740650 (PMAP Cleanup: Potentially reclaim the PP_ATTR_NOENCRYPT bit
+ * on ARM)
  */
 #define PP_ATTR_NOENCRYPT 0x0800
 
@@ -1231,11 +1182,9 @@ extern volatile pp_attr_t* pp_attr_table;
  * @param pai The physical address index for the entry to update.
  * @param bits The flags to set in the entry.
  */
-static inline void
-ppattr_set_bits(unsigned int pai, pp_attr_t bits)
-{
-	volatile pp_attr_t *ppattr = &pp_attr_table[pai];
-	os_atomic_or(ppattr, bits, acq_rel);
+static inline void ppattr_set_bits(unsigned int pai, pp_attr_t bits) {
+  volatile pp_attr_t *ppattr = &pp_attr_table[pai];
+  os_atomic_or(ppattr, bits, acq_rel);
 }
 
 /**
@@ -1244,11 +1193,9 @@ ppattr_set_bits(unsigned int pai, pp_attr_t bits)
  * @param pai The physical address index for the entry to update.
  * @param bits The flags to clear in the entry.
  */
-static inline void
-ppattr_clear_bits(unsigned int pai, pp_attr_t bits)
-{
-	volatile pp_attr_t *ppattr = &pp_attr_table[pai];
-	os_atomic_andnot(ppattr, bits, acq_rel);
+static inline void ppattr_clear_bits(unsigned int pai, pp_attr_t bits) {
+  volatile pp_attr_t *ppattr = &pp_attr_table[pai];
+  os_atomic_andnot(ppattr, bits, acq_rel);
 }
 
 /**
@@ -1257,11 +1204,9 @@ ppattr_clear_bits(unsigned int pai, pp_attr_t bits)
  * @param pai The physical address index for the entry to test.
  * @param bits The flags to check for.
  */
-static inline bool
-ppattr_test_bits(unsigned int pai, pp_attr_t bits)
-{
-	const volatile pp_attr_t *ppattr = &pp_attr_table[pai];
-	return (*ppattr & bits) == bits;
+static inline bool ppattr_test_bits(unsigned int pai, pp_attr_t bits) {
+  const volatile pp_attr_t *ppattr = &pp_attr_table[pai];
+  return (*ppattr & bits) == bits;
 }
 
 /**
@@ -1271,12 +1216,10 @@ ppattr_test_bits(unsigned int pai, pp_attr_t bits)
  * @param pa The physical address for the entry to update.
  * @param bits The flags to set in the entry.
  */
-static inline void
-ppattr_pa_set_bits(pmap_paddr_t pa, pp_attr_t bits)
-{
-	if (pa_valid(pa)) {
-		ppattr_set_bits(pa_index(pa), bits);
-	}
+static inline void ppattr_pa_set_bits(pmap_paddr_t pa, pp_attr_t bits) {
+  if (pa_valid(pa)) {
+    ppattr_set_bits(pa_index(pa), bits);
+  }
 }
 
 /**
@@ -1286,12 +1229,10 @@ ppattr_pa_set_bits(pmap_paddr_t pa, pp_attr_t bits)
  * @param pa The physical address for the entry to update.
  * @param bits The flags to clear in the entry.
  */
-static inline void
-ppattr_pa_clear_bits(pmap_paddr_t pa, pp_attr_t bits)
-{
-	if (pa_valid(pa)) {
-		ppattr_clear_bits(pa_index(pa), bits);
-	}
+static inline void ppattr_pa_clear_bits(pmap_paddr_t pa, pp_attr_t bits) {
+  if (pa_valid(pa)) {
+    ppattr_clear_bits(pa_index(pa), bits);
+  }
 }
 
 /**
@@ -1304,10 +1245,8 @@ ppattr_pa_clear_bits(pmap_paddr_t pa, pp_attr_t bits)
  * @return False if the PA isn't a kernel-managed page, otherwise true/false
  *         depending on whether the bits are set.
  */
-static inline bool
-ppattr_pa_test_bits(pmap_paddr_t pa, pp_attr_t bits)
-{
-	return pa_valid(pa) ? ppattr_test_bits(pa_index(pa), bits) : false;
+static inline bool ppattr_pa_test_bits(pmap_paddr_t pa, pp_attr_t bits) {
+  return pa_valid(pa) ? ppattr_test_bits(pa_index(pa), bits) : false;
 }
 
 /**
@@ -1316,10 +1255,8 @@ ppattr_pa_test_bits(pmap_paddr_t pa, pp_attr_t bits)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_set_modify(pmap_paddr_t pa)
-{
-	ppattr_pa_set_bits(pa, PP_ATTR_MODIFIED);
+static inline void ppattr_pa_set_modify(pmap_paddr_t pa) {
+  ppattr_pa_set_bits(pa, PP_ATTR_MODIFIED);
 }
 
 /**
@@ -1328,10 +1265,8 @@ ppattr_pa_set_modify(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_clear_modify(pmap_paddr_t pa)
-{
-	ppattr_pa_clear_bits(pa, PP_ATTR_MODIFIED);
+static inline void ppattr_pa_clear_modify(pmap_paddr_t pa) {
+  ppattr_pa_clear_bits(pa, PP_ATTR_MODIFIED);
 }
 
 /**
@@ -1340,10 +1275,8 @@ ppattr_pa_clear_modify(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_set_reference(pmap_paddr_t pa)
-{
-	ppattr_pa_set_bits(pa, PP_ATTR_REFERENCED);
+static inline void ppattr_pa_set_reference(pmap_paddr_t pa) {
+  ppattr_pa_set_bits(pa, PP_ATTR_REFERENCED);
 }
 
 /**
@@ -1352,10 +1285,8 @@ ppattr_pa_set_reference(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_clear_reference(pmap_paddr_t pa)
-{
-	ppattr_pa_clear_bits(pa, PP_ATTR_REFERENCED);
+static inline void ppattr_pa_clear_reference(pmap_paddr_t pa) {
+  ppattr_pa_clear_bits(pa, PP_ATTR_REFERENCED);
 }
 
 #if XNU_MONITOR
@@ -1366,10 +1297,8 @@ ppattr_pa_clear_reference(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_set_monitor(pmap_paddr_t pa)
-{
-	ppattr_pa_set_bits(pa, PP_ATTR_MONITOR);
+static inline void ppattr_pa_set_monitor(pmap_paddr_t pa) {
+  ppattr_pa_set_bits(pa, PP_ATTR_MONITOR);
 }
 
 /**
@@ -1378,10 +1307,8 @@ ppattr_pa_set_monitor(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_clear_monitor(pmap_paddr_t pa)
-{
-	ppattr_pa_clear_bits(pa, PP_ATTR_MONITOR);
+static inline void ppattr_pa_clear_monitor(pmap_paddr_t pa) {
+  ppattr_pa_clear_bits(pa, PP_ATTR_MONITOR);
 }
 
 /**
@@ -1393,10 +1320,8 @@ ppattr_pa_clear_monitor(pmap_paddr_t pa)
  * @return False if the PA isn't a kernel-managed page, otherwise true/false
  *         depending on whether the PP_ATTR_MONITOR is set.
  */
-static inline bool
-ppattr_pa_test_monitor(pmap_paddr_t pa)
-{
-	return ppattr_pa_test_bits(pa, PP_ATTR_MONITOR);
+static inline bool ppattr_pa_test_monitor(pmap_paddr_t pa) {
+  return ppattr_pa_test_bits(pa, PP_ATTR_MONITOR);
 }
 
 /**
@@ -1405,10 +1330,8 @@ ppattr_pa_test_monitor(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_set_no_monitor(pmap_paddr_t pa)
-{
-	ppattr_pa_set_bits(pa, PP_ATTR_NO_MONITOR);
+static inline void ppattr_pa_set_no_monitor(pmap_paddr_t pa) {
+  ppattr_pa_set_bits(pa, PP_ATTR_NO_MONITOR);
 }
 
 /**
@@ -1417,10 +1340,8 @@ ppattr_pa_set_no_monitor(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_clear_no_monitor(pmap_paddr_t pa)
-{
-	ppattr_pa_clear_bits(pa, PP_ATTR_NO_MONITOR);
+static inline void ppattr_pa_clear_no_monitor(pmap_paddr_t pa) {
+  ppattr_pa_clear_bits(pa, PP_ATTR_NO_MONITOR);
 }
 
 /**
@@ -1432,10 +1353,8 @@ ppattr_pa_clear_no_monitor(pmap_paddr_t pa)
  * @return False if the PA isn't a kernel-managed page, otherwise true/false
  *         depending on whether the PP_ATTR_NO_MONITOR is set.
  */
-static inline bool
-ppattr_pa_test_no_monitor(pmap_paddr_t pa)
-{
-	return ppattr_pa_test_bits(pa, PP_ATTR_NO_MONITOR);
+static inline bool ppattr_pa_test_no_monitor(pmap_paddr_t pa) {
+  return ppattr_pa_test_bits(pa, PP_ATTR_NO_MONITOR);
 }
 
 #endif /* XNU_MONITOR */
@@ -1445,10 +1364,8 @@ ppattr_pa_test_no_monitor(pmap_paddr_t pa)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_internal(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_INTERNAL);
+static inline void ppattr_set_internal(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1456,10 +1373,8 @@ ppattr_set_internal(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_internal(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_INTERNAL);
+static inline void ppattr_clear_internal(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1467,10 +1382,8 @@ ppattr_clear_internal(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_internal(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
+static inline bool ppattr_test_internal(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1478,10 +1391,8 @@ ppattr_test_internal(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_reusable(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_REUSABLE);
+static inline void ppattr_set_reusable(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_REUSABLE);
 }
 
 /**
@@ -1489,10 +1400,8 @@ ppattr_set_reusable(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_reusable(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_REUSABLE);
+static inline void ppattr_clear_reusable(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_REUSABLE);
 }
 
 /**
@@ -1500,10 +1409,8 @@ ppattr_clear_reusable(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_reusable(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_REUSABLE);
+static inline bool ppattr_test_reusable(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_REUSABLE);
 }
 
 /**
@@ -1515,10 +1422,8 @@ ppattr_test_reusable(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_altacct(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_ALTACCT);
+static inline void ppattr_set_altacct(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_ALTACCT);
 }
 
 /**
@@ -1530,10 +1435,8 @@ ppattr_set_altacct(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_altacct(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_ALTACCT);
+static inline void ppattr_clear_altacct(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_ALTACCT);
 }
 
 /**
@@ -1548,10 +1451,8 @@ ppattr_clear_altacct(unsigned int pai)
  * @return True if the passed in page uses alternate accounting, false
  *         otherwise.
  */
-static inline bool
-ppattr_is_altacct(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_ALTACCT);
+static inline bool ppattr_is_altacct(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_ALTACCT);
 }
 /**
  * Get the PP_ATTR_INTERNAL flag on a specific pp_attr_table entry.
@@ -1565,10 +1466,8 @@ ppattr_is_altacct(unsigned int pai)
  * @return True if the passed in page is accounted for as "internal", false
  *         otherwise.
  */
-static inline bool
-ppattr_is_internal(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
+static inline bool ppattr_is_internal(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1588,10 +1487,10 @@ ppattr_is_internal(unsigned int pai)
  * @return True if the passed in page uses alternate accounting, false
  *         otherwise.
  */
-static inline bool
-ppattr_pve_is_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	return (pvep == PV_ENTRY_NULL) ? ppattr_is_altacct(pai) : pve_get_altacct(pvep, idx);
+static inline bool ppattr_pve_is_altacct(unsigned int pai, pv_entry_t *pvep,
+                                         unsigned idx) {
+  return (pvep == PV_ENTRY_NULL) ? ppattr_is_altacct(pai)
+                                 : pve_get_altacct(pvep, idx);
 }
 /**
  * The "internal" (INTERNAL) status for a page is tracked differently
@@ -1609,18 +1508,18 @@ ppattr_pve_is_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  *
  * @return True if the passed in page is "internal", false otherwise.
  */
-static inline bool
-ppattr_pve_is_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	return (pvep == PV_ENTRY_NULL) ? ppattr_is_internal(pai) : pve_get_internal(pvep, idx);
+static inline bool ppattr_pve_is_internal(unsigned int pai, pv_entry_t *pvep,
+                                          unsigned idx) {
+  return (pvep == PV_ENTRY_NULL) ? ppattr_is_internal(pai)
+                                 : pve_get_internal(pvep, idx);
 }
 
 /**
  * The "alternate accounting" (ALTACCT) status for a page is tracked differently
  * depending on whether there are one or multiple mappings to a page. This
  * function abstracts out the difference between single and multiple mappings to
- * a page and provides a single function for setting the alternate accounting status
- * for a mapping.
+ * a page and provides a single function for setting the alternate accounting
+ * status for a mapping.
  *
  * @note See the descriptions above the PVE_PTEP_ALTACCT and PP_ATTR_ALTACCT
  *       definitions for more information.
@@ -1629,14 +1528,13 @@ ppattr_pve_is_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_set_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_set_altacct(pai);
-	} else {
-		pve_set_altacct(pvep, idx);
-	}
+static inline void ppattr_pve_set_altacct(unsigned int pai, pv_entry_t *pvep,
+                                          unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_set_altacct(pai);
+  } else {
+    pve_set_altacct(pvep, idx);
+  }
 }
 /**
  * The "internal" (INTERNAL) status for a page is tracked differently
@@ -1652,22 +1550,21 @@ ppattr_pve_set_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_set_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_set_internal(pai);
-	} else {
-		pve_set_internal(pvep, idx);
-	}
+static inline void ppattr_pve_set_internal(unsigned int pai, pv_entry_t *pvep,
+                                           unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_set_internal(pai);
+  } else {
+    pve_set_internal(pvep, idx);
+  }
 }
 
 /**
  * The "alternate accounting" (ALTACCT) status for a page is tracked differently
  * depending on whether there are one or multiple mappings to a page. This
  * function abstracts out the difference between single and multiple mappings to
- * a page and provides a single function for clearing the alternate accounting status
- * for a mapping.
+ * a page and provides a single function for clearing the alternate accounting
+ * status for a mapping.
  *
  * @note See the descriptions above the PVE_PTEP_ALTACCT and PP_ATTR_ALTACCT
  *       definitions for more information.
@@ -1676,14 +1573,13 @@ ppattr_pve_set_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_clr_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_clear_altacct(pai);
-	} else {
-		pve_clr_altacct(pvep, idx);
-	}
+static inline void ppattr_pve_clr_altacct(unsigned int pai, pv_entry_t *pvep,
+                                          unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_clear_altacct(pai);
+  } else {
+    pve_clr_altacct(pvep, idx);
+  }
 }
 /**
  * The "internal" (INTERNAL) status for a page is tracked differently
@@ -1699,14 +1595,13 @@ ppattr_pve_clr_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_clr_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_clear_internal(pai);
-	} else {
-		pve_clr_internal(pvep, idx);
-	}
+static inline void ppattr_pve_clr_internal(unsigned int pai, pv_entry_t *pvep,
+                                           unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_clear_internal(pai);
+  } else {
+    pve_clr_internal(pvep, idx);
+  }
 }
 
 /**
@@ -1714,10 +1609,8 @@ ppattr_pve_clr_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_reffault(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_REFFAULT);
+static inline void ppattr_set_reffault(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_REFFAULT);
 }
 
 /**
@@ -1725,10 +1618,8 @@ ppattr_set_reffault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_reffault(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_REFFAULT);
+static inline void ppattr_clear_reffault(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_REFFAULT);
 }
 
 /**
@@ -1736,10 +1627,8 @@ ppattr_clear_reffault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_reffault(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_REFFAULT);
+static inline bool ppattr_test_reffault(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_REFFAULT);
 }
 
 /**
@@ -1747,10 +1636,8 @@ ppattr_test_reffault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_modfault(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_MODFAULT);
+static inline void ppattr_set_modfault(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_MODFAULT);
 }
 
 /**
@@ -1758,10 +1645,8 @@ ppattr_set_modfault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_modfault(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_MODFAULT);
+static inline void ppattr_clear_modfault(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_MODFAULT);
 }
 
 /**
@@ -1769,27 +1654,21 @@ ppattr_clear_modfault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_modfault(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_MODFAULT);
+static inline bool ppattr_test_modfault(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_MODFAULT);
 }
 
-static inline boolean_t
-pmap_is_preemptible(void)
-{
-	return preemption_enabled() || (startup_phase < STARTUP_SUB_EARLY_BOOT);
+static inline boolean_t pmap_is_preemptible(void) {
+  return preemption_enabled() || (startup_phase < STARTUP_SUB_EARLY_BOOT);
 }
 
 /**
- * This helper function ensures that potentially-long-running batched PPL operations are
- * called in preemptible context before entering the PPL, so that the PPL call may
- * periodically exit to allow pending urgent ASTs to be taken.
+ * This helper function ensures that potentially-long-running batched PPL
+ * operations are called in preemptible context before entering the PPL, so that
+ * the PPL call may periodically exit to allow pending urgent ASTs to be taken.
  */
-static inline void
-pmap_verify_preemptible(void)
-{
-	assert(pmap_is_preemptible());
+static inline void pmap_verify_preemptible(void) {
+  assert(pmap_is_preemptible());
 }
 
 /**
@@ -1846,7 +1725,8 @@ extern uint32_t pv_kern_alloc_initial_target;
  */
 extern void pmap_data_bootstrap(void);
 extern void pmap_enqueue_pages(vm_page_t);
-extern kern_return_t pmap_pages_alloc_zeroed(pmap_paddr_t *, unsigned, unsigned);
+extern kern_return_t pmap_pages_alloc_zeroed(pmap_paddr_t *, unsigned,
+                                             unsigned);
 extern void pmap_pages_free(pmap_paddr_t, unsigned);
 
 #if XNU_MONITOR
@@ -1880,41 +1760,41 @@ void pmap_free_pmap(pmap_t pmap);
  * the rest of the pmap locking code is defined so there shouldn't be any issues
  * with missing types.
  */
-OS_ENUM(pmap_lock_mode, uint8_t,
-    PMAP_LOCK_SHARED,
-    PMAP_LOCK_EXCLUSIVE);
+OS_ENUM(pmap_lock_mode, uint8_t, PMAP_LOCK_SHARED, PMAP_LOCK_EXCLUSIVE);
 
 /**
  * Possible return values for pv_alloc(). See the pv_alloc() function header for
  * a description of each of these values.
  */
 typedef enum {
-	PV_ALLOC_SUCCESS,
-	PV_ALLOC_RETRY,
-	PV_ALLOC_FAIL
+  PV_ALLOC_SUCCESS,
+  PV_ALLOC_RETRY,
+  PV_ALLOC_FAIL
 } pv_alloc_return_t;
 
-extern pv_alloc_return_t pv_alloc(
-	pmap_t, unsigned int, pmap_lock_mode_t, unsigned int, pv_entry_t **);
+extern pv_alloc_return_t pv_alloc(pmap_t, unsigned int, pmap_lock_mode_t,
+                                  unsigned int, pv_entry_t **);
 extern void pv_free(pv_entry_t *);
 extern void pv_list_free(pv_entry_t *, pv_entry_t *, int);
 extern void pmap_compute_pv_targets(void);
-extern pv_alloc_return_t pmap_enter_pv(
-	pmap_t, pt_entry_t *, int, unsigned int, pmap_lock_mode_t, pv_entry_t **, int *new_pve_ptep_idx);
+extern pv_alloc_return_t pmap_enter_pv(pmap_t, pt_entry_t *, int, unsigned int,
+                                       pmap_lock_mode_t, pv_entry_t **,
+                                       int *new_pve_ptep_idx);
 extern void pmap_remove_pv(pmap_t, pt_entry_t *, int, bool, bool *, bool *);
 
 extern void ptd_bootstrap(pt_desc_t *, unsigned int);
 extern pt_desc_t *ptd_alloc_unlinked(void);
 extern pt_desc_t *ptd_alloc(pmap_t);
 extern void ptd_deallocate(pt_desc_t *);
-extern void ptd_info_init(
-	pt_desc_t *, pmap_t, vm_map_address_t, unsigned int, pt_entry_t *);
+extern void ptd_info_init(pt_desc_t *, pmap_t, vm_map_address_t, unsigned int,
+                          pt_entry_t *);
 
 extern kern_return_t pmap_ledger_credit(pmap_t, int, ledger_amount_t);
 extern kern_return_t pmap_ledger_debit(pmap_t, int, ledger_amount_t);
 
 extern void validate_pmap_internal(const volatile struct pmap *, const char *);
-extern void validate_pmap_mutable_internal(const volatile struct pmap *, const char *);
+extern void validate_pmap_mutable_internal(const volatile struct pmap *,
+                                           const char *);
 
 /**
  * Macro function wrappers around pmap validation so that the calling function
@@ -1935,105 +1815,113 @@ extern void validate_pmap_mutable_internal(const volatile struct pmap *, const c
  *       consistency of this structure.
  */
 typedef struct pmap_io_range {
-	/* Physical address of the PPL-owned I/O range. */
-	uint64_t addr;
+  /* Physical address of the PPL-owned I/O range. */
+  uint64_t addr;
 
-	/**
-	 * Length (in bytes) of the PPL-owned I/O range. Has to be the size
-	 * of a page if the range will be refered to by pmap_io_filter_entries.
-	 */
-	uint64_t len;
+  /**
+   * Length (in bytes) of the PPL-owned I/O range. Has to be the size
+   * of a page if the range will be refered to by pmap_io_filter_entries.
+   */
+  uint64_t len;
 
-	/* Strong DSB required for pages in this range. */
-	#define PMAP_IO_RANGE_STRONG_SYNC (1U << 31)
+/* Strong DSB required for pages in this range. */
+#define PMAP_IO_RANGE_STRONG_SYNC (1U << 31)
 
-	/* Corresponds to memory carved out by bootloader. */
-	#define PMAP_IO_RANGE_CARVEOUT (1U << 30)
+/* Corresponds to memory carved out by bootloader. */
+#define PMAP_IO_RANGE_CARVEOUT (1U << 30)
 
-	/* Pages in this range need to be included in the hibernation image */
-	#define PMAP_IO_RANGE_NEEDS_HIBERNATING (1U << 29)
+/* Pages in this range need to be included in the hibernation image */
+#define PMAP_IO_RANGE_NEEDS_HIBERNATING (1U << 29)
 
-	/* Mark the range as 'owned' by a given subsystem */
-	#define PMAP_IO_RANGE_OWNED (1U << 28)
-
-	/**
-	 * Denotes a range that is *not* to be treated as an I/O range that
-	 * needs to be mapped, but only to decorate arbitrary physical
-	 * memory ranges (including of managed memory) with extra
-	 * flags. I.e. this allows tagging of "ordinary" managed memory
-	 * pages with flags like `PMAP_IO_RANGE_PROHIBIT_HIB_WRITE`, or
-	 * informing the SPTM that some (nominally) managed memory pages are
-	 * unavailable for some reason.
-	 *
-	 * Notably, `pmap_find_io_attr()`, and anything else that uses
-	 * `pmap_io_range`s for denoting to-be-mapped I/O ranges, ignores
-	 * entries with this flag.
-	 */
-	#define PMAP_IO_RANGE_NOT_IO (1U << 27)
-
-	/* Pages in this range may never be written during hibernation restore. */
-	#define PMAP_IO_RANGE_PROHIBIT_HIB_WRITE (1U << 26)
-
-	/**
-	 * Lower 16 bits treated as pp_attr_t, upper 16 bits contain additional
-	 * mapping flags (defined above).
-	 */
-	uint32_t wimg;
-
-	/**
-	 * 4 Character Code (4CC) describing what this range is.
-	 *
-	 * This has to be unique for each "type" of pages, meaning pages sharing
-	 * the same register layout, if it is used for the I/O filter descriptors
-	 * below. Otherwise it doesn't matter.
-	 */
-	uint32_t signature;
-} pmap_io_range_t;
-
-/* Reminder: be sure to change all relevant device trees if you change the layout of pmap_io_range_t */
-_Static_assert(sizeof(pmap_io_range_t) == 24, "unexpected size for pmap_io_range_t");
-
-extern pmap_io_range_t* pmap_find_io_attr(pmap_paddr_t);
+/* Mark the range as 'owned' by a given subsystem */
+#define PMAP_IO_RANGE_OWNED (1U << 28)
 
 /**
- * This structure describes a sub-page-size I/O region owned by PPL but the kernel can write to.
+ * Denotes a range that is *not* to be treated as an I/O range that
+ * needs to be mapped, but only to decorate arbitrary physical
+ * memory ranges (including of managed memory) with extra
+ * flags. I.e. this allows tagging of "ordinary" managed memory
+ * pages with flags like `PMAP_IO_RANGE_PROHIBIT_HIB_WRITE`, or
+ * informing the SPTM that some (nominally) managed memory pages are
+ * unavailable for some reason.
  *
- * @note I/O filter software will use a collection of such data structures to determine access
- *       permissions to a page owned by PPL.
+ * Notably, `pmap_find_io_attr()`, and anything else that uses
+ * `pmap_io_range`s for denoting to-be-mapped I/O ranges, ignores
+ * entries with this flag.
+ */
+#define PMAP_IO_RANGE_NOT_IO (1U << 27)
+
+/* Pages in this range may never be written during hibernation restore. */
+#define PMAP_IO_RANGE_PROHIBIT_HIB_WRITE (1U << 26)
+
+  /**
+   * Lower 16 bits treated as pp_attr_t, upper 16 bits contain additional
+   * mapping flags (defined above).
+   */
+  uint32_t wimg;
+
+  /**
+   * 4 Character Code (4CC) describing what this range is.
+   *
+   * This has to be unique for each "type" of pages, meaning pages sharing
+   * the same register layout, if it is used for the I/O filter descriptors
+   * below. Otherwise it doesn't matter.
+   */
+  uint32_t signature;
+} pmap_io_range_t;
+
+/* Reminder: be sure to change all relevant device trees if you change the
+ * layout of pmap_io_range_t */
+_Static_assert(sizeof(pmap_io_range_t) == 24,
+               "unexpected size for pmap_io_range_t");
+
+extern pmap_io_range_t *pmap_find_io_attr(pmap_paddr_t);
+
+/**
+ * This structure describes a sub-page-size I/O region owned by PPL but the
+ * kernel can write to.
  *
- * @note The {signature, offset} key is used to index a collection of such data structures to
- *       optimize for space in the case where one page layout is repeated for many devices, such
- *       as the memory controller channels.
+ * @note I/O filter software will use a collection of such data structures to
+ * determine access permissions to a page owned by PPL.
+ *
+ * @note The {signature, offset} key is used to index a collection of such data
+ * structures to optimize for space in the case where one page layout is
+ * repeated for many devices, such as the memory controller channels.
  */
 typedef struct pmap_io_filter_entry {
-	/* 4 Character Code (4CC) describing what this range (page) is. */
-	uint32_t signature;
+  /* 4 Character Code (4CC) describing what this range (page) is. */
+  uint32_t signature;
 
-	/* Offset within the page. It has to be within [0, PAGE_SIZE). */
-	uint16_t offset;
+  /* Offset within the page. It has to be within [0, PAGE_SIZE). */
+  uint16_t offset;
 
-	/* Length of the range, and (offset + length) has to be within [0, PAGE_SIZE). */
-	uint16_t length;
+  /* Length of the range, and (offset + length) has to be within [0, PAGE_SIZE).
+   */
+  uint16_t length;
 } pmap_io_filter_entry_t;
 
-_Static_assert(sizeof(pmap_io_filter_entry_t) == 8, "unexpected size for pmap_io_filter_entry_t");
+_Static_assert(sizeof(pmap_io_filter_entry_t) == 8,
+               "unexpected size for pmap_io_filter_entry_t");
 
-extern pmap_io_filter_entry_t *pmap_find_io_filter_entry(pmap_paddr_t, uint64_t, const pmap_io_range_t **);
+extern pmap_io_filter_entry_t *
+pmap_find_io_filter_entry(pmap_paddr_t, uint64_t, const pmap_io_range_t **);
 
 extern void pmap_cpu_data_init_internal(unsigned int);
+extern void pmap_mark_page_for_cache_flush(pmap_paddr_t pa);
 
 /**
  * Flush a single 16K page from noncoherent coprocessor caches.
  *
- * @note Nonocoherent cache flushes are only guaranteed to work if the participating coprocessor(s)
- *       do not have any active VA translations for the page being flushed.  Since coprocessor
- *       mappings should always be controlled by some PPL IOMMU extension, they should always
- *       have PV list entries.  This flush should therefore be performed at a point when the PV
- *       list is known to be either empty or at least to not contain any IOMMU entries.  For
- *       the purposes of our security model, it is sufficient to wait for the PV list to become
- *       empty, as we really want to protect PPL-sensitive pages from malicious/accidental
- *       coprocessor cacheline evictions, and the PV list must be empty before a page can be
- *       handed to the PPL.
+ * @note Nonocoherent cache flushes are only guaranteed to work if the
+ * participating coprocessor(s) do not have any active VA translations for the
+ * page being flushed.  Since coprocessor mappings should always be controlled
+ * by some PPL IOMMU extension, they should always have PV list entries.  This
+ * flush should therefore be performed at a point when the PV list is known to
+ * be either empty or at least to not contain any IOMMU entries.  For the
+ * purposes of our security model, it is sufficient to wait for the PV list to
+ * become empty, as we really want to protect PPL-sensitive pages from
+ * malicious/accidental coprocessor cacheline evictions, and the PV list must be
+ * empty before a page can be handed to the PPL.
  *
  * @param paddr The base physical address of the page to flush.
  */

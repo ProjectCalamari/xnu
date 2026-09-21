@@ -45,7 +45,6 @@
 
 __BEGIN_DECLS
 
-
 /*!
  * @header
  *
@@ -57,8 +56,8 @@ __BEGIN_DECLS
 #pragma mark Core OSReturn Values for Libkern
 #endif
 /*********************************************************************
-* Core OSReturn Values for Libkern
-*********************************************************************/
+ * Core OSReturn Values for Libkern
+ *********************************************************************/
 /*!
  * @group Core OSReturn Values for Libkern
  * Some kext and I/O Kit functions can return these values,
@@ -74,9 +73,9 @@ __BEGIN_DECLS
 
 #ifdef XNU_KERNEL_PRIVATE
 /*********************************************************************
-* Check libsyscall/mach/err_libkern.sub when editing or adding
-* result codes!
-*********************************************************************/
+ * Check libsyscall/mach/err_libkern.sub when editing or adding
+ * result codes!
+ *********************************************************************/
 #endif /* XNU_KERNEL_PRIVATE */
 
 /*!
@@ -86,15 +85,16 @@ __BEGIN_DECLS
 typedef kern_return_t OSReturn;
 
 #ifndef sys_libkern
-#define sys_libkern                   err_system(0x37)
+#define sys_libkern err_system(0x37)
 #endif /* sys_libkern */
 
-#define sub_libkern_common            err_sub(0)
-#define sub_libkern_metaclass         err_sub(1)
-#define sub_libkern_reserved          err_sub(-1)
+#define sub_libkern_common err_sub(0)
+#define sub_libkern_metaclass err_sub(1)
+#define sub_libkern_reserved err_sub(-1)
 
-#define libkern_common_err(return )    (sys_libkern|sub_libkern_common|(return))
-#define libkern_metaclass_err(return ) (sys_libkern|sub_libkern_metaclass|(return))
+#define libkern_common_err(return) (sys_libkern | sub_libkern_common | (return))
+#define libkern_metaclass_err(return)                                          \
+  (sys_libkern | sub_libkern_metaclass | (return))
 
 /* See OSKextLib.h for these
  * #define sub_libkern_kext           err_sub(2)
@@ -107,7 +107,7 @@ typedef kern_return_t OSReturn;
  *           Equal to <code>@link //apple_ref/c/econst/KERN_SUCCESS
  *           KERN_SUCCESS@/link</code>.
  */
-#define kOSReturnSuccess              KERN_SUCCESS
+#define kOSReturnSuccess KERN_SUCCESS
 
 /*!
  * @define   kOSReturnError
@@ -116,27 +116,27 @@ typedef kern_return_t OSReturn;
  *           <code>@link //apple_ref/c/econst/KERN_FAILURE
  *           KERN_FAILURE@/link</code>.
  */
-#define kOSReturnError                libkern_common_err(1)
+#define kOSReturnError libkern_common_err(1)
 
 /*!
  * @define   kOSMetaClassInternal
  * @abstract Internal OSMetaClass run-time error.
  */
-#define kOSMetaClassInternal          libkern_metaclass_err(1)
+#define kOSMetaClassInternal libkern_metaclass_err(1)
 
 /*!
  * @define   kOSMetaClassHasInstances
  * @abstract A kext cannot be unloaded because there are instances
  *           derived from Libkern C++ classes that it defines.
  */
-#define kOSMetaClassHasInstances      libkern_metaclass_err(2)
+#define kOSMetaClassHasInstances libkern_metaclass_err(2)
 
 /*!
  * @define   kOSMetaClassNoInit
  * @abstract Internal error: The Libkern C++ class registration system
  *           was not properly initialized during kext loading.
  */
-#define kOSMetaClassNoInit            libkern_metaclass_err(3)
+#define kOSMetaClassNoInit libkern_metaclass_err(3)
 // OSMetaClass::preModLoad wasn't called, runtime internal error
 
 /*!
@@ -144,7 +144,7 @@ typedef kern_return_t OSReturn;
  * @abstract Internal error: An allocation failure occurred
  *           registering Libkern C++ classes during kext loading.
  */
-#define kOSMetaClassNoTempData        libkern_metaclass_err(4)
+#define kOSMetaClassNoTempData libkern_metaclass_err(4)
 // Allocation failure internal data
 
 /*!
@@ -152,7 +152,7 @@ typedef kern_return_t OSReturn;
  * @abstract Internal error: An allocation failure occurred
  *           registering Libkern C++ classes during kext loading.
  */
-#define kOSMetaClassNoDicts           libkern_metaclass_err(5)
+#define kOSMetaClassNoDicts libkern_metaclass_err(5)
 // Allocation failure for Metaclass internal dictionaries
 
 /*!
@@ -160,7 +160,7 @@ typedef kern_return_t OSReturn;
  * @abstract Internal error: An allocation failure occurred
  *           registering Libkern C++ classes during kext loading.
  */
-#define kOSMetaClassNoKModSet         libkern_metaclass_err(6)
+#define kOSMetaClassNoKModSet libkern_metaclass_err(6)
 // Allocation failure for internal kmodule set
 
 /*!
@@ -168,7 +168,7 @@ typedef kern_return_t OSReturn;
  * @abstract Internal error: An error occurred registering
  *           a specific Libkern C++ class during kext loading.
  */
-#define kOSMetaClassNoInsKModSet      libkern_metaclass_err(7)
+#define kOSMetaClassNoInsKModSet libkern_metaclass_err(7)
 // Can't insert the KMod set into the module dictionary
 
 /*!
@@ -176,28 +176,28 @@ typedef kern_return_t OSReturn;
  * @abstract Internal error: No superclass can be found
  *           for a specific Libkern C++ class during kext loading.
  */
-#define kOSMetaClassNoSuper           libkern_metaclass_err(8)
+#define kOSMetaClassNoSuper libkern_metaclass_err(8)
 
 /*!
  * @define   kOSMetaClassInstNoSuper
  * @abstract Internal error: No superclass can be found when constructing
  *           an instance of a Libkern C++ class.
  */
-#define kOSMetaClassInstNoSuper       libkern_metaclass_err(9)
+#define kOSMetaClassInstNoSuper libkern_metaclass_err(9)
 
 /*!
  * @define   kOSMetaClassDuplicateClass
  * @abstract A duplicate Libkern C++ classname was encountered
  *           during kext loading.
  */
-#define kOSMetaClassDuplicateClass    libkern_metaclass_err(10)
+#define kOSMetaClassDuplicateClass libkern_metaclass_err(10)
 
 /*!
  * @define   kOSMetaClassNoKext
  * @abstract Internal error: The kext for a Libkern C++ class
  *           can't be found during kext loading.
  */
-#define kOSMetaClassNoKext            libkern_metaclass_err(11)
+#define kOSMetaClassNoKext libkern_metaclass_err(11)
 
 __END_DECLS
 

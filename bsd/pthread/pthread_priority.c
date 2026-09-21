@@ -33,54 +33,50 @@
 #define QOS_MIN_RELATIVE_PRIORITY -15
 #endif
 
-pthread_priority_compact_t
-_pthread_priority_normalize(pthread_priority_t pp)
-{
-	if (pp & _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG) {
-		return _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG;
-	}
-	if (_pthread_priority_has_qos(pp)) {
-		int relpri = _pthread_priority_relpri(pp);
-		if (relpri > 0 || relpri < QOS_MIN_RELATIVE_PRIORITY) {
-			pp |= _PTHREAD_PRIORITY_PRIORITY_MASK;
-		}
-		return pp & (_PTHREAD_PRIORITY_OVERCOMMIT_FLAG |
-		       _PTHREAD_PRIORITY_FALLBACK_FLAG |
-		       _PTHREAD_PRIORITY_QOS_CLASS_MASK |
-		       _PTHREAD_PRIORITY_PRIORITY_MASK);
-	}
-	return _pthread_unspecified_priority();
+pthread_priority_compact_t _pthread_priority_normalize(pthread_priority_t pp) {
+  if (pp & _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG) {
+    return _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG;
+  }
+  if (_pthread_priority_has_qos(pp)) {
+    int relpri = _pthread_priority_relpri(pp);
+    if (relpri > 0 || relpri < QOS_MIN_RELATIVE_PRIORITY) {
+      pp |= _PTHREAD_PRIORITY_PRIORITY_MASK;
+    }
+    return pp &
+           (_PTHREAD_PRIORITY_OVERCOMMIT_FLAG |
+            _PTHREAD_PRIORITY_FALLBACK_FLAG | _PTHREAD_PRIORITY_QOS_CLASS_MASK |
+            _PTHREAD_PRIORITY_PRIORITY_MASK);
+  }
+  return _pthread_unspecified_priority();
 }
 
 pthread_priority_compact_t
-_pthread_priority_normalize_for_ipc(pthread_priority_t pp)
-{
-	if (_pthread_priority_has_qos(pp)) {
-		int relpri = _pthread_priority_relpri(pp);
-		if (relpri > 0 || relpri < QOS_MIN_RELATIVE_PRIORITY) {
-			pp |= _PTHREAD_PRIORITY_PRIORITY_MASK;
-		}
-		return pp & (_PTHREAD_PRIORITY_QOS_CLASS_MASK |
-		       _PTHREAD_PRIORITY_PRIORITY_MASK);
-	}
-	return _pthread_unspecified_priority();
+_pthread_priority_normalize_for_ipc(pthread_priority_t pp) {
+  if (_pthread_priority_has_qos(pp)) {
+    int relpri = _pthread_priority_relpri(pp);
+    if (relpri > 0 || relpri < QOS_MIN_RELATIVE_PRIORITY) {
+      pp |= _PTHREAD_PRIORITY_PRIORITY_MASK;
+    }
+    return pp &
+           (_PTHREAD_PRIORITY_QOS_CLASS_MASK | _PTHREAD_PRIORITY_PRIORITY_MASK);
+  }
+  return _pthread_unspecified_priority();
 }
 
-pthread_priority_compact_t
-_pthread_priority_combine(pthread_priority_t base_pp, thread_qos_t qos)
-{
-	if (base_pp & _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG) {
-		return _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG;
-	}
+pthread_priority_compact_t _pthread_priority_combine(pthread_priority_t base_pp,
+                                                     thread_qos_t qos) {
+  if (base_pp & _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG) {
+    return _PTHREAD_PRIORITY_EVENT_MANAGER_FLAG;
+  }
 
-	if (base_pp & _PTHREAD_PRIORITY_FALLBACK_FLAG) {
-		if (!qos) {
-			return (pthread_priority_compact_t)base_pp;
-		}
-	} else if (qos < _pthread_priority_thread_qos(base_pp)) {
-		return (pthread_priority_compact_t)base_pp;
-	}
+  if (base_pp & _PTHREAD_PRIORITY_FALLBACK_FLAG) {
+    if (!qos) {
+      return (pthread_priority_compact_t)base_pp;
+    }
+  } else if (qos < _pthread_priority_thread_qos(base_pp)) {
+    return (pthread_priority_compact_t)base_pp;
+  }
 
-	return _pthread_priority_make_from_thread_qos(qos, 0,
-	           base_pp & _PTHREAD_PRIORITY_OVERCOMMIT_FLAG);
+  return _pthread_priority_make_from_thread_qos(
+      qos, 0, base_pp & _PTHREAD_PRIORITY_OVERCOMMIT_FLAG);
 }

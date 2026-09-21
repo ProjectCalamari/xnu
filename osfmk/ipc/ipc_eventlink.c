@@ -26,105 +26,88 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <mach/mach_types.h>
-#include <mach/mach_traps.h>
 #include <mach/kern_return.h>
+#include <mach/mach_traps.h>
+#include <mach/mach_types.h>
 #include <mach/sync_policy.h>
 #include <mach/task.h>
 
-#include <kern/misc_protos.h>
-#include <kern/spl.h>
-#include <kern/ipc_tt.h>
-#include <kern/thread.h>
-#include <kern/clock.h>
+#include <ipc/ipc_eventlink.h>
 #include <ipc/ipc_port.h>
 #include <ipc/ipc_space.h>
-#include <ipc/ipc_eventlink.h>
+#include <kern/clock.h>
 #include <kern/host.h>
+#include <kern/ipc_tt.h>
+#include <kern/mach_param.h>
+#include <kern/misc_protos.h>
+#include <kern/spl.h>
+#include <kern/thread.h>
 #include <kern/waitq.h>
 #include <kern/zalloc.h>
-#include <kern/mach_param.h>
-#include <mach/mach_traps.h>
 #include <mach/mach_eventlink_server.h>
+#include <mach/mach_traps.h>
 
-static KALLOC_TYPE_DEFINE(ipc_eventlink_zone,
-    struct ipc_eventlink_base, KT_DEFAULT);
+static KALLOC_TYPE_DEFINE(ipc_eventlink_zone, struct ipc_eventlink_base,
+                          KT_DEFAULT);
 
 os_refgrp_decl(static, ipc_eventlink_refgrp, "eventlink", NULL);
 
 #if DEVELOPMENT || DEBUG
-static queue_head_t ipc_eventlink_list = QUEUE_HEAD_INITIALIZER(ipc_eventlink_list);
+static queue_head_t ipc_eventlink_list =
+    QUEUE_HEAD_INITIALIZER(ipc_eventlink_list);
 static LCK_GRP_DECLARE(ipc_eventlink_dev_lock_grp, "ipc_eventlink_dev_lock");
 static LCK_SPIN_DECLARE(global_ipc_eventlink_lock, &ipc_eventlink_dev_lock_grp);
 
-#define global_ipc_eventlink_lock() \
-	lck_spin_lock_grp(&global_ipc_eventlink_lock, &ipc_eventlink_dev_lock_grp)
-#define global_ipc_eventlink_lock_try() \
-	lck_spin_try_lock_grp(&global_ipc_eventlink_lock, &ipc_eventlink_dev_lock_grp)
-#define global_ipc_eventlink_unlock() \
-	lck_spin_unlock(&global_ipc_eventlink_lock)
+#define global_ipc_eventlink_lock()                                            \
+  lck_spin_lock_grp(&global_ipc_eventlink_lock, &ipc_eventlink_dev_lock_grp)
+#define global_ipc_eventlink_lock_try()                                        \
+  lck_spin_try_lock_grp(&global_ipc_eventlink_lock, &ipc_eventlink_dev_lock_grp)
+#define global_ipc_eventlink_unlock()                                          \
+  lck_spin_unlock(&global_ipc_eventlink_lock)
 
 #endif /* DEVELOPMENT || DEBUG */
 
 /* Forward declarations */
-static void
-ipc_eventlink_no_senders(
-	ipc_port_t          port,
-	mach_port_mscount_t mscount);
+static void ipc_eventlink_no_senders(ipc_port_t port,
+                                     mach_port_mscount_t mscount);
 
-static struct ipc_eventlink_base *
-ipc_eventlink_alloc(void);
+static struct ipc_eventlink_base *ipc_eventlink_alloc(void);
 
 static void
-ipc_eventlink_initialize(
-	struct ipc_eventlink_base *ipc_eventlink_base);
+ipc_eventlink_initialize(struct ipc_eventlink_base *ipc_eventlink_base);
 
 static kern_return_t
-ipc_eventlink_destroy_internal(
-	struct ipc_eventlink *ipc_eventlink);
+ipc_eventlink_destroy_internal(struct ipc_eventlink *ipc_eventlink);
+
+static kern_return_t ipc_eventlink_signal(struct ipc_eventlink *ipc_eventlink);
+
+static uint64_t ipc_eventlink_signal_wait_until_trap_internal(
+    mach_port_name_t wait_port, mach_port_name_t signal_port, uint64_t count,
+    mach_eventlink_signal_wait_option_t el_option, kern_clock_id_t clock_id,
+    uint64_t deadline);
 
 static kern_return_t
-ipc_eventlink_signal(
-	struct ipc_eventlink *ipc_eventlink);
+ipc_eventlink_signal_wait_internal(struct ipc_eventlink *wait_eventlink,
+                                   struct ipc_eventlink *signal_eventlink,
+                                   uint64_t deadline, uint64_t *count,
+                                   ipc_eventlink_option_t eventlink_option);
 
-static uint64_t
-ipc_eventlink_signal_wait_until_trap_internal(
-	mach_port_name_t                     wait_port,
-	mach_port_name_t                     signal_port,
-	uint64_t                             count,
-	mach_eventlink_signal_wait_option_t  el_option,
-	kern_clock_id_t                      clock_id,
-	uint64_t                             deadline);
+static kern_return_t ipc_eventlink_convert_wait_result(int wait_result);
 
 static kern_return_t
-ipc_eventlink_signal_wait_internal(
-	struct ipc_eventlink        *wait_eventlink,
-	struct ipc_eventlink        *signal_eventlink,
-	uint64_t                    deadline,
-	uint64_t                    *count,
-	ipc_eventlink_option_t      eventlink_option);
+ipc_eventlink_signal_internal_locked(struct ipc_eventlink *signal_eventlink,
+                                     ipc_eventlink_option_t eventlink_option);
 
 static kern_return_t
-ipc_eventlink_convert_wait_result(int wait_result);
+convert_port_to_eventlink_locked(ipc_port_t port,
+                                 struct ipc_eventlink **ipc_eventlink_ptr);
 
 static kern_return_t
-ipc_eventlink_signal_internal_locked(
-	struct ipc_eventlink         *signal_eventlink,
-	ipc_eventlink_option_t       eventlink_option);
+port_name_to_eventlink(mach_port_name_t name,
+                       struct ipc_eventlink **ipc_eventlink_ptr);
 
-static kern_return_t
-convert_port_to_eventlink_locked(
-	ipc_port_t                      port,
-	struct ipc_eventlink            **ipc_eventlink_ptr);
-
-static kern_return_t
-port_name_to_eventlink(
-	mach_port_name_t              name,
-	struct ipc_eventlink          **ipc_eventlink_ptr);
-
-IPC_KOBJECT_DEFINE(IKOT_EVENTLINK,
-    .iko_op_movable_send = true,
-    .iko_op_no_senders = ipc_eventlink_no_senders);
+IPC_KOBJECT_DEFINE(IKOT_EVENTLINK, .iko_op_movable_send = true,
+                   .iko_op_no_senders = ipc_eventlink_no_senders);
 
 /*
  * Name: ipc_eventlink_alloc
@@ -136,22 +119,20 @@ IPC_KOBJECT_DEFINE(IKOT_EVENTLINK,
  * Returns:
  *   ipc_eventlink_base on Success.
  */
-static struct ipc_eventlink_base *
-ipc_eventlink_alloc(void)
-{
-	struct ipc_eventlink_base *ipc_eventlink_base = IPC_EVENTLINK_BASE_NULL;
-	ipc_eventlink_base = zalloc(ipc_eventlink_zone);
+static struct ipc_eventlink_base *ipc_eventlink_alloc(void) {
+  struct ipc_eventlink_base *ipc_eventlink_base = IPC_EVENTLINK_BASE_NULL;
+  ipc_eventlink_base = zalloc(ipc_eventlink_zone);
 
-	ipc_eventlink_initialize(ipc_eventlink_base);
+  ipc_eventlink_initialize(ipc_eventlink_base);
 
 #if DEVELOPMENT || DEBUG
-	/* Add ipc_eventlink to global list */
-	global_ipc_eventlink_lock();
-	queue_enter(&ipc_eventlink_list, ipc_eventlink_base,
-	    struct ipc_eventlink_base *, elb_global_elm);
-	global_ipc_eventlink_unlock();
+  /* Add ipc_eventlink to global list */
+  global_ipc_eventlink_lock();
+  queue_enter(&ipc_eventlink_list, ipc_eventlink_base,
+              struct ipc_eventlink_base *, elb_global_elm);
+  global_ipc_eventlink_unlock();
 #endif
-	return ipc_eventlink_base;
+  return ipc_eventlink_base;
 }
 
 /*
@@ -165,27 +146,27 @@ ipc_eventlink_alloc(void)
  *   KERN_SUCCESS on Success.
  */
 static void
-ipc_eventlink_initialize(
-	struct ipc_eventlink_base *ipc_eventlink_base)
-{
-	/* Initialize the count to 2, refs for each ipc eventlink port */
-	os_ref_init_count(&ipc_eventlink_base->elb_ref_count, &ipc_eventlink_refgrp, 2);
-	ipc_eventlink_base->elb_type = IPC_EVENTLINK_TYPE_NO_COPYIN;
+ipc_eventlink_initialize(struct ipc_eventlink_base *ipc_eventlink_base) {
+  /* Initialize the count to 2, refs for each ipc eventlink port */
+  os_ref_init_count(&ipc_eventlink_base->elb_ref_count, &ipc_eventlink_refgrp,
+                    2);
+  ipc_eventlink_base->elb_type = IPC_EVENTLINK_TYPE_NO_COPYIN;
 
-	for (int i = 0; i < 2; i++) {
-		struct ipc_eventlink *ipc_eventlink = &(ipc_eventlink_base->elb_eventlink[i]);
+  for (int i = 0; i < 2; i++) {
+    struct ipc_eventlink *ipc_eventlink =
+        &(ipc_eventlink_base->elb_eventlink[i]);
 
-		ipc_eventlink->el_port = ipc_kobject_alloc_port(ipc_eventlink,
-		    IKOT_EVENTLINK, IPC_KOBJECT_ALLOC_MAKE_SEND);
-		/* ipc_kobject_alloc_port never fails */
-		ipc_eventlink->el_thread = THREAD_NULL;
-		ipc_eventlink->el_sync_counter = 0;
-		ipc_eventlink->el_wait_counter = UINT64_MAX;
-		ipc_eventlink->el_base = ipc_eventlink_base;
-	}
+    ipc_eventlink->el_port = ipc_kobject_alloc_port(
+        ipc_eventlink, IKOT_EVENTLINK, IPC_KOBJECT_ALLOC_MAKE_SEND);
+    /* ipc_kobject_alloc_port never fails */
+    ipc_eventlink->el_thread = THREAD_NULL;
+    ipc_eventlink->el_sync_counter = 0;
+    ipc_eventlink->el_wait_counter = UINT64_MAX;
+    ipc_eventlink->el_base = ipc_eventlink_base;
+  }
 
-	/* Must be done last */
-	waitq_init(&ipc_eventlink_base->elb_waitq, WQT_QUEUE, SYNC_POLICY_FIFO);
+  /* Must be done last */
+  waitq_init(&ipc_eventlink_base->elb_waitq, WQT_QUEUE, SYNC_POLICY_FIFO);
 }
 
 /*
@@ -201,27 +182,24 @@ ipc_eventlink_initialize(
  * Returns:
  *   KERN_SUCCESS on Success.
  */
-kern_return_t
-mach_eventlink_create(
-	task_t                             task,
-	mach_eventlink_create_option_t     elc_option,
-	eventlink_port_pair_t              eventlink_port_pair)
-{
-	int i;
-	struct ipc_eventlink_base *ipc_eventlink_base;
+kern_return_t mach_eventlink_create(task_t task,
+                                    mach_eventlink_create_option_t elc_option,
+                                    eventlink_port_pair_t eventlink_port_pair) {
+  int i;
+  struct ipc_eventlink_base *ipc_eventlink_base;
 
-	if (task == TASK_NULL || task != current_task() ||
-	    elc_option != MELC_OPTION_NO_COPYIN) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (task == TASK_NULL || task != current_task() ||
+      elc_option != MELC_OPTION_NO_COPYIN) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	ipc_eventlink_base = ipc_eventlink_alloc();
+  ipc_eventlink_base = ipc_eventlink_alloc();
 
-	for (i = 0; i < 2; i++) {
-		eventlink_port_pair[i] = ipc_eventlink_base->elb_eventlink[i].el_port;
-	}
+  for (i = 0; i < 2; i++) {
+    eventlink_port_pair[i] = ipc_eventlink_base->elb_eventlink[i].el_port;
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -235,14 +213,11 @@ mach_eventlink_create(
  * Returns:
  *   KERN_SUCCESS on Success.
  */
-kern_return_t
-mach_eventlink_destroy(
-	struct ipc_eventlink *ipc_eventlink)
-{
-	ipc_eventlink_destroy_internal(ipc_eventlink);
+kern_return_t mach_eventlink_destroy(struct ipc_eventlink *ipc_eventlink) {
+  ipc_eventlink_destroy_internal(ipc_eventlink);
 
-	/* mach_eventlink_destroy should succeed for terminated eventlink */
-	return KERN_SUCCESS;
+  /* mach_eventlink_destroy should succeed for terminated eventlink */
+  return KERN_SUCCESS;
 }
 
 /*
@@ -257,87 +232,86 @@ mach_eventlink_destroy(
  *   KERN_SUCCESS on Success.
  */
 static kern_return_t
-ipc_eventlink_destroy_internal(
-	struct ipc_eventlink *ipc_eventlink)
-{
-	spl_t s;
-	struct ipc_eventlink_base *ipc_eventlink_base;
-	thread_t associated_thread[2] = {};
-	ipc_port_t ipc_eventlink_port = IPC_PORT_NULL;
-	ipc_port_t ipc_eventlink_port_remote = IPC_PORT_NULL;
+ipc_eventlink_destroy_internal(struct ipc_eventlink *ipc_eventlink) {
+  spl_t s;
+  struct ipc_eventlink_base *ipc_eventlink_base;
+  thread_t associated_thread[2] = {};
+  ipc_port_t ipc_eventlink_port = IPC_PORT_NULL;
+  ipc_port_t ipc_eventlink_port_remote = IPC_PORT_NULL;
 
-	if (ipc_eventlink == IPC_EVENTLINK_NULL) {
-		return KERN_TERMINATED;
-	}
+  if (ipc_eventlink == IPC_EVENTLINK_NULL) {
+    return KERN_TERMINATED;
+  }
 
-	s = splsched();
-	ipc_eventlink_lock(ipc_eventlink);
+  s = splsched();
+  ipc_eventlink_lock(ipc_eventlink);
 
-	ipc_eventlink_base = ipc_eventlink->el_base;
+  ipc_eventlink_base = ipc_eventlink->el_base;
 
-	/* Check if the eventlink is active */
-	if (!ipc_eventlink_active(ipc_eventlink)) {
-		ipc_eventlink_unlock(ipc_eventlink);
-		splx(s);
-		return KERN_TERMINATED;
-	}
+  /* Check if the eventlink is active */
+  if (!ipc_eventlink_active(ipc_eventlink)) {
+    ipc_eventlink_unlock(ipc_eventlink);
+    splx(s);
+    return KERN_TERMINATED;
+  }
 
-	for (int i = 0; i < 2; i++) {
-		struct ipc_eventlink *temp_ipc_eventlink = &ipc_eventlink_base->elb_eventlink[i];
+  for (int i = 0; i < 2; i++) {
+    struct ipc_eventlink *temp_ipc_eventlink =
+        &ipc_eventlink_base->elb_eventlink[i];
 
-		/* Wakeup threads sleeping on eventlink */
-		if (temp_ipc_eventlink->el_thread) {
-			associated_thread[i] = temp_ipc_eventlink->el_thread;
-			temp_ipc_eventlink->el_thread = THREAD_NULL;
+    /* Wakeup threads sleeping on eventlink */
+    if (temp_ipc_eventlink->el_thread) {
+      associated_thread[i] = temp_ipc_eventlink->el_thread;
+      temp_ipc_eventlink->el_thread = THREAD_NULL;
 
-			ipc_eventlink_signal_internal_locked(temp_ipc_eventlink,
-			    IPC_EVENTLINK_FORCE_WAKEUP);
-		}
+      ipc_eventlink_signal_internal_locked(temp_ipc_eventlink,
+                                           IPC_EVENTLINK_FORCE_WAKEUP);
+    }
 
-		/* Only destroy the port on which destroy was called */
-		if (temp_ipc_eventlink == ipc_eventlink) {
-			ipc_eventlink_port = temp_ipc_eventlink->el_port;
-			assert(ipc_eventlink_port != IPC_PORT_NULL);
-		} else {
-			/* Do not destory the remote port, else eventlink_destroy will fail */
-			ipc_eventlink_port_remote = temp_ipc_eventlink->el_port;
-			assert(ipc_eventlink_port_remote != IPC_PORT_NULL);
-			/*
-			 * Take a reference on the remote port, since it could go
-			 * away after eventlink lock is dropped.
-			 */
-			ip_validate(ipc_eventlink_port_remote);
-			ip_reference(ipc_eventlink_port_remote);
-		}
-		assert(temp_ipc_eventlink->el_port != IPC_PORT_NULL);
-		temp_ipc_eventlink->el_port = IPC_PORT_NULL;
-	}
+    /* Only destroy the port on which destroy was called */
+    if (temp_ipc_eventlink == ipc_eventlink) {
+      ipc_eventlink_port = temp_ipc_eventlink->el_port;
+      assert(ipc_eventlink_port != IPC_PORT_NULL);
+    } else {
+      /* Do not destory the remote port, else eventlink_destroy will fail */
+      ipc_eventlink_port_remote = temp_ipc_eventlink->el_port;
+      assert(ipc_eventlink_port_remote != IPC_PORT_NULL);
+      /*
+       * Take a reference on the remote port, since it could go
+       * away after eventlink lock is dropped.
+       */
+      ip_validate(ipc_eventlink_port_remote);
+      ip_reference(ipc_eventlink_port_remote);
+    }
+    assert(temp_ipc_eventlink->el_port != IPC_PORT_NULL);
+    temp_ipc_eventlink->el_port = IPC_PORT_NULL;
+  }
 
-	/* Mark the eventlink as inactive */
-	waitq_invalidate(&ipc_eventlink_base->elb_waitq);
+  /* Mark the eventlink as inactive */
+  waitq_invalidate(&ipc_eventlink_base->elb_waitq);
 
-	ipc_eventlink_unlock(ipc_eventlink);
-	splx(s);
+  ipc_eventlink_unlock(ipc_eventlink);
+  splx(s);
 
-	/* Destroy the local eventlink port */
-	ipc_kobject_dealloc_port(ipc_eventlink_port, IPC_KOBJECT_NO_MSCOUNT,
-	    IKOT_EVENTLINK);
-	/* Drops port reference */
+  /* Destroy the local eventlink port */
+  ipc_kobject_dealloc_port(ipc_eventlink_port, IPC_KOBJECT_NO_MSCOUNT,
+                           IKOT_EVENTLINK);
+  /* Drops port reference */
 
-	/* Clear the remote eventlink port without destroying it */
-	(void)ipc_kobject_disable(ipc_eventlink_port_remote, IKOT_EVENTLINK);
-	ip_release(ipc_eventlink_port_remote);
+  /* Clear the remote eventlink port without destroying it */
+  (void)ipc_kobject_disable(ipc_eventlink_port_remote, IKOT_EVENTLINK);
+  ip_release(ipc_eventlink_port_remote);
 
-	for (int i = 0; i < 2; i++) {
-		if (associated_thread[i] != THREAD_NULL &&
-		    associated_thread[i] != THREAD_ASSOCIATE_WILD) {
-			thread_deallocate(associated_thread[i]);
-		}
+  for (int i = 0; i < 2; i++) {
+    if (associated_thread[i] != THREAD_NULL &&
+        associated_thread[i] != THREAD_ASSOCIATE_WILD) {
+      thread_deallocate(associated_thread[i]);
+    }
 
-		/* Drop the eventlink reference given to port */
-		ipc_eventlink_deallocate(ipc_eventlink);
-	}
-	return KERN_SUCCESS;
+    /* Drop the eventlink reference given to port */
+    ipc_eventlink_deallocate(ipc_eventlink);
+  }
+  return KERN_SUCCESS;
 }
 
 /*
@@ -357,58 +331,53 @@ ipc_eventlink_destroy_internal(
  * Returns:
  *   KERN_SUCCESS on Success.
  */
-kern_return_t
-mach_eventlink_associate(
-	struct ipc_eventlink                  *ipc_eventlink,
-	thread_t                              thread,
-	mach_vm_address_t                     copyin_addr_wait,
-	uint64_t                              copyin_mask_wait,
-	mach_vm_address_t                     copyin_addr_signal,
-	uint64_t                              copyin_mask_signal,
-	mach_eventlink_associate_option_t     ela_option)
-{
-	spl_t s;
+kern_return_t mach_eventlink_associate(
+    struct ipc_eventlink *ipc_eventlink, thread_t thread,
+    mach_vm_address_t copyin_addr_wait, uint64_t copyin_mask_wait,
+    mach_vm_address_t copyin_addr_signal, uint64_t copyin_mask_signal,
+    mach_eventlink_associate_option_t ela_option) {
+  spl_t s;
 
-	if (ipc_eventlink == IPC_EVENTLINK_NULL) {
-		return KERN_TERMINATED;
-	}
+  if (ipc_eventlink == IPC_EVENTLINK_NULL) {
+    return KERN_TERMINATED;
+  }
 
-	if (copyin_addr_wait != 0 || copyin_mask_wait != 0 ||
-	    copyin_addr_signal != 0 || copyin_mask_signal != 0) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (copyin_addr_wait != 0 || copyin_mask_wait != 0 ||
+      copyin_addr_signal != 0 || copyin_mask_signal != 0) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if ((thread == NULL && ela_option == MELA_OPTION_NONE) ||
-	    (thread != NULL && ela_option == MELA_OPTION_ASSOCIATE_ON_WAIT)) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if ((thread == NULL && ela_option == MELA_OPTION_NONE) ||
+      (thread != NULL && ela_option == MELA_OPTION_ASSOCIATE_ON_WAIT)) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	s = splsched();
-	ipc_eventlink_lock(ipc_eventlink);
+  s = splsched();
+  ipc_eventlink_lock(ipc_eventlink);
 
-	/* Check if eventlink is terminated */
-	if (!ipc_eventlink_active(ipc_eventlink)) {
-		ipc_eventlink_unlock(ipc_eventlink);
-		splx(s);
-		return KERN_TERMINATED;
-	}
+  /* Check if eventlink is terminated */
+  if (!ipc_eventlink_active(ipc_eventlink)) {
+    ipc_eventlink_unlock(ipc_eventlink);
+    splx(s);
+    return KERN_TERMINATED;
+  }
 
-	if (ipc_eventlink->el_thread != NULL) {
-		ipc_eventlink_unlock(ipc_eventlink);
-		splx(s);
-		return KERN_NAME_EXISTS;
-	}
+  if (ipc_eventlink->el_thread != NULL) {
+    ipc_eventlink_unlock(ipc_eventlink);
+    splx(s);
+    return KERN_NAME_EXISTS;
+  }
 
-	if (ela_option == MELA_OPTION_ASSOCIATE_ON_WAIT) {
-		ipc_eventlink->el_thread = THREAD_ASSOCIATE_WILD;
-	} else {
-		thread_reference(thread);
-		ipc_eventlink->el_thread = thread;
-	}
+  if (ela_option == MELA_OPTION_ASSOCIATE_ON_WAIT) {
+    ipc_eventlink->el_thread = THREAD_ASSOCIATE_WILD;
+  } else {
+    thread_reference(thread);
+    ipc_eventlink->el_thread = thread;
+  }
 
-	ipc_eventlink_unlock(ipc_eventlink);
-	splx(s);
-	return KERN_SUCCESS;
+  ipc_eventlink_unlock(ipc_eventlink);
+  splx(s);
+  return KERN_SUCCESS;
 }
 
 /*
@@ -425,51 +394,49 @@ mach_eventlink_associate(
  *   KERN_SUCCESS on Success.
  */
 kern_return_t
-mach_eventlink_disassociate(
-	struct ipc_eventlink                   *ipc_eventlink,
-	mach_eventlink_disassociate_option_t   eld_option)
-{
-	spl_t s;
-	thread_t thread;
+mach_eventlink_disassociate(struct ipc_eventlink *ipc_eventlink,
+                            mach_eventlink_disassociate_option_t eld_option) {
+  spl_t s;
+  thread_t thread;
 
-	if (ipc_eventlink == IPC_EVENTLINK_NULL) {
-		return KERN_TERMINATED;
-	}
+  if (ipc_eventlink == IPC_EVENTLINK_NULL) {
+    return KERN_TERMINATED;
+  }
 
-	if (eld_option != MELD_OPTION_NONE) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (eld_option != MELD_OPTION_NONE) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	s = splsched();
-	ipc_eventlink_lock(ipc_eventlink);
+  s = splsched();
+  ipc_eventlink_lock(ipc_eventlink);
 
-	/* Check if eventlink is terminated */
-	if (!ipc_eventlink_active(ipc_eventlink)) {
-		ipc_eventlink_unlock(ipc_eventlink);
-		splx(s);
-		return KERN_TERMINATED;
-	}
+  /* Check if eventlink is terminated */
+  if (!ipc_eventlink_active(ipc_eventlink)) {
+    ipc_eventlink_unlock(ipc_eventlink);
+    splx(s);
+    return KERN_TERMINATED;
+  }
 
-	if (ipc_eventlink->el_thread == NULL) {
-		ipc_eventlink_unlock(ipc_eventlink);
-		splx(s);
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (ipc_eventlink->el_thread == NULL) {
+    ipc_eventlink_unlock(ipc_eventlink);
+    splx(s);
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	thread = ipc_eventlink->el_thread;
-	ipc_eventlink->el_thread = NULL;
+  thread = ipc_eventlink->el_thread;
+  ipc_eventlink->el_thread = NULL;
 
-	/* wake up the thread if blocked */
-	ipc_eventlink_signal_internal_locked(ipc_eventlink,
-	    IPC_EVENTLINK_FORCE_WAKEUP);
+  /* wake up the thread if blocked */
+  ipc_eventlink_signal_internal_locked(ipc_eventlink,
+                                       IPC_EVENTLINK_FORCE_WAKEUP);
 
-	ipc_eventlink_unlock(ipc_eventlink);
-	splx(s);
+  ipc_eventlink_unlock(ipc_eventlink);
+  splx(s);
 
-	if (thread != THREAD_ASSOCIATE_WILD) {
-		thread_deallocate(thread);
-	}
-	return KERN_SUCCESS;
+  if (thread != THREAD_ASSOCIATE_WILD) {
+    thread_deallocate(thread);
+  }
+  return KERN_SUCCESS;
 }
 
 /*
@@ -485,26 +452,23 @@ mach_eventlink_disassociate(
  * Returns:
  *   uint64_t: Contains count and error codes.
  */
-uint64_t
-mach_eventlink_signal_trap(
-	mach_port_name_t port,
-	uint64_t         signal_count __unused)
-{
-	struct ipc_eventlink *ipc_eventlink;
-	kern_return_t kr;
-	uint64_t retval = 0;
+uint64_t mach_eventlink_signal_trap(mach_port_name_t port,
+                                    uint64_t signal_count __unused) {
+  struct ipc_eventlink *ipc_eventlink;
+  kern_return_t kr;
+  uint64_t retval = 0;
 
-	kr = port_name_to_eventlink(port, &ipc_eventlink);
-	if (kr == KERN_SUCCESS) {
-		/* Signal the remote side of the eventlink */
-		kr = ipc_eventlink_signal(eventlink_remote_side(ipc_eventlink));
+  kr = port_name_to_eventlink(port, &ipc_eventlink);
+  if (kr == KERN_SUCCESS) {
+    /* Signal the remote side of the eventlink */
+    kr = ipc_eventlink_signal(eventlink_remote_side(ipc_eventlink));
 
-		/* Deallocate ref returned by port_name_to_eventlink */
-		ipc_eventlink_deallocate(ipc_eventlink);
-	}
+    /* Deallocate ref returned by port_name_to_eventlink */
+    ipc_eventlink_deallocate(ipc_eventlink);
+  }
 
-	retval = encode_eventlink_count_and_error(0, kr);
-	return retval;
+  retval = encode_eventlink_count_and_error(0, kr);
+  return retval;
 }
 
 /*
@@ -520,38 +484,34 @@ mach_eventlink_signal_trap(
  * Returns:
  *   KERN_SUCCESS on Success.
  */
-static kern_return_t
-ipc_eventlink_signal(
-	struct ipc_eventlink *ipc_eventlink)
-{
-	kern_return_t kr;
-	spl_t s;
+static kern_return_t ipc_eventlink_signal(struct ipc_eventlink *ipc_eventlink) {
+  kern_return_t kr;
+  spl_t s;
 
-	if (ipc_eventlink == IPC_EVENTLINK_NULL) {
-		return KERN_INVALID_ARGUMENT;
-	}
+  if (ipc_eventlink == IPC_EVENTLINK_NULL) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	s = splsched();
-	ipc_eventlink_lock(ipc_eventlink);
+  s = splsched();
+  ipc_eventlink_lock(ipc_eventlink);
 
-	/* Check if eventlink is terminated */
-	if (!ipc_eventlink_active(ipc_eventlink)) {
-		ipc_eventlink_unlock(ipc_eventlink);
-		splx(s);
-		return KERN_TERMINATED;
-	}
+  /* Check if eventlink is terminated */
+  if (!ipc_eventlink_active(ipc_eventlink)) {
+    ipc_eventlink_unlock(ipc_eventlink);
+    splx(s);
+    return KERN_TERMINATED;
+  }
 
-	kr = ipc_eventlink_signal_internal_locked(ipc_eventlink,
-	    IPC_EVENTLINK_NONE);
+  kr = ipc_eventlink_signal_internal_locked(ipc_eventlink, IPC_EVENTLINK_NONE);
 
-	ipc_eventlink_unlock(ipc_eventlink);
-	splx(s);
+  ipc_eventlink_unlock(ipc_eventlink);
+  splx(s);
 
-	if (kr == KERN_NOT_WAITING) {
-		kr = KERN_SUCCESS;
-	}
+  if (kr == KERN_NOT_WAITING) {
+    kr = KERN_SUCCESS;
+  }
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -571,20 +531,12 @@ ipc_eventlink_signal(
  *   uint64_t: contains count and error codes
  */
 uint64_t
-mach_eventlink_wait_until_trap(
-	mach_port_name_t                    eventlink_port,
-	uint64_t                            wait_count,
-	mach_eventlink_signal_wait_option_t option,
-	kern_clock_id_t                     clock_id,
-	uint64_t                            deadline)
-{
-	return ipc_eventlink_signal_wait_until_trap_internal(
-		eventlink_port,
-		MACH_PORT_NULL,
-		wait_count,
-		option,
-		clock_id,
-		deadline);
+mach_eventlink_wait_until_trap(mach_port_name_t eventlink_port,
+                               uint64_t wait_count,
+                               mach_eventlink_signal_wait_option_t option,
+                               kern_clock_id_t clock_id, uint64_t deadline) {
+  return ipc_eventlink_signal_wait_until_trap_internal(
+      eventlink_port, MACH_PORT_NULL, wait_count, option, clock_id, deadline);
 }
 
 /*
@@ -604,22 +556,12 @@ mach_eventlink_wait_until_trap(
  * Returns:
  *   uint64_t: contains count and error codes
  */
-uint64_t
-mach_eventlink_signal_wait_until_trap(
-	mach_port_name_t                    eventlink_port,
-	uint64_t                            wait_count,
-	uint64_t                            signal_count __unused,
-	mach_eventlink_signal_wait_option_t option,
-	kern_clock_id_t                     clock_id,
-	uint64_t                            deadline)
-{
-	return ipc_eventlink_signal_wait_until_trap_internal(
-		eventlink_port,
-		eventlink_port,
-		wait_count,
-		option,
-		clock_id,
-		deadline);
+uint64_t mach_eventlink_signal_wait_until_trap(
+    mach_port_name_t eventlink_port, uint64_t wait_count,
+    uint64_t signal_count __unused, mach_eventlink_signal_wait_option_t option,
+    kern_clock_id_t clock_id, uint64_t deadline) {
+  return ipc_eventlink_signal_wait_until_trap_internal(
+      eventlink_port, eventlink_port, wait_count, option, clock_id, deadline);
 }
 
 /*
@@ -640,45 +582,40 @@ mach_eventlink_signal_wait_until_trap(
  * Returns:
  *   uint64_t: contains signal count and error codes
  */
-static uint64_t
-ipc_eventlink_signal_wait_until_trap_internal(
-	mach_port_name_t                     wait_port,
-	mach_port_name_t                     signal_port,
-	uint64_t                             count,
-	mach_eventlink_signal_wait_option_t  el_option,
-	kern_clock_id_t                      clock_id,
-	uint64_t                             deadline)
-{
-	struct ipc_eventlink *wait_ipc_eventlink = IPC_EVENTLINK_NULL;
-	struct ipc_eventlink *signal_ipc_eventlink = IPC_EVENTLINK_NULL;
-	kern_return_t kr;
-	ipc_eventlink_option_t ipc_eventlink_option = IPC_EVENTLINK_NONE;
+static uint64_t ipc_eventlink_signal_wait_until_trap_internal(
+    mach_port_name_t wait_port, mach_port_name_t signal_port, uint64_t count,
+    mach_eventlink_signal_wait_option_t el_option, kern_clock_id_t clock_id,
+    uint64_t deadline) {
+  struct ipc_eventlink *wait_ipc_eventlink = IPC_EVENTLINK_NULL;
+  struct ipc_eventlink *signal_ipc_eventlink = IPC_EVENTLINK_NULL;
+  kern_return_t kr;
+  ipc_eventlink_option_t ipc_eventlink_option = IPC_EVENTLINK_NONE;
 
-	if (clock_id != KERN_CLOCK_MACH_ABSOLUTE_TIME) {
-		return encode_eventlink_count_and_error(count, KERN_INVALID_ARGUMENT);
-	}
+  if (clock_id != KERN_CLOCK_MACH_ABSOLUTE_TIME) {
+    return encode_eventlink_count_and_error(count, KERN_INVALID_ARGUMENT);
+  }
 
-	kr = port_name_to_eventlink(wait_port, &wait_ipc_eventlink);
-	if (kr == KERN_SUCCESS) {
-		assert(wait_ipc_eventlink != IPC_EVENTLINK_NULL);
+  kr = port_name_to_eventlink(wait_port, &wait_ipc_eventlink);
+  if (kr == KERN_SUCCESS) {
+    assert(wait_ipc_eventlink != IPC_EVENTLINK_NULL);
 
-		/* Get the remote side of eventlink for signal */
-		if (signal_port != MACH_PORT_NULL) {
-			signal_ipc_eventlink = eventlink_remote_side(wait_ipc_eventlink);
-		}
+    /* Get the remote side of eventlink for signal */
+    if (signal_port != MACH_PORT_NULL) {
+      signal_ipc_eventlink = eventlink_remote_side(wait_ipc_eventlink);
+    }
 
-		if (el_option & MELSW_OPTION_NO_WAIT) {
-			ipc_eventlink_option |= IPC_EVENTLINK_NO_WAIT;
-		}
+    if (el_option & MELSW_OPTION_NO_WAIT) {
+      ipc_eventlink_option |= IPC_EVENTLINK_NO_WAIT;
+    }
 
-		kr = ipc_eventlink_signal_wait_internal(wait_ipc_eventlink,
-		    signal_ipc_eventlink, deadline,
-		    &count, ipc_eventlink_option);
+    kr = ipc_eventlink_signal_wait_internal(wait_ipc_eventlink,
+                                            signal_ipc_eventlink, deadline,
+                                            &count, ipc_eventlink_option);
 
-		/* release ref returned by port_name_to_eventlink */
-		ipc_eventlink_deallocate(wait_ipc_eventlink);
-	}
-	return encode_eventlink_count_and_error(count, kr);
+    /* release ref returned by port_name_to_eventlink */
+    ipc_eventlink_deallocate(wait_ipc_eventlink);
+  }
+  return encode_eventlink_count_and_error(count, kr);
 }
 
 /*
@@ -700,114 +637,108 @@ ipc_eventlink_signal_wait_until_trap_internal(
  *   signal count is returned implicitly in count arg.
  */
 static kern_return_t
-ipc_eventlink_signal_wait_internal(
-	struct ipc_eventlink        *wait_eventlink,
-	struct ipc_eventlink        *signal_eventlink,
-	uint64_t                    deadline,
-	uint64_t                    *count,
-	ipc_eventlink_option_t      eventlink_option)
-{
-	spl_t s;
-	kern_return_t kr = KERN_ALREADY_WAITING;
-	thread_t self = current_thread();
-	struct ipc_eventlink_base *ipc_eventlink_base = wait_eventlink->el_base;
-	thread_t handoff_thread = THREAD_NULL;
-	thread_handoff_option_t handoff_option = THREAD_HANDOFF_NONE;
-	uint64_t old_signal_count;
-	wait_result_t wr;
+ipc_eventlink_signal_wait_internal(struct ipc_eventlink *wait_eventlink,
+                                   struct ipc_eventlink *signal_eventlink,
+                                   uint64_t deadline, uint64_t *count,
+                                   ipc_eventlink_option_t eventlink_option) {
+  spl_t s;
+  kern_return_t kr = KERN_ALREADY_WAITING;
+  thread_t self = current_thread();
+  struct ipc_eventlink_base *ipc_eventlink_base = wait_eventlink->el_base;
+  thread_t handoff_thread = THREAD_NULL;
+  thread_handoff_option_t handoff_option = THREAD_HANDOFF_NONE;
+  uint64_t old_signal_count;
+  wait_result_t wr;
 
-	s = splsched();
-	ipc_eventlink_lock(wait_eventlink);
+  s = splsched();
+  ipc_eventlink_lock(wait_eventlink);
 
-	/* Check if eventlink is terminated */
-	if (!ipc_eventlink_active(wait_eventlink)) {
-		kr = KERN_TERMINATED;
-		goto unlock;
-	}
+  /* Check if eventlink is terminated */
+  if (!ipc_eventlink_active(wait_eventlink)) {
+    kr = KERN_TERMINATED;
+    goto unlock;
+  }
 
-	/* Check if waiting thread is associated to eventlink */
-	if (wait_eventlink->el_thread != THREAD_ASSOCIATE_WILD &&
-	    wait_eventlink->el_thread != self) {
-		kr = KERN_INVALID_ARGUMENT;
-		goto unlock;
-	}
+  /* Check if waiting thread is associated to eventlink */
+  if (wait_eventlink->el_thread != THREAD_ASSOCIATE_WILD &&
+      wait_eventlink->el_thread != self) {
+    kr = KERN_INVALID_ARGUMENT;
+    goto unlock;
+  }
 
-	/* Check if thread already waiting for associate on wait case */
-	if (wait_eventlink->el_thread == THREAD_ASSOCIATE_WILD &&
-	    wait_eventlink->el_wait_counter != UINT64_MAX) {
-		kr = KERN_INVALID_ARGUMENT;
-		goto unlock;
-	}
+  /* Check if thread already waiting for associate on wait case */
+  if (wait_eventlink->el_thread == THREAD_ASSOCIATE_WILD &&
+      wait_eventlink->el_wait_counter != UINT64_MAX) {
+    kr = KERN_INVALID_ARGUMENT;
+    goto unlock;
+  }
 
-	/* Check if the signal count exceeds the count provided */
-	if (*count < wait_eventlink->el_sync_counter) {
-		*count = wait_eventlink->el_sync_counter;
-		kr = KERN_SUCCESS;
-	} else if (eventlink_option & IPC_EVENTLINK_NO_WAIT) {
-		/* Check if no block was passed */
-		*count =  wait_eventlink->el_sync_counter;
-		kr = KERN_OPERATION_TIMED_OUT;
-	} else {
-		/* Update the wait counter and add thread to waitq */
-		wait_eventlink->el_wait_counter = *count;
-		old_signal_count = wait_eventlink->el_sync_counter;
+  /* Check if the signal count exceeds the count provided */
+  if (*count < wait_eventlink->el_sync_counter) {
+    *count = wait_eventlink->el_sync_counter;
+    kr = KERN_SUCCESS;
+  } else if (eventlink_option & IPC_EVENTLINK_NO_WAIT) {
+    /* Check if no block was passed */
+    *count = wait_eventlink->el_sync_counter;
+    kr = KERN_OPERATION_TIMED_OUT;
+  } else {
+    /* Update the wait counter and add thread to waitq */
+    wait_eventlink->el_wait_counter = *count;
+    old_signal_count = wait_eventlink->el_sync_counter;
 
-		thread_set_pending_block_hint(self, kThreadWaitEventlink);
-		(void)waitq_assert_wait64_locked(
-			&ipc_eventlink_base->elb_waitq,
-			CAST_EVENT64_T(wait_eventlink),
-			THREAD_ABORTSAFE,
-			TIMEOUT_URGENCY_USER_NORMAL,
-			deadline, TIMEOUT_NO_LEEWAY,
-			self);
+    thread_set_pending_block_hint(self, kThreadWaitEventlink);
+    (void)waitq_assert_wait64_locked(
+        &ipc_eventlink_base->elb_waitq, CAST_EVENT64_T(wait_eventlink),
+        THREAD_ABORTSAFE, TIMEOUT_URGENCY_USER_NORMAL, deadline,
+        TIMEOUT_NO_LEEWAY, self);
 
-		eventlink_option |= IPC_EVENTLINK_HANDOFF;
-	}
+    eventlink_option |= IPC_EVENTLINK_HANDOFF;
+  }
 
-	/* Check if we need to signal the other side of eventlink */
-	if (signal_eventlink != IPC_EVENTLINK_NULL) {
-		kern_return_t signal_kr;
-		signal_kr = ipc_eventlink_signal_internal_locked(signal_eventlink,
-		    eventlink_option);
+  /* Check if we need to signal the other side of eventlink */
+  if (signal_eventlink != IPC_EVENTLINK_NULL) {
+    kern_return_t signal_kr;
+    signal_kr = ipc_eventlink_signal_internal_locked(signal_eventlink,
+                                                     eventlink_option);
 
-		if (signal_kr == KERN_NOT_WAITING) {
-			assert(self->handoff_thread == THREAD_NULL);
-		}
-	}
+    if (signal_kr == KERN_NOT_WAITING) {
+      assert(self->handoff_thread == THREAD_NULL);
+    }
+  }
 
-	if (kr != KERN_ALREADY_WAITING) {
-		goto unlock;
-	}
+  if (kr != KERN_ALREADY_WAITING) {
+    goto unlock;
+  }
 
-	if (self->handoff_thread) {
-		handoff_thread = self->handoff_thread;
-		self->handoff_thread = THREAD_NULL;
-		handoff_option = THREAD_HANDOFF_SETRUN_NEEDED;
-	}
+  if (self->handoff_thread) {
+    handoff_thread = self->handoff_thread;
+    self->handoff_thread = THREAD_NULL;
+    handoff_option = THREAD_HANDOFF_SETRUN_NEEDED;
+  }
 
-	ipc_eventlink_unlock(wait_eventlink);
-	splx(s);
+  ipc_eventlink_unlock(wait_eventlink);
+  splx(s);
 
-	wr = thread_handoff_deallocate(handoff_thread, handoff_option);
-	kr = ipc_eventlink_convert_wait_result(wr);
+  wr = thread_handoff_deallocate(handoff_thread, handoff_option);
+  kr = ipc_eventlink_convert_wait_result(wr);
 
-	assert(self->handoff_thread == THREAD_NULL);
+  assert(self->handoff_thread == THREAD_NULL);
 
-	/* Increment the count value if eventlink_signal was called */
-	if (kr == KERN_SUCCESS) {
-		*count += 1;
-	} else {
-		*count = old_signal_count;
-	}
+  /* Increment the count value if eventlink_signal was called */
+  if (kr == KERN_SUCCESS) {
+    *count += 1;
+  } else {
+    *count = old_signal_count;
+  }
 
-	return kr;
+  return kr;
 
 unlock:
-	ipc_eventlink_unlock(wait_eventlink);
-	splx(s);
-	assert(self->handoff_thread == THREAD_NULL);
+  ipc_eventlink_unlock(wait_eventlink);
+  splx(s);
+  assert(self->handoff_thread == THREAD_NULL);
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -822,26 +753,24 @@ unlock:
  * Returns:
  *   KERN_SUCCESS on Success.
  */
-static kern_return_t
-ipc_eventlink_convert_wait_result(int wait_result)
-{
-	switch (wait_result) {
-	case THREAD_AWAKENED:
-		return KERN_SUCCESS;
+static kern_return_t ipc_eventlink_convert_wait_result(int wait_result) {
+  switch (wait_result) {
+  case THREAD_AWAKENED:
+    return KERN_SUCCESS;
 
-	case THREAD_TIMED_OUT:
-		return KERN_OPERATION_TIMED_OUT;
+  case THREAD_TIMED_OUT:
+    return KERN_OPERATION_TIMED_OUT;
 
-	case THREAD_INTERRUPTED:
-		return KERN_ABORTED;
+  case THREAD_INTERRUPTED:
+    return KERN_ABORTED;
 
-	case THREAD_RESTART:
-		return KERN_TERMINATED;
+  case THREAD_RESTART:
+    return KERN_TERMINATED;
 
-	default:
-		panic("ipc_eventlink_wait_block");
-		return KERN_FAILURE;
-	}
+  default:
+    panic("ipc_eventlink_wait_block");
+    return KERN_FAILURE;
+  }
 }
 
 /*
@@ -859,44 +788,40 @@ ipc_eventlink_convert_wait_result(int wait_result)
  *   KERN_SUCCESS on Success.
  */
 static kern_return_t
-ipc_eventlink_signal_internal_locked(
-	struct ipc_eventlink         *signal_eventlink,
-	ipc_eventlink_option_t       eventlink_option)
-{
-	kern_return_t kr = KERN_NOT_WAITING;
-	struct ipc_eventlink_base *ipc_eventlink_base = signal_eventlink->el_base;
-	waitq_wakeup_flags_t flags = WAITQ_KEEP_LOCKED;
+ipc_eventlink_signal_internal_locked(struct ipc_eventlink *signal_eventlink,
+                                     ipc_eventlink_option_t eventlink_option) {
+  kern_return_t kr = KERN_NOT_WAITING;
+  struct ipc_eventlink_base *ipc_eventlink_base = signal_eventlink->el_base;
+  waitq_wakeup_flags_t flags = WAITQ_KEEP_LOCKED;
 
-	if (eventlink_option & IPC_EVENTLINK_FORCE_WAKEUP) {
-		/* Adjust the wait counter */
-		signal_eventlink->el_wait_counter = UINT64_MAX;
+  if (eventlink_option & IPC_EVENTLINK_FORCE_WAKEUP) {
+    /* Adjust the wait counter */
+    signal_eventlink->el_wait_counter = UINT64_MAX;
 
-		kr = waitq_wakeup64_all_locked(
-			&ipc_eventlink_base->elb_waitq,
-			CAST_EVENT64_T(signal_eventlink),
-			THREAD_RESTART, flags);
-		return kr;
-	}
+    kr = waitq_wakeup64_all_locked(&ipc_eventlink_base->elb_waitq,
+                                   CAST_EVENT64_T(signal_eventlink),
+                                   THREAD_RESTART, flags);
+    return kr;
+  }
 
-	/* Increment the eventlink sync count */
-	signal_eventlink->el_sync_counter++;
+  /* Increment the eventlink sync count */
+  signal_eventlink->el_sync_counter++;
 
-	/* Check if thread needs to be woken up */
-	if (signal_eventlink->el_sync_counter > signal_eventlink->el_wait_counter) {
-		if (eventlink_option & IPC_EVENTLINK_HANDOFF) {
-			flags |= WAITQ_HANDOFF;
-		}
+  /* Check if thread needs to be woken up */
+  if (signal_eventlink->el_sync_counter > signal_eventlink->el_wait_counter) {
+    if (eventlink_option & IPC_EVENTLINK_HANDOFF) {
+      flags |= WAITQ_HANDOFF;
+    }
 
-		/* Adjust the wait counter */
-		signal_eventlink->el_wait_counter = UINT64_MAX;
+    /* Adjust the wait counter */
+    signal_eventlink->el_wait_counter = UINT64_MAX;
 
-		kr = waitq_wakeup64_one_locked(
-			&ipc_eventlink_base->elb_waitq,
-			CAST_EVENT64_T(signal_eventlink),
-			THREAD_AWAKENED, flags);
-	}
+    kr = waitq_wakeup64_one_locked(&ipc_eventlink_base->elb_waitq,
+                                   CAST_EVENT64_T(signal_eventlink),
+                                   THREAD_AWAKENED, flags);
+  }
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -909,11 +834,8 @@ ipc_eventlink_signal_internal_locked(
  *
  * Returns: None
  */
-void
-ipc_eventlink_reference(
-	struct ipc_eventlink *ipc_eventlink)
-{
-	os_ref_retain(&ipc_eventlink->el_base->elb_ref_count);
+void ipc_eventlink_reference(struct ipc_eventlink *ipc_eventlink) {
+  os_ref_retain(&ipc_eventlink->el_base->elb_ref_count);
 }
 
 /*
@@ -926,32 +848,29 @@ ipc_eventlink_reference(
  *
  * Returns: None
  */
-void
-ipc_eventlink_deallocate(
-	struct ipc_eventlink *ipc_eventlink)
-{
-	if (ipc_eventlink == IPC_EVENTLINK_NULL) {
-		return;
-	}
+void ipc_eventlink_deallocate(struct ipc_eventlink *ipc_eventlink) {
+  if (ipc_eventlink == IPC_EVENTLINK_NULL) {
+    return;
+  }
 
-	struct ipc_eventlink_base *ipc_eventlink_base = ipc_eventlink->el_base;
+  struct ipc_eventlink_base *ipc_eventlink_base = ipc_eventlink->el_base;
 
-	if (os_ref_release(&ipc_eventlink_base->elb_ref_count) > 0) {
-		return;
-	}
+  if (os_ref_release(&ipc_eventlink_base->elb_ref_count) > 0) {
+    return;
+  }
 
-	waitq_deinit(&ipc_eventlink_base->elb_waitq);
+  waitq_deinit(&ipc_eventlink_base->elb_waitq);
 
-	assert(!ipc_eventlink_active(ipc_eventlink));
+  assert(!ipc_eventlink_active(ipc_eventlink));
 
 #if DEVELOPMENT || DEBUG
-	/* Remove ipc_eventlink to global list */
-	global_ipc_eventlink_lock();
-	queue_remove(&ipc_eventlink_list, ipc_eventlink_base,
-	    struct ipc_eventlink_base *, elb_global_elm);
-	global_ipc_eventlink_unlock();
+  /* Remove ipc_eventlink to global list */
+  global_ipc_eventlink_lock();
+  queue_remove(&ipc_eventlink_list, ipc_eventlink_base,
+               struct ipc_eventlink_base *, elb_global_elm);
+  global_ipc_eventlink_unlock();
 #endif
-	zfree(ipc_eventlink_zone, ipc_eventlink_base);
+  zfree(ipc_eventlink_zone, ipc_eventlink_base);
 }
 
 /*
@@ -967,19 +886,16 @@ ipc_eventlink_deallocate(
  * Returns:
  *   ipc_eventlink on Success.
  */
-struct ipc_eventlink *
-convert_port_to_eventlink(
-	mach_port_t     port)
-{
-	struct ipc_eventlink *ipc_eventlink = IPC_EVENTLINK_NULL;
+struct ipc_eventlink *convert_port_to_eventlink(mach_port_t port) {
+  struct ipc_eventlink *ipc_eventlink = IPC_EVENTLINK_NULL;
 
-	if (IP_VALID(port)) {
-		ip_mq_lock(port);
-		convert_port_to_eventlink_locked(port, &ipc_eventlink);
-		ip_mq_unlock(port);
-	}
+  if (IP_VALID(port)) {
+    ip_mq_lock(port);
+    convert_port_to_eventlink_locked(port, &ipc_eventlink);
+    ip_mq_unlock(port);
+  }
 
-	return ipc_eventlink;
+  return ipc_eventlink;
 }
 
 /*
@@ -998,25 +914,23 @@ convert_port_to_eventlink(
  *   KERN_TERMINATED on inactive eventlink.
  */
 static kern_return_t
-convert_port_to_eventlink_locked(
-	ipc_port_t                      port,
-	struct ipc_eventlink            **ipc_eventlink_ptr)
-{
-	kern_return_t kr = KERN_INVALID_CAPABILITY;
-	struct ipc_eventlink *ipc_eventlink = IPC_EVENTLINK_NULL;
+convert_port_to_eventlink_locked(ipc_port_t port,
+                                 struct ipc_eventlink **ipc_eventlink_ptr) {
+  kern_return_t kr = KERN_INVALID_CAPABILITY;
+  struct ipc_eventlink *ipc_eventlink = IPC_EVENTLINK_NULL;
 
-	if (ip_active(port) && ip_type(port) == IKOT_EVENTLINK) {
-		ipc_eventlink = ipc_kobject_get_raw(port, IKOT_EVENTLINK);
-		if (ipc_eventlink) {
-			ipc_eventlink_reference(ipc_eventlink);
-			kr = KERN_SUCCESS;
-		} else {
-			kr = KERN_TERMINATED;
-		}
-	}
+  if (ip_active(port) && ip_type(port) == IKOT_EVENTLINK) {
+    ipc_eventlink = ipc_kobject_get_raw(port, IKOT_EVENTLINK);
+    if (ipc_eventlink) {
+      ipc_eventlink_reference(ipc_eventlink);
+      kr = KERN_SUCCESS;
+    } else {
+      kr = KERN_TERMINATED;
+    }
+  }
 
-	*ipc_eventlink_ptr = ipc_eventlink;
-	return kr;
+  *ipc_eventlink_ptr = ipc_eventlink;
+  return kr;
 }
 
 /*
@@ -1034,30 +948,28 @@ convert_port_to_eventlink_locked(
  *   KERN_SUCCESS on Success.
  */
 static kern_return_t
-port_name_to_eventlink(
-	mach_port_name_t              name,
-	struct ipc_eventlink          **ipc_eventlink_ptr)
-{
-	ipc_port_t kern_port;
-	kern_return_t kr;
+port_name_to_eventlink(mach_port_name_t name,
+                       struct ipc_eventlink **ipc_eventlink_ptr) {
+  ipc_port_t kern_port;
+  kern_return_t kr;
 
-	if (!MACH_PORT_VALID(name)) {
-		*ipc_eventlink_ptr = IPC_EVENTLINK_NULL;
-		return KERN_INVALID_NAME;
-	}
+  if (!MACH_PORT_VALID(name)) {
+    *ipc_eventlink_ptr = IPC_EVENTLINK_NULL;
+    return KERN_INVALID_NAME;
+  }
 
-	kr = ipc_port_translate_send(current_space(), name, &kern_port);
-	if (kr != KERN_SUCCESS) {
-		*ipc_eventlink_ptr = IPC_EVENTLINK_NULL;
-		return kr;
-	}
-	/* have the port locked */
-	assert(IP_VALID(kern_port));
+  kr = ipc_port_translate_send(current_space(), name, &kern_port);
+  if (kr != KERN_SUCCESS) {
+    *ipc_eventlink_ptr = IPC_EVENTLINK_NULL;
+    return kr;
+  }
+  /* have the port locked */
+  assert(IP_VALID(kern_port));
 
-	kr = convert_port_to_eventlink_locked(kern_port, ipc_eventlink_ptr);
-	ip_mq_unlock(kern_port);
+  kr = convert_port_to_eventlink_locked(kern_port, ipc_eventlink_ptr);
+  ip_mq_unlock(kern_port);
 
-	return kr;
+  return kr;
 }
 
 /*
@@ -1068,39 +980,41 @@ port_name_to_eventlink(
  * Returns:
  *   None.
  */
-static void
-ipc_eventlink_no_senders(ipc_port_t port, mach_port_mscount_t mscount)
-{
-	kern_return_t kr;
-	struct ipc_eventlink *ipc_eventlink;
+static void ipc_eventlink_no_senders(ipc_port_t port,
+                                     mach_port_mscount_t mscount) {
+  kern_return_t kr;
+  struct ipc_eventlink *ipc_eventlink;
 
-	if (!ip_active(port)) {
-		return;
-	}
+  if (!ip_active(port)) {
+    return;
+  }
 
-	/* Get ipc_eventlink reference */
-	ip_mq_lock(port);
+  /* Get ipc_eventlink reference */
+  ip_mq_lock(port);
 
-	/* Make sure port is still active */
-	if (!ip_active(port)) {
-		ip_mq_unlock(port);
-		return;
-	}
+  /* Make sure port is still active */
+  if (!ip_active(port)) {
+    ip_mq_unlock(port);
+    return;
+  }
 
-	convert_port_to_eventlink_locked(port, &ipc_eventlink);
-	ip_mq_unlock(port);
+  convert_port_to_eventlink_locked(port, &ipc_eventlink);
+  ip_mq_unlock(port);
 
-	kr = ipc_eventlink_destroy_internal(ipc_eventlink);
-	if (kr == KERN_TERMINATED) {
-		/* eventlink is already inactive, destroy the port */
-		ipc_kobject_dealloc_port(port, mscount, IKOT_EVENTLINK);
-	}
+  kr = ipc_eventlink_destroy_internal(ipc_eventlink);
+  if (kr == KERN_TERMINATED) {
+    /* eventlink is already inactive, destroy the port */
+    ipc_kobject_dealloc_port(port, mscount, IKOT_EVENTLINK);
+  }
 
-	/* Drop the reference returned by convert_port_to_eventlink_locked */
-	ipc_eventlink_deallocate(ipc_eventlink);
+  /* Drop the reference returned by convert_port_to_eventlink_locked */
+  ipc_eventlink_deallocate(ipc_eventlink);
 }
 
-#define WAITQ_TO_EVENTLINK(wq) ((struct ipc_eventlink_base *) ((uintptr_t)(wq) - offsetof(struct ipc_eventlink_base, elb_waitq)))
+#define WAITQ_TO_EVENTLINK(wq)                                                 \
+  ((struct ipc_eventlink_base *)((uintptr_t)(wq) -                             \
+                                 offsetof(struct ipc_eventlink_base,           \
+                                          elb_waitq)))
 
 /*
  * Name: kdp_eventlink_find_owner
@@ -1115,37 +1029,37 @@ ipc_eventlink_no_senders(ipc_port_t port, mach_port_mscount_t mscount)
  * Returns:
  *   None.
  */
-void
-kdp_eventlink_find_owner(
-	struct waitq      *waitq,
-	event64_t         event,
-	thread_waitinfo_t *waitinfo)
-{
-	assert(waitinfo->wait_type == kThreadWaitEventlink);
-	waitinfo->owner = 0;
-	waitinfo->context = 0;
+void kdp_eventlink_find_owner(struct waitq *waitq, event64_t event,
+                              thread_waitinfo_t *waitinfo) {
+  assert(waitinfo->wait_type == kThreadWaitEventlink);
+  waitinfo->owner = 0;
+  waitinfo->context = 0;
 
-	if (waitq_held(waitq)) {
-		return;
-	}
+  if (waitq_held(waitq)) {
+    return;
+  }
 
-	struct ipc_eventlink_base *ipc_eventlink_base = WAITQ_TO_EVENTLINK(waitq);
+  struct ipc_eventlink_base *ipc_eventlink_base = WAITQ_TO_EVENTLINK(waitq);
 
-	if (event == CAST_EVENT64_T(&ipc_eventlink_base->elb_eventlink[0])) {
-		/* Use the other end of eventlink for signal thread */
-		if (ipc_eventlink_base->elb_eventlink[1].el_thread != THREAD_ASSOCIATE_WILD) {
-			waitinfo->owner = thread_tid(ipc_eventlink_base->elb_eventlink[1].el_thread);
-		} else {
-			waitinfo->owner = 0;
-		}
-	} else if (event == CAST_EVENT64_T(&ipc_eventlink_base->elb_eventlink[1])) {
-		/* Use the other end of eventlink for signal thread */
-		if (ipc_eventlink_base->elb_eventlink[0].el_thread != THREAD_ASSOCIATE_WILD) {
-			waitinfo->owner = thread_tid(ipc_eventlink_base->elb_eventlink[0].el_thread);
-		} else {
-			waitinfo->owner = 0;
-		}
-	}
+  if (event == CAST_EVENT64_T(&ipc_eventlink_base->elb_eventlink[0])) {
+    /* Use the other end of eventlink for signal thread */
+    if (ipc_eventlink_base->elb_eventlink[1].el_thread !=
+        THREAD_ASSOCIATE_WILD) {
+      waitinfo->owner =
+          thread_tid(ipc_eventlink_base->elb_eventlink[1].el_thread);
+    } else {
+      waitinfo->owner = 0;
+    }
+  } else if (event == CAST_EVENT64_T(&ipc_eventlink_base->elb_eventlink[1])) {
+    /* Use the other end of eventlink for signal thread */
+    if (ipc_eventlink_base->elb_eventlink[0].el_thread !=
+        THREAD_ASSOCIATE_WILD) {
+      waitinfo->owner =
+          thread_tid(ipc_eventlink_base->elb_eventlink[0].el_thread);
+    } else {
+      waitinfo->owner = 0;
+    }
+  }
 
-	return;
+  return;
 }

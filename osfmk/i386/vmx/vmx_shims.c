@@ -26,35 +26,27 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <string.h>
-#include <kern/assert.h>
-#include <mach/i386/vm_param.h>
-#include <mach/i386/kern_return.h>
-#include <vm/vm_kern_xnu.h>
-#include <vm/pmap.h>
 #include "vmx_shims.h"
+#include <kern/assert.h>
+#include <mach/i386/kern_return.h>
+#include <mach/i386/vm_param.h>
+#include <string.h>
+#include <vm/pmap.h>
+#include <vm/vm_kern_xnu.h>
 
-void *
-vmx_pcalloc(void)
-{
-	char               *pptr;
-	kern_return_t   ret;
-	ret = kmem_alloc(kernel_map, (vm_offset_t *)&pptr, PAGE_SIZE,
-	    KMA_KOBJECT | KMA_DATA | KMA_ZERO, VM_KERN_MEMORY_OSFMK);
-	if (ret != KERN_SUCCESS) {
-		return NULL;
-	}
-	return pptr;
+void *vmx_pcalloc(void) {
+  char *pptr;
+  kern_return_t ret;
+  ret = kmem_alloc(kernel_map, (vm_offset_t *)&pptr, PAGE_SIZE,
+                   KMA_KOBJECT | KMA_DATA | KMA_ZERO, VM_KERN_MEMORY_OSFMK);
+  if (ret != KERN_SUCCESS) {
+    return NULL;
+  }
+  return pptr;
 }
 
-addr64_t
-vmx_paddr(void *va)
-{
-	return ptoa_64(pmap_find_phys(kernel_pmap, (addr64_t)(uintptr_t)va));
+addr64_t vmx_paddr(void *va) {
+  return ptoa_64(pmap_find_phys(kernel_pmap, (addr64_t)(uintptr_t)va));
 }
 
-void
-vmx_pfree(void *va)
-{
-	kmem_free(kernel_map, (vm_offset_t)va, PAGE_SIZE);
-}
+void vmx_pfree(void *va) { kmem_free(kernel_map, (vm_offset_t)va, PAGE_SIZE); }

@@ -33,13 +33,11 @@
 #define VM_VM_DEBUG_H
 
 #include <ipc/ipc_types.h>
-#include <vm/vm_object_xnu.h>
 #include <mach/vm_param.h>
 #include <mach_debug/hash_info.h>
 #include <vm/pmap.h>
+#include <vm/vm_object_xnu.h>
 
-extern unsigned int     vm_page_info(
-	hash_info_bucket_t      *info,
-	unsigned int            count);
+extern unsigned int vm_page_info(hash_info_bucket_t *info, unsigned int count);
 
-#endif  /* VM_VM_DEBUG_H */
+#endif /* VM_VM_DEBUG_H */

@@ -8,7 +8,8 @@
 #define CORE_ENTITLEMENTS_ERRORS_H
 
 #ifndef _CE_INDIRECT
-#error "Please include <CoreEntitlements/CoreEntitlements.h> instead of this file"
+#error                                                                         \
+    "Please include <CoreEntitlements/CoreEntitlements.h> instead of this file"
 #endif
 
 #include <sys/cdefs.h>
@@ -35,10 +36,12 @@ CE_DEF_ERROR(kCEInvalidArgument);
 // Returned when we expected to have allocated data, but we couldn't
 CE_DEF_ERROR(kCEAllocationFailed);
 
-// Returned when the passed in entitlements do not conform to any supported format
+// Returned when the passed in entitlements do not conform to any supported
+// format
 CE_DEF_ERROR(kCEMalformedEntitlements);
 
-// Returned when a group of queries does not generate a valid result on the current CEQueryContext
+// Returned when a group of queries does not generate a valid result on the
+// current CEQueryContext
 CE_DEF_ERROR(kCEQueryCannotBeSatisfied);
 
 // Returned when a context shouldn't be accelerated

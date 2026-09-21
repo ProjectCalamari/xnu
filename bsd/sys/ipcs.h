@@ -37,7 +37,7 @@
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
 
-#define IPCS_MAGIC      0x00000001      /* Version */
+#define IPCS_MAGIC 0x00000001 /* Version */
 
 /*
  * IPCS_command
@@ -49,30 +49,30 @@
  */
 
 struct IPCS_command {
-	int             ipcs_magic;     /* Magic number for struct layout */
-	int             ipcs_op;        /* Operation to perform */
-	int             ipcs_cursor;    /* Cursor for iteration functions */
-	int             ipcs_datalen;   /* Length of ipcs_data area */
-	void            *ipcs_data;     /* OP specific data */
+  int ipcs_magic;   /* Magic number for struct layout */
+  int ipcs_op;      /* Operation to perform */
+  int ipcs_cursor;  /* Cursor for iteration functions */
+  int ipcs_datalen; /* Length of ipcs_data area */
+  void *ipcs_data;  /* OP specific data */
 };
 
 #ifdef KERNEL_PRIVATE
 #include <machine/types.h>
 
 struct user_IPCS_command {
-	int             ipcs_magic;     /* Magic number for struct layout */
-	int             ipcs_op;        /* Operation to perform */
-	int             ipcs_cursor;    /* Cursor for iteration functions */
-	int             ipcs_datalen;   /* Length of ipcs_data area */
-	user_addr_t     ipcs_data;      /* OP specific data */
+  int ipcs_magic;        /* Magic number for struct layout */
+  int ipcs_op;           /* Operation to perform */
+  int ipcs_cursor;       /* Cursor for iteration functions */
+  int ipcs_datalen;      /* Length of ipcs_data area */
+  user_addr_t ipcs_data; /* OP specific data */
 };
 
 struct user32_IPCS_command {
-	int             ipcs_magic;     /* Magic number for struct layout */
-	int             ipcs_op;        /* Operation to perform */
-	int             ipcs_cursor;    /* Cursor for iteration functions */
-	int             ipcs_datalen;   /* Length of ipcs_data area */
-	user32_addr_t   ipcs_data;      /* OP specific data */
+  int ipcs_magic;          /* Magic number for struct layout */
+  int ipcs_op;             /* Operation to perform */
+  int ipcs_cursor;         /* Cursor for iteration functions */
+  int ipcs_datalen;        /* Length of ipcs_data area */
+  user32_addr_t ipcs_data; /* OP specific data */
 };
 
 #endif /* KERNEL_PRIVATE */
@@ -80,14 +80,14 @@ struct user32_IPCS_command {
 /*
  * OP code values for 'ipcs_op'
  */
-#define IPCS_SHM_CONF   0x00000001      /* Obtain shared memory config */
-#define IPCS_SHM_ITER   0x00000002      /* Iterate shared memory info */
+#define IPCS_SHM_CONF 0x00000001 /* Obtain shared memory config */
+#define IPCS_SHM_ITER 0x00000002 /* Iterate shared memory info */
 
-#define IPCS_SEM_CONF   0x00000010      /* Obtain semaphore config */
-#define IPCS_SEM_ITER   0x00000020      /* Iterate semaphore info */
+#define IPCS_SEM_CONF 0x00000010 /* Obtain semaphore config */
+#define IPCS_SEM_ITER 0x00000020 /* Iterate semaphore info */
 
-#define IPCS_MSG_CONF   0x00000100      /* Obtain message queue config */
-#define IPCS_MSG_ITER   0x00000200      /* Iterate message queue info */
+#define IPCS_MSG_CONF 0x00000100 /* Obtain message queue config */
+#define IPCS_MSG_ITER 0x00000200 /* Iterate message queue info */
 
 /*
  * Sysctl oid name values
@@ -96,5 +96,4 @@ struct user32_IPCS_command {
 #define IPCS_SEM_SYSCTL "kern.sysv.ipcs.sem"
 #define IPCS_MSG_SYSCTL "kern.sysv.ipcs.msg"
 
-
-#endif  /* _SYS_IPCS_H_ */
+#endif /* _SYS_IPCS_H_ */

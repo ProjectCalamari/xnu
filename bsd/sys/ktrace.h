@@ -29,18 +29,19 @@
 #ifndef SYS_KTRACE_H
 #define SYS_KTRACE_H
 
-#include <stdint.h>
-#include <os/base.h>
 #include <kern/locks.h>
+#include <os/base.h>
+#include <stdint.h>
 
-__enum_decl(ktrace_state_t, unsigned int, {
-	/* No tool has configured ktrace. */
-	KTRACE_STATE_OFF = 0,
-	/* A foreground tool has configured ktrace. */
-	KTRACE_STATE_FG,
-	/* A background tool has configured ktrace. */
-	KTRACE_STATE_BG,
-});
+__enum_decl(ktrace_state_t, unsigned int,
+            {
+                /* No tool has configured ktrace. */
+                KTRACE_STATE_OFF = 0,
+                /* A foreground tool has configured ktrace. */
+                KTRACE_STATE_FG,
+                /* A background tool has configured ktrace. */
+                KTRACE_STATE_BG,
+            });
 
 void ktrace_lock(void);
 void ktrace_unlock(void);
@@ -53,7 +54,7 @@ void ktrace_end_single_threaded(void);
  * part of the `*_mask` arguments in `ktrace_configure` and `ktrace_reset`.
  */
 #define KTRACE_KDEBUG (1 << 0)
-#define KTRACE_KPERF  (1 << 1)
+#define KTRACE_KPERF (1 << 1)
 
 /*
  * Used by subsystems to inform ktrace that a configuration is occurring.

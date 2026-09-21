@@ -55,54 +55,58 @@
  */
 
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/param.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/param.h>
+#include <sys/types.h>
 
 struct file_list {
-	struct  file_list *f_next;
-	char    *f_fn;                  /* the name */
-	u_char  f_type;                 /* see below */
-	u_char  f_flags;                /* see below */
-	short   f_special;              /* requires special make rule */
-	char    *f_needs;
-	char    *f_extra;               /* stuff to add to make line */
+  struct file_list *f_next;
+  char *f_fn;      /* the name */
+  u_char f_type;   /* see below */
+  u_char f_flags;  /* see below */
+  short f_special; /* requires special make rule */
+  char *f_needs;
+  char *f_extra; /* stuff to add to make line */
 };
 
 /*
  * Types.
  */
-#define DRIVER          1
-#define NORMAL          2
-#define INVISIBLE       3
-#define PROFILING       4
+#define DRIVER 1
+#define NORMAL 2
+#define INVISIBLE 3
+#define PROFILING 4
 
 /*
  * Attributes (flags).
  */
-#define CONFIGDEP            0x01    /* obsolete? */
-#define OPTIONSDEF           0x02    /* options definition entry */
-#define LIBRARYDEP           0x04    /* include file in library build */
-#define BOUND_CHECKS_MASK        0x78    /* options for -fbounds-safety */
+#define CONFIGDEP 0x01         /* obsolete? */
+#define OPTIONSDEF 0x02        /* options definition entry */
+#define LIBRARYDEP 0x04        /* include file in library build */
+#define BOUND_CHECKS_MASK 0x78 /* options for -fbounds-safety */
 
-#define BOUND_CHECKS_NONE        0x00    /* do not use -fbounds-safety */
-#define BOUND_CHECKS_PENDING 0x08        /* do not use -fbounds-safety but disable associated warnings */
-#define BOUND_CHECKS         0x10    /* build with -fbounds-safety */
-#define BOUND_CHECKS_SOFT    0x18    /* emit non-panicking traps for bound-checked source */
-#define BOUND_CHECKS_DEBUG   0x20    /* emit one panicking trap per bounds check */
-#define BOUND_CHECKS_SEED    0x40    /* emit panicking traps on !RELEASE builds */
-#define BOUND_CHECKS_NEW_CHECKS 0x80 /* build with -fbounds-safety-bringup-missing-checks if building with -fbounds-safety*/
+#define BOUND_CHECKS_NONE 0x00 /* do not use -fbounds-safety */
+#define BOUND_CHECKS_PENDING                                                   \
+  0x08 /* do not use -fbounds-safety but disable associated warnings */
+#define BOUND_CHECKS 0x10 /* build with -fbounds-safety */
+#define BOUND_CHECKS_SOFT                                                      \
+  0x18 /* emit non-panicking traps for bound-checked source */
+#define BOUND_CHECKS_DEBUG 0x20 /* emit one panicking trap per bounds check */
+#define BOUND_CHECKS_SEED 0x40  /* emit panicking traps on !RELEASE builds */
+#define BOUND_CHECKS_NEW_CHECKS                                                \
+  0x80 /* build with -fbounds-safety-bringup-missing-checks if building with   \
+          -fbounds-safety*/
 
 struct device {
-	int     d_type;                 /* CONTROLLER, DEVICE, bus adaptor */
-	const char      *d_name;        /* name of device (e.g. rk11) */
-	int     d_slave;                /* slave number */
-#define QUES    -1      /* -1 means '?' */
-#define UNKNOWN -2      /* -2 means not set yet */
-	int     d_flags;                /* nlags for device init */
-	struct  device *d_next;         /* Next one in list */
-	char    *d_init;                /* pseudo device init routine name */
+  int d_type;            /* CONTROLLER, DEVICE, bus adaptor */
+  const char *d_name;    /* name of device (e.g. rk11) */
+  int d_slave;           /* slave number */
+#define QUES -1          /* -1 means '?' */
+#define UNKNOWN -2       /* -2 means not set yet */
+  int d_flags;           /* nlags for device init */
+  struct device *d_next; /* Next one in list */
+  char *d_init;          /* pseudo device init routine name */
 };
 
 /*
@@ -112,7 +116,7 @@ struct device {
  * it will build from ``Makefile.vax'' and use ``../vax/inline''
  * in the makerules, etc.
  */
-extern const char       *machinename;
+extern const char *machinename;
 
 /*
  * In order to configure and build outside the kernel source tree,
@@ -124,7 +128,7 @@ extern char *config_directory;
 
 FILE *fopenp(const char *fpath, char *file, char *complete, const char *ftype);
 const char *get_VPATH(void);
-#define VPATH   get_VPATH()
+#define VPATH get_VPATH()
 
 /*
  * A set of options may also be specified which are like CPU types,
@@ -132,36 +136,36 @@ const char *get_VPATH(void);
  * A separate set of options may be defined for make-style options.
  */
 struct opt {
-	char    *op_name;
-	char    *op_value;
-	struct  opt *op_next;
+  char *op_name;
+  char *op_value;
+  struct opt *op_next;
 };
 
 extern struct opt *opt, *mkopt, *opt_tail, *mkopt_tail;
 
-const char      *get_word(FILE *fp);
-char    *ns(const char *str);
-char    *qu(int num);
-char    *path(const char *file);
+const char *get_word(FILE *fp);
+char *ns(const char *str);
+char *qu(int num);
+char *path(const char *file);
 
-extern int      do_trace;
+extern int do_trace;
 
-extern struct   device *dtab;
-dev_t   nametodev(char *name, int defunit, char defpartition);
-char    *devtoname(dev_t dev);
+extern struct device *dtab;
+dev_t nametodev(char *name, int defunit, char defpartition);
+char *devtoname(dev_t dev);
 
-extern char     errbuf[80];
-extern int      yyline;
+extern char errbuf[80];
+extern int yyline;
 
-extern struct   file_list *ftab, *conf_list, **confp;
-extern char     *build_directory;
+extern struct file_list *ftab, *conf_list, **confp;
+extern char *build_directory;
 
-extern int      profiling;
+extern int profiling;
 
-#define eq(a, b) (!strcmp(a,b))
+#define eq(a, b) (!strcmp(a, b))
 
 #define DEV_MASK 0x7
-#define DEV_SHIFT  3
+#define DEV_SHIFT 3
 
 /* External function references */
 char *get_rest(FILE *fp);

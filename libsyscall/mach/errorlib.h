@@ -65,49 +65,49 @@
 
 #include <stddef.h>
 
-#include <mach/error.h>
 #include <mach/boolean.h>
+#include <mach/error.h>
 
-#define MACH_IPC_SEND_MOD       (err_mach_ipc|err_sub(0))
-#define MACH_IPC_RCV_MOD        (err_mach_ipc|err_sub(1))
-#define MACH_IPC_MIG_MOD        (err_mach_ipc|err_sub(2))
+#define MACH_IPC_SEND_MOD (err_mach_ipc | err_sub(0))
+#define MACH_IPC_RCV_MOD (err_mach_ipc | err_sub(1))
+#define MACH_IPC_MIG_MOD (err_mach_ipc | err_sub(2))
 
-#define IPC_SEND_MOD            (err_ipc|err_sub(0))
-#define IPC_RCV_MOD             (err_ipc|err_sub(1))
-#define IPC_MIG_MOD             (err_ipc|err_sub(2))
+#define IPC_SEND_MOD (err_ipc | err_sub(0))
+#define IPC_RCV_MOD (err_ipc | err_sub(1))
+#define IPC_MIG_MOD (err_ipc | err_sub(2))
 
-#define SERV_NETNAME_MOD        (err_server|err_sub(0))
-#define SERV_ENV_MOD            (err_server|err_sub(1))
-#define SERV_EXECD_MOD          (err_server|err_sub(2))
+#define SERV_NETNAME_MOD (err_server | err_sub(0))
+#define SERV_ENV_MOD (err_server | err_sub(1))
+#define SERV_EXECD_MOD (err_server | err_sub(2))
 
-#define NO_SUCH_ERROR           "unknown error code"
+#define NO_SUCH_ERROR "unknown error code"
 
 struct error_sparse_map {
-	unsigned                start;
-	unsigned                end;
+  unsigned start;
+  unsigned end;
 };
-#define err_sub_map_entry(start, end)  { err_get_sub(start),  err_get_sub(end) }
-#define err_code_map_entry(start, end) { err_get_code(start), err_get_code(end) }
+#define err_sub_map_entry(start, end) {err_get_sub(start), err_get_sub(end)}
+#define err_code_map_entry(start, end) {err_get_code(start), err_get_code(end)}
 
 struct error_subsystem {
-	const char                      *subsys_name;
-	int                             max_code;
-	const char * const              *codes;
-	const struct error_sparse_map   *map_table;
-	int                             map_count;
+  const char *subsys_name;
+  int max_code;
+  const char *const *codes;
+  const struct error_sparse_map *map_table;
+  int map_count;
 };
-#define errorlib_system_null    { NULL, 0, NULL, NULL, 0 }
+#define errorlib_system_null {NULL, 0, NULL, NULL, 0}
 
 struct error_system {
-	int                             max_sub;
-	const char                      *bad_sub;
-	const struct error_subsystem    *subsystem;
-	const struct error_sparse_map   *map_table;
-	int                             map_count;
+  int max_sub;
+  const char *bad_sub;
+  const struct error_subsystem *subsystem;
+  const struct error_sparse_map *map_table;
+  int map_count;
 };
-#define errorlib_sub_null       { 0, NULL, NULL, NULL, 0 }
+#define errorlib_sub_null {0, NULL, NULL, NULL, 0}
 
-extern const struct error_system        _mach_errors[err_max_system + 1];
+extern const struct error_system _mach_errors[err_max_system + 1];
 char *mach_error_string_int(mach_error_t, boolean_t *);
 
-#define errlib_count(s)         (sizeof(s)/sizeof(s[0]))
+#define errlib_count(s) (sizeof(s) / sizeof(s[0]))

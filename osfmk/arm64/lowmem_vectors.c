@@ -26,9 +26,9 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <mach_kdp.h>
-#include <mach/vm_param.h>
 #include <arm64/lowglobals.h>
+#include <mach/vm_param.h>
+#include <mach_kdp.h>
 #include <vm/vm_object_xnu.h>
 #include <vm/vm_page.h>
 
@@ -38,115 +38,110 @@
  */
 
 extern vm_offset_t vm_kernel_stext;
-extern void     *version;
-extern void     *kmod;
-extern void     *kdp_trans_off;
-extern void     *osversion;
-extern void     *flag_kdp_trigger_reboot;
-extern void     *manual_pkt;
-extern struct vm_object pmap_object_store;      /* store pt pages */
-extern vm_offset_t  c_buffers;
-extern vm_size_t    c_buffers_size;
+extern void *version;
+extern void *kmod;
+extern void *kdp_trans_off;
+extern void *osversion;
+extern void *flag_kdp_trigger_reboot;
+extern void *manual_pkt;
+extern struct vm_object pmap_object_store; /* store pt pages */
+extern vm_offset_t c_buffers;
+extern vm_size_t c_buffers_size;
 
-lowglo lowGlo __attribute__ ((aligned(PAGE_MAX_SIZE))) = {
-	// Increment the major version for changes that break the current Astris
-	// usage of lowGlo values
-	// Increment the minor version for changes that provide additonal info/function
-	// but does not break current usage
-	.lgLayoutMajorVersion = 3,
-	.lgLayoutMinorVersion = 3,
-	.lgLayoutMagic = LOWGLO_LAYOUT_MAGIC,
-	.lgVerCode = { 'K', 'r', 'a', 'k', 'e', 'n', ' ', ' ' },
-	.lgZero = 0,
-	.lgStext = 0, // To be filled in below
-	.lgVersion = (uint64_t) &version,
-	.lgOSVersion = (uint64_t) &osversion,
-	.lgKmodptr = (uint64_t) &kmod,
+lowglo lowGlo __attribute__((aligned(PAGE_MAX_SIZE))) = {
+    // Increment the major version for changes that break the current Astris
+    // usage of lowGlo values
+    // Increment the minor version for changes that provide additonal
+    // info/function
+    // but does not break current usage
+    .lgLayoutMajorVersion = 3,
+    .lgLayoutMinorVersion = 3,
+    .lgLayoutMagic = LOWGLO_LAYOUT_MAGIC,
+    .lgVerCode = {'K', 'r', 'a', 'k', 'e', 'n', ' ', ' '},
+    .lgZero = 0,
+    .lgStext = 0, // To be filled in below
+    .lgVersion = (uint64_t)&version,
+    .lgOSVersion = (uint64_t)&osversion,
+    .lgKmodptr = (uint64_t)&kmod,
 #if MACH_KDP && CONFIG_KDP_INTERACTIVE_DEBUGGING
-	.lgTransOff = (uint64_t) &kdp_trans_off,
-	.lgRebootFlag = (uint64_t) &flag_kdp_trigger_reboot,
-	.lgManualPktAddr = (uint64_t) &manual_pkt,
+    .lgTransOff = (uint64_t)&kdp_trans_off,
+    .lgRebootFlag = (uint64_t)&flag_kdp_trigger_reboot,
+    .lgManualPktAddr = (uint64_t)&manual_pkt,
 #endif
-	.lgPmapMemQ = (uint64_t)&(pmap_object_store.memq),
-	.lgPmapMemPageOffset = offsetof(struct vm_page_with_ppnum, vmp_phys_page),
-	.lgPmapMemChainOffset = offsetof(struct vm_page, vmp_listq),
-	.lgPmapMemPagesize = (uint64_t)sizeof(struct vm_page),
-	.lgPmapMemFromArrayMask = VM_PAGE_PACKED_FROM_ARRAY,
-	.lgPmapMemPackedShift = VM_PAGE_PACKED_PTR_SHIFT,
+    .lgPmapMemQ = (uint64_t)&(pmap_object_store.memq),
+    .lgPmapMemPageOffset = offsetof(struct vm_page_with_ppnum, vmp_phys_page),
+    .lgPmapMemChainOffset = offsetof(struct vm_page, vmp_listq),
+    .lgPmapMemPagesize = (uint64_t)sizeof(struct vm_page),
+    .lgPmapMemFromArrayMask = VM_PAGE_PACKED_FROM_ARRAY,
+    .lgPmapMemPackedShift = VM_PAGE_PACKED_PTR_SHIFT,
 #ifndef __BUILDING_XNU_LIB_UNITTEST__
-	.lgPmapMemPackedBaseAddr = VM_PAGE_PACKED_PTR_BASE,
+    .lgPmapMemPackedBaseAddr = VM_PAGE_PACKED_PTR_BASE,
 #else
-	.lgPmapMemPackedBaseAddr = 0, /* not a compile-time constant when building for unit-test */
+    .lgPmapMemPackedBaseAddr =
+        0, /* not a compile-time constant when building for unit-test */
 #endif
-	.lgPmapMemStartAddr = -1,
-	.lgPmapMemEndAddr = -1,
-	.lgPmapMemFirstppnum = -1,
-	.lgPageShift = ARM_PGSHIFT,
-	.lgVmFirstPhys = -1,
-	.lgVmLastPhys = -1,
-	.lgPhysMapBase = -1,
-	.lgPhysMapEnd = -1,
-	.lgPmapIoRangePtr = -1,
-	.lgNumPmapIoRanges = -1,
-	.lgCompressorBufferAddr = (uint64_t) &c_buffers,  // added in 3.3
-	.lgCompressorSizeAddr   = (uint64_t) &c_buffers_size // added in 3.3
+    .lgPmapMemStartAddr = -1,
+    .lgPmapMemEndAddr = -1,
+    .lgPmapMemFirstppnum = -1,
+    .lgPageShift = ARM_PGSHIFT,
+    .lgVmFirstPhys = -1,
+    .lgVmLastPhys = -1,
+    .lgPhysMapBase = -1,
+    .lgPhysMapEnd = -1,
+    .lgPmapIoRangePtr = -1,
+    .lgNumPmapIoRanges = -1,
+    .lgCompressorBufferAddr = (uint64_t)&c_buffers,   // added in 3.3
+    .lgCompressorSizeAddr = (uint64_t)&c_buffers_size // added in 3.3
 };
 
-void
-patch_low_glo(void)
-{
-	lowGlo.lgStext = (uint64_t)vm_kernel_stext;
+void patch_low_glo(void) { lowGlo.lgStext = (uint64_t)vm_kernel_stext; }
+
+void patch_low_glo_static_region(uint64_t address, uint64_t size) {
+  lowGlo.lgStaticAddr = address;
+  lowGlo.lgStaticSize = size;
+
+  /**
+   * These values are set in pmap_bootstrap() and represent the range of
+   * kernel managed memory.
+   */
+  extern const pmap_paddr_t vm_first_phys;
+  extern const pmap_paddr_t vm_last_phys;
+  assertf((vm_first_phys != 0) && (vm_last_phys != 0),
+          "Tried setting the Low Globals before pmap_bootstrap()");
+  lowGlo.lgVmFirstPhys = vm_first_phys;
+  lowGlo.lgVmLastPhys = vm_last_phys;
+
+  /**
+   * These values are set in pmap_bootstrap() and represent an array of all
+   * kernel-managed I/O regions (pmap-io-ranges in the device tree). Some of
+   * these regions may include DRAM carved out for usage by other agents on
+   * the system.
+   *
+   * Need to forward-declare pmap_io_range_t since that only exists in the
+   * PMAP code.
+   */
+  typedef struct pmap_io_range pmap_io_range_t;
+  extern const pmap_io_range_t *io_attr_table;
+  extern const unsigned int num_io_rgns;
+  lowGlo.lgPmapIoRangePtr = (uint64_t)io_attr_table;
+  lowGlo.lgNumPmapIoRanges = (uint64_t)num_io_rgns;
+
+  /**
+   * These values are set in arm_vm_init() and represent the virtual address
+   * space used by the physical aperture.
+   */
+  extern const vm_map_address_t physmap_base;
+  extern const vm_map_address_t physmap_end;
+  assertf((physmap_base != 0) && (physmap_end != 0),
+          "Tried setting the Low Globals before arm_vm_init()");
+  lowGlo.lgPhysMapBase = physmap_base;
+  lowGlo.lgPhysMapEnd = physmap_end;
 }
 
-void
-patch_low_glo_static_region(uint64_t address, uint64_t size)
-{
-	lowGlo.lgStaticAddr = address;
-	lowGlo.lgStaticSize = size;
-
-	/**
-	 * These values are set in pmap_bootstrap() and represent the range of
-	 * kernel managed memory.
-	 */
-	extern const pmap_paddr_t vm_first_phys;
-	extern const pmap_paddr_t vm_last_phys;
-	assertf((vm_first_phys != 0) && (vm_last_phys != 0),
-	    "Tried setting the Low Globals before pmap_bootstrap()");
-	lowGlo.lgVmFirstPhys = vm_first_phys;
-	lowGlo.lgVmLastPhys = vm_last_phys;
-
-	/**
-	 * These values are set in pmap_bootstrap() and represent an array of all
-	 * kernel-managed I/O regions (pmap-io-ranges in the device tree). Some of
-	 * these regions may include DRAM carved out for usage by other agents on
-	 * the system.
-	 *
-	 * Need to forward-declare pmap_io_range_t since that only exists in the
-	 * PMAP code.
-	 */
-	typedef struct pmap_io_range pmap_io_range_t;
-	extern const pmap_io_range_t* io_attr_table;
-	extern const unsigned int num_io_rgns;
-	lowGlo.lgPmapIoRangePtr = (uint64_t)io_attr_table;
-	lowGlo.lgNumPmapIoRanges = (uint64_t)num_io_rgns;
-
-	/**
-	 * These values are set in arm_vm_init() and represent the virtual address
-	 * space used by the physical aperture.
-	 */
-	extern const vm_map_address_t physmap_base;
-	extern const vm_map_address_t physmap_end;
-	assertf((physmap_base != 0) && (physmap_end != 0),
-	    "Tried setting the Low Globals before arm_vm_init()");
-	lowGlo.lgPhysMapBase = physmap_base;
-	lowGlo.lgPhysMapEnd = physmap_end;
-}
-
-void
-patch_low_glo_vm_page_info(void * start_addr, void * end_addr, uint32_t first_ppnum)
-{
-	lowGlo.lgPmapMemStartAddr = (uint64_t)start_addr;
-	lowGlo.lgPmapMemEndAddr = (uint64_t)end_addr;
-	lowGlo.lgPmapMemFirstppnum = first_ppnum;
-	lowGlo.lgPageShift = PAGE_SHIFT;
+void patch_low_glo_vm_page_info(void *start_addr, void *end_addr,
+                                uint32_t first_ppnum) {
+  lowGlo.lgPmapMemStartAddr = (uint64_t)start_addr;
+  lowGlo.lgPmapMemEndAddr = (uint64_t)end_addr;
+  lowGlo.lgPmapMemFirstppnum = first_ppnum;
+  lowGlo.lgPageShift = PAGE_SHIFT;
 }

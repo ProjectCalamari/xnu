@@ -32,30 +32,28 @@
 
 #include <darwintest.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.net"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("networking"),
-	T_META_ASROOT(true)
-	);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.net"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("networking"),
+              T_META_ASROOT(true));
 
 T_DECL(test_unp_sock_release, "UDS with sock_release()",
-    T_META_ENABLED(false) /* rdar://150253879 */)
-{
-	int fds[2] = { -1, -1 };
-	struct nfsd_args nfsd_args = { 0 };
+       T_META_ENABLED(false) /* rdar://150253879 */) {
+  int fds[2] = {-1, -1};
+  struct nfsd_args nfsd_args = {0};
 
-	T_ASSERT_POSIX_SUCCESS(socketpair(AF_UNIX, SOCK_DGRAM, 0, fds),
-	    "socketpair(AF_UNIX, SOCK_DGRAM, 0)");
-	T_LOG("socketpair() fds: %d, %d\n", fds[0], fds[1]);
+  T_ASSERT_POSIX_SUCCESS(socketpair(AF_UNIX, SOCK_DGRAM, 0, fds),
+                         "socketpair(AF_UNIX, SOCK_DGRAM, 0)");
+  T_LOG("socketpair() fds: %d, %d\n", fds[0], fds[1]);
 
-	nfsd_args.sock = fds[0];
-	T_ASSERT_POSIX_SUCCESS(nfssvc(NFSSVC_EXPORT | NFSSVC_ADDSOCK | NFSSVC_NFSD, &nfsd_args),
-	    "nfssvc() sock %d", fds[0]);
+  nfsd_args.sock = fds[0];
+  T_ASSERT_POSIX_SUCCESS(
+      nfssvc(NFSSVC_EXPORT | NFSSVC_ADDSOCK | NFSSVC_NFSD, &nfsd_args),
+      "nfssvc() sock %d", fds[0]);
 
-	T_ASSERT_POSIX_SUCCESS(close(fds[0]), "close(%d)\n", fds[0]);
+  T_ASSERT_POSIX_SUCCESS(close(fds[0]), "close(%d)\n", fds[0]);
 
-	T_ASSERT_POSIX_SUCCESS(nfssvc(NFSSVC_EXPORT | NFSSVC_NFSD, NULL), "nfssvc() NULL");
+  T_ASSERT_POSIX_SUCCESS(nfssvc(NFSSVC_EXPORT | NFSSVC_NFSD, NULL),
+                         "nfssvc() NULL");
 
-	T_ASSERT_POSIX_SUCCESS(close(fds[1]), "close(%d)\n", fds[1]);
+  T_ASSERT_POSIX_SUCCESS(close(fds[1]), "close(%d)\n", fds[1]);
 }

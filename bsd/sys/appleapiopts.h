@@ -29,7 +29,6 @@
 #ifndef __SYS_APPLEAPIOPTS_H__
 #define __SYS_APPLEAPIOPTS_H__
 
-
 #ifndef __APPLE_API_STANDARD
 #define __APPLE_API_STANDARD
 #endif /* __APPLE_API_STANDARD */

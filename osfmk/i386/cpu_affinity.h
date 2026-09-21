@@ -32,16 +32,16 @@
 #include <i386/cpu_topology.h>
 
 typedef struct x86_affinity_set {
-	struct x86_affinity_set     *next;/* Forward link */
-	struct x86_cpu_cache        *cache;/* The L2 cache concerned */
-	processor_set_t             pset;/* The processor set container */
-	uint32_t                    num;/* Logical id */
+  struct x86_affinity_set *next; /* Forward link */
+  struct x86_cpu_cache *cache;   /* The L2 cache concerned */
+  processor_set_t pset;          /* The processor set container */
+  uint32_t num;                  /* Logical id */
 } x86_affinity_set_t;
 
-extern x86_affinity_set_t *x86_affinities;      /* root of all affinities */
+extern x86_affinity_set_t *x86_affinities; /* root of all affinities */
 
-extern int              ml_get_max_affinity_sets(void);
-extern processor_set_t  ml_affinity_to_pset(uint32_t affinity_num);
+extern int ml_get_max_affinity_sets(void);
+extern processor_set_t ml_affinity_to_pset(uint32_t affinity_num);
 
 #endif /* _I386_CPU_AFFINITY_H_ */
 #endif /* KERNEL_PRIVATE */

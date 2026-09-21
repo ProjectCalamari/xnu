@@ -35,28 +35,24 @@ extern "C" {
 #define super IOService
 OSDefineMetaClassAndAbstractStructors(IOPlatformIO, IOService);
 
-static IOPlatformIO * platformIOProvider;
+static IOPlatformIO *platformIOProvider;
 
-bool
-IOPlatformIO::start(IOService * provider)
-{
-	if (!super::start(provider)) {
-		return false;
-	}
+bool IOPlatformIO::start(IOService *provider) {
+  if (!super::start(provider)) {
+    return false;
+  }
 
-	if (platformIOProvider == NULL) {
-		platformIOProvider = this;
-	}
+  if (platformIOProvider == NULL) {
+    platformIOProvider = this;
+  }
 
-	return true;
+  return true;
 }
 
-bool
-PE_handle_platform_error(vm_offset_t far)
-{
-	if (platformIOProvider == NULL) {
-		return false;
-	} else {
-		return platformIOProvider->handlePlatformError(far);
-	}
+bool PE_handle_platform_error(vm_offset_t far) {
+  if (platformIOProvider == NULL) {
+    return false;
+  } else {
+    return platformIOProvider->handlePlatformError(far);
+  }
 }

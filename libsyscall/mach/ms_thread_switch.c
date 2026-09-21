@@ -56,21 +56,19 @@
  */
 
 #include <mach/mach.h>
+#include <mach/mach_syscalls.h>
 #include <mach/message.h>
 #include <mach/rpc.h>
-#include <mach/mach_syscalls.h>
 #include <mach/thread_switch.h>
 
-extern kern_return_t syscall_thread_switch(mach_port_name_t, int, mach_msg_timeout_t);  // From pthread_internals.h
+extern kern_return_t
+syscall_thread_switch(mach_port_name_t, int,
+                      mach_msg_timeout_t); // From pthread_internals.h
 
-kern_return_t
-thread_switch(
-	mach_port_t thread,
-	int option,
-	mach_msg_timeout_t option_time)
-{
-	kern_return_t result;
+kern_return_t thread_switch(mach_port_t thread, int option,
+                            mach_msg_timeout_t option_time) {
+  kern_return_t result;
 
-	result = syscall_thread_switch(thread, option, option_time);
-	return result;
+  result = syscall_thread_switch(thread, option, option_time);
+  return result;
 }

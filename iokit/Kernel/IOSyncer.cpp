@@ -32,102 +32,89 @@
 
 OSDefineMetaClassAndStructors(IOSyncer, OSObject)
 
-IOSyncer * IOSyncer::create(bool twoRetains)
-{
-	IOSyncer * me = new IOSyncer;
+    IOSyncer *IOSyncer::create(bool twoRetains) {
+  IOSyncer *me = new IOSyncer;
 
-	if (me && !me->init(twoRetains)) {
-		me->release();
-		return NULL;
-	}
+  if (me && !me->init(twoRetains)) {
+    me->release();
+    return NULL;
+  }
 
-	return me;
+  return me;
 }
 
-bool
-IOSyncer::init(bool twoRetains)
-{
-	if (!OSObject::init()) {
-		return false;
-	}
+bool IOSyncer::init(bool twoRetains) {
+  if (!OSObject::init()) {
+    return false;
+  }
 
-	if (!(guardLock = IOSimpleLockAlloc())) {
-		return false;
-	}
+  if (!(guardLock = IOSimpleLockAlloc())) {
+    return false;
+  }
 
-	IOSimpleLockInit(guardLock);
+  IOSimpleLockInit(guardLock);
 
-	if (twoRetains) {
-		retain();
-	}
+  if (twoRetains) {
+    retain();
+  }
 
-	fResult = kIOReturnSuccess;
+  fResult = kIOReturnSuccess;
 
-	reinit();
+  reinit();
 
-	return true;
+  return true;
 }
 
-void
-IOSyncer::reinit()
-{
-	IOInterruptState is = IOSimpleLockLockDisableInterrupt(guardLock);
-	threadMustStop = true;
-	IOSimpleLockUnlockEnableInterrupt(guardLock, is);
+void IOSyncer::reinit() {
+  IOInterruptState is = IOSimpleLockLockDisableInterrupt(guardLock);
+  threadMustStop = true;
+  IOSimpleLockUnlockEnableInterrupt(guardLock, is);
 }
 
-void
-IOSyncer::free()
-{
-	// just in case a thread is blocked here:
-	privateSignal();
+void IOSyncer::free() {
+  // just in case a thread is blocked here:
+  privateSignal();
 
-	if (guardLock != NULL) {
-		IOSimpleLockFree(guardLock);
-	}
+  if (guardLock != NULL) {
+    IOSimpleLockFree(guardLock);
+  }
 
-	OSObject::free();
+  OSObject::free();
 }
 
-IOReturn
-IOSyncer::wait(bool autoRelease)
-{
-	IOInterruptState is = IOSimpleLockLockDisableInterrupt(guardLock);
+IOReturn IOSyncer::wait(bool autoRelease) {
+  IOInterruptState is = IOSimpleLockLockDisableInterrupt(guardLock);
 
-	if (threadMustStop) {
-		assert_wait((void *) &threadMustStop, false);
-		IOSimpleLockUnlockEnableInterrupt(guardLock, is);
-		thread_block(THREAD_CONTINUE_NULL);
-	} else {
-		IOSimpleLockUnlockEnableInterrupt(guardLock, is);
-	}
+  if (threadMustStop) {
+    assert_wait((void *)&threadMustStop, false);
+    IOSimpleLockUnlockEnableInterrupt(guardLock, is);
+    thread_block(THREAD_CONTINUE_NULL);
+  } else {
+    IOSimpleLockUnlockEnableInterrupt(guardLock, is);
+  }
 
-	IOReturn result = fResult; // Pick up before auto deleting!
+  IOReturn result = fResult; // Pick up before auto deleting!
 
-	if (autoRelease) {
-		release();
-	}
+  if (autoRelease) {
+    release();
+  }
 
-	return result;
+  return result;
 }
 
-void
-IOSyncer::signal(IOReturn res, bool autoRelease)
-{
-	fResult = res;
-	privateSignal();
-	if (autoRelease) {
-		release();
-	}
+void IOSyncer::signal(IOReturn res, bool autoRelease) {
+  fResult = res;
+  privateSignal();
+  if (autoRelease) {
+    release();
+  }
 }
 
-void
-IOSyncer::privateSignal()
-{
-	if (threadMustStop) {
-		IOInterruptState is = IOSimpleLockLockDisableInterrupt(guardLock);
-		threadMustStop = false;
-		thread_wakeup_one((void *) &threadMustStop);
-		IOSimpleLockUnlockEnableInterrupt(guardLock, is);
-	}
+void IOSyncer::privateSignal() {
+  if (threadMustStop) {
+    IOInterruptState is = IOSimpleLockLockDisableInterrupt(guardLock);
+    threadMustStop = false;
+    thread_wakeup_one((void *)&threadMustStop);
+    IOSimpleLockUnlockEnableInterrupt(guardLock, is);
+  }
 }

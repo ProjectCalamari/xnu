@@ -24,81 +24,82 @@
  * Use is subject to license terms.
  */
 
-#ifndef	_SYS_FASTTRAP_H
-#define	_SYS_FASTTRAP_H
+#ifndef _SYS_FASTTRAP_H
+#define _SYS_FASTTRAP_H
 
-#include <sys/fasttrap_isa.h>
 #include <sys/dtrace.h>
+#include <sys/fasttrap_isa.h>
 #include <sys/types.h>
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #if !defined(__APPLE__)
-#define	FASTTRAPIOC		(('m' << 24) | ('r' << 16) | ('f' << 8))
+#define FASTTRAPIOC (('m' << 24) | ('r' << 16) | ('f' << 8))
 #else
-#define	FASTTRAPIOC		_IO('d', 0)
+#define FASTTRAPIOC _IO('d', 0)
 #endif /* __APPLE__ */
-#define	FASTTRAPIOC_MAKEPROBE	(FASTTRAPIOC | 1)
-#define	FASTTRAPIOC_GETINSTR	(FASTTRAPIOC | 2)
+#define FASTTRAPIOC_MAKEPROBE (FASTTRAPIOC | 1)
+#define FASTTRAPIOC_GETINSTR (FASTTRAPIOC | 2)
 
 typedef enum fasttrap_probe_type {
-	DTFTP_NONE = 0,
-	DTFTP_ENTRY,
-	DTFTP_RETURN,
-	DTFTP_OFFSETS,
-	DTFTP_POST_OFFSETS,
-	DTFTP_IS_ENABLED
+  DTFTP_NONE = 0,
+  DTFTP_ENTRY,
+  DTFTP_RETURN,
+  DTFTP_OFFSETS,
+  DTFTP_POST_OFFSETS,
+  DTFTP_IS_ENABLED
 } fasttrap_probe_type_t;
 
 #if defined(__APPLE__)
 typedef enum fasttrap_provider_type {
-	DTFTP_PROVIDER_NONE = 0,
-	DTFTP_PROVIDER_USDT, 
-	DTFTP_PROVIDER_PID,
-	DTFTP_PROVIDER_OBJC,
-	DTFTP_PROVIDER_ONESHOT
+  DTFTP_PROVIDER_NONE = 0,
+  DTFTP_PROVIDER_USDT,
+  DTFTP_PROVIDER_PID,
+  DTFTP_PROVIDER_OBJC,
+  DTFTP_PROVIDER_ONESHOT
 } fasttrap_provider_type_t;
 
 /* Moved from fasttrap.c */
-#define	FASTTRAP_PID_NAME		"pid"
-#define	FASTTRAP_OBJC_NAME		"objc"
-#define	FASTTRAP_ONESHOT_NAME		"oneshot"
+#define FASTTRAP_PID_NAME "pid"
+#define FASTTRAP_OBJC_NAME "objc"
+#define FASTTRAP_ONESHOT_NAME "oneshot"
 
 #endif
 
 typedef struct fasttrap_probe_spec {
-	pid_t				ftps_pid;
+  pid_t ftps_pid;
 #if defined(__APPLE__)
-	fasttrap_provider_type_t	ftps_provider_type;
-	fasttrap_probe_type_t		ftps_probe_type;
+  fasttrap_provider_type_t ftps_provider_type;
+  fasttrap_probe_type_t ftps_probe_type;
 #if defined(__arm__) || defined(__arm64__)
-	uint32_t			ftps_arch_subinfo;	// For any additional per probe architecture specific data
+  uint32_t ftps_arch_subinfo; // For any additional per probe architecture
+                              // specific data
 #endif
 #endif
-	char				ftps_func[DTRACE_FUNCNAMELEN];
-	char				ftps_mod[DTRACE_MODNAMELEN];
+  char ftps_func[DTRACE_FUNCNAMELEN];
+  char ftps_mod[DTRACE_MODNAMELEN];
 
 #if defined(__APPLE__)
 #if defined(__arm__) || defined(__arm64__)
-	// We already have 'padding' from the ftps_arch_subinfo above
+  // We already have 'padding' from the ftps_arch_subinfo above
 #else
 #if !defined(__LP64__)
-	uint32_t			pad; /* Explicit pad to keep ILP32 and LP64 lined up. */
+  uint32_t pad; /* Explicit pad to keep ILP32 and LP64 lined up. */
 #endif
 #endif
 #endif
-	uint64_t			ftps_pc;
-	uint64_t			ftps_size;
-	uint64_t			ftps_noffs;
-	uint64_t			ftps_offs[1];
+  uint64_t ftps_pc;
+  uint64_t ftps_size;
+  uint64_t ftps_noffs;
+  uint64_t ftps_offs[1];
 } fasttrap_probe_spec_t;
 
 typedef struct fasttrap_instr_query {
-	uint64_t		ftiq_pc;
-	pid_t			ftiq_pid;
-	fasttrap_instr_t	ftiq_instr;
+  uint64_t ftiq_pc;
+  pid_t ftiq_pid;
+  fasttrap_instr_t ftiq_instr;
 } fasttrap_instr_query_t;
 
 /*
@@ -116,10 +117,10 @@ typedef struct fasttrap_instr_query {
  * elfexec() function only has to look for the latest version of the
  * PT_SUNWDTRACE program header.
  */
-#define	PT_SUNWDTRACE_SIZE	FASTTRAP_SUNWDTRACE_SIZE
+#define PT_SUNWDTRACE_SIZE FASTTRAP_SUNWDTRACE_SIZE
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* _SYS_FASTTRAP_H */
+#endif /* _SYS_FASTTRAP_H */

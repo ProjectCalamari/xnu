@@ -44,18 +44,18 @@
 #define _VFS_VFS_SUPPORT_H_
 
 #include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/kernel.h>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <sys/proc.h>
 #include <sys/conf.h>
+#include <sys/dirent.h>
+#include <sys/file.h>
+#include <sys/kernel.h>
+#include <sys/malloc.h>
 #include <sys/mount.h>
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <sys/stat.h>
+#include <sys/systm.h>
 #include <sys/vnode.h>
 #include <sys/vnode_if.h>
-#include <sys/malloc.h>
-#include <sys/dirent.h>
 
 __BEGIN_DECLS
 extern int nop_create(struct vnop_create_args *ap);
@@ -139,7 +139,6 @@ extern int err_inactive(struct vnop_inactive_args *ap);
 extern int nop_reclaim(struct vnop_reclaim_args *ap);
 extern int err_reclaim(struct vnop_reclaim_args *ap);
 
-
 extern int nop_strategy(struct vnop_strategy_args *ap);
 extern int err_strategy(struct vnop_strategy_args *ap);
 
@@ -148,7 +147,6 @@ extern int err_pathconf(struct vnop_pathconf_args *ap);
 
 extern int nop_advlock(struct vnop_advlock_args *ap);
 extern int err_advlock(struct vnop_advlock_args *ap);
-
 
 extern int nop_allocate(struct vnop_allocate_args *ap);
 extern int err_allocate(struct vnop_allocate_args *ap);
@@ -182,4 +180,4 @@ extern int err_monitor(struct vnop_monitor_args *ap);
 
 __END_DECLS
 
-#endif  /* _VFS_VFS_SUPPORT_H_ */
+#endif /* _VFS_VFS_SUPPORT_H_ */

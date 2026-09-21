@@ -38,65 +38,29 @@
 #define IMG4_API_VERSION (20221202u)
 
 #if IMG4_TARGET_DARWIN
-#define IMG4_API_AVAILABLE_FALL_2018 \
-		API_AVAILABLE( \
-			macos(10.15), \
-			ios(12.0), \
-			tvos(12.0), \
-			watchos(5.0))
+#define IMG4_API_AVAILABLE_FALL_2018                                           \
+  API_AVAILABLE(macos(10.15), ios(12.0), tvos(12.0), watchos(5.0))
 
-#define IMG4_API_DEPRECATED_FALL_2018 \
-		API_DEPRECATED_WITH_REPLACEMENT( \
-			"img4_firmware_t", \
-			macos(10.15, 11.0), \
-			ios(12.2, 14.0), \
-			tvos(12.2, 14.0), \
-			watchos(5.2, 7.0))
+#define IMG4_API_DEPRECATED_FALL_2018                                          \
+  API_DEPRECATED_WITH_REPLACEMENT("img4_firmware_t", macos(10.15, 11.0),       \
+                                  ios(12.2, 14.0), tvos(12.2, 14.0),           \
+                                  watchos(5.2, 7.0))
 
-#define IMG4_API_AVAILABLE_SPRING_2019 \
-		API_AVAILABLE(\
-			macos(10.15), \
-			ios(12.2), \
-			tvos(12.2), \
-			watchos(5.2))
+#define IMG4_API_AVAILABLE_SPRING_2019                                         \
+  API_AVAILABLE(macos(10.15), ios(12.2), tvos(12.2), watchos(5.2))
 
-#define IMG4_API_AVAILABLE_FALL_2020 \
-		API_AVAILABLE( \
-			macos(11.0), \
-			ios(14.0), \
-			tvos(14.0), \
-			watchos(7.0), \
-			bridgeos(5.0))
+#define IMG4_API_AVAILABLE_FALL_2020                                           \
+  API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0), watchos(7.0), bridgeos(5.0))
 
-#define IMG4_API_AVAILABLE_FALL_2021 \
-		API_AVAILABLE( \
-			macos(12.0), \
-			ios(15.0), \
-			tvos(15.0), \
-			watchos(8.0), \
-			bridgeos(6.0))
+#define IMG4_API_AVAILABLE_FALL_2021                                           \
+  API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0), watchos(8.0), bridgeos(6.0))
 
-#define IMG4_API_AVAILABLE_FALL_2021_B \
-		API_AVAILABLE( \
-			macos(12.1), \
-			ios(15.1), \
-			tvos(15.1), \
-			watchos(8.1), \
-			bridgeos(6.1))
-#define IMG4_API_AVAILABLE_FALL_2022 \
-		API_AVAILABLE( \
-			macos(13.0), \
-			ios(16.0), \
-			tvos(16.0), \
-			watchos(9.0), \
-			bridgeos(7.0))
-#define IMG4_API_AVAILABLE_SPRING_2023 \
-		API_AVAILABLE( \
-			macos(13.3), \
-			ios(16.4), \
-			tvos(16.4), \
-			watchos(9.4), \
-			bridgeos(7.4))
+#define IMG4_API_AVAILABLE_FALL_2021_B                                         \
+  API_AVAILABLE(macos(12.1), ios(15.1), tvos(15.1), watchos(8.1), bridgeos(6.1))
+#define IMG4_API_AVAILABLE_FALL_2022                                           \
+  API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0), watchos(9.0), bridgeos(7.0))
+#define IMG4_API_AVAILABLE_SPRING_2023                                         \
+  API_AVAILABLE(macos(13.3), ios(16.4), tvos(16.4), watchos(9.4), bridgeos(7.4))
 #else
 #define IMG4_API_AVAILABLE_FALL_2018
 #define IMG4_API_DEPRECATED_FALL_2018

@@ -32,55 +32,61 @@
 #include <sys/types.h>
 
 /* Options for pathname based xattr calls */
-#define XATTR_NOFOLLOW   0x0001     /* Don't follow symbolic links */
+#define XATTR_NOFOLLOW 0x0001 /* Don't follow symbolic links */
 
 /* Options for setxattr calls */
-#define XATTR_CREATE     0x0002     /* set the value, fail if attr already exists */
-#define XATTR_REPLACE    0x0004     /* set the value, fail if attr does not exist */
+#define XATTR_CREATE 0x0002  /* set the value, fail if attr already exists */
+#define XATTR_REPLACE 0x0004 /* set the value, fail if attr does not exist */
 
 /* Set this to bypass authorization checking (eg. if doing auth-related work) */
 #define XATTR_NOSECURITY 0x0008
 
-/* Set this to bypass the default extended attribute file (dot-underscore file) */
-#define XATTR_NODEFAULT  0x0010
+/* Set this to bypass the default extended attribute file (dot-underscore file)
+ */
+#define XATTR_NODEFAULT 0x0010
 
-/* option for f/getxattr() and f/listxattr() to expose the HFS Compression extended attributes */
+/* option for f/getxattr() and f/listxattr() to expose the HFS Compression
+ * extended attributes */
 #define XATTR_SHOWCOMPRESSION 0x0020
 
 /* Options for pathname based xattr calls */
-#define XATTR_NOFOLLOW_ANY     0x0040  /* Don't follow any symbolic links in the path */
-#define XATTR_RESOLVE_BENEATH  0x0080  /* path must reside in the hierarchy beneath the starting directory */
+#define XATTR_NOFOLLOW_ANY                                                     \
+  0x0040 /* Don't follow any symbolic links in the path */
+#define XATTR_RESOLVE_BENEATH                                                  \
+  0x0080 /* path must reside in the hierarchy beneath the starting directory   \
+          */
 
-#define XATTR_MAXNAMELEN   127
+#define XATTR_MAXNAMELEN 127
 
-/* See the ATTR_CMN_FNDRINFO section of getattrlist(2) for details on FinderInfo */
-#define XATTR_FINDERINFO_NAME     "com.apple.FinderInfo"
+/* See the ATTR_CMN_FNDRINFO section of getattrlist(2) for details on FinderInfo
+ */
+#define XATTR_FINDERINFO_NAME "com.apple.FinderInfo"
 
-#define XATTR_RESOURCEFORK_NAME   "com.apple.ResourceFork"
-
+#define XATTR_RESOURCEFORK_NAME "com.apple.ResourceFork"
 
 #ifdef KERNEL
 
 #ifdef KERNEL_PRIVATE
-#define XATTR_VNODE_SUPPORTED(vp) \
-	((vp)->v_type == VREG || (vp)->v_type == VDIR || (vp)->v_type == VLNK || (vp)->v_type == VSOCK || (vp)->v_type == VFIFO)
+#define XATTR_VNODE_SUPPORTED(vp)                                              \
+  ((vp)->v_type == VREG || (vp)->v_type == VDIR || (vp)->v_type == VLNK ||     \
+   (vp)->v_type == VSOCK || (vp)->v_type == VFIFO)
 #endif
 
 __BEGIN_DECLS
-int  xattr_protected(const char *);
-int  xattr_validatename(const char *);
+int xattr_protected(const char *);
+int xattr_validatename(const char *);
 
 /* Maximum extended attribute size supported by VFS */
-#define XATTR_MAXSIZE           INT32_MAX
+#define XATTR_MAXSIZE INT32_MAX
 
 #ifdef PRIVATE
 /* Maximum extended attribute size in an Apple Double file */
-#define AD_XATTR_MAXSIZE        XATTR_MAXSIZE
+#define AD_XATTR_MAXSIZE XATTR_MAXSIZE
 
 /* Number of bits used to represent the maximum size of
  * extended attribute stored in an Apple Double file.
  */
-#define AD_XATTR_SIZE_BITS      31
+#define AD_XATTR_SIZE_BITS 31
 #endif /* PRIVATE */
 
 __END_DECLS
@@ -89,13 +95,17 @@ __END_DECLS
 #ifndef KERNEL
 __BEGIN_DECLS
 
-ssize_t getxattr(const char *path, const char *name, void *value, size_t size, u_int32_t position, int options);
+ssize_t getxattr(const char *path, const char *name, void *value, size_t size,
+                 u_int32_t position, int options);
 
-ssize_t fgetxattr(int fd, const char *name, void *value, size_t size, u_int32_t position, int options);
+ssize_t fgetxattr(int fd, const char *name, void *value, size_t size,
+                  u_int32_t position, int options);
 
-int setxattr(const char *path, const char *name, const void *value, size_t size, u_int32_t position, int options);
+int setxattr(const char *path, const char *name, const void *value, size_t size,
+             u_int32_t position, int options);
 
-int fsetxattr(int fd, const char *name, const void *value, size_t size, u_int32_t position, int options);
+int fsetxattr(int fd, const char *name, const void *value, size_t size,
+              u_int32_t position, int options);
 
 int removexattr(const char *path, const char *name, int options);
 

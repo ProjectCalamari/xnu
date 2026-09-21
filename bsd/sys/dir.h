@@ -89,8 +89,8 @@
  * null byte (dp->d_namlen+1), rounded up to a 4 byte boundary.
  */
 #undef DIRSIZ
-#define DIRSIZ(dp) \
-    (((unsigned long)&((struct direct *)0)->d_name + (dp)->d_namlen+1 + 3) & ~3)
+#define DIRSIZ(dp)                                                             \
+  (((unsigned long)&((struct direct *)0)->d_name + (dp)->d_namlen + 1 + 3) & ~3)
 
 #endif /* __OBJC__ */
 

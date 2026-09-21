@@ -28,52 +28,47 @@
 
 #if (DEVELOPMENT || DEBUG) && !KASAN
 
-#include <sys/sysctl.h>
 #include <libkern/stack_protector.h>
+#include <sys/sysctl.h>
 
-__attribute__((noinline))
-static int
-check_for_cookie(size_t len)
-{
-	long buf[4];
-	long *search = (long *)(void *)&buf[0];
-	size_t n;
+__attribute__((noinline)) static int check_for_cookie(size_t len) {
+  long buf[4];
+  long *search = (long *)(void *)&buf[0];
+  size_t n;
 
-	assert(len < sizeof(buf));
-	assert(__stack_chk_guard != 0);
-	assert(((uintptr_t)search & (sizeof(long) - 1)) == 0);
+  assert(len < sizeof(buf));
+  assert(__stack_chk_guard != 0);
+  assert(((uintptr_t)search & (sizeof(long) - 1)) == 0);
 
-	/* force compiler to insert stack cookie check: */
-	memset_s(buf, len, 0, len);
+  /* force compiler to insert stack cookie check: */
+  memset_s(buf, len, 0, len);
 
-	/* 32 x sizeof(long) should be plenty to find the cookie: */
-	for (n = 0; n < 32; ++n) {
-		if (*(search++) == __stack_chk_guard) {
-			return 0;
-		}
-	}
+  /* 32 x sizeof(long) should be plenty to find the cookie: */
+  for (n = 0; n < 32; ++n) {
+    if (*(search++) == __stack_chk_guard) {
+      return 0;
+    }
+  }
 
-	return ESRCH;
+  return ESRCH;
 }
 
-static int
-sysctl_run_stack_chk_tests SYSCTL_HANDLER_ARGS
-{
-	#pragma unused(arg1, arg2, oidp)
+static int sysctl_run_stack_chk_tests SYSCTL_HANDLER_ARGS {
+#pragma unused(arg1, arg2, oidp)
 
-	unsigned int dummy = 0;
-	int error, changed = 0, kr;
-	error = sysctl_io_number(req, 0, sizeof(dummy), &dummy, &changed);
-	if (error || !changed) {
-		return error;
-	}
+  unsigned int dummy = 0;
+  int error, changed = 0, kr;
+  error = sysctl_io_number(req, 0, sizeof(dummy), &dummy, &changed);
+  if (error || !changed) {
+    return error;
+  }
 
-	kr = check_for_cookie(3);
-	return kr;
+  kr = check_for_cookie(3);
+  return kr;
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, run_stack_chk_tests,
-    CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_LOCKED | CTLFLAG_MASKED,
-    0, 0, sysctl_run_stack_chk_tests, "I", "");
+            CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_LOCKED | CTLFLAG_MASKED, 0, 0,
+            sysctl_run_stack_chk_tests, "I", "");
 
 #endif /* (DEVELOPMENT || DEBUG) && !KASAN */

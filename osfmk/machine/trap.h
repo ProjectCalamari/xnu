@@ -28,49 +28,55 @@
 #ifndef _MACHINE_TRAP_H
 #define _MACHINE_TRAP_H
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/trap.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/trap.h"
 #else
 #error architecture not supported
 #endif
 
-#define ml_trap_pin_value_1(a) ({ \
-	register long _a __asm__(ML_TRAP_REGISTER_1) = (long)(a);               \
-                                                                                \
-	__asm__ __volatile__ ("" : "+r"(_a));                                   \
-})
-#define ml_trap_pin_value_2(a, b) ({ \
-	register long _a __asm__(ML_TRAP_REGISTER_1) = (long)(a);               \
-	register long _b __asm__(ML_TRAP_REGISTER_2) = (long)(b);               \
-                                                                                \
-	__asm__ __volatile__ ("" : "+r"(_a), "+r"(_b));                         \
-})
-#define ml_trap_pin_value_3(a, b, c) ({ \
-	register long _a __asm__(ML_TRAP_REGISTER_1) = (long)(a);               \
-	register long _b __asm__(ML_TRAP_REGISTER_2) = (long)(b);               \
-	register long _c __asm__(ML_TRAP_REGISTER_3) = (long)(c);               \
-                                                                                \
-	__asm__ __volatile__ ("" : "+r"(_a), "+r"(_b), "+r"(_c));               \
-})
+#define ml_trap_pin_value_1(a)                                                 \
+  ({                                                                           \
+    register long _a __asm__(ML_TRAP_REGISTER_1) = (long)(a);                  \
+                                                                               \
+    __asm__ __volatile__("" : "+r"(_a));                                       \
+  })
+#define ml_trap_pin_value_2(a, b)                                              \
+  ({                                                                           \
+    register long _a __asm__(ML_TRAP_REGISTER_1) = (long)(a);                  \
+    register long _b __asm__(ML_TRAP_REGISTER_2) = (long)(b);                  \
+                                                                               \
+    __asm__ __volatile__("" : "+r"(_a), "+r"(_b));                             \
+  })
+#define ml_trap_pin_value_3(a, b, c)                                           \
+  ({                                                                           \
+    register long _a __asm__(ML_TRAP_REGISTER_1) = (long)(a);                  \
+    register long _b __asm__(ML_TRAP_REGISTER_2) = (long)(b);                  \
+    register long _c __asm__(ML_TRAP_REGISTER_3) = (long)(c);                  \
+                                                                               \
+    __asm__ __volatile__("" : "+r"(_a), "+r"(_b), "+r"(_c));                   \
+  })
 
 #ifndef __BUILDING_XNU_LIB_UNITTEST__
 
-#define ml_fatal_trap_with_value(code, a)  ({ \
-	ml_trap_pin_value_1(a); \
-	ml_fatal_trap(code); \
-})
+#define ml_fatal_trap_with_value(code, a)                                      \
+  ({                                                                           \
+    ml_trap_pin_value_1(a);                                                    \
+    ml_fatal_trap(code);                                                       \
+  })
 
-#define ml_fatal_trap_with_value2(code, a, b)  ({ \
-	ml_trap_pin_value_2(a, b); \
-	ml_fatal_trap(code); \
-})
+#define ml_fatal_trap_with_value2(code, a, b)                                  \
+  ({                                                                           \
+    ml_trap_pin_value_2(a, b);                                                 \
+    ml_fatal_trap(code);                                                       \
+  })
 
-#define ml_fatal_trap_with_value3(code, a, b, c)  ({ \
-	ml_trap_pin_value_3(a, b, c); \
-	ml_fatal_trap(code); \
-})
+#define ml_fatal_trap_with_value3(code, a, b, c)                               \
+  ({                                                                           \
+    ml_trap_pin_value_3(a, b, c);                                              \
+    ml_fatal_trap(code);                                                       \
+  })
 
 #else /* __BUILDING_XNU_LIB_UNITTEST__ */
 /* assert trap call into unit-test harness instead of calling brk */
@@ -79,19 +85,17 @@ extern "C"
 #else
 extern
 #endif
-__attribute__((noreturn)) void ut_assert_trap(int code, long a, long b, long c);
+    __attribute__((noreturn)) void ut_assert_trap(int code, long a, long b,
+                                                  long c);
 
-#define ml_fatal_trap_with_value(code, a)  ({ \
-	ut_assert_trap(code, (long)a, 0, 0); \
-})
+#define ml_fatal_trap_with_value(code, a)                                      \
+  ({ ut_assert_trap(code, (long)a, 0, 0); })
 
-#define ml_fatal_trap_with_value2(code, a)  ({ \
-	ut_assert_trap(code, (long)a, (long)b, 0); \
-})
+#define ml_fatal_trap_with_value2(code, a)                                     \
+  ({ ut_assert_trap(code, (long)a, (long)b, 0); })
 
-#define ml_fatal_trap_with_value3(code, a, b, c)  ({ \
-	ut_assert_trap(code, (long)a, (long)b, (long)c); \
-})
+#define ml_fatal_trap_with_value3(code, a, b, c)                               \
+  ({ ut_assert_trap(code, (long)a, (long)b, (long)c); })
 
 #endif /* __BUILDING_XNU_LIB_UNITTEST__ */
 
@@ -102,11 +106,9 @@ __attribute__((noreturn)) void ut_assert_trap(int code, long a, long b, long c);
  * - x8 for arm64
  * - r8 on armv7
  */
-__attribute__((cold, noreturn, always_inline))
-static inline void
-ml_fatal_trap_invalid_list_linkage(unsigned long e)
-{
-	ml_fatal_trap_with_value(/* XNU_HARD_TRAP_SAFE_UNLINK */ 0xbffd, e);
+__attribute__((cold, noreturn, always_inline)) static inline void
+ml_fatal_trap_invalid_list_linkage(unsigned long e) {
+  ml_fatal_trap_with_value(/* XNU_HARD_TRAP_SAFE_UNLINK */ 0xbffd, e);
 }
 
 #endif /* _MACHINE_TRAP_H */

@@ -27,5 +27,5 @@
  */
 #ifndef FD_COPY
 #include <sys/_types/_fd_def.h>
-#define FD_COPY(f, t)   __DARWIN_FD_COPY(f, t)
+#define FD_COPY(f, t) __DARWIN_FD_COPY(f, t)
 #endif /* FD_COPY */

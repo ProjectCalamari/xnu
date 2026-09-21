@@ -46,15 +46,12 @@ extern const struct memory_object_pager_ops dyld_pager_ops;
 /*
  * VM call to implement map_with_linking_np() system call.
  */
-extern kern_return_t
-vm_map_with_linking(
-	task_t                  task,
-	struct mwl_region       *regions,
-	uint32_t                region_cnt,
-	void                    **link_info,
-	uint32_t                link_info_size,
-	memory_object_control_t file_control);
+extern kern_return_t vm_map_with_linking(task_t task,
+                                         struct mwl_region *regions,
+                                         uint32_t region_cnt, void **link_info,
+                                         uint32_t link_info_size,
+                                         memory_object_control_t file_control);
 
 #endif /* KERNEL_PRIVATE */
 
-#endif  /* _VM_DYLD_PAGER_INTERNAL_H_ */
+#endif /* _VM_DYLD_PAGER_INTERNAL_H_ */

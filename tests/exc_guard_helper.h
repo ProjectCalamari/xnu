@@ -37,9 +37,9 @@
 
 #pragma once
 
+#include <mach/task_info.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <mach/task_info.h>
 
 /*
  * Set verbose_exc_helper = true to log exception information with T_LOG().
@@ -48,17 +48,17 @@
 extern bool verbose_exc_helper;
 
 typedef struct {
-	/* The number of EXC_GUARD exceptions caught during the block. */
-	unsigned catch_count;
+  /* The number of EXC_GUARD exceptions caught during the block. */
+  unsigned catch_count;
 
-	/*
-	 * The remaining fields are only set for the first EXC_GUARD caught.
-	 * See kern/exc_guard.h for definitions of these fields.
-	 */
-	unsigned guard_type;     /* e.g. GUARD_TYPE_VIRT_MEMORY */
-	uint32_t guard_flavor;
-	uint32_t guard_target;
-	uint64_t guard_payload;
+  /*
+   * The remaining fields are only set for the first EXC_GUARD caught.
+   * See kern/exc_guard.h for definitions of these fields.
+   */
+  unsigned guard_type; /* e.g. GUARD_TYPE_VIRT_MEMORY */
+  uint32_t guard_flavor;
+  uint32_t guard_target;
+  uint64_t guard_payload;
 } exc_guard_helper_info_t;
 
 /*
@@ -70,8 +70,7 @@ typedef struct {
  * memory in address ranges that your test requires to
  * be unallocated.
  */
-extern void
-exc_guard_helper_init(void);
+extern void exc_guard_helper_init(void);
 
 /*
  * Sets EXC_GUARD exceptions of the given type (e.g. GUARD_TYPE_VIRT_MEMORY)
@@ -113,17 +112,16 @@ enable_exc_guard_of_type(unsigned int guard_type);
  *      if (block_raised_exc_guard_of_type(GUARD_TYPE_VIRT_MEMORY, &exc_info, ^{
  *              mach_vm_deallocate(mach_task_self(), addr, size);
  *          })) {
- *              // EXC_GUARD raised during mach_vm_deallocate, details in exc_info
- *      } else {
+ *              // EXC_GUARD raised during mach_vm_deallocate, details in
+ * exc_info } else {
  *              // mach_vm_deallocate did not raise EXC_GUARD
  *      }
  */
 typedef void (^exc_guard_helper_block_t)(void);
 extern bool
-block_raised_exc_guard_of_type(
-	unsigned int guard_type,
-	exc_guard_helper_info_t * const out_exc_info,
-	exc_guard_helper_block_t block);
+block_raised_exc_guard_of_type(unsigned int guard_type,
+                               exc_guard_helper_info_t *const out_exc_info,
+                               exc_guard_helper_block_t block);
 
 /*
  * Like block_raised_exc_guard_of_type(), but quietly
@@ -131,8 +129,6 @@ block_raised_exc_guard_of_type(
  * the guard type is GUARD_TYPE_VIRT_MEMORY and we're
  * in a translated execution environment like Rosetta.
  */
-extern bool
-block_raised_exc_guard_of_type_ignoring_translated(
-	unsigned int guard_type,
-	exc_guard_helper_info_t * const out_exc_info,
-	exc_guard_helper_block_t block);
+extern bool block_raised_exc_guard_of_type_ignoring_translated(
+    unsigned int guard_type, exc_guard_helper_info_t *const out_exc_info,
+    exc_guard_helper_block_t block);

@@ -28,5 +28,5 @@
 
 #include "kxld_util.h"
 
-void kxld_test_log(KXLDLogSubsystem sys, KXLDLogLevel level,
-    const char *format, va_list ap, void *user_data);
+void kxld_test_log(KXLDLogSubsystem sys, KXLDLogLevel level, const char *format,
+                   va_list ap, void *user_data);

@@ -35,34 +35,27 @@
 
 extern memory_object_default_t memory_manager_default;
 
-__private_extern__
-memory_object_default_t memory_manager_default_reference(void);
+__private_extern__ memory_object_default_t
+memory_manager_default_reference(void);
 
-__private_extern__
-kern_return_t           memory_manager_default_check(void);
+__private_extern__ kern_return_t memory_manager_default_check(void);
 
-__private_extern__
-memory_object_control_t memory_object_control_allocate(
-	vm_object_t             object);
+__private_extern__ memory_object_control_t
+memory_object_control_allocate(vm_object_t object);
 
-__private_extern__
-void                    memory_object_control_collapse(
-	memory_object_control_t *control,
-	vm_object_t             object);
+__private_extern__ void
+memory_object_control_collapse(memory_object_control_t *control,
+                               vm_object_t object);
 
-__private_extern__
-vm_object_t             memory_object_control_to_vm_object(
-	memory_object_control_t control);
-__private_extern__
-vm_object_t             memory_object_to_vm_object(
-	memory_object_t mem_obj);
+__private_extern__ vm_object_t
+memory_object_control_to_vm_object(memory_object_control_t control);
+__private_extern__ vm_object_t
+memory_object_to_vm_object(memory_object_t mem_obj);
 
-extern void memory_object_control_disable(
-	memory_object_control_t *control);
+extern void memory_object_control_disable(memory_object_control_t *control);
 
-extern boolean_t        memory_object_is_shared_cache(
-	memory_object_control_t         control);
+extern boolean_t memory_object_is_shared_cache(memory_object_control_t control);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-#endif  /* _VM_MEMORY_OBJECT_INTERNAL_H_ */
+#endif /* _VM_MEMORY_OBJECT_INTERNAL_H_ */

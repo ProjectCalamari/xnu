@@ -38,24 +38,18 @@ __BEGIN_DECLS
 /*
  * Fetch the exclave panic string.
  */
-extern kern_return_t
-exclaves_panic_get_string(char **string);
+extern kern_return_t exclaves_panic_get_string(char **string);
 
 /*
  * Append additional info and panic bactrace to the paniclog.
  */
-extern void
-exclaves_panic_append_info(void);
+extern void exclaves_panic_append_info(void);
 
-extern void
-exclaves_panic_thread_wait(void);
+extern void exclaves_panic_thread_wait(void);
 
+extern kern_return_t exclaves_panic_thread_setup(void);
 
-extern kern_return_t
-exclaves_panic_thread_setup(void);
-
-void
-handle_response_panic_buffer_address(pmap_paddr_t address);
+void handle_response_panic_buffer_address(pmap_paddr_t address);
 
 __END_DECLS
 

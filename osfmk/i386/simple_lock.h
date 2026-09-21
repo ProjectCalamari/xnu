@@ -60,69 +60,67 @@
  *
  *	Simple lock data type definitions
  */
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _I386_SIMPLE_LOCK_TYPES_H_
 #define _I386_SIMPLE_LOCK_TYPES_H_
 
-#include <mach/boolean.h>
 #include <kern/lock_types.h>
+#include <mach/boolean.h>
 
 #include <sys/appleapiopts.h>
 #if defined(MACH_KERNEL_PRIVATE) && defined(__APPLE_API_PRIVATE)
 #include <mach_ldebug.h>
 
-extern uint64_t LockTimeOutTSC; /* Lock timeout in TSC ticks */
-extern uint32_t LockTimeOutUsec;/* Lock timeout in microseconds */
-extern uint64_t LockTimeOut;    /* Lock timeout in absolute time */
+extern uint64_t LockTimeOutTSC;  /* Lock timeout in TSC ticks */
+extern uint32_t LockTimeOutUsec; /* Lock timeout in microseconds */
+extern uint64_t LockTimeOut;     /* Lock timeout in absolute time */
 
-#if     MACH_LDEBUG
+#if MACH_LDEBUG
 #define USLOCK_DEBUG 1
 #else
 #define USLOCK_DEBUG 0
-#endif  /* USLOCK_DEBUG */
+#endif /* USLOCK_DEBUG */
 
 typedef struct uslock_debug {
-	void                    *lock_pc;       /* pc where lock operation began    */
-	void                    *lock_thread;   /* thread that acquired lock */
-	void                    *unlock_thread; /* last thread to release lock */
-	void                    *unlock_pc;     /* pc where lock operation ended    */
-	unsigned long   duration[2];
-	unsigned short  state;
-	unsigned char   lock_cpu;
-	unsigned char   unlock_cpu;
+  void *lock_pc;       /* pc where lock operation began    */
+  void *lock_thread;   /* thread that acquired lock */
+  void *unlock_thread; /* last thread to release lock */
+  void *unlock_pc;     /* pc where lock operation ended    */
+  unsigned long duration[2];
+  unsigned short state;
+  unsigned char lock_cpu;
+  unsigned char unlock_cpu;
 } uslock_debug;
 
 typedef struct slock {
-	hw_lock_data_t  interlock;      /* must be first... see lock.c */
-#if     USLOCK_DEBUG
-	unsigned short  lock_type;      /* must be second... see lock.c */
-#define USLOCK_TAG      0x5353
-	uslock_debug    debug;
+  hw_lock_data_t interlock; /* must be first... see lock.c */
+#if USLOCK_DEBUG
+  unsigned short lock_type; /* must be second... see lock.c */
+#define USLOCK_TAG 0x5353
+  uslock_debug debug;
 #endif
 } usimple_lock_data_t, *usimple_lock_t;
 
-extern void                     i386_lock_unlock_with_flush(
-	hw_lock_t);
+extern void i386_lock_unlock_with_flush(hw_lock_t);
 #else
 
 typedef struct slock {
-	unsigned long   lock_data[10];
+  unsigned long lock_data[10];
 } usimple_lock_data_t, *usimple_lock_t;
 
-#endif  /* defined(MACH_KERNEL_PRIVATE) && defined(__APPLE_API_PRIVATE) */
+#endif /* defined(MACH_KERNEL_PRIVATE) && defined(__APPLE_API_PRIVATE) */
 
-#define USIMPLE_LOCK_NULL       ((usimple_lock_t) 0)
+#define USIMPLE_LOCK_NULL ((usimple_lock_t)0)
 
 #if !defined(decl_simple_lock_data)
-typedef usimple_lock_data_t     *simple_lock_t;
-typedef usimple_lock_data_t     simple_lock_data_t;
+typedef usimple_lock_data_t *simple_lock_t;
+typedef usimple_lock_data_t simple_lock_data_t;
 
-#define decl_simple_lock_data(class, name) \
-	class	simple_lock_data_t	name
+#define decl_simple_lock_data(class, name) class simple_lock_data_t name
 
-#endif  /* !defined(decl_simple_lock_data) */
+#endif /* !defined(decl_simple_lock_data) */
 
 #endif /* !_I386_SIMPLE_LOCK_TYPES_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

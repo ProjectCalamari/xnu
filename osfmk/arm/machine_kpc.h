@@ -32,17 +32,17 @@
 
 #ifdef ARMA7
 
-#define KPC_ARM_FIXED_COUNT             1
-#define KPC_ARM_CONFIGURABLE_COUNT      4
+#define KPC_ARM_FIXED_COUNT 1
+#define KPC_ARM_CONFIGURABLE_COUNT 4
 
-#define KPC_ARM_TOTAL_COUNT                     (KPC_ARM_FIXED_COUNT + KPC_ARM_CONFIGURABLE_COUNT)
+#define KPC_ARM_TOTAL_COUNT (KPC_ARM_FIXED_COUNT + KPC_ARM_CONFIGURABLE_COUNT)
 
 #define KPC_ARM_COUNTER_WIDTH 32
 
 #else
 
-#define KPC_ARM_FIXED_COUNT             2
-#define KPC_ARM_CONFIGURABLE_COUNT      6
+#define KPC_ARM_FIXED_COUNT 2
+#define KPC_ARM_CONFIGURABLE_COUNT 6
 
 #define KPC_ARM_COUNTER_WIDTH 39
 #define KPC_ARM_COUNTER_MASK ((1ull << KPC_ARM_COUNTER_WIDTH) - 1)
@@ -53,10 +53,11 @@
 
 typedef uint64_t kpc_config_t;
 
-/* Size to the maximum number of counters we could read from every class in one go */
+/* Size to the maximum number of counters we could read from every class in one
+ * go */
 #define KPC_MAX_COUNTERS (KPC_ARM_FIXED_COUNT + KPC_ARM_CONFIGURABLE_COUNT + 1)
 
 /* arm32 uses fixed counter shadows */
-#define FIXED_COUNTER_SHADOW  (1)
+#define FIXED_COUNTER_SHADOW (1)
 
 #endif /* _MACHINE_ARM_KPC_H */

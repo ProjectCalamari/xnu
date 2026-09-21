@@ -34,21 +34,21 @@
  *      Created.
  */
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _BSD_DEV_KMREG_COM_
 #define _BSD_DEV_KMREG_COM_
 
-#include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 
 /*
  * Colors for fg, bg in struct km_drawrect
  */
-#define KM_COLOR_WHITE          0
-#define KM_COLOR_LTGRAY         1
-#define KM_COLOR_DKGRAY         2
-#define KM_COLOR_BLACK          3
+#define KM_COLOR_WHITE 0
+#define KM_COLOR_LTGRAY 1
+#define KM_COLOR_DKGRAY 2
+#define KM_COLOR_BLACK 3
 
 /*
  * The data to be rendered is treated as a pixmap of 2 bit pixels.
@@ -64,47 +64,48 @@
  * the specified value.
  */
 struct km_drawrect {
-	unsigned short x;       /* Upper left corner of rect to be imaged. */
-	unsigned short y;
-	unsigned short width;   /* Width and height of rect to be imaged,
-	                         * in pixels */
-	unsigned short height;
-	union {
-		void *bits;     /* Pointer to 2 bit per pixel raster data. */
-		int   fill;     /* Const color for erase operation. */
-	} data;
+  unsigned short x; /* Upper left corner of rect to be imaged. */
+  unsigned short y;
+  unsigned short width; /* Width and height of rect to be imaged,
+                         * in pixels */
+  unsigned short height;
+  union {
+    void *bits; /* Pointer to 2 bit per pixel raster data. */
+    int fill;   /* Const color for erase operation. */
+  } data;
 };
 
 /*
  * Argument to KMIOCANIMCTL.
  */
 typedef enum {
-	KM_ANIM_STOP,           /* stop permanently */
-	KM_ANIM_SUSPEND,        /* suspend */
-	KM_ANIM_RESUME          /* resume */
+  KM_ANIM_STOP,    /* stop permanently */
+  KM_ANIM_SUSPEND, /* suspend */
+  KM_ANIM_RESUME   /* resume */
 } km_anim_ctl_t;
 
-#define KMIOCPOPUP      _IO('k', 1)             /* popup new window */
-#define KMIOCRESTORE    _IO('k', 2)             /* restore background */
-#define KMIOCDUMPLOG    _IO('k', 3)             /* dump message log */
-#define KMIOCDRAWRECT   _IOW('k', 5, struct km_drawrect)  /* Draw rect from
-	                                                   * bits */
-#define KMIOCERASERECT  _IOW('k', 6, struct km_drawrect)  /* Erase a rect */
+#define KMIOCPOPUP _IO('k', 1)   /* popup new window */
+#define KMIOCRESTORE _IO('k', 2) /* restore background */
+#define KMIOCDUMPLOG _IO('k', 3) /* dump message log */
+#define KMIOCDRAWRECT                                                          \
+  _IOW('k', 5, struct km_drawrect)                      /* Draw rect from      \
+                                                         * bits */
+#define KMIOCERASERECT _IOW('k', 6, struct km_drawrect) /* Erase a rect */
 
-#ifdef  KERNEL_PRIVATE
-#define KMIOCDISABLCONS _IO('k', 8)             /* disable console messages */
-#endif  /* KERNEL_PRIVATE */
+#ifdef KERNEL_PRIVATE
+#define KMIOCDISABLCONS _IO('k', 8) /* disable console messages */
+#endif                              /* KERNEL_PRIVATE */
 
-#define KMIOCANIMCTL    _IOW('k',9, km_anim_ctl_t)
+#define KMIOCANIMCTL _IOW('k', 9, km_anim_ctl_t)
 /* stop animation */
-#define KMIOCSTATUS     _IOR('k',10, int)       /* get status bits */
-#define KMIOCSIZE       _IOR('k',11, struct winsize) /* get screen size */
+#define KMIOCSTATUS _IOR('k', 10, int)          /* get status bits */
+#define KMIOCSIZE _IOR('k', 11, struct winsize) /* get screen size */
 
 /*
  * Status bits returned via KMIOCSTATUS.
  */
-#define KMS_SEE_MSGS    0x00000001
+#define KMS_SEE_MSGS 0x00000001
 
-#endif  /* _BSD_DEV_KMREG_COM_ */
+#endif /* _BSD_DEV_KMREG_COM_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

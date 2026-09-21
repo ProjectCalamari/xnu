@@ -27,52 +27,49 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <sys/sysctl.h>
 #include <unistd.h>
 #include <uuid/uuid.h>
 
-#include "skywalk_test_driver.h"
 #include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
 #include "skywalk_test_utils.h"
 
 static int sktc_libcuckoo_test_was_enabled;
 
-void
-sktc_libcuckoo_init(void)
-{
-	size_t len = sizeof(sktc_libcuckoo_test_was_enabled);
-	int enabled = 1;
+void sktc_libcuckoo_init(void) {
+  size_t len = sizeof(sktc_libcuckoo_test_was_enabled);
+  int enabled = 1;
 
-	sysctlbyname("kern.skywalk.libcuckoo.test", &sktc_libcuckoo_test_was_enabled,
-	    &len, &enabled, sizeof(enabled));
+  sysctlbyname("kern.skywalk.libcuckoo.test", &sktc_libcuckoo_test_was_enabled,
+               &len, &enabled, sizeof(enabled));
 }
 
-void
-sktc_libcuckoo_fini(void)
-{
-	sysctlbyname("kern.skywalk.libcuckoo.test", NULL, 0,
-	    &sktc_libcuckoo_test_was_enabled,
-	    sizeof(sktc_libcuckoo_test_was_enabled));
+void sktc_libcuckoo_fini(void) {
+  sysctlbyname("kern.skywalk.libcuckoo.test", NULL, 0,
+               &sktc_libcuckoo_test_was_enabled,
+               sizeof(sktc_libcuckoo_test_was_enabled));
 }
 
-static int
-skt_libcuckoo_main(int argc, char *argv[])
-{
+static int skt_libcuckoo_main(int argc, char *argv[]) {
 #pragma unused(argc, argv)
-	/*
-	 * A failure for this test is indicated by either a panic or
-	 * a hang; we rely on some external mechanism to detect the
-	 * latter and take the appropriate actions.
-	 */
-	return 0;
+  /*
+   * A failure for this test is indicated by either a panic or
+   * a hang; we rely on some external mechanism to detect the
+   * latter and take the appropriate actions.
+   */
+  return 0;
 }
 
 struct skywalk_test skt_libcuckoo = {
-	"libcuckoo", "Cuckoo hashtable library basic and advanced tests",
-	SK_FEATURE_SKYWALK | SK_FEATURE_DEV_OR_DEBUG,
-	skt_libcuckoo_main, { NULL },
-	sktc_libcuckoo_init, sktc_libcuckoo_fini,
+    "libcuckoo",
+    "Cuckoo hashtable library basic and advanced tests",
+    SK_FEATURE_SKYWALK | SK_FEATURE_DEV_OR_DEBUG,
+    skt_libcuckoo_main,
+    {NULL},
+    sktc_libcuckoo_init,
+    sktc_libcuckoo_fini,
 };

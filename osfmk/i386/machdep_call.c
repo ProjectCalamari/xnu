@@ -40,31 +40,29 @@
 
 #include <i386/machdep_call.h>
 
-extern kern_return_t    kern_invalid(void);
+extern kern_return_t kern_invalid(void);
 
-const machdep_call_t            machdep_call_table[] = {
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
-	MACHDEP_CALL_ROUTINE(thread_fast_set_cthread_self, 1),
-	MACHDEP_CALL_ROUTINE(thread_set_user_ldt, 3),
-	MACHDEP_BSD_CALL_ROUTINE(i386_set_ldt, 3),
-	MACHDEP_BSD_CALL_ROUTINE(i386_get_ldt, 3),
+const machdep_call_t machdep_call_table[] = {
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_CALL_ROUTINE(thread_fast_set_cthread_self, 1),
+    MACHDEP_CALL_ROUTINE(thread_set_user_ldt, 3),
+    MACHDEP_BSD_CALL_ROUTINE(i386_set_ldt, 3),
+    MACHDEP_BSD_CALL_ROUTINE(i386_get_ldt, 3),
 };
-const machdep_call_t            machdep_call_table64[] = {
+const machdep_call_t machdep_call_table64[] = {
 #if HYPERVISOR
-	MACHDEP_CALL_ROUTINE64(hv_task_trap, 2),
-	MACHDEP_CALL_ROUTINE64(hv_thread_trap, 2),
+    MACHDEP_CALL_ROUTINE64(hv_task_trap, 2),
+    MACHDEP_CALL_ROUTINE64(hv_thread_trap, 2),
 #else
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
 #endif
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
-	MACHDEP_CALL_ROUTINE64(thread_fast_set_cthread_self64, 1),
-	MACHDEP_CALL_ROUTINE(kern_invalid, 0),
-	MACHDEP_BSD_CALL_ROUTINE64(i386_set_ldt64, 3),
-	MACHDEP_BSD_CALL_ROUTINE64(i386_get_ldt64, 3)
-};
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_CALL_ROUTINE64(thread_fast_set_cthread_self64, 1),
+    MACHDEP_CALL_ROUTINE(kern_invalid, 0),
+    MACHDEP_BSD_CALL_ROUTINE64(i386_set_ldt64, 3),
+    MACHDEP_BSD_CALL_ROUTINE64(i386_get_ldt64, 3)};
 
-int     machdep_call_count =
-    (sizeof(machdep_call_table) / sizeof(machdep_call_t));
+int machdep_call_count = (sizeof(machdep_call_table) / sizeof(machdep_call_t));

@@ -37,14 +37,16 @@
 #ifndef __KPI_SOCKET__
 #define __KPI_SOCKET__
 
-#include <sys/types.h>
+#include <sys/ioccom.h>
 #include <sys/kernel_types.h>
 #include <sys/socket.h>
-#include <sys/ioccom.h>
+#include <sys/types.h>
 
 #ifndef PRIVATE
 #include <Availability.h>
-#define __NKE_API_DEPRECATED __API_DEPRECATED("Network Kernel Extension KPI is deprecated", macos(10.4, 10.15))
+#define __NKE_API_DEPRECATED                                                   \
+  __API_DEPRECATED("Network Kernel Extension KPI is deprecated",               \
+                   macos(10.4, 10.15))
 #else
 #define __NKE_API_DEPRECATED
 #endif /* PRIVATE */
@@ -57,19 +59,18 @@ struct timeval;
  *       @typedef sock_upcall
  *
  *       @discussion sock_upcall is used by a socket to notify an in kernel
- *               client that data is waiting. Instead of making blocking calls in
- *               the kernel, a client can specify an upcall which will be called
- *               when data is available or the socket is ready for sending.
+ *               client that data is waiting. Instead of making blocking calls
+ * in the kernel, a client can specify an upcall which will be called when data
+ * is available or the socket is ready for sending.
  *
  *               Calls to your upcall function are not serialized and may be
  *               called concurrently from multiple threads in the kernel.
  *
  *               Your upcall function will be called:
- *                   when there is data more than the low water mark for reading,
- *                   or when there is space for a write,
- *                   or when there is a connection to accept,
- *                   or when a socket is connected,
- *                   or when a socket is closed or disconnected
+ *                   when there is data more than the low water mark for
+ * reading, or when there is space for a write, or when there is a connection to
+ * accept, or when a socket is connected, or when a socket is closed or
+ * disconnected
  *
  *       @param so A reference to the socket that's ready.
  *       @param cookie The cookie passed in when the socket was created.
@@ -82,9 +83,9 @@ typedef void (*sock_upcall)(socket_t so, void *cookie, int waitf);
  *       @typedef sock_evupcall
  *
  *       @discussion sock_evupcall is used by a socket to notify an in kernel
- *               client when an event occurs. Instead of making blocking calls in
- *               the kernel, a client can specify an upcall which will be called
- *               when an event status is available.
+ *               client when an event occurs. Instead of making blocking calls
+ * in the kernel, a client can specify an upcall which will be called when an
+ * event status is available.
  *       @param so A reference to the socket that's ready.
  *       @param cookie The cookie passed in when the socket was created.
  *       @param event Indicates the event as defined by SO_FILT_HINT_*
@@ -95,17 +96,16 @@ typedef void (*sock_evupcall)(socket_t so, void *cookie, uint32_t event);
 /*!
  *       @function sock_accept
  *       @discussion Accepts an incoming connection on a socket. See 'man 2
- *               accept' for more information. Allocating a socket in this manner
- *               creates a socket with no associated file descriptor.
+ *               accept' for more information. Allocating a socket in this
+ * manner creates a socket with no associated file descriptor.
  *       @param so The listening socket you'd like to accept a connection on.
  *       @param from A pointer to a socket address that will be filled in
  *               with the address the connection is from.
  *       @param fromlen Maximum length of from.
  *       @param flags Supports MSG_DONTWAIT and MSG_USEUPCALL. If
- *               MSG_DONTWAIT is set, accept will return EWOULDBLOCK if there are
- *               no connections ready to be accepted. If MSG_USEUPCALL is set,
- *               the created socket will use the same upcall function attached to
- *               the original socket.
+ *               MSG_DONTWAIT is set, accept will return EWOULDBLOCK if there
+ * are no connections ready to be accepted. If MSG_USEUPCALL is set, the created
+ * socket will use the same upcall function attached to the original socket.
  *       @param callback A notifier function to be called when an event
  *               occurs on the socket. This may be NULL.
  *       @param cookie A cookie passed directly to the callback.
@@ -114,16 +114,20 @@ typedef void (*sock_evupcall)(socket_t so, void *cookie, uint32_t event);
  *       @result 0 on success otherwise the errno error.
  */
 #ifdef KERNEL_PRIVATE
-extern errno_t sock_accept_internal(socket_t so, struct sockaddr *__sized_by(fromlen) from, int fromlen,
-    int flags, sock_upcall callback, void *cookie, socket_t *new_so);
+extern errno_t sock_accept_internal(socket_t so,
+                                    struct sockaddr *__sized_by(fromlen) from,
+                                    int fromlen, int flags,
+                                    sock_upcall callback, void *cookie,
+                                    socket_t *new_so);
 
-#define sock_accept(so, from, fromlen, flags, callback, cookie, new_so) \
-	sock_accept_internal((so), (from), (fromlen), (flags), (callback), \
-	(cookie), (new_so))
+#define sock_accept(so, from, fromlen, flags, callback, cookie, new_so)        \
+  sock_accept_internal((so), (from), (fromlen), (flags), (callback), (cookie), \
+                       (new_so))
 #else
-extern errno_t sock_accept(socket_t so, struct sockaddr *__sized_by(fromlen) from, int fromlen,
-    int flags, sock_upcall callback, void *cookie, socket_t *new_so)
-__NKE_API_DEPRECATED;
+extern errno_t sock_accept(socket_t so,
+                           struct sockaddr *__sized_by(fromlen) from,
+                           int fromlen, int flags, sock_upcall callback,
+                           void *cookie, socket_t *new_so) __NKE_API_DEPRECATED;
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -134,8 +138,8 @@ __NKE_API_DEPRECATED;
  *       @param to The local address the socket should be bound to.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_bind(socket_t so, const struct sockaddr *to)
-__NKE_API_DEPRECATED;
+extern errno_t sock_bind(socket_t so,
+                         const struct sockaddr *to) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_connect
@@ -151,8 +155,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success, EINPROGRESS for a non-blocking connect that
  *               has not completed, otherwise the errno error.
  */
-extern errno_t sock_connect(socket_t so, const struct sockaddr *to, int flags)
-__NKE_API_DEPRECATED;
+extern errno_t sock_connect(socket_t so, const struct sockaddr *to,
+                            int flags) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -184,9 +188,10 @@ extern errno_t sock_connectwait(socket_t so, const struct timeval *tv);
  *       @param peernamelen Length of storage for the peer name.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_getpeername(socket_t so, struct sockaddr *__sized_by(peernamelen) peername,
-    int peernamelen)
-__NKE_API_DEPRECATED;
+extern errno_t sock_getpeername(socket_t so,
+                                struct sockaddr *__sized_by(peernamelen)
+                                    peername,
+                                int peernamelen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_getsockname
@@ -197,9 +202,10 @@ __NKE_API_DEPRECATED;
  *       @param socknamelen Length of storage for the socket name.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_getsockname(socket_t so, struct sockaddr *__sized_by(socknamelen) sockname,
-    int socknamelen)
-__NKE_API_DEPRECATED;
+extern errno_t sock_getsockname(socket_t so,
+                                struct sockaddr *__sized_by(socknamelen)
+                                    sockname,
+                                int socknamelen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_getsockopt
@@ -212,8 +218,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t sock_getsockopt(socket_t so, int level, int optname,
-    void *optval, int *optlen)
-__NKE_API_DEPRECATED;
+                               void *optval, int *optlen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_ioctl
@@ -223,8 +228,9 @@ __NKE_API_DEPRECATED;
  *       @param argp The argument.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_ioctl(socket_t so, unsigned long request, void *__sized_by(IOCPARM_LEN(request)) argp)
-__NKE_API_DEPRECATED;
+extern errno_t sock_ioctl(socket_t so, unsigned long request,
+                          void *__sized_by(IOCPARM_LEN(request))
+                              argp) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_setsockopt
@@ -237,8 +243,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t sock_setsockopt(socket_t so, int level, int optname,
-    const void *optval, int optlen)
-__NKE_API_DEPRECATED;
+                               const void *optval,
+                               int optlen) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -255,7 +261,8 @@ __NKE_API_DEPRECATED;
  *       @param optlen The length of optval.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_settclassopt(socket_t so, const void* optval, size_t optlen);
+extern errno_t sock_settclassopt(socket_t so, const void *optval,
+                                 size_t optlen);
 
 /*
  *       This function was added to support AFP getting the traffic class
@@ -270,7 +277,7 @@ extern errno_t sock_settclassopt(socket_t so, const void* optval, size_t optlen)
  *       @param optlen The length of optval, returns the actual length.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_gettclassopt(socket_t so, void* optval, size_t* optlen);
+extern errno_t sock_gettclassopt(socket_t so, void *optval, size_t *optlen);
 
 #ifdef XNU_KERNEL_PRIVATE
 extern void socket_set_traffic_mgt_flags_locked(socket_t so, u_int8_t flags);
@@ -280,8 +287,8 @@ extern void socket_clear_traffic_mgt_flags_locked(socket_t so, u_int8_t flags);
 extern void socket_set_traffic_mgt_flags(socket_t so, u_int8_t flags);
 extern void socket_clear_traffic_mgt_flags(socket_t so, u_int8_t flags);
 extern errno_t socket_defunct(struct proc *, socket_t so, int);
-extern errno_t sock_receive_internal(socket_t, struct msghdr *, mbuf_t *,
-    int, size_t *);
+extern errno_t sock_receive_internal(socket_t, struct msghdr *, mbuf_t *, int,
+                                     size_t *);
 #endif /* BSD_KERNEL_PRIVATE */
 #endif /* KERNEL_PRIVATE */
 
@@ -293,8 +300,7 @@ extern errno_t sock_receive_internal(socket_t, struct msghdr *, mbuf_t *,
  *       @param backlog The maximum length of the queue of pending connections.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_listen(socket_t so, int backlog)
-__NKE_API_DEPRECATED;
+extern errno_t sock_listen(socket_t so, int backlog) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_receive
@@ -309,14 +315,13 @@ __NKE_API_DEPRECATED;
  *               would cause the thread to block, otherwise the errno error.
  */
 extern errno_t sock_receive(socket_t so, struct msghdr *msg, int flags,
-    size_t *recvdlen)
-__NKE_API_DEPRECATED;
+                            size_t *recvdlen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_receivembuf
  *       @discussion Receive data from a socket. Similar to sock_receive
- *               though data is returned as a chain of mbufs. See 'man 2 recvmsg'
- *               for more information about receiving data.
+ *               though data is returned as a chain of mbufs. See 'man 2
+ * recvmsg' for more information about receiving data.
  *       @param so The socket.
  *       @param msg The msg describing how the data should be received. May
  *               be NULL. The msg_iov is ignored.
@@ -331,8 +336,8 @@ __NKE_API_DEPRECATED;
  *               would cause the thread to block, otherwise the errno error.
  */
 extern errno_t sock_receivembuf(socket_t so, struct msghdr *msg, mbuf_t *data,
-    int flags, size_t *recvlen)
-__NKE_API_DEPRECATED;
+                                int flags,
+                                size_t *recvlen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_send
@@ -347,8 +352,7 @@ __NKE_API_DEPRECATED;
  *               would cause the thread to block, otherwise the errno error.
  */
 extern errno_t sock_send(socket_t so, const struct msghdr *msg, int flags,
-    size_t *sentlen)
-__NKE_API_DEPRECATED;
+                         size_t *sentlen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_sendmbuf
@@ -362,17 +366,17 @@ __NKE_API_DEPRECATED;
  *       @param sentlen The number of bytes sent.
  *       @result 0 on success, EWOULDBLOCK if non-blocking and operation
  *               would cause the thread to block, otherwise the errno error.
- *               Regardless of return value, the mbuf chain 'data' will be freed.
+ *               Regardless of return value, the mbuf chain 'data' will be
+ * freed.
  */
 extern errno_t sock_sendmbuf(socket_t so, const struct msghdr *msg, mbuf_t data,
-    int flags, size_t *sentlen)
-__NKE_API_DEPRECATED;
+                             int flags, size_t *sentlen) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
  *       @function sock_sendmbuf_can_wait
- *       @discussion Variation of sock_sendmbuf that can wait for the send socket
- *               buffer to drain when it is full instead of returning EMSGSIZE.
+ *       @discussion Variation of sock_sendmbuf that can wait for the send
+ * socket buffer to drain when it is full instead of returning EMSGSIZE.
  *       @param so The socket.
  *       @param msg The msg describing how the data should be sent. The
  *               msg_iov is ignored. msg may be NULL.
@@ -381,10 +385,11 @@ __NKE_API_DEPRECATED;
  *       @param sentlen The number of bytes sent.
  *       @result 0 on success, EWOULDBLOCK if non-blocking and operation
  *               would cause the thread to block, otherwise the errno error.
- *               Regardless of return value, the mbuf chain 'data' will be freed.
+ *               Regardless of return value, the mbuf chain 'data' will be
+ * freed.
  */
-extern errno_t sock_sendmbuf_can_wait(socket_t so, const struct msghdr *msg, mbuf_t data,
-    int flags, size_t *sentlen);
+extern errno_t sock_sendmbuf_can_wait(socket_t so, const struct msghdr *msg,
+                                      mbuf_t data, int flags, size_t *sentlen);
 #define HAS_SOCK_SENDMBUF_CAN_WAIT 1
 
 #endif /* KERNEL_PRIVATE */
@@ -399,8 +404,7 @@ extern errno_t sock_sendmbuf_can_wait(socket_t so, const struct msghdr *msg, mbu
  *               SHUT_RDWR - shutdown both.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_shutdown(socket_t so, int how)
-__NKE_API_DEPRECATED;
+extern errno_t sock_shutdown(socket_t so, int how) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_socket
@@ -418,27 +422,27 @@ __NKE_API_DEPRECATED;
  */
 #ifdef KERNEL_PRIVATE
 extern errno_t sock_socket_internal(int domain, int type, int protocol,
-    sock_upcall callback, void *cookie, socket_t *new_so);
+                                    sock_upcall callback, void *cookie,
+                                    socket_t *new_so);
 
-#define sock_socket(domain, type, protocol, callback, cookie, new_so) \
-	sock_socket_internal((domain), (type), (protocol), \
-	(callback), (cookie), (new_so))
+#define sock_socket(domain, type, protocol, callback, cookie, new_so)          \
+  sock_socket_internal((domain), (type), (protocol), (callback), (cookie),     \
+                       (new_so))
 #else
 extern errno_t sock_socket(int domain, int type, int protocol,
-    sock_upcall callback, void *cookie, socket_t *new_so)
-__NKE_API_DEPRECATED;
+                           sock_upcall callback, void *cookie,
+                           socket_t *new_so) __NKE_API_DEPRECATED;
 #endif /* KERNEL_PRIVATE */
 
 /*!
  *       @function sock_close
  *       @discussion Close the socket.
  *       @param so The socket to close. This should only ever be a socket
- *               created with sock_socket. Closing a socket created in user space
- *               using sock_close may leave a file descriptor pointing to the
- *               closed socket, resulting in undefined behavior.
+ *               created with sock_socket. Closing a socket created in user
+ * space using sock_close may leave a file descriptor pointing to the closed
+ * socket, resulting in undefined behavior.
  */
-extern void sock_close(socket_t so)
-__NKE_API_DEPRECATED;
+extern void sock_close(socket_t so) __NKE_API_DEPRECATED;
 
 /*
  *       @function sock_retain
@@ -450,8 +454,7 @@ __NKE_API_DEPRECATED;
  *               that socket. It is used in conjunction with
  *               sock_release(socket_t so).
  */
-extern void sock_retain(socket_t so)
-__NKE_API_DEPRECATED;
+extern void sock_retain(socket_t so) __NKE_API_DEPRECATED;
 
 /*
  *       @function sock_release
@@ -459,10 +462,10 @@ __NKE_API_DEPRECATED;
  *               retain count reaches zero.
  *       @param so The socket to release. This is used to release ownership
  *               on a socket acquired with sock_retain. When the last retain
- *               count is reached, this will call sock_close to close the socket.
+ *               count is reached, this will call sock_close to close the
+ * socket.
  */
-extern void sock_release(socket_t so)
-__NKE_API_DEPRECATED;
+extern void sock_release(socket_t so) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_setpriv
@@ -472,8 +475,7 @@ __NKE_API_DEPRECATED;
  *       @param on Indicate whether or not the SS_PRIV flag should be set.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_setpriv(socket_t so, int on)
-__NKE_API_DEPRECATED;
+extern errno_t sock_setpriv(socket_t so, int on) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_isconnected
@@ -481,8 +483,7 @@ __NKE_API_DEPRECATED;
  *       @param so The socket to check.
  *       @result 0 - socket is not connected. 1 - socket is connected.
  */
-extern int sock_isconnected(socket_t so)
-__NKE_API_DEPRECATED;
+extern int sock_isconnected(socket_t so) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_isnonblocking
@@ -495,8 +496,7 @@ __NKE_API_DEPRECATED;
  *               If the parameter is non-zero, the socket will not block.
  *       @result 0 - socket will block. 1 - socket will not block.
  */
-extern int sock_isnonblocking(socket_t so)
-__NKE_API_DEPRECATED;
+extern int sock_isnonblocking(socket_t so) __NKE_API_DEPRECATED;
 
 /*!
  *       @function sock_gettype
@@ -506,12 +506,13 @@ __NKE_API_DEPRECATED;
  *               retrieved.
  *       @param so The socket to check.
  *       @param domain The domain of the socket (PF_INET, ...). May be NULL.
- *       @param type The socket type (SOCK_STREAM, SOCK_DGRAM, ...). May be NULL.
+ *       @param type The socket type (SOCK_STREAM, SOCK_DGRAM, ...). May be
+ * NULL.
  *       @param protocol The socket protocol. May be NULL.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t sock_gettype(socket_t so, int *domain, int *type, int *protocol)
-__NKE_API_DEPRECATED;
+extern errno_t sock_gettype(socket_t so, int *domain, int *type,
+                            int *protocol) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -559,7 +560,7 @@ extern socket_t sock_getlistener(socket_t so);
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t sock_getaddr(socket_t so, struct sockaddr **psockname,
-    int peername);
+                            int peername);
 
 /*
  *       @function sock_freeaddr
@@ -583,7 +584,7 @@ extern void sock_freeaddr(struct sockaddr *sockname);
  *       @param context A cookie passed directly to the callback
  */
 extern errno_t sock_setupcall(socket_t sock, sock_upcall callback,
-    void *context);
+                              void *context);
 
 /*
  *       @function sock_setupcalls
@@ -602,7 +603,8 @@ extern errno_t sock_setupcall(socket_t sock, sock_upcall callback,
  *       @param write_context A cookie passed directly to the write callback
  */
 extern errno_t sock_setupcalls(socket_t sock, sock_upcall read_callback,
-    void *read_context, sock_upcall write_callback, void *write_context);
+                               void *read_context, sock_upcall write_callback,
+                               void *write_context);
 
 /*
  *       @function sock_setupcalls_locked
@@ -611,9 +613,9 @@ extern errno_t sock_setupcalls(socket_t sock, sock_upcall read_callback,
  *                      on a locked socket. Thus, no unlock is done prior to
  *                      calling the callback.
  */
-extern void sock_setupcalls_locked(socket_t sock,
-    sock_upcall rcallback, void *rcontext,
-    sock_upcall wcallback, void *wcontext, int locked);
+extern void sock_setupcalls_locked(socket_t sock, sock_upcall rcallback,
+                                   void *rcontext, sock_upcall wcallback,
+                                   void *wcontext, int locked);
 
 /*
  *       @function sock_catchevents
@@ -628,11 +630,10 @@ extern void sock_setupcalls_locked(socket_t sock,
  *               indicating the registered event(s).
  */
 extern errno_t sock_catchevents(socket_t sock, sock_evupcall event_callback,
-    void *event_context, uint32_t event_mask);
+                                void *event_context, uint32_t event_mask);
 
 extern void sock_catchevents_locked(socket_t sock, sock_evupcall ecallback,
-    void *econtext, uint32_t emask);
-
+                                    void *econtext, uint32_t emask);
 
 /*
  *       @function sock_iskernel

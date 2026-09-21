@@ -33,18 +33,18 @@
  *	Broke out machine-independent portion.
  */
 
-#ifdef  DRIVER_PRIVATE
+#ifdef DRIVER_PRIVATE
 
 #ifndef _BUSVAR_
 #define _BUSVAR_
 
 /* pseudo device initialization routine support */
 struct pseudo_init {
-	int     ps_count;
-	int     (*ps_func)(int count);
+  int ps_count;
+  int (*ps_func)(int count);
 };
 extern struct pseudo_init pseudo_inits[];
 
 #endif /* _BUSVAR_ */
 
-#endif  /* DRIVER_PRIVATE */
+#endif /* DRIVER_PRIVATE */

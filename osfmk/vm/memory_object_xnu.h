@@ -33,15 +33,14 @@
 
 /* Also defined in vm_protos.h currently */
 #if CONFIG_SECLUDED_MEMORY
-extern void             memory_object_mark_eligible_for_secluded(
-	memory_object_control_t         control,
-	boolean_t                       eligible_for_secluded);
+extern void
+memory_object_mark_eligible_for_secluded(memory_object_control_t control,
+                                         boolean_t eligible_for_secluded);
 #endif /* CONFIG_SECLUDED_MEMORY */
 
-extern void             memory_object_mark_for_realtime(
-	memory_object_control_t         control,
-	bool                            for_realtime);
+extern void memory_object_mark_for_realtime(memory_object_control_t control,
+                                            bool for_realtime);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-#endif  /* _VM_MEMORY_OBJECT_XNU_H_ */
+#endif /* _VM_MEMORY_OBJECT_XNU_H_ */

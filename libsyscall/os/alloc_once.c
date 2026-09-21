@@ -27,13 +27,13 @@
  */
 
 // Keep in sync with libplatform alloc_once.c
-#define OS_ALLOC_ONCE_KEY_MAX   100
+#define OS_ALLOC_ONCE_KEY_MAX 100
 
 struct _os_alloc_once_s {
-	long once;
-	void *ptr;
+  long once;
+  void *ptr;
 };
 
-__attribute__((visibility("default")))
-extern struct _os_alloc_once_s _os_alloc_once_table[];
+__attribute__((visibility(
+    "default"))) extern struct _os_alloc_once_s _os_alloc_once_table[];
 struct _os_alloc_once_s _os_alloc_once_table[OS_ALLOC_ONCE_KEY_MAX];

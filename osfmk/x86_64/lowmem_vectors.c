@@ -55,63 +55,63 @@
  * the rights to redistribute these changes.
  */
 
-#include <mach_kdp.h>
 #include <mach/vm_param.h>
+#include <mach_kdp.h>
 #include <x86_64/lowglobals.h>
 
 /*
- * on x86_64 the low mem vectors live here and get mapped to 0xffffff8000002000 at
- * system startup time
+ * on x86_64 the low mem vectors live here and get mapped to 0xffffff8000002000
+ * at system startup time
  */
 
-extern void         *version;
-extern void         *kmod;
-extern void         *kdp_trans_off;
-extern void         *kdp_read_io;
-extern void         *osversion;
-extern void         *flag_kdp_trigger_reboot;
-extern void         *manual_pkt;
-extern void         *kdp_jtag_coredump;
-extern vm_offset_t  c_buffers;
-extern vm_size_t    c_buffers_size;
+extern void *version;
+extern void *kmod;
+extern void *kdp_trans_off;
+extern void *kdp_read_io;
+extern void *osversion;
+extern void *flag_kdp_trigger_reboot;
+extern void *manual_pkt;
+extern void *kdp_jtag_coredump;
+extern vm_offset_t c_buffers;
+extern vm_size_t c_buffers_size;
 
-lowglo lowGlo __attribute__ ((aligned(PAGE_SIZE))) = {
-	.lgVerCode              = { 'C', 'a', 't', 'f', 'i', 's', 'h', ' ' },
+lowglo lowGlo __attribute__((aligned(PAGE_SIZE))) = {
+    .lgVerCode = {'C', 'a', 't', 'f', 'i', 's', 'h', ' '},
 
-	// Increment major version for changes that break the current usage of lowGlow
-	.lgLayoutMajorVersion   = 0,
-	// Increment minor version for changes that provide additional fields but do
-	// not break the current usage of lowGlow
-	.lgLayoutMinorVersion   = 1,
+    // Increment major version for changes that break the current usage of
+    // lowGlow
+    .lgLayoutMajorVersion = 0,
+    // Increment minor version for changes that provide additional fields but do
+    // not break the current usage of lowGlow
+    .lgLayoutMinorVersion = 1,
 
-	// Kernel version (not lowglo layout version)
-	.lgVersion              = (uint64_t) &version,
+    // Kernel version (not lowglo layout version)
+    .lgVersion = (uint64_t)&version,
 
-	// Kernel compressor buffers
-	.lgCompressorBufferAddr = (uint64_t) &c_buffers,
-	.lgCompressorSizeAddr   = (uint64_t) &c_buffers_size,
+    // Kernel compressor buffers
+    .lgCompressorBufferAddr = (uint64_t)&c_buffers,
+    .lgCompressorSizeAddr = (uint64_t)&c_buffers_size,
 
-	.lgKmodptr              = (uint64_t) &kmod,
-
-#if MACH_KDP
-	.lgTransOff             = (uint64_t) &kdp_trans_off,
-	.lgReadIO               = (uint64_t) &kdp_read_io,
-#else
-	.lgTransOff             = 0,
-	.lgReadIO               = 0,
-#endif
-
-	.lgDevSlot1             = 0,
-	.lgDevSlot2             = 0,
-
-	.lgOSVersion            = (uint64_t) &osversion,
+    .lgKmodptr = (uint64_t)&kmod,
 
 #if MACH_KDP
-	.lgRebootFlag           = (uint64_t) &flag_kdp_trigger_reboot,
-	.lgManualPktAddr        = (uint64_t) &manual_pkt,
+    .lgTransOff = (uint64_t)&kdp_trans_off,
+    .lgReadIO = (uint64_t)&kdp_read_io,
 #else
-	.lgRebootFlag           = 0,
-	.lgManualPktAddr        = 0,
+    .lgTransOff = 0,
+    .lgReadIO = 0,
 #endif
-	.lgKdpJtagCoredumpAddr  = (uint64_t) &kdp_jtag_coredump
-};
+
+    .lgDevSlot1 = 0,
+    .lgDevSlot2 = 0,
+
+    .lgOSVersion = (uint64_t)&osversion,
+
+#if MACH_KDP
+    .lgRebootFlag = (uint64_t)&flag_kdp_trigger_reboot,
+    .lgManualPktAddr = (uint64_t)&manual_pkt,
+#else
+    .lgRebootFlag = 0,
+    .lgManualPktAddr = 0,
+#endif
+    .lgKdpJtagCoredumpAddr = (uint64_t)&kdp_jtag_coredump};

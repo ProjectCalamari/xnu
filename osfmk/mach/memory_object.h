@@ -65,8 +65,8 @@
 #ifndef _MACH_MEMORY_OBJECT_H_
 #define _MACH_MEMORY_OBJECT_H_
 
-#include <mach/vm_types.h>
 #include <mach/memory_object_types.h>
+#include <mach/vm_types.h>
 
 __BEGIN_DECLS
 #pragma GCC visibility push(hidden)
@@ -81,10 +81,10 @@ __BEGIN_DECLS
  *	all mappings of this object, the memory manager may
  *	use memory_object_destroy.]
  */
-extern kern_return_t memory_object_init(
-	memory_object_t memory_object,
-	memory_object_control_t memory_control,
-	memory_object_cluster_size_t memory_object_page_size);
+extern kern_return_t
+memory_object_init(memory_object_t memory_object,
+                   memory_object_control_t memory_control,
+                   memory_object_cluster_size_t memory_object_page_size);
 
 /*
  *	Indicates that the specified memory object is no longer
@@ -97,8 +97,7 @@ extern kern_return_t memory_object_init(
  *	with the memory object is no longer usable - the pager should
  *	drop the control reference granted to it by memory_object_init.]
  */
-extern kern_return_t memory_object_terminate(
-	memory_object_t memory_object);
+extern kern_return_t memory_object_terminate(memory_object_t memory_object);
 
 /*
  *	Request data from this memory object.  At least
@@ -108,11 +107,9 @@ extern kern_return_t memory_object_terminate(
  *	[Response should be upl commit over the specified range.]
  */
 extern kern_return_t memory_object_data_request(
-	memory_object_t memory_object,
-	memory_object_offset_t offset,
-	memory_object_cluster_size_t length,
-	vm_prot_t desired_access,
-	memory_object_fault_info_t fault_info);
+    memory_object_t memory_object, memory_object_offset_t offset,
+    memory_object_cluster_size_t length, vm_prot_t desired_access,
+    memory_object_fault_info_t fault_info);
 
 /*
  *	Return data to manager.  This call is used in place of data_write
@@ -126,14 +123,9 @@ extern kern_return_t memory_object_data_request(
  *	[response should be a upl_commit over the range specified]
  */
 extern kern_return_t memory_object_data_return(
-	memory_object_t memory_object,
-	memory_object_offset_t offset,
-	memory_object_cluster_size_t size,
-	memory_object_offset_t *resid_offset,
-	int *io_error,
-	boolean_t dirty,
-	boolean_t kernel_copy,
-	int upl_flags);
+    memory_object_t memory_object, memory_object_offset_t offset,
+    memory_object_cluster_size_t size, memory_object_offset_t *resid_offset,
+    int *io_error, boolean_t dirty, boolean_t kernel_copy, int upl_flags);
 
 /*
  *	Provide initial data contents for this region of
@@ -143,10 +135,10 @@ extern kern_return_t memory_object_data_return(
  *
  *	[response should be UPL commit over the specified range.]
  */
-extern kern_return_t memory_object_data_initialize(
-	memory_object_t memory_object,
-	memory_object_offset_t offset,
-	memory_object_cluster_size_t size);
+extern kern_return_t
+memory_object_data_initialize(memory_object_t memory_object,
+                              memory_object_offset_t offset,
+                              memory_object_cluster_size_t size);
 
 /*
  *	Notify the pager that the specified memory object
@@ -156,14 +148,12 @@ extern kern_return_t memory_object_data_initialize(
  *	[Response should be a release of the named reference when
  *	the pager deems that appropriate.]
  */
-extern kern_return_t memory_object_map(
-	memory_object_t memory_object,
-	vm_prot_t prot);
+extern kern_return_t memory_object_map(memory_object_t memory_object,
+                                       vm_prot_t prot);
 
-extern kern_return_t memory_object_last_unmap(
-	memory_object_t memory_object);
+extern kern_return_t memory_object_last_unmap(memory_object_t memory_object);
 
 #pragma GCC visibility pop
 __END_DECLS
 
-#endif  /* _MACH_MEMORY_OBJECT_H_ */
+#endif /* _MACH_MEMORY_OBJECT_H_ */

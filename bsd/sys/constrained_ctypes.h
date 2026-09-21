@@ -159,8 +159,8 @@
  *
  *      (1) `socket_ref_t *' is an unconstrained pointer to `socket_ref_t', i.e.
  *          unconstrained pointer to a `reference' pointer to `struct socket'.
- *      (2) `socket_ref_t const *' is an unconstrained pointer to `socket_ref_t const',
- *          i.e. an unconstrained pointer to a const-qualified `reference'
+ *      (2) `socket_ref_t const *' is an unconstrained pointer to `socket_ref_t
+ * const', i.e. an unconstrained pointer to a const-qualified `reference'
  *          pointer to `struct socket'.
  *      (3) `socket_ref_t * const' is a const-qualified unconstrained pointer to
  *          `socket_ref_t', i.e. a const-qualified unconstrained pointer to a
@@ -238,24 +238,21 @@
  *
  *      Examples:
  *
- *      (1) `__CCT_DECLARE_CONSTRAINED_PTR_TYPE(struct socket, socket, __CCT_REF)'
- *          will declare the type
- *              `reference' pointer to `struct socket'
- *          and call this type by `socket_ref_t'
+ *      (1) `__CCT_DECLARE_CONSTRAINED_PTR_TYPE(struct socket, socket,
+ * __CCT_REF)' will declare the type `reference' pointer to `struct socket' and
+ * call this type by `socket_ref_t'
  *
- *      (2) `__CCT_DECLARE_CONSTRAINED_PTR_TYPE(struct socket, socket, __CCT_REF, __CCT_PTR)'
- *          will declare the type
- *              `checked' pointer to `socket_ref_t'
- *          which in turn is equivalent to the type
- *              `checked' pointer to `reference' pointer to `struct socket'
+ *      (2) `__CCT_DECLARE_CONSTRAINED_PTR_TYPE(struct socket, socket,
+ * __CCT_REF, __CCT_PTR)' will declare the type `checked' pointer to
+ * `socket_ref_t' which in turn is equivalent to the type `checked' pointer to
+ * `reference' pointer to `struct socket'
  *
- *      (3) `__CCT_DECLARE_CONSTRAINED_PTR_TYPE(struct socket, socket, __CCT_REF, __CCT_PTR, __CCT_REF)'
- *          will declare the type
- *              `reference' pointer to `socket_ref_ptr_t'
- *          which is equivalent to the type
- *              `reference' pointer to `checked' pointer to `socket_ref_t'
- *          which in turn is equivalent to the type
- *              `reference' pointer to `checked' pointer to `reference' pointer to `struct socket'
+ *      (3) `__CCT_DECLARE_CONSTRAINED_PTR_TYPE(struct socket, socket,
+ * __CCT_REF, __CCT_PTR, __CCT_REF)' will declare the type `reference' pointer
+ * to `socket_ref_ptr_t' which is equivalent to the type `reference' pointer to
+ * `checked' pointer to `socket_ref_t' which in turn is equivalent to the type
+ *              `reference' pointer to `checked' pointer to `reference' pointer
+ * to `struct socket'
  *
  *
  * 3. Using constrained pointer types.
@@ -269,8 +266,8 @@
  *      needs to be pointed, opt for the `reference' pointers.
  *
  *      There are two alternative approaches for using the `reference' pointers.
- *      One approach is to explicitly use `thing_ref_t ptr` instead of `thing *ptr`.
- *      The other approach is to surround the code with the directives
+ *      One approach is to explicitly use `thing_ref_t ptr` instead of `thing
+ * *ptr`. The other approach is to surround the code with the directives
  *      `__ASSUME_PTR_ABI_SINGLE_BEGIN' and `__ASSUME_PTR_ABI_SINGLE_END', which
  *      will have the effect of turning every unconstrained pointer to its
  *      `reference' counterpart.
@@ -392,7 +389,8 @@
  *      pointed-to array. Use of these attributes does not change the size of
  *      the pointer.
  *
- *      The tradeoff is between maintaining code readabilty and ABI compatibility.
+ *      The tradeoff is between maintaining code readabilty and ABI
+ * compatibility.
  *
  *      A common pattern is to split the function into the implementation,
  *      which is statically linked and therefore is ABI-safe, and the interface
@@ -410,8 +408,8 @@
  *      (1) Using `const thing_ref_t __counted_by(count)' instead of `const
  *          thing_ref_ptr_t' for vector input in a wrapper:
  *
- *      errno_t thing_find_best_compat(const thing_ref_t __counted_by(count)things,
- *                                     thing_ref_ref_t best, size_t count)
+ *      errno_t thing_find_best_compat(const thing_ref_t
+ * __counted_by(count)things, thing_ref_ref_t best, size_t count)
  *      {
  *              // __counted_by implicitly upgraded to `checked'
  *              return thing_find_best(things, best, count);
@@ -456,52 +454,49 @@
  *          stripping the `struct' keyword from `typename'.
  *      (d) If `typename' is a name of an enumeration, then `basetag' is formed
  *          by stripping the `enum' keyword from `typename'.
- *      (e) If `typename' is a name of a typedef to a struct or an enum that ends
- *          with `_t', then `basetag' is formed by stripping the `_t' suffix
- *          from `typename'. See (h) below for when `typename' is a pointer typedef.
- *      (f) If `typename' is a name of constrained pointer type ending with `_t',
- *          then `basetag' is formed by stripping the `_t' suffix from `typename'.
+ *      (e) If `typename' is a name of a typedef to a struct or an enum that
+ * ends with `_t', then `basetag' is formed by stripping the `_t' suffix from
+ * `typename'. See (h) below for when `typename' is a pointer typedef. (f) If
+ * `typename' is a name of constrained pointer type ending with `_t', then
+ * `basetag' is formed by stripping the `_t' suffix from `typename'.
  *
  *      Additionally, constrained pointers to constrained const pointers are a
  *      special case:
  *
  *      (g) If `typename' is a name of a constrained pointer type, ending with
- *          `_{innertag}_t', and `typename' has `const' qualifier, then `basetag'
- *          is formed by replacing `_{innertag}_t' with `_c{innertag}'
+ *          `_{innertag}_t', and `typename' has `const' qualifier, then
+ * `basetag' is formed by replacing `_{innertag}_t' with `_c{innertag}'
  *
- *      Finally, sometimes `name_t' represents not `struct name' but `struct name *'.
- *      This creates additional special case:
+ *      Finally, sometimes `name_t' represents not `struct name' but `struct
+ * name *'. This creates additional special case:
  *
  *      (h) If `typename' is a pointer typedef named `{struct}_t`, such as
  *          `mbuf_t',  then creating a constrained pointer to a `typename' would
- *           require creating a  constrained pointer to an unconstrained pointer,
- *           which is not supported at the moment. Instead, a constrained pointer to
- *           `typeof(*typename)` must be created first, and constrained again. Using
- *           the `mbuf_t` example, first one should create a constrained pointer to
- *           `struct mbuf`, e.g, `mbuf_bptr_t`, and then constrain it again with
- *           `tag`, leading to `mbuf_bptr_ref_t'.
+ *           require creating a  constrained pointer to an unconstrained
+ * pointer, which is not supported at the moment. Instead, a constrained pointer
+ * to `typeof(*typename)` must be created first, and constrained again. Using
+ *           the `mbuf_t` example, first one should create a constrained pointer
+ * to `struct mbuf`, e.g, `mbuf_bptr_t`, and then constrain it again with `tag`,
+ * leading to `mbuf_bptr_ref_t'.
  *
  *      Examples:
  *
- *      (1) `int_ref_t' is a `reference pointer' to `int', following the rule (a) above.
- *      (2) `so_pru_ref_t' is a `reference pointer' to function `so_pru',
+ *      (1) `int_ref_t' is a `reference pointer' to `int', following the rule
+ * (a) above. (2) `so_pru_ref_t' is a `reference pointer' to function `so_pru',
  *          following the rule (b) above.
  *      (3) `socket_ref_t' is a `reference pointer' to `struct socket',
  *          following the rule (c) above.
- *      (4) `classq_pkt_type_ref_t' is a `reference pointer' to `enum classq_pkt_type'
- *          following the rule (d) above.
- *      (5) `classq_pkt_type_ref_t' is a also `reference pointer' to `classq_pkt_type_t'
- *          following the rule (e) above.
- *      (6) `socket_ref_ref_t' is a `reference pointer' to `socket_ref_t`,
+ *      (4) `classq_pkt_type_ref_t' is a `reference pointer' to `enum
+ * classq_pkt_type' following the rule (d) above. (5) `classq_pkt_type_ref_t' is
+ * a also `reference pointer' to `classq_pkt_type_t' following the rule (e)
+ * above. (6) `socket_ref_ref_t' is a `reference pointer' to `socket_ref_t`,
  *          following the rule (f) above.
- *      (7) `socket_cref_ref_t' is a `reference pointer' to `socket_ref_t const`,
- *          following the rule (g) above.
- *      (8) `mbuf_ref_ref_t', is a `reference pointer' to `mbuf_ref_t`, and is one
- *          possible result of creating a `reference pointer' to `mbuf_t',
- *          following the rule (h) above.
- *      (9) `mbuf_bptr_ref_t', is a `reference pointer' to `mbuf_bptr_t`, and
- *          is another possible result of creating a `reference pointer' to
- *          `mbuf_t', following the rule (h) above.
+ *      (7) `socket_cref_ref_t' is a `reference pointer' to `socket_ref_t
+ * const`, following the rule (g) above. (8) `mbuf_ref_ref_t', is a `reference
+ * pointer' to `mbuf_ref_t`, and is one possible result of creating a `reference
+ * pointer' to `mbuf_t', following the rule (h) above. (9) `mbuf_bptr_ref_t', is
+ * a `reference pointer' to `mbuf_bptr_t`, and is another possible result of
+ * creating a `reference pointer' to `mbuf_t', following the rule (h) above.
  *
  */
 
@@ -509,85 +504,91 @@
  * Constraint contract constants.
  *
  * At the moment only clang (when compiled with `ptrcheck' feature) supports
- * pointer tagging via `__single', `__indexable' and `__bidi_indexable' attributes.
+ * pointer tagging via `__single', `__indexable' and `__bidi_indexable'
+ * attributes.
  *
  * During the transitional period, the `__indexable__' and `__bidi_indexable'
- * constraints will decay to raw pointers if the `ptrcheck' feature is not enabled.
- * Once the transitional period is over, the `__CCT_CONTRACT_ATTR_{B}PTR' constraints
- * will stop decaying to raw pointers when built by sufficiently recent version
- * of clang.
+ * constraints will decay to raw pointers if the `ptrcheck' feature is not
+ * enabled. Once the transitional period is over, the
+ * `__CCT_CONTRACT_ATTR_{B}PTR' constraints will stop decaying to raw pointers
+ * when built by sufficiently recent version of clang.
  *
  * Support for other compilers will be added after the introduction of support
  * for pointer tagging on those compilers.
  */
 #if defined(KERNEL) || defined(__CCT_ENABLE_USER_SPACE)
 #if defined(__clang__)
-#define __CCT_CONTRACT_ATTR___CCT_REF         __single
-#define __CCT_CONTRACT_ATTR___CCT_CREF        const __single
-#if  __has_ptrcheck
-#define __CCT_CONTRACT_ATTR___CCT_BPTR        __bidi_indexable
-#define __CCT_CONTRACT_ATTR___CCT_PTR         __indexable
+#define __CCT_CONTRACT_ATTR___CCT_REF __single
+#define __CCT_CONTRACT_ATTR___CCT_CREF const __single
+#if __has_ptrcheck
+#define __CCT_CONTRACT_ATTR___CCT_BPTR __bidi_indexable
+#define __CCT_CONTRACT_ATTR___CCT_PTR __indexable
 #else /* __clang__ + __has_ptrcheck */
 #define __CCT_CONTRACT_ATTR___CCT_BPTR
 #define __CCT_CONTRACT_ATTR___CCT_PTR
 #endif /* __clang__ + !__has_ptrcheck */
-#else /* !__clang__ */
+#else  /* !__clang__ */
 #define __CCT_CONTRACT_ATTR___CCT_REF
-#define __CCT_CONTRACT_ATTR___CCT_CREF        const
+#define __CCT_CONTRACT_ATTR___CCT_CREF const
 #define __CCT_CONTRACT_ATTR___CCT_BPTR
 #define __CCT_CONTRACT_ATTR___CCT_PTR
 #endif /* __clang__ */
 
-#define __CCT_CONTRACT_TAG___CCT_REF          _ref
-#define __CCT_CONTRACT_TAG___CCT_CREF         _cref
-#define __CCT_CONTRACT_TAG___CCT_BPTR         _bptr
-#define __CCT_CONTRACT_TAG___CCT_PTR          _ptr
+#define __CCT_CONTRACT_TAG___CCT_REF _ref
+#define __CCT_CONTRACT_TAG___CCT_CREF _cref
+#define __CCT_CONTRACT_TAG___CCT_BPTR _bptr
+#define __CCT_CONTRACT_TAG___CCT_PTR _ptr
 
 /* Helper macros */
 #define __CCT_DEFER(F, ...) F(__VA_ARGS__)
 #define __CCT_CONTRACT_TO_ATTR(kind) __CONCAT(__CCT_CONTRACT_ATTR_, kind)
-#define __CCT_CONTRACT_TO_TAG(kind)  __CCT_DEFER(__CONCAT, __CCT_CONTRACT_TAG_, kind)
+#define __CCT_CONTRACT_TO_TAG(kind)                                            \
+  __CCT_DEFER(__CONCAT, __CCT_CONTRACT_TAG_, kind)
 
 #define __CCT_COUNT_ARGS1(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, N, ...) N
-#define __CCT_COUNT_ARGS(...) \
-	__CCT_COUNT_ARGS1(, __VA_ARGS__, _9, _8, _7, _6, _5, _4, _3, _2, _1, _0)
+#define __CCT_COUNT_ARGS(...)                                                  \
+  __CCT_COUNT_ARGS1(, __VA_ARGS__, _9, _8, _7, _6, _5, _4, _3, _2, _1, _0)
 #define __CCT_DISPATCH1(base, N, ...) __CONCAT(base, N)(__VA_ARGS__)
-#define __CCT_DISPATCH(base, ...) \
-	__CCT_DISPATCH1(base, __CCT_COUNT_ARGS(__VA_ARGS__), __VA_ARGS__)
+#define __CCT_DISPATCH(base, ...)                                              \
+  __CCT_DISPATCH1(base, __CCT_COUNT_ARGS(__VA_ARGS__), __VA_ARGS__)
 
 /* Covert a contract list to a type suffix */
-#define __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_1(kind)                                                \
-	__CCT_DEFER(__CONCAT, __CCT_CONTRACT_TO_TAG(kind), _t)
-#define __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_2(kind1, kind2)                                        \
-	__CCT_DEFER(__CONCAT, __CCT_CONTRACT_TO_TAG(kind1),                                             \
-	         __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_1(kind2))
-#define __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_3(kind1, kind2, kind3)                                 \
-	__CCT_DEFER(__CONCAT, __CCT_CONTRACT_TO_TAG(kind1),                                             \
-	         __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_2(kind2, kind3))
+#define __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_1(kind)                           \
+  __CCT_DEFER(__CONCAT, __CCT_CONTRACT_TO_TAG(kind), _t)
+#define __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_2(kind1, kind2)                   \
+  __CCT_DEFER(__CONCAT, __CCT_CONTRACT_TO_TAG(kind1),                          \
+              __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_1(kind2))
+#define __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_3(kind1, kind2, kind3)            \
+  __CCT_DEFER(__CONCAT, __CCT_CONTRACT_TO_TAG(kind1),                          \
+              __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_2(kind2, kind3))
 
 /* Create typedefs for the constrained pointer type */
-#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE_3(basetype, basetag, kind)                               \
-typedef basetype * __CCT_CONTRACT_TO_ATTR(kind)                                                     \
-	__CCT_DEFER(__CONCAT, basetag,  __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_1(kind))
+#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE_3(basetype, basetag, kind)          \
+  typedef basetype *__CCT_CONTRACT_TO_ATTR(kind) __CCT_DEFER(                  \
+      __CONCAT, basetag, __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_1(kind))
 
-#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE_4(basetype, basetag, kind1, kind2)                       \
-typedef basetype * __CCT_CONTRACT_TO_ATTR(kind1)                                                    \
-	         * __CCT_CONTRACT_TO_ATTR(kind2)                                                        \
-	__CCT_DEFER(__CONCAT, basetag,  __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_2(kind1, kind2))
+#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE_4(basetype, basetag, kind1, kind2)  \
+  typedef basetype *__CCT_CONTRACT_TO_ATTR(kind1) *                            \
+      __CCT_CONTRACT_TO_ATTR(kind2)                                            \
+          __CCT_DEFER(__CONCAT, basetag,                                       \
+                      __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_2(kind1, kind2))
 
-#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE_5(basetype, basetag, kind1, kind2, kind3)                \
-typedef basetype * __CCT_CONTRACT_TO_ATTR(kind1)                                                    \
-	         * __CCT_CONTRACT_TO_ATTR(kind2)                                                        \
-	         * __CCT_CONTRACT_TO_ATTR(kind3)                                                        \
-	__CCT_DEFER(__CONCAT, basetag,  __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_3(kind1, kind2, kind3))
+#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE_5(basetype, basetag, kind1, kind2,  \
+                                             kind3)                            \
+  typedef basetype *__CCT_CONTRACT_TO_ATTR(kind1) *                            \
+      __CCT_CONTRACT_TO_ATTR(kind2) *                                          \
+      __CCT_CONTRACT_TO_ATTR(kind3) __CCT_DEFER(                               \
+          __CONCAT, basetag,                                                   \
+          __CCT_CONTRACT_LIST_TO_TAGGED_SUFFIX_3(kind1, kind2, kind3))
 #endif /* defined(KERNEL) || defined(__CCT_ENABLE_USER_SPACE) */
 
 /*
  * Lower level type constructor.
  */
 #if defined(KERNEL) || defined(__CCT_ENABLE_USER_SPACE)
-#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, ...)                                  \
-	__CCT_DISPATCH(__CCT_DECLARE_CONSTRAINED_PTR_TYPE, basetype, basetag, __VA_ARGS__)
+#define __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, ...)             \
+  __CCT_DISPATCH(__CCT_DECLARE_CONSTRAINED_PTR_TYPE, basetype, basetag,        \
+                 __VA_ARGS__)
 #else /* !defined(KERNEL) && !defined(__CCT_ENABLE_USER_SPACE) */
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -607,19 +608,19 @@ typedef basetype * __CCT_CONTRACT_TO_ATTR(kind1)                                
  * The constrained types that can potentially break the ABI are not exposed
  * into the user-space.
  */
-#define __CCT_DECLARE_CONSTRAINED_PTR_TYPES(basetype, basetag)                                      \
-__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF);                                   \
-__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_BPTR);                                  \
-__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_PTR);                                   \
-__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF, __CCT_REF);                        \
-__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF, __CCT_PTR);                        \
-__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_PTR, __CCT_REF)
+#define __CCT_DECLARE_CONSTRAINED_PTR_TYPES(basetype, basetag)                 \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF);            \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_BPTR);           \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_PTR);            \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF, __CCT_REF); \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF, __CCT_PTR); \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_PTR, __CCT_REF)
 #else /* !defined(KERNEL) */
 #if defined(__CCT_ENABLE_USER_SPACE)
 /* Limiting the higher-level constructor to the ABI-preserving constructs. */
-#define __CCT_DECLARE_CONSTRAINED_PTR_TYPES(basetype, basetag)                                      \
-	__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF);                               \
-	__CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF, __CCT_REF)
+#define __CCT_DECLARE_CONSTRAINED_PTR_TYPES(basetype, basetag)                 \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF);            \
+  __CCT_DECLARE_CONSTRAINED_PTR_TYPE(basetype, basetag, __CCT_REF, __CCT_REF)
 #else /* !defined(__CCT_ENABLE_USER_SPACE) */
 /* Disabling the higher-level constructor */
 #if defined(__clang__)

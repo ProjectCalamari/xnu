@@ -23,7 +23,8 @@
  *===-----------------------------------------------------------------------===
  */
 
-#if (defined(__has_include) && __has_include(<__xnu_libcxx_sentinel.h>) && !defined(XNU_LIBCXX_SDKROOT))
+#if (defined(__has_include) &&                                                 \
+     __has_include(<__xnu_libcxx_sentinel.h>) && !defined(XNU_LIBCXX_SDKROOT))
 
 #if !__has_include_next(<stddef.h>)
 #error Do not build with -nostdinc (use GCC_USE_STANDARD_INCLUDE_SEARCHING=NO)
@@ -31,7 +32,8 @@
 
 #include_next <stddef.h>
 
-#else /* (defined(__has_include) && __has_include(<__xnu_libcxx_sentinel.h>) && !defined(XNU_LIBCXX_SDKROOT)) */
+#else /* (defined(__has_include) && __has_include(<__xnu_libcxx_sentinel.h>)   \
+         && !defined(XNU_LIBCXX_SDKROOT)) */
 
 #ifndef __STDDEF_H
 #define __STDDEF_H
@@ -41,16 +43,16 @@
 #if __cplusplus >= 201103L
 #define NULL nullptr
 #else
-#undef __null  // VC++ hack.
+#undef __null // VC++ hack.
 #define NULL __null
 #endif
 #else
-#define NULL ((void*)0)
+#define NULL ((void *)0)
 #endif
 
 #ifndef _PTRDIFF_T
 #define _PTRDIFF_T
-typedef __typeof__(((int*)NULL) - ((int*)NULL)) ptrdiff_t;
+typedef __typeof__(((int *)NULL) - ((int *)NULL)) ptrdiff_t;
 #endif
 #ifndef _SIZE_T
 #define _SIZE_T

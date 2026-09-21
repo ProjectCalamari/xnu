@@ -39,19 +39,19 @@
  * Coverage sanitizer per-cpu data
  */
 struct kcov_cpu_data {
-	uint32_t       kcd_enabled;     /* coverage recording enabled for CPU. */
+  uint32_t kcd_enabled; /* coverage recording enabled for CPU. */
 };
 
 /*
  * Coverage sanitizer per-thread data
  */
 struct kcov_thread_data {
-	uint32_t               ktd_disabled;    /* disable sanitizer for a thread */
+  uint32_t ktd_disabled; /* disable sanitizer for a thread */
 #if CONFIG_KSANCOV
-	ksancov_dev_t          ktd_device;      /* ksancov per-thread data */
+  ksancov_dev_t ktd_device; /* ksancov per-thread data */
 #endif
 #if CONFIG_STKSZ
-	kcov_stksz_thread_t    ktd_stksz;       /* stack size per-thread data */
+  kcov_stksz_thread_t ktd_stksz; /* stack size per-thread data */
 #endif
 };
 

@@ -38,17 +38,19 @@
 #define CPC_INSECURE 0
 #endif // DEVELOPMENT || DEBUG
 
-__enum_decl(cpc_hw_t, unsigned int, {
-	CPC_HW_CPMU,
-	CPC_HW_UPMU,
-	CPC_HW_COUNT,
-});
+__enum_decl(cpc_hw_t, unsigned int,
+            {
+                CPC_HW_CPMU,
+                CPC_HW_UPMU,
+                CPC_HW_COUNT,
+            });
 
 __result_use_check bool cpc_hw_acquire(cpc_hw_t hw, const char *owner_name);
 bool cpc_hw_in_use(cpc_hw_t hw);
 void cpc_hw_release(cpc_hw_t hw, const char *owner_name);
 
-/// Return whether the event encoding `event_selector` is allowed on a given `hw`.
+/// Return whether the event encoding `event_selector` is allowed on a given
+/// `hw`.
 ///
 /// Parameters:
 ///   - hw: The allow list to check differs by the hardware.

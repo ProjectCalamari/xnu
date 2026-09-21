@@ -26,19 +26,18 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #include <darwintest.h>
+#include <libproc.h>
 #include <stdint.h>
 #include <sys/proc_info.h>
-#include <libproc.h>
 
 /** Retrieve current CSW count for the calling PID. */
-static int32_t
-get_csw_count(void)
-{
-	struct proc_taskinfo taskinfo;
-	int rv;
+static int32_t get_csw_count(void) {
+  struct proc_taskinfo taskinfo;
+  int rv;
 
-	rv = proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, &taskinfo, sizeof(taskinfo));
-	T_QUIET; T_ASSERT_POSIX_SUCCESS(rv, "PROC_PIDTASKINFO");
+  rv = proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, &taskinfo, sizeof(taskinfo));
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(rv, "PROC_PIDTASKINFO");
 
-	return taskinfo.pti_csw;
+  return taskinfo.pti_csw;
 }

@@ -25,68 +25,63 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <string.h>
 #include <mach-o/loader.h>
+#include <string.h>
 #include <sys/types.h>
 
 #define DEBUG_ASSERT_COMPONENT_NAME_STRING "kxld"
 #include <AssertMacros.h>
 
-#include "kxld_util.h"
 #include "kxld_srcversion.h"
+#include "kxld_util.h"
 
 /*******************************************************************************
 *******************************************************************************/
-void
-kxld_srcversion_init_from_macho(KXLDsrcversion *srcversion, struct source_version_command *src)
-{
-	check(srcversion);
-	check(src);
+void kxld_srcversion_init_from_macho(KXLDsrcversion *srcversion,
+                                     struct source_version_command *src) {
+  check(srcversion);
+  check(src);
 
-	srcversion->version = src->version;
-	srcversion->has_srcversion = TRUE;
+  srcversion->version = src->version;
+  srcversion->has_srcversion = TRUE;
 }
 
 /*******************************************************************************
 *******************************************************************************/
-void
-kxld_srcversion_clear(KXLDsrcversion *srcversion)
-{
-	bzero(srcversion, sizeof(*srcversion));
+void kxld_srcversion_clear(KXLDsrcversion *srcversion) {
+  bzero(srcversion, sizeof(*srcversion));
 }
 
 /*******************************************************************************
 *******************************************************************************/
-u_long
-kxld_srcversion_get_macho_header_size(void)
-{
-	return sizeof(struct source_version_command);
+u_long kxld_srcversion_get_macho_header_size(void) {
+  return sizeof(struct source_version_command);
 }
 
 /*******************************************************************************
 *******************************************************************************/
-kern_return_t
-kxld_srcversion_export_macho(const KXLDsrcversion *srcversion, u_char *buf,
-    u_long *header_offset, u_long header_size)
-{
-	kern_return_t rval = KERN_FAILURE;
-	struct source_version_command *srcversionhdr = NULL;
+kern_return_t kxld_srcversion_export_macho(const KXLDsrcversion *srcversion,
+                                           u_char *buf, u_long *header_offset,
+                                           u_long header_size) {
+  kern_return_t rval = KERN_FAILURE;
+  struct source_version_command *srcversionhdr = NULL;
 
-	check(srcversion);
-	check(buf);
-	check(header_offset);
+  check(srcversion);
+  check(buf);
+  check(header_offset);
 
-	require_action(sizeof(*srcversionhdr) <= header_size - *header_offset, finish,
-	    rval = KERN_FAILURE);
-	srcversionhdr = (struct source_version_command *) ((void *) (buf + *header_offset));
-	*header_offset += sizeof(*srcversionhdr);
+  require_action(sizeof(*srcversionhdr) <= header_size - *header_offset, finish,
+                 rval = KERN_FAILURE);
+  srcversionhdr =
+      (struct source_version_command *)((void *)(buf + *header_offset));
+  *header_offset += sizeof(*srcversionhdr);
 
-	srcversionhdr->cmd = LC_SOURCE_VERSION;
-	srcversionhdr->cmdsize = (uint32_t) sizeof(*srcversionhdr);
-	srcversionhdr->version = srcversion->version;
+  srcversionhdr->cmd = LC_SOURCE_VERSION;
+  srcversionhdr->cmdsize = (uint32_t)sizeof(*srcversionhdr);
+  srcversionhdr->version = srcversion->version;
 
-	rval = KERN_SUCCESS;
+  rval = KERN_SUCCESS;
 
 finish:
-	return rval;
+  return rval;
 }

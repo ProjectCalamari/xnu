@@ -26,21 +26,19 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/vnode.h>
+#include <security/mac_framework.h>
+#include <security/mac_internal.h>
 #include <sys/kauth.h>
 #include <sys/param.h>
 #include <sys/tty.h>
-#include <security/mac_framework.h>
-#include <security/mac_internal.h>
+#include <sys/vnode.h>
 
-void
-mac_pty_notify_grant(proc_t p, struct tty *tp, dev_t dev, struct label *label)
-{
-	MAC_PERFORM(pty_notify_grant, p, tp, dev, label);
+void mac_pty_notify_grant(proc_t p, struct tty *tp, dev_t dev,
+                          struct label *label) {
+  MAC_PERFORM(pty_notify_grant, p, tp, dev, label);
 }
 
-void
-mac_pty_notify_close(proc_t p, struct tty *tp, dev_t dev, struct label *label)
-{
-	MAC_PERFORM(pty_notify_close, p, tp, dev, label);
+void mac_pty_notify_close(proc_t p, struct tty *tp, dev_t dev,
+                          struct label *label) {
+  MAC_PERFORM(pty_notify_close, p, tp, dev, label);
 }

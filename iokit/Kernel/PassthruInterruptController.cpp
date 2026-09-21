@@ -31,128 +31,111 @@ extern "C" {
 #include <pexpert/pexpert.h>
 };
 
-#include <machine/machine_routines.h>
 #include <IOKit/IOPlatformExpert.h>
 #include <IOKit/IOService.h>
 #include <IOKit/PassthruInterruptController.h>
+#include <machine/machine_routines.h>
 
 #define super IOInterruptController
-OSDefineMetaClassAndStructors(PassthruInterruptController, IOInterruptController);
+OSDefineMetaClassAndStructors(PassthruInterruptController,
+                              IOInterruptController);
 
-bool
-PassthruInterruptController::init(void)
-{
-	if (!super::init() ||
-	    !this->setProperty(gPlatformInterruptControllerName, kOSBooleanTrue) ||
-	    !this->attach(getPlatform())) {
-		return false;
-	}
-	registerService();
-	if (getPlatform()->registerInterruptController(gPlatformInterruptControllerName, this) != kIOReturnSuccess) {
-		return false;
-	}
-	if (semaphore_create(kernel_task, &child_sentinel, SYNC_POLICY_FIFO, 0) != KERN_SUCCESS) {
-		return false;
-	}
-	return true;
+bool PassthruInterruptController::init(void) {
+  if (!super::init() ||
+      !this->setProperty(gPlatformInterruptControllerName, kOSBooleanTrue) ||
+      !this->attach(getPlatform())) {
+    return false;
+  }
+  registerService();
+  if (getPlatform()->registerInterruptController(
+          gPlatformInterruptControllerName, this) != kIOReturnSuccess) {
+    return false;
+  }
+  if (semaphore_create(kernel_task, &child_sentinel, SYNC_POLICY_FIFO, 0) !=
+      KERN_SUCCESS) {
+    return false;
+  }
+  return true;
 }
 
-void
-PassthruInterruptController::setCPUInterruptProperties(IOService *service)
-{
-	if ((service->getProperty(gIOInterruptControllersKey) != NULL) &&
-	    (service->getProperty(gIOInterruptSpecifiersKey) != NULL)) {
-		return;
-	}
+void PassthruInterruptController::setCPUInterruptProperties(
+    IOService *service) {
+  if ((service->getProperty(gIOInterruptControllersKey) != NULL) &&
+      (service->getProperty(gIOInterruptSpecifiersKey) != NULL)) {
+    return;
+  }
 
-	long         zero = 0;
-	OSArray *specifier = OSArray::withCapacity(1);
-	OSData *tmpData = OSData::withValue(zero);
-	specifier->setObject(tmpData);
-	tmpData->release();
-	service->setProperty(gIOInterruptSpecifiersKey, specifier);
-	specifier->release();
+  long zero = 0;
+  OSArray *specifier = OSArray::withCapacity(1);
+  OSData *tmpData = OSData::withValue(zero);
+  specifier->setObject(tmpData);
+  tmpData->release();
+  service->setProperty(gIOInterruptSpecifiersKey, specifier);
+  specifier->release();
 
-	OSArray *controller = OSArray::withCapacity(1);
-	controller->setObject(gPlatformInterruptControllerName);
-	service->setProperty(gIOInterruptControllersKey, controller);
-	controller->release();
+  OSArray *controller = OSArray::withCapacity(1);
+  controller->setObject(gPlatformInterruptControllerName);
+  service->setProperty(gIOInterruptControllersKey, controller);
+  controller->release();
 }
 
-IOReturn
-PassthruInterruptController::registerInterrupt(IOService *nub,
-    int source,
-    void *target,
-    IOInterruptHandler handler,
-    void *refCon)
-{
-	child_handler = handler;
-	child_nub = nub;
-	child_target = target;
-	child_refCon = refCon;
+IOReturn PassthruInterruptController::registerInterrupt(
+    IOService *nub, int source, void *target, IOInterruptHandler handler,
+    void *refCon) {
+  child_handler = handler;
+  child_nub = nub;
+  child_target = target;
+  child_refCon = refCon;
 
-	// Wake up waitForChildController() to tell it that AIC is registered
-	semaphore_signal(child_sentinel);
-	return kIOReturnSuccess;
+  // Wake up waitForChildController() to tell it that AIC is registered
+  semaphore_signal(child_sentinel);
+  return kIOReturnSuccess;
 }
 
-void *
-PassthruInterruptController::waitForChildController(void)
-{
-	// Block if child controller isn't registered yet.  Assumes that this
-	// is only called from one place.
-	semaphore_wait(child_sentinel);
+void *PassthruInterruptController::waitForChildController(void) {
+  // Block if child controller isn't registered yet.  Assumes that this
+  // is only called from one place.
+  semaphore_wait(child_sentinel);
 
-	// NOTE: Assumes that AppleInterruptController passes |this| as the target argument.
-	return child_target;
+  // NOTE: Assumes that AppleInterruptController passes |this| as the target
+  // argument.
+  return child_target;
 }
 
-IOReturn
-PassthruInterruptController::getInterruptType(IOService */*nub*/,
-    int /*source*/,
-    int *interruptType)
-{
-	if (interruptType == NULL) {
-		return kIOReturnBadArgument;
-	}
+IOReturn PassthruInterruptController::getInterruptType(IOService * /*nub*/,
+                                                       int /*source*/,
+                                                       int *interruptType) {
+  if (interruptType == NULL) {
+    return kIOReturnBadArgument;
+  }
 
-	*interruptType = kIOInterruptTypeLevel;
+  *interruptType = kIOInterruptTypeLevel;
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-IOReturn
-PassthruInterruptController::enableInterrupt(IOService */*nub*/,
-    int /*source*/)
-{
-	return kIOReturnSuccess;
+IOReturn PassthruInterruptController::enableInterrupt(IOService * /*nub*/,
+                                                      int /*source*/) {
+  return kIOReturnSuccess;
 }
 
-IOReturn
-PassthruInterruptController::disableInterrupt(IOService */*nub*/,
-    int /*source*/)
-{
-	return kIOReturnSuccess;
+IOReturn PassthruInterruptController::disableInterrupt(IOService * /*nub*/,
+                                                       int /*source*/) {
+  return kIOReturnSuccess;
 }
 
-IOReturn
-PassthruInterruptController::causeInterrupt(IOService */*nub*/,
-    int /*source*/)
-{
-	ml_cause_interrupt();
-	return kIOReturnSuccess;
+IOReturn PassthruInterruptController::causeInterrupt(IOService * /*nub*/,
+                                                     int /*source*/) {
+  ml_cause_interrupt();
+  return kIOReturnSuccess;
 }
 
-IOReturn
-PassthruInterruptController::handleInterrupt(void */*refCon*/,
-    IOService */*nub*/,
-    int source)
-{
-	panic("handleInterrupt shouldn't be invoked directly");
+IOReturn PassthruInterruptController::handleInterrupt(void * /*refCon*/,
+                                                      IOService * /*nub*/,
+                                                      int source) {
+  panic("handleInterrupt shouldn't be invoked directly");
 }
 
-void
-PassthruInterruptController::externalInterrupt(void)
-{
-	child_handler(child_target, child_refCon, child_nub, 0);
+void PassthruInterruptController::externalInterrupt(void) {
+  child_handler(child_target, child_refCon, child_nub, 0);
 }

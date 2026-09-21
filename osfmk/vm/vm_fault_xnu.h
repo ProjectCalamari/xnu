@@ -36,31 +36,26 @@
 
 __BEGIN_DECLS
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
-#include <vm/vm_page.h>
-#include <vm/vm_object_xnu.h>
 #include <vm/vm_map_xnu.h>
+#include <vm/vm_object_xnu.h>
+#include <vm/vm_page.h>
 
 extern void vm_fault_init(void);
 
 /* exported kext version */
-extern kern_return_t vm_fault_external(
-	vm_map_t        map,
-	vm_map_offset_t vaddr,
-	vm_prot_t       fault_type,
-	boolean_t       change_wiring,
-	int             interruptible,
-	pmap_t          caller_pmap,
-	vm_map_offset_t caller_pmap_addr);
+extern kern_return_t vm_fault_external(vm_map_t map, vm_map_offset_t vaddr,
+                                       vm_prot_t fault_type,
+                                       boolean_t change_wiring,
+                                       int interruptible, pmap_t caller_pmap,
+                                       vm_map_offset_t caller_pmap_addr);
 
+extern vm_offset_t kdp_lightweight_fault(vm_map_t map,
+                                         vm_offset_t cur_target_addr,
+                                         bool multi_cpu);
 
-extern vm_offset_t kdp_lightweight_fault(
-	vm_map_t map,
-	vm_offset_t cur_target_addr,
-	bool multi_cpu);
-
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
 /*
  * Disable vm faults on the current thread.
@@ -82,4 +77,4 @@ extern boolean_t NEED_TO_HARD_THROTTLE_THIS_TASK(void);
 __END_DECLS
 
 #endif /* XNU_KERNEL_PRIVATE */
-#endif  /* _VM_VM_FAULT_XNU_H_ */
+#endif /* _VM_VM_FAULT_XNU_H_ */

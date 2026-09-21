@@ -26,50 +26,41 @@
 
 #ifdef XNU_KERNEL_PRIVATE
 
-
 #include <kern/mem_acct.h>
 #include <kern/uipc_socket.h>
 
 #include <sys/protosw.h>
 
-static inline void
-proto_memacct_add(struct protosw *proto, unsigned int size)
-{
-	if (proto->pr_mem_acct) {
-		mem_acct_add(proto->pr_mem_acct, size);
-	} else {
-		socket_memacct_add(size);
-	}
+static inline void proto_memacct_add(struct protosw *proto, unsigned int size) {
+  if (proto->pr_mem_acct) {
+    mem_acct_add(proto->pr_mem_acct, size);
+  } else {
+    socket_memacct_add(size);
+  }
 }
 
-static inline void
-proto_memacct_sub(struct protosw *proto, unsigned int size)
-{
-	if (proto->pr_mem_acct) {
-		mem_acct_sub(proto->pr_mem_acct, size);
-	} else {
-		socket_memacct_sub(size);
-	}
+static inline void proto_memacct_sub(struct protosw *proto, unsigned int size) {
+  if (proto->pr_mem_acct) {
+    mem_acct_sub(proto->pr_mem_acct, size);
+  } else {
+    socket_memacct_sub(size);
+  }
 }
 
-static inline bool
-proto_memacct_hardlimit(const struct protosw *proto)
-{
-	if (proto->pr_mem_acct) {
-		return mem_acct_limited(proto->pr_mem_acct) == MEMACCT_HARDLIMIT;
-	} else {
-		return socket_memacct_hardlimit();
-	}
+static inline bool proto_memacct_hardlimit(const struct protosw *proto) {
+  if (proto->pr_mem_acct) {
+    return mem_acct_limited(proto->pr_mem_acct) == MEMACCT_HARDLIMIT;
+  } else {
+    return socket_memacct_hardlimit();
+  }
 }
 
-static inline bool
-proto_memacct_limited(const struct protosw *proto)
-{
-	if (proto->pr_mem_acct) {
-		return mem_acct_limited(proto->pr_mem_acct) != 0;
-	} else {
-		return socket_memacct_limited();
-	}
+static inline bool proto_memacct_limited(const struct protosw *proto) {
+  if (proto->pr_mem_acct) {
+    return mem_acct_limited(proto->pr_mem_acct) != 0;
+  } else {
+    return socket_memacct_limited();
+  }
 }
 
 extern uint64_t _net_uptime;
@@ -83,21 +74,9 @@ extern void net_update_uptime_with_time(const struct timeval *);
  * ToDo - we could even replace all callers of net_uptime* by a direct access
  * to _net_uptime*
  */
-static inline uint64_t
-net_uptime(void)
-{
-	return _net_uptime;
-}
-static inline uint64_t
-net_uptime_ms(void)
-{
-	return _net_uptime_ms;
-}
-static inline uint64_t
-net_uptime_us(void)
-{
-	return _net_uptime_us;
-}
+static inline uint64_t net_uptime(void) { return _net_uptime; }
+static inline uint64_t net_uptime_ms(void) { return _net_uptime_ms; }
+static inline uint64_t net_uptime_us(void) { return _net_uptime_us; }
 
 extern void net_uptime2timeval(struct timeval *);
 

@@ -1,3 +1,9 @@
 .direnv/
 result-*
 result
+
+BUILD
+SETUP/kextsymboltool/kextsymboltool
+SETUP/kextsymboltool/kextsymboltool.o
+SETUP/setsegname/setsegname
+SETUP/setsegname/setsegname.o

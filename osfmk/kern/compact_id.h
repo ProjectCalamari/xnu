@@ -29,22 +29,23 @@
 #ifndef _KERN_COMPACT_ID_H_
 #define _KERN_COMPACT_ID_H_
 
+#include <kern/bits.h>
+#include <kern/locks.h>
+#include <kern/startup.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <kern/bits.h>
-#include <kern/startup.h>
-#include <kern/locks.h>
 
 __BEGIN_DECLS
 __exported_push_hidden
 
-#define COMPACT_ID_SHIFT_BASE     (10)
-#define COMPACT_ID_COUNT_BASE     (1u << COMPACT_ID_SHIFT_BASE)
-#define COMPACT_ID_SLAB_COUNT     (12)
-#define COMPACT_ID_MAX            ((COMPACT_ID_COUNT_BASE << (COMPACT_ID_SLAB_COUNT - 1)) - 1u)
+#define COMPACT_ID_SHIFT_BASE (10)
+#define COMPACT_ID_COUNT_BASE (1u << COMPACT_ID_SHIFT_BASE)
+#define COMPACT_ID_SLAB_COUNT (12)
+#define COMPACT_ID_MAX                                                         \
+  ((COMPACT_ID_COUNT_BASE << (COMPACT_ID_SLAB_COUNT - 1)) - 1u)
 
-typedef uint32_t                  compact_id_t;
-typedef struct compact_id_table  *compact_id_table_t;
+    typedef uint32_t compact_id_t;
+typedef struct compact_id_table *compact_id_table_t;
 
 /*
  * @struct compact_id_table
@@ -81,7 +82,8 @@ typedef struct compact_id_table  *compact_id_table_t;
  * By observing the most significant bit of a given compact ID,
  * we can compute its slab index very efficiently:
  *
- * slab_index = clz(COMPACT_ID_COUNT_BASE) - clz(ctid | (COMPACT_ID_COUNT_BASE - 1)) + 1
+ * slab_index = clz(COMPACT_ID_COUNT_BASE) - clz(ctid | (COMPACT_ID_COUNT_BASE -
+ * 1)) + 1
  *
  * Note: because we expect lookups to be common,
  *       cidt_array isn't the real array but shifted
@@ -89,67 +91,52 @@ typedef struct compact_id_table  *compact_id_table_t;
  *       works for any slab.
  */
 struct compact_id_table {
-	/*
-	 * slabs first saves one instruction per compact_id_resolve()
-	 */
-	void                  **cidt_array[COMPACT_ID_SLAB_COUNT];
-	bitmap_t               *cidt_bitmap[COMPACT_ID_SLAB_COUNT];
-	lck_mtx_t               cidt_lock;
-	struct thread          *cidt_allocator;
-	bool                    cidt_waiters;
-	uint32_t                cidt_count;
-	compact_id_t            cidt_first_free;
+  /*
+   * slabs first saves one instruction per compact_id_resolve()
+   */
+  void **cidt_array[COMPACT_ID_SLAB_COUNT];
+  bitmap_t *cidt_bitmap[COMPACT_ID_SLAB_COUNT];
+  lck_mtx_t cidt_lock;
+  struct thread *cidt_allocator;
+  bool cidt_waiters;
+  uint32_t cidt_count;
+  compact_id_t cidt_first_free;
 };
 
-extern void compact_id_table_init(
-	compact_id_table_t      table);
+extern void compact_id_table_init(compact_id_table_t table);
 
-extern void **compact_id_resolve(
-	compact_id_table_t      table,
-	compact_id_t            compact_id) __pure2;
+extern void **compact_id_resolve(compact_id_table_t table,
+                                 compact_id_t compact_id) __pure2;
 
-extern bool compact_id_slab_valid(
-	compact_id_table_t      table,
-	compact_id_t            compact_id) __stateful_pure;
+extern bool compact_id_slab_valid(compact_id_table_t table,
+                                  compact_id_t compact_id) __stateful_pure;
 
+extern compact_id_t compact_id_get_locked(compact_id_table_t table,
+                                          compact_id_t limit, void *value);
 
-extern compact_id_t compact_id_get_locked(
-	compact_id_table_t      table,
-	compact_id_t            limit,
-	void                   *value);
+extern compact_id_t compact_id_get(compact_id_table_t table, compact_id_t limit,
+                                   void *value);
 
-extern compact_id_t compact_id_get(
-	compact_id_table_t      table,
-	compact_id_t            limit,
-	void                   *value);
+extern void *compact_id_put(compact_id_table_t table, compact_id_t compact_id);
 
-extern void *compact_id_put(
-	compact_id_table_t      table,
-	compact_id_t            compact_id);
+extern void compact_id_for_each(compact_id_table_t table, uint32_t stride,
+                                bool (^cb)(void *v));
 
-extern void compact_id_for_each(
-	compact_id_table_t      table,
-	uint32_t                stride,
-	bool                  (^cb)(void *v));
+extern void compact_id_table_lock(compact_id_table_t table);
 
-extern void compact_id_table_lock(
-	compact_id_table_t      table);
+extern void compact_id_table_unlock(compact_id_table_t table);
 
-extern void compact_id_table_unlock(
-	compact_id_table_t      table);
+#define COMPACT_ID_TABLE_DEFINE(class, var)                                    \
+  static void *var##_array0[COMPACT_ID_COUNT_BASE];                            \
+  static bitmap_t var##_bits0[BITMAP_LEN(COMPACT_ID_COUNT_BASE)] = {           \
+      [0 ... BITMAP_LEN(COMPACT_ID_COUNT_BASE) - 1] = ~0ull,                   \
+  };                                                                           \
+  class struct compact_id_table var = {                                        \
+      .cidt_bitmap[0] = var##_bits0,                                           \
+      .cidt_array[0] = var##_array0,                                           \
+  };                                                                           \
+  STARTUP_ARG(LOCKS, STARTUP_RANK_THIRD, compact_id_table_init, &var)
 
-#define COMPACT_ID_TABLE_DEFINE(class, var) \
-	static void *var##_array0[COMPACT_ID_COUNT_BASE];                       \
-	static bitmap_t var##_bits0[BITMAP_LEN(COMPACT_ID_COUNT_BASE)] = {      \
-	        [0 ... BITMAP_LEN(COMPACT_ID_COUNT_BASE) - 1] = ~0ull,          \
-	};                                                                      \
-	class struct compact_id_table var = {                                   \
-	        .cidt_bitmap[0] = var##_bits0,                                  \
-	        .cidt_array[0]  = var##_array0,                                 \
-	};                                                                      \
-	STARTUP_ARG(LOCKS, STARTUP_RANK_THIRD, compact_id_table_init, &var)
-
-__exported_pop
-__END_DECLS
+__exported_pop __END_DECLS
 
 #endif /* _KERN_COMPACT_ID_H_ */

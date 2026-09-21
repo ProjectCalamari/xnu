@@ -25,81 +25,80 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <kern/misc_protos.h>
-#include <machine/atomic.h>
-#include <mach/mach_time.h>
-#include <mach/clock_types.h>
+#include <arm/machine_routines.h>
+#include <arm64/machine_remote_time.h>
 #include <kern/clock.h>
 #include <kern/locks.h>
-#include <arm64/machine_remote_time.h>
-#include <sys/kdebug.h>
-#include <arm/machine_routines.h>
+#include <kern/misc_protos.h>
 #include <kern/remote_time.h>
+#include <mach/clock_types.h>
+#include <mach/mach_time.h>
+#include <machine/atomic.h>
+#include <sys/kdebug.h>
 
 _Atomic uint32_t bt_init_flag = 0;
 
-extern void mach_bridge_add_timestamp(uint64_t remote_timestamp, uint64_t local_timestamp);
+extern void mach_bridge_add_timestamp(uint64_t remote_timestamp,
+                                      uint64_t local_timestamp);
 extern void bt_calibration_thread_start(void);
 extern void bt_params_add(struct bt_params *params);
 
-void
-mach_bridge_init_timestamp(void)
-{
-	/* This function should be called only once by the driver
-	 *  implementing the interrupt handler for receiving timestamps */
-	if (os_atomic_load(&bt_init_flag, relaxed)) {
-		return;
-	}
+void mach_bridge_init_timestamp(void) {
+  /* This function should be called only once by the driver
+   *  implementing the interrupt handler for receiving timestamps */
+  if (os_atomic_load(&bt_init_flag, relaxed)) {
+    return;
+  }
 
-	os_atomic_store(&bt_init_flag, 1, release);
+  os_atomic_store(&bt_init_flag, 1, release);
 
-	/* Start the kernel thread only after all the locks have been initialized */
-	bt_calibration_thread_start();
+  /* Start the kernel thread only after all the locks have been initialized */
+  bt_calibration_thread_start();
 }
 
 /*
  * Conditions: Should be called from primary interrupt context
  */
-void
-mach_bridge_recv_timestamps(uint64_t remoteTimestamp, uint64_t localTimestamp)
-{
-	assert(ml_at_interrupt_context() == TRUE);
+void mach_bridge_recv_timestamps(uint64_t remoteTimestamp,
+                                 uint64_t localTimestamp) {
+  assert(ml_at_interrupt_context() == TRUE);
 
-	/* Ensure the locks have been initialized */
-	if (!os_atomic_load(&bt_init_flag, acquire)) {
-		panic("%s called before mach_bridge_init_timestamp", __func__);
-		return;
-	}
+  /* Ensure the locks have been initialized */
+  if (!os_atomic_load(&bt_init_flag, acquire)) {
+    panic("%s called before mach_bridge_init_timestamp", __func__);
+    return;
+  }
 
-	KDBG(MACHDBG_CODE(DBG_MACH_CLOCK, MACH_BRIDGE_RCV_TS), localTimestamp, remoteTimestamp);
+  KDBG(MACHDBG_CODE(DBG_MACH_CLOCK, MACH_BRIDGE_RCV_TS), localTimestamp,
+       remoteTimestamp);
 
-	lck_spin_lock(&bt_spin_lock);
-	mach_bridge_add_timestamp(remoteTimestamp, localTimestamp);
-	lck_spin_unlock(&bt_spin_lock);
+  lck_spin_lock(&bt_spin_lock);
+  mach_bridge_add_timestamp(remoteTimestamp, localTimestamp);
+  lck_spin_unlock(&bt_spin_lock);
 
-	return;
+  return;
 }
 
 /*
  * This function is used to set parameters, calculated externally,
  * needed for mach_bridge_remote_time.
  */
-void
-mach_bridge_set_params(uint64_t local_timestamp, uint64_t remote_timestamp, double rate)
-{
-	/* Ensure the locks have been initialized */
-	if (!os_atomic_load(&bt_init_flag, acquire)) {
-		panic("%s called before mach_bridge_init_timestamp", __func__);
-		return;
-	}
+void mach_bridge_set_params(uint64_t local_timestamp, uint64_t remote_timestamp,
+                            double rate) {
+  /* Ensure the locks have been initialized */
+  if (!os_atomic_load(&bt_init_flag, acquire)) {
+    panic("%s called before mach_bridge_init_timestamp", __func__);
+    return;
+  }
 
-	struct bt_params params = {};
-	params.base_local_ts = local_timestamp;
-	params.base_remote_ts = remote_timestamp;
-	params.rate = rate;
-	lck_spin_lock(&bt_ts_conversion_lock);
-	bt_params_add(&params);
-	lck_spin_unlock(&bt_ts_conversion_lock);
-	KDBG(MACHDBG_CODE(DBG_MACH_CLOCK, MACH_BRIDGE_TS_PARAMS), params.base_local_ts,
-	    params.base_remote_ts, *(uint64_t *)((void *)&params.rate));
+  struct bt_params params = {};
+  params.base_local_ts = local_timestamp;
+  params.base_remote_ts = remote_timestamp;
+  params.rate = rate;
+  lck_spin_lock(&bt_ts_conversion_lock);
+  bt_params_add(&params);
+  lck_spin_unlock(&bt_ts_conversion_lock);
+  KDBG(MACHDBG_CODE(DBG_MACH_CLOCK, MACH_BRIDGE_TS_PARAMS),
+       params.base_local_ts, params.base_remote_ts,
+       *(uint64_t *)((void *)&params.rate));
 }

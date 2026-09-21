@@ -90,45 +90,45 @@
 #ifndef _MACH_I386_VM_PARAM_H_
 #define _MACH_I386_VM_PARAM_H_
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 
 #if !defined(KERNEL) && !defined(__ASSEMBLER__)
 
 #include <mach/vm_page_size.h>
 #endif
 
-#define BYTE_SIZE               8               /* byte size in bits */
+#define BYTE_SIZE 8 /* byte size in bits */
 
-#define I386_PGBYTES            4096            /* bytes per 80386 page */
-#define I386_PGSHIFT            12              /* bitshift for pages */
+#define I386_PGBYTES 4096 /* bytes per 80386 page */
+#define I386_PGSHIFT 12   /* bitshift for pages */
 
 #if defined(KERNEL)
 
-#define PAGE_SIZE               I386_PGBYTES
-#define PAGE_SHIFT              I386_PGSHIFT
-#define PAGE_MASK               (PAGE_SIZE - 1)
+#define PAGE_SIZE I386_PGBYTES
+#define PAGE_SHIFT I386_PGSHIFT
+#define PAGE_MASK (PAGE_SIZE - 1)
 
-#define PAGE_MAX_SHIFT          PAGE_SHIFT
-#define PAGE_MAX_SIZE           PAGE_SIZE
-#define PAGE_MAX_MASK           PAGE_MASK
+#define PAGE_MAX_SHIFT PAGE_SHIFT
+#define PAGE_MAX_SIZE PAGE_SIZE
+#define PAGE_MAX_MASK PAGE_MASK
 
-#define PAGE_MIN_SHIFT          PAGE_SHIFT
-#define PAGE_MIN_SIZE           PAGE_SIZE
-#define PAGE_MIN_MASK           PAGE_MASK
+#define PAGE_MIN_SHIFT PAGE_SHIFT
+#define PAGE_MIN_SIZE PAGE_SIZE
+#define PAGE_MIN_MASK PAGE_MASK
 
-#define I386_LPGBYTES           2*1024*1024     /* bytes per large page */
-#define I386_LPGSHIFT           21              /* bitshift for large pages */
-#define I386_LPGMASK            (I386_LPGBYTES-1)
+#define I386_LPGBYTES 2 * 1024 * 1024 /* bytes per large page */
+#define I386_LPGSHIFT 21              /* bitshift for large pages */
+#define I386_LPGMASK (I386_LPGBYTES - 1)
 
 /*
  *	Convert bytes to pages and convert pages to bytes.
  *	No rounding is used.
  */
 
-#define i386_btop(x)            ((ppnum_t)((x) >> I386_PGSHIFT))
-#define machine_btop(x)         i386_btop(x)
-#define i386_ptob(x)            (((pmap_paddr_t)(x)) << I386_PGSHIFT)
-#define machine_ptob(x)         i386_ptob(x)
+#define i386_btop(x) ((ppnum_t)((x) >> I386_PGSHIFT))
+#define machine_btop(x) i386_btop(x)
+#define i386_ptob(x) (((pmap_paddr_t)(x)) << I386_PGSHIFT)
+#define machine_ptob(x) i386_ptob(x)
 
 /*
  *	Round off or truncate to the nearest page.  These will work
@@ -136,82 +136,85 @@
  *	bytes.
  */
 
-#define i386_round_page(x)      ((((pmap_paddr_t)(x)) + I386_PGBYTES - 1) & \
-	                                ~(I386_PGBYTES-1))
-#define i386_trunc_page(x)      (((pmap_paddr_t)(x)) & ~(I386_PGBYTES-1))
+#define i386_round_page(x)                                                     \
+  ((((pmap_paddr_t)(x)) + I386_PGBYTES - 1) & ~(I386_PGBYTES - 1))
+#define i386_trunc_page(x) (((pmap_paddr_t)(x)) & ~(I386_PGBYTES - 1))
 
 #else /* KERNEL */
 
-#if !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || (__MAC_OS_X_VERSION_MIN_REQUIRED < 101600)
-#define PAGE_SHIFT              I386_PGSHIFT
-#define PAGE_SIZE               I386_PGBYTES
-#define PAGE_MASK               (PAGE_SIZE-1)
-#else /* !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || (__MAC_OS_X_VERSION_MIN_REQUIRED < 101600) */
-#define PAGE_SHIFT              vm_page_shift
-#define PAGE_SIZE               vm_page_size
-#define PAGE_MASK               vm_page_mask
-#endif /* !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) || (__MAC_OS_X_VERSION_MIN_REQUIRED < 101600) */
+#if !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) ||                               \
+    (__MAC_OS_X_VERSION_MIN_REQUIRED < 101600)
+#define PAGE_SHIFT I386_PGSHIFT
+#define PAGE_SIZE I386_PGBYTES
+#define PAGE_MASK (PAGE_SIZE - 1)
+#else /* !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) ||                          \
+         (__MAC_OS_X_VERSION_MIN_REQUIRED < 101600) */
+#define PAGE_SHIFT vm_page_shift
+#define PAGE_SIZE vm_page_size
+#define PAGE_MASK vm_page_mask
+#endif /* !defined(__MAC_OS_X_VERSION_MIN_REQUIRED) ||                         \
+          (__MAC_OS_X_VERSION_MIN_REQUIRED < 101600) */
 
-#define PAGE_MAX_SHIFT          14
-#define PAGE_MAX_SIZE           (1 << PAGE_MAX_SHIFT)
-#define PAGE_MAX_MASK           (PAGE_MAX_SIZE-1)
+#define PAGE_MAX_SHIFT 14
+#define PAGE_MAX_SIZE (1 << PAGE_MAX_SHIFT)
+#define PAGE_MAX_MASK (PAGE_MAX_SIZE - 1)
 
-#define PAGE_MIN_SHIFT          12
-#define PAGE_MIN_SIZE           (1 << PAGE_MIN_SHIFT)
-#define PAGE_MIN_MASK           (PAGE_MIN_SIZE-1)
+#define PAGE_MIN_SHIFT 12
+#define PAGE_MIN_SIZE (1 << PAGE_MIN_SHIFT)
+#define PAGE_MIN_MASK (PAGE_MIN_SIZE - 1)
 
 #endif /* KERNEL */
 
-#define VM_MIN_ADDRESS64        ((user_addr_t) 0x0000000000000000ULL)
+#define VM_MIN_ADDRESS64 ((user_addr_t)0x0000000000000000ULL)
 /*
  * Default top of user stack, grows down from here.
- * Address chosen to be 1G (3rd level page table entry) below SHARED_REGION_BASE_X86_64
- * minus additional 1Meg (1/2 1st level page table coverage) to allow a redzone after it.
+ * Address chosen to be 1G (3rd level page table entry) below
+ * SHARED_REGION_BASE_X86_64 minus additional 1Meg (1/2 1st level page table
+ * coverage) to allow a redzone after it.
  */
-#define VM_USRSTACK64           ((user_addr_t) (0x00007FF7C0000000ull - (1024 * 1024)))
+#define VM_USRSTACK64 ((user_addr_t)(0x00007FF7C0000000ull - (1024 * 1024)))
 
 /*
  * XXX TODO: Obsolete?
  */
-#define VM_DYLD64               ((user_addr_t) 0x00007FFF5FC00000ULL)
-#define VM_LIB64_SHR_DATA       ((user_addr_t) 0x00007FFF60000000ULL)
-#define VM_LIB64_SHR_TEXT       ((user_addr_t) 0x00007FFF80000000ULL)
+#define VM_DYLD64 ((user_addr_t)0x00007FFF5FC00000ULL)
+#define VM_LIB64_SHR_DATA ((user_addr_t)0x00007FFF60000000ULL)
+#define VM_LIB64_SHR_TEXT ((user_addr_t)0x00007FFF80000000ULL)
 /*
  * the end of the usable user address space , for now about 47 bits.
  * the 64 bit commpage is past the end of this
  */
-#define VM_MAX_PAGE_ADDRESS     ((user_addr_t) 0x00007FFFFFE00000ULL)
+#define VM_MAX_PAGE_ADDRESS ((user_addr_t)0x00007FFFFFE00000ULL)
 /*
  * canonical end of user address space for limits checking
  */
 #define VM_MAX_USER_PAGE_ADDRESS ((user_addr_t)0x00007FFFFFFFF000ULL)
 
-
 /* system-wide values */
-#define MACH_VM_MIN_ADDRESS             ((mach_vm_offset_t) 0)
-#define MACH_VM_MAX_ADDRESS             ((mach_vm_offset_t) VM_MAX_PAGE_ADDRESS)
+#define MACH_VM_MIN_ADDRESS ((mach_vm_offset_t)0)
+#define MACH_VM_MAX_ADDRESS ((mach_vm_offset_t)VM_MAX_PAGE_ADDRESS)
 
 /* process-relative values (all 32-bit legacy only for now) */
-#define VM_MIN_ADDRESS          ((vm_offset_t) 0)
-#define VM_USRSTACK32           ((vm_offset_t) 0xC0000000)      /* ASLR slides stack down by up to 1 MB */
-#define VM_MAX_ADDRESS          ((vm_offset_t) 0xFFE00000)
+#define VM_MIN_ADDRESS ((vm_offset_t)0)
+#define VM_USRSTACK32                                                          \
+  ((vm_offset_t)0xC0000000) /* ASLR slides stack down by up to 1 MB */
+#define VM_MAX_ADDRESS ((vm_offset_t)0xFFE00000)
 
+#ifdef KERNEL_PRIVATE
 
-#ifdef  KERNEL_PRIVATE
-
-#define TEST_PAGE_SIZE_16K      FALSE
-#define TEST_PAGE_SIZE_4K       TRUE
+#define TEST_PAGE_SIZE_16K FALSE
+#define TEST_PAGE_SIZE_4K TRUE
 
 /* Kernel-wide values */
-#define KB              (1024ULL)
-#define MB              (1024*KB)
-#define GB              (1024*MB)
+#define KB (1024ULL)
+#define MB (1024 * KB)
+#define GB (1024 * MB)
 
 /*
  * Maximum physical memory supported.
  */
-#define K64_MAXMEM      (2048*GB)
-#define KERNEL_MAXMEM   K64_MAXMEM
+#define K64_MAXMEM (2048 * GB)
+#define KERNEL_MAXMEM K64_MAXMEM
 
 /*
  * +-----------------------+--------+--------+------------------------+
@@ -224,35 +227,35 @@
 
 #define KERNEL_IMAGE_TO_PHYS(x) (x)
 #define VM_KERNEL_POINTER_SIGNIFICANT_BITS 39
-#define VM_MIN_KERNEL_ADDRESS           ((vm_offset_t) 0xFFFFFF8000000000UL)
-#define VM_MIN_KERNEL_PAGE              ((ppnum_t)0)
-#define VM_MIN_KERNEL_AND_KEXT_ADDRESS  (VM_MIN_KERNEL_ADDRESS - 0x80000000ULL)
-#define VM_MAX_KERNEL_ADDRESS           ((vm_offset_t) 0xFFFFFFFFFFFFEFFFUL)
-#define VM_MAX_KERNEL_ADDRESS_EFI32     ((vm_offset_t) 0xFFFFFF80FFFFEFFFUL)
-#define KEXT_ALLOC_MAX_OFFSET           (2 * 1024 * 1024 * 1024UL)
-#define KEXT_ALLOC_BASE(x)              ((x) - KEXT_ALLOC_MAX_OFFSET)
-#define KEXT_ALLOC_SIZE(x)              (KEXT_ALLOC_MAX_OFFSET - (x))
+#define VM_MIN_KERNEL_ADDRESS ((vm_offset_t)0xFFFFFF8000000000UL)
+#define VM_MIN_KERNEL_PAGE ((ppnum_t)0)
+#define VM_MIN_KERNEL_AND_KEXT_ADDRESS (VM_MIN_KERNEL_ADDRESS - 0x80000000ULL)
+#define VM_MAX_KERNEL_ADDRESS ((vm_offset_t)0xFFFFFFFFFFFFEFFFUL)
+#define VM_MAX_KERNEL_ADDRESS_EFI32 ((vm_offset_t)0xFFFFFF80FFFFEFFFUL)
+#define KEXT_ALLOC_MAX_OFFSET (2 * 1024 * 1024 * 1024UL)
+#define KEXT_ALLOC_BASE(x) ((x) - KEXT_ALLOC_MAX_OFFSET)
+#define KEXT_ALLOC_SIZE(x) (KEXT_ALLOC_MAX_OFFSET - (x))
 
 #define VM_USER_STRIP_PTR(_v) (_v)
 #define VM_KERNEL_STRIP_PTR(_v) (_v)
 #define VM_KERNEL_STRIP_UPTR(_v) (_v)
 
-#define VM_KERNEL_ADDRESS(va) \
-	(((vm_address_t)(va) >= VM_MIN_KERNEL_AND_KEXT_ADDRESS) && \
-	((vm_address_t)(va)  <= VM_MAX_KERNEL_ADDRESS))
+#define VM_KERNEL_ADDRESS(va)                                                  \
+  (((vm_address_t)(va) >= VM_MIN_KERNEL_AND_KEXT_ADDRESS) &&                   \
+   ((vm_address_t)(va) <= VM_MAX_KERNEL_ADDRESS))
 
-#define VM_MAP_MIN_ADDRESS      MACH_VM_MIN_ADDRESS
-#define VM_MAP_MAX_ADDRESS      MACH_VM_MAX_ADDRESS
+#define VM_MAP_MIN_ADDRESS MACH_VM_MIN_ADDRESS
+#define VM_MAP_MAX_ADDRESS MACH_VM_MAX_ADDRESS
 
 /* FIXME  - always leave like this? */
 #if KASAN
 /* Increase the stack sizes to account for the redzones that get added to every
  * stack object. */
-# define INTSTACK_SIZE (I386_PGBYTES*4*4)
-# define KERNEL_STACK_SIZE (I386_PGBYTES*4*4)
+#define INTSTACK_SIZE (I386_PGBYTES * 4 * 4)
+#define KERNEL_STACK_SIZE (I386_PGBYTES * 4 * 4)
 #elif DEBUG
-# define INTSTACK_SIZE (I386_PGBYTES*4)
-# define KERNEL_STACK_SIZE (I386_PGBYTES*6)
+#define INTSTACK_SIZE (I386_PGBYTES * 4)
+#define KERNEL_STACK_SIZE (I386_PGBYTES * 6)
 #else
 /*
  * KERNEL_STACK_MULTIPLIER can be defined externally to get a larger
@@ -262,16 +265,16 @@
 #ifndef KERNEL_STACK_MULTIPLIER
 #define KERNEL_STACK_MULTIPLIER (1)
 #endif /* KERNEL_STACK_MULTIPLIER */
-# define INTSTACK_SIZE (I386_PGBYTES*4)
-# define KERNEL_STACK_SIZE (I386_PGBYTES*4*KERNEL_STACK_MULTIPLIER)
+#define INTSTACK_SIZE (I386_PGBYTES * 4)
+#define KERNEL_STACK_SIZE (I386_PGBYTES * 4 * KERNEL_STACK_MULTIPLIER)
 #endif
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
 /* For implementing legacy 32-bit interfaces */
-#define VM32_SUPPORT                    1
-#define VM32_MIN_ADDRESS                ((vm32_offset_t) 0)
-#define VM32_MAX_ADDRESS                ((vm32_offset_t) (VM_MAX_PAGE_ADDRESS & 0xFFFFFFFF))
+#define VM32_SUPPORT 1
+#define VM32_MIN_ADDRESS ((vm32_offset_t)0)
+#define VM32_MAX_ADDRESS ((vm32_offset_t)(VM_MAX_PAGE_ADDRESS & 0xFFFFFFFF))
 
 /*
  * kalloc() parameters:
@@ -285,40 +288,39 @@
  *
  * The common alignment for LP64 is for longs and pointers i.e. 8 bytes.
  */
-#define KALLOC_MINSIZE          16      /* minimum allocation size */
-#define KALLOC_LOG2_MINALIGN    4       /* log2 minimum alignment */
+#define KALLOC_MINSIZE 16      /* minimum allocation size */
+#define KALLOC_LOG2_MINALIGN 4 /* log2 minimum alignment */
 
-#define LINEAR_KERNEL_ADDRESS   ((vm_offset_t) 0x00000000)
+#define LINEAR_KERNEL_ADDRESS ((vm_offset_t)0x00000000)
 
-#define VM_MIN_KERNEL_LOADED_ADDRESS    ((vm_offset_t) 0xFFFFFF8000000000UL)
-#define VM_MAX_KERNEL_LOADED_ADDRESS    ((vm_offset_t) 0xFFFFFF801FFFFFFFUL)
+#define VM_MIN_KERNEL_LOADED_ADDRESS ((vm_offset_t)0xFFFFFF8000000000UL)
+#define VM_MAX_KERNEL_LOADED_ADDRESS ((vm_offset_t)0xFFFFFF801FFFFFFFUL)
 
 /*
  *	Conversion between 80386 pages and VM pages
  */
 
-#define trunc_i386_to_vm(p)     (atop(trunc_page(i386_ptob(p))))
-#define round_i386_to_vm(p)     (atop(round_page(i386_ptob(p))))
-#define vm_to_i386(p)           (i386_btop(ptoa(p)))
+#define trunc_i386_to_vm(p) (atop(trunc_page(i386_ptob(p))))
+#define round_i386_to_vm(p) (atop(round_page(i386_ptob(p))))
+#define vm_to_i386(p) (i386_btop(ptoa(p)))
 
-#define PMAP_SET_CACHE_ATTR(mem, object, cache_attr, batch_pmap_op)     \
-	MACRO_BEGIN                                                     \
-	        pmap_set_cache_attributes(VM_PAGE_GET_PHYS_PAGE(mem), (cache_attr));    \
-	        (object)->set_cache_attr = TRUE;                                \
-	        (void) batch_pmap_op;                                   \
-	MACRO_END
+#define PMAP_SET_CACHE_ATTR(mem, object, cache_attr, batch_pmap_op)            \
+  MACRO_BEGIN                                                                  \
+  pmap_set_cache_attributes(VM_PAGE_GET_PHYS_PAGE(mem), (cache_attr));         \
+  (object)->set_cache_attr = TRUE;                                             \
+  (void)batch_pmap_op;                                                         \
+  MACRO_END
 
-#define PMAP_BATCH_SET_CACHE_ATTR(object, user_page_list, cache_attr, num_pages, batch_pmap_op) \
-	MACRO_BEGIN                                                     \
-	(void) user_page_list;                                          \
-	(void) num_pages;                                               \
-	(void) batch_pmap_op;                                           \
-	MACRO_END
+#define PMAP_BATCH_SET_CACHE_ATTR(object, user_page_list, cache_attr,          \
+                                  num_pages, batch_pmap_op)                    \
+  MACRO_BEGIN(void) user_page_list;                                            \
+  (void)num_pages;                                                             \
+  (void)batch_pmap_op;                                                         \
+  MACRO_END
 
-#define IS_USERADDR64_CANONICAL(addr)                   \
-	((addr) < (VM_MAX_USER_PAGE_ADDRESS))
+#define IS_USERADDR64_CANONICAL(addr) ((addr) < (VM_MAX_USER_PAGE_ADDRESS))
 
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
 #ifdef XNU_KERNEL_PRIVATE
 
@@ -326,8 +328,8 @@
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 
 #endif /* defined (__i386__) || defined (__x86_64__) */
 
-#endif  /* _MACH_I386_VM_PARAM_H_ */
+#endif /* _MACH_I386_VM_PARAM_H_ */

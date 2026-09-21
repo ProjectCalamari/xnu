@@ -11,24 +11,17 @@
 
 #include "_libkernel_init.h"
 
-__attribute__((weak, visibility("hidden")))
-void *
-malloc(__unused size_t size)
-{
-	return NULL;
+__attribute__((weak, visibility("hidden"))) void *malloc(__unused size_t size) {
+  return NULL;
 }
 
-__attribute__((weak, visibility("hidden")))
-mach_msg_size_t
+__attribute__((weak, visibility("hidden"))) mach_msg_size_t
 voucher_mach_msg_fill_aux(__unused mach_msg_aux_header_t *aux_hdr,
-    __unused mach_msg_size_t sz)
-{
-	return 0;
+                          __unused mach_msg_size_t sz) {
+  return 0;
 }
 
-__attribute__((weak, visibility("hidden")))
-boolean_t
-voucher_mach_msg_fill_aux_supported(void)
-{
-	return FALSE;
+__attribute__((weak, visibility("hidden"))) boolean_t
+voucher_mach_msg_fill_aux_supported(void) {
+  return FALSE;
 }

@@ -29,77 +29,68 @@
 #include "IOPMPowerStateQueue.h"
 
 #define super IOEventSource
-OSDefineMetaClassAndStructors( IOPMPowerStateQueue, IOEventSource )
+OSDefineMetaClassAndStructors(IOPMPowerStateQueue, IOEventSource)
 
-IOPMPowerStateQueue * IOPMPowerStateQueue::PMPowerStateQueue(
-	OSObject * inOwner, Action inAction )
-{
-	IOPMPowerStateQueue * me = new IOPMPowerStateQueue;
+    IOPMPowerStateQueue *IOPMPowerStateQueue::PMPowerStateQueue(
+        OSObject *inOwner, Action inAction) {
+  IOPMPowerStateQueue *me = new IOPMPowerStateQueue;
 
-	if (me && !me->init(inOwner, inAction)) {
-		me->release();
-		return NULL;
-	}
+  if (me && !me->init(inOwner, inAction)) {
+    me->release();
+    return NULL;
+  }
 
-	return me;
+  return me;
 }
 
-bool
-IOPMPowerStateQueue::init( OSObject * inOwner, Action inAction )
-{
-	if (!inAction || !(super::init(inOwner, inAction))) {
-		return false;
-	}
+bool IOPMPowerStateQueue::init(OSObject *inOwner, Action inAction) {
+  if (!inAction || !(super::init(inOwner, inAction))) {
+    return false;
+  }
 
-	queue_init( &queueHead );
+  queue_init(&queueHead);
 
-	queueLock = IOLockAlloc();
-	if (!queueLock) {
-		return false;
-	}
+  queueLock = IOLockAlloc();
+  if (!queueLock) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-bool
-IOPMPowerStateQueue::submitPowerEvent(
-	uint32_t eventType,
-	void *   arg0,
-	uint64_t arg1 )
-{
-	PowerEventEntry * entry;
+bool IOPMPowerStateQueue::submitPowerEvent(uint32_t eventType, void *arg0,
+                                           uint64_t arg1) {
+  PowerEventEntry *entry;
 
-	entry = IOMallocType(PowerEventEntry);
+  entry = IOMallocType(PowerEventEntry);
 
-	entry->eventType = eventType;
-	entry->arg0 = arg0;
-	entry->arg1 = arg1;
+  entry->eventType = eventType;
+  entry->arg0 = arg0;
+  entry->arg1 = arg1;
 
-	IOLockLock(queueLock);
-	queue_enter(&queueHead, entry, PowerEventEntry *, chain);
-	IOLockUnlock(queueLock);
-	signalWorkAvailable();
+  IOLockLock(queueLock);
+  queue_enter(&queueHead, entry, PowerEventEntry *, chain);
+  IOLockUnlock(queueLock);
+  signalWorkAvailable();
 
-	return true;
+  return true;
 }
 
-bool
-IOPMPowerStateQueue::checkForWork( void )
-{
-	IOPMPowerStateQueueAction queueAction = (IOPMPowerStateQueueAction) action;
-	PowerEventEntry * entry;
+bool IOPMPowerStateQueue::checkForWork(void) {
+  IOPMPowerStateQueueAction queueAction = (IOPMPowerStateQueueAction)action;
+  PowerEventEntry *entry;
 
-	IOLockLock(queueLock);
-	while (!queue_empty(&queueHead)) {
-		queue_remove_first(&queueHead, entry, PowerEventEntry *, chain);
-		IOLockUnlock(queueLock);
+  IOLockLock(queueLock);
+  while (!queue_empty(&queueHead)) {
+    queue_remove_first(&queueHead, entry, PowerEventEntry *, chain);
+    IOLockUnlock(queueLock);
 
-		(*queueAction)(owner, entry->eventType, entry->arg0, entry->arg1);
-		IOFreeType(entry, PowerEventEntry);
+    (*queueAction)(owner, entry->eventType, entry->arg0, entry->arg1);
+    IOFreeType(entry, PowerEventEntry);
 
-		IOLockLock(queueLock);
-	}
-	IOLockUnlock(queueLock);
+    IOLockLock(queueLock);
+  }
+  IOLockUnlock(queueLock);
 
-	return false;
+  return false;
 }

@@ -27,7 +27,7 @@
  */
 #ifndef _CADDR_T
 #define _CADDR_T
-typedef char *          caddr_t;
+typedef char *caddr_t;
 #endif /* _CADDR_T */
 
 #if KERNEL

@@ -54,15 +54,15 @@
  * the rights to redistribute these changes.
  */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #ifndef _KERN_CPU_NUMBER_H_
 #define _KERN_CPU_NUMBER_H_
 
-extern int              master_cpu;
+extern int master_cpu;
 
 #include <machine/cpu_number.h>
 
-#endif  /* _KERN_CPU_NUMBER_H_ */
+#endif /* _KERN_CPU_NUMBER_H_ */
 
-#endif  /* XNU_KERNEL_PRIVATE */
+#endif /* XNU_KERNEL_PRIVATE */

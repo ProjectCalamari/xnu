@@ -34,40 +34,49 @@
 
 #include "bpflib.h"
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.net"),
-	T_META_ASROOT(true),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("networking"),
-	T_META_CHECK_LEAKS(false));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.net"), T_META_ASROOT(true),
+              T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("networking"),
+              T_META_CHECK_LEAKS(false));
 
-T_DECL(bpf_no_timestamp, "test BIOCGNOTSTAMP and BIOCSNOTSTAMP")
-{
-	int fd = bpf_new();
-	T_ASSERT_POSIX_SUCCESS(fd, "bpf open fd %d", fd);
+T_DECL(bpf_no_timestamp, "test BIOCGNOTSTAMP and BIOCSNOTSTAMP") {
+  int fd = bpf_new();
+  T_ASSERT_POSIX_SUCCESS(fd, "bpf open fd %d", fd);
 
-	int get_no_timestamp = -1;
+  int get_no_timestamp = -1;
 
-	T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCGNOTSTAMP, &get_no_timestamp), "BIOCGNOTSTAMP");;
-	T_LOG("BIOCGNOTSTAMP detault: %u", get_no_timestamp);
+  T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCGNOTSTAMP, &get_no_timestamp),
+                         "BIOCGNOTSTAMP");
+  ;
+  T_LOG("BIOCGNOTSTAMP detault: %u", get_no_timestamp);
 
-	int set_no_timestamp = 1;
+  int set_no_timestamp = 1;
 
-	T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCSNOTSTAMP, &set_no_timestamp), "BIOCSNOTSTAMP");;
-	T_LOG("set_no_timestamp %u", set_no_timestamp);
+  T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCSNOTSTAMP, &set_no_timestamp),
+                         "BIOCSNOTSTAMP");
+  ;
+  T_LOG("set_no_timestamp %u", set_no_timestamp);
 
-	T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCGNOTSTAMP, &get_no_timestamp), "BIOCGNOTSTAMP");;
-	T_LOG("BIOCGNOTSTAMP detault: %u", get_no_timestamp);
+  T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCGNOTSTAMP, &get_no_timestamp),
+                         "BIOCGNOTSTAMP");
+  ;
+  T_LOG("BIOCGNOTSTAMP detault: %u", get_no_timestamp);
 
-	T_ASSERT_EQ(get_no_timestamp, set_no_timestamp, "get_no_timestamp == set_no_timestamp");
+  T_ASSERT_EQ(get_no_timestamp, set_no_timestamp,
+              "get_no_timestamp == set_no_timestamp");
 
-	set_no_timestamp = 0;
+  set_no_timestamp = 0;
 
-	T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCSNOTSTAMP, &set_no_timestamp), "BIOCSNOTSTAMP");;
-	T_LOG("set_no_timestamp %u", set_no_timestamp);
+  T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCSNOTSTAMP, &set_no_timestamp),
+                         "BIOCSNOTSTAMP");
+  ;
+  T_LOG("set_no_timestamp %u", set_no_timestamp);
 
-	T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCGNOTSTAMP, &get_no_timestamp), "BIOCGNOTSTAMP");;
-	T_LOG("get_no_timestamp %u", get_no_timestamp);
+  T_ASSERT_POSIX_SUCCESS(ioctl(fd, BIOCGNOTSTAMP, &get_no_timestamp),
+                         "BIOCGNOTSTAMP");
+  ;
+  T_LOG("get_no_timestamp %u", get_no_timestamp);
 
-	T_ASSERT_EQ(get_no_timestamp, set_no_timestamp, "get_no_timestamp== set_no_timestamp");
+  T_ASSERT_EQ(get_no_timestamp, set_no_timestamp,
+              "get_no_timestamp== set_no_timestamp");
 }

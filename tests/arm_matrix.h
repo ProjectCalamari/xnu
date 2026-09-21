@@ -36,21 +36,21 @@
 #include <stdlib.h>
 
 struct arm_matrix_operations {
-	const char *name;
+  const char *name;
 
-	size_t (*data_size)(void);
-	void *(*alloc_data)(void);
+  size_t (*data_size)(void);
+  void *(*alloc_data)(void);
 
-	bool (*is_available)(void);
-	void (*start)(void);
-	void (*stop)(void);
+  bool (*is_available)(void);
+  void (*start)(void);
+  void (*stop)(void);
 
-	void (*load_one_vector)(const void *);
-	void (*load_data)(const void *);
-	void (*store_data)(void *);
+  void (*load_one_vector)(const void *);
+  void (*load_data)(const void *);
+  void (*store_data)(void *);
 
-	kern_return_t (*thread_get_state)(thread_act_t, void *);
-	kern_return_t (*thread_set_state)(thread_act_t, const void *);
+  kern_return_t (*thread_get_state)(thread_act_t, void *);
+  kern_return_t (*thread_set_state)(thread_act_t, const void *);
 };
 
 extern const struct arm_matrix_operations sme_operations;

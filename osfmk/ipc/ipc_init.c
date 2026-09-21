@@ -70,37 +70,37 @@
  *	Functions to initialize the IPC system.
  */
 
-#include <mach/port.h>
-#include <mach/message.h>
 #include <mach/kern_return.h>
+#include <mach/message.h>
+#include <mach/port.h>
 
-#include <kern/kern_types.h>
 #include <kern/arcade.h>
-#include <kern/kalloc.h>
-#include <kern/simple_lock.h>
-#include <kern/mach_param.h>
+#include <kern/host_notify.h>
 #include <kern/ipc_host.h>
 #include <kern/ipc_kobject.h>
 #include <kern/ipc_mig.h>
-#include <kern/host_notify.h>
+#include <kern/kalloc.h>
+#include <kern/kern_types.h>
+#include <kern/mach_param.h>
 #include <kern/misc_protos.h>
+#include <kern/simple_lock.h>
 #include <kern/sync_sema.h>
 #include <kern/ux_handler.h>
-#include <vm/vm_map_xnu.h>
 #include <vm/vm_kern_xnu.h>
+#include <vm/vm_map_xnu.h>
 
 #include <ipc/ipc_entry.h>
-#include <ipc/ipc_space.h>
+#include <ipc/ipc_eventlink.h>
+#include <ipc/ipc_hash.h>
+#include <ipc/ipc_kmsg.h>
+#include <ipc/ipc_notify.h>
 #include <ipc/ipc_object.h>
 #include <ipc/ipc_port.h>
 #include <ipc/ipc_pset.h>
-#include <ipc/ipc_notify.h>
-#include <ipc/ipc_kmsg.h>
-#include <ipc/ipc_hash.h>
+#include <ipc/ipc_space.h>
 #include <ipc/ipc_voucher.h>
-#include <ipc/ipc_eventlink.h>
 
-#include <mach/machine/ndr_def.h>   /* NDR_record */
+#include <mach/machine/ndr_def.h> /* NDR_record */
 
 SECURITY_READ_ONLY_LATE(vm_map_t) ipc_kernel_map;
 
@@ -109,7 +109,7 @@ SECURITY_READ_ONLY_LATE(vm_map_t) ipc_kernel_copy_map;
 #define IPC_KERNEL_COPY_MAP_SIZE (8 * 1024 * 1024)
 const vm_size_t ipc_kmsg_max_vm_space = ((IPC_KERNEL_COPY_MAP_SIZE * 7) / 8);
 
-#define IPC_KERNEL_MAP_SIZE      (CONFIG_IPC_KERNEL_MAP_SIZE << 20)
+#define IPC_KERNEL_MAP_SIZE (CONFIG_IPC_KERNEL_MAP_SIZE << 20)
 
 LCK_GRP_DECLARE(ipc_lck_grp, "ipc");
 LCK_ATTR_DECLARE(ipc_lck_attr, 0, 0);
@@ -121,52 +121,51 @@ LCK_ATTR_DECLARE(ipc_lck_attr, 0, 0);
  * with sizes greater than msg_ool_size_small may fail.
  */
 const vm_size_t msg_ool_size_small = KHEAP_MAX_SIZE;
-__startup_data
-static struct mach_vm_range ipc_kernel_range;
-__startup_data
-static struct mach_vm_range ipc_kernel_copy_range;
+__startup_data static struct mach_vm_range ipc_kernel_range;
+__startup_data static struct mach_vm_range ipc_kernel_copy_range;
 KMEM_RANGE_REGISTER_STATIC(ipc_kernel_map, &ipc_kernel_range,
-    IPC_KERNEL_MAP_SIZE);
+                           IPC_KERNEL_MAP_SIZE);
 KMEM_RANGE_REGISTER_STATIC(ipc_kernel_copy_map, &ipc_kernel_copy_range,
-    IPC_KERNEL_COPY_MAP_SIZE);
+                           IPC_KERNEL_COPY_MAP_SIZE);
 
 /*
  *	Routine:	ipc_init
  *	Purpose:
  *		Final initialization
  */
-__startup_func
-static void
-ipc_init(void)
-{
-	/* create special spaces */
+__startup_func static void ipc_init(void) {
+  /* create special spaces */
 
-	ipc_space_kernel = ipc_space_create_special();
-	ipc_space_reply = ipc_space_create_special();
+  ipc_space_kernel = ipc_space_create_special();
+  ipc_space_reply = ipc_space_create_special();
 
-	/* initialize modules with hidden data structures */
+  /* initialize modules with hidden data structures */
 
 #if CONFIG_ARCADE
-	arcade_init();
+  arcade_init();
 #endif
 
-	ipc_kernel_map = kmem_suballoc(kernel_map, &ipc_kernel_range.min_address,
-	    IPC_KERNEL_MAP_SIZE, VM_MAP_CREATE_PAGEABLE,
-	    VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE, KMS_PERMANENT | KMS_NOFAIL,
-	    VM_KERN_MEMORY_IPC).kmr_submap;
+  ipc_kernel_map = kmem_suballoc(kernel_map, &ipc_kernel_range.min_address,
+                                 IPC_KERNEL_MAP_SIZE, VM_MAP_CREATE_PAGEABLE,
+                                 VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE,
+                                 KMS_PERMANENT | KMS_NOFAIL, VM_KERN_MEMORY_IPC)
+                       .kmr_submap;
 
-	ipc_kernel_copy_map = kmem_suballoc(kernel_map, &ipc_kernel_copy_range.min_address,
-	    IPC_KERNEL_COPY_MAP_SIZE,
-	    VM_MAP_CREATE_PAGEABLE | VM_MAP_CREATE_DISABLE_HOLELIST,
-	    VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE, KMS_PERMANENT | KMS_NOFAIL,
-	    VM_KERN_MEMORY_IPC).kmr_submap;
+  ipc_kernel_copy_map =
+      kmem_suballoc(kernel_map, &ipc_kernel_copy_range.min_address,
+                    IPC_KERNEL_COPY_MAP_SIZE,
+                    VM_MAP_CREATE_PAGEABLE | VM_MAP_CREATE_DISABLE_HOLELIST,
+                    VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE,
+                    KMS_PERMANENT | KMS_NOFAIL, VM_KERN_MEMORY_IPC)
+          .kmr_submap;
 
-	ipc_kernel_copy_map->no_zero_fill = TRUE;
-	ipc_kernel_copy_map->wait_for_space = TRUE;
+  ipc_kernel_copy_map->no_zero_fill = TRUE;
+  ipc_kernel_copy_map->wait_for_space = TRUE;
 
-	ipc_host_init();
-	ux_handler_init();
+  ipc_host_init();
+  ux_handler_init();
 }
-#ifndef __BUILDING_XNU_LIB_UNITTEST__ /* unittests don't support creating submap in kernel_map */
+#ifndef __BUILDING_XNU_LIB_UNITTEST__ /* unittests don't support creating      \
+                                         submap in kernel_map */
 STARTUP(MACH_IPC, STARTUP_RANK_LAST, ipc_init);
 #endif /* __BUILDING_XNU_LIB_UNITTEST__ */

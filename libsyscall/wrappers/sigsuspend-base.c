@@ -27,15 +27,13 @@
 
 int __SIGSUSPEND(const sigset_t);
 
-int
-sigsuspend(const sigset_t *sigmask_p)
-{
-	sigset_t    mask;
+int sigsuspend(const sigset_t *sigmask_p) {
+  sigset_t mask;
 
-	if (sigmask_p) {
-		mask = *sigmask_p;
-	} else {
-		sigemptyset(&mask);
-	}
-	return __SIGSUSPEND(mask);
+  if (sigmask_p) {
+    mask = *sigmask_p;
+  } else {
+    sigemptyset(&mask);
+  }
+  return __SIGSUSPEND(mask);
 }

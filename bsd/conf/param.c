@@ -65,49 +65,53 @@
  *	@(#)param.c	8.3 (Berkeley) 8/20/94
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/socket.h>
-#include <sys/vnode_internal.h>
-#include <sys/file_internal.h>
-#include <sys/mbuf.h>
-#include <sys/domain.h>
-#include <sys/kernel.h>
-#include <sys/quota.h>
 #include <miscfs/fifofs/fifo.h>
-#include <sys/shm_internal.h>
 #include <sys/aio_kern.h>
+#include <sys/domain.h>
+#include <sys/file_internal.h>
+#include <sys/kernel.h>
+#include <sys/mbuf.h>
+#include <sys/param.h>
+#include <sys/quota.h>
+#include <sys/shm_internal.h>
+#include <sys/socket.h>
+#include <sys/systm.h>
+#include <sys/vnode_internal.h>
 
-struct  timezone tz = { .tz_minuteswest = 0, .tz_dsttime = 0 };
+struct timezone tz = {.tz_minuteswest = 0, .tz_dsttime = 0};
 
 #if !defined(__x86_64__)
-#define NPROC 1000          /* Account for DEFAULT_TOTAL_CORPSES_ALLOWED by making this slightly lower than we can. */
+#define NPROC                                                                  \
+  1000 /* Account for DEFAULT_TOTAL_CORPSES_ALLOWED by making this slightly    \
+          lower than we can. */
 #define NPROC_PER_UID 950
 #else
 #define NPROC (20 + 32 * 32)
-#define NPROC_PER_UID (NPROC/2)
+#define NPROC_PER_UID (NPROC / 2)
 #endif
 
-/* NOTE: maxproc and hard_maxproc values are subject to device specific scaling in bsd_scale_setup */
-#define HNPROC 2500     /* based on thread_max */
-int     maxproc = NPROC;
-int     maxprocperuid = NPROC_PER_UID;
+/* NOTE: maxproc and hard_maxproc values are subject to device specific scaling
+ * in bsd_scale_setup */
+#define HNPROC 2500 /* based on thread_max */
+int maxproc = NPROC;
+int maxprocperuid = NPROC_PER_UID;
 
 #if !defined(__x86_64__)
-int hard_maxproc = NPROC;       /* hardcoded limit -- for ARM the number of processes is limited by the ASID space */
+int hard_maxproc = NPROC; /* hardcoded limit -- for ARM the number of processes
+                             is limited by the ASID space */
 #else
-int hard_maxproc = HNPROC;      /* hardcoded limit */
+int hard_maxproc = HNPROC; /* hardcoded limit */
 #endif
 
 int nprocs = 0; /* XXX */
 
-int desiredvnodes = 0;          /* desiredvnodes is set explicitly in unix_startup.c */
-uint32_t kern_maxvnodes = 0;    /* global, to be read from the device tree */
+int desiredvnodes = 0; /* desiredvnodes is set explicitly in unix_startup.c */
+uint32_t kern_maxvnodes = 0; /* global, to be read from the device tree */
 
 #if __LP64__
-int     maxfiles = 3 * OPEN_MAX;
+int maxfiles = 3 * OPEN_MAX;
 #else
-int     maxfiles = OPEN_MAX + 2048;
+int maxfiles = OPEN_MAX + 2048;
 #endif
 
 unsigned int nmbclusters = NMBCLUSTERS;
@@ -119,5 +123,5 @@ int aio_max_requests = CONFIG_AIO_MAX;
 int aio_max_requests_per_process = CONFIG_AIO_PROCESS_MAX;
 int aio_worker_threads = CONFIG_AIO_THREAD_COUNT;
 
-struct  buf *buf_headers;
+struct buf *buf_headers;
 struct domains_head domains = TAILQ_HEAD_INITIALIZER(domains);

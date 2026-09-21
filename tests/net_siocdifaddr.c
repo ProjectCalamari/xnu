@@ -31,81 +31,70 @@
  * - verify that SIOCDIFADDR succeeds
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 #include <TargetConditionals.h>
 #include <darwintest.h>
 #include <darwintest_utils.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "net_test_lib.h"
 
-T_GLOBAL_META(T_META_NAMESPACE("xnu.net"),
-    T_META_RADAR_COMPONENT_NAME("xnu"),
-    T_META_RADAR_COMPONENT_VERSION("networking"),
-    T_META_ASROOT(true));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.net"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("networking"),
+              T_META_ASROOT(true));
 
 static char ifname[IF_NAMESIZE];
 
-static void
-fake_set_fail_ioctl(bool fail)
-{
-	int     error;
-	int     val;
+static void fake_set_fail_ioctl(bool fail) {
+  int error;
+  int val;
 
-	val = fail ? 1 : 0;
-#define FAKE_FAIL_IOCTL         "net.link.fake.fail_ioctl"
-	error = sysctlbyname(FAKE_FAIL_IOCTL, NULL, 0,
-	    &val, sizeof(val));
-	T_ASSERT_EQ(error, 0, FAKE_FAIL_IOCTL " %d", val);
+  val = fail ? 1 : 0;
+#define FAKE_FAIL_IOCTL "net.link.fake.fail_ioctl"
+  error = sysctlbyname(FAKE_FAIL_IOCTL, NULL, 0, &val, sizeof(val));
+  T_ASSERT_EQ(error, 0, FAKE_FAIL_IOCTL " %d", val);
 }
 
-static void
-test_cleanup(void)
-{
-	if (ifname[0] != '\0') {
-		(void)ifnet_destroy(ifname, false);
-		T_LOG("ifnet_destroy %s", ifname);
-	}
-	fake_set_fail_ioctl(false);
+static void test_cleanup(void) {
+  if (ifname[0] != '\0') {
+    (void)ifnet_destroy(ifname, false);
+    T_LOG("ifnet_destroy %s", ifname);
+  }
+  fake_set_fail_ioctl(false);
 }
 
-static void
-sigint_cleanup(__unused int sig)
-{
-	signal(SIGINT, SIG_DFL);
-	test_cleanup();
+static void sigint_cleanup(__unused int sig) {
+  signal(SIGINT, SIG_DFL);
+  test_cleanup();
 }
 
-static void
-test_siocdifaddr(void)
-{
-	struct in_addr  addr;
-	int             error;
-	struct in_addr  mask;
+static void test_siocdifaddr(void) {
+  struct in_addr addr;
+  int error;
+  struct in_addr mask;
 
-	addr.s_addr = htonl(IN_LINKLOCALNETNUM + 1);
-	mask.s_addr = htonl(IN_CLASSB_NET);
+  addr.s_addr = htonl(IN_LINKLOCALNETNUM + 1);
+  mask.s_addr = htonl(IN_CLASSB_NET);
 
-	signal(SIGINT, sigint_cleanup);
-	T_ATEND(test_cleanup);
+  signal(SIGINT, sigint_cleanup);
+  T_ATEND(test_cleanup);
 
-	strlcpy(ifname, FETH_NAME, sizeof(ifname));
-	error = ifnet_create_2(ifname, sizeof(ifname));
-	if (error != 0) {
-		ifname[0] = '\0';
-		T_FAIL("ifnet_create_2 %s", FETH_NAME);
-	}
-	fake_set_fail_ioctl(true);
-	ifnet_add_ip_address(ifname, addr, mask);
-	ifnet_remove_ip_address(ifname, addr, mask);
+  strlcpy(ifname, FETH_NAME, sizeof(ifname));
+  error = ifnet_create_2(ifname, sizeof(ifname));
+  if (error != 0) {
+    ifname[0] = '\0';
+    T_FAIL("ifnet_create_2 %s", FETH_NAME);
+  }
+  fake_set_fail_ioctl(true);
+  ifnet_add_ip_address(ifname, addr, mask);
+  ifnet_remove_ip_address(ifname, addr, mask);
 }
 
 T_DECL(siocdifaddr,
-    "Verify SIOCDIFADDR succeeds when interface returns failure",
-    T_META_ASROOT(true), T_META_TAG_VM_PREFERRED)
-{
-	test_siocdifaddr();
+       "Verify SIOCDIFADDR succeeds when interface returns failure",
+       T_META_ASROOT(true), T_META_TAG_VM_PREFERRED) {
+  test_siocdifaddr();
 }

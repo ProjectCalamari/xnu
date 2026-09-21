@@ -26,263 +26,245 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <IOKit/IOLib.h>
 #include <IOKit/IOInterleavedMemoryDescriptor.h>
+#include <IOKit/IOLib.h>
 
 #define super IOMemoryDescriptor
 OSDefineMetaClassAndStructors(IOInterleavedMemoryDescriptor, IOMemoryDescriptor)
 
-IOInterleavedMemoryDescriptor * IOInterleavedMemoryDescriptor::withCapacity(
-	IOByteCount           capacity,
-	IODirection           direction )
-{
-	//
-	// Create a new IOInterleavedMemoryDescriptor.  The "buffer" will be made up
-	// of several memory descriptors, that are to be chained end-to-end to make up
-	// a single memory descriptor.
-	//
+    IOInterleavedMemoryDescriptor *IOInterleavedMemoryDescriptor::withCapacity(
+        IOByteCount capacity, IODirection direction) {
+  //
+  // Create a new IOInterleavedMemoryDescriptor.  The "buffer" will be made up
+  // of several memory descriptors, that are to be chained end-to-end to make up
+  // a single memory descriptor.
+  //
 
-	IOInterleavedMemoryDescriptor * me = new IOInterleavedMemoryDescriptor;
+  IOInterleavedMemoryDescriptor *me = new IOInterleavedMemoryDescriptor;
 
-	if (me && !me->initWithCapacity(
-		    /* capacity  */ capacity,
-		    /* direction */ direction )) {
-		me->release();
-		me = NULL;
-	}
+  if (me && !me->initWithCapacity(
+                /* capacity  */ capacity,
+                /* direction */ direction)) {
+    me->release();
+    me = NULL;
+  }
 
-	return me;
+  return me;
 }
 
-bool
-IOInterleavedMemoryDescriptor::initWithCapacity(
-	IOByteCount           capacity,
-	IODirection           direction )
-{
-	//
-	// Initialize an IOInterleavedMemoryDescriptor. The "buffer" will be made up
-	// of several memory descriptors, that are to be chained end-to-end to make up
-	// a single memory descriptor.
-	//
+bool IOInterleavedMemoryDescriptor::initWithCapacity(IOByteCount capacity,
+                                                     IODirection direction) {
+  //
+  // Initialize an IOInterleavedMemoryDescriptor. The "buffer" will be made up
+  // of several memory descriptors, that are to be chained end-to-end to make up
+  // a single memory descriptor.
+  //
 
-	assert(capacity);
+  assert(capacity);
 
-	// Ask our superclass' opinion.
-	if (super::init() == false) {
-		return false;
-	}
+  // Ask our superclass' opinion.
+  if (super::init() == false) {
+    return false;
+  }
 
-	// Initialize our minimal state.
+  // Initialize our minimal state.
 
-	_flags                  = direction;
+  _flags = direction;
 #ifndef __LP64__
-	_direction              = (IODirection) (_flags & kIOMemoryDirectionMask);
+  _direction = (IODirection)(_flags & kIOMemoryDirectionMask);
 #endif /* !__LP64__ */
-	_length                 = 0;
-	_mappings               = NULL;
-	_tag                    = 0;
-	_descriptorCount        = 0;
-	_descriptors            = IONew(IOMemoryDescriptor *, capacity);
-	_descriptorOffsets      = IONewData(IOByteCount, capacity);
-	_descriptorLengths      = IONewData(IOByteCount, capacity);
+  _length = 0;
+  _mappings = NULL;
+  _tag = 0;
+  _descriptorCount = 0;
+  _descriptors = IONew(IOMemoryDescriptor *, capacity);
+  _descriptorOffsets = IONewData(IOByteCount, capacity);
+  _descriptorLengths = IONewData(IOByteCount, capacity);
 
-	if ((_descriptors == NULL) || (_descriptorOffsets == NULL) || (_descriptorLengths == NULL)) {
-		return false;
-	}
+  if ((_descriptors == NULL) || (_descriptorOffsets == NULL) ||
+      (_descriptorLengths == NULL)) {
+    return false;
+  }
 
-	_descriptorCapacity     = capacity;
+  _descriptorCapacity = capacity;
 
-	return true;
+  return true;
 }
 
-void
-IOInterleavedMemoryDescriptor::clearMemoryDescriptors( IODirection direction )
-{
-	UInt32 index;
+void IOInterleavedMemoryDescriptor::clearMemoryDescriptors(
+    IODirection direction) {
+  UInt32 index;
 
-	for (index = 0; index < _descriptorCount; index++) {
-		if (_descriptorPrepared) {
-			_descriptors[index]->complete(getDirection());
-		}
+  for (index = 0; index < _descriptorCount; index++) {
+    if (_descriptorPrepared) {
+      _descriptors[index]->complete(getDirection());
+    }
 
-		_descriptors[index]->release();
-		_descriptors[index] = NULL;
+    _descriptors[index]->release();
+    _descriptors[index] = NULL;
 
-		_descriptorOffsets[index] = 0;
-		_descriptorLengths[index] = 0;
-	}
+    _descriptorOffsets[index] = 0;
+    _descriptorLengths[index] = 0;
+  }
 
-	if (direction != kIODirectionNone) {
-		_flags = (_flags & ~kIOMemoryDirectionMask) | direction;
+  if (direction != kIODirectionNone) {
+    _flags = (_flags & ~kIOMemoryDirectionMask) | direction;
 #ifndef __LP64__
-		_direction = (IODirection) (_flags & kIOMemoryDirectionMask);
+    _direction = (IODirection)(_flags & kIOMemoryDirectionMask);
 #endif /* !__LP64__ */
-	}
+  }
 
-	_descriptorCount = 0;
-	_length = 0;
-	_mappings = NULL;
-	_tag = 0;
+  _descriptorCount = 0;
+  _length = 0;
+  _mappings = NULL;
+  _tag = 0;
 };
 
-bool
-IOInterleavedMemoryDescriptor::setMemoryDescriptor(
-	IOMemoryDescriptor * descriptor,
-	IOByteCount offset,
-	IOByteCount length )
-{
-	if (_descriptorPrepared || (_descriptorCount == _descriptorCapacity)) {
-		return false;
-	}
+bool IOInterleavedMemoryDescriptor::setMemoryDescriptor(
+    IOMemoryDescriptor *descriptor, IOByteCount offset, IOByteCount length) {
+  if (_descriptorPrepared || (_descriptorCount == _descriptorCapacity)) {
+    return false;
+  }
 
-	if ((offset + length) > descriptor->getLength()) {
-		return false;
-	}
+  if ((offset + length) > descriptor->getLength()) {
+    return false;
+  }
 
-//    if ( descriptor->getDirection() != getDirection() )
-//        return false;
+  //    if ( descriptor->getDirection() != getDirection() )
+  //        return false;
 
-	descriptor->retain();
-	_descriptors[_descriptorCount] = descriptor;
-	_descriptorOffsets[_descriptorCount] = offset;
-	_descriptorLengths[_descriptorCount] = length;
+  descriptor->retain();
+  _descriptors[_descriptorCount] = descriptor;
+  _descriptorOffsets[_descriptorCount] = offset;
+  _descriptorLengths[_descriptorCount] = length;
 
-	_descriptorCount++;
+  _descriptorCount++;
 
-	_length += length;
+  _length += length;
 
-	return true;
+  return true;
 }
 
-void
-IOInterleavedMemoryDescriptor::free()
-{
-	//
-	// Free all of this object's outstanding resources.
-	//
+void IOInterleavedMemoryDescriptor::free() {
+  //
+  // Free all of this object's outstanding resources.
+  //
 
-	if (_descriptors) {
-		for (unsigned index = 0; index < _descriptorCount; index++) {
-			_descriptors[index]->release();
-		}
+  if (_descriptors) {
+    for (unsigned index = 0; index < _descriptorCount; index++) {
+      _descriptors[index]->release();
+    }
 
-		if (_descriptors != NULL) {
-			IODelete(_descriptors, IOMemoryDescriptor *, _descriptorCapacity);
-		}
+    if (_descriptors != NULL) {
+      IODelete(_descriptors, IOMemoryDescriptor *, _descriptorCapacity);
+    }
 
-		if (_descriptorOffsets != NULL) {
-			IODeleteData(_descriptorOffsets, IOByteCount, _descriptorCapacity);
-		}
+    if (_descriptorOffsets != NULL) {
+      IODeleteData(_descriptorOffsets, IOByteCount, _descriptorCapacity);
+    }
 
-		if (_descriptorLengths != NULL) {
-			IODeleteData(_descriptorLengths, IOByteCount, _descriptorCapacity);
-		}
-	}
+    if (_descriptorLengths != NULL) {
+      IODeleteData(_descriptorLengths, IOByteCount, _descriptorCapacity);
+    }
+  }
 
-	super::free();
+  super::free();
 }
 
-IOReturn
-IOInterleavedMemoryDescriptor::prepare(IODirection forDirection)
-{
-	//
-	// Prepare the memory for an I/O transfer.
-	//
-	// This involves paging in the memory and wiring it down for the duration
-	// of the transfer.  The complete() method finishes the processing of the
-	// memory after the I/O transfer finishes.
-	//
+IOReturn IOInterleavedMemoryDescriptor::prepare(IODirection forDirection) {
+  //
+  // Prepare the memory for an I/O transfer.
+  //
+  // This involves paging in the memory and wiring it down for the duration
+  // of the transfer.  The complete() method finishes the processing of the
+  // memory after the I/O transfer finishes.
+  //
 
-	unsigned index;
-	IOReturn status = kIOReturnSuccess;
-	IOReturn statusUndo;
+  unsigned index;
+  IOReturn status = kIOReturnSuccess;
+  IOReturn statusUndo;
 
-	if (forDirection == kIODirectionNone) {
-		forDirection = getDirection();
-	}
+  if (forDirection == kIODirectionNone) {
+    forDirection = getDirection();
+  }
 
-	for (index = 0; index < _descriptorCount; index++) {
-		status = _descriptors[index]->prepare(forDirection);
-		if (status != kIOReturnSuccess) {
-			break;
-		}
-	}
+  for (index = 0; index < _descriptorCount; index++) {
+    status = _descriptors[index]->prepare(forDirection);
+    if (status != kIOReturnSuccess) {
+      break;
+    }
+  }
 
-	if (status != kIOReturnSuccess) {
-		for (unsigned indexUndo = 0; indexUndo < index; indexUndo++) {
-			statusUndo = _descriptors[index]->complete(forDirection);
-			assert(statusUndo == kIOReturnSuccess);
-		}
-	}
+  if (status != kIOReturnSuccess) {
+    for (unsigned indexUndo = 0; indexUndo < index; indexUndo++) {
+      statusUndo = _descriptors[index]->complete(forDirection);
+      assert(statusUndo == kIOReturnSuccess);
+    }
+  }
 
-	if (status == kIOReturnSuccess) {
-		_descriptorPrepared = true;
-	}
+  if (status == kIOReturnSuccess) {
+    _descriptorPrepared = true;
+  }
 
-	return status;
+  return status;
 }
 
-IOReturn
-IOInterleavedMemoryDescriptor::complete(IODirection forDirection)
-{
-	//
-	// Complete processing of the memory after an I/O transfer finishes.
-	//
-	// This method shouldn't be called unless a prepare() was previously issued;
-	// the prepare() and complete() must occur in pairs, before and after an I/O
-	// transfer.
-	//
+IOReturn IOInterleavedMemoryDescriptor::complete(IODirection forDirection) {
+  //
+  // Complete processing of the memory after an I/O transfer finishes.
+  //
+  // This method shouldn't be called unless a prepare() was previously issued;
+  // the prepare() and complete() must occur in pairs, before and after an I/O
+  // transfer.
+  //
 
-	IOReturn status;
-	IOReturn statusFinal = kIOReturnSuccess;
+  IOReturn status;
+  IOReturn statusFinal = kIOReturnSuccess;
 
-	if (forDirection == kIODirectionNone) {
-		forDirection = getDirection();
-	}
+  if (forDirection == kIODirectionNone) {
+    forDirection = getDirection();
+  }
 
-	for (unsigned index = 0; index < _descriptorCount; index++) {
-		status = _descriptors[index]->complete(forDirection);
-		if (status != kIOReturnSuccess) {
-			statusFinal = status;
-		}
-		assert(status == kIOReturnSuccess);
-	}
+  for (unsigned index = 0; index < _descriptorCount; index++) {
+    status = _descriptors[index]->complete(forDirection);
+    if (status != kIOReturnSuccess) {
+      statusFinal = status;
+    }
+    assert(status == kIOReturnSuccess);
+  }
 
-	_descriptorPrepared = false;
+  _descriptorPrepared = false;
 
-	return statusFinal;
+  return statusFinal;
 }
 
-addr64_t
-IOInterleavedMemoryDescriptor::getPhysicalSegment(
-	IOByteCount   offset,
-	IOByteCount * length,
-	IOOptionBits  options )
-{
-	//
-	// This method returns the physical address of the byte at the given offset
-	// into the memory,  and optionally the length of the physically contiguous
-	// segment from that offset.
-	//
+addr64_t IOInterleavedMemoryDescriptor::getPhysicalSegment(
+    IOByteCount offset, IOByteCount *length, IOOptionBits options) {
+  //
+  // This method returns the physical address of the byte at the given offset
+  // into the memory,  and optionally the length of the physically contiguous
+  // segment from that offset.
+  //
 
-	addr64_t pa;
+  addr64_t pa;
 
-	assert(offset <= _length);
+  assert(offset <= _length);
 
-	for (unsigned index = 0; index < _descriptorCount; index++) {
-		if (offset < _descriptorLengths[index]) {
-			pa = _descriptors[index]->getPhysicalSegment(_descriptorOffsets[index] + offset, length, options);
-			if ((_descriptorLengths[index] - offset) < *length) {
-				*length = _descriptorLengths[index] - offset;
-			}
-			return pa;
-		}
-		offset -= _descriptorLengths[index];
-	}
+  for (unsigned index = 0; index < _descriptorCount; index++) {
+    if (offset < _descriptorLengths[index]) {
+      pa = _descriptors[index]->getPhysicalSegment(
+          _descriptorOffsets[index] + offset, length, options);
+      if ((_descriptorLengths[index] - offset) < *length) {
+        *length = _descriptorLengths[index] - offset;
+      }
+      return pa;
+    }
+    offset -= _descriptorLengths[index];
+  }
 
-	if (length) {
-		*length = 0;
-	}
+  if (length) {
+    *length = 0;
+  }
 
-	return 0;
+  return 0;
 }

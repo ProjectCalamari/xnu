@@ -31,14 +31,14 @@
 
 #ifdef KERNEL_PRIVATE
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/buf.h>
-#include <sys/kdebug.h>
 #include <crypto/aes.h>
-#include <stdbool.h>
-#include <uuid/uuid.h>
 #include <libkern/crypto/sha1.h>
+#include <stdbool.h>
+#include <sys/buf.h>
+#include <sys/cdefs.h>
+#include <sys/kdebug.h>
+#include <sys/param.h>
+#include <uuid/uuid.h>
 
 __BEGIN_DECLS
 
@@ -50,11 +50,13 @@ __BEGIN_DECLS
  */
 
 enum {
-	CPDBG_OFFSET_IO = CP_CODE(0),   /* 0x03CF0000 */
+  CPDBG_OFFSET_IO = CP_CODE(0), /* 0x03CF0000 */
 };
 
 /* normally the debug events are no-ops */
-#define CP_DEBUG(x, a, b, c, d, e) do {} while (0);
+#define CP_DEBUG(x, a, b, c, d, e)                                             \
+  do {                                                                         \
+  } while (0);
 
 /* dev kernels only! */
 #if !SECURE_KERNEL
@@ -67,15 +69,15 @@ enum {
 
 #endif
 
-#define CP_MAX_WRAPPEDKEYSIZE     128   /* The size of the largest allowed key */
-#define VFS_CP_MAX_CACHEBUFLEN    64    /* Maximum size of the cached key */
+#define CP_MAX_WRAPPEDKEYSIZE 128 /* The size of the largest allowed key */
+#define VFS_CP_MAX_CACHEBUFLEN 64 /* Maximum size of the cached key */
 
 /* lock events from AppleKeyStore */
 enum {
-	CP_ACTION_LOCKED         = 0,
-	CP_ACTION_UNLOCKED       = 1,
-	CP_ACTION_EP_INVALIDATED = 2,
-	CP_ACTION_CX_EXPIRED     = 3,
+  CP_ACTION_LOCKED = 0,
+  CP_ACTION_UNLOCKED = 1,
+  CP_ACTION_EP_INVALIDATED = 2,
+  CP_ACTION_CX_EXPIRED = 3,
 };
 /*
  * Ideally, cp_key_store_action_t would be an enum, but we cannot fix
@@ -91,18 +93,18 @@ typedef int cp_key_store_action_t;
  */
 typedef unsigned char cp_lock_state_t;
 enum {
-	CP_LOCKED_STATE         = 0,
-	CP_UNLOCKED_STATE       = 1,
+  CP_LOCKED_STATE = 0,
+  CP_UNLOCKED_STATE = 1,
 };
 
 typedef unsigned char cp_ep_state_t;
 enum {
-	CP_EP_INVALIDATED       = 0,
+  CP_EP_INVALIDATED = 0,
 };
 
 typedef unsigned char cp_cx_state_t;
 enum {
-	CP_CX_EXPIRED           = 0,
+  CP_CX_EXPIRED = 0,
 };
 
 typedef uint32_t cp_key_class_t;
@@ -117,73 +119,80 @@ typedef struct cpx *cpx_t;
 /* Not for consumption outside of XNU */
 typedef uint32_t cpx_flags_t;
 /*
- * This is a CPX structure with a fixed-length key buffer. We need this defined in a header
- * so that we can use this structure to allocate the memory for the zone(s) properly.
+ * This is a CPX structure with a fixed-length key buffer. We need this defined
+ * in a header so that we can use this structure to allocate the memory for the
+ * zone(s) properly.
  */
 typedef struct fcpx {
 #ifdef DEBUG
-	uint32_t                cpx_magic1;
-#endif // DEBUG
-	aes_encrypt_ctx         *cpx_iv_aes_ctx_ptr;// Context used for generating the IV
-	cpx_flags_t             cpx_flags;
-	uint16_t                cpx_max_key_len;
-	uint16_t                cpx_key_len;
-	uint8_t                 cpx_cached_key[VFS_CP_MAX_CACHEBUFLEN];
-	//Fixed length all the way through
+  uint32_t cpx_magic1;
+#endif                                 // DEBUG
+  aes_encrypt_ctx *cpx_iv_aes_ctx_ptr; // Context used for generating the IV
+  cpx_flags_t cpx_flags;
+  uint16_t cpx_max_key_len;
+  uint16_t cpx_key_len;
+  uint8_t cpx_cached_key[VFS_CP_MAX_CACHEBUFLEN];
+  // Fixed length all the way through
 } fcpx_t;
 
 #endif // BSD_KERNEL_PRIVATE
 
 typedef struct cp_key {
-	uint8_t len;
-	void *key;
+  uint8_t len;
+  void *key;
 } cp_key_t;
 
 /* Interface to AKS kext */
 typedef struct {
-	void     *key;
-	unsigned key_len;
-	void     *iv_key;
-	unsigned iv_key_len;
-	uint32_t flags;
+  void *key;
+  unsigned key_len;
+  void *iv_key;
+  unsigned iv_key_len;
+  uint32_t flags;
 } cp_raw_key_s;
 
-typedef cp_raw_key_s* cp_raw_key_t;
+typedef cp_raw_key_s *cp_raw_key_t;
 
 typedef struct {
-	void     *key;
-	unsigned key_len;
-	cp_key_class_t dp_class;
+  void *key;
+  unsigned key_len;
+  cp_key_class_t dp_class;
 } cp_wrapped_key_s;
 
-typedef cp_wrapped_key_s* cp_wrapped_key_t;
+typedef cp_wrapped_key_s *cp_wrapped_key_t;
 
 typedef struct {
-	union {
-		ino64_t                 inode;
-		cp_crypto_id_t  crypto_id;
-	};
-	uint32_t                        volume;
-	pid_t                           pid;
-	uid_t                           uid;
-	cp_key_revision_t       key_revision;
+  union {
+    ino64_t inode;
+    cp_crypto_id_t crypto_id;
+  };
+  uint32_t volume;
+  pid_t pid;
+  uid_t uid;
+  cp_key_revision_t key_revision;
 } cp_cred_s;
 
-typedef cp_cred_s* cp_cred_t;
+typedef cp_cred_s *cp_cred_t;
 
 /* The wrappers are invoked on the AKS kext */
-typedef int unwrapper_t(cp_cred_t access, const cp_wrapped_key_t wrapped_key_in, cp_raw_key_t key_out);
-typedef int rewrapper_t(cp_cred_t access, cp_key_class_t dp_class, const cp_wrapped_key_t wrapped_key_in, cp_wrapped_key_t wrapped_key_out);
-typedef int new_key_t(cp_cred_t access, cp_key_class_t dp_class, cp_raw_key_t key_out, cp_wrapped_key_t wrapped_key_out);
+typedef int unwrapper_t(cp_cred_t access, const cp_wrapped_key_t wrapped_key_in,
+                        cp_raw_key_t key_out);
+typedef int rewrapper_t(cp_cred_t access, cp_key_class_t dp_class,
+                        const cp_wrapped_key_t wrapped_key_in,
+                        cp_wrapped_key_t wrapped_key_out);
+typedef int new_key_t(cp_cred_t access, cp_key_class_t dp_class,
+                      cp_raw_key_t key_out, cp_wrapped_key_t wrapped_key_out);
 typedef int invalidater_t(cp_cred_t access); /* invalidates keys */
-typedef int backup_key_t(cp_cred_t access, const cp_wrapped_key_t wrapped_key_in, cp_wrapped_key_t wrapped_key_out);
+typedef int backup_key_t(cp_cred_t access,
+                         const cp_wrapped_key_t wrapped_key_in,
+                         cp_wrapped_key_t wrapped_key_out);
 
 /*
  * Flags for Interaction between AKS / Kernel
  * These are twiddled via the input/output structs in the above
  * wrapper/unwrapper functions.
  */
-#define CP_RAW_KEY_WRAPPEDKEY   0x00000001
+#define CP_RAW_KEY_WRAPPEDKEY 0x00000001
 
 /*
  * Function prototypes for kexts to interface with our internal cprotect
@@ -219,7 +228,8 @@ size_t cpx_sizex(const struct cpx *cpx);
 void cpx_set_aes_iv_key(struct cpx *cpx, void *iv_key);
 
 int cp_key_store_action(cp_key_store_action_t);
-int cp_key_store_action_for_volume(uuid_t volume_uuid, cp_key_store_action_t action);
+int cp_key_store_action_for_volume(uuid_t volume_uuid,
+                                   cp_key_store_action_t action);
 cp_key_os_version_t cp_os_version(void);
 // Should be cp_key_class_t but HFS has a conflicting definition
 int cp_is_valid_class(int isdir, int32_t protectionclass);

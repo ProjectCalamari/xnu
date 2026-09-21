@@ -61,25 +61,26 @@
  */
 
 #ifndef _EXEC_
-#define _EXEC_  1
+#define _EXEC_ 1
 
 /*
  * Header prepended to each a.out file.
  */
 struct exec {
-#ifdef  sun
-	unsigned short  a_machtype;/* machine type */
-	unsigned short  a_info; /* Use macros N_MAGIC, etc for access */
-#else   /* sun */
-	unsigned long   a_info; /* Use macros N_MAGIC, etc for access */
-#endif  /* sun */
-	unsigned long a_text;   /* length of text, in bytes */
-	unsigned long a_data;   /* length of data, in bytes */
-	unsigned long a_bss;    /* length of uninitialized data area for file, in bytes */
-	unsigned long a_syms;   /* length of symbol table data in file, in bytes */
-	unsigned long a_entry;  /* start address */
-	unsigned long a_trsize; /* length of relocation info for text, in bytes */
-	unsigned long a_drsize; /* length of relocation info for data, in bytes */
+#ifdef sun
+  unsigned short a_machtype; /* machine type */
+  unsigned short a_info;     /* Use macros N_MAGIC, etc for access */
+#else                        /* sun */
+  unsigned long a_info; /* Use macros N_MAGIC, etc for access */
+#endif                       /* sun */
+  unsigned long a_text;      /* length of text, in bytes */
+  unsigned long a_data;      /* length of data, in bytes */
+  unsigned long
+      a_bss; /* length of uninitialized data area for file, in bytes */
+  unsigned long a_syms;   /* length of symbol table data in file, in bytes */
+  unsigned long a_entry;  /* start address */
+  unsigned long a_trsize; /* length of relocation info for text, in bytes */
+  unsigned long a_drsize; /* length of relocation info for data, in bytes */
 };
 
 /* Code indicating object file or impure executable.  */
@@ -92,9 +93,9 @@ struct exec {
 #ifdef sun
 /* Sun machine types */
 
-#define M_OLDSUN2       0       /* old sun-2 executable files */
-#define M_68010         1       /* runs on either 68010 or 68020 */
-#define M_68020         2       /* runs only on 68020 */
-#endif /* sun */
+#define M_OLDSUN2 0 /* old sun-2 executable files */
+#define M_68010 1   /* runs on either 68010 or 68020 */
+#define M_68020 2   /* runs only on 68020 */
+#endif              /* sun */
 
-#endif  /* _EXEC_ */
+#endif /* _EXEC_ */

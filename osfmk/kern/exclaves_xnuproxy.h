@@ -30,9 +30,9 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <mach/kern_return.h>
 #include <mach/exclaves_l4.h>
+#include <mach/kern_return.h>
+#include <stdint.h>
 
 #include "exclaves_internal.h"
 
@@ -40,54 +40,50 @@
 
 __BEGIN_DECLS
 
-extern kern_return_t
-exclaves_xnuproxy_pmm_usage(void);
+extern kern_return_t exclaves_xnuproxy_pmm_usage(void);
 
-extern kern_return_t
-exclaves_xnuproxy_ctx_alloc(exclaves_ctx_t *ctx);
+extern kern_return_t exclaves_xnuproxy_ctx_alloc(exclaves_ctx_t *ctx);
 
-extern kern_return_t
-exclaves_xnuproxy_ctx_free(exclaves_ctx_t *ctx);
+extern kern_return_t exclaves_xnuproxy_ctx_free(exclaves_ctx_t *ctx);
 
-extern kern_return_t
-exclaves_xnuproxy_init(uint64_t bootinfo_pa);
+extern kern_return_t exclaves_xnuproxy_init(uint64_t bootinfo_pa);
 
 /* BEGIN IGNORE CODESTYLE */
 /*
  * Note: strings passed to callback are not valid outside of the context of the
  * callback.
  */
-extern kern_return_t
-exclaves_xnuproxy_resource_info(void (^cb)(const char *name, const char *domain,
-    xnuproxy_resourcetype_s, uint64_t id, bool));
+extern kern_return_t exclaves_xnuproxy_resource_info(
+    void (^cb)(const char *name, const char *domain, xnuproxy_resourcetype_s,
+               uint64_t id, bool));
 /* END IGNORE CODESTYLE */
 
-extern kern_return_t
-exclaves_xnuproxy_audio_buffer_copyout(uint64_t id,
-    uint64_t size1, uint64_t offset1, uint64_t size2, uint64_t offset2);
+extern kern_return_t exclaves_xnuproxy_audio_buffer_copyout(uint64_t id,
+                                                            uint64_t size1,
+                                                            uint64_t offset1,
+                                                            uint64_t size2,
+                                                            uint64_t offset2);
 
-extern kern_return_t
-exclaves_xnuproxy_audio_buffer_delete(uint64_t id);
+extern kern_return_t exclaves_xnuproxy_audio_buffer_delete(uint64_t id);
 
 extern kern_return_t
 exclaves_xnuproxy_audio_buffer_map(uint64_t id, size_t size, bool *read_only);
 
 /* BEGIN IGNORE CODESTYLE */
-extern kern_return_t
-exclaves_xnuproxy_audio_buffer_layout(uint64_t id, uint32_t start,
-    uint32_t npages, kern_return_t (^cb)(uint64_t base, uint32_t npages));
+extern kern_return_t exclaves_xnuproxy_audio_buffer_layout(
+    uint64_t id, uint32_t start, uint32_t npages,
+    kern_return_t (^cb)(uint64_t base, uint32_t npages));
 /* ENDIGNORE CODESTYLE */
 
-extern kern_return_t
-exclaves_xnuproxy_named_buffer_delete(uint64_t id);
+extern kern_return_t exclaves_xnuproxy_named_buffer_delete(uint64_t id);
 
 extern kern_return_t
 exclaves_xnuproxy_named_buffer_map(uint64_t id, size_t size, bool *read_only);
 
 /* BEGIN IGNORE CODESTYLE */
-extern kern_return_t
-exclaves_xnuproxy_named_buffer_layout(uint64_t id, uint32_t start,
-    uint32_t npages, kern_return_t (^cb)(uint64_t base, uint32_t npages));
+extern kern_return_t exclaves_xnuproxy_named_buffer_layout(
+    uint64_t id, uint32_t start, uint32_t npages,
+    kern_return_t (^cb)(uint64_t base, uint32_t npages));
 /* END IGNORE CODESTYLE */
 
 extern kern_return_t

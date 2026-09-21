@@ -28,27 +28,26 @@
 #ifndef _IOKIT_IOPMINFORMEE_H
 #define _IOKIT_IOPMINFORMEE_H
 
-#include <IOKit/IOService.h>
 #include <IOKit/IOReturn.h>
+#include <IOKit/IOService.h>
 
-class IOPMinformee : public OSObject
-{
-	OSDeclareDefaultStructors(IOPMinformee);
-	friend class IOPMinformeeList;
-
-public:
-	static IOPMinformee * withObject( IOService * theObject );
-
-	void initialize( IOService * theObject );
-
-	void free( void ) APPLE_KEXT_OVERRIDE;
+class IOPMinformee : public OSObject {
+  OSDeclareDefaultStructors(IOPMinformee);
+  friend class IOPMinformeeList;
 
 public:
-	IOService *     whatObject; // interested driver
-	int32_t         timer;      // -1, 0, or positive number of ticks
-	IOPMinformee *  nextInList; // linkage pointer
-	AbsoluteTime    startTime;  // start time of last inform
-	bool            active;     // enable flag
+  static IOPMinformee *withObject(IOService *theObject);
+
+  void initialize(IOService *theObject);
+
+  void free(void) APPLE_KEXT_OVERRIDE;
+
+public:
+  IOService *whatObject;    // interested driver
+  int32_t timer;            // -1, 0, or positive number of ticks
+  IOPMinformee *nextInList; // linkage pointer
+  AbsoluteTime startTime;   // start time of last inform
+  bool active;              // enable flag
 };
 
 #endif /* !_IOKIT_IOPMINFORMEE_H */

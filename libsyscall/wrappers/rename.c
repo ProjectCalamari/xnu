@@ -24,12 +24,10 @@
 void __inc_remove_counter(void);
 int __rename(const char *old, const char *new);
 
-int
-rename(const char *old, const char *new)
-{
-	int res = __rename(old, new);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int rename(const char *old, const char *new) {
+  int res = __rename(old, new);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }

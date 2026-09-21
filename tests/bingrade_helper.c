@@ -31,7 +31,7 @@
 #define _STR(X) #X
 #define STR(X) _STR(X)
 
-void start() asm ("start");
+void start() asm("start");
 
 /*
  * A library-free routine to return the number of bytes in a pointer. This
@@ -41,13 +41,9 @@ void start() asm ("start");
  *
  * No C code. The stack is not guaranteed to be aligned yet.
  */
-__attribute__((naked, noreturn))
-void
-start()
-{
-	/* exit(__WORDSIZE/8) */
-	asm volatile (
-            "mov x0, " STR(__WORDSIZE/8) "\n"
-            "mov x16, #1\n"
-            "svc #(" STR(SWI_SYSCALL) ")\n");
+__attribute__((naked, noreturn)) void start() {
+  /* exit(__WORDSIZE/8) */
+  asm volatile("mov x0, " STR(__WORDSIZE / 8) "\n"
+                                              "mov x16, #1\n"
+                                              "svc #(" STR(SWI_SYSCALL) ")\n");
 }

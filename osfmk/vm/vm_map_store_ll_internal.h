@@ -29,28 +29,22 @@
 #ifndef _VM_VM_MAP_STORE_LL_H
 #define _VM_VM_MAP_STORE_LL_H
 
-extern bool first_free_is_valid_ll(
-	struct _vm_map         *map);
+extern bool first_free_is_valid_ll(struct _vm_map *map);
 
-extern void vm_map_store_init_ll(
-	struct vm_map_header   *header);
+extern void vm_map_store_init_ll(struct vm_map_header *header);
 
-extern void vm_map_store_entry_link_ll(
-	struct vm_map_header   *header,
-	struct vm_map_entry    *after_where,
-	struct vm_map_entry    *entry);
+extern void vm_map_store_entry_link_ll(struct vm_map_header *header,
+                                       struct vm_map_entry *after_where,
+                                       struct vm_map_entry *entry);
 
-extern void vm_map_store_entry_unlink_ll(
-	struct vm_map_header   *header,
-	struct vm_map_entry    *entry);
+extern void vm_map_store_entry_unlink_ll(struct vm_map_header *header,
+                                         struct vm_map_entry *entry);
 
-extern void update_first_free_ll(
-	struct _vm_map         *map,
-	struct vm_map_entry    *entry);
+extern void update_first_free_ll(struct _vm_map *map,
+                                 struct vm_map_entry *entry);
 
-extern void vm_map_store_copy_reset_ll(
-	struct vm_map_copy     *copy_map,
-	struct vm_map_entry    *entry,
-	int                     nentries);
+extern void vm_map_store_copy_reset_ll(struct vm_map_copy *copy_map,
+                                       struct vm_map_entry *entry,
+                                       int nentries);
 
 #endif /* _VM_VM_MAP_STORE_LL_H */

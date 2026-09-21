@@ -32,10 +32,10 @@
  */
 
 #if !defined(__arm__) && !defined(__arm64__) && !defined(__x86_64__)
-#include <sys/param.h>
 #include <sys/cdefs.h>
-#include <sys/types.h>
 #include <sys/conf.h>
+#include <sys/param.h>
+#include <sys/types.h>
 #ifndef KERNEL
 #include <strings.h>
 #ifndef LIBSYSCALL_INTERFACE
@@ -43,15 +43,15 @@
 #endif /* !LIBSYSCALL_INTERFACE */
 #endif /* !KERNEL */
 
-extern uint32_t os_cpu_copy_in_cksum(void *__sized_by(len), void *__sized_by(len),
-    uint32_t len, uint32_t);
+extern uint32_t os_cpu_copy_in_cksum(void *__sized_by(len),
+                                     void *__sized_by(len), uint32_t len,
+                                     uint32_t);
 extern uint32_t os_cpu_in_cksum(const void *, uint32_t, uint32_t);
 
-uint32_t
-os_cpu_copy_in_cksum(void *__sized_by(len) src, void *__sized_by(len) dst,
-    uint32_t len, uint32_t sum0)
-{
-	bcopy(src, dst, len);
-	return os_cpu_in_cksum(dst, len, sum0);
+uint32_t os_cpu_copy_in_cksum(void *__sized_by(len) src,
+                              void *__sized_by(len) dst, uint32_t len,
+                              uint32_t sum0) {
+  bcopy(src, dst, len);
+  return os_cpu_in_cksum(dst, len, sum0);
 }
 #endif /* !__arm__ && !__arm64__ && !__x86_64__ */

@@ -42,7 +42,7 @@
 #include <mach_debug/mach_debug_types.h>
 
 #include <mach/mach_host.h>
-#include <mach/mach_port.h>
 #include <mach/mach_interface.h>
+#include <mach/mach_port.h>
 
 #endif /* _MACH_DEBUG_MACH_DEBUG_H_ */

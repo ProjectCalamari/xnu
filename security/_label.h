@@ -69,23 +69,23 @@
  * and various other messes.
  */
 #if defined(XNU_TARGET_OS_OSX)
-#define MAC_MAX_SLOTS   7
+#define MAC_MAX_SLOTS 7
 #else
 #if CONFIG_VNGUARD
-#define MAC_MAX_SLOTS   4
+#define MAC_MAX_SLOTS 4
 #else
-#define MAC_MAX_SLOTS   3
+#define MAC_MAX_SLOTS 3
 #endif
 #endif
 
 #if XNU_KERNEL_PRIVATE
 /* l_owner set to this value means the label is inlined in the cred */
-#define MAC_LABEL_CRED_OWNED  ((struct label **)~0ul)
-#define MAC_LABEL_NULL_SLOT   (~0l)
+#define MAC_LABEL_CRED_OWNED ((struct label **)~0ul)
+#define MAC_LABEL_NULL_SLOT (~0l)
 
 struct label {
-	struct label **l_owner;
-	long           l_perpolicy[MAC_MAX_SLOTS];
+  struct label **l_owner;
+  long l_perpolicy[MAC_MAX_SLOTS];
 };
 
 extern const struct label empty_label;

@@ -64,25 +64,26 @@
 #ifndef _VM_VM_FAULT_H_
 #define _VM_VM_FAULT_H_
 
-#include <mach/mach_types.h>
-#include <mach/kern_return.h>
 #include <mach/boolean.h>
-#include <mach/vm_prot.h>
-#include <mach/vm_param.h>
+#include <mach/kern_return.h>
+#include <mach/mach_types.h>
 #include <mach/vm_behavior.h>
+#include <mach/vm_param.h>
+#include <mach/vm_prot.h>
 
 #if XNU_KERNEL_PRIVATE
 
-__enum_closed_decl(vm_fault_return_t, int, {
-	VM_FAULT_SUCCESS            = 0,
-	VM_FAULT_RETRY              = 1,
-	VM_FAULT_INTERRUPTED        = 2,
-	VM_FAULT_MEMORY_SHORTAGE    = 3,
-	VM_FAULT_MEMORY_ERROR       = 5,
-	/* success but no VM page */
-	VM_FAULT_SUCCESS_NO_VM_PAGE = 6,
-	VM_FAULT_BUSY               = 7,
-});
+__enum_closed_decl(vm_fault_return_t, int,
+                   {
+                       VM_FAULT_SUCCESS = 0,
+                       VM_FAULT_RETRY = 1,
+                       VM_FAULT_INTERRUPTED = 2,
+                       VM_FAULT_MEMORY_SHORTAGE = 3,
+                       VM_FAULT_MEMORY_ERROR = 5,
+                       /* success but no VM page */
+                       VM_FAULT_SUCCESS_NO_VM_PAGE = 6,
+                       VM_FAULT_BUSY = 7,
+                   });
 
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -91,26 +92,20 @@ __enum_closed_decl(vm_fault_return_t, int, {
  *	Page fault handling based on vm_map (or entries therein)
  */
 
-extern kern_return_t vm_fault(
-	vm_map_t        map,
-	vm_map_offset_t vaddr,
-	vm_prot_t       fault_type,
-	boolean_t       change_wiring,
+extern kern_return_t
+vm_fault(vm_map_t map, vm_map_offset_t vaddr, vm_prot_t fault_type,
+         boolean_t change_wiring,
 #if XNU_KERNEL_PRIVATE
-	vm_tag_t        wire_tag,                   /* if wiring must pass tag != VM_KERN_MEMORY_NONE */
+         vm_tag_t wire_tag, /* if wiring must pass tag != VM_KERN_MEMORY_NONE */
 #endif
-	int             interruptible,
-	pmap_t          pmap,
-	vm_map_offset_t pmap_addr)
+         int interruptible, pmap_t pmap, vm_map_offset_t pmap_addr)
 #if XNU_KERNEL_PRIVATE
-__XNU_INTERNAL(vm_fault)
+    __XNU_INTERNAL(vm_fault)
 #endif
-;
+        ;
 
-extern kern_return_t vm_pre_fault(
-	vm_map_offset_t offset,
-	vm_prot_t       prot);
+extern kern_return_t vm_pre_fault(vm_map_offset_t offset, vm_prot_t prot);
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 
-#endif  /* _VM_VM_FAULT_H_ */
+#endif /* _VM_VM_FAULT_H_ */

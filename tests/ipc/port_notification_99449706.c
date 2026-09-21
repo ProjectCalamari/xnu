@@ -26,54 +26,48 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <unistd.h>
 #include <darwintest.h>
 #include <mach/mach.h>
+#include <unistd.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.ipc"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("IPC"),
-	T_META_RUN_CONCURRENTLY(true),
-	T_META_TAG_VM_PREFERRED);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.ipc"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("IPC"),
+              T_META_RUN_CONCURRENTLY(true), T_META_TAG_VM_PREFERRED);
 
-static mach_port_t
-create_voucher(void)
-{
-	mach_voucher_attr_recipe_data_t dummy_voucher = {
-		.key                = MACH_VOUCHER_ATTR_KEY_IMPORTANCE,
-		.command            = MACH_VOUCHER_ATTR_IMPORTANCE_SELF,
-		.previous_voucher   = MACH_VOUCHER_NULL,
-		.content_size       = 0,
-	};
+static mach_port_t create_voucher(void) {
+  mach_voucher_attr_recipe_data_t dummy_voucher = {
+      .key = MACH_VOUCHER_ATTR_KEY_IMPORTANCE,
+      .command = MACH_VOUCHER_ATTR_IMPORTANCE_SELF,
+      .previous_voucher = MACH_VOUCHER_NULL,
+      .content_size = 0,
+  };
 
-	mach_port_t port = MACH_PORT_NULL;
-	kern_return_t kr = host_create_mach_voucher(mach_host_self(),
-	    (mach_voucher_attr_raw_recipe_array_t)&dummy_voucher,
-	    sizeof(dummy_voucher), &port);
-	T_ASSERT_MACH_SUCCESS(kr, "alloc voucher");
+  mach_port_t port = MACH_PORT_NULL;
+  kern_return_t kr = host_create_mach_voucher(
+      mach_host_self(), (mach_voucher_attr_raw_recipe_array_t)&dummy_voucher,
+      sizeof(dummy_voucher), &port);
+  T_ASSERT_MACH_SUCCESS(kr, "alloc voucher");
 
-	return port;
+  return port;
 }
 
+T_DECL(mach_port_notification_dead_name_double_free,
+       "Test mach_port_request_notification with a dead name port") {
+  kern_return_t kr;
+  mach_port_t dead_port;
+  mach_port_t voucher_port;
 
-T_DECL(mach_port_notification_dead_name_double_free, "Test mach_port_request_notification with a dead name port")
-{
-	kern_return_t kr;
-	mach_port_t dead_port;
-	mach_port_t voucher_port;
+  kr = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_DEAD_NAME,
+                          &dead_port);
+  T_ASSERT_MACH_SUCCESS(kr, "alloc dead port");
 
-	kr = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_DEAD_NAME, &dead_port);
-	T_ASSERT_MACH_SUCCESS(kr, "alloc dead port");
+  voucher_port = create_voucher();
+  T_ASSERT_NE(voucher_port, MACH_PORT_NULL, "voucher not null");
 
-	voucher_port = create_voucher();
-	T_ASSERT_NE(voucher_port, MACH_PORT_NULL, "voucher not null");
+  /* trigger crash via double-free: see rdar://99779706 */
+  mach_port_request_notification(mach_task_self(), voucher_port,
+                                 MACH_NOTIFY_PORT_DESTROYED, 0, dead_port,
+                                 MACH_MSG_TYPE_PORT_SEND_ONCE, 0);
 
-	/* trigger crash via double-free: see rdar://99779706 */
-	mach_port_request_notification(mach_task_self(),
-	    voucher_port,
-	    MACH_NOTIFY_PORT_DESTROYED,
-	    0, dead_port, MACH_MSG_TYPE_PORT_SEND_ONCE, 0);
-
-	T_PASS("Kernel didn't crash!");
+  T_PASS("Kernel didn't crash!");
 }

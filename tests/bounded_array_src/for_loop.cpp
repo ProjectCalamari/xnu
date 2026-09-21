@@ -2,28 +2,25 @@
 // Make sure `bounded_array` works nicely with the range-based for-loop.
 //
 
-#include <libkern/c++/bounded_array.h>
-#include <darwintest.h>
 #include "test_policy.h"
+#include <darwintest.h>
+#include <libkern/c++/bounded_array.h>
 
 struct T {
-	int i;
+  int i;
 };
 
-template <typename T>
-static void
-tests()
-{
-	test_bounded_array<T, 5> array = {T{0}, T{1}, T{2}, T{3}, T{4}};
-	for (T& element : array) {
-		element = T{3};
-	}
+template <typename T> static void tests() {
+  test_bounded_array<T, 5> array = {T{0}, T{1}, T{2}, T{3}, T{4}};
+  for (T &element : array) {
+    element = T{3};
+  }
 
-	for (T const& element : array) {
-		CHECK(element.i == 3);
-	}
+  for (T const &element : array) {
+    CHECK(element.i == 3);
+  }
 }
 
 T_DECL(for_loop, "bounded_array.for_loop", T_META_TAG_VM_PREFERRED) {
-	tests<T>();
+  tests<T>();
 }

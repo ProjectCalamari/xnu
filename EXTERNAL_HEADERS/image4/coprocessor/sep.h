@@ -60,9 +60,8 @@ IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_coprocessor_sep);
  * The host's SEP environment.
  */
 OS_CLOSED_ENUM(image4_coprocessor_handle_sep, image4_coprocessor_handle_t,
-	IMAGE4_COPROCESSOR_HANDLE_SEP = 0,
-	_IMAGE4_COPROCESSOR_HANDLE_SEP_CNT,
-);
+               IMAGE4_COPROCESSOR_HANDLE_SEP = 0,
+               _IMAGE4_COPROCESSOR_HANDLE_SEP_CNT, );
 
 /*!
  * @const IMAGE4_COPROCESSOR_HANDLE_SEP_DEFAULT
@@ -71,8 +70,7 @@ OS_CLOSED_ENUM(image4_coprocessor_handle_sep, image4_coprocessor_handle_t,
  * {@link image4_environment_init_coproc} and
  * {@link image4_environment_new_coproc} respectively.
  */
-#define IMAGE4_COPROCESSOR_HANDLE_SEP_DEFAULT \
-	IMAGE4_COPROCESSOR_HANDLE_SEP
+#define IMAGE4_COPROCESSOR_HANDLE_SEP_DEFAULT IMAGE4_COPROCESSOR_HANDLE_SEP
 
 OS_ASSUME_PTR_ABI_SINGLE_END
 OS_ASSUME_NONNULL_END

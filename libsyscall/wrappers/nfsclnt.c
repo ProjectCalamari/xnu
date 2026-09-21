@@ -23,21 +23,19 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <nfs/nfs.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
-int
-nfsclnt(unsigned long request, void *argstructp)
-{
-	int fd, error;
+int nfsclnt(unsigned long request, void *argstructp) {
+  int fd, error;
 
-	fd = open("/dev/" NFSCLNT_DEVICE, O_RDONLY);
-	if (fd < 0) {
-		return errno;
-	}
+  fd = open("/dev/" NFSCLNT_DEVICE, O_RDONLY);
+  if (fd < 0) {
+    return errno;
+  }
 
-	error = ioctl(fd, request, argstructp);
-	close(fd);
-	return error;
+  error = ioctl(fd, request, argstructp);
+  close(fd);
+  return error;
 }

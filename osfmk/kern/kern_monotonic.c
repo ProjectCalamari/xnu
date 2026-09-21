@@ -30,9 +30,9 @@
 #include <kern/kpc.h>
 #include <kern/monotonic.h>
 #include <kern/thread.h>
+#include <mach/mach_traps.h>
 #include <machine/atomic.h>
 #include <machine/monotonic.h>
-#include <mach/mach_traps.h>
 #include <stdatomic.h>
 #include <sys/errno.h>
 
@@ -40,224 +40,195 @@ bool mt_debug = false;
 _Atomic uint64_t mt_pmis = 0;
 _Atomic uint64_t mt_retrograde = 0;
 
-#define MT_KDBG_INSTRS_CYCLES(CODE) \
-	KDBG_EVENTID(DBG_MONOTONIC, DBG_MT_INSTRS_CYCLES, CODE)
+#define MT_KDBG_INSTRS_CYCLES(CODE)                                            \
+  KDBG_EVENTID(DBG_MONOTONIC, DBG_MT_INSTRS_CYCLES, CODE)
 
 static void mt_fixed_counts_internal(uint64_t *counts, uint64_t *counts_since);
 
-uint64_t
-mt_mtc_update_count(struct mt_cpu *mtc, unsigned int ctr)
-{
-	uint64_t snap = mt_core_snap(ctr);
-	if (snap < mtc->mtc_snaps[ctr]) {
-		if (mt_debug) {
-			kprintf("monotonic: cpu %d: thread %#llx: "
-			    "retrograde counter %u value: %llu, last read = %llu\n",
-			    cpu_number(), thread_tid(current_thread()), ctr, snap,
-			    mtc->mtc_snaps[ctr]);
-		}
-		(void)atomic_fetch_add_explicit(&mt_retrograde, 1,
-		    memory_order_relaxed);
-		mtc->mtc_snaps[ctr] = snap;
-		return 0;
-	}
+uint64_t mt_mtc_update_count(struct mt_cpu *mtc, unsigned int ctr) {
+  uint64_t snap = mt_core_snap(ctr);
+  if (snap < mtc->mtc_snaps[ctr]) {
+    if (mt_debug) {
+      kprintf("monotonic: cpu %d: thread %#llx: "
+              "retrograde counter %u value: %llu, last read = %llu\n",
+              cpu_number(), thread_tid(current_thread()), ctr, snap,
+              mtc->mtc_snaps[ctr]);
+    }
+    (void)atomic_fetch_add_explicit(&mt_retrograde, 1, memory_order_relaxed);
+    mtc->mtc_snaps[ctr] = snap;
+    return 0;
+  }
 
-	uint64_t count = snap - mtc->mtc_snaps[ctr];
-	mtc->mtc_snaps[ctr] = snap;
+  uint64_t count = snap - mtc->mtc_snaps[ctr];
+  mtc->mtc_snaps[ctr] = snap;
 
-	return count;
+  return count;
 }
 
-uint64_t
-mt_cpu_update_count(cpu_data_t *cpu, unsigned int ctr)
-{
-	return mt_mtc_update_count(&cpu->cpu_monotonic, ctr);
+uint64_t mt_cpu_update_count(cpu_data_t *cpu, unsigned int ctr) {
+  return mt_mtc_update_count(&cpu->cpu_monotonic, ctr);
 }
 
-static void
-mt_fixed_counts_internal(uint64_t *counts, uint64_t *counts_since)
-{
-	assert(ml_get_interrupts_enabled() == FALSE);
+static void mt_fixed_counts_internal(uint64_t *counts, uint64_t *counts_since) {
+  assert(ml_get_interrupts_enabled() == FALSE);
 
-	struct mt_cpu *mtc = mt_cur_cpu();
-	assert(mtc != NULL);
+  struct mt_cpu *mtc = mt_cur_cpu();
+  assert(mtc != NULL);
 
-	mt_mtc_update_fixed_counts(mtc, counts, counts_since);
+  mt_mtc_update_fixed_counts(mtc, counts, counts_since);
 }
 
-void
-mt_mtc_update_fixed_counts(struct mt_cpu *mtc, uint64_t *counts,
-    uint64_t *counts_since)
-{
-	if (!mt_core_supported) {
-		return;
-	}
+void mt_mtc_update_fixed_counts(struct mt_cpu *mtc, uint64_t *counts,
+                                uint64_t *counts_since) {
+  if (!mt_core_supported) {
+    return;
+  }
 
-	for (int i = 0; i < (int) kpc_fixed_count(); i++) {
-		uint64_t last_delta;
-		uint64_t count;
+  for (int i = 0; i < (int)kpc_fixed_count(); i++) {
+    uint64_t last_delta;
+    uint64_t count;
 
-		last_delta = mt_mtc_update_count(mtc, i);
-		count = mtc->mtc_counts[i] + last_delta;
+    last_delta = mt_mtc_update_count(mtc, i);
+    count = mtc->mtc_counts[i] + last_delta;
 
-		if (counts) {
-			counts[i] = count;
-		}
-		if (counts_since) {
-			assert(counts != NULL);
-			counts_since[i] = count - mtc->mtc_counts_last[i];
-			mtc->mtc_counts_last[i] = count;
-		}
+    if (counts) {
+      counts[i] = count;
+    }
+    if (counts_since) {
+      assert(counts != NULL);
+      counts_since[i] = count - mtc->mtc_counts_last[i];
+      mtc->mtc_counts_last[i] = count;
+    }
 
-		mtc->mtc_counts[i] = count;
-	}
+    mtc->mtc_counts[i] = count;
+  }
 }
 
-void
-mt_update_fixed_counts(void)
-{
-	assert(ml_get_interrupts_enabled() == FALSE);
+void mt_update_fixed_counts(void) {
+  assert(ml_get_interrupts_enabled() == FALSE);
 
 #if defined(__x86_64__)
-	__builtin_ia32_lfence();
+  __builtin_ia32_lfence();
 #elif defined(__arm64__)
-	__builtin_arm_isb(ISB_SY);
+  __builtin_arm_isb(ISB_SY);
 #endif /* !defined(__x86_64__) && defined(__arm64__) */
 
-	mt_fixed_counts_internal(NULL, NULL);
+  mt_fixed_counts_internal(NULL, NULL);
 }
 
-void
-mt_fixed_counts(uint64_t *counts)
-{
+void mt_fixed_counts(uint64_t *counts) {
 #if defined(__x86_64__)
-	__builtin_ia32_lfence();
+  __builtin_ia32_lfence();
 #elif defined(__arm64__)
-	__builtin_arm_isb(ISB_SY);
+  __builtin_arm_isb(ISB_SY);
 #endif /* !defined(__x86_64__) && defined(__arm64__) */
 
-	int intrs_en = ml_set_interrupts_enabled(FALSE);
-	mt_fixed_counts_internal(counts, NULL);
-	ml_set_interrupts_enabled(intrs_en);
+  int intrs_en = ml_set_interrupts_enabled(FALSE);
+  mt_fixed_counts_internal(counts, NULL);
+  ml_set_interrupts_enabled(intrs_en);
 }
 
-uint64_t
-mt_cur_cpu_instrs(void)
-{
-	uint64_t counts[MT_CORE_NFIXED];
+uint64_t mt_cur_cpu_instrs(void) {
+  uint64_t counts[MT_CORE_NFIXED];
 
-	if (!mt_core_supported) {
-		return 0;
-	}
+  if (!mt_core_supported) {
+    return 0;
+  }
 
-	mt_fixed_counts(counts);
-	return counts[MT_CORE_INSTRS];
+  mt_fixed_counts(counts);
+  return counts[MT_CORE_INSTRS];
 }
 
-uint64_t
-mt_cur_cpu_cycles(void)
-{
-	uint64_t counts[MT_CORE_NFIXED];
+uint64_t mt_cur_cpu_cycles(void) {
+  uint64_t counts[MT_CORE_NFIXED];
 
-	if (!mt_core_supported) {
-		return 0;
-	}
+  if (!mt_core_supported) {
+    return 0;
+  }
 
-	mt_fixed_counts(counts);
-	return counts[MT_CORE_CYCLES];
+  mt_fixed_counts(counts);
+  return counts[MT_CORE_CYCLES];
 }
 
-void
-mt_cur_cpu_cycles_instrs_speculative(uint64_t *cycles, uint64_t *instrs)
-{
+void mt_cur_cpu_cycles_instrs_speculative(uint64_t *cycles, uint64_t *instrs) {
 #if defined(__arm64__)
-	if (!mt_core_supported) {
-		return;
-	}
-	struct mt_cpu *mtc = mt_cur_cpu();
+  if (!mt_core_supported) {
+    return;
+  }
+  struct mt_cpu *mtc = mt_cur_cpu();
 
-	/*
-	 * Keep the MSRs back-to-back to improve throughput.
-	 */
-	uint64_t cur_cycles = __builtin_arm_rsr64("S3_2_C15_C0_0");
-	uint64_t cur_instrs = __builtin_arm_rsr64("S3_2_C15_C1_0");
+  /*
+   * Keep the MSRs back-to-back to improve throughput.
+   */
+  uint64_t cur_cycles = __builtin_arm_rsr64("S3_2_C15_C0_0");
+  uint64_t cur_instrs = __builtin_arm_rsr64("S3_2_C15_C1_0");
 
-	uint64_t cycles_sum = mtc->mtc_counts[MT_CORE_CYCLES];
-	uint64_t instrs_sum = mtc->mtc_counts[MT_CORE_INSTRS];
-	if (__probable(cur_cycles > mtc->mtc_snaps[MT_CORE_CYCLES])) {
-		cycles_sum += cur_cycles - mtc->mtc_snaps[MT_CORE_CYCLES];
-	}
-	if (__probable(cur_instrs > mtc->mtc_snaps[MT_CORE_INSTRS])) {
-		instrs_sum += cur_instrs - mtc->mtc_snaps[MT_CORE_INSTRS];
-	}
+  uint64_t cycles_sum = mtc->mtc_counts[MT_CORE_CYCLES];
+  uint64_t instrs_sum = mtc->mtc_counts[MT_CORE_INSTRS];
+  if (__probable(cur_cycles > mtc->mtc_snaps[MT_CORE_CYCLES])) {
+    cycles_sum += cur_cycles - mtc->mtc_snaps[MT_CORE_CYCLES];
+  }
+  if (__probable(cur_instrs > mtc->mtc_snaps[MT_CORE_INSTRS])) {
+    instrs_sum += cur_instrs - mtc->mtc_snaps[MT_CORE_INSTRS];
+  }
 
-	*cycles = cycles_sum;
-	*instrs = instrs_sum;
-	mtc->mtc_counts[MT_CORE_CYCLES] = cycles_sum;
-	mtc->mtc_counts[MT_CORE_INSTRS] = instrs_sum;
-	mtc->mtc_snaps[MT_CORE_CYCLES] = cur_cycles;
-	mtc->mtc_snaps[MT_CORE_INSTRS] = cur_instrs;
-#else // defined(__arm64__)
-	uint64_t counts[MT_CORE_NFIXED] = {0};
-	struct mt_cpu *mtc = mt_cur_cpu();
+  *cycles = cycles_sum;
+  *instrs = instrs_sum;
+  mtc->mtc_counts[MT_CORE_CYCLES] = cycles_sum;
+  mtc->mtc_counts[MT_CORE_INSTRS] = instrs_sum;
+  mtc->mtc_snaps[MT_CORE_CYCLES] = cur_cycles;
+  mtc->mtc_snaps[MT_CORE_INSTRS] = cur_instrs;
+#else  // defined(__arm64__)
+  uint64_t counts[MT_CORE_NFIXED] = {0};
+  struct mt_cpu *mtc = mt_cur_cpu();
 
-	assert(ml_get_interrupts_enabled() == FALSE);
-	assert(mtc != NULL);
+  assert(ml_get_interrupts_enabled() == FALSE);
+  assert(mtc != NULL);
 
-	mt_mtc_update_fixed_counts(mtc, counts, NULL);
+  mt_mtc_update_fixed_counts(mtc, counts, NULL);
 
-	*cycles = counts[MT_CORE_CYCLES];
-	*instrs = counts[MT_CORE_INSTRS];
+  *cycles = counts[MT_CORE_CYCLES];
+  *instrs = counts[MT_CORE_INSTRS];
 #endif // !defined(__arm64__)
 }
 
-void
-mt_perfcontrol(uint64_t *instrs, uint64_t *cycles)
-{
-	if (!mt_core_supported) {
-		*instrs = 0;
-		*cycles = 0;
-		return;
-	}
+void mt_perfcontrol(uint64_t *instrs, uint64_t *cycles) {
+  if (!mt_core_supported) {
+    *instrs = 0;
+    *cycles = 0;
+    return;
+  }
 
-	struct mt_cpu *mtc = mt_cur_cpu();
+  struct mt_cpu *mtc = mt_cur_cpu();
 
-	/*
-	 * The performance controller queries the hardware directly, so provide the
-	 * last snapshot we took for the core.  This is the value from when we
-	 * updated the thread counts.
-	 */
+  /*
+   * The performance controller queries the hardware directly, so provide the
+   * last snapshot we took for the core.  This is the value from when we
+   * updated the thread counts.
+   */
 
-	*instrs = mtc->mtc_snaps[MT_CORE_INSTRS];
-	*cycles = mtc->mtc_snaps[MT_CORE_CYCLES];
+  *instrs = mtc->mtc_snaps[MT_CORE_INSTRS];
+  *cycles = mtc->mtc_snaps[MT_CORE_CYCLES];
 }
 
-bool
-mt_acquire_counters(void)
-{
-	if (kpc_get_force_all_ctrs()) {
-		extern bool kpc_task_get_forced_all_ctrs(task_t);
-		if (kpc_task_get_forced_all_ctrs(current_task())) {
-			return true;
-		}
-		return false;
-	}
-	kpc_force_all_ctrs(current_task(), 1);
-	return true;
+bool mt_acquire_counters(void) {
+  if (kpc_get_force_all_ctrs()) {
+    extern bool kpc_task_get_forced_all_ctrs(task_t);
+    if (kpc_task_get_forced_all_ctrs(current_task())) {
+      return true;
+    }
+    return false;
+  }
+  kpc_force_all_ctrs(current_task(), 1);
+  return true;
 }
 
-bool
-mt_owns_counters(void)
-{
-	return kpc_get_force_all_ctrs();
-}
+bool mt_owns_counters(void) { return kpc_get_force_all_ctrs(); }
 
-void
-mt_release_counters(void)
-{
-	if (kpc_get_force_all_ctrs()) {
-		kpc_force_all_ctrs(current_task(), 0);
-	}
+void mt_release_counters(void) {
+  if (kpc_get_force_all_ctrs()) {
+    kpc_force_all_ctrs(current_task(), 0);
+  }
 }
 
 /*
@@ -271,47 +242,43 @@ unsigned int mt_microstackshot_ctr = 0;
 uint64_t mt_microstackshot_period = 0;
 mt_pmi_fn mt_microstackshot_pmi_handler = NULL;
 void *mt_microstackshot_ctx = NULL;
-uint64_t mt_core_reset_values[MT_CORE_NFIXED] = { 0 };
+uint64_t mt_core_reset_values[MT_CORE_NFIXED] = {0};
 
 #define MT_MIN_FIXED_PERIOD (10 * 1000 * 1000)
 
-int
-mt_microstackshot_start(unsigned int ctr, uint64_t period, mt_pmi_fn handler,
-    void *ctx)
-{
-	assert(ctr < MT_CORE_NFIXED);
+int mt_microstackshot_start(unsigned int ctr, uint64_t period,
+                            mt_pmi_fn handler, void *ctx) {
+  assert(ctr < MT_CORE_NFIXED);
 
-	if (period < MT_MIN_FIXED_PERIOD) {
-		return EINVAL;
-	}
-	if (mt_microstackshots) {
-		return EBUSY;
-	}
+  if (period < MT_MIN_FIXED_PERIOD) {
+    return EINVAL;
+  }
+  if (mt_microstackshots) {
+    return EBUSY;
+  }
 
-	mt_microstackshot_ctr = ctr;
-	mt_microstackshot_pmi_handler = handler;
-	mt_microstackshot_ctx = ctx;
+  mt_microstackshot_ctr = ctr;
+  mt_microstackshot_pmi_handler = handler;
+  mt_microstackshot_ctx = ctx;
 
-	int error = mt_microstackshot_start_arch(period);
-	if (error) {
-		mt_microstackshot_ctr = 0;
-		mt_microstackshot_pmi_handler = NULL;
-		mt_microstackshot_ctx = NULL;
-		return error;
-	}
+  int error = mt_microstackshot_start_arch(period);
+  if (error) {
+    mt_microstackshot_ctr = 0;
+    mt_microstackshot_pmi_handler = NULL;
+    mt_microstackshot_ctx = NULL;
+    return error;
+  }
 
-	mt_microstackshot_period = period;
-	mt_microstackshots = true;
+  mt_microstackshot_period = period;
+  mt_microstackshots = true;
 
-	return 0;
+  return 0;
 }
 
-int
-mt_microstackshot_stop(void)
-{
-	mt_microstackshots = false;
-	mt_microstackshot_period = 0;
-	memset(mt_core_reset_values, 0, sizeof(mt_core_reset_values));
+int mt_microstackshot_stop(void) {
+  mt_microstackshots = false;
+  mt_microstackshot_period = 0;
+  memset(mt_core_reset_values, 0, sizeof(mt_core_reset_values));
 
-	return 0;
+  return 0;
 }

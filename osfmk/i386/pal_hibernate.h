@@ -34,22 +34,23 @@
 
 __BEGIN_DECLS
 
-#define HIB_MAP_SIZE    (2*I386_LPGBYTES)
-#define DEST_COPY_AREA  (4*GB - HIB_MAP_SIZE) /*4GB - 2*2m */
-#define SRC_COPY_AREA   (DEST_COPY_AREA - HIB_MAP_SIZE)
-#define COPY_PAGE_AREA  (SRC_COPY_AREA  - HIB_MAP_SIZE)
-#define BITMAP_AREA     (COPY_PAGE_AREA - HIB_MAP_SIZE)
-#define IMAGE_AREA      (BITMAP_AREA    - HIB_MAP_SIZE)
-#define IMAGE2_AREA     (IMAGE_AREA     - HIB_MAP_SIZE)
-#define SCRATCH_AREA    (IMAGE2_AREA    - HIB_MAP_SIZE)
-#define WKDM_AREA       (SCRATCH_AREA   - HIB_MAP_SIZE)
+#define HIB_MAP_SIZE (2 * I386_LPGBYTES)
+#define DEST_COPY_AREA (4 * GB - HIB_MAP_SIZE) /*4GB - 2*2m */
+#define SRC_COPY_AREA (DEST_COPY_AREA - HIB_MAP_SIZE)
+#define COPY_PAGE_AREA (SRC_COPY_AREA - HIB_MAP_SIZE)
+#define BITMAP_AREA (COPY_PAGE_AREA - HIB_MAP_SIZE)
+#define IMAGE_AREA (BITMAP_AREA - HIB_MAP_SIZE)
+#define IMAGE2_AREA (IMAGE_AREA - HIB_MAP_SIZE)
+#define SCRATCH_AREA (IMAGE2_AREA - HIB_MAP_SIZE)
+#define WKDM_AREA (SCRATCH_AREA - HIB_MAP_SIZE)
 
 #define HIB_BASE segHIBB
 #define HIB_ENTRYPOINT acpi_wake_prot_entry
 
 /*!
  * @typedef     pal_hib_map_type_t
- * @discussion  Parameter to pal_hib_map used to signify which memory region to map.
+ * @discussion  Parameter to pal_hib_map used to signify which memory region to
+ * map.
  */
 typedef uintptr_t pal_hib_map_type_t;
 
@@ -58,7 +59,7 @@ typedef uintptr_t pal_hib_map_type_t;
  * @discussion  x86_64-specific PAL context; see pal_hib_ctx_t for details.
  */
 struct pal_hib_ctx {
-	char reserved;
+  char reserved;
 };
 
 __END_DECLS

@@ -24,18 +24,18 @@
  * Use is subject to license terms.
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include <sys/malloc.h>
-#include <sys/time.h>
-#include <sys/dtrace.h>
-#include <sys/dtrace_impl.h>
-#include <sys/proc_internal.h>
-#include <sys/vnode.h>
 #include <kern/debug.h>
 #include <kern/sched_prim.h>
 #include <kern/task.h>
 #include <machine/machine_routines.h>
+#include <stdarg.h>
+#include <string.h>
+#include <sys/dtrace.h>
+#include <sys/dtrace_impl.h>
+#include <sys/malloc.h>
+#include <sys/proc_internal.h>
+#include <sys/time.h>
+#include <sys/vnode.h>
 
 #if CONFIG_CSR
 #include <sys/codesign.h>
@@ -47,7 +47,6 @@
  * Darwin's proc_t is a pointer to it.
  */
 #define proc_t struct proc /* Steer clear of the Darwin typedef for proc_t */
-
 
 /* Copied from an arch specific dtrace_subr.c. */
 int (*dtrace_fasttrap_probe_ptr)(struct regs *);
@@ -83,14 +82,11 @@ void (*dtrace_fasttrap_exit_ptr)(proc_t *);
  * existing tracepoints, and ensuring they can't be removed, we can rely
  * on the fasttrap module remaining loaded.
  */
-void
-dtrace_fasttrap_fork(proc_t *p, proc_t *cp)
-{
-	if (dtrace_fasttrap_fork_ptr) {
-		(*dtrace_fasttrap_fork_ptr)(p, cp);
-	}
+void dtrace_fasttrap_fork(proc_t *p, proc_t *cp) {
+  if (dtrace_fasttrap_fork_ptr) {
+    (*dtrace_fasttrap_fork_ptr)(p, cp);
+  }
 }
-
 
 /*
  * DTrace wait for process execution
@@ -105,373 +101,334 @@ dtrace_fasttrap_fork(proc_t *p, proc_t *cp)
  * duty to resume the task.
  */
 
-LCK_MTX_DECLARE_ATTR(dtrace_procwaitfor_lock, &dtrace_lck_grp, &dtrace_lck_attr);
+LCK_MTX_DECLARE_ATTR(dtrace_procwaitfor_lock, &dtrace_lck_grp,
+                     &dtrace_lck_attr);
 
 typedef struct dtrace_proc_awaited_entry {
-	struct dtrace_procdesc			*pdesc;
-	LIST_ENTRY(dtrace_proc_awaited_entry)	entries;
+  struct dtrace_procdesc *pdesc;
+  LIST_ENTRY(dtrace_proc_awaited_entry) entries;
 } dtrace_proc_awaited_entry_t;
 
-LIST_HEAD(listhead, dtrace_proc_awaited_entry) dtrace_proc_awaited_head
-	= LIST_HEAD_INITIALIZER(dtrace_proc_awaited_head);
+LIST_HEAD(listhead, dtrace_proc_awaited_entry)
+dtrace_proc_awaited_head = LIST_HEAD_INITIALIZER(dtrace_proc_awaited_head);
 
-void (*dtrace_proc_waitfor_exec_ptr)(proc_t*) = NULL;
+void (*dtrace_proc_waitfor_exec_ptr)(proc_t *) = NULL;
 
-static int
-dtrace_proc_get_execpath(proc_t *p, char *buffer, int *maxlen)
-{
-	int err = 0, vid = 0;
-	vnode_t tvp = NULLVP, nvp = NULLVP;
+static int dtrace_proc_get_execpath(proc_t *p, char *buffer, int *maxlen) {
+  int err = 0, vid = 0;
+  vnode_t tvp = NULLVP, nvp = NULLVP;
 
-	ASSERT(p);
-	ASSERT(buffer);
-	ASSERT(maxlen);
+  ASSERT(p);
+  ASSERT(buffer);
+  ASSERT(maxlen);
 
-	if ((tvp = p->p_textvp) == NULLVP)
-		return ESRCH;
+  if ((tvp = p->p_textvp) == NULLVP)
+    return ESRCH;
 
-	vid = vnode_vid(tvp);
-	if ((err = vnode_getwithvid(tvp, vid)) != 0)
-		return err;
+  vid = vnode_vid(tvp);
+  if ((err = vnode_getwithvid(tvp, vid)) != 0)
+    return err;
 
-	if ((err = vn_getpath_fsenter(tvp, buffer, maxlen)) != 0)
-		return err;
-	vnode_put(tvp);
+  if ((err = vn_getpath_fsenter(tvp, buffer, maxlen)) != 0)
+    return err;
+  vnode_put(tvp);
 
-	if ((err = vnode_lookup(buffer, 0, &nvp, vfs_context_current())) != 0)
-		return err;
-	if (nvp != NULLVP)
-		vnode_put(nvp);
+  if ((err = vnode_lookup(buffer, 0, &nvp, vfs_context_current())) != 0)
+    return err;
+  if (nvp != NULLVP)
+    vnode_put(nvp);
 
-	return 0;
+  return 0;
 }
 
+static void dtrace_proc_exec_notification(proc_t *p) {
+  dtrace_proc_awaited_entry_t *entry, *tmp;
+  static char execpath[MAXPATHLEN];
 
-static void
-dtrace_proc_exec_notification(proc_t *p) {
-	dtrace_proc_awaited_entry_t *entry, *tmp;
-	static char execpath[MAXPATHLEN];
+  ASSERT(p);
+  ASSERT(proc_getpid(p) != -1);
+  ASSERT(current_task() != proc_task(p));
 
-	ASSERT(p);
-	ASSERT(proc_getpid(p) != -1);
-	ASSERT(current_task() != proc_task(p));
+  lck_mtx_lock(&dtrace_procwaitfor_lock);
 
-	lck_mtx_lock(&dtrace_procwaitfor_lock);
+  LIST_FOREACH_SAFE(entry, &dtrace_proc_awaited_head, entries, tmp) {
+    /* By default consider we're using p_comm. */
+    char *pname = p->p_comm;
 
-	LIST_FOREACH_SAFE(entry, &dtrace_proc_awaited_head, entries, tmp) {
-		/* By default consider we're using p_comm. */
-		char *pname = p->p_comm;
+    /* Already matched with another process. */
+    if (((entry->pdesc->p_pid) != -1))
+      continue;
 
-		/* Already matched with another process. */
-		if (((entry->pdesc->p_pid) != -1))
-			continue;
+    /* p_comm is too short, use the execpath. */
+    if (entry->pdesc->p_name_length >= MAXCOMLEN) {
+      /*
+       * Retrieve the executable path. After the call, length contains
+       * the length of the string + 1.
+       */
+      int length = sizeof(execpath);
+      if (dtrace_proc_get_execpath(p, execpath, &length) != 0)
+        continue;
+      /* Move the cursor to the position after the last / */
+      pname = &execpath[length - 1];
+      while (pname != execpath && *pname != '/')
+        pname--;
+      pname = (*pname == '/') ? pname + 1 : pname;
+    }
 
-		/* p_comm is too short, use the execpath. */
-		if (entry->pdesc->p_name_length >= MAXCOMLEN) {
-			/*
-			 * Retrieve the executable path. After the call, length contains
-			 * the length of the string + 1.
-			 */
-			int length = sizeof(execpath);
-			if (dtrace_proc_get_execpath(p, execpath, &length) != 0)
-				continue;
-			/* Move the cursor to the position after the last / */
-			pname = &execpath[length - 1];
-			while (pname != execpath && *pname != '/')
-				pname--;
-			pname = (*pname == '/') ? pname + 1 : pname;
-		}
+    if (!strcmp(entry->pdesc->p_name, pname)) {
+      entry->pdesc->p_pid = proc_getpid(p);
+      task_pidsuspend(proc_task(p));
+      wakeup(entry);
+    }
+  }
 
-		if (!strcmp(entry->pdesc->p_name, pname)) {
-			entry->pdesc->p_pid = proc_getpid(p);
-			task_pidsuspend(proc_task(p));
-			wakeup(entry);
-		}
-	}
-
-	lck_mtx_unlock(&dtrace_procwaitfor_lock);
+  lck_mtx_unlock(&dtrace_procwaitfor_lock);
 }
 
-int
-dtrace_proc_waitfor(dtrace_procdesc_t* pdesc) {
-	dtrace_proc_awaited_entry_t entry;
-	int res;
+int dtrace_proc_waitfor(dtrace_procdesc_t *pdesc) {
+  dtrace_proc_awaited_entry_t entry;
+  int res;
 
-	ASSERT(pdesc);
-	ASSERT(pdesc->p_name);
+  ASSERT(pdesc);
+  ASSERT(pdesc->p_name);
 
-	/*
-	 * Never trust user input, compute the length of the process name and ensure the
-	 * string is null terminated.
-	 */
-	pdesc->p_name_length = (int) strnlen(pdesc->p_name, sizeof(pdesc->p_name));
-	if (pdesc->p_name_length >= (int) sizeof(pdesc->p_name))
-		return -1;
+  /*
+   * Never trust user input, compute the length of the process name and ensure
+   * the string is null terminated.
+   */
+  pdesc->p_name_length = (int)strnlen(pdesc->p_name, sizeof(pdesc->p_name));
+  if (pdesc->p_name_length >= (int)sizeof(pdesc->p_name))
+    return -1;
 
-	lck_mtx_lock(&dtrace_procwaitfor_lock);
+  lck_mtx_lock(&dtrace_procwaitfor_lock);
 
-	/* Initialize and insert the entry, then install the hook. */
-	pdesc->p_pid = -1;
-	entry.pdesc = pdesc;
-	LIST_INSERT_HEAD(&dtrace_proc_awaited_head, &entry, entries);
-	dtrace_proc_waitfor_exec_ptr = &dtrace_proc_exec_notification;
+  /* Initialize and insert the entry, then install the hook. */
+  pdesc->p_pid = -1;
+  entry.pdesc = pdesc;
+  LIST_INSERT_HEAD(&dtrace_proc_awaited_head, &entry, entries);
+  dtrace_proc_waitfor_exec_ptr = &dtrace_proc_exec_notification;
 
-	/* Sleep until the process has been executed */
-	res = msleep(&entry, &dtrace_procwaitfor_lock, PCATCH, "dtrace_proc_waitfor", NULL);
+  /* Sleep until the process has been executed */
+  res = msleep(&entry, &dtrace_procwaitfor_lock, PCATCH, "dtrace_proc_waitfor",
+               NULL);
 
-	/* Remove the entry and the hook if it is not needed anymore. */
-	LIST_REMOVE(&entry, entries);
-	if (LIST_EMPTY(&dtrace_proc_awaited_head))
-		dtrace_proc_waitfor_exec_ptr = NULL;
+  /* Remove the entry and the hook if it is not needed anymore. */
+  LIST_REMOVE(&entry, entries);
+  if (LIST_EMPTY(&dtrace_proc_awaited_head))
+    dtrace_proc_waitfor_exec_ptr = NULL;
 
-	lck_mtx_unlock(&dtrace_procwaitfor_lock);
+  lck_mtx_unlock(&dtrace_procwaitfor_lock);
 
-	return res;
+  return res;
 }
-
 
 typedef struct dtrace_invop_hdlr {
-	int (*dtih_func)(uintptr_t, uintptr_t *, uintptr_t);
-	struct dtrace_invop_hdlr *dtih_next;
+  int (*dtih_func)(uintptr_t, uintptr_t *, uintptr_t);
+  struct dtrace_invop_hdlr *dtih_next;
 } dtrace_invop_hdlr_t;
 
 dtrace_invop_hdlr_t *dtrace_invop_hdlr;
 
-int
-dtrace_invop(uintptr_t, uintptr_t *, uintptr_t);
+int dtrace_invop(uintptr_t, uintptr_t *, uintptr_t);
 
-int
-dtrace_invop(uintptr_t addr, uintptr_t *stack, uintptr_t eax)
-{
-	dtrace_invop_hdlr_t *hdlr;
-	int rval;
+int dtrace_invop(uintptr_t addr, uintptr_t *stack, uintptr_t eax) {
+  dtrace_invop_hdlr_t *hdlr;
+  int rval;
 
-	for (hdlr = dtrace_invop_hdlr; hdlr != NULL; hdlr = hdlr->dtih_next) {
-		if ((rval = hdlr->dtih_func(addr, stack, eax)) != 0)
-			return (rval);
-	}
+  for (hdlr = dtrace_invop_hdlr; hdlr != NULL; hdlr = hdlr->dtih_next) {
+    if ((rval = hdlr->dtih_func(addr, stack, eax)) != 0)
+      return (rval);
+  }
 
-	return (0);
+  return (0);
 }
 
-void
-dtrace_invop_add(int (*func)(uintptr_t, uintptr_t *, uintptr_t))
-{
-	dtrace_invop_hdlr_t *hdlr;
+void dtrace_invop_add(int (*func)(uintptr_t, uintptr_t *, uintptr_t)) {
+  dtrace_invop_hdlr_t *hdlr;
 
-	hdlr = kmem_alloc(sizeof (dtrace_invop_hdlr_t), KM_SLEEP);
-	hdlr->dtih_func = func;
-	hdlr->dtih_next = dtrace_invop_hdlr;
-	dtrace_invop_hdlr = hdlr;
+  hdlr = kmem_alloc(sizeof(dtrace_invop_hdlr_t), KM_SLEEP);
+  hdlr->dtih_func = func;
+  hdlr->dtih_next = dtrace_invop_hdlr;
+  dtrace_invop_hdlr = hdlr;
 }
 
-void
-dtrace_invop_remove(int (*func)(uintptr_t, uintptr_t *, uintptr_t))
-{
-	dtrace_invop_hdlr_t *hdlr = dtrace_invop_hdlr, *prev = NULL;
+void dtrace_invop_remove(int (*func)(uintptr_t, uintptr_t *, uintptr_t)) {
+  dtrace_invop_hdlr_t *hdlr = dtrace_invop_hdlr, *prev = NULL;
 
-	for (;;) {
-		if (hdlr == NULL)
-			panic("attempt to remove non-existent invop handler");
+  for (;;) {
+    if (hdlr == NULL)
+      panic("attempt to remove non-existent invop handler");
 
-		if (hdlr->dtih_func == func)
-			break;
+    if (hdlr->dtih_func == func)
+      break;
 
-		prev = hdlr;
-		hdlr = hdlr->dtih_next;
-	}
+    prev = hdlr;
+    hdlr = hdlr->dtih_next;
+  }
 
-	if (prev == NULL) {
-		ASSERT(dtrace_invop_hdlr == hdlr);
-		dtrace_invop_hdlr = hdlr->dtih_next;
-	} else {
-		ASSERT(dtrace_invop_hdlr != hdlr);
-		prev->dtih_next = hdlr->dtih_next;
-	}
+  if (prev == NULL) {
+    ASSERT(dtrace_invop_hdlr == hdlr);
+    dtrace_invop_hdlr = hdlr->dtih_next;
+  } else {
+    ASSERT(dtrace_invop_hdlr != hdlr);
+    prev->dtih_next = hdlr->dtih_next;
+  }
 
-	kmem_free(hdlr, sizeof (dtrace_invop_hdlr_t));
+  kmem_free(hdlr, sizeof(dtrace_invop_hdlr_t));
 }
 
-void*
-dtrace_ptrauth_strip(void *ptr, uint64_t key)
-{
+void *dtrace_ptrauth_strip(void *ptr, uint64_t key) {
 #pragma unused(key)
 #if __has_feature(ptrauth_calls)
-	/*
-	 * The key argument to ptrauth_strip needs to be a compile-time
-	 * constant
-	 */
-	switch (key) {
-	case ptrauth_key_asia:
-		return ptrauth_strip(ptr, ptrauth_key_asia);
-	case ptrauth_key_asib:
-		return ptrauth_strip(ptr, ptrauth_key_asib);
-	case ptrauth_key_asda:
-		return ptrauth_strip(ptr, ptrauth_key_asda);
-	case ptrauth_key_asdb:
-		return ptrauth_strip(ptr, ptrauth_key_asdb);
-	default:
-		return ptr;
-	}
+  /*
+   * The key argument to ptrauth_strip needs to be a compile-time
+   * constant
+   */
+  switch (key) {
+  case ptrauth_key_asia:
+    return ptrauth_strip(ptr, ptrauth_key_asia);
+  case ptrauth_key_asib:
+    return ptrauth_strip(ptr, ptrauth_key_asib);
+  case ptrauth_key_asda:
+    return ptrauth_strip(ptr, ptrauth_key_asda);
+  case ptrauth_key_asdb:
+    return ptrauth_strip(ptr, ptrauth_key_asdb);
+  default:
+    return ptr;
+  }
 #else
-	return ptr;
+  return ptr;
 #endif // __has_feature(ptrauth_calls)
 }
 
-int
-dtrace_is_valid_ptrauth_key(uint64_t key)
-{
+int dtrace_is_valid_ptrauth_key(uint64_t key) {
 #pragma unused(key)
 #if __has_feature(ptrauth_calls)
-	return (key == ptrauth_key_asia) || (key == ptrauth_key_asib) ||
-	    (key == ptrauth_key_asda) || (key == ptrauth_key_asdb);
+  return (key == ptrauth_key_asia) || (key == ptrauth_key_asib) ||
+         (key == ptrauth_key_asda) || (key == ptrauth_key_asdb);
 #else
-	return (1);
+  return (1);
 #endif /* __has_feature(ptrauth_calls) */
 }
 
-uint64_t
-dtrace_physmem_read(uint64_t addr, size_t size)
-{
-	switch (size) {
-	case 1:
-		return (uint64_t)ml_phys_read_byte_64((addr64_t)addr);
-	case 2:
-		return (uint64_t)ml_phys_read_half_64((addr64_t)addr);
-	case 4:
-		return (uint64_t)ml_phys_read_64((addr64_t)addr);
-	case 8:
-		return (uint64_t)ml_phys_read_double_64((addr64_t)addr);
-	}
-	DTRACE_CPUFLAG_SET(CPU_DTRACE_ILLOP);
+uint64_t dtrace_physmem_read(uint64_t addr, size_t size) {
+  switch (size) {
+  case 1:
+    return (uint64_t)ml_phys_read_byte_64((addr64_t)addr);
+  case 2:
+    return (uint64_t)ml_phys_read_half_64((addr64_t)addr);
+  case 4:
+    return (uint64_t)ml_phys_read_64((addr64_t)addr);
+  case 8:
+    return (uint64_t)ml_phys_read_double_64((addr64_t)addr);
+  }
+  DTRACE_CPUFLAG_SET(CPU_DTRACE_ILLOP);
 
-	return (0);
+  return (0);
 }
 
-void
-dtrace_physmem_write(uint64_t addr, uint64_t data, size_t size)
-{
-	switch (size) {
-	case 1:
-		ml_phys_write_byte_64((addr64_t)addr, (unsigned int)data);
-		break;
-	case 2:
-		ml_phys_write_half_64((addr64_t)addr, (unsigned int)data);
-		break;
-	case 4:
-		ml_phys_write_64((addr64_t)addr, (unsigned int)data);
-		break;
-	case 8:
-		ml_phys_write_double_64((addr64_t)addr, (unsigned long long)data);
-		break;
-	default:
-		DTRACE_CPUFLAG_SET(CPU_DTRACE_ILLOP);
-	}
+void dtrace_physmem_write(uint64_t addr, uint64_t data, size_t size) {
+  switch (size) {
+  case 1:
+    ml_phys_write_byte_64((addr64_t)addr, (unsigned int)data);
+    break;
+  case 2:
+    ml_phys_write_half_64((addr64_t)addr, (unsigned int)data);
+    break;
+  case 4:
+    ml_phys_write_64((addr64_t)addr, (unsigned int)data);
+    break;
+  case 8:
+    ml_phys_write_double_64((addr64_t)addr, (unsigned long long)data);
+    break;
+  default:
+    DTRACE_CPUFLAG_SET(CPU_DTRACE_ILLOP);
+  }
 }
 
 static minor_t next_minor = 0;
-static dtrace_state_t* dtrace_clients[DTRACE_NCLIENTS] = {NULL};
+static dtrace_state_t *dtrace_clients[DTRACE_NCLIENTS] = {NULL};
 
-
-minor_t
-dtrace_state_reserve(void)
-{
-	for (int i = 0; i < DTRACE_NCLIENTS; i++) {
-		minor_t minor = os_atomic_inc_orig(&next_minor, relaxed) % DTRACE_NCLIENTS;
-		if (dtrace_clients[minor] == NULL)
-			return minor;
-	}
-	return 0;
+minor_t dtrace_state_reserve(void) {
+  for (int i = 0; i < DTRACE_NCLIENTS; i++) {
+    minor_t minor = os_atomic_inc_orig(&next_minor, relaxed) % DTRACE_NCLIENTS;
+    if (dtrace_clients[minor] == NULL)
+      return minor;
+  }
+  return 0;
 }
 
-dtrace_state_t*
-dtrace_state_get(minor_t minor)
-{
-	ASSERT(minor < DTRACE_NCLIENTS);
-	return dtrace_clients[minor];
+dtrace_state_t *dtrace_state_get(minor_t minor) {
+  ASSERT(minor < DTRACE_NCLIENTS);
+  return dtrace_clients[minor];
 }
 
-dtrace_state_t*
-dtrace_state_allocate(minor_t minor)
-{
-	dtrace_state_t *state = kalloc_type(dtrace_state_t, Z_ZERO | Z_WAITOK);
-	if (dtrace_casptr(&dtrace_clients[minor], NULL, state) != NULL) {
-		// We have been raced by another client for this number, abort
-		kfree_type(dtrace_state_t, state);
-		return NULL;
-	}
-	return state;
+dtrace_state_t *dtrace_state_allocate(minor_t minor) {
+  dtrace_state_t *state = kalloc_type(dtrace_state_t, Z_ZERO | Z_WAITOK);
+  if (dtrace_casptr(&dtrace_clients[minor], NULL, state) != NULL) {
+    // We have been raced by another client for this number, abort
+    kfree_type(dtrace_state_t, state);
+    return NULL;
+  }
+  return state;
 }
 
-void
-dtrace_state_free(minor_t minor)
-{
-	dtrace_state_t *state = dtrace_clients[minor];
-	dtrace_clients[minor] = NULL;
-	kfree_type(dtrace_state_t, state);
+void dtrace_state_free(minor_t minor) {
+  dtrace_state_t *state = dtrace_clients[minor];
+  dtrace_clients[minor] = NULL;
+  kfree_type(dtrace_state_t, state);
 }
 
 /*
  * Check if DTrace has been restricted by the current security policy.
  */
-boolean_t
-dtrace_is_restricted(void)
-{
+boolean_t dtrace_is_restricted(void) {
 #if CONFIG_CSR
-	if (csr_check(CSR_ALLOW_UNRESTRICTED_DTRACE) != 0)
-		return TRUE;
+  if (csr_check(CSR_ALLOW_UNRESTRICTED_DTRACE) != 0)
+    return TRUE;
 #endif
 
-	return FALSE;
+  return FALSE;
 }
 
-boolean_t
-dtrace_are_restrictions_relaxed(void)
-{
+boolean_t dtrace_are_restrictions_relaxed(void) {
 #if CONFIG_CSR
-	if (csr_check(CSR_ALLOW_APPLE_INTERNAL) == 0)
-		return TRUE;
+  if (csr_check(CSR_ALLOW_APPLE_INTERNAL) == 0)
+    return TRUE;
 #endif
 
-	return FALSE;
+  return FALSE;
 }
 
-boolean_t
-dtrace_fbt_probes_restricted(void)
-{
-	if (!ml_unsafe_kernel_text())
-		return TRUE;
+boolean_t dtrace_fbt_probes_restricted(void) {
+  if (!ml_unsafe_kernel_text())
+    return TRUE;
 #if CONFIG_CSR
-	if (dtrace_is_restricted() && !dtrace_are_restrictions_relaxed())
-		return TRUE;
+  if (dtrace_is_restricted() && !dtrace_are_restrictions_relaxed())
+    return TRUE;
 #endif
 
-	return FALSE;
+  return FALSE;
 }
 
-boolean_t
-dtrace_sdt_probes_restricted(void)
-{
+boolean_t dtrace_sdt_probes_restricted(void) {
 
-	if (!ml_unsafe_kernel_text())
-		return TRUE;
-	return FALSE;
+  if (!ml_unsafe_kernel_text())
+    return TRUE;
+  return FALSE;
 }
 
 /*
  * Check if the process can be attached.
  */
-boolean_t
-dtrace_can_attach_to_proc(proc_t *proc)
-{
+boolean_t dtrace_can_attach_to_proc(proc_t *proc) {
 #pragma unused(proc)
-	ASSERT(proc != NULL);
+  ASSERT(proc != NULL);
 
 #if CONFIG_CSR
-	if (cs_restricted(proc))
-		return FALSE;
+  if (cs_restricted(proc))
+    return FALSE;
 #endif
 
-	return TRUE;
+  return TRUE;
 }
-

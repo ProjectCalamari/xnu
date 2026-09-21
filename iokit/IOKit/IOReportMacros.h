@@ -30,8 +30,8 @@
 #define _IOREPORT_MACROS_H_
 
 #include "IOReportTypes.h"
-#include <string.h>
 #include <os/overflow.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,15 +56,13 @@ extern "C" {
  *   appropriate macro.
  */
 
-
 /* ----- Reporting Single Integers (SimpleReport) ----- */
 
 /*
  * The buffer size required for a SimpleReport.
  */
 
-#define SIMPLEREPORT_BUFSIZE   (sizeof(IOReportElement))
-
+#define SIMPLEREPORT_BUFSIZE (sizeof(IOReportElement))
 
 /*
  * Initialize a buffer to hold a SimpleReport.
@@ -79,28 +77,26 @@ extern "C" {
  * If that returns, the buffer is left full of '&'.
  */
 
-#define SIMPLEREPORT_INIT(buf, bufSize, providerID, channelID, cats)  \
-do {  \
-    memset((buf), '&', (bufSize));  \
-    IOReportElement     *__elem = (IOReportElement *)(buf);  \
-    IOSimpleReportValues *__vals;  \
-    if ((bufSize) >= SIMPLEREPORT_BUFSIZE) {  \
-	__elem->provider_id = (providerID);  \
-	__elem->channel_id = (channelID);  \
-	__elem->channel_type.report_format = kIOReportFormatSimple;  \
-	__elem->channel_type.reserved = 0;  \
-	__elem->channel_type.categories = (cats);  \
-	__elem->channel_type.nelements = 1;  \
-	__elem->channel_type.element_idx = 0;  \
-	__elem->timestamp = 0;  \
-	__vals = (IOSimpleReportValues*)&__elem->values;  \
-	__vals->simple_value = kIOReportInvalidIntValue;  \
-    }  \
-    else {  \
-	IOREPORT_ABORT("bufSize is smaller than the required size\n");  \
-    }  \
-} while(0)
-
+#define SIMPLEREPORT_INIT(buf, bufSize, providerID, channelID, cats)           \
+  do {                                                                         \
+    memset((buf), '&', (bufSize));                                             \
+    IOReportElement *__elem = (IOReportElement *)(buf);                        \
+    IOSimpleReportValues *__vals;                                              \
+    if ((bufSize) >= SIMPLEREPORT_BUFSIZE) {                                   \
+      __elem->provider_id = (providerID);                                      \
+      __elem->channel_id = (channelID);                                        \
+      __elem->channel_type.report_format = kIOReportFormatSimple;              \
+      __elem->channel_type.reserved = 0;                                       \
+      __elem->channel_type.categories = (cats);                                \
+      __elem->channel_type.nelements = 1;                                      \
+      __elem->channel_type.element_idx = 0;                                    \
+      __elem->timestamp = 0;                                                   \
+      __vals = (IOSimpleReportValues *)&__elem->values;                        \
+      __vals->simple_value = kIOReportInvalidIntValue;                         \
+    } else {                                                                   \
+      IOREPORT_ABORT("bufSize is smaller than the required size\n");           \
+    }                                                                          \
+  } while (0)
 
 /*
  * Set a SimpleReport to a new value.
@@ -109,14 +105,13 @@ do {  \
  * int64_t new_value - new value for the report
  */
 
-#define SIMPLEREPORT_SETVALUE(simp_buf, new_value)  \
-do {  \
-    IOReportElement *__elem = (IOReportElement *)(simp_buf);  \
-    IOSimpleReportValues *__vals;  \
-    __vals = (IOSimpleReportValues*)&__elem->values;  \
-    __vals->simple_value = (new_value);  \
-} while(0)
-
+#define SIMPLEREPORT_SETVALUE(simp_buf, new_value)                             \
+  do {                                                                         \
+    IOReportElement *__elem = (IOReportElement *)(simp_buf);                   \
+    IOSimpleReportValues *__vals;                                              \
+    __vals = (IOSimpleReportValues *)&__elem->values;                          \
+    __vals->simple_value = (new_value);                                        \
+  } while (0)
 
 /*
  * Increment the value of a SimpleReport.
@@ -124,19 +119,19 @@ do {  \
  *    void* simp_buf - ptr to memory initialized by SIMPLEREPORT_INIT()
  * int64_t increment - amount by which to increment the value
  */
-#define SIMPLEREPORT_INCREMENTVALUE(simp_buf, increment_by)  \
-do {  \
-    IOReportElement *__elem = (IOReportElement *)(simp_buf);  \
-    IOSimpleReportValues *__vals;  \
-    __vals = (IOSimpleReportValues*)&__elem->values;  \
-    int64_t __simple_value = INT64_MAX;  \
-    if (os_add_overflow(__vals->simple_value, (increment_by), &__simple_value)) {  \
-    __vals->simple_value = INT64_MAX;  \
-    } else {  \
-    __vals->simple_value = __simple_value;  \
-    }  \
-} while(0)
-
+#define SIMPLEREPORT_INCREMENTVALUE(simp_buf, increment_by)                    \
+  do {                                                                         \
+    IOReportElement *__elem = (IOReportElement *)(simp_buf);                   \
+    IOSimpleReportValues *__vals;                                              \
+    __vals = (IOSimpleReportValues *)&__elem->values;                          \
+    int64_t __simple_value = INT64_MAX;                                        \
+    if (os_add_overflow(__vals->simple_value, (increment_by),                  \
+                        &__simple_value)) {                                    \
+      __vals->simple_value = INT64_MAX;                                        \
+    } else {                                                                   \
+      __vals->simple_value = __simple_value;                                   \
+    }                                                                          \
+  } while (0)
 
 /*
  * Prepare a SimpleReport for
@@ -149,12 +144,11 @@ do {  \
  *                   data that needs to be copied for kIOReportCopyChannelData.
  */
 
-#define SIMPLEREPORT_UPDATEPREP(simp_buf, ptr2cpy, size2cpy)  \
-do {  \
-    (ptr2cpy) = (simp_buf);  \
-    (size2cpy) = sizeof(IOReportElement);  \
-} while(0)
-
+#define SIMPLEREPORT_UPDATEPREP(simp_buf, ptr2cpy, size2cpy)                   \
+  do {                                                                         \
+    (ptr2cpy) = (simp_buf);                                                    \
+    (size2cpy) = sizeof(IOReportElement);                                      \
+  } while (0)
 
 /*
  * Update the result field received as a parameter for
@@ -164,14 +158,14 @@ do {  \
  *                   void* result - configure/updateReport() 'result' param
  */
 
-#define SIMPLEREPORT_UPDATERES(action, result)  \
-do {  \
-    if (((action) == kIOReportGetDimensions) || ((action) == kIOReportCopyChannelData)) {  \
-	int *__nElements = (int *)(result);  \
-	*__nElements += 1;  \
-    }  \
-} while (0)
-
+#define SIMPLEREPORT_UPDATERES(action, result)                                 \
+  do {                                                                         \
+    if (((action) == kIOReportGetDimensions) ||                                \
+        ((action) == kIOReportCopyChannelData)) {                              \
+      int *__nElements = (int *)(result);                                      \
+      *__nElements += 1;                                                       \
+    }                                                                          \
+  } while (0)
 
 /*
  * Get the 64-bit channel ID of a SimpleReport.
@@ -179,8 +173,8 @@ do {  \
  * void* simp_buf - ptr to memory initialized by SIMPLEREPORT_INIT()
  */
 
-#define SIMPLEREPORT_GETCHID(simp_buf)  \
-    (((IOReportElement *)(simp_buf))->channel_id)
+#define SIMPLEREPORT_GETCHID(simp_buf)                                         \
+  (((IOReportElement *)(simp_buf))->channel_id)
 
 /*
  * Get the IOReportChannelType of a SimpleReport.
@@ -188,9 +182,8 @@ do {  \
  * void* simp_buf - ptr to memory initialized by SIMPLEREPORT_INIT()
  */
 
-#define SIMPLEREPORT_GETCHTYPE(simp_buf)  \
-    (*(uint64_t*)&(((IOReportElement *)(simp_buf))->channel_type))
-
+#define SIMPLEREPORT_GETCHTYPE(simp_buf)                                       \
+  (*(uint64_t *)&(((IOReportElement *)(simp_buf))->channel_type))
 
 /*
  * Get the integer value of a SimpleReport.
@@ -198,18 +191,17 @@ do {  \
  * void* simp_buf - memory initialized by SIMPLEREPORT_INIT()
  */
 
-#define SIMPLEREPORT_GETVALUE(simp_buf)  \
-    (((IOSimpleReportValues*)&(((IOReportElement*)(simp_buf))->values))  \
-	    ->simple_value)
-
+#define SIMPLEREPORT_GETVALUE(simp_buf)                                        \
+  (((IOSimpleReportValues *)&(((IOReportElement *)(simp_buf))->values))        \
+       ->simple_value)
 
 /* ----- State Machine Reporting (StateReport) ----- */
 
 // Internal struct for StateReport
 typedef struct {
-	uint16_t        curr_state;
-	uint64_t        update_ts;
-	IOReportElement elem[]; // Array of elements
+  uint16_t curr_state;
+  uint64_t update_ts;
+  IOReportElement elem[]; // Array of elements
 } IOStateReportInfo;
 
 /*
@@ -217,9 +209,8 @@ typedef struct {
  *
  * int nstates - number of states to be reported
  */
-#define STATEREPORT_BUFSIZE(nstates)  \
-    (sizeof(IOStateReportInfo) + (nstates) * sizeof(IOReportElement))
-
+#define STATEREPORT_BUFSIZE(nstates)                                           \
+  (sizeof(IOStateReportInfo) + (nstates) * sizeof(IOReportElement))
 
 /*
  * Initialize a StateReport buffer.
@@ -234,36 +225,35 @@ typedef struct {
  * If the buffer is not of sufficient size, the macro invokes IOREPORT_ABORT.
  * If that returns, the buffer is left full of '&'.
  */
-#define STATEREPORT_INIT(nstates, buf, bufSize, providerID, channelID, cats) \
-do {  \
-    memset((buf), '&', (bufSize));  \
-    IOStateReportInfo *__info = (IOStateReportInfo *)(buf);  \
-    IOStateReportValues *__rep;  \
-    IOReportElement     *__elem;  \
-    if ((bufSize) >= STATEREPORT_BUFSIZE(nstates)) {  \
-	for (uint16_t __no = 0; __no < (nstates); __no++) {  \
-	    __elem =  &(__info->elem[__no]);  \
-	    __rep = (IOStateReportValues *) &(__elem->values);  \
-	    __elem->provider_id = (providerID);  \
-	    __elem->channel_id = (channelID);  \
-	    __elem->channel_type.report_format = kIOReportFormatState;  \
-	    __elem->channel_type.reserved = 0;  \
-	    __elem->channel_type.categories = (cats);  \
-	    __elem->channel_type.nelements = (nstates);  \
-	    __elem->channel_type.element_idx = __no;  \
-	    __elem->timestamp = 0;  \
-	    __rep->state_id = __no;  \
-	    __rep->intransitions = 0;  \
-	    __rep->upticks = 0;  \
-	    __rep->last_intransition = 0;  \
-	}  \
-	__info->curr_state = 0;  \
-	__info->update_ts = 0;  \
-    }  \
-    else {  \
-	IOREPORT_ABORT("bufSize is smaller than the required size\n");  \
-    }  \
-} while(0)
+#define STATEREPORT_INIT(nstates, buf, bufSize, providerID, channelID, cats)   \
+  do {                                                                         \
+    memset((buf), '&', (bufSize));                                             \
+    IOStateReportInfo *__info = (IOStateReportInfo *)(buf);                    \
+    IOStateReportValues *__rep;                                                \
+    IOReportElement *__elem;                                                   \
+    if ((bufSize) >= STATEREPORT_BUFSIZE(nstates)) {                           \
+      for (uint16_t __no = 0; __no < (nstates); __no++) {                      \
+        __elem = &(__info->elem[__no]);                                        \
+        __rep = (IOStateReportValues *)&(__elem->values);                      \
+        __elem->provider_id = (providerID);                                    \
+        __elem->channel_id = (channelID);                                      \
+        __elem->channel_type.report_format = kIOReportFormatState;             \
+        __elem->channel_type.reserved = 0;                                     \
+        __elem->channel_type.categories = (cats);                              \
+        __elem->channel_type.nelements = (nstates);                            \
+        __elem->channel_type.element_idx = __no;                               \
+        __elem->timestamp = 0;                                                 \
+        __rep->state_id = __no;                                                \
+        __rep->intransitions = 0;                                              \
+        __rep->upticks = 0;                                                    \
+        __rep->last_intransition = 0;                                          \
+      }                                                                        \
+      __info->curr_state = 0;                                                  \
+      __info->update_ts = 0;                                                   \
+    } else {                                                                   \
+      IOREPORT_ABORT("bufSize is smaller than the required size\n");           \
+    }                                                                          \
+  } while (0)
 
 /*
  * Initialize the state id field of a state with the specified value.  By
@@ -274,16 +264,15 @@ do {  \
  * unsigned stateIdx - index of the state, out of bounds -> no-op
  *  uint64_t stateID - new state id, see IOREPORT_MAKEID()
  */
-#define STATEREPORT_SETSTATEID(state_buf, stateIdx, stateID)  \
-do {  \
-    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);  \
-    IOStateReportValues *__rep;  \
-    if ((stateIdx) < __info->elem[0].channel_type.nelements) {  \
-	__rep = (IOStateReportValues*) &(__info->elem[(stateIdx)].values);  \
-	__rep->state_id = (stateID);  \
-    }  \
-} while (0)
-
+#define STATEREPORT_SETSTATEID(state_buf, stateIdx, stateID)                   \
+  do {                                                                         \
+    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);              \
+    IOStateReportValues *__rep;                                                \
+    if ((stateIdx) < __info->elem[0].channel_type.nelements) {                 \
+      __rep = (IOStateReportValues *)&(__info->elem[(stateIdx)].values);       \
+      __rep->state_id = (stateID);                                             \
+    }                                                                          \
+  } while (0)
 
 /*
  * Set the state of a StateReport.
@@ -292,21 +281,22 @@ do {  \
  * unsigned newStateIdx - index of new state, out of bounds -> no-op
  *  uint64_t changeTime - time at which the transition occurred
  */
-#define STATEREPORT_SETSTATE(state_buf, newStateIdx, changeTime)  \
-do {  \
-    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);  \
-    IOStateReportValues *__rep;  \
-    if ((newStateIdx) < __info->elem[0].channel_type.nelements ) {  \
-	__rep = (IOStateReportValues*) &(__info->elem[__info->curr_state].values);  \
-	if (__info->update_ts)  \
-	    __rep->upticks += (changeTime) - __info->update_ts;  \
-	__info->elem[(newStateIdx)].timestamp = (changeTime);  \
-	__rep = (IOStateReportValues*) &(__info->elem[(newStateIdx)].values);  \
-	__rep->intransitions++;  \
-	__info->curr_state = (newStateIdx);  \
-	__info->update_ts = (changeTime);  \
-    }  \
-} while(0)
+#define STATEREPORT_SETSTATE(state_buf, newStateIdx, changeTime)               \
+  do {                                                                         \
+    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);              \
+    IOStateReportValues *__rep;                                                \
+    if ((newStateIdx) < __info->elem[0].channel_type.nelements) {              \
+      __rep =                                                                  \
+          (IOStateReportValues *)&(__info->elem[__info->curr_state].values);   \
+      if (__info->update_ts)                                                   \
+        __rep->upticks += (changeTime) - __info->update_ts;                    \
+      __info->elem[(newStateIdx)].timestamp = (changeTime);                    \
+      __rep = (IOStateReportValues *)&(__info->elem[(newStateIdx)].values);    \
+      __rep->intransitions++;                                                  \
+      __info->curr_state = (newStateIdx);                                      \
+      __info->update_ts = (changeTime);                                        \
+    }                                                                          \
+  } while (0)
 
 /*
  * Prepare a StateReport for
@@ -317,21 +307,22 @@ do {  \
  *        void* ptr2cpy - filled in with pointer to buffer to be copied out
  *      size_t size2cpy - filled in with the size of the buffer to copy out
  */
-#define STATEREPORT_UPDATEPREP(state_buf, currentTime, ptr2cpy, size2cpy)  \
-do {  \
-    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);  \
-    IOReportElement     *__elem;  \
-    IOStateReportValues *__state;  \
-    (size2cpy) = __info->elem[0].channel_type.nelements * sizeof(IOReportElement);  \
-    (ptr2cpy) =  (void *) &__info->elem[0];  \
-    if (__info->update_ts)  {  \
-	__elem = &__info->elem[__info->curr_state];  \
-	__state = (IOStateReportValues *)&__elem->values;  \
-	__elem->timestamp = (currentTime);  \
-	__state->upticks  += (currentTime) - __info->update_ts;  \
-	__info->update_ts = (currentTime);  \
-    }  \
-} while(0)
+#define STATEREPORT_UPDATEPREP(state_buf, currentTime, ptr2cpy, size2cpy)      \
+  do {                                                                         \
+    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);              \
+    IOReportElement *__elem;                                                   \
+    IOStateReportValues *__state;                                              \
+    (size2cpy) =                                                               \
+        __info->elem[0].channel_type.nelements * sizeof(IOReportElement);      \
+    (ptr2cpy) = (void *)&__info->elem[0];                                      \
+    if (__info->update_ts) {                                                   \
+      __elem = &__info->elem[__info->curr_state];                              \
+      __state = (IOStateReportValues *)&__elem->values;                        \
+      __elem->timestamp = (currentTime);                                       \
+      __state->upticks += (currentTime) - __info->update_ts;                   \
+      __info->update_ts = (currentTime);                                       \
+    }                                                                          \
+  } while (0)
 
 /*
  * Update the result field received as a parameter for kIOReportGetDimensions &
@@ -342,35 +333,36 @@ do {  \
  *                   void* result - configure/updateReport() 'result'
  */
 
-#define STATEREPORT_UPDATERES(state_buf, action, result)  \
-do {  \
-    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);  \
-    IOReportElement     *__elem;  \
-    int *__nElements = (int *)(result);  \
-    if (((action) == kIOReportGetDimensions) || ((action) == kIOReportCopyChannelData)) {  \
-	__elem =  &(__info->elem[0]);  \
-    if (os_add_overflow(*__nElements, __elem->channel_type.nelements, __nElements)) {  \
-	*__nElements = INT_MAX;  \
-    }  \
-    }  \
-} while (0)
-
+#define STATEREPORT_UPDATERES(state_buf, action, result)                       \
+  do {                                                                         \
+    IOStateReportInfo *__info = (IOStateReportInfo *)(state_buf);              \
+    IOReportElement *__elem;                                                   \
+    int *__nElements = (int *)(result);                                        \
+    if (((action) == kIOReportGetDimensions) ||                                \
+        ((action) == kIOReportCopyChannelData)) {                              \
+      __elem = &(__info->elem[0]);                                             \
+      if (os_add_overflow(*__nElements, __elem->channel_type.nelements,        \
+                          __nElements)) {                                      \
+        *__nElements = INT_MAX;                                                \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 /*
  * Get the 64-bit channel ID of a StateReport.
  *
  * void* state_buf - ptr to memory initialized by STATEREPORT_INIT()
  */
-#define STATEREPORT_GETCHID(state_buf)  \
-    (((IOStateReportInfo *)(state_buf))->elem[0].channel_id)
+#define STATEREPORT_GETCHID(state_buf)                                         \
+  (((IOStateReportInfo *)(state_buf))->elem[0].channel_id)
 
 /*
  * Get the IOReportChannelType of a StateReport.
  *
  * void* state_buf - ptr to memory initialized by STATEREPORT_INIT()
  */
-#define STATEREPORT_GETCHTYPE(state_buf)  \
-    (*(uint64_t*)&(((IOStateReportInfo *)(state_buf))->elem[0].channel_type))
+#define STATEREPORT_GETCHTYPE(state_buf)                                       \
+  (*(uint64_t *)&(((IOStateReportInfo *)(state_buf))->elem[0].channel_type))
 
 /*
  * Get the number of transitions into a given state.
@@ -379,10 +371,13 @@ do {  \
  * unsigned stateIdx - index of state, out of bounds -> kIOReportInvalidValue
  *
  */
-#define STATEREPORT_GETTRANSITIONS(state_buf, stateIdx)  \
-    (((stateIdx) < ((IOStateReportInfo *)(state_buf))->elem[0].channel_type.nelements)  \
-	? ((IOStateReportValues*)&(((IOStateReportInfo*)(state_buf))->elem[(stateIdx)].values))->intransitions  \
-	: kIOReportInvalidValue)
+#define STATEREPORT_GETTRANSITIONS(state_buf, stateIdx)                        \
+  (((stateIdx) <                                                               \
+    ((IOStateReportInfo *)(state_buf))->elem[0].channel_type.nelements)        \
+       ? ((IOStateReportValues *)&(                                            \
+              ((IOStateReportInfo *)(state_buf))->elem[(stateIdx)].values))    \
+             ->intransitions                                                   \
+       : kIOReportInvalidValue)
 
 /*
  * Get the total number of ticks spent in a given state.
@@ -390,11 +385,13 @@ do {  \
  *   void* state_buf - ptr to memory initialized by STATEREPORT_INIT()
  * unsigned stateIdx - index of state, out of bounds -> kIOReportInvalidValue
  */
-#define STATEREPORT_GETTICKS(state_buf, stateIdx)  \
-    (((stateIdx) < ((IOStateReportInfo*)(state_buf))->elem[0].channel_type.nelements)  \
-	? ((IOStateReportValues*)&(((IOStateReportInfo*)(state_buf))->elem[(stateIdx)].values))->upticks  \
-	: kIOReportInvalidValue)
-
+#define STATEREPORT_GETTICKS(state_buf, stateIdx)                              \
+  (((stateIdx) <                                                               \
+    ((IOStateReportInfo *)(state_buf))->elem[0].channel_type.nelements)        \
+       ? ((IOStateReportValues *)&(                                            \
+              ((IOStateReportInfo *)(state_buf))->elem[(stateIdx)].values))    \
+             ->upticks                                                         \
+       : kIOReportInvalidValue)
 
 /* ----- Reporting an Array of Integers (SimpleArrayReport) ----- */
 
@@ -404,9 +401,10 @@ do {  \
  * int nValues - number of values to be reported
  */
 
-#define SIMPLEARRAY_BUFSIZE(nValues) \
-    ((((nValues)/IOR_VALUES_PER_ELEMENT) + (((nValues) % IOR_VALUES_PER_ELEMENT) ? 1:0)) \
-	* sizeof(IOReportElement))
+#define SIMPLEARRAY_BUFSIZE(nValues)                                           \
+  ((((nValues) / IOR_VALUES_PER_ELEMENT) +                                     \
+    (((nValues) % IOR_VALUES_PER_ELEMENT) ? 1 : 0)) *                          \
+   sizeof(IOReportElement))
 
 /*
  * Initialize a buffer for use as a SimpleArrayReport.
@@ -422,52 +420,51 @@ do {  \
  * If that returns, the buffer is left full of '&'.
  */
 
-#define SIMPLEARRAY_INIT(nValues, buf, bufSize, providerID, channelID, cats) \
-do {  \
-    memset((buf), '&', (bufSize));  \
-    IOSimpleArrayReportValues *__rep;  \
-    IOReportElement     *__elem;  \
-    uint32_t            __nElems = (((nValues) / IOR_VALUES_PER_ELEMENT) + \
-	                            (((nValues) % IOR_VALUES_PER_ELEMENT) ? 1 : 0)); \
-    if ((bufSize) >= SIMPLEARRAY_BUFSIZE(nValues)) {  \
-	for (unsigned __no = 0; __no < __nElems; __no++) {  \
-	    __elem =  &(((IOReportElement *)(buf))[__no]);  \
-	    __rep = (IOSimpleArrayReportValues *) &(__elem->values);  \
-	    __elem->provider_id = (providerID);  \
-	    __elem->channel_id = (channelID);  \
-	    __elem->channel_type.report_format = kIOReportFormatSimpleArray;  \
-	    __elem->channel_type.reserved = 0;  \
-	    __elem->channel_type.categories = (cats);  \
-	    __elem->channel_type.nelements = (__nElems);  \
-	    __elem->channel_type.element_idx = __no;  \
-	    __elem->timestamp = 0;  \
-	    __rep->simple_values[0] = kIOReportInvalidIntValue;  \
-	    __rep->simple_values[1] = kIOReportInvalidIntValue;  \
-	    __rep->simple_values[2] = kIOReportInvalidIntValue;  \
-	    __rep->simple_values[3] = kIOReportInvalidIntValue;  \
-	}  \
-    }  \
-    else {  \
-	IOREPORT_ABORT("bufSize is smaller than the required size\n");  \
-    }  \
-} while(0)
-
+#define SIMPLEARRAY_INIT(nValues, buf, bufSize, providerID, channelID, cats)   \
+  do {                                                                         \
+    memset((buf), '&', (bufSize));                                             \
+    IOSimpleArrayReportValues *__rep;                                          \
+    IOReportElement *__elem;                                                   \
+    uint32_t __nElems = (((nValues) / IOR_VALUES_PER_ELEMENT) +                \
+                         (((nValues) % IOR_VALUES_PER_ELEMENT) ? 1 : 0));      \
+    if ((bufSize) >= SIMPLEARRAY_BUFSIZE(nValues)) {                           \
+      for (unsigned __no = 0; __no < __nElems; __no++) {                       \
+        __elem = &(((IOReportElement *)(buf))[__no]);                          \
+        __rep = (IOSimpleArrayReportValues *)&(__elem->values);                \
+        __elem->provider_id = (providerID);                                    \
+        __elem->channel_id = (channelID);                                      \
+        __elem->channel_type.report_format = kIOReportFormatSimpleArray;       \
+        __elem->channel_type.reserved = 0;                                     \
+        __elem->channel_type.categories = (cats);                              \
+        __elem->channel_type.nelements = (__nElems);                           \
+        __elem->channel_type.element_idx = __no;                               \
+        __elem->timestamp = 0;                                                 \
+        __rep->simple_values[0] = kIOReportInvalidIntValue;                    \
+        __rep->simple_values[1] = kIOReportInvalidIntValue;                    \
+        __rep->simple_values[2] = kIOReportInvalidIntValue;                    \
+        __rep->simple_values[3] = kIOReportInvalidIntValue;                    \
+      }                                                                        \
+    } else {                                                                   \
+      IOREPORT_ABORT("bufSize is smaller than the required size\n");           \
+    }                                                                          \
+  } while (0)
 
 /* SimpleArrayReport helpers */
 
-    #define __SA_FINDREP(array_buf, idx)  \
-	IOSimpleArrayReportValues *__rep;  \
-	IOReportElement     *__elem;  \
-	unsigned __elemIdx = (idx) / IOR_VALUES_PER_ELEMENT;  \
-	unsigned __valueIdx = (idx) % IOR_VALUES_PER_ELEMENT;  \
-	__elem = &(((IOReportElement *)(array_buf))[0]);  \
-	if (__elemIdx < __elem->channel_type.nelements)  { \
-	    __elem = &(((IOReportElement *)(array_buf))[__elemIdx]);  \
-	    __rep = (IOSimpleArrayReportValues *) &(__elem->values);  \
+#define __SA_FINDREP(array_buf, idx)                                           \
+  IOSimpleArrayReportValues *__rep;                                            \
+  IOReportElement *__elem;                                                     \
+  unsigned __elemIdx = (idx) / IOR_VALUES_PER_ELEMENT;                         \
+  unsigned __valueIdx = (idx) % IOR_VALUES_PER_ELEMENT;                        \
+  __elem = &(((IOReportElement *)(array_buf))[0]);                             \
+  if (__elemIdx < __elem->channel_type.nelements) {                            \
+    __elem = &(((IOReportElement *)(array_buf))[__elemIdx]);                   \
+    __rep = (IOSimpleArrayReportValues *)&(__elem->values);
 
-    #define __SA_MAXINDEX(array_buf)  \
-	((((IOReportElement*)(array_buf))->channel_type.nelements)  \
-	    * IOR_VALUES_PER_ELEMENT) - 1
+#define __SA_MAXINDEX(array_buf)                                               \
+  ((((IOReportElement *)(array_buf))->channel_type.nelements) *                \
+   IOR_VALUES_PER_ELEMENT) -                                                   \
+      1
 
 /*
  * Set a value at a specified index in a SimpleArrayReport.
@@ -476,12 +473,13 @@ do {  \
  *        unsigned idx  - array index, out of bounds -> no-op
  *    uint64_t newValue - new value to be stored at array[idx]
  */
-#define SIMPLEARRAY_SETVALUE(array_buf, idx, newValue) \
-do {  \
-    __SA_FINDREP((array_buf), (idx)) \
-	__rep->simple_values[__valueIdx] = (newValue);  \
-    } \
-} while(0)
+#define SIMPLEARRAY_SETVALUE(array_buf, idx, newValue)                         \
+  do {                                                                         \
+    __SA_FINDREP((array_buf), (idx))                                           \
+    __rep->simple_values[__valueIdx] = (newValue);                             \
+  }                                                                            \
+  }                                                                            \
+  while (0)
 
 /*
  * Increment an array value within a SimpleArrayReport.
@@ -490,15 +488,16 @@ do {  \
  *       unsigned idx  - array index to increment, out of bounds -> no-op
  *      int64_t value  - amount by which to increment array[idx]
  */
-#define SIMPLEARRAY_INCREMENTVALUE(array_buf, idx, value)  \
-do {  \
-    __SA_FINDREP((array_buf), (idx)) \
-    if (os_add_overflow(__rep->simple_values[__valueIdx], (value), &__rep->simple_values[__valueIdx])) {  \
-	__rep->simple_values[__valueIdx] = INT64_MAX;  \
-    } \
-    } \
-} while(0)
-
+#define SIMPLEARRAY_INCREMENTVALUE(array_buf, idx, value)                      \
+  do {                                                                         \
+    __SA_FINDREP((array_buf), (idx))                                           \
+    if (os_add_overflow(__rep->simple_values[__valueIdx], (value),             \
+                        &__rep->simple_values[__valueIdx])) {                  \
+      __rep->simple_values[__valueIdx] = INT64_MAX;                            \
+    }                                                                          \
+  }                                                                            \
+  }                                                                            \
+  while (0)
 
 /*
  * Prepare a SimpleArrayReport for
@@ -509,14 +508,13 @@ do {  \
  *      size_t size2cpy - filled in with the size of the buffer to copy out
  */
 
-#define SIMPLEARRAY_UPDATEPREP(array_buf, ptr2cpy, size2cpy) \
-do {  \
-    IOReportElement     *__elem;  \
-    __elem = &(((IOReportElement *)(array_buf))[0]);  \
-    (ptr2cpy) =  (void *) (array_buf);  \
-    (size2cpy) = __elem->channel_type.nelements * sizeof(IOReportElement);  \
-} while(0)
-
+#define SIMPLEARRAY_UPDATEPREP(array_buf, ptr2cpy, size2cpy)                   \
+  do {                                                                         \
+    IOReportElement *__elem;                                                   \
+    __elem = &(((IOReportElement *)(array_buf))[0]);                           \
+    (ptr2cpy) = (void *)(array_buf);                                           \
+    (size2cpy) = __elem->channel_type.nelements * sizeof(IOReportElement);     \
+  } while (0)
 
 /*
  * Update the result field received as a parameter for kIOReportGetDimensions &
@@ -527,35 +525,35 @@ do {  \
  *                   void* result - configure/updateReport() 'result'
  */
 
-#define SIMPLEARRAY_UPDATERES(array_buf, action, result) \
-do {  \
-    IOReportElement     *__elem;  \
-    int *__nElements = (int *)(result);  \
-    __elem = &(((IOReportElement *)(array_buf))[0]);  \
-    if (((action) == kIOReportGetDimensions) || ((action) == kIOReportCopyChannelData)) {  \
-    if (os_add_overflow(*__nElements, __elem->channel_type.nelements, __nElements)) {  \
-	*__nElements = INT_MAX;  \
-    }  \
-    }  \
-} while (0)
-
+#define SIMPLEARRAY_UPDATERES(array_buf, action, result)                       \
+  do {                                                                         \
+    IOReportElement *__elem;                                                   \
+    int *__nElements = (int *)(result);                                        \
+    __elem = &(((IOReportElement *)(array_buf))[0]);                           \
+    if (((action) == kIOReportGetDimensions) ||                                \
+        ((action) == kIOReportCopyChannelData)) {                              \
+      if (os_add_overflow(*__nElements, __elem->channel_type.nelements,        \
+                          __nElements)) {                                      \
+        *__nElements = INT_MAX;                                                \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 /*
  * Get the 64-bit channel ID of a SimpleArrayReport.
  *
  * void* array_buf - ptr to memory initialized by SIMPLEARRAY_INIT()
  */
-#define SIMPLEARRAY_GETCHID(array_buf)  \
-    (((IOReportElement *)(array_buf))->channel_id)
-
+#define SIMPLEARRAY_GETCHID(array_buf)                                         \
+  (((IOReportElement *)(array_buf))->channel_id)
 
 /*
  * Get the IOReportChannelType of a SimpleArrayReport.
  *
  * void* simp_buf - ptr to memory initialized by SIMPLEREPORT_INIT()
  */
-#define SIMPLEARRAY_GETCHTYPE(array_buf)  \
-    (*(uint64_t*)&(((IOReportElement *)(array_buf))->channel_type))
+#define SIMPLEARRAY_GETCHTYPE(array_buf)                                       \
+  (*(uint64_t *)&(((IOReportElement *)(array_buf))->channel_type))
 
 /*
  * Get a value from a SimpleArrayReport.
@@ -563,19 +561,20 @@ do {  \
  * void* array_buf - ptr to memory initialized by SIMPLEARRAY_INIT()
  *   unsigned idx  - index of the value, out of bounds -> kIOReportInvalidValue
  */
-#define SIMPLEARRAY_GETVALUE(array_buf, idx)  \
-    (((idx) > __SA_MAXINDEX(array_buf) || (idx) < 0) ? kIOReportInvalidIntValue :  \
-    ((IOSimpleArrayReportValues*)&(  \
-	((IOReportElement*)(array_buf))[(idx) / IOR_VALUES_PER_ELEMENT].values))  \
-	    ->simple_values[(idx) % IOR_VALUES_PER_ELEMENT])
-
+#define SIMPLEARRAY_GETVALUE(array_buf, idx)                                   \
+  (((idx) > __SA_MAXINDEX(array_buf) || (idx) < 0)                             \
+       ? kIOReportInvalidIntValue                                              \
+       : ((IOSimpleArrayReportValues *)&(                                      \
+              ((IOReportElement *)(array_buf))[(idx) / IOR_VALUES_PER_ELEMENT] \
+                  .values))                                                    \
+             ->simple_values[(idx) % IOR_VALUES_PER_ELEMENT])
 
 /* ----- Histogram Reporting (HistogramReport) ----- */
 
 // Internal struct for HistogramReport
 typedef struct {
-	int             bucketWidth;
-	IOReportElement elem[]; // Array of elements
+  int bucketWidth;
+  IOReportElement elem[]; // Array of elements
 } IOHistReportInfo;
 
 /*
@@ -583,8 +582,8 @@ typedef struct {
  *
  * int nbuckets - number of buckets in the histogram
  */
-#define HISTREPORT_BUFSIZE(nbuckets)  \
-    (sizeof(IOHistReportInfo) + ((nbuckets) * sizeof(IOReportElement)))
+#define HISTREPORT_BUFSIZE(nbuckets)                                           \
+  (sizeof(IOHistReportInfo) + ((nbuckets) * sizeof(IOReportElement)))
 
 /*
  * Initialize a HistogramReport buffer. Supports only linear scale histogram.
@@ -600,32 +599,32 @@ typedef struct {
  * If the buffer is not of sufficient size, the macro invokes IOREPORT_ABORT.
  * If that returns, the buffer is left full of '&'.
  */
-#define HISTREPORT_INIT(nbuckets, bktSize, buf, bufSize, providerID, channelID, cats) \
-do {  \
-    memset((buf), '&', (bufSize));  \
-    IOHistReportInfo   *__info = (IOHistReportInfo *)(buf);  \
-    IOReportElement         *__elem;  \
-    IOHistogramReportValues *__rep;  \
-    if ((bufSize) >= HISTREPORT_BUFSIZE(nbuckets)) {  \
-	__info->bucketWidth = (bktSize);  \
-	for (uint16_t __no = 0; __no < (nbuckets); __no++) {  \
-	    __elem =  &(__info->elem[__no]);  \
-	    __rep = (IOHistogramReportValues *) &(__elem->values);  \
-	    __elem->provider_id = (providerID);  \
-	    __elem->channel_id = (channelID);  \
-	    __elem->channel_type.report_format = kIOReportFormatHistogram;  \
-	    __elem->channel_type.reserved = 0;  \
-	    __elem->channel_type.categories = (cats);  \
-	    __elem->channel_type.nelements = (nbuckets);  \
-	    __elem->channel_type.element_idx = __no;  \
-	    __elem->timestamp = 0;  \
-	    memset(__rep, '\0', sizeof(IOHistogramReportValues)); \
-	}  \
-    }  \
-    else {  \
-	IOREPORT_ABORT("bufSize is smaller than the required size\n");  \
-    }  \
-} while (0)
+#define HISTREPORT_INIT(nbuckets, bktSize, buf, bufSize, providerID,           \
+                        channelID, cats)                                       \
+  do {                                                                         \
+    memset((buf), '&', (bufSize));                                             \
+    IOHistReportInfo *__info = (IOHistReportInfo *)(buf);                      \
+    IOReportElement *__elem;                                                   \
+    IOHistogramReportValues *__rep;                                            \
+    if ((bufSize) >= HISTREPORT_BUFSIZE(nbuckets)) {                           \
+      __info->bucketWidth = (bktSize);                                         \
+      for (uint16_t __no = 0; __no < (nbuckets); __no++) {                     \
+        __elem = &(__info->elem[__no]);                                        \
+        __rep = (IOHistogramReportValues *)&(__elem->values);                  \
+        __elem->provider_id = (providerID);                                    \
+        __elem->channel_id = (channelID);                                      \
+        __elem->channel_type.report_format = kIOReportFormatHistogram;         \
+        __elem->channel_type.reserved = 0;                                     \
+        __elem->channel_type.categories = (cats);                              \
+        __elem->channel_type.nelements = (nbuckets);                           \
+        __elem->channel_type.element_idx = __no;                               \
+        __elem->timestamp = 0;                                                 \
+        memset(__rep, '\0', sizeof(IOHistogramReportValues));                  \
+      }                                                                        \
+    } else {                                                                   \
+      IOREPORT_ABORT("bufSize is smaller than the required size\n");           \
+    }                                                                          \
+  } while (0)
 
 /*
  * Update histogram with a new value.
@@ -634,35 +633,34 @@ do {  \
  *      void* hist_buf - pointer to memory initialized by HISTREPORT_INIT()
  *        int64_t value - new value to add to the histogram
  */
-#define HISTREPORT_TALLYVALUE(hist_buf, value) \
-do {  \
-    IOHistReportInfo   *__info = (IOHistReportInfo *)(hist_buf);  \
-    IOReportElement         *__elem;  \
-    IOHistogramReportValues *__rep;  \
-    for (unsigned __no = 0; __no < __info->elem[0].channel_type.nelements; __no++) {  \
-	if ((value) <= __info->bucketWidth * (__no+1)) {  \
-	    __elem =  &(__info->elem[__no]);  \
-	    __rep = (IOHistogramReportValues *) &(__elem->values);  \
-	    if (__rep->bucket_hits == 0) {  \
-	        __rep->bucket_min = __rep->bucket_max = (value);  \
-	    }  \
-	    else if ((value) < __rep->bucket_min) {  \
-	        __rep->bucket_min = (value);  \
-	    }  \
-	    else if ((value) > __rep->bucket_max) {  \
-	        __rep->bucket_max = (value);  \
-	    }  \
-	int64_t __sum = 0;  \
-	if (os_add_overflow(__rep->bucket_sum, (value), &__sum)) {  \
-	    __rep->bucket_sum = INT64_MAX;  \
-	} else {  \
-	    __rep->bucket_sum = __sum;  \
-	}  \
-	    __rep->bucket_hits++;  \
-	    break;  \
-	}  \
-    }  \
-} while (0)
+#define HISTREPORT_TALLYVALUE(hist_buf, value)                                 \
+  do {                                                                         \
+    IOHistReportInfo *__info = (IOHistReportInfo *)(hist_buf);                 \
+    IOReportElement *__elem;                                                   \
+    IOHistogramReportValues *__rep;                                            \
+    for (unsigned __no = 0; __no < __info->elem[0].channel_type.nelements;     \
+         __no++) {                                                             \
+      if ((value) <= __info->bucketWidth * (__no + 1)) {                       \
+        __elem = &(__info->elem[__no]);                                        \
+        __rep = (IOHistogramReportValues *)&(__elem->values);                  \
+        if (__rep->bucket_hits == 0) {                                         \
+          __rep->bucket_min = __rep->bucket_max = (value);                     \
+        } else if ((value) < __rep->bucket_min) {                              \
+          __rep->bucket_min = (value);                                         \
+        } else if ((value) > __rep->bucket_max) {                              \
+          __rep->bucket_max = (value);                                         \
+        }                                                                      \
+        int64_t __sum = 0;                                                     \
+        if (os_add_overflow(__rep->bucket_sum, (value), &__sum)) {             \
+          __rep->bucket_sum = INT64_MAX;                                       \
+        } else {                                                               \
+          __rep->bucket_sum = __sum;                                           \
+        }                                                                      \
+        __rep->bucket_hits++;                                                  \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 /*
  * Prepare a HistogramReport for
@@ -673,13 +671,13 @@ do {  \
  *      size_t size2cpy - filled in with the size of the buffer to copy out
  */
 
-#define HISTREPORT_UPDATEPREP(hist_buf, ptr2cpy, size2cpy) \
-do {  \
-    IOHistReportInfo   *__info = (IOHistReportInfo *)(hist_buf);  \
-    (size2cpy) = __info->elem[0].channel_type.nelements * sizeof(IOReportElement);  \
-    (ptr2cpy) =  (void *) &__info->elem[0];  \
-} while(0)
-
+#define HISTREPORT_UPDATEPREP(hist_buf, ptr2cpy, size2cpy)                     \
+  do {                                                                         \
+    IOHistReportInfo *__info = (IOHistReportInfo *)(hist_buf);                 \
+    (size2cpy) =                                                               \
+        __info->elem[0].channel_type.nelements * sizeof(IOReportElement);      \
+    (ptr2cpy) = (void *)&__info->elem[0];                                      \
+  } while (0)
 
 /*
  * Update the result field received as a parameter for kIOReportGetDimensions &
@@ -690,32 +688,35 @@ do {  \
  *                   void* result - configure/updateReport() 'result'
  */
 
-#define HISTREPORT_UPDATERES(hist_buf, action, result) \
-do {  \
-    IOHistReportInfo   *__info = (IOHistReportInfo *)(hist_buf);  \
-    int *__nElements = (int *)(result);  \
-    if (((action) == kIOReportGetDimensions) || ((action) == kIOReportCopyChannelData)) {  \
-	if (os_add_overflow(*__nElements, __info->elem[0].channel_type.nelements, __nElements)) {  \
-	    *__nElements = INT_MAX;  \
-	}  \
-    }  \
-} while (0)
+#define HISTREPORT_UPDATERES(hist_buf, action, result)                         \
+  do {                                                                         \
+    IOHistReportInfo *__info = (IOHistReportInfo *)(hist_buf);                 \
+    int *__nElements = (int *)(result);                                        \
+    if (((action) == kIOReportGetDimensions) ||                                \
+        ((action) == kIOReportCopyChannelData)) {                              \
+      if (os_add_overflow(*__nElements,                                        \
+                          __info->elem[0].channel_type.nelements,              \
+                          __nElements)) {                                      \
+        *__nElements = INT_MAX;                                                \
+      }                                                                        \
+    }                                                                          \
+  } while (0)
 
 /*
  * Get the 64-bit channel ID of a HistogramReport.
  *
  * void* hist_buf - ptr to memory initialized by HISTREPORT_INIT()
  */
-#define HISTREPORT_GETCHID(hist_buf)  \
-    (((IOHistReportInfo *)(hist_buf))->elem[0].channel_id)
+#define HISTREPORT_GETCHID(hist_buf)                                           \
+  (((IOHistReportInfo *)(hist_buf))->elem[0].channel_id)
 
 /*
  * Get the IOReportChannelType of a HistogramReport.
  *
  * void* hist_buf - ptr to memory initialized by HISTREPORT_INIT()
  */
-#define HISTREPORT_GETCHTYPE(hist_buf)  \
-    (*(uint64_t*)&(((IOHistReportInfo *)(hist_buf))->elem[0].channel_type))
+#define HISTREPORT_GETCHTYPE(hist_buf)                                         \
+  (*(uint64_t *)&(((IOHistReportInfo *)(hist_buf))->elem[0].channel_type))
 
 #ifdef __cplusplus
 }

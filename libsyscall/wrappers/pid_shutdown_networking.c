@@ -26,8 +26,6 @@
 /*
  * Wrapper for pid_shutdown_sockets.
  */
-int
-pid_shutdown_networking(int pid, int level)
-{
-	return pid_shutdown_sockets(pid, level);
+int pid_shutdown_networking(int pid, int level) {
+  return pid_shutdown_sockets(pid, level);
 }

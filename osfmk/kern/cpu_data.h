@@ -29,7 +29,7 @@
  * @OSF_COPYRIGHT@
  */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #ifndef _KERN_CPU_DATA_H_
 #define _KERN_CPU_DATA_H_
@@ -37,22 +37,23 @@
 #include <mach/mach_types.h>
 #include <sys/cdefs.h>
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
 #include <machine/cpu_data.h>
 
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
 __BEGIN_DECLS
 
-extern void             _disable_preemption(void);
-extern void             _disable_preemption_without_measurements(void);
-extern void             _enable_preemption(void);
+extern void _disable_preemption(void);
+extern void _disable_preemption_without_measurements(void);
+extern void _enable_preemption(void);
 
 #ifndef MACHINE_PREEMPTION_MACROS
-#define disable_preemption()                    _disable_preemption()
-#define disable_preemption_without_measurements() _disable_preemption_without_measurements()
-#define enable_preemption()                     _enable_preemption()
+#define disable_preemption() _disable_preemption()
+#define disable_preemption_without_measurements()                              \
+  _disable_preemption_without_measurements()
+#define enable_preemption() _enable_preemption()
 #endif
 
 #if SCHED_HYGIENE_DEBUG
@@ -62,6 +63,6 @@ extern void abandon_preemption_disable_measurement(void);
 
 __END_DECLS
 
-#endif  /* _KERN_CPU_DATA_H_ */
+#endif /* _KERN_CPU_DATA_H_ */
 
-#endif  /* XNU_KERNEL_PRIVATE */
+#endif /* XNU_KERNEL_PRIVATE */

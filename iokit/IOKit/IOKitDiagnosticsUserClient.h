@@ -3,14 +3,14 @@
 #include <IOKit/IOService.h>
 #include <IOKit/IOUserClient.h>
 
-
-class IOKitDiagnosticsClient : public IOUserClient2022
-{
-	OSDeclareDefaultStructors(IOKitDiagnosticsClient);
+class IOKitDiagnosticsClient : public IOUserClient2022 {
+  OSDeclareDefaultStructors(IOKitDiagnosticsClient);
 
 public:
-	static  IOUserClient * withTask(task_t owningTask);
-	virtual IOReturn       clientClose(void) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn       setProperties(OSObject * properties) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn       externalMethod(uint32_t selector, IOExternalMethodArgumentsOpaque * args) APPLE_KEXT_OVERRIDE;
+  static IOUserClient *withTask(task_t owningTask);
+  virtual IOReturn clientClose(void) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn setProperties(OSObject *properties) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn
+  externalMethod(uint32_t selector,
+                 IOExternalMethodArgumentsOpaque *args) APPLE_KEXT_OVERRIDE;
 };

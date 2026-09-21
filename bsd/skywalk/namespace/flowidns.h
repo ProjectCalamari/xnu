@@ -36,41 +36,41 @@
 typedef uint32_t flowidns_flowid_t;
 
 typedef enum {
-	FLOWIDNS_DOMAIN_MIN = 0,
-	FLOWIDNS_DOMAIN_IPSEC = FLOWIDNS_DOMAIN_MIN,
-	FLOWIDNS_DOMAIN_FLOWSWITCH,
-	FLOWIDNS_DOMAIN_INPCB,
-	FLOWIDNS_DOMAIN_PF,
-	FLOWIDNS_DOMAIN_MAX = FLOWIDNS_DOMAIN_PF
+  FLOWIDNS_DOMAIN_MIN = 0,
+  FLOWIDNS_DOMAIN_IPSEC = FLOWIDNS_DOMAIN_MIN,
+  FLOWIDNS_DOMAIN_FLOWSWITCH,
+  FLOWIDNS_DOMAIN_INPCB,
+  FLOWIDNS_DOMAIN_PF,
+  FLOWIDNS_DOMAIN_MAX = FLOWIDNS_DOMAIN_PF
 } flowidns_domain_id_t;
 
 struct flowidns_flow_key {
-	union {
-		struct in_addr  _v4;
-		struct in6_addr _v6;
-	} ffk_laddr; /* local IP address */
-	union {
-		struct in_addr  _v4;
-		struct in6_addr _v6;
-	} ffk_raddr; /* remote IP address */
-	union {
-		struct {
-			uint16_t _lport; /* local port */
-			uint16_t _rport; /* remote port */
-		} ffk_ports;
-		uint32_t ffk_spi; /* IPSec ESP/AH SPI */
-		uint32_t ffk_protoid; /* opaque protocol id */
-	};
-	uint8_t ffk_af; /* IP address family AF_INET* */
-	uint8_t ffk_proto; /* IP protocol IP_PROTO_* */
+  union {
+    struct in_addr _v4;
+    struct in6_addr _v6;
+  } ffk_laddr; /* local IP address */
+  union {
+    struct in_addr _v4;
+    struct in6_addr _v6;
+  } ffk_raddr; /* remote IP address */
+  union {
+    struct {
+      uint16_t _lport; /* local port */
+      uint16_t _rport; /* remote port */
+    } ffk_ports;
+    uint32_t ffk_spi;     /* IPSec ESP/AH SPI */
+    uint32_t ffk_protoid; /* opaque protocol id */
+  };
+  uint8_t ffk_af;    /* IP address family AF_INET* */
+  uint8_t ffk_proto; /* IP protocol IP_PROTO_* */
 };
 
-#define ffk_laddr_v4    ffk_laddr._v4
-#define ffk_laddr_v6    ffk_laddr._v6
-#define ffk_raddr_v4    ffk_raddr._v4
-#define ffk_raddr_v6    ffk_raddr._v6
-#define ffk_lport       ffk_ports._lport
-#define ffk_rport       ffk_ports._rport
+#define ffk_laddr_v4 ffk_laddr._v4
+#define ffk_laddr_v6 ffk_laddr._v6
+#define ffk_raddr_v4 ffk_raddr._v4
+#define ffk_raddr_v6 ffk_raddr._v6
+#define ffk_lport ffk_ports._lport
+#define ffk_rport ffk_ports._rport
 
 extern int flowidns_init(void);
 extern void flowidns_fini(void);
@@ -79,7 +79,8 @@ extern void flowidns_fini(void);
  * Allocate a globally unique flow identifier.
  */
 extern void flowidns_allocate_flowid(flowidns_domain_id_t domain,
-    struct flowidns_flow_key *flow_key, flowidns_flowid_t *flowid);
+                                     struct flowidns_flow_key *flow_key,
+                                     flowidns_flowid_t *flowid);
 
 /*
  * Release an allocated flow identifier.

@@ -30,25 +30,22 @@
 #define _RSA_H
 
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <corecrypto/ccrsa.h>
 #define RSA_MAX_KEY_BITSIZE 4096
 
-typedef struct{
-	ccrsa_pub_ctx_decl(ccn_sizeof(RSA_MAX_KEY_BITSIZE), key);
+typedef struct {
+  ccrsa_pub_ctx_decl(ccn_sizeof(RSA_MAX_KEY_BITSIZE), key);
 } rsa_pub_ctx;
 
-int rsa_make_pub(rsa_pub_ctx *pub,
-    size_t exp_nbytes, const uint8_t *exp,
-    size_t mod_nbytes, const uint8_t *mod);
+int rsa_make_pub(rsa_pub_ctx *pub, size_t exp_nbytes, const uint8_t *exp,
+                 size_t mod_nbytes, const uint8_t *mod);
 
-int rsa_verify_pkcs1v15(rsa_pub_ctx *pub, const uint8_t *oid,
-    size_t digest_len, const uint8_t *digest,
-    size_t sig_len, const uint8_t *sig,
-    bool *valid);
+int rsa_verify_pkcs1v15(rsa_pub_ctx *pub, const uint8_t *oid, size_t digest_len,
+                        const uint8_t *digest, size_t sig_len,
+                        const uint8_t *sig, bool *valid);
 
 #if defined(__cplusplus)
 }

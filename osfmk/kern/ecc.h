@@ -29,9 +29,9 @@
 #pragma once
 
 #include <mach/kern_return.h>
+#include <mach/vm_types.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include <mach/vm_types.h>
 
 __BEGIN_DECLS
 
@@ -48,15 +48,16 @@ extern uint32_t vm_ecc_max_db_pages;
 
 /* Old ECC logging mechanism */
 
-#define ECC_EVENT_INFO_DATA_ENTRIES     8
+#define ECC_EVENT_INFO_DATA_ENTRIES 8
 struct ecc_event {
-	uint8_t         id;     // ID of memory (e.g. L2C), platform-specific
-	uint8_t         count;  // Of uint64_t's used, starting at index 0
-	uint64_t        data[ECC_EVENT_INFO_DATA_ENTRIES] __attribute__((aligned(8))); // Event-specific data
+  uint8_t id;    // ID of memory (e.g. L2C), platform-specific
+  uint8_t count; // Of uint64_t's used, starting at index 0
+  uint64_t data[ECC_EVENT_INFO_DATA_ENTRIES]
+      __attribute__((aligned(8))); // Event-specific data
 };
 
 #ifdef KERNEL_PRIVATE
-extern kern_return_t    ecc_log_record_event(const struct ecc_event *ev);
+extern kern_return_t ecc_log_record_event(const struct ecc_event *ev);
 #endif
 
 #ifdef XNU_KERNEL_PRIVATE
@@ -65,8 +66,8 @@ extern kern_return_t    ecc_log_record_event(const struct ecc_event *ev);
 #define ECC_PANIC_PAGE_MAGIC 0xEC
 #define ECC_PANIC_PAGE_SIGN ((1ULL << 63) | (ECC_PANIC_PAGE_MAGIC))
 #define ECC_PANIC_PAGE_MASK ((1ULL << 63) | (PAGE_MASK))
-extern kern_return_t    ecc_log_get_next_event(struct ecc_event *ev);
-extern uint32_t         ecc_log_get_correction_count(void);
+extern kern_return_t ecc_log_get_next_event(struct ecc_event *ev);
+extern uint32_t ecc_log_get_correction_count(void);
 #endif
 
 #define ECC_TESTING (DEVELOPMENT || DEBUG)
@@ -77,29 +78,28 @@ extern uint32_t         ecc_log_get_correction_count(void);
 #define VM_ECC_PAGE_POISON_GRANULE (1 << VM_ECC_PAGE_POISON_GRANULE_SHIFT)
 
 /* Flags to describe ECC memory errors */
-__options_decl(ecc_flags_t, uint32_t, {
-	ECC_NONE                        = 0x00000000,
-	/* An error is correctable (1) or uncorrectable (0). */
-	ECC_IS_CORRECTABLE              = 0x00000001,
-	/* The database is corrupt. */
-	ECC_DB_CORRUPTED                = 0x00000002,
-	/* The error was injected for testing purposes. */
-	ECC_IS_TEST_ERROR               = 0x00000004,
-	/* Do not trigger a CA report, just record to the DB (for testing purposes) */
-	ECC_DB_ONLY                     = 0x00000008,
-	/* Filter out the given address from the DB*/
-	ECC_REMOVE_ADDR                     = 0x00000010
-});
+__options_decl(ecc_flags_t, uint32_t,
+               {ECC_NONE = 0x00000000,
+                /* An error is correctable (1) or uncorrectable (0). */
+                ECC_IS_CORRECTABLE = 0x00000001,
+                /* The database is corrupt. */
+                ECC_DB_CORRUPTED = 0x00000002,
+                /* The error was injected for testing purposes. */
+                ECC_IS_TEST_ERROR = 0x00000004,
+                /* Do not trigger a CA report, just record to the DB (for
+                   testing purposes) */
+                ECC_DB_ONLY = 0x00000008,
+                /* Filter out the given address from the DB*/
+                ECC_REMOVE_ADDR = 0x00000010});
 
 /**
  * ECC versions.
  */
-__options_decl(ecc_version_t, uint32_t, {
-	ECC_V1,
+__options_decl(ecc_version_t, uint32_t,
+               {ECC_V1,
 
-	// Metadata
-	ECC_NUM_VERSIONS
-});
+                // Metadata
+                ECC_NUM_VERSIONS});
 
 /**
  * ECC event descriptor.
@@ -110,75 +110,86 @@ __options_decl(ecc_version_t, uint32_t, {
  * the field corresponds only to hardware that has been deprecated.
  */
 typedef struct {
-	/* Version of this struct. */
-	ecc_version_t version;
-	/* Flags describing the reported error. */
-	ecc_flags_t flags;
-	/* Physical address of failure */
-	uint64_t physaddr;
-	/* Number of CEs reported at physaddr */
-	uint32_t ce_count;
-	/* Vendor ID */
-	uint32_t vendor;
-	/* Reserved for future extension to report row, column, bank, etc. */
-	uint32_t reserved[4];
+  /* Version of this struct. */
+  ecc_version_t version;
+  /* Flags describing the reported error. */
+  ecc_flags_t flags;
+  /* Physical address of failure */
+  uint64_t physaddr;
+  /* Number of CEs reported at physaddr */
+  uint32_t ce_count;
+  /* Vendor ID */
+  uint32_t vendor;
+  /* Reserved for future extension to report row, column, bank, etc. */
+  uint32_t reserved[4];
 } ecc_event_t;
-_Static_assert(sizeof(ecc_event_t) == 10 * sizeof(uint32_t), "ecc_event_t size must be updated in memory_error_notification.defs");
+_Static_assert(
+    sizeof(ecc_event_t) == 10 * sizeof(uint32_t),
+    "ecc_event_t size must be updated in memory_error_notification.defs");
 
 /**
  * platform_error_handler_ecc_poll_t is the type of callback registered by the
  * platform error handler that xnu can use to poll for ECC data.
  */
-typedef int (*platform_error_handler_ecc_poll_t)(uint64_t *addrs, uint32_t *error_count);
-kern_return_t kern_ecc_poll_register(platform_error_handler_ecc_poll_t poll_func, uint32_t max_errors);
+typedef int (*platform_error_handler_ecc_poll_t)(uint64_t *addrs,
+                                                 uint32_t *error_count);
+kern_return_t
+kern_ecc_poll_register(platform_error_handler_ecc_poll_t poll_func,
+                       uint32_t max_errors);
 
 /* Flags to describe MCC memory errors */
-__options_decl(mcc_flags_t, uint32_t, {
-	MCC_NONE                        = 0x00000000,
-	MCC_IS_SINGLE_BIT               = 0x00000001,
-	MCC_IS_MULTI_BIT                = 0x00000002,
-});
+__options_decl(mcc_flags_t, uint32_t,
+               {
+                   MCC_NONE = 0x00000000,
+                   MCC_IS_SINGLE_BIT = 0x00000001,
+                   MCC_IS_MULTI_BIT = 0x00000002,
+               });
 
 /**
  * MCC ECC versions.
  */
 typedef enum {
-	MCC_ECC_V1,
+  MCC_ECC_V1,
 
-	// Metadata
-	MCC_ECC_NUM_VERSIONS
+  // Metadata
+  MCC_ECC_NUM_VERSIONS
 } mcc_ecc_version_t;
 
 /**
  * MCC ECC event descriptor.
  *
- * @note If a new MCC ECC version has been added, because i.e. future hardware must log new or different data,
- * new fields should be appended to this struct to represent the new data.  No fields should be
- * deleted from this struct unless the field corresponds only to hardware that has been deprecated.
+ * @note If a new MCC ECC version has been added, because i.e. future hardware
+ * must log new or different data, new fields should be appended to this struct
+ * to represent the new data.  No fields should be deleted from this struct
+ * unless the field corresponds only to hardware that has been deprecated.
  */
 typedef struct {
-	/* Version of this struct. */
-	mcc_ecc_version_t version;
-	/* Flags used to describe the error. */
-	mcc_flags_t flags;
-	/* Interrupt status at the time of the MCC error. */
-	uint32_t status;
-	/* AMCC on which the error occurred. */
-	uint32_t amcc;
-	/* Plane of the AMCC on which the error occurred. */
-	uint32_t plane;
-	/* MemCache error Bank of first one bit error. */
-	uint32_t bank;
-	/* MemCache error Way of first one bit error. */
-	uint32_t way;
-	/* MemCache error Index of first one bit error. */
-	uint32_t index;
-	/* Indicates whether the error is in upper half cache line or lower half cache line. */
-	uint32_t bit_off_cl;
-	/* MemCache one bit error bit offset of first one bit error with in half cache line. */
-	uint32_t bit_off_within_hcl;
+  /* Version of this struct. */
+  mcc_ecc_version_t version;
+  /* Flags used to describe the error. */
+  mcc_flags_t flags;
+  /* Interrupt status at the time of the MCC error. */
+  uint32_t status;
+  /* AMCC on which the error occurred. */
+  uint32_t amcc;
+  /* Plane of the AMCC on which the error occurred. */
+  uint32_t plane;
+  /* MemCache error Bank of first one bit error. */
+  uint32_t bank;
+  /* MemCache error Way of first one bit error. */
+  uint32_t way;
+  /* MemCache error Index of first one bit error. */
+  uint32_t index;
+  /* Indicates whether the error is in upper half cache line or lower half cache
+   * line. */
+  uint32_t bit_off_cl;
+  /* MemCache one bit error bit offset of first one bit error with in half cache
+   * line. */
+  uint32_t bit_off_within_hcl;
 } mcc_ecc_event_t;
-_Static_assert(sizeof(mcc_ecc_event_t) == 10 * sizeof(uint32_t), "ecc_event_t size must be updated in memory_error_notification.defs");
+_Static_assert(
+    sizeof(mcc_ecc_event_t) == 10 * sizeof(uint32_t),
+    "ecc_event_t size must be updated in memory_error_notification.defs");
 
 #if KERNEL_PRIVATE
 
@@ -204,13 +215,16 @@ _Static_assert(sizeof(mcc_ecc_event_t) == 10 * sizeof(uint32_t), "ecc_event_t si
  *
  * @returns KERN_SUCCESS if logging supported by hw, KERN_FAILURE if not
  */
-extern kern_return_t ecc_log_memory_error(uint64_t physical_address, ecc_flags_t ecc_flags);
-extern kern_return_t ecc_log_memory_error_internal(uint64_t physical_address, ecc_flags_t ecc_flags);
+extern kern_return_t ecc_log_memory_error(uint64_t physical_address,
+                                          ecc_flags_t ecc_flags);
+extern kern_return_t ecc_log_memory_error_internal(uint64_t physical_address,
+                                                   ecc_flags_t ecc_flags);
 
 /*
  * Used to report delayed errors, scraped after ECC is enabled.
  */
-extern kern_return_t ecc_log_memory_error_delayed(uint64_t physical_address, ecc_flags_t ecc_flags);
+extern kern_return_t ecc_log_memory_error_delayed(uint64_t physical_address,
+                                                  ecc_flags_t ecc_flags);
 
 /**
  * Logs a correctable memory error.
@@ -224,7 +238,8 @@ extern kern_return_t ecc_log_memory_error_delayed(uint64_t physical_address, ecc
  *
  * @returns KERN_SUCCESS if logging supported by hw, KERN_FAILURE if not
  */
-kern_return_t ecc_log_memory_error_ce(uint64_t physical_address, ecc_flags_t ecc_flags, uint32_t ce_count);
+kern_return_t ecc_log_memory_error_ce(uint64_t physical_address,
+                                      ecc_flags_t ecc_flags, uint32_t ce_count);
 
 /**
  * Logs an MCC error.
@@ -232,8 +247,7 @@ kern_return_t ecc_log_memory_error_ce(uint64_t physical_address, ecc_flags_t ecc
  * @param event Event to be logged
  * @returns KERN_SUCCESS on success, KERN_FAILURE otherwise
  */
-kern_return_t
-mcc_log_memory_error(mcc_ecc_event_t event);
+kern_return_t mcc_log_memory_error(mcc_ecc_event_t event);
 
 #endif /* KERNEL_PRIVATE */
 

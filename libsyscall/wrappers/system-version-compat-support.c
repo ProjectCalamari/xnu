@@ -30,17 +30,17 @@
 
 #if SYSTEM_VERSION_COMPAT_ENABLED
 
-
 #include <stdbool.h>
 #include <sys/param.h>
 #include <sys/types.h>
 
-__attribute__((visibility("hidden")))
-bool (*system_version_compat_check_path_suffix)(const char *orig_path) = NULL;
-system_version_compat_mode_t system_version_compat_mode = SYSTEM_VERSION_COMPAT_MODE_DISABLED;
+__attribute__((visibility("hidden"))) bool (
+    *system_version_compat_check_path_suffix)(const char *orig_path) = NULL;
+system_version_compat_mode_t system_version_compat_mode =
+    SYSTEM_VERSION_COMPAT_MODE_DISABLED;
 
-__attribute__((visibility("hidden")))
-int (*system_version_compat_open_shim)(int opened_fd, int openat_fd, const char *orig_path, int oflag, mode_t mode,
+__attribute__((visibility("hidden"))) int (*system_version_compat_open_shim)(
+    int opened_fd, int openat_fd, const char *orig_path, int oflag, mode_t mode,
     int (*close_syscall)(int), int (*open_syscall)(const char *, int, mode_t),
     int (*openat_syscall)(int, const char *, int, mode_t),
     int (*fcntl_syscall)(int, int, long)) = NULL;

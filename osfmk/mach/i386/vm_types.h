@@ -67,7 +67,7 @@
 #ifndef _MACH_I386_VM_TYPES_H_
 #define _MACH_I386_VM_TYPES_H_
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 
 #ifndef ASSEMBLER
 
@@ -92,18 +92,18 @@
  *
  * New use of these types is discouraged.
  */
-typedef __darwin_natural_t      natural_t;
-typedef int                     integer_t;
+typedef __darwin_natural_t natural_t;
+typedef int integer_t;
 
 /*
  * A vm_offset_t is a type-neutral pointer,
  * e.g. an offset into a virtual memory space.
  */
 #ifdef __LP64__
-typedef uintptr_t               vm_offset_t __kernel_ptr_semantics;
-#else   /* __LP64__ */
-typedef natural_t               vm_offset_t __kernel_ptr_semantics;
-#endif  /* __LP64__ */
+typedef uintptr_t vm_offset_t __kernel_ptr_semantics;
+#else  /* __LP64__ */
+typedef natural_t vm_offset_t __kernel_ptr_semantics;
+#endif /* __LP64__ */
 
 /*
  * A vm_size_t is the proper type for e.g.
@@ -111,10 +111,10 @@ typedef natural_t               vm_offset_t __kernel_ptr_semantics;
  * vm_offset_t entities.
  */
 #ifdef __LP64__
-typedef uintptr_t               vm_size_t;
-#else   /* __LP64__ */
-typedef natural_t               vm_size_t;
-#endif  /* __LP64__ */
+typedef uintptr_t vm_size_t;
+#else  /* __LP64__ */
+typedef natural_t vm_size_t;
+#endif /* __LP64__ */
 
 /*
  * This new type is independent of a particular vm map's
@@ -123,15 +123,15 @@ typedef natural_t               vm_size_t;
  * where the size of the map is not known - or we don't
  * want to have to distinguish.
  */
-typedef uint64_t                mach_vm_address_t __kernel_ptr_semantics;
-typedef uint64_t                mach_vm_offset_t __kernel_ptr_semantics;
-typedef uint64_t                mach_vm_size_t;
+typedef uint64_t mach_vm_address_t __kernel_ptr_semantics;
+typedef uint64_t mach_vm_offset_t __kernel_ptr_semantics;
+typedef uint64_t mach_vm_size_t;
 
-typedef uint64_t                vm_map_offset_t __kernel_ptr_semantics;
-typedef uint64_t                vm_map_address_t __kernel_ptr_semantics;
-typedef uint64_t                vm_map_size_t;
+typedef uint64_t vm_map_offset_t __kernel_ptr_semantics;
+typedef uint64_t vm_map_address_t __kernel_ptr_semantics;
+typedef uint64_t vm_map_size_t;
 
-typedef mach_vm_address_t       mach_port_context_t;
+typedef mach_vm_address_t mach_port_context_t;
 
 #if defined(MACH_KERNEL_PRIVATE) || KERNEL_VM_TEST
 
@@ -139,13 +139,13 @@ typedef mach_vm_address_t       mach_port_context_t;
  * These are types used internal to Mach to implement the
  * legacy 32-bit VM APIs published by the kernel.
  */
-typedef uint32_t                vm32_address_t;
-typedef uint32_t                vm32_offset_t;
-typedef uint32_t                vm32_size_t;
+typedef uint32_t vm32_address_t;
+typedef uint32_t vm32_offset_t;
+typedef uint32_t vm32_size_t;
 
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
-#endif  /* ASSEMBLER */
+#endif /* ASSEMBLER */
 
 /*
  * If composing messages by hand (please do not)
@@ -154,4 +154,4 @@ typedef uint32_t                vm32_size_t;
 
 #endif /* defined (__i386__) || defined (__x86_64__) */
 
-#endif  /* _MACH_I386_VM_TYPES_H_ */
+#endif /* _MACH_I386_VM_TYPES_H_ */

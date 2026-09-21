@@ -43,7 +43,8 @@
 #include <vm/vm_map.h>
 
 #define MWL_MIN_LINK_INFO_SIZE sizeof(struct mwl_info_hdr)
-#define MWL_MAX_LINK_INFO_SIZE (64 * 1024 * 1024)   /* just a guess for now, may have to increase */
+#define MWL_MAX_LINK_INFO_SIZE                                                 \
+  (64 * 1024 * 1024) /* just a guess for now, may have to increase */
 
 #endif /* KERNEL_PRIVATE */
 

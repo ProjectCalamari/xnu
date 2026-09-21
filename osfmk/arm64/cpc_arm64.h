@@ -26,21 +26,22 @@
 
 #pragma once
 
+#include <kern/cpc.h>
 #include <os/base.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <kern/cpc.h>
 
-__enum_closed_decl(cpc_event_policy_t, unsigned int, {
-	CPC_EVPOL_DENY_ALL = 0,
-	CPC_EVPOL_ALLOW_ALL,
-	CPC_EVPOL_RESTRICT_TO_KNOWN,
+__enum_closed_decl(cpc_event_policy_t, unsigned int,
+                   {
+                       CPC_EVPOL_DENY_ALL = 0,
+                       CPC_EVPOL_ALLOW_ALL,
+                       CPC_EVPOL_RESTRICT_TO_KNOWN,
 #if CPC_INSECURE
-	CPC_EVPOL_DEFAULT = CPC_EVPOL_ALLOW_ALL,
-#else // CPC_INSECURE
-	CPC_EVPOL_DEFAULT = CPC_EVPOL_RESTRICT_TO_KNOWN,
+                       CPC_EVPOL_DEFAULT = CPC_EVPOL_ALLOW_ALL,
+#else  // CPC_INSECURE
+                       CPC_EVPOL_DEFAULT = CPC_EVPOL_RESTRICT_TO_KNOWN,
 #endif // !CPC_INSECURE
-});
+                   });
 
 cpc_event_policy_t cpc_get_event_policy(void);
 

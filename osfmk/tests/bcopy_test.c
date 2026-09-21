@@ -30,33 +30,30 @@
 
 #include <kern/bits.h>
 
-static int
-sysctl_test_memmove(__unused int64_t in, __unused int64_t *out)
-{
-	// Ensure our platform-specific memmove implements correct semantics
-	extern void *__xnu_memmove(
-		void *dst __sized_by(n),
-		const void *src __sized_by(n),
-		size_t n) __asm("_memmove");
+static int sysctl_test_memmove(__unused int64_t in, __unused int64_t *out) {
+  // Ensure our platform-specific memmove implements correct semantics
+  extern void *__xnu_memmove(void *dst __sized_by(n),
+                             const void *src __sized_by(n),
+                             size_t n) __asm("_memmove");
 
-	// Given two buffers
-	int dest = 0;
-	int source = 42;
-	// When I call our platform-specific memmove implementation
-	void* memmove_ret = __xnu_memmove(&dest, &source, sizeof(int));
-	// Then the value of `src` has been copied to `dst`
-	if (dest != 42) {
-		return KERN_FAILURE;
-	}
-	// And `src` is unmodified
-	if (source != 42) {
-		return KERN_FAILURE;
-	}
-	// And the return value is the `dest` pointer we passed in
-	if (memmove_ret != &dest) {
-		return KERN_FAILURE;
-	}
-	return KERN_SUCCESS;
+  // Given two buffers
+  int dest = 0;
+  int source = 42;
+  // When I call our platform-specific memmove implementation
+  void *memmove_ret = __xnu_memmove(&dest, &source, sizeof(int));
+  // Then the value of `src` has been copied to `dst`
+  if (dest != 42) {
+    return KERN_FAILURE;
+  }
+  // And `src` is unmodified
+  if (source != 42) {
+    return KERN_FAILURE;
+  }
+  // And the return value is the `dest` pointer we passed in
+  if (memmove_ret != &dest) {
+    return KERN_FAILURE;
+  }
+  return KERN_SUCCESS;
 }
 
 SYSCTL_TEST_REGISTER(test_memmove, sysctl_test_memmove);

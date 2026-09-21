@@ -56,10 +56,6 @@
  */
 #include <mach/mach.h>
 
-void
-mig_deallocate(vm_address_t addr, vm_size_t size)
-{
-	(void)vm_deallocate(mach_task_self_,
-	    addr,
-	    size);
+void mig_deallocate(vm_address_t addr, vm_size_t size) {
+  (void)vm_deallocate(mach_task_self_, addr, size);
 }

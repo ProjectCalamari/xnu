@@ -33,21 +33,17 @@
 #include <darwintest.h>
 #include <darwintest_utils.h>
 
-T_GLOBAL_META(
-	T_META_RUN_CONCURRENTLY(true),
-	T_META_NAMESPACE("xnu.vfs"),
-	T_META_OWNER("chrisjd")
-	);
+T_GLOBAL_META(T_META_RUN_CONCURRENTLY(true), T_META_NAMESPACE("xnu.vfs"),
+              T_META_OWNER("chrisjd"));
 
-T_DECL(read_nullbuf, "read into a NULL buffer should fail")
-{
-	int fd;
-	ssize_t result;
+T_DECL(read_nullbuf, "read into a NULL buffer should fail") {
+  int fd;
+  ssize_t result;
 
-	fd = open("/etc/passwd", O_RDONLY);
-	T_ASSERT_NE(fd, -1, "open /etc/passwd for reading");
+  fd = open("/etc/passwd", O_RDONLY);
+  T_ASSERT_NE(fd, -1, "open /etc/passwd for reading");
 
-	result = read(fd, NULL, 8);
-	T_ASSERT_EQ(result, -1, "expected to fail");
-	T_ASSERT_EQ(errno, EFAULT, "should have errno == EFAULT");
+  result = read(fd, NULL, 8);
+  T_ASSERT_EQ(result, -1, "expected to fail");
+  T_ASSERT_EQ(errno, EFAULT, "should have errno == EFAULT");
 }

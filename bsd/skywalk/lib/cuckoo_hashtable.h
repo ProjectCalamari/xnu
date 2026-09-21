@@ -37,7 +37,7 @@ SYSCTL_DECL(_kern_skywalk_libcuckoo);
  *
  * Cuckoo_hashtable is resizable, multi-reader/multi-write thread safe.
  */
-#define CUCKOO_HASHTABLE_ENTRIES_MAX    (1<<24)
+#define CUCKOO_HASHTABLE_ENTRIES_MAX (1 << 24)
 
 /*
  * Cuckoo_node is embedded in the object associated by cuckoo_hashtable,
@@ -52,12 +52,12 @@ SYSCTL_DECL(_kern_skywalk_libcuckoo);
  *
  */
 struct cuckoo_node {
-	struct cuckoo_node *next;
+  struct cuckoo_node *next;
 };
 
 #ifndef container_of
-#define container_of(ptr, type, member) \
-	((type*)(((uintptr_t)ptr) - offsetof(type, member)))
+#define container_of(ptr, type, member)                                        \
+  ((type *)(((uintptr_t)ptr) - offsetof(type, member)))
 #endif
 
 struct cuckoo_hashtable;
@@ -68,16 +68,16 @@ typedef void (*cuckoo_obj_retain_func)(struct cuckoo_node *);
 typedef void (*cuckoo_obj_release_func)(struct cuckoo_node *);
 
 struct cuckoo_hashtable_params {
-	size_t cht_capacity;
-	cuckoo_obj_cmp_func cht_obj_cmp;
-	cuckoo_obj_retain_func cht_obj_retain;
-	cuckoo_obj_release_func cht_obj_release;
+  size_t cht_capacity;
+  cuckoo_obj_cmp_func cht_obj_cmp;
+  cuckoo_obj_retain_func cht_obj_retain;
+  cuckoo_obj_release_func cht_obj_release;
 };
 
 __BEGIN_DECLS
 
-struct cuckoo_hashtable * cuckoo_hashtable_create(
-	struct cuckoo_hashtable_params *p);
+struct cuckoo_hashtable *
+cuckoo_hashtable_create(struct cuckoo_hashtable_params *p);
 void cuckoo_hashtable_free(struct cuckoo_hashtable *ht);
 
 size_t cuckoo_hashtable_entries(struct cuckoo_hashtable *h);
@@ -86,19 +86,20 @@ uint32_t cuckoo_hashtable_load_factor(struct cuckoo_hashtable *h);
 size_t cuckoo_hashtable_memory_footprint(struct cuckoo_hashtable *h);
 void cuckoo_hashtable_try_shrink(struct cuckoo_hashtable *h);
 
-int cuckoo_hashtable_add_with_hash(struct cuckoo_hashtable *h, struct cuckoo_node *node,
-    uint32_t key);
+int cuckoo_hashtable_add_with_hash(struct cuckoo_hashtable *h,
+                                   struct cuckoo_node *node, uint32_t key);
 int cuckoo_hashtable_del(struct cuckoo_hashtable *h, struct cuckoo_node *node,
-    uint32_t key);
+                         uint32_t key);
 struct cuckoo_node *cuckoo_hashtable_find_with_hash(struct cuckoo_hashtable *h,
-    void *key, uint32_t hv);
+                                                    void *key, uint32_t hv);
 
 /*
  * There is no guarantee that keys concurrently operated would be returned by
  * walk function. But walk function won't return invalid key/node pairs.
  */
 void cuckoo_hashtable_foreach(struct cuckoo_hashtable *ht,
-    void (^handler)(struct cuckoo_node *node, uint32_t hv));
+                              void (^handler)(struct cuckoo_node *node,
+                                              uint32_t hv));
 
 #if (DEVELOPMENT || DEBUG)
 void cht_test_init(void);

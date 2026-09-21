@@ -29,10 +29,10 @@
 #ifndef _KERNEL_TELEMETRY_H_
 #define _KERNEL_TELEMETRY_H_
 
+#include <kern/thread.h>
+#include <mach/mach_types.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include <mach/mach_types.h>
-#include <kern/thread.h>
 
 __BEGIN_DECLS
 
@@ -44,26 +44,20 @@ __BEGIN_DECLS
 #define TELEMETRY_CMD_VOUCHER_STAIN TELEMETRY_CMD_VOUCHER_NAME
 
 enum telemetry_pmi {
-	TELEMETRY_PMI_NONE,
-	TELEMETRY_PMI_INSTRS,
-	TELEMETRY_PMI_CYCLES,
+  TELEMETRY_PMI_NONE,
+  TELEMETRY_PMI_INSTRS,
+  TELEMETRY_PMI_CYCLES,
 };
 #define TELEMETRY_CMD_PMI_SETUP 3
 
 #if XNU_KERNEL_PRIVATE
 
 /* implemented in OSKextLib.cpp */
-extern void telemetry_backtrace_add_kexts(
-	char                 *buf,
-	size_t                buflen,
-	uintptr_t            *frames,
-	uint32_t              framecnt);
+extern void telemetry_backtrace_add_kexts(char *buf, size_t buflen,
+                                          uintptr_t *frames, uint32_t framecnt);
 
-extern void telemetry_backtrace_to_string(
-	char                 *buf,
-	size_t                buflen,
-	uint32_t              tot,
-	uintptr_t            *frames);
+extern void telemetry_backtrace_to_string(char *buf, size_t buflen,
+                                          uint32_t tot, uintptr_t *frames);
 
 extern void telemetry_init(void);
 
@@ -71,7 +65,8 @@ extern void compute_telemetry(void *);
 
 extern void telemetry_ast(thread_t thread, uint32_t reasons);
 
-extern int telemetry_kernel_gather(user_addr_t user_buffer, uint32_t *user_length);
+extern int telemetry_kernel_gather(user_addr_t user_buffer,
+                                   uint32_t *user_length);
 extern int telemetry_gather(user_addr_t buffer, uint32_t *length, bool mark);
 
 extern int telemetry_pmi_setup(enum telemetry_pmi pmi_type, uint64_t interval);

@@ -26,34 +26,36 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <mach/vm_param.h>
 #include "kasan-tbi.h"
+#include <mach/vm_param.h>
 
 #ifndef _KASAN_TBI_ARM64_H_
 #define _KASAN_TBI_ARM64_H_
 
 #if KASAN_LIGHT
-#define STOLEN_MEM_PERCENT      5UL
+#define STOLEN_MEM_PERCENT 5UL
 #else
-#define STOLEN_MEM_PERCENT      7UL
+#define STOLEN_MEM_PERCENT 7UL
 #endif /* KASAN_LIGHT */
 /* No need for quarantine with KASAN-TBI */
-#define STOLEN_MEM_BYTES            MiB(20)
+#define STOLEN_MEM_BYTES MiB(20)
 
 /* Defined in makedefs/MakeInc.def */
 #ifndef KASAN_OFFSET_ARM64
-#define KASAN_OFFSET_ARM64      0xf000000000000000ULL
-#endif  /* KASAN_OFFSET_ARM64 */
+#define KASAN_OFFSET_ARM64 0xf000000000000000ULL
+#endif /* KASAN_OFFSET_ARM64 */
 
 #if defined(ARM_LARGE_MEMORY)
-#define KASAN_SHADOW_MIN        (VM_MAX_KERNEL_ADDRESS+1)
-#define KASAN_SHADOW_MAX        0xffffffffffffffffULL
-#elif defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR)
-#define KASAN_SHADOW_MIN        0xfffffffdc0000000ULL
-#define KASAN_SHADOW_MAX        0xffffffffc0000000ULL
-#else /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR) */
-#define KASAN_SHADOW_MIN        0xfffffffe00000000ULL
-#define KASAN_SHADOW_MAX        0xffffffffc0000000ULL
+#define KASAN_SHADOW_MIN (VM_MAX_KERNEL_ADDRESS + 1)
+#define KASAN_SHADOW_MAX 0xffffffffffffffffULL
+#elif defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||      \
+    defined(KERNEL_INTEGRITY_PV_CTRR)
+#define KASAN_SHADOW_MIN 0xfffffffdc0000000ULL
+#define KASAN_SHADOW_MAX 0xffffffffc0000000ULL
+#else /* defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR) ||   \
+         defined(KERNEL_INTEGRITY_PV_CTRR) */
+#define KASAN_SHADOW_MIN 0xfffffffe00000000ULL
+#define KASAN_SHADOW_MAX 0xffffffffc0000000ULL
 #endif
 
 #endif /* _KASAN_TBI_ARM64_H_ */

@@ -34,7 +34,7 @@
 #include "tcp_includes.h"
 
 uint32_t tcp_pacer_get_packet_tx_time(struct tcpcb *tp, int pkt_len,
-    uint64_t *tx_time);
+                                      uint64_t *tx_time);
 
 uint64_t tcp_compute_measured_rate(const struct tcpcb *tp);
 

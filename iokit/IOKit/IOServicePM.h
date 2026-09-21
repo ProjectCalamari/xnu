@@ -47,66 +47,66 @@ class IOPMRequest;
 class IOPMRequestQueue;
 class IOPMCompletionQueue;
 
-typedef void (*IOPMCompletionAction)(void * target, void * param);
+typedef void (*IOPMCompletionAction)(void *target, void *param);
 
 // PM channels for IOReporting
 #ifndef kPMPowerStatesChID
-#define kPMPowerStatesChID  IOREPORT_MAKEID('P','M','S','t','H','i','s','t')
+#define kPMPowerStatesChID                                                     \
+  IOREPORT_MAKEID('P', 'M', 'S', 't', 'H', 'i', 's', 't')
 #endif
 
 #ifndef kPMCurrStateChID
-#define kPMCurrStateChID  IOREPORT_MAKEID( 'P','M','C','u','r','S','t','\0' )
+#define kPMCurrStateChID                                                       \
+  IOREPORT_MAKEID('P', 'M', 'C', 'u', 'r', 'S', 't', '\0')
 #endif
 
 // state_id details in PM channels
-#define kPMReportPowerOn       0x01
-#define kPMReportDeviceUsable  0x02
-#define kPMReportLowPower      0x04
+#define kPMReportPowerOn 0x01
+#define kPMReportDeviceUsable 0x02
+#define kPMReportLowPower 0x04
 
-
-typedef unsigned long       IOPMPowerStateIndex;
-typedef uint32_t            IOPMPowerChangeFlags;
-typedef uint32_t            IOPMRequestTag;
+typedef unsigned long IOPMPowerStateIndex;
+typedef uint32_t IOPMPowerChangeFlags;
+typedef uint32_t IOPMRequestTag;
 
 struct IOPMDriverCallEntry {
-	queue_chain_t   link;
-	thread_t        thread;
-	IOService *     target;
-	const void  *callMethod;
+  queue_chain_t link;
+  thread_t thread;
+  IOService *target;
+  const void *callMethod;
 };
 
 // Power clients (desires)
-extern const OSSymbol *     gIOPMPowerClientDevice;
-extern const OSSymbol *     gIOPMPowerClientDriver;
-extern const OSSymbol *     gIOPMPowerClientChildProxy;
-extern const OSSymbol *     gIOPMPowerClientChildren;
-extern const OSSymbol *     gIOPMPowerClientRootDomain;
+extern const OSSymbol *gIOPMPowerClientDevice;
+extern const OSSymbol *gIOPMPowerClientDriver;
+extern const OSSymbol *gIOPMPowerClientChildProxy;
+extern const OSSymbol *gIOPMPowerClientChildren;
+extern const OSSymbol *gIOPMPowerClientRootDomain;
 
 /* Binary compatibility with drivers that access pm_vars */
 #ifdef __LP64__
-#define PM_VARS_SUPPORT     0
+#define PM_VARS_SUPPORT 0
 #else
-#define PM_VARS_SUPPORT     1
+#define PM_VARS_SUPPORT 1
 #endif
 
 #if PM_VARS_SUPPORT
 /* Deprecated in version 10.5 */
-class IOPMprot : public OSObject
-{
-	friend class IOService;
+class IOPMprot : public OSObject {
+  friend class IOService;
 
-	OSDeclareDefaultStructors(IOPMprot);
+  OSDeclareDefaultStructors(IOPMprot);
 
 public:
-	const char *            ourName;
-	IOPlatformExpert *      thePlatform;
-	unsigned long           theNumberOfPowerStates;
-	IOPMPowerState          thePowerStates[IOPMMaxPowerStates];
-	IOService *             theControllingDriver;
-	unsigned long           aggressiveness;
-	unsigned long           current_aggressiveness_values[kMaxType + 1];
-	bool                    current_aggressiveness_valid[kMaxType + 1];
-	unsigned long           myCurrentState;
+  const char *ourName;
+  IOPlatformExpert *thePlatform;
+  unsigned long theNumberOfPowerStates;
+  IOPMPowerState thePowerStates[IOPMMaxPowerStates];
+  IOService *theControllingDriver;
+  unsigned long aggressiveness;
+  unsigned long current_aggressiveness_values[kMaxType + 1];
+  bool current_aggressiveness_valid[kMaxType + 1];
+  unsigned long myCurrentState;
 };
 #endif /* PM_VARS_SUPPORT */
 #endif /* XNU_KERNEL_PRIVATE */

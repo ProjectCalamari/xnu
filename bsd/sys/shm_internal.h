@@ -71,35 +71,35 @@
 #ifndef _SYS_SHM_INTERNALH_
 #define _SYS_SHM_INTERNALH_
 
-#include <sys/shm.h>
 #include <sys/cdefs.h>
+#include <sys/shm.h>
 
 #include <machine/types.h>
 
 #pragma pack(4)
 
 struct user_shmid_ds {
-	struct ipc_perm shm_perm;       /* operation permission structure */
-	user_size_t     shm_segsz;      /* size of segment in bytes */
-	pid_t           shm_lpid;       /* PID of last shared memory op */
-	pid_t           shm_cpid;       /* PID of creator */
-	short           shm_nattch;     /* number of current attaches */
-	user_time_t     shm_atime;      /* time of last shmat() */
-	user_time_t     shm_dtime;      /* time of last shmdt() */
-	user_time_t     shm_ctime;      /* time of last change by shmctl() */
-	user_addr_t     shm_internal;   /* reserved for kernel use */
+  struct ipc_perm shm_perm; /* operation permission structure */
+  user_size_t shm_segsz;    /* size of segment in bytes */
+  pid_t shm_lpid;           /* PID of last shared memory op */
+  pid_t shm_cpid;           /* PID of creator */
+  short shm_nattch;         /* number of current attaches */
+  user_time_t shm_atime;    /* time of last shmat() */
+  user_time_t shm_dtime;    /* time of last shmdt() */
+  user_time_t shm_ctime;    /* time of last change by shmctl() */
+  user_addr_t shm_internal; /* reserved for kernel use */
 };
 
 struct user32_shmid_ds {
-	struct ipc_perm shm_perm;       /* operation permission structure */
-	uint32_t        shm_segsz;      /* size of segment in bytes */
-	pid_t           shm_lpid;       /* PID of last shared memory op */
-	pid_t           shm_cpid;       /* PID of creator */
-	short           shm_nattch;     /* number of current attaches */
-	uint32_t                shm_atime;      /* time of last shmat() */
-	uint32_t                shm_dtime;      /* time of last shmdt() */
-	uint32_t                shm_ctime;      /* time of last change by shmctl() */
-	user32_addr_t   shm_internal;   /* reserved for kernel use */
+  struct ipc_perm shm_perm;   /* operation permission structure */
+  uint32_t shm_segsz;         /* size of segment in bytes */
+  pid_t shm_lpid;             /* PID of last shared memory op */
+  pid_t shm_cpid;             /* PID of creator */
+  short shm_nattch;           /* number of current attaches */
+  uint32_t shm_atime;         /* time of last shmat() */
+  uint32_t shm_dtime;         /* time of last shmdt() */
+  uint32_t shm_ctime;         /* time of last change by shmctl() */
+  user32_addr_t shm_internal; /* reserved for kernel use */
 };
 
 #pragma pack()
@@ -113,11 +113,11 @@ struct user32_shmid_ds {
  * so let's use int64_t explicitely...
  */
 struct shminfo {
-	int64_t shmmax;         /* max shm segment size (bytes) */
-	int64_t shmmin;         /* min shm segment size (bytes) */
-	int64_t shmmni;         /* max number of shm identifiers */
-	int64_t shmseg;         /* max shm segments per process */
-	int64_t shmall;         /* max amount of shm (pages) */
+  int64_t shmmax; /* max shm segment size (bytes) */
+  int64_t shmmin; /* min shm segment size (bytes) */
+  int64_t shmmni; /* max number of shm identifiers */
+  int64_t shmseg; /* max shm segments per process */
+  int64_t shmall; /* max amount of shm (pages) */
 };
 
 #ifdef KERNEL
@@ -129,8 +129,8 @@ struct label;
  * MAC label) can be added to it, without changing the user interface.
  */
 struct shmid_kernel {
-	struct user_shmid_ds u;
-	struct label *label;    /* MAC label */
+  struct user_shmid_ds u;
+  struct label *label; /* MAC label */
 };
 
 extern struct shminfo shminfo;
@@ -140,8 +140,8 @@ struct proc;
 
 __BEGIN_DECLS
 
-void    shmexit(struct proc *);
-int     shmfork(struct proc *, struct proc *);
+void shmexit(struct proc *);
+int shmfork(struct proc *, struct proc *);
 __private_extern__ void shmexec(struct proc *);
 
 __END_DECLS

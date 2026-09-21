@@ -63,30 +63,27 @@
  *	Entry hash table operations.
  */
 
-#include <mach/boolean.h>
-#include <mach/port.h>
-#include <ipc/port.h>
-#include <ipc/ipc_space.h>
-#include <ipc/ipc_object.h>
 #include <ipc/ipc_entry.h>
 #include <ipc/ipc_hash.h>
+#include <ipc/ipc_object.h>
+#include <ipc/ipc_space.h>
+#include <ipc/port.h>
+#include <mach/boolean.h>
+#include <mach/port.h>
 #include <os/hash.h>
 
 #include <mach/kern_return.h>
 #include <mach_debug/hash_info.h>
-#include <vm/vm_map.h>
 #include <vm/vm_kern.h>
+#include <vm/vm_map.h>
 
 /*
  * Forward declarations
  */
 
 /* Delete an entry from the local reverse hash table */
-void ipc_hash_local_delete(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_index_t       index,
-	ipc_entry_t             entry);
+void ipc_hash_local_delete(ipc_space_t space, ipc_object_t obj,
+                           mach_port_index_t index, ipc_entry_t entry);
 
 /*
  *	Routine:	ipc_hash_lookup
@@ -97,14 +94,9 @@ void ipc_hash_local_delete(
  *		The space must be locked (read or write) throughout.
  */
 
-boolean_t
-ipc_hash_lookup(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_name_t        *namep,
-	ipc_entry_t             *entryp)
-{
-	return ipc_hash_table_lookup(is_active_table(space), obj, namep, entryp);
+boolean_t ipc_hash_lookup(ipc_space_t space, ipc_object_t obj,
+                          mach_port_name_t *namep, ipc_entry_t *entryp) {
+  return ipc_hash_table_lookup(is_active_table(space), obj, namep, entryp);
 }
 
 /*
@@ -116,18 +108,13 @@ ipc_hash_lookup(
  *		The space must be write-locked.
  */
 
-void
-ipc_hash_insert(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_name_t        name,
-	ipc_entry_t             entry)
-{
-	mach_port_index_t index;
+void ipc_hash_insert(ipc_space_t space, ipc_object_t obj, mach_port_name_t name,
+                     ipc_entry_t entry) {
+  mach_port_index_t index;
 
-	index = MACH_PORT_INDEX(name);
-	space->is_table_hashed++;
-	ipc_hash_table_insert(is_active_table(space), obj, index, entry);
+  index = MACH_PORT_INDEX(name);
+  space->is_table_hashed++;
+  ipc_hash_table_insert(is_active_table(space), obj, index, entry);
 }
 
 /*
@@ -138,18 +125,13 @@ ipc_hash_insert(
  *		The space must be write-locked.
  */
 
-void
-ipc_hash_delete(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_name_t        name,
-	ipc_entry_t             entry)
-{
-	mach_port_index_t index;
+void ipc_hash_delete(ipc_space_t space, ipc_object_t obj, mach_port_name_t name,
+                     ipc_entry_t entry) {
+  mach_port_index_t index;
 
-	index = MACH_PORT_INDEX(name);
-	space->is_table_hashed--;
-	ipc_hash_table_delete(is_active_table(space), obj, index, entry);
+  index = MACH_PORT_INDEX(name);
+  space->is_table_hashed--;
+  ipc_hash_table_delete(is_active_table(space), obj, index, entry);
 }
 
 /*
@@ -182,8 +164,8 @@ ipc_hash_delete(
  *	So possibly a small win; probably nothing significant.
  */
 
-#define IH_TABLE_HASH(obj, size)                                \
-	        ((mach_port_index_t)(os_hash_kernel_pointer(obj) % (size)))
+#define IH_TABLE_HASH(obj, size)                                               \
+  ((mach_port_index_t)(os_hash_kernel_pointer(obj) % (size)))
 
 /*
  *	Routine:	ipc_hash_table_lookup
@@ -193,68 +175,62 @@ ipc_hash_delete(
  *		Must have read consistency on the table.
  */
 
-boolean_t
-ipc_hash_table_lookup(
-	ipc_entry_table_t       array,
-	ipc_object_t            obj,
-	mach_port_name_t        *namep,
-	ipc_entry_t             *entryp)
-{
-	mach_port_index_t hindex, index, hdist;
-	ipc_entry_t       table = ipc_entry_table_base(array);
-	ipc_entry_num_t   size  = ipc_entry_table_count(array);
+boolean_t ipc_hash_table_lookup(ipc_entry_table_t array, ipc_object_t obj,
+                                mach_port_name_t *namep, ipc_entry_t *entryp) {
+  mach_port_index_t hindex, index, hdist;
+  ipc_entry_t table = ipc_entry_table_base(array);
+  ipc_entry_num_t size = ipc_entry_table_count(array);
 
-	if (obj == IPC_OBJECT_NULL) {
-		return FALSE;
-	}
+  if (obj == IPC_OBJECT_NULL) {
+    return FALSE;
+  }
 
-	hindex = IH_TABLE_HASH(obj, size);
-	hdist  = 0;
+  hindex = IH_TABLE_HASH(obj, size);
+  hdist = 0;
 
-	/*
-	 *	Ideally, table[hindex].ie_index is the name we want.
-	 *	However, must check ie_object to verify this,
-	 *	because collisions can happen.  In case of a collision,
-	 *	search farther along in the clump.
-	 */
+  /*
+   *	Ideally, table[hindex].ie_index is the name we want.
+   *	However, must check ie_object to verify this,
+   *	because collisions can happen.  In case of a collision,
+   *	search farther along in the clump.
+   */
 
-	while ((index = table[hindex].ie_index) != 0) {
-		ipc_entry_t entry = index < size ? &table[index] : IE_NULL;
+  while ((index = table[hindex].ie_index) != 0) {
+    ipc_entry_t entry = index < size ? &table[index] : IE_NULL;
 
-		/*
-		 * if our current displacement is strictly larger
-		 * than the current slot one, then insertion would
-		 * have stolen his place so we can't possibly exist.
-		 */
-		if (hdist > table[hindex].ie_dist) {
-			return FALSE;
-		}
+    /*
+     * if our current displacement is strictly larger
+     * than the current slot one, then insertion would
+     * have stolen his place so we can't possibly exist.
+     */
+    if (hdist > table[hindex].ie_dist) {
+      return FALSE;
+    }
 
-		/*
-		 * If our current displacement is exactly the current
-		 * slot displacement, then it can be a match, let's check.
-		 */
-		if (hdist == table[hindex].ie_dist) {
-			if (entry->ie_object == obj) {
-				*entryp = entry;
-				*namep = MACH_PORT_MAKE(index,
-				    IE_BITS_GEN(entry->ie_bits));
-				return TRUE;
-			}
-		} else {
-			assert(entry->ie_object != obj);
-		}
+    /*
+     * If our current displacement is exactly the current
+     * slot displacement, then it can be a match, let's check.
+     */
+    if (hdist == table[hindex].ie_dist) {
+      if (entry->ie_object == obj) {
+        *entryp = entry;
+        *namep = MACH_PORT_MAKE(index, IE_BITS_GEN(entry->ie_bits));
+        return TRUE;
+      }
+    } else {
+      assert(entry->ie_object != obj);
+    }
 
-		if (hdist < IPC_ENTRY_DIST_MAX) {
-			/* peg the displacement distance at IPC_ENTRY_DIST_MAX */
-			++hdist;
-		}
-		if (++hindex == size) {
-			hindex = 0;
-		}
-	}
+    if (hdist < IPC_ENTRY_DIST_MAX) {
+      /* peg the displacement distance at IPC_ENTRY_DIST_MAX */
+      ++hdist;
+    }
+    if (++hindex == size) {
+      hindex = 0;
+    }
+  }
 
-	return FALSE;
+  return FALSE;
 }
 
 /*
@@ -265,54 +241,55 @@ ipc_hash_table_lookup(
  *		The space must be write-locked.
  */
 
-void
-ipc_hash_table_insert(
-	ipc_entry_table_t               array,
-	ipc_object_t                    obj,
-	mach_port_index_t               index,
-	__assert_only ipc_entry_t       entry)
-{
-	mach_port_index_t hindex, hdist;
-	ipc_entry_t       table = ipc_entry_table_base(array);
-	ipc_entry_num_t   size  = ipc_entry_table_count(array);
+void ipc_hash_table_insert(ipc_entry_table_t array, ipc_object_t obj,
+                           mach_port_index_t index,
+                           __assert_only ipc_entry_t entry) {
+  mach_port_index_t hindex, hdist;
+  ipc_entry_t table = ipc_entry_table_base(array);
+  ipc_entry_num_t size = ipc_entry_table_count(array);
 
-	assert(index != 0);
-	assert(obj != IPC_OBJECT_NULL);
+  assert(index != 0);
+  assert(obj != IPC_OBJECT_NULL);
 
-	hindex = IH_TABLE_HASH(obj, size);
-	hdist  = 0;
+  hindex = IH_TABLE_HASH(obj, size);
+  hdist = 0;
 
-	assert(entry == &table[index]);
-	assert(entry->ie_object == obj);
+  assert(entry == &table[index]);
+  assert(entry->ie_object == obj);
 
-	/*
-	 *	We want to insert at hindex, but there may be collisions.
-	 *	If a collision occurs, search for the end of the clump
-	 *	and insert there.
-	 *
-	 *	However, Robin Hood steals from the rich, and as we go
-	 *	through the clump, if we go over an item that is less
-	 *	displaced than we'd be, we steal his slot and
-	 *	keep inserting him in our stead.
-	 */
-	while (table[hindex].ie_index != 0) {
-		if (table[hindex].ie_dist < hdist) {
-#define swap(a, b)  ({ typeof(a) _tmp = (b); (b) = (a); (a) = _tmp; })
-			swap(hdist, table[hindex].ie_dist);
-			swap(index, table[hindex].ie_index);
+  /*
+   *	We want to insert at hindex, but there may be collisions.
+   *	If a collision occurs, search for the end of the clump
+   *	and insert there.
+   *
+   *	However, Robin Hood steals from the rich, and as we go
+   *	through the clump, if we go over an item that is less
+   *	displaced than we'd be, we steal his slot and
+   *	keep inserting him in our stead.
+   */
+  while (table[hindex].ie_index != 0) {
+    if (table[hindex].ie_dist < hdist) {
+#define swap(a, b)                                                             \
+  ({                                                                           \
+    typeof(a) _tmp = (b);                                                      \
+    (b) = (a);                                                                 \
+    (a) = _tmp;                                                                \
+  })
+      swap(hdist, table[hindex].ie_dist);
+      swap(index, table[hindex].ie_index);
 #undef swap
-		}
-		if (hdist < IPC_ENTRY_DIST_MAX) {
-			/* peg the displacement distance at IPC_ENTRY_DIST_MAX */
-			++hdist;
-		}
-		if (++hindex == size) {
-			hindex = 0;
-		}
-	}
+    }
+    if (hdist < IPC_ENTRY_DIST_MAX) {
+      /* peg the displacement distance at IPC_ENTRY_DIST_MAX */
+      ++hdist;
+    }
+    if (++hindex == size) {
+      hindex = 0;
+    }
+  }
 
-	table[hindex].ie_index = index;
-	table[hindex].ie_dist = hdist;
+  table[hindex].ie_index = index;
+  table[hindex].ie_dist = hdist;
 }
 
 /*
@@ -323,97 +300,93 @@ ipc_hash_table_insert(
  *		Exclusive access to the table.
  */
 
-void
-ipc_hash_table_delete(
-	ipc_entry_table_t               array,
-	ipc_object_t                    obj,
-	mach_port_index_t               index,
-	__assert_only ipc_entry_t       entry)
-{
-	mach_port_index_t hindex, dindex, dist;
-	ipc_entry_t       table = ipc_entry_table_base(array);
-	ipc_entry_num_t   size  = ipc_entry_table_count(array);
+void ipc_hash_table_delete(ipc_entry_table_t array, ipc_object_t obj,
+                           mach_port_index_t index,
+                           __assert_only ipc_entry_t entry) {
+  mach_port_index_t hindex, dindex, dist;
+  ipc_entry_t table = ipc_entry_table_base(array);
+  ipc_entry_num_t size = ipc_entry_table_count(array);
 
-	assert(index != MACH_PORT_NULL);
-	assert(obj != IPC_OBJECT_NULL);
+  assert(index != MACH_PORT_NULL);
+  assert(obj != IPC_OBJECT_NULL);
 
-	hindex = IH_TABLE_HASH(obj, size);
+  hindex = IH_TABLE_HASH(obj, size);
 
-	assert(entry == &table[index]);
-	assert(entry->ie_object == obj);
+  assert(entry == &table[index]);
+  assert(entry->ie_object == obj);
 
-	/*
-	 *	First check we have the right hindex for this index.
-	 *	In case of collision, we have to search farther
-	 *	along in this clump.
-	 */
+  /*
+   *	First check we have the right hindex for this index.
+   *	In case of collision, we have to search farther
+   *	along in this clump.
+   */
 
-	while (table[hindex].ie_index != index) {
-		if (++hindex == size) {
-			hindex = 0;
-		}
-	}
+  while (table[hindex].ie_index != index) {
+    if (++hindex == size) {
+      hindex = 0;
+    }
+  }
 
-	/*
-	 *	Now we want to set table[hindex].ie_index = 0.
-	 *	But if we aren't the last index in a clump,
-	 *	this might cause problems for lookups of objects
-	 *	farther along in the clump that are displaced
-	 *	due to collisions.  Searches for them would fail
-	 *	at hindex instead of succeeding.
-	 *
-	 *	So we must check the clump after hindex for objects
-	 *	that are so displaced, and move one up to the new hole.
-	 *
-	 *		hindex - index of new hole in the clump
-	 *		dindex - index we are checking for a displaced object
-	 *
-	 *	When we move a displaced object up into the hole,
-	 *	it creates a new hole, and we have to repeat the process
-	 *	until we get to the end of the clump.
-	 */
+  /*
+   *	Now we want to set table[hindex].ie_index = 0.
+   *	But if we aren't the last index in a clump,
+   *	this might cause problems for lookups of objects
+   *	farther along in the clump that are displaced
+   *	due to collisions.  Searches for them would fail
+   *	at hindex instead of succeeding.
+   *
+   *	So we must check the clump after hindex for objects
+   *	that are so displaced, and move one up to the new hole.
+   *
+   *		hindex - index of new hole in the clump
+   *		dindex - index we are checking for a displaced object
+   *
+   *	When we move a displaced object up into the hole,
+   *	it creates a new hole, and we have to repeat the process
+   *	until we get to the end of the clump.
+   */
 
-	for (;;) {
-		dindex = hindex + 1;
-		if (dindex == size) {
-			dindex = 0;
-		}
+  for (;;) {
+    dindex = hindex + 1;
+    if (dindex == size) {
+      dindex = 0;
+    }
 
-		/*
-		 * If the next element is empty or isn't displaced,
-		 * then lookup will end on the next element anyway,
-		 * so we can leave the hole right here, we're done
-		 */
-		index = table[dindex].ie_index;
-		dist  = table[dindex].ie_dist;
-		if (index == 0 || dist == 0) {
-			table[hindex].ie_index = 0;
-			table[hindex].ie_dist = 0;
-			return;
-		}
+    /*
+     * If the next element is empty or isn't displaced,
+     * then lookup will end on the next element anyway,
+     * so we can leave the hole right here, we're done
+     */
+    index = table[dindex].ie_index;
+    dist = table[dindex].ie_dist;
+    if (index == 0 || dist == 0) {
+      table[hindex].ie_index = 0;
+      table[hindex].ie_dist = 0;
+      return;
+    }
 
-		/*
-		 * Move this object closer to its own slot by occupying the hole.
-		 * If its displacement was pegged, recompute it.
-		 */
-		if (dist-- == IPC_ENTRY_DIST_MAX) {
-			uint32_t desired = IH_TABLE_HASH(table[index].ie_object, size);
-			if (hindex >= desired) {
-				dist = hindex - desired;
-			} else {
-				dist = hindex + size - desired;
-			}
-			if (dist > IPC_ENTRY_DIST_MAX) {
-				dist = IPC_ENTRY_DIST_MAX;
-			}
-		}
+    /*
+     * Move this object closer to its own slot by occupying the hole.
+     * If its displacement was pegged, recompute it.
+     */
+    if (dist-- == IPC_ENTRY_DIST_MAX) {
+      uint32_t desired = IH_TABLE_HASH(table[index].ie_object, size);
+      if (hindex >= desired) {
+        dist = hindex - desired;
+      } else {
+        dist = hindex + size - desired;
+      }
+      if (dist > IPC_ENTRY_DIST_MAX) {
+        dist = IPC_ENTRY_DIST_MAX;
+      }
+    }
 
-		/*
-		 * Move the displaced element closer to its ideal bucket,
-		 * and keep shifting elements back.
-		 */
-		table[hindex].ie_index = index;
-		table[hindex].ie_dist = dist;
-		hindex = dindex;
-	}
+    /*
+     * Move the displaced element closer to its ideal bucket,
+     * and keep shifting elements back.
+     */
+    table[hindex].ie_index = index;
+    table[hindex].ie_dist = dist;
+    hindex = dindex;
+  }
 }

@@ -26,32 +26,27 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "tsd.h"
 #include <mach/mach.h>
 #include <mach/mach_init.h>
 #include <sys/cdefs.h>
-#include "tsd.h"
-
 
 #pragma mark Utilities
-#define _mach_assert(__op, __kr) \
-	do { \
-	        if (kr != KERN_SUCCESS) { \
-	                __builtin_trap(); \
-	        } \
-	} while (0)
+#define _mach_assert(__op, __kr)                                               \
+  do {                                                                         \
+    if (kr != KERN_SUCCESS) {                                                  \
+      __builtin_trap();                                                        \
+    }                                                                          \
+  } while (0)
 
 __XNU_PRIVATE_EXTERN mach_port_t _task_reply_port = MACH_PORT_NULL;
 
-static inline mach_port_t
-_mig_get_reply_port(void)
-{
-	return (mach_port_t)(uintptr_t)_os_tsd_get_direct(__TSD_MIG_REPLY);
+static inline mach_port_t _mig_get_reply_port(void) {
+  return (mach_port_t)(uintptr_t)_os_tsd_get_direct(__TSD_MIG_REPLY);
 }
 
-static inline void
-_mig_set_reply_port(mach_port_t port)
-{
-	_os_tsd_set_direct(__TSD_MIG_REPLY, (void *)(uintptr_t)port);
+static inline void _mig_set_reply_port(mach_port_t port) {
+  _os_tsd_set_direct(__TSD_MIG_REPLY, (void *)(uintptr_t)port);
 }
 
 /*
@@ -60,39 +55,36 @@ _mig_set_reply_port(mach_port_t port)
  * can result in a call to malloc() which eventually reenters
  * mig_get_reply_port() and deadlocks.
  */
-mach_port_t
-mig_get_reply_port(void)
-{
-	mach_port_t port = _mig_get_reply_port();
-	if (port == MACH_PORT_NULL) {
-		kern_return_t kr;
-		mach_port_options_t opts = {
-			.flags = MPO_REPLY_PORT,
-		};
+mach_port_t mig_get_reply_port(void) {
+  mach_port_t port = _mig_get_reply_port();
+  if (port == MACH_PORT_NULL) {
+    kern_return_t kr;
+    mach_port_options_t opts = {
+        .flags = MPO_REPLY_PORT,
+    };
 
-		kr = mach_port_construct(mach_task_self(), &opts, NULL, &port);
-		_mach_assert("mach_port_construct for mig_get_reply_port", kr);
-		_mig_set_reply_port(port);
-	}
-	return port;
+    kr = mach_port_construct(mach_task_self(), &opts, NULL, &port);
+    _mach_assert("mach_port_construct for mig_get_reply_port", kr);
+    _mig_set_reply_port(port);
+  }
+  return port;
 }
 
 /*
  * Called by mig interface code after a timeout on the reply port.
  * May also be called by user. The new mig calls with port passed in.
  */
-void
-mig_dealloc_reply_port(mach_port_t migport)
-{
-	mach_port_t port = _mig_get_reply_port();
-	if (port != MACH_PORT_NULL && port != _task_reply_port) {
-		_mig_set_reply_port(_task_reply_port);
-		(void) mach_port_mod_refs(mach_task_self(), port, MACH_PORT_RIGHT_RECEIVE, -1);
-		if (migport != port) {
-			(void) mach_port_deallocate(mach_task_self(), migport);
-		}
-		_mig_set_reply_port(MACH_PORT_NULL);
-	}
+void mig_dealloc_reply_port(mach_port_t migport) {
+  mach_port_t port = _mig_get_reply_port();
+  if (port != MACH_PORT_NULL && port != _task_reply_port) {
+    _mig_set_reply_port(_task_reply_port);
+    (void)mach_port_mod_refs(mach_task_self(), port, MACH_PORT_RIGHT_RECEIVE,
+                             -1);
+    if (migport != port) {
+      (void)mach_port_deallocate(mach_task_self(), migport);
+    }
+    _mig_set_reply_port(MACH_PORT_NULL);
+  }
 }
 
 /*************************************************************
@@ -100,7 +92,4 @@ mig_dealloc_reply_port(mach_port_t migport)
  *  Could be called by user.
  ***********************************************************/
 
-void
-mig_put_reply_port(mach_port_t reply_port __unused)
-{
-}
+void mig_put_reply_port(mach_port_t reply_port __unused) {}

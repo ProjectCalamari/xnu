@@ -85,17 +85,17 @@
  * System calls related to processes and protection
  */
 
-#include <sys/param.h>
 #include <sys/acct.h>
-#include <sys/systm.h>
-#include <sys/ucred.h>
-#include <sys/proc_internal.h>
-#include <sys/user.h>
 #include <sys/kauth.h>
+#include <sys/malloc.h>
+#include <sys/param.h>
+#include <sys/persona.h>
+#include <sys/proc_internal.h>
+#include <sys/systm.h>
 #include <sys/timeb.h>
 #include <sys/times.h>
-#include <sys/malloc.h>
-#include <sys/persona.h>
+#include <sys/ucred.h>
+#include <sys/user.h>
 
 #include <security/audit/audit.h>
 
@@ -103,13 +103,13 @@
 #include <security/mac_framework.h>
 #endif
 
+#include <mach/message.h>
 #include <sys/mount_internal.h>
 #include <sys/sysproto.h>
-#include <mach/message.h>
 
-#include <kern/host.h>
-#include <kern/task.h>          /* for current_task() */
 #include <kern/assert.h>
+#include <kern/host.h>
+#include <kern/task.h> /* for current_task() */
 
 #if DEVELOPMENT || DEBUG
 extern void task_importance_update_owner_info(task_t);
@@ -130,15 +130,12 @@ void kauth_cred_copy(const uintptr_t kv, const uintptr_t new_data);
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-setprivexec(proc_t p, struct setprivexec_args *uap, int32_t *retval)
-{
-	AUDIT_ARG(value32, uap->flag);
-	*retval = p->p_debugger;
-	p->p_debugger = (uap->flag != 0);
-	return 0;
+int setprivexec(proc_t p, struct setprivexec_args *uap, int32_t *retval) {
+  AUDIT_ARG(value32, uap->flag);
+  *retval = p->p_debugger;
+  p->p_debugger = (uap->flag != 0);
+  return 0;
 }
-
 
 /*
  * getpid
@@ -151,13 +148,10 @@ setprivexec(proc_t p, struct setprivexec_args *uap, int32_t *retval)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-getpid(proc_t p, __unused struct getpid_args *uap, int32_t *retval)
-{
-	*retval = proc_getpid(p);
-	return 0;
+int getpid(proc_t p, __unused struct getpid_args *uap, int32_t *retval) {
+  *retval = proc_getpid(p);
+  return 0;
 }
-
 
 /*
  * getppid
@@ -170,13 +164,10 @@ getpid(proc_t p, __unused struct getpid_args *uap, int32_t *retval)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-getppid(proc_t p, __unused struct getppid_args *uap, int32_t *retval)
-{
-	*retval = p->p_ppid;
-	return 0;
+int getppid(proc_t p, __unused struct getppid_args *uap, int32_t *retval) {
+  *retval = p->p_ppid;
+  return 0;
 }
-
 
 /*
  * getpgrp
@@ -189,13 +180,10 @@ getppid(proc_t p, __unused struct getppid_args *uap, int32_t *retval)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-getpgrp(proc_t p, __unused struct getpgrp_args *uap, int32_t *retval)
-{
-	*retval = p->p_pgrpid;
-	return 0;
+int getpgrp(proc_t p, __unused struct getpgrp_args *uap, int32_t *retval) {
+  *retval = p->p_pgrpid;
+  return 0;
 }
-
 
 /*
  * getpgid
@@ -213,29 +201,26 @@ getpgrp(proc_t p, __unused struct getpgrp_args *uap, int32_t *retval)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-getpgid(proc_t p, struct getpgid_args *uap, int32_t *retval)
-{
-	proc_t pt;
-	int refheld = 0;
+int getpgid(proc_t p, struct getpgid_args *uap, int32_t *retval) {
+  proc_t pt;
+  int refheld = 0;
 
-	pt = p;
-	if (uap->pid == 0) {
-		goto found;
-	}
+  pt = p;
+  if (uap->pid == 0) {
+    goto found;
+  }
 
-	if ((pt = proc_find(uap->pid)) == 0) {
-		return ESRCH;
-	}
-	refheld = 1;
+  if ((pt = proc_find(uap->pid)) == 0) {
+    return ESRCH;
+  }
+  refheld = 1;
 found:
-	*retval = pt->p_pgrpid;
-	if (refheld != 0) {
-		proc_rele(pt);
-	}
-	return 0;
+  *retval = pt->p_pgrpid;
+  if (refheld != 0) {
+    proc_rele(pt);
+  }
+  return 0;
 }
-
 
 /*
  * getsid
@@ -253,25 +238,22 @@ found:
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-getsid(proc_t p, struct getsid_args *uap, int32_t *retval)
-{
-	proc_t pt;
+int getsid(proc_t p, struct getsid_args *uap, int32_t *retval) {
+  proc_t pt;
 
-	if (uap->pid == 0) {
-		*retval = proc_sessionid(p);
-		return 0;
-	}
+  if (uap->pid == 0) {
+    *retval = proc_sessionid(p);
+    return 0;
+  }
 
-	if ((pt = proc_find(uap->pid)) != PROC_NULL) {
-		*retval = proc_sessionid(pt);
-		proc_rele(pt);
-		return 0;
-	}
+  if ((pt = proc_find(uap->pid)) != PROC_NULL) {
+    *retval = proc_sessionid(pt);
+    proc_rele(pt);
+    return 0;
+  }
 
-	return ESRCH;
+  return ESRCH;
 }
-
 
 /*
  * getuid
@@ -282,13 +264,11 @@ getsid(proc_t p, struct getsid_args *uap, int32_t *retval)
  *
  * Returns:	uid_t				The real uid of the caller
  */
-int
-getuid(__unused proc_t p, __unused struct getuid_args *uap, int32_t *retval)
-{
-	*retval = kauth_getruid();
-	return 0;
+int getuid(__unused proc_t p, __unused struct getuid_args *uap,
+           int32_t *retval) {
+  *retval = kauth_getruid();
+  return 0;
 }
-
 
 /*
  * geteuid
@@ -299,13 +279,11 @@ getuid(__unused proc_t p, __unused struct getuid_args *uap, int32_t *retval)
  *
  * Returns:	uid_t				The effective uid of the caller
  */
-int
-geteuid(__unused proc_t p, __unused struct geteuid_args *uap, int32_t *retval)
-{
-	*retval = kauth_getuid();
-	return 0;
+int geteuid(__unused proc_t p, __unused struct geteuid_args *uap,
+            int32_t *retval) {
+  *retval = kauth_getuid();
+  return 0;
 }
-
 
 /*
  * gettid
@@ -318,32 +296,29 @@ geteuid(__unused proc_t p, __unused struct geteuid_args *uap, int32_t *retval)
  * Returns:	0				Success
  *		ESRCH				No per thread identity active
  */
-int
-gettid(__unused proc_t p, struct gettid_args *uap, int32_t *retval)
-{
-	thread_ro_t tro = current_thread_ro();
-	kauth_cred_t tro_cred = tro->tro_cred;
-	int     error;
+int gettid(__unused proc_t p, struct gettid_args *uap, int32_t *retval) {
+  thread_ro_t tro = current_thread_ro();
+  kauth_cred_t tro_cred = tro->tro_cred;
+  int error;
 
-	/*
-	 * If this thread is not running with an override identity, we can't
-	 * return one to the caller, so return an error instead.
-	 */
-	if (tro->tro_realcred == tro->tro_cred) {
-		return ESRCH;
-	}
+  /*
+   * If this thread is not running with an override identity, we can't
+   * return one to the caller, so return an error instead.
+   */
+  if (tro->tro_realcred == tro->tro_cred) {
+    return ESRCH;
+  }
 
-	if ((error = suword(uap->uidp, kauth_cred_getruid(tro_cred)))) {
-		return error;
-	}
-	if ((error = suword(uap->gidp, kauth_cred_getrgid(tro_cred)))) {
-		return error;
-	}
+  if ((error = suword(uap->uidp, kauth_cred_getruid(tro_cred)))) {
+    return error;
+  }
+  if ((error = suword(uap->gidp, kauth_cred_getrgid(tro_cred)))) {
+    return error;
+  }
 
-	*retval = 0;
-	return 0;
+  *retval = 0;
+  return 0;
 }
-
 
 /*
  * getgid
@@ -354,13 +329,11 @@ gettid(__unused proc_t p, struct gettid_args *uap, int32_t *retval)
  *
  * Returns:	gid_t				The real gid of the caller
  */
-int
-getgid(__unused proc_t p, __unused struct getgid_args *uap, int32_t *retval)
-{
-	*retval = kauth_getrgid();
-	return 0;
+int getgid(__unused proc_t p, __unused struct getgid_args *uap,
+           int32_t *retval) {
+  *retval = kauth_getrgid();
+  return 0;
 }
-
 
 /*
  * getegid
@@ -377,13 +350,11 @@ getgid(__unused proc_t p, __unused struct getgid_args *uap, int32_t *retval)
  *		This could be implemented in Libc instead because of the above
  *		detail.
  */
-int
-getegid(__unused proc_t p, __unused struct getegid_args *uap, int32_t *retval)
-{
-	*retval = kauth_getgid();
-	return 0;
+int getegid(__unused proc_t p, __unused struct getegid_args *uap,
+            int32_t *retval) {
+  *retval = kauth_getgid();
+  return 0;
 }
-
 
 /*
  * getgroups
@@ -415,39 +386,35 @@ getegid(__unused proc_t p, __unused struct getegid_args *uap, int32_t *retval)
  *		the first element of the supplementary group list, and will
  *		be returned by this call.
  */
-int
-getgroups(__unused proc_t p, struct getgroups_args *uap, int32_t *retval)
-{
-	int ngrp;
-	int error;
-	kauth_cred_t cred;
-	posix_cred_t pcred;
+int getgroups(__unused proc_t p, struct getgroups_args *uap, int32_t *retval) {
+  int ngrp;
+  int error;
+  kauth_cred_t cred;
+  posix_cred_t pcred;
 
-	/* grab reference while we muck around with the credential */
-	cred = kauth_cred_get_with_ref();
-	pcred = posix_cred_get(cred);
+  /* grab reference while we muck around with the credential */
+  cred = kauth_cred_get_with_ref();
+  pcred = posix_cred_get(cred);
 
-	if ((ngrp = uap->gidsetsize) == 0) {
-		*retval = pcred->cr_ngroups;
-		kauth_cred_unref(&cred);
-		return 0;
-	}
-	if (ngrp < pcred->cr_ngroups) {
-		kauth_cred_unref(&cred);
-		return EINVAL;
-	}
-	ngrp = pcred->cr_ngroups;
-	if ((error = copyout((caddr_t)pcred->cr_groups,
-	    uap->gidset,
-	    ngrp * sizeof(gid_t)))) {
-		kauth_cred_unref(&cred);
-		return error;
-	}
-	kauth_cred_unref(&cred);
-	*retval = ngrp;
-	return 0;
+  if ((ngrp = uap->gidsetsize) == 0) {
+    *retval = pcred->cr_ngroups;
+    kauth_cred_unref(&cred);
+    return 0;
+  }
+  if (ngrp < pcred->cr_ngroups) {
+    kauth_cred_unref(&cred);
+    return EINVAL;
+  }
+  ngrp = pcred->cr_ngroups;
+  if ((error = copyout((caddr_t)pcred->cr_groups, uap->gidset,
+                       ngrp * sizeof(gid_t)))) {
+    kauth_cred_unref(&cred);
+    return error;
+  }
+  kauth_cred_unref(&cred);
+  *retval = ngrp;
+  return 0;
 }
-
 
 /*
  * Return the per-thread/per-process supplementary groups list.
@@ -456,10 +423,9 @@ getgroups(__unused proc_t p, struct getgroups_args *uap, int32_t *retval)
  *
  */
 
-int
-getsgroups(__unused proc_t p, __unused struct getsgroups_args *uap, __unused int32_t *retval)
-{
-	return ENOTSUP;
+int getsgroups(__unused proc_t p, __unused struct getsgroups_args *uap,
+               __unused int32_t *retval) {
+  return ENOTSUP;
 }
 
 /*
@@ -469,10 +435,9 @@ getsgroups(__unused proc_t p, __unused struct getsgroups_args *uap, __unused int
  *
  */
 
-int
-getwgroups(__unused proc_t p, __unused struct getwgroups_args *uap, __unused int32_t *retval)
-{
-	return ENOTSUP;
+int getwgroups(__unused proc_t p, __unused struct getwgroups_args *uap,
+               __unused int32_t *retval) {
+  return ENOTSUP;
 }
 
 /*
@@ -480,20 +445,17 @@ getwgroups(__unused proc_t p, __unused struct getwgroups_args *uap, __unused int
  *
  * Description:	Core implementation of setsid().
  */
-int
-setsid_internal(proc_t p)
-{
-	struct pgrp * pg = PGRP_NULL;
+int setsid_internal(proc_t p) {
+  struct pgrp *pg = PGRP_NULL;
 
-	if (p->p_pgrpid == proc_getpid(p) ||
-	    (pg = pgrp_find(proc_getpid(p)))) {
-		pgrp_rele(pg);
-		return EPERM;
-	}
+  if (p->p_pgrpid == proc_getpid(p) || (pg = pgrp_find(proc_getpid(p)))) {
+    pgrp_rele(pg);
+    return EPERM;
+  }
 
-	/* enter pgrp works with its own pgrp refcount */
-	(void)enterpgrp(p, proc_getpid(p), 1);
-	return 0;
+  /* enter pgrp works with its own pgrp refcount */
+  (void)enterpgrp(p, proc_getpid(p), 1);
+  return 0;
 }
 
 /*
@@ -508,8 +470,8 @@ setsid_internal(proc_t p)
  *		EPERM				Permission denied
  *
  * Notes:	If the calling process is not the process group leader; there
- *		is no existing process group with its ID, then this function will
- *		create a new session, a new process group, and put the caller in the
+ *		is no existing process group with its ID, then this function
+ * will create a new session, a new process group, and put the caller in the
  *		process group (as the sole member) and make it the session
  *		leader (as the sole process in the session).
  *
@@ -519,16 +481,13 @@ setsid_internal(proc_t p)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-setsid(proc_t p, __unused struct setsid_args *uap, int32_t *retval)
-{
-	int rc = setsid_internal(p);
-	if (rc == 0) {
-		*retval = proc_getpid(p);
-	}
-	return rc;
+int setsid(proc_t p, __unused struct setsid_args *uap, int32_t *retval) {
+  int rc = setsid_internal(p);
+  if (rc == 0) {
+    *retval = proc_getpid(p);
+  }
+  return rc;
 }
-
 
 /*
  * setpgid
@@ -567,76 +526,73 @@ setsid(proc_t p, __unused struct setsid_args *uap, int32_t *retval)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-setpgid(proc_t curp, struct setpgid_args *uap, __unused int32_t *retval)
-{
-	proc_t targp = PROC_NULL;       /* target process */
-	struct pgrp *curp_pg = PGRP_NULL;
-	struct pgrp *targp_pg = PGRP_NULL;
-	int error = 0;
-	int refheld = 0;
-	int samesess = 0;
+int setpgid(proc_t curp, struct setpgid_args *uap, __unused int32_t *retval) {
+  proc_t targp = PROC_NULL; /* target process */
+  struct pgrp *curp_pg = PGRP_NULL;
+  struct pgrp *targp_pg = PGRP_NULL;
+  int error = 0;
+  int refheld = 0;
+  int samesess = 0;
 
-	curp_pg = proc_pgrp(curp, NULL);
+  curp_pg = proc_pgrp(curp, NULL);
 
-	if (uap->pid != 0 && uap->pid != proc_getpid(curp)) {
-		if ((targp = proc_find(uap->pid)) == 0 || !inferior(targp)) {
-			if (targp != PROC_NULL) {
-				refheld = 1;
-			}
-			error = ESRCH;
-			goto out;
-		}
-		refheld = 1;
-		targp_pg = proc_pgrp(targp, NULL);
-		if (targp_pg->pg_session != curp_pg->pg_session) {
-			error = EPERM;
-			goto out;
-		}
-		if (targp->p_flag & P_EXEC) {
-			error = EACCES;
-			goto out;
-		}
-	} else {
-		targp = curp;
-		targp_pg = proc_pgrp(targp, NULL);
-	}
+  if (uap->pid != 0 && uap->pid != proc_getpid(curp)) {
+    if ((targp = proc_find(uap->pid)) == 0 || !inferior(targp)) {
+      if (targp != PROC_NULL) {
+        refheld = 1;
+      }
+      error = ESRCH;
+      goto out;
+    }
+    refheld = 1;
+    targp_pg = proc_pgrp(targp, NULL);
+    if (targp_pg->pg_session != curp_pg->pg_session) {
+      error = EPERM;
+      goto out;
+    }
+    if (targp->p_flag & P_EXEC) {
+      error = EACCES;
+      goto out;
+    }
+  } else {
+    targp = curp;
+    targp_pg = proc_pgrp(targp, NULL);
+  }
 
-	if (SESS_LEADER(targp, targp_pg->pg_session)) {
-		error = EPERM;
-		goto out;
-	}
+  if (SESS_LEADER(targp, targp_pg->pg_session)) {
+    error = EPERM;
+    goto out;
+  }
 
-	if (uap->pgid < 0) {
-		error = EINVAL;
-		goto out;
-	}
-	if (uap->pgid == 0) {
-		uap->pgid = proc_getpid(targp);
-	} else if (uap->pgid != proc_getpid(targp)) {
-		struct pgrp *pg = PGRP_NULL;
+  if (uap->pgid < 0) {
+    error = EINVAL;
+    goto out;
+  }
+  if (uap->pgid == 0) {
+    uap->pgid = proc_getpid(targp);
+  } else if (uap->pgid != proc_getpid(targp)) {
+    struct pgrp *pg = PGRP_NULL;
 
-		if ((pg = pgrp_find(uap->pgid)) == PGRP_NULL) {
-			error = EPERM;
-			goto out;
-		}
-		samesess = (pg->pg_session != curp_pg->pg_session);
-		pgrp_rele(pg);
-		if (samesess != 0) {
-			error = EPERM;
-			goto out;
-		}
-	}
-	error = enterpgrp(targp, uap->pgid, 0);
+    if ((pg = pgrp_find(uap->pgid)) == PGRP_NULL) {
+      error = EPERM;
+      goto out;
+    }
+    samesess = (pg->pg_session != curp_pg->pg_session);
+    pgrp_rele(pg);
+    if (samesess != 0) {
+      error = EPERM;
+      goto out;
+    }
+  }
+  error = enterpgrp(targp, uap->pgid, 0);
 out:
-	pgrp_rele(curp_pg);
-	pgrp_rele(targp_pg);
-	if (refheld != 0) {
-		proc_rele(targp);
-	}
-	return error;
+  pgrp_rele(curp_pg);
+  pgrp_rele(targp_pg);
+  if (refheld != 0) {
+    proc_rele(targp);
+  }
+  return error;
 }
-
 
 /*
  * issetugid
@@ -654,26 +610,20 @@ out:
  *		real, effective, or saved user or group IDs since beginning
  *		execution.
  */
-int
-proc_issetugid(proc_t p)
-{
-	return (p->p_flag & P_SUGID) ? 1 : 0;
-}
+int proc_issetugid(proc_t p) { return (p->p_flag & P_SUGID) ? 1 : 0; }
 
-int
-issetugid(proc_t p, __unused struct issetugid_args *uap, int32_t *retval)
-{
-	/*
-	 * Note: OpenBSD sets a P_SUGIDEXEC flag set at execve() time,
-	 * we use P_SUGID because we consider changing the owners as
-	 * "tainting" as well.
-	 * This is significant for procs that start as root and "become"
-	 * a user without an exec - programs cannot know *everything*
-	 * that libc *might* have put in their data segment.
-	 */
+int issetugid(proc_t p, __unused struct issetugid_args *uap, int32_t *retval) {
+  /*
+   * Note: OpenBSD sets a P_SUGIDEXEC flag set at execve() time,
+   * we use P_SUGID because we consider changing the owners as
+   * "tainting" as well.
+   * This is significant for procs that start as root and "become"
+   * a user without an exec - programs cannot know *everything*
+   * that libc *might* have put in their data segment.
+   */
 
-	*retval = proc_issetugid(p);
-	return 0;
+  *retval = proc_issetugid(p);
+  return 0;
 }
 
 /*
@@ -696,74 +646,70 @@ issetugid(proc_t p, __unused struct issetugid_args *uap, int32_t *retval)
  *		If the credential is changed as a result of this call, then we
  *		flag the process as having set privilege since the last exec.
  */
-int
-setuid(proc_t p, struct setuid_args *uap, __unused int32_t *retval)
-{
-	__block int error = 0;
-	__block uid_t old_ruid;
-	__block uid_t ruid;
-	uid_t want_uid;
-	bool changed;
+int setuid(proc_t p, struct setuid_args *uap, __unused int32_t *retval) {
+  __block int error = 0;
+  __block uid_t old_ruid;
+  __block uid_t ruid;
+  uid_t want_uid;
+  bool changed;
 
-	want_uid = uap->uid;
-	AUDIT_ARG(uid, want_uid);
+  want_uid = uap->uid;
+  AUDIT_ARG(uid, want_uid);
 
-	changed = kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID,
-	    ^bool (kauth_cred_t parent, kauth_cred_t model) {
-		posix_cred_t cur_pcred = posix_cred_get(parent);
-		uid_t svuid = KAUTH_UID_NONE;
-		uid_t gmuid = KAUTH_UID_NONE;
+  changed = kauth_cred_proc_update(
+      p, PROC_SETTOKEN_SETUGID, ^bool(kauth_cred_t parent, kauth_cred_t model) {
+        posix_cred_t cur_pcred = posix_cred_get(parent);
+        uid_t svuid = KAUTH_UID_NONE;
+        uid_t gmuid = KAUTH_UID_NONE;
 
-		ruid = KAUTH_UID_NONE;
-		old_ruid = cur_pcred->cr_ruid;
+        ruid = KAUTH_UID_NONE;
+        old_ruid = cur_pcred->cr_ruid;
 
 #if CONFIG_MACF
-		if ((error = mac_proc_check_setuid(p, parent, want_uid)) != 0) {
-		        return false;
-		}
+        if ((error = mac_proc_check_setuid(p, parent, want_uid)) != 0) {
+          return false;
+        }
 #endif
 
-		if (want_uid != cur_pcred->cr_ruid &&         /* allow setuid(getuid()) */
-		want_uid != cur_pcred->cr_svuid &&            /* allow setuid(saved uid) */
-		(error = suser(parent, &p->p_acflag))) {
-		        return false;
-		}
+        if (want_uid != cur_pcred->cr_ruid &&  /* allow setuid(getuid()) */
+            want_uid != cur_pcred->cr_svuid && /* allow setuid(saved uid) */
+            (error = suser(parent, &p->p_acflag))) {
+          return false;
+        }
 
-		/*
-		 * If we are privileged, then set the saved and real UID too;
-		 * otherwise, just set the effective UID
-		 */
-		if (suser(parent, &p->p_acflag) == 0) {
-		        svuid = want_uid;
-		        ruid = want_uid;
-		}
+        /*
+         * If we are privileged, then set the saved and real UID too;
+         * otherwise, just set the effective UID
+         */
+        if (suser(parent, &p->p_acflag) == 0) {
+          svuid = want_uid;
+          ruid = want_uid;
+        }
 
-		/*
-		 * Only set the gmuid if the current cred has not opt'ed out;
-		 * this normally only happens when calling setgroups() instead
-		 * of initgroups() to set an explicit group list, or one of the
-		 * other group manipulation functions is invoked and results in
-		 * a dislocation (i.e. the credential group membership changes
-		 * to something other than the default list for the user, as
-		 * in entering a group or leaving an exclusion group).
-		 */
-		if (!(cur_pcred->cr_flags & CRF_NOMEMBERD)) {
-		        gmuid = want_uid;
-		}
+        /*
+         * Only set the gmuid if the current cred has not opt'ed out;
+         * this normally only happens when calling setgroups() instead
+         * of initgroups() to set an explicit group list, or one of the
+         * other group manipulation functions is invoked and results in
+         * a dislocation (i.e. the credential group membership changes
+         * to something other than the default list for the user, as
+         * in entering a group or leaving an exclusion group).
+         */
+        if (!(cur_pcred->cr_flags & CRF_NOMEMBERD)) {
+          gmuid = want_uid;
+        }
 
-		return kauth_cred_model_setresuid(model,
-		ruid, want_uid, svuid, gmuid);
-	});
+        return kauth_cred_model_setresuid(model, ruid, want_uid, svuid, gmuid);
+      });
 
-	if (changed && ruid != KAUTH_UID_NONE && old_ruid != ruid &&
-	    !proc_has_persona(p)) {
-		(void)chgproccnt(ruid, 1);
-		(void)chgproccnt(old_ruid, -1);
-	}
+  if (changed && ruid != KAUTH_UID_NONE && old_ruid != ruid &&
+      !proc_has_persona(p)) {
+    (void)chgproccnt(ruid, 1);
+    (void)chgproccnt(old_ruid, -1);
+  }
 
-	return error;
+  return error;
 }
-
 
 /*
  * seteuid
@@ -783,38 +729,35 @@ setuid(proc_t p, struct setuid_args *uap, __unused int32_t *retval)
  *		If the credential is changed as a result of this call, then we
  *		flag the process as having set privilege since the last exec.
  */
-int
-seteuid(proc_t p, struct seteuid_args *uap, __unused int32_t *retval)
-{
-	__block int error = 0;
-	uid_t want_euid;
+int seteuid(proc_t p, struct seteuid_args *uap, __unused int32_t *retval) {
+  __block int error = 0;
+  uid_t want_euid;
 
-	want_euid = uap->euid;
-	AUDIT_ARG(euid, want_euid);
+  want_euid = uap->euid;
+  AUDIT_ARG(euid, want_euid);
 
-	kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID,
-	    ^bool (kauth_cred_t parent, kauth_cred_t model) {
-		posix_cred_t cur_pcred = posix_cred_get(parent);
+  kauth_cred_proc_update(
+      p, PROC_SETTOKEN_SETUGID, ^bool(kauth_cred_t parent, kauth_cred_t model) {
+        posix_cred_t cur_pcred = posix_cred_get(parent);
 
 #if CONFIG_MACF
-		if ((error = mac_proc_check_seteuid(p, parent, want_euid)) != 0) {
-		        return false;
-		}
+        if ((error = mac_proc_check_seteuid(p, parent, want_euid)) != 0) {
+          return false;
+        }
 #endif
 
-		if (want_euid != cur_pcred->cr_ruid && want_euid != cur_pcred->cr_svuid &&
-		(error = suser(parent, &p->p_acflag))) {
-		        return false;
-		}
+        if (want_euid != cur_pcred->cr_ruid &&
+            want_euid != cur_pcred->cr_svuid &&
+            (error = suser(parent, &p->p_acflag))) {
+          return false;
+        }
 
-		return kauth_cred_model_setresuid(model,
-		KAUTH_UID_NONE, want_euid,
-		KAUTH_UID_NONE, cur_pcred->cr_gmuid);
-	});
+        return kauth_cred_model_setresuid(model, KAUTH_UID_NONE, want_euid,
+                                          KAUTH_UID_NONE, cur_pcred->cr_gmuid);
+      });
 
-	return error;
+  return error;
 }
-
 
 /*
  * setreuid
@@ -847,83 +790,81 @@ seteuid(proc_t p, struct seteuid_args *uap, __unused int32_t *retval)
  *		If the credential is changed as a result of this call, then we
  *		flag the process as having set privilege since the last exec.
  */
-int
-setreuid(proc_t p, struct setreuid_args *uap, __unused int32_t *retval)
-{
-	__block int error = 0;
-	__block uid_t old_ruid;
-	uid_t want_ruid, want_euid;
-	bool changed;
+int setreuid(proc_t p, struct setreuid_args *uap, __unused int32_t *retval) {
+  __block int error = 0;
+  __block uid_t old_ruid;
+  uid_t want_ruid, want_euid;
+  bool changed;
 
-	want_ruid = uap->ruid;
-	want_euid = uap->euid;
+  want_ruid = uap->ruid;
+  want_euid = uap->euid;
 
-	if (want_ruid == (uid_t)-1) {
-		want_ruid = KAUTH_UID_NONE;
-	}
+  if (want_ruid == (uid_t)-1) {
+    want_ruid = KAUTH_UID_NONE;
+  }
 
-	if (want_euid == (uid_t)-1) {
-		want_euid = KAUTH_UID_NONE;
-	}
+  if (want_euid == (uid_t)-1) {
+    want_euid = KAUTH_UID_NONE;
+  }
 
-	AUDIT_ARG(euid, want_euid);
-	AUDIT_ARG(ruid, want_ruid);
+  AUDIT_ARG(euid, want_euid);
+  AUDIT_ARG(ruid, want_ruid);
 
-	changed = kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID,
-	    ^bool (kauth_cred_t parent, kauth_cred_t model) {
-		posix_cred_t cur_pcred = posix_cred_get(parent);
-		uid_t svuid = KAUTH_UID_NONE;
+  changed = kauth_cred_proc_update(
+      p, PROC_SETTOKEN_SETUGID, ^bool(kauth_cred_t parent, kauth_cred_t model) {
+        posix_cred_t cur_pcred = posix_cred_get(parent);
+        uid_t svuid = KAUTH_UID_NONE;
 
 #if CONFIG_MACF
-		if ((error = mac_proc_check_setreuid(p, parent, want_ruid, want_euid)) != 0) {
-		        return false;
-		}
+        if ((error = mac_proc_check_setreuid(p, parent, want_ruid,
+                                             want_euid)) != 0) {
+          return false;
+        }
 #endif
 
-		if (((want_ruid != KAUTH_UID_NONE &&          /* allow no change of ruid */
-		want_ruid != cur_pcred->cr_ruid &&            /* allow ruid = ruid */
-		want_ruid != cur_pcred->cr_uid &&             /* allow ruid = euid */
-		want_ruid != cur_pcred->cr_svuid) ||          /* allow ruid = svuid */
-		(want_euid != KAUTH_UID_NONE &&               /* allow no change of euid */
-		want_euid != cur_pcred->cr_uid &&             /* allow euid = euid */
-		want_euid != cur_pcred->cr_ruid &&            /* allow euid = ruid */
-		want_euid != cur_pcred->cr_svuid)) &&         /* allow euid = svuid */
-		(error = suser(parent, &p->p_acflag))) {      /* allow root user any */
-		        return false;
-		}
+        if (((want_ruid != KAUTH_UID_NONE &&       /* allow no change of ruid */
+              want_ruid != cur_pcred->cr_ruid &&   /* allow ruid = ruid */
+              want_ruid != cur_pcred->cr_uid &&    /* allow ruid = euid */
+              want_ruid != cur_pcred->cr_svuid) || /* allow ruid = svuid */
+             (want_euid != KAUTH_UID_NONE &&       /* allow no change of euid */
+              want_euid != cur_pcred->cr_uid &&    /* allow euid = euid */
+              want_euid != cur_pcred->cr_ruid &&   /* allow euid = ruid */
+              want_euid != cur_pcred->cr_svuid)) &&  /* allow euid = svuid */
+            (error = suser(parent, &p->p_acflag))) { /* allow root user any */
+          return false;
+        }
 
-		uid_t new_euid = cur_pcred->cr_uid;
+        uid_t new_euid = cur_pcred->cr_uid;
 
-		if (want_euid != KAUTH_UID_NONE && cur_pcred->cr_uid != want_euid) {
-		        new_euid = want_euid;
-		}
+        if (want_euid != KAUTH_UID_NONE && cur_pcred->cr_uid != want_euid) {
+          new_euid = want_euid;
+        }
 
-		old_ruid = cur_pcred->cr_ruid;
+        old_ruid = cur_pcred->cr_ruid;
 
-		/*
-		 * If the newly requested real uid or effective uid does
-		 * not match the saved uid, then set the saved uid to the
-		 * new effective uid.  We are protected from escalation
-		 * by the prechecking.
-		 */
-		if (cur_pcred->cr_svuid != uap->ruid &&
-		cur_pcred->cr_svuid != uap->euid) {
-		        svuid = new_euid;
-		}
+        /*
+         * If the newly requested real uid or effective uid does
+         * not match the saved uid, then set the saved uid to the
+         * new effective uid.  We are protected from escalation
+         * by the prechecking.
+         */
+        if (cur_pcred->cr_svuid != uap->ruid &&
+            cur_pcred->cr_svuid != uap->euid) {
+          svuid = new_euid;
+        }
 
-		return kauth_cred_model_setresuid(model, want_ruid, want_euid,
-		svuid, cur_pcred->cr_gmuid);
-	});
+        return kauth_cred_model_setresuid(model, want_ruid, want_euid, svuid,
+                                          cur_pcred->cr_gmuid);
+      });
 
-	if (changed && want_ruid != KAUTH_UID_NONE && want_ruid != old_ruid &&
-	    !proc_has_persona(p)) {
-		(void)chgproccnt(want_ruid, 1);
-		(void)chgproccnt(old_ruid, -1);
-	}
+  if (changed && want_ruid != KAUTH_UID_NONE && want_ruid != old_ruid &&
+      !proc_has_persona(p)) {
+    (void)chgproccnt(want_ruid, 1);
+    (void)chgproccnt(old_ruid, -1);
+  }
 
-	return error;
+  return error;
 }
-
 
 /*
  * setgid
@@ -950,48 +891,45 @@ setreuid(proc_t p, struct setreuid_args *uap, __unused int32_t *retval)
  *		therefore the effective group list may be reordered to keep
  *		the supplementary group list unchanged.
  */
-int
-setgid(proc_t p, struct setgid_args *uap, __unused int32_t *retval)
-{
-	__block int error = 0;
-	gid_t want_gid;
+int setgid(proc_t p, struct setgid_args *uap, __unused int32_t *retval) {
+  __block int error = 0;
+  gid_t want_gid;
 
-	want_gid = uap->gid;
-	AUDIT_ARG(gid, want_gid);
+  want_gid = uap->gid;
+  AUDIT_ARG(gid, want_gid);
 
-	kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID,
-	    ^bool (kauth_cred_t parent, kauth_cred_t model) {
-		posix_cred_t cur_pcred = posix_cred_get(parent);
-		gid_t rgid = KAUTH_GID_NONE;
-		gid_t svgid = KAUTH_GID_NONE;
+  kauth_cred_proc_update(
+      p, PROC_SETTOKEN_SETUGID, ^bool(kauth_cred_t parent, kauth_cred_t model) {
+        posix_cred_t cur_pcred = posix_cred_get(parent);
+        gid_t rgid = KAUTH_GID_NONE;
+        gid_t svgid = KAUTH_GID_NONE;
 
 #if CONFIG_MACF
-		if ((error = mac_proc_check_setgid(p, parent, want_gid)) != 0) {
-		        return false;
-		}
+        if ((error = mac_proc_check_setgid(p, parent, want_gid)) != 0) {
+          return false;
+        }
 #endif
 
-		if (want_gid != cur_pcred->cr_rgid &&         /* allow setgid(getgid()) */
-		want_gid != cur_pcred->cr_svgid &&            /* allow setgid(saved gid) */
-		(error = suser(parent, &p->p_acflag))) {
-		        return false;
-		}
+        if (want_gid != cur_pcred->cr_rgid &&  /* allow setgid(getgid()) */
+            want_gid != cur_pcred->cr_svgid && /* allow setgid(saved gid) */
+            (error = suser(parent, &p->p_acflag))) {
+          return false;
+        }
 
-		/*
-		 * If we are privileged, then set the saved and real GID too;
-		 * otherwise, just set the effective GID
-		 */
-		if (suser(parent, &p->p_acflag) == 0) {
-		        svgid = want_gid;
-		        rgid = want_gid;
-		}
+        /*
+         * If we are privileged, then set the saved and real GID too;
+         * otherwise, just set the effective GID
+         */
+        if (suser(parent, &p->p_acflag) == 0) {
+          svgid = want_gid;
+          rgid = want_gid;
+        }
 
-		return kauth_cred_model_setresgid(model, rgid, want_gid, svgid);
-	});
+        return kauth_cred_model_setresgid(model, rgid, want_gid, svgid);
+      });
 
-	return error;
+  return error;
 }
-
 
 /*
  * setegid
@@ -1016,36 +954,34 @@ setgid(proc_t p, struct setgid_args *uap, __unused int32_t *retval)
  *		therefore the effective group list may be reordered to keep
  *		the supplementary group list unchanged.
  */
-int
-setegid(proc_t p, struct setegid_args *uap, __unused int32_t *retval)
-{
-	__block int error = 0;
-	gid_t want_egid;
+int setegid(proc_t p, struct setegid_args *uap, __unused int32_t *retval) {
+  __block int error = 0;
+  gid_t want_egid;
 
-	want_egid = uap->egid;
-	AUDIT_ARG(egid, want_egid);
+  want_egid = uap->egid;
+  AUDIT_ARG(egid, want_egid);
 
-	kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID,
-	    ^bool (kauth_cred_t parent, kauth_cred_t model) {
-		posix_cred_t cur_pcred = posix_cred_get(parent);
+  kauth_cred_proc_update(
+      p, PROC_SETTOKEN_SETUGID, ^bool(kauth_cred_t parent, kauth_cred_t model) {
+        posix_cred_t cur_pcred = posix_cred_get(parent);
 
 #if CONFIG_MACF
-		if ((error = mac_proc_check_setegid(p, parent, want_egid)) != 0) {
-		        return false;
-		}
+        if ((error = mac_proc_check_setegid(p, parent, want_egid)) != 0) {
+          return false;
+        }
 #endif
 
-		if (want_egid != cur_pcred->cr_rgid &&
-		want_egid != cur_pcred->cr_svgid &&
-		(error = suser(parent, &p->p_acflag))) {
-		        return false;
-		}
+        if (want_egid != cur_pcred->cr_rgid &&
+            want_egid != cur_pcred->cr_svgid &&
+            (error = suser(parent, &p->p_acflag))) {
+          return false;
+        }
 
-		return kauth_cred_model_setresgid(model, KAUTH_GID_NONE,
-		want_egid, KAUTH_GID_NONE);
-	});
+        return kauth_cred_model_setresgid(model, KAUTH_GID_NONE, want_egid,
+                                          KAUTH_GID_NONE);
+      });
 
-	return error;
+  return error;
 }
 
 /*
@@ -1085,83 +1021,79 @@ setegid(proc_t p, struct setegid_args *uap, __unused int32_t *retval)
  *		therefore the effective group list may be reordered to keep
  *		the supplementary group list unchanged.
  */
-int
-setregid(proc_t p, struct setregid_args *uap, __unused int32_t *retval)
-{
-	__block int error = 0;
-	gid_t want_rgid;
-	gid_t want_egid;
+int setregid(proc_t p, struct setregid_args *uap, __unused int32_t *retval) {
+  __block int error = 0;
+  gid_t want_rgid;
+  gid_t want_egid;
 
-	want_rgid = uap->rgid;
-	want_egid = uap->egid;
+  want_rgid = uap->rgid;
+  want_egid = uap->egid;
 
-	if (want_rgid == (gid_t)-1) {
-		want_rgid = KAUTH_GID_NONE;
-	}
+  if (want_rgid == (gid_t)-1) {
+    want_rgid = KAUTH_GID_NONE;
+  }
 
-	if (want_egid == (gid_t)-1) {
-		want_egid = KAUTH_GID_NONE;
-	}
+  if (want_egid == (gid_t)-1) {
+    want_egid = KAUTH_GID_NONE;
+  }
 
-	AUDIT_ARG(egid, want_egid);
-	AUDIT_ARG(rgid, want_rgid);
+  AUDIT_ARG(egid, want_egid);
+  AUDIT_ARG(rgid, want_rgid);
 
-	kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID,
-	    ^bool (kauth_cred_t parent, kauth_cred_t model) {
-		posix_cred_t cur_pcred = posix_cred_get(parent);
-		uid_t svgid = KAUTH_UID_NONE;
+  kauth_cred_proc_update(
+      p, PROC_SETTOKEN_SETUGID, ^bool(kauth_cred_t parent, kauth_cred_t model) {
+        posix_cred_t cur_pcred = posix_cred_get(parent);
+        uid_t svgid = KAUTH_UID_NONE;
 
 #if CONFIG_MACF
-		if ((error = mac_proc_check_setregid(p, parent, want_rgid,
-		want_egid)) != 0) {
-		        return false;
-		}
+        if ((error = mac_proc_check_setregid(p, parent, want_rgid,
+                                             want_egid)) != 0) {
+          return false;
+        }
 #endif
 
-		if (((want_rgid != KAUTH_UID_NONE &&          /* allow no change of rgid */
-		want_rgid != cur_pcred->cr_rgid &&            /* allow rgid = rgid */
-		want_rgid != cur_pcred->cr_gid &&             /* allow rgid = egid */
-		want_rgid != cur_pcred->cr_svgid) ||          /* allow rgid = svgid */
-		(want_egid != KAUTH_UID_NONE &&               /* allow no change of egid */
-		want_egid != cur_pcred->cr_groups[0] &&       /* allow no change of egid */
-		want_egid != cur_pcred->cr_gid &&             /* allow egid = egid */
-		want_egid != cur_pcred->cr_rgid &&            /* allow egid = rgid */
-		want_egid != cur_pcred->cr_svgid)) &&         /* allow egid = svgid */
-		(error = suser(parent, &p->p_acflag))) {      /* allow root user any */
-		        return false;
-		}
+        if (((want_rgid != KAUTH_UID_NONE &&       /* allow no change of rgid */
+              want_rgid != cur_pcred->cr_rgid &&   /* allow rgid = rgid */
+              want_rgid != cur_pcred->cr_gid &&    /* allow rgid = egid */
+              want_rgid != cur_pcred->cr_svgid) || /* allow rgid = svgid */
+             (want_egid != KAUTH_UID_NONE &&       /* allow no change of egid */
+              want_egid !=
+                  cur_pcred->cr_groups[0] &&     /* allow no change of egid */
+              want_egid != cur_pcred->cr_gid &&  /* allow egid = egid */
+              want_egid != cur_pcred->cr_rgid && /* allow egid = rgid */
+              want_egid != cur_pcred->cr_svgid)) &&  /* allow egid = svgid */
+            (error = suser(parent, &p->p_acflag))) { /* allow root user any */
+          return false;
+        }
 
-		uid_t new_egid = cur_pcred->cr_gid;
-		if (want_egid != KAUTH_UID_NONE && cur_pcred->cr_gid != want_egid) {
-		        /* changing the effective GID */
-		        new_egid = want_egid;
-		}
+        uid_t new_egid = cur_pcred->cr_gid;
+        if (want_egid != KAUTH_UID_NONE && cur_pcred->cr_gid != want_egid) {
+          /* changing the effective GID */
+          new_egid = want_egid;
+        }
 
-		/*
-		 * If the newly requested real gid or effective gid does
-		 * not match the saved gid, then set the saved gid to the
-		 * new effective gid.  We are protected from escalation
-		 * by the prechecking.
-		 */
-		if (cur_pcred->cr_svgid != want_rgid &&
-		cur_pcred->cr_svgid != want_egid) {
-		        svgid = new_egid;
-		}
+        /*
+         * If the newly requested real gid or effective gid does
+         * not match the saved gid, then set the saved gid to the
+         * new effective gid.  We are protected from escalation
+         * by the prechecking.
+         */
+        if (cur_pcred->cr_svgid != want_rgid &&
+            cur_pcred->cr_svgid != want_egid) {
+          svgid = new_egid;
+        }
 
-		return kauth_cred_model_setresgid(model, want_rgid, want_egid, svgid);
-	});
+        return kauth_cred_model_setresgid(model, want_rgid, want_egid, svgid);
+      });
 
-	return error;
+  return error;
 }
 
+static void kern_settid_assume_cred(thread_ro_t tro, kauth_cred_t tmp) {
+  kauth_cred_t cred = tro->tro_cred;
 
-static void
-kern_settid_assume_cred(thread_ro_t tro, kauth_cred_t tmp)
-{
-	kauth_cred_t cred = tro->tro_cred;
-
-	kauth_cred_set(&cred, tmp);
-	zalloc_ro_update_field(ZONE_ID_THREAD_RO, tro, tro_cred, &cred);
+  kauth_cred_set(&cred, tmp);
+  zalloc_ro_update_field(ZONE_ID_THREAD_RO, tro, tro_cred, &cred);
 }
 
 /*
@@ -1172,70 +1104,65 @@ kern_settid_assume_cred(thread_ro_t tro, kauth_cred_t tmp)
  * it changes the effective, real, and saved UIDs and GIDs for the current
  * thread to the requested UID and single GID, and clears all other GIDs.
  */
-static int
-kern_settid(proc_t p, uid_t uid, gid_t gid)
-{
-	kauth_cred_t cred;
-	struct thread_ro *tro = current_thread_ro();
+static int kern_settid(proc_t p, uid_t uid, gid_t gid) {
+  kauth_cred_t cred;
+  struct thread_ro *tro = current_thread_ro();
 #if CONFIG_MACF
-	int error;
+  int error;
 
-	if ((error = mac_proc_check_settid(p, uid, gid)) != 0) {
-		return error;
-	}
+  if ((error = mac_proc_check_settid(p, uid, gid)) != 0) {
+    return error;
+  }
 #endif
 
-	if (proc_suser(p) != 0) {
-		return EPERM;
-	}
+  if (proc_suser(p) != 0) {
+    return EPERM;
+  }
 
-	if (uid == KAUTH_UID_NONE) {
-		/* must already be assuming another identity in order to revert back */
-		if (tro->tro_realcred == tro->tro_cred) {
-			return EPERM;
-		}
+  if (uid == KAUTH_UID_NONE) {
+    /* must already be assuming another identity in order to revert back */
+    if (tro->tro_realcred == tro->tro_cred) {
+      return EPERM;
+    }
 
-		/* revert to delayed binding of process credential */
-		kern_settid_assume_cred(tro, tro->tro_realcred);
-	} else {
-		/* cannot already be assuming another identity */
-		if (tro->tro_realcred != tro->tro_cred) {
-			return EPERM;
-		}
+    /* revert to delayed binding of process credential */
+    kern_settid_assume_cred(tro, tro->tro_realcred);
+  } else {
+    /* cannot already be assuming another identity */
+    if (tro->tro_realcred != tro->tro_cred) {
+      return EPERM;
+    }
 
-		/*
-		 * Get a new credential instance from the old if this one
-		 * changes; otherwise kauth_cred_setuidgid() returns the
-		 * same credential.  We take an extra reference on the
-		 * current credential while we muck with it, so we can do
-		 * the post-compare for changes by pointer.
-		 */
-		cred = kauth_cred_derive(tro->tro_cred,
-		    ^bool (kauth_cred_t parent __unused, kauth_cred_t model) {
-			return kauth_cred_model_setuidgid(model, uid, gid);
-		});
-		kern_settid_assume_cred(tro, cred);
-		kauth_cred_unref(&cred);
-	}
+    /*
+     * Get a new credential instance from the old if this one
+     * changes; otherwise kauth_cred_setuidgid() returns the
+     * same credential.  We take an extra reference on the
+     * current credential while we muck with it, so we can do
+     * the post-compare for changes by pointer.
+     */
+    cred = kauth_cred_derive(
+        tro->tro_cred, ^bool(kauth_cred_t parent __unused, kauth_cred_t model) {
+          return kauth_cred_model_setuidgid(model, uid, gid);
+        });
+    kern_settid_assume_cred(tro, cred);
+    kauth_cred_unref(&cred);
+  }
 
-	/*
-	 * XXX should potentially set per thread security token (there is
-	 * XXX none).
-	 * XXX it is unclear whether P_SUGID should be st at this point;
-	 * XXX in theory, it is being deprecated.
-	 */
-	return 0;
+  /*
+   * XXX should potentially set per thread security token (there is
+   * XXX none).
+   * XXX it is unclear whether P_SUGID should be st at this point;
+   * XXX in theory, it is being deprecated.
+   */
+  return 0;
 }
 
-int
-sys_settid(proc_t p, struct settid_args *uap, __unused int32_t *retval)
-{
-	AUDIT_ARG(uid, uap->uid);
-	AUDIT_ARG(gid, uap->gid);
+int sys_settid(proc_t p, struct settid_args *uap, __unused int32_t *retval) {
+  AUDIT_ARG(uid, uap->uid);
+  AUDIT_ARG(gid, uap->gid);
 
-	return kern_settid(p, uap->uid, uap->gid);
+  return kern_settid(p, uap->uid, uap->gid);
 }
-
 
 /*
  * Set the per-thread override identity.  Use this system call for a thread to
@@ -1247,54 +1174,52 @@ sys_settid(proc_t p, struct settid_args *uap, __unused int32_t *retval)
  *
  * When the assume argument is zero we revert back to our normal identity.
  */
-int
-sys_settid_with_pid(proc_t p, struct settid_with_pid_args *uap, __unused int32_t *retval)
-{
-	uid_t uid;
-	gid_t gid;
+int sys_settid_with_pid(proc_t p, struct settid_with_pid_args *uap,
+                        __unused int32_t *retval) {
+  uid_t uid;
+  gid_t gid;
 
-	AUDIT_ARG(pid, uap->pid);
-	AUDIT_ARG(value32, uap->assume);
+  AUDIT_ARG(pid, uap->pid);
+  AUDIT_ARG(value32, uap->assume);
 
-	/*
-	 * XXX should potentially set per thread security token (there is
-	 * XXX none).
-	 * XXX it is unclear whether P_SUGID should be st at this point;
-	 * XXX in theory, it is being deprecated.
-	 */
+  /*
+   * XXX should potentially set per thread security token (there is
+   * XXX none).
+   * XXX it is unclear whether P_SUGID should be st at this point;
+   * XXX in theory, it is being deprecated.
+   */
 
-	/*
-	 * assume argument tells us to assume the identity of the process with the
-	 * id passed in the pid argument.
-	 */
-	if (uap->assume != 0) {
-		kauth_cred_t cred;
+  /*
+   * assume argument tells us to assume the identity of the process with the
+   * id passed in the pid argument.
+   */
+  if (uap->assume != 0) {
+    kauth_cred_t cred;
 
-		if (uap->pid == 0) {
-			return ESRCH;
-		}
+    if (uap->pid == 0) {
+      return ESRCH;
+    }
 
-		cred = kauth_cred_proc_ref_for_pid(uap->pid);
-		if (cred == NOCRED) {
-			return ESRCH;
-		}
+    cred = kauth_cred_proc_ref_for_pid(uap->pid);
+    if (cred == NOCRED) {
+      return ESRCH;
+    }
 
-		uid = kauth_cred_getuid(cred);
-		gid = kauth_cred_getgid(cred);
-		kauth_cred_unref(&cred);
-	} else {
-		/*
-		 * Otherwise, we are reverting back to normal mode of operation
-		 * where delayed binding of the process credential sets the
-		 * credential in the thread_ro (tro_cred)
-		 */
-		uid = KAUTH_UID_NONE;
-		gid = KAUTH_GID_NONE;
-	}
+    uid = kauth_cred_getuid(cred);
+    gid = kauth_cred_getgid(cred);
+    kauth_cred_unref(&cred);
+  } else {
+    /*
+     * Otherwise, we are reverting back to normal mode of operation
+     * where delayed binding of the process credential sets the
+     * credential in the thread_ro (tro_cred)
+     */
+    uid = KAUTH_UID_NONE;
+    gid = KAUTH_GID_NONE;
+  }
 
-	return kern_settid(p, uid, gid);
+  return kern_settid(p, uid, gid);
 }
-
 
 /*
  * setgroups1
@@ -1331,68 +1256,64 @@ sys_settid_with_pid(proc_t p, struct settid_with_pid_args *uap, __unused int32_t
  *		If the credential is changed as a result of this call, then we
  *		flag the process as having set privilege since the last exec.
  */
-static int
-setgroups1(proc_t p, u_int ngrp, user_addr_t gidset, uid_t gmuid, __unused int32_t *retval)
-{
-	gid_t   newgroups[NGROUPS] = { 0 };
-	int     error;
+static int setgroups1(proc_t p, u_int ngrp, user_addr_t gidset, uid_t gmuid,
+                      __unused int32_t *retval) {
+  gid_t newgroups[NGROUPS] = {0};
+  int error;
 
-	if (ngrp > NGROUPS) {
-		return EINVAL;
-	}
+  if (ngrp > NGROUPS) {
+    return EINVAL;
+  }
 
-	if (ngrp >= 1) {
-		error = copyin(gidset,
-		    (caddr_t)newgroups, ngrp * sizeof(gid_t));
-		if (error) {
-			return error;
-		}
-	}
-	return setgroups_internal(p, ngrp, newgroups, gmuid);
+  if (ngrp >= 1) {
+    error = copyin(gidset, (caddr_t)newgroups, ngrp * sizeof(gid_t));
+    if (error) {
+      return error;
+    }
+  }
+  return setgroups_internal(p, ngrp, newgroups, gmuid);
 }
 
-int
-setgroups_internal(proc_t p, u_int ngrp, gid_t *newgroups, uid_t gmuid)
-{
-	thread_ro_t tro = current_thread_ro();
-	kauth_cred_t cred;
-	int     error;
+int setgroups_internal(proc_t p, u_int ngrp, gid_t *newgroups, uid_t gmuid) {
+  thread_ro_t tro = current_thread_ro();
+  kauth_cred_t cred;
+  int error;
 
-	error = proc_suser(p);
-	if (error) {
-		return error;
-	}
+  error = proc_suser(p);
+  if (error) {
+    return error;
+  }
 
-	if (ngrp < 1) {
-		ngrp = 1;
-		newgroups[0] = 0;
-	}
+  if (ngrp < 1) {
+    ngrp = 1;
+    newgroups[0] = 0;
+  }
 
-	kauth_cred_derive_t fn = ^bool (kauth_cred_t parent __unused, kauth_cred_t model) {
-		return kauth_cred_model_setgroups(model, newgroups, ngrp, gmuid);
-	};
+  kauth_cred_derive_t fn =
+      ^bool(kauth_cred_t parent __unused, kauth_cred_t model) {
+        return kauth_cred_model_setgroups(model, newgroups, ngrp, gmuid);
+      };
 
-	if (tro->tro_realcred != tro->tro_cred) {
-		/*
-		 * If this thread is under an assumed identity, set the
-		 * supplementary grouplist on the thread credential instead
-		 * of the process one.  If we were the only reference holder,
-		 * the credential is updated in place, otherwise, our reference
-		 * is dropped and we get back a different cred with a reference
-		 * already held on it.  Because this is per-thread, we don't
-		 * need the referencing/locking/retry required for per-process.
-		 */
-		cred = kauth_cred_derive(tro->tro_cred, fn);
-		kern_settid_assume_cred(tro, cred);
-		kauth_cred_unref(&cred);
-	} else {
-		kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID, fn);
-		AUDIT_ARG(groupset, &newgroups[0], ngrp);
-	}
+  if (tro->tro_realcred != tro->tro_cred) {
+    /*
+     * If this thread is under an assumed identity, set the
+     * supplementary grouplist on the thread credential instead
+     * of the process one.  If we were the only reference holder,
+     * the credential is updated in place, otherwise, our reference
+     * is dropped and we get back a different cred with a reference
+     * already held on it.  Because this is per-thread, we don't
+     * need the referencing/locking/retry required for per-process.
+     */
+    cred = kauth_cred_derive(tro->tro_cred, fn);
+    kern_settid_assume_cred(tro, cred);
+    kauth_cred_unref(&cred);
+  } else {
+    kauth_cred_proc_update(p, PROC_SETTOKEN_SETUGID, fn);
+    AUDIT_ARG(groupset, &newgroups[0], ngrp);
+  }
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * initgroups
@@ -1423,12 +1344,10 @@ setgroups_internal(proc_t p, u_int ngrp, gid_t *newgroups, uid_t gmuid)
  *
  * See also:	setgroups1()
  */
-int
-initgroups(proc_t p, struct initgroups_args *uap, __unused int32_t *retval)
-{
-	return setgroups1(p, uap->gidsetsize, uap->gidset, uap->gmuid, retval);
+int initgroups(proc_t p, struct initgroups_args *uap,
+               __unused int32_t *retval) {
+  return setgroups1(p, uap->gidsetsize, uap->gidset, uap->gmuid, retval);
 }
-
 
 /*
  * setgroups
@@ -1455,12 +1374,9 @@ initgroups(proc_t p, struct initgroups_args *uap, __unused int32_t *retval)
  *
  * See also:	setgroups1()
  */
-int
-setgroups(proc_t p, struct setgroups_args *uap, __unused int32_t *retval)
-{
-	return setgroups1(p, uap->gidsetsize, uap->gidset, KAUTH_UID_NONE, retval);
+int setgroups(proc_t p, struct setgroups_args *uap, __unused int32_t *retval) {
+  return setgroups1(p, uap->gidsetsize, uap->gidset, KAUTH_UID_NONE, retval);
 }
-
 
 /*
  * Set the per-thread/per-process supplementary groups list.
@@ -1469,10 +1385,9 @@ setgroups(proc_t p, struct setgroups_args *uap, __unused int32_t *retval)
  *
  */
 
-int
-setsgroups(__unused proc_t p, __unused struct setsgroups_args *uap, __unused int32_t *retval)
-{
-	return ENOTSUP;
+int setsgroups(__unused proc_t p, __unused struct setsgroups_args *uap,
+               __unused int32_t *retval) {
+  return ENOTSUP;
 }
 
 /*
@@ -1482,12 +1397,10 @@ setsgroups(__unused proc_t p, __unused struct setsgroups_args *uap, __unused int
  *
  */
 
-int
-setwgroups(__unused proc_t p, __unused struct setwgroups_args *uap, __unused int32_t *retval)
-{
-	return ENOTSUP;
+int setwgroups(__unused proc_t p, __unused struct setwgroups_args *uap,
+               __unused int32_t *retval) {
+  return ENOTSUP;
 }
-
 
 /*
  * Check if gid is a member of the group set.
@@ -1495,17 +1408,14 @@ setwgroups(__unused proc_t p, __unused struct setwgroups_args *uap, __unused int
  * XXX This interface is going away; use kauth_cred_ismember_gid() directly
  * XXX instead.
  */
-int
-groupmember(gid_t gid, kauth_cred_t cred)
-{
-	int is_member;
+int groupmember(gid_t gid, kauth_cred_t cred) {
+  int is_member;
 
-	if (kauth_cred_ismember_gid(cred, gid, &is_member) == 0 && is_member) {
-		return 1;
-	}
-	return 0;
+  if (kauth_cred_ismember_gid(cred, gid, &is_member) == 0 && is_member) {
+    return 1;
+  }
+  return 0;
 }
-
 
 /*
  * Test whether the specified credentials imply "super-user"
@@ -1521,18 +1431,15 @@ groupmember(gid_t gid, kauth_cred_t cred)
  *		only externalized via private sysctl and in process accounting
  *		records.  The flag is technically not required in either case.
  */
-int
-suser(kauth_cred_t cred, u_short *acflag)
-{
-	if (kauth_cred_getuid(cred) == 0) {
-		if (acflag) {
-			*acflag |= ASU;
-		}
-		return 0;
-	}
-	return EPERM;
+int suser(kauth_cred_t cred, u_short *acflag) {
+  if (kauth_cred_getuid(cred) == 0) {
+    if (acflag) {
+      *acflag |= ASU;
+    }
+    return 0;
+  }
+  return EPERM;
 }
-
 
 /*
  * getlogin
@@ -1557,41 +1464,37 @@ suser(kauth_cred_t cred, u_short *acflag)
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-getlogin(proc_t p, struct getlogin_args *uap, __unused int32_t *retval)
-{
-	char buffer[MAXLOGNAME];
-	struct session *sessp;
-	struct pgrp *pg;
+int getlogin(proc_t p, struct getlogin_args *uap, __unused int32_t *retval) {
+  char buffer[MAXLOGNAME];
+  struct session *sessp;
+  struct pgrp *pg;
 
-	if (uap->namelen > MAXLOGNAME) {
-		uap->namelen = MAXLOGNAME;
-	}
+  if (uap->namelen > MAXLOGNAME) {
+    uap->namelen = MAXLOGNAME;
+  }
 
-	if ((pg = proc_pgrp(p, &sessp)) != PGRP_NULL) {
-		session_lock(sessp);
-		bcopy(sessp->s_login, buffer, uap->namelen);
-		session_unlock(sessp);
-		pgrp_rele(pg);
-	} else {
-		bzero(buffer, uap->namelen);
-	}
+  if ((pg = proc_pgrp(p, &sessp)) != PGRP_NULL) {
+    session_lock(sessp);
+    bcopy(sessp->s_login, buffer, uap->namelen);
+    session_unlock(sessp);
+    pgrp_rele(pg);
+  } else {
+    bzero(buffer, uap->namelen);
+  }
 
-	return copyout((caddr_t)buffer, uap->namebuf, uap->namelen);
+  return copyout((caddr_t)buffer, uap->namebuf, uap->namelen);
 }
 
-void
-setlogin_internal(proc_t p, const char login[static MAXLOGNAME])
-{
-	struct session *sessp;
-	struct pgrp *pg;
+void setlogin_internal(proc_t p, const char login[static MAXLOGNAME]) {
+  struct session *sessp;
+  struct pgrp *pg;
 
-	if ((pg = proc_pgrp(p, &sessp)) != PGRP_NULL) {
-		session_lock(sessp);
-		bcopy(login, sessp->s_login, MAXLOGNAME);
-		session_unlock(sessp);
-		pgrp_rele(pg);
-	}
+  if ((pg = proc_pgrp(p, &sessp)) != PGRP_NULL) {
+    session_lock(sessp);
+    bcopy(login, sessp->s_login, MAXLOGNAME);
+    session_unlock(sessp);
+    pgrp_rele(pg);
+  }
 }
 
 /*
@@ -1610,134 +1513,118 @@ setlogin_internal(proc_t p, const char login[static MAXLOGNAME])
  *
  * XXX:		Belongs in kern_proc.c
  */
-int
-setlogin(proc_t p, struct setlogin_args *uap, __unused int32_t *retval)
-{
-	int error;
-	size_t dummy = 0;
-	char buffer[MAXLOGNAME + 1];
+int setlogin(proc_t p, struct setlogin_args *uap, __unused int32_t *retval) {
+  int error;
+  size_t dummy = 0;
+  char buffer[MAXLOGNAME + 1];
 
-	if ((error = proc_suser(p))) {
-		return error;
-	}
+  if ((error = proc_suser(p))) {
+    return error;
+  }
 
-	bzero(&buffer[0], MAXLOGNAME + 1);
+  bzero(&buffer[0], MAXLOGNAME + 1);
 
+  error = copyinstr(uap->namebuf, (caddr_t)&buffer[0], MAXLOGNAME - 1,
+                    (size_t *)&dummy);
 
-	error = copyinstr(uap->namebuf,
-	    (caddr_t) &buffer[0],
-	    MAXLOGNAME - 1, (size_t *)&dummy);
+  setlogin_internal(p, buffer);
 
-	setlogin_internal(p, buffer);
-
-	if (!error) {
-		AUDIT_ARG(text, buffer);
-	} else if (error == ENAMETOOLONG) {
-		error = EINVAL;
-	}
-	return error;
+  if (!error) {
+    AUDIT_ARG(text, buffer);
+  } else if (error == ENAMETOOLONG) {
+    error = EINVAL;
+  }
+  return error;
 }
 
+static void proc_calc_audit_token(proc_t p, kauth_cred_t my_cred,
+                                  audit_token_t *audit_token) {
+  posix_cred_t my_pcred = posix_cred_get(my_cred);
 
-static void
-proc_calc_audit_token(proc_t p, kauth_cred_t my_cred, audit_token_t *audit_token)
-{
-	posix_cred_t my_pcred = posix_cred_get(my_cred);
-
-	/*
-	 * The current layout of the Mach audit token explicitly
-	 * adds these fields.  But nobody should rely on such
-	 * a literal representation.  Instead, the BSM library
-	 * provides a function to convert an audit token into
-	 * a BSM subject.  Use of that mechanism will isolate
-	 * the user of the trailer from future representation
-	 * changes.
-	 */
-	audit_token->val[0] = my_cred->cr_audit.as_aia_p->ai_auid;
-	audit_token->val[1] = my_pcred->cr_uid;
-	audit_token->val[2] = my_pcred->cr_gid;
-	audit_token->val[3] = my_pcred->cr_ruid;
-	audit_token->val[4] = my_pcred->cr_rgid;
-	audit_token->val[5] = proc_getpid(p);
-	audit_token->val[6] = my_cred->cr_audit.as_aia_p->ai_asid;
-	audit_token->val[7] = proc_pidversion(p);
+  /*
+   * The current layout of the Mach audit token explicitly
+   * adds these fields.  But nobody should rely on such
+   * a literal representation.  Instead, the BSM library
+   * provides a function to convert an audit token into
+   * a BSM subject.  Use of that mechanism will isolate
+   * the user of the trailer from future representation
+   * changes.
+   */
+  audit_token->val[0] = my_cred->cr_audit.as_aia_p->ai_auid;
+  audit_token->val[1] = my_pcred->cr_uid;
+  audit_token->val[2] = my_pcred->cr_gid;
+  audit_token->val[3] = my_pcred->cr_ruid;
+  audit_token->val[4] = my_pcred->cr_rgid;
+  audit_token->val[5] = proc_getpid(p);
+  audit_token->val[6] = my_cred->cr_audit.as_aia_p->ai_asid;
+  audit_token->val[7] = proc_pidversion(p);
 }
 
 /* Set the secrity token of the task with current euid and eguid */
-int
-set_security_token(proc_t p, struct ucred *my_cred)
-{
-	security_token_t sec_token;
-	audit_token_t    audit_token;
-	host_priv_t host_priv;
-	task_t task = proc_task(p);
+int set_security_token(proc_t p, struct ucred *my_cred) {
+  security_token_t sec_token;
+  audit_token_t audit_token;
+  host_priv_t host_priv;
+  task_t task = proc_task(p);
 
-	proc_calc_audit_token(p, my_cred, &audit_token);
+  proc_calc_audit_token(p, my_cred, &audit_token);
 
-	sec_token.val[0] = kauth_cred_getuid(my_cred);
-	sec_token.val[1] = kauth_cred_getgid(my_cred);
+  sec_token.val[0] = kauth_cred_getuid(my_cred);
+  sec_token.val[1] = kauth_cred_getgid(my_cred);
 
-	host_priv = (sec_token.val[0]) ? HOST_PRIV_NULL : host_priv_self();
+  host_priv = (sec_token.val[0]) ? HOST_PRIV_NULL : host_priv_self();
 #if CONFIG_MACF
-	if (host_priv != HOST_PRIV_NULL && mac_system_check_host_priv(my_cred)) {
-		host_priv = HOST_PRIV_NULL;
-	}
+  if (host_priv != HOST_PRIV_NULL && mac_system_check_host_priv(my_cred)) {
+    host_priv = HOST_PRIV_NULL;
+  }
 #endif
 
 #if DEVELOPMENT || DEBUG
-	/*
-	 * Update the pid an proc name for importance base if any
-	 */
-	task_importance_update_owner_info(task);
+  /*
+   * Update the pid an proc name for importance base if any
+   */
+  task_importance_update_owner_info(task);
 #endif
 
-	return task_set_security_tokens(task, sec_token, audit_token,
-	           host_priv) != KERN_SUCCESS;
+  return task_set_security_tokens(task, sec_token, audit_token, host_priv) !=
+         KERN_SUCCESS;
 }
 
-void
-proc_parent_audit_token(proc_t p, audit_token_t *token_out)
-{
-	proc_t parent;
-	kauth_cred_t my_cred;
+void proc_parent_audit_token(proc_t p, audit_token_t *token_out) {
+  proc_t parent;
+  kauth_cred_t my_cred;
 
-	proc_list_lock();
+  proc_list_lock();
 
-	parent = p->p_pptr;
-	my_cred = kauth_cred_proc_ref(parent);
-	proc_calc_audit_token(parent, my_cred, token_out);
-	kauth_cred_unref(&my_cred);
+  parent = p->p_pptr;
+  my_cred = kauth_cred_proc_ref(parent);
+  proc_calc_audit_token(parent, my_cred, token_out);
+  kauth_cred_unref(&my_cred);
 
-	proc_list_unlock();
+  proc_list_unlock();
 }
-
 
 int get_audit_token_pid(audit_token_t *audit_token);
 
-int
-get_audit_token_pid(audit_token_t *audit_token)
-{
-	/* keep in-sync with set_security_token (above) */
-	if (audit_token) {
-		return (int)audit_token->val[5];
-	}
-	return -1;
+int get_audit_token_pid(audit_token_t *audit_token) {
+  /* keep in-sync with set_security_token (above) */
+  if (audit_token) {
+    return (int)audit_token->val[5];
+  }
+  return -1;
 }
-
 
 /*
  * Fill in a struct xucred based on a kauth_cred_t.
  */
-void
-cru2x(kauth_cred_t cr, struct xucred *xcr)
-{
-	posix_cred_t pcr = posix_cred_get(cr);
+void cru2x(kauth_cred_t cr, struct xucred *xcr) {
+  posix_cred_t pcr = posix_cred_get(cr);
 
-	bzero(xcr, sizeof(*xcr));
-	xcr->cr_version = XUCRED_VERSION;
-	xcr->cr_uid = kauth_cred_getuid(cr);
-	xcr->cr_ngroups = pcr->cr_ngroups;
-	bcopy(pcr->cr_groups, xcr->cr_groups, sizeof(xcr->cr_groups));
+  bzero(xcr, sizeof(*xcr));
+  xcr->cr_version = XUCRED_VERSION;
+  xcr->cr_uid = kauth_cred_getuid(cr);
+  xcr->cr_ngroups = pcr->cr_ngroups;
+  bcopy(pcr->cr_groups, xcr->cr_groups, sizeof(xcr->cr_groups));
 }
 
 /*
@@ -1745,8 +1632,6 @@ cru2x(kauth_cred_t cr, struct xucred *xcr)
  * Needed because elements of kauth_cred are PACed
  * so memcpy doesn't work.
  */
-void
-kauth_cred_copy(const uintptr_t kv, const uintptr_t new_data)
-{
-	*(kauth_cred_t)kv = *(kauth_cred_t)new_data;
+void kauth_cred_copy(const uintptr_t kv, const uintptr_t new_data) {
+  *(kauth_cred_t)kv = *(kauth_cred_t)new_data;
 }

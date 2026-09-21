@@ -68,14 +68,14 @@
 #ifndef _SYS_ACCT_H_
 #define _SYS_ACCT_H_
 
-#include <sys/appleapiopts.h>
-#include <sys/cdefs.h>
-#include <sys/_types/_u_int8_t.h>  /* u_int8_t */
+#include <sys/_types/_dev_t.h>     /* dev_t */
+#include <sys/_types/_gid_t.h>     /* gid_t */
 #include <sys/_types/_u_int16_t.h> /* u_int16_t */
 #include <sys/_types/_u_int32_t.h> /* u_int32_t */
+#include <sys/_types/_u_int8_t.h>  /* u_int8_t */
 #include <sys/_types/_uid_t.h>     /* uid_t */
-#include <sys/_types/_gid_t.h>     /* gid_t */
-#include <sys/_types/_dev_t.h>     /* dev_t */
+#include <sys/appleapiopts.h>
+#include <sys/cdefs.h>
 
 /*
  * Accounting structures; these use a comp_t type which is a 3 bits base 8
@@ -85,37 +85,37 @@
 typedef u_int16_t comp_t;
 
 struct acct {
-	char      ac_comm[10];  /* command name */
-	comp_t    ac_utime;     /* user time */
-	comp_t    ac_stime;     /* system time */
-	comp_t    ac_etime;     /* elapsed time */
-	u_int32_t ac_btime;     /* starting time */
-	uid_t     ac_uid;       /* user id */
-	gid_t     ac_gid;       /* group id */
-	u_int16_t ac_mem;       /* average memory usage */
-	comp_t    ac_io;        /* count of IO blocks */
-	dev_t     ac_tty;       /* controlling tty */
+  char ac_comm[10];   /* command name */
+  comp_t ac_utime;    /* user time */
+  comp_t ac_stime;    /* system time */
+  comp_t ac_etime;    /* elapsed time */
+  u_int32_t ac_btime; /* starting time */
+  uid_t ac_uid;       /* user id */
+  gid_t ac_gid;       /* group id */
+  u_int16_t ac_mem;   /* average memory usage */
+  comp_t ac_io;       /* count of IO blocks */
+  dev_t ac_tty;       /* controlling tty */
 
-#define AFORK   0x01            /* fork'd but not exec'd */
-#define ASU     0x02            /* used super-user permissions */
-#define ACOMPAT 0x04            /* used compatibility mode */
-#define ACORE   0x08            /* dumped core */
-#define AXSIG   0x10            /* killed by a signal */
-	u_int8_t  ac_flag;      /* accounting flags */
+#define AFORK 0x01   /* fork'd but not exec'd */
+#define ASU 0x02     /* used super-user permissions */
+#define ACOMPAT 0x04 /* used compatibility mode */
+#define ACORE 0x08   /* dumped core */
+#define AXSIG 0x10   /* killed by a signal */
+  u_int8_t ac_flag;  /* accounting flags */
 };
 
 /*
  * 1/AHZ is the granularity of the data encoded in the comp_t fields.
  * This is not necessarily equal to hz.
  */
-#define AHZ     64
+#define AHZ 64
 
 #ifdef XNU_KERNEL_PRIVATE
 #ifdef __APPLE_API_PRIVATE
-extern struct vnode     *acctp;
+extern struct vnode *acctp;
 
 __BEGIN_DECLS
-int     acct_process(struct proc *p);
+int acct_process(struct proc *p);
 __END_DECLS
 
 #endif /* __APPLE_API_PRIVATE */

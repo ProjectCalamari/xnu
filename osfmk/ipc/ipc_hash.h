@@ -66,36 +66,27 @@
 #ifndef _IPC_IPC_HASH_H_
 #define _IPC_IPC_HASH_H_
 
-#include <mach/port.h>
-#include <mach/mach_types.h>
+#include <ipc/ipc_entry.h>
 #include <mach/boolean.h>
 #include <mach/kern_return.h>
-#include <ipc/ipc_entry.h>
+#include <mach/mach_types.h>
+#include <mach/port.h>
 
 /*
  * Exported interfaces
  */
 
 /* Lookup (space, obj) in the appropriate reverse hash table */
-extern boolean_t ipc_hash_lookup(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_name_t        *namep,
-	ipc_entry_t             *entryp);
+extern boolean_t ipc_hash_lookup(ipc_space_t space, ipc_object_t obj,
+                                 mach_port_name_t *namep, ipc_entry_t *entryp);
 
 /* Insert an entry into the appropriate reverse hash table */
-extern void ipc_hash_insert(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_name_t        name,
-	ipc_entry_t             entry);
+extern void ipc_hash_insert(ipc_space_t space, ipc_object_t obj,
+                            mach_port_name_t name, ipc_entry_t entry);
 
 /* Delete an entry from the appropriate reverse hash table */
-extern void ipc_hash_delete(
-	ipc_space_t             space,
-	ipc_object_t            obj,
-	mach_port_name_t        name,
-	ipc_entry_t             entry);
+extern void ipc_hash_delete(ipc_space_t space, ipc_object_t obj,
+                            mach_port_name_t name, ipc_entry_t entry);
 
 /*
  *	For use by functions that know what they're doing:
@@ -103,30 +94,21 @@ extern void ipc_hash_delete(
  */
 
 /* Lookup (space, obj) in local hash table */
-extern boolean_t ipc_hash_table_lookup(
-	ipc_entry_table_t       table,
-	ipc_object_t            obj,
-	mach_port_name_t        *namep,
-	ipc_entry_t             *entryp);
+extern boolean_t ipc_hash_table_lookup(ipc_entry_table_t table,
+                                       ipc_object_t obj,
+                                       mach_port_name_t *namep,
+                                       ipc_entry_t *entryp);
 
 /* Inserts an entry into the local reverse hash table */
-extern void ipc_hash_table_insert(
-	ipc_entry_table_t       table,
-	ipc_object_t            obj,
-	mach_port_index_t       index,
-	ipc_entry_t             entry);
+extern void ipc_hash_table_insert(ipc_entry_table_t table, ipc_object_t obj,
+                                  mach_port_index_t index, ipc_entry_t entry);
 
 /* Delete an entry from the appropriate reverse hash table */
-extern void ipc_hash_table_delete(
-	ipc_entry_table_t       table,
-	ipc_object_t            obj,
-	mach_port_name_t        name,
-	ipc_entry_t             entry);
+extern void ipc_hash_table_delete(ipc_entry_table_t table, ipc_object_t obj,
+                                  mach_port_name_t name, ipc_entry_t entry);
 
 #include <mach_debug/hash_info.h>
 
-extern natural_t ipc_hash_info(
-	hash_info_bucket_t      *info,
-	natural_t count);
+extern natural_t ipc_hash_info(hash_info_bucket_t *info, natural_t count);
 
-#endif  /* _IPC_IPC_HASH_H_ */
+#endif /* _IPC_IPC_HASH_H_ */

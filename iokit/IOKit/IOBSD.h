@@ -32,18 +32,17 @@
  * bsd-related registry properties
  */
 
-#define kIOBSDKey      "IOBSD"     // (BSD subsystem resource)
-#define kIOBSDNameKey  "BSD Name"  // (an OSString)
+#define kIOBSDKey "IOBSD"          // (BSD subsystem resource)
+#define kIOBSDNameKey "BSD Name"   // (an OSString)
 #define kIOBSDNamesKey "BSD Names" // (an OSDictionary of OSString's, for links)
 #define kIOBSDMajorKey "BSD Major" // (an OSNumber)
 #define kIOBSDMinorKey "BSD Minor" // (an OSNumber)
-#define kIOBSDUnitKey  "BSD Unit"  // (an OSNumber)
-
+#define kIOBSDUnitKey "BSD Unit"   // (an OSNumber)
 
 #ifdef KERNEL_PRIVATE
 
-#include <stdint.h>
 #include <kern/task.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,65 +52,72 @@ struct IOPolledFileIOVars;
 struct mount;
 struct vnode;
 
-enum{
-	kIOMountChangeMount      = 0x00000101,
-	kIOMountChangeUnmount    = 0x00000102,
-	kIOMountChangeWillResize = 0x00000201,
-	kIOMountChangeDidResize  = 0x00000202,
+enum {
+  kIOMountChangeMount = 0x00000101,
+  kIOMountChangeUnmount = 0x00000102,
+  kIOMountChangeWillResize = 0x00000201,
+  kIOMountChangeDidResize = 0x00000202,
 };
 extern void IOBSDMountChange(struct mount *mp, uint32_t op);
 extern void IOBSDLowSpaceUnlinkKernelCore(void);
 /*
  *       Tests that the entitlement is present and true
  */
-extern boolean_t IOCurrentTaskHasEntitlement(const char * entitlement);
+extern boolean_t IOCurrentTaskHasEntitlement(const char *entitlement);
 extern boolean_t IOTaskHasEntitlement(task_t task, const char *entitlement);
 
 /*
- * IOTaskHasEntitlementAsBooleanOrObject returns true if the entitlement is true boolean, or
- *  a non-NULL object.
+ * IOTaskHasEntitlementAsBooleanOrObject returns true if the entitlement is true
+ * boolean, or a non-NULL object.
  */
-extern boolean_t IOTaskHasEntitlementAsBooleanOrObject(task_t task, const char *entitlement);
-extern boolean_t IOVnodeHasEntitlement(struct vnode *vnode, int64_t off, const char *entitlement);
-extern boolean_t IOVnodeGetBooleanEntitlement(
-	struct vnode *vnode,
-	int64_t off,
-	const char *entitlement,
-	bool *value);
-extern char * IOCurrentTaskGetEntitlement(const char * entitlement);
-extern char * IOTaskGetEntitlement(task_t task, const char * entitlement);
+extern boolean_t IOTaskHasEntitlementAsBooleanOrObject(task_t task,
+                                                       const char *entitlement);
+extern boolean_t IOVnodeHasEntitlement(struct vnode *vnode, int64_t off,
+                                       const char *entitlement);
+extern boolean_t IOVnodeGetBooleanEntitlement(struct vnode *vnode, int64_t off,
+                                              const char *entitlement,
+                                              bool *value);
+extern char *IOCurrentTaskGetEntitlement(const char *entitlement);
+extern char *IOTaskGetEntitlement(task_t task, const char *entitlement);
 /*
- * IOVnodeGetEntitlement returns a null-terminated string that must be freed with kfree_data().
+ * IOVnodeGetEntitlement returns a null-terminated string that must be freed
+ * with kfree_data().
  */
-extern char *IOVnodeGetEntitlement(struct vnode *vnode, int64_t offset, const char *entitlement);
+extern char *IOVnodeGetEntitlement(struct vnode *vnode, int64_t offset,
+                                   const char *entitlement);
 
-extern boolean_t IOTaskGetIntegerEntitlement(task_t task, const char *entitlement, uint64_t *value);
+extern boolean_t IOTaskGetIntegerEntitlement(task_t task,
+                                             const char *entitlement,
+                                             uint64_t *value);
 
 /*
  *       Tests that the entitlement is present and has matching value
  */
-extern boolean_t IOCurrentTaskHasStringEntitlement(const char *entitlement, const char *value);
-extern boolean_t IOTaskHasStringEntitlement(task_t task, const char *entitlement, const char *value);
+extern boolean_t IOCurrentTaskHasStringEntitlement(const char *entitlement,
+                                                   const char *value);
+extern boolean_t IOTaskHasStringEntitlement(task_t task,
+                                            const char *entitlement,
+                                            const char *value);
 
 typedef enum {
-	kIOPolledCoreFileModeNotInitialized,
-	kIOPolledCoreFileModeDisabled,
-	kIOPolledCoreFileModeClosed,
-	kIOPolledCoreFileModeUnlinked,
-	kIOPolledCoreFileModeStackshot,
-	kIOPolledCoreFileModeCoredump,
+  kIOPolledCoreFileModeNotInitialized,
+  kIOPolledCoreFileModeDisabled,
+  kIOPolledCoreFileModeClosed,
+  kIOPolledCoreFileModeUnlinked,
+  kIOPolledCoreFileModeStackshot,
+  kIOPolledCoreFileModeCoredump,
 } IOPolledCoreFileMode_t;
 
-extern struct IOPolledFileIOVars * gIOPolledCoreFileVars;
+extern struct IOPolledFileIOVars *gIOPolledCoreFileVars;
 extern kern_return_t gIOPolledCoreFileOpenRet;
 extern IOPolledCoreFileMode_t gIOPolledCoreFileMode;
 
 extern bool IOPMIsAOTMode(void);
 extern bool IOPMIsLPWMode(void);
 enum {
-	kIOPMNetworkStackFullWakeFlag = 0x000000001,
+  kIOPMNetworkStackFullWakeFlag = 0x000000001,
 };
-extern void IOPMNetworkStackFullWake(uint64_t flags, const char * reason);
+extern void IOPMNetworkStackFullWake(uint64_t flags, const char *reason);
 
 #ifdef __cplusplus
 }

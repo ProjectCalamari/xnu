@@ -21,63 +21,48 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
-#include <sys/snapshot.h>
-#include <sys/attr.h>
-#include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/attr.h>
+#include <sys/snapshot.h>
+#include <unistd.h>
 
 extern int __fs_snapshot(uint32_t, int, const char *, const char *, void *,
-    uint32_t);
+                         uint32_t);
 
-int
-fs_snapshot_create(int dirfd, const char *name, uint32_t flags)
-{
-	return __fs_snapshot(SNAPSHOT_OP_CREATE, dirfd, name, NULL, NULL, flags);
+int fs_snapshot_create(int dirfd, const char *name, uint32_t flags) {
+  return __fs_snapshot(SNAPSHOT_OP_CREATE, dirfd, name, NULL, NULL, flags);
 }
 
-int
-fs_snapshot_list(int dirfd, struct attrlist *alist, void *attrbuf, size_t bufsize,
-    uint32_t flags)
-{
-	if (flags != 0) {
-		errno = EINVAL;
-		return -1;
-	}
+int fs_snapshot_list(int dirfd, struct attrlist *alist, void *attrbuf,
+                     size_t bufsize, uint32_t flags) {
+  if (flags != 0) {
+    errno = EINVAL;
+    return -1;
+  }
 
-	return getattrlistbulk(dirfd, alist, attrbuf, bufsize,
-	           FSOPT_LIST_SNAPSHOT);
+  return getattrlistbulk(dirfd, alist, attrbuf, bufsize, FSOPT_LIST_SNAPSHOT);
 }
 
-int
-fs_snapshot_delete(int dirfd, const char *name, uint32_t flags)
-{
-	return __fs_snapshot(SNAPSHOT_OP_DELETE, dirfd, name, NULL, NULL, flags);
+int fs_snapshot_delete(int dirfd, const char *name, uint32_t flags) {
+  return __fs_snapshot(SNAPSHOT_OP_DELETE, dirfd, name, NULL, NULL, flags);
 }
 
-int
-fs_snapshot_rename(int dirfd, const char *old, const char *new, uint32_t flags)
-{
-	return __fs_snapshot(SNAPSHOT_OP_RENAME, dirfd, old, new, NULL, flags);
+int fs_snapshot_rename(int dirfd, const char *old, const char *new,
+                       uint32_t flags) {
+  return __fs_snapshot(SNAPSHOT_OP_RENAME, dirfd, old, new, NULL, flags);
 }
 
-int
-fs_snapshot_revert(int dirfd, const char *name, uint32_t flags)
-{
-	return __fs_snapshot(SNAPSHOT_OP_REVERT, dirfd, name, NULL, NULL, flags);
+int fs_snapshot_revert(int dirfd, const char *name, uint32_t flags) {
+  return __fs_snapshot(SNAPSHOT_OP_REVERT, dirfd, name, NULL, NULL, flags);
 }
 
-int
-fs_snapshot_root(int dirfd, const char *name, uint32_t flags)
-{
-	return __fs_snapshot(SNAPSHOT_OP_ROOT, dirfd, name, NULL, NULL, flags);
+int fs_snapshot_root(int dirfd, const char *name, uint32_t flags) {
+  return __fs_snapshot(SNAPSHOT_OP_ROOT, dirfd, name, NULL, NULL, flags);
 }
 
-int
-fs_snapshot_mount(int dirfd, const char *dir, const char *snapshot,
-    uint32_t flags)
-{
-	return __fs_snapshot(SNAPSHOT_OP_MOUNT, dirfd, snapshot, dir,
-	           NULL, flags);
+int fs_snapshot_mount(int dirfd, const char *dir, const char *snapshot,
+                      uint32_t flags) {
+  return __fs_snapshot(SNAPSHOT_OP_MOUNT, dirfd, snapshot, dir, NULL, flags);
 }

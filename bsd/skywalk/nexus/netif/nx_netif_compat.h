@@ -58,19 +58,19 @@
 #include <skywalk/os_skywalk_private.h>
 
 /* kernel packet buffer size for compat netif */
-#define NETIF_COMPAT_BUF_SIZE   128
+#define NETIF_COMPAT_BUF_SIZE 128
 /* size of data to be copied from mbuf for flowswitch classification */
 #define NETIF_COMPAT_MAX_MBUF_DATA_COPY NETIF_COMPAT_BUF_SIZE
 
 #if CONFIG_NEXUS_NETIF
-#define NEXUS_PROVIDER_NET_IF_COMPAT    "com.apple.nexus.netif.compat"
+#define NEXUS_PROVIDER_NET_IF_COMPAT "com.apple.nexus.netif.compat"
 
-struct nexus_netif_compat_adapter {     /* emulated device */
-	/*
-	 * This is an overlay structure on nexus_adapter;
-	 * make sure it contains 'up' as the first member.
-	 */
-	struct nexus_netif_adapter nca_up;
+struct nexus_netif_compat_adapter { /* emulated device */
+  /*
+   * This is an overlay structure on nexus_adapter;
+   * make sure it contains 'up' as the first member.
+   */
+  struct nexus_netif_adapter nca_up;
 };
 
 extern void nx_netif_compat_init(struct nxdom *);

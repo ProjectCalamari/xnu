@@ -26,94 +26,94 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <kperf/task_samplers.h>
-#include <kperf/context.h>
-#include <kperf/buffer.h>
 #include <kern/thread.h>
+#include <kperf/buffer.h>
+#include <kperf/context.h>
+#include <kperf/task_samplers.h>
 
 #include <kern/task.h>
 
-extern void memorystatus_proc_flags_unsafe(void * v, boolean_t *is_dirty,
-    boolean_t *is_dirty_tracked, boolean_t *allow_idle_exit, boolean_t *is_active,
-    boolean_t *is_managed, boolean_t *has_assertion);
+extern void memorystatus_proc_flags_unsafe(void *v, boolean_t *is_dirty,
+                                           boolean_t *is_dirty_tracked,
+                                           boolean_t *allow_idle_exit,
+                                           boolean_t *is_active,
+                                           boolean_t *is_managed,
+                                           boolean_t *has_assertion);
 
-void
-kperf_task_snapshot_sample(task_t task, struct kperf_task_snapshot *tksn)
-{
-	BUF_INFO(PERF_TK_SNAP_SAMPLE | DBG_FUNC_START);
+void kperf_task_snapshot_sample(task_t task, struct kperf_task_snapshot *tksn) {
+  BUF_INFO(PERF_TK_SNAP_SAMPLE | DBG_FUNC_START);
 
-	assert(tksn != NULL);
+  assert(tksn != NULL);
 
-	tksn->kptksn_flags = 0;
-	if (task->effective_policy.tep_darwinbg) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_DARWIN_BG;
-	}
-	if (task->requested_policy.trp_role == TASK_FOREGROUND_APPLICATION) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_FOREGROUND;
-	}
-	if (task->requested_policy.trp_boosted == 1) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_BOOSTED;
-	}
+  tksn->kptksn_flags = 0;
+  if (task->effective_policy.tep_darwinbg) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_DARWIN_BG;
+  }
+  if (task->requested_policy.trp_role == TASK_FOREGROUND_APPLICATION) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_FOREGROUND;
+  }
+  if (task->requested_policy.trp_boosted == 1) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_BOOSTED;
+  }
 #if CONFIG_MEMORYSTATUS
-	boolean_t dirty = FALSE, dirty_tracked = FALSE, allow_idle_exit = FALSE;
-	boolean_t is_active = FALSE, is_managed = FALSE, has_assertion = FALSE;
-	memorystatus_proc_flags_unsafe(get_bsdtask_info(task), &dirty, &dirty_tracked, &allow_idle_exit, &is_active, &is_managed, &has_assertion);
-	if (dirty) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_DIRTY;
-	}
-	if (dirty_tracked) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_DIRTY_TRACKED;
-	}
-	if (allow_idle_exit) {
-		tksn->kptksn_flags |= KPERF_TASK_ALLOW_IDLE_EXIT;
-	}
-	if (is_active) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_ACTIVE;
-	}
-	if (is_managed) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_MANAGED;
-	}
-	if (has_assertion) {
-		tksn->kptksn_flags |= KPERF_TASK_FLAG_HAS_ASSERTION;
-	}
+  boolean_t dirty = FALSE, dirty_tracked = FALSE, allow_idle_exit = FALSE;
+  boolean_t is_active = FALSE, is_managed = FALSE, has_assertion = FALSE;
+  memorystatus_proc_flags_unsafe(get_bsdtask_info(task), &dirty, &dirty_tracked,
+                                 &allow_idle_exit, &is_active, &is_managed,
+                                 &has_assertion);
+  if (dirty) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_DIRTY;
+  }
+  if (dirty_tracked) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_DIRTY_TRACKED;
+  }
+  if (allow_idle_exit) {
+    tksn->kptksn_flags |= KPERF_TASK_ALLOW_IDLE_EXIT;
+  }
+  if (is_active) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_ACTIVE;
+  }
+  if (is_managed) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_MANAGED;
+  }
+  if (has_assertion) {
+    tksn->kptksn_flags |= KPERF_TASK_FLAG_HAS_ASSERTION;
+  }
 #endif
 
-	tksn->kptksn_suspend_count = task->suspend_count;
-	tksn->kptksn_pageins = (integer_t) MIN(counter_load(&task->pageins), INT32_MAX);
-	struct recount_times_mach times = recount_task_terminated_times(task);
-	tksn->kptksn_user_time_in_terminated_threads = times.rtm_user;
-	tksn->kptksn_system_time_in_terminated_threads = times.rtm_system;
+  tksn->kptksn_suspend_count = task->suspend_count;
+  tksn->kptksn_pageins =
+      (integer_t)MIN(counter_load(&task->pageins), INT32_MAX);
+  struct recount_times_mach times = recount_task_terminated_times(task);
+  tksn->kptksn_user_time_in_terminated_threads = times.rtm_user;
+  tksn->kptksn_system_time_in_terminated_threads = times.rtm_system;
 
-	BUF_INFO(PERF_TK_SNAP_SAMPLE | DBG_FUNC_END);
+  BUF_INFO(PERF_TK_SNAP_SAMPLE | DBG_FUNC_END);
 }
 
-void
-kperf_task_snapshot_log(struct kperf_task_snapshot *tksn)
-{
-	assert(tksn != NULL);
+void kperf_task_snapshot_log(struct kperf_task_snapshot *tksn) {
+  assert(tksn != NULL);
 
 #if defined(__LP64__)
-	BUF_DATA(PERF_TK_SNAP_DATA, tksn->kptksn_flags,
-	    ENCODE_UPPER_64(tksn->kptksn_suspend_count) |
-	    ENCODE_LOWER_64(tksn->kptksn_pageins),
-	    tksn->kptksn_user_time_in_terminated_threads,
-	    tksn->kptksn_system_time_in_terminated_threads);
+  BUF_DATA(PERF_TK_SNAP_DATA, tksn->kptksn_flags,
+           ENCODE_UPPER_64(tksn->kptksn_suspend_count) |
+               ENCODE_LOWER_64(tksn->kptksn_pageins),
+           tksn->kptksn_user_time_in_terminated_threads,
+           tksn->kptksn_system_time_in_terminated_threads);
 #else
-	BUF_DATA(PERF_TK_SNAP_DATA1_32, UPPER_32(tksn->kptksn_flags),
-	    LOWER_32(tksn->kptksn_flags),
-	    tksn->kptksn_suspend_count,
-	    tksn->kptksn_pageins);
-	BUF_DATA(PERF_TK_SNAP_DATA2_32, UPPER_32(tksn->kptksn_user_time_in_terminated_threads),
-	    LOWER_32(tksn->kptksn_user_time_in_terminated_threads),
-	    UPPER_32(tksn->kptksn_system_time_in_terminated_threads),
-	    LOWER_32(tksn->kptksn_system_time_in_terminated_threads));
+  BUF_DATA(PERF_TK_SNAP_DATA1_32, UPPER_32(tksn->kptksn_flags),
+           LOWER_32(tksn->kptksn_flags), tksn->kptksn_suspend_count,
+           tksn->kptksn_pageins);
+  BUF_DATA(PERF_TK_SNAP_DATA2_32,
+           UPPER_32(tksn->kptksn_user_time_in_terminated_threads),
+           LOWER_32(tksn->kptksn_user_time_in_terminated_threads),
+           UPPER_32(tksn->kptksn_system_time_in_terminated_threads),
+           LOWER_32(tksn->kptksn_system_time_in_terminated_threads));
 #endif /* defined(__LP64__) */
 }
 
-void
-kperf_task_info_log(struct kperf_context *ctx)
-{
-	assert(ctx != NULL);
+void kperf_task_info_log(struct kperf_context *ctx) {
+  assert(ctx != NULL);
 
-	BUF_DATA(PERF_TK_INFO_DATA, ctx->cur_pid);
+  BUF_DATA(PERF_TK_INFO_DATA, ctx->cur_pid);
 }

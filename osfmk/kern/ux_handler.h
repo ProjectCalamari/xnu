@@ -31,8 +31,8 @@
 
 #include <mach/port.h>
 
-extern void             ux_handler_init(void);
-extern void             ux_handler_setup(void);
-extern boolean_t        is_ux_handler_port(mach_port_t port);
+extern void ux_handler_init(void);
+extern void ux_handler_setup(void);
+extern boolean_t is_ux_handler_port(mach_port_t port);
 
 #endif /* !defined(_KERN_UX_HANDLER_H_) */

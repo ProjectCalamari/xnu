@@ -32,22 +32,20 @@
 
 /* No-op on bare-metal */
 #define pal_dbg_page_fault(x, y, z)
-#define pal_dbg_set_task_name( x )
-#define pal_set_signal_delivery( x )
+#define pal_dbg_set_task_name(x)
+#define pal_set_signal_delivery(x)
 
-#define pal_is_usable_memory(b, t)      (TRUE)
+#define pal_is_usable_memory(b, t) (TRUE)
 
-#define pal_hlt()                       __asm__ volatile ("sti; hlt")
-#define pal_sti()                       __asm__ volatile ("sti")
-#define pal_cli()                       __asm__ volatile ("cli")
+#define pal_hlt() __asm__ volatile("sti; hlt")
+#define pal_sti() __asm__ volatile("sti")
+#define pal_cli() __asm__ volatile("cli")
 
-static inline void
-pal_stop_cpu(boolean_t cli)
-{
-	if (cli) {
-		__asm__ volatile ( "cli");
-	}
-	__asm__ volatile ( "wbinvd; hlt");
+static inline void pal_stop_cpu(boolean_t cli) {
+  if (cli) {
+    __asm__ volatile("cli");
+  }
+  __asm__ volatile("wbinvd; hlt");
 }
 
 #define pal_register_cache_state(t, v)
@@ -56,12 +54,17 @@ pal_stop_cpu(boolean_t cli)
 #define pal_thread_terminate_self(t)
 #define pal_ast_check(t)
 
-#define panic_display_pal_info() do { } while(0)
-#define pal_kernel_announce() do { } while(0)
+#define panic_display_pal_info()                                               \
+  do {                                                                         \
+  } while (0)
+#define pal_kernel_announce()                                                  \
+  do {                                                                         \
+  } while (0)
 
 #define PAL_AICPM_PROPERTY_VALUE 0
 
-#define pal_pmc_swi() __asm__ __volatile__("int %0"::"i"(LAPIC_PMC_SWI_VECTOR):"memory")
+#define pal_pmc_swi()                                                          \
+  __asm__ __volatile__("int %0" ::"i"(LAPIC_PMC_SWI_VECTOR) : "memory")
 
 /* Macro used by non-native xnus for access to low globals when it may
  * have moved.
@@ -69,26 +72,22 @@ pal_stop_cpu(boolean_t cli)
 #define PAL_KDP_ADDR(x) (x)
 
 struct pal_rtc_nanotime {
-	volatile uint64_t       tsc_base;       /* timestamp */
-	volatile uint64_t       ns_base;        /* nanoseconds */
-	uint32_t                scale;          /* tsc -> nanosec multiplier */
-	uint32_t                shift;          /* shift is nonzero only on "slow" machines, */
-	                                        /* ie where tscFreq <= SLOW_TSC_THRESHOLD */
-	volatile uint32_t       generation;     /* 0 == being updated */
-	uint32_t                spare1;
+  volatile uint64_t tsc_base;   /* timestamp */
+  volatile uint64_t ns_base;    /* nanoseconds */
+  uint32_t scale;               /* tsc -> nanosec multiplier */
+  uint32_t shift;               /* shift is nonzero only on "slow" machines, */
+                                /* ie where tscFreq <= SLOW_TSC_THRESHOLD */
+  volatile uint32_t generation; /* 0 == being updated */
+  uint32_t spare1;
 };
-
 
 #ifdef MACH_KERNEL_PRIVATE
 
-struct pal_cpu_data {
-};
+struct pal_cpu_data {};
 
-struct pal_pcb {
-};
+struct pal_pcb {};
 
-struct pal_apic_table {
-};
+struct pal_apic_table {};
 
 #endif /* MACH_KERNEL_PRIVATE */
 

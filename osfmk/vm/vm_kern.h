@@ -66,14 +66,13 @@
 #ifndef _VM_VM_KERN_H_
 #define _VM_VM_KERN_H_
 
-#include <mach/mach_types.h>
 #include <mach/boolean.h>
 #include <mach/kern_return.h>
+#include <mach/mach_types.h>
 #include <mach/vm_types.h>
 #ifdef XNU_KERNEL_PRIVATE
 #include <kern/locks.h>
 #endif /* XNU_KERNEL_PRIVATE */
-
 
 __BEGIN_DECLS
 
@@ -91,7 +90,6 @@ __BEGIN_DECLS
  * of that kind include the physical aperture or the KASAN shadow map.
  */
 extern vm_map_t kernel_map;
-
 
 /*!
  * @brief
@@ -155,11 +153,8 @@ extern vm_map_t g_kext_map __XNU_PRIVATE_EXTERN;
  *                      the allocation failed because the kernel
  *                      was out of pages and couldn't satisfy the demand.
  */
-extern kern_return_t kmem_alloc(
-	vm_map_t                map,
-	vm_offset_t            *addrp,
-	vm_size_t               size);
-
+extern kern_return_t kmem_alloc(vm_map_t map, vm_offset_t *addrp,
+                                vm_size_t size);
 
 /*!
  * @function kmem_alloc_pageable()
@@ -168,8 +163,8 @@ extern kern_return_t kmem_alloc(
  * Allocate anonymous pageable memory from the kernel map or a kernel submap.
  *
  * @discussion
- * This call is equivalent to @c mach_vm_allocate(map, addr, size, VM_FLAGS_ANYWHERE)
- * which should be preferred to this legacy call.
+ * This call is equivalent to @c mach_vm_allocate(map, addr, size,
+ * VM_FLAGS_ANYWHERE) which should be preferred to this legacy call.
  *
  * The memory allocated is wired and must be deallocated with @c kmem_free()
  * or @c mach_vm_deallocate().
@@ -189,11 +184,8 @@ extern kern_return_t kmem_alloc(
  * KERN_NO_SPACE        the allocation failed because the specified map
  *                      is out of address space.
  */
-extern kern_return_t kmem_alloc_pageable(
-	vm_map_t                map,
-	vm_offset_t            *addrp,
-	vm_size_t               size);
-
+extern kern_return_t kmem_alloc_pageable(vm_map_t map, vm_offset_t *addrp,
+                                         vm_size_t size);
 
 /*!
  * @function kmem_alloc_kobject()
@@ -234,10 +226,8 @@ extern kern_return_t kmem_alloc_pageable(
  *                      the allocation failed because the kernel
  *                      was out of pages and couldn't satisfy the demand.
  */
-extern kern_return_t kmem_alloc_kobject(
-	vm_map_t                map,
-	vm_offset_t            *addrp,
-	vm_size_t               size);
+extern kern_return_t kmem_alloc_kobject(vm_map_t map, vm_offset_t *addrp,
+                                        vm_size_t size);
 
 /*!
  * @function kmem_free()
@@ -261,10 +251,7 @@ extern kern_return_t kmem_alloc_kobject(
  * @param addr          the address to deallocate.
  * @param size          the size of the address to deallocate.
  */
-extern void kmem_free(
-	vm_map_t                map,
-	vm_offset_t             addr,
-	vm_size_t               size);
+extern void kmem_free(vm_map_t map, vm_offset_t addr, vm_size_t size);
 
 #endif /* !XNU_KERNEL_PRIVATE */
 #endif /* KERNEL_PRIVATE */
@@ -291,10 +278,7 @@ extern void kmem_free(
  *                      @c addr on development kernels if @c addr is not part of
  *                      a slid region of the kernel.
  */
-extern void vm_kernel_addrhide(
-	vm_offset_t             addr,
-	vm_offset_t            *hide_addr);
-
+extern void vm_kernel_addrhide(vm_offset_t addr, vm_offset_t *hide_addr);
 
 /*!
  * @function vm_kernel_addrperm_external()
@@ -316,10 +300,8 @@ extern void vm_kernel_addrhide(
  * @param perm_addr     the unslid value of @c addr if it was part of a slid
  *                      region of the kernel.
  */
-extern void vm_kernel_addrperm_external(
-	vm_offset_t             addr,
-	vm_offset_t            *perm_addr);
-
+extern void vm_kernel_addrperm_external(vm_offset_t addr,
+                                        vm_offset_t *perm_addr);
 
 /*!
  * @function vm_kernel_unslide_or_perm_external()
@@ -327,9 +309,8 @@ extern void vm_kernel_addrperm_external(
  * @brief
  * Equivalent to vm_kernel_addrperm_external().
  */
-extern void vm_kernel_unslide_or_perm_external(
-	vm_offset_t             addr,
-	vm_offset_t            *perm_addr);
+extern void vm_kernel_unslide_or_perm_external(vm_offset_t addr,
+                                               vm_offset_t *perm_addr);
 
 #if !XNU_KERNEL_PRIVATE
 
@@ -349,8 +330,7 @@ extern void vm_kernel_unslide_or_perm_external(
  *
  *                      a hashed value of @c addr otherwise.
  */
-extern vm_offset_t vm_kernel_addrhash(
-	vm_offset_t             addr);
+extern vm_offset_t vm_kernel_addrhash(vm_offset_t addr);
 
 #else /* XNU_KERNEL_PRIVATE */
 #pragma GCC visibility push(hidden)
@@ -361,13 +341,11 @@ extern vm_offset_t vm_kernel_addrhash(
  */
 extern vm_offset_t vm_kernel_addrperm_ext;
 
-
 /*!
  * @brief
  * The quantity @c vm_kernel_addrhash() uses to hash heap pointers inside XNU.
  */
 extern uint64_t vm_kernel_addrhash_salt;
-
 
 /*!
  * @brief
@@ -376,17 +354,13 @@ extern uint64_t vm_kernel_addrhash_salt;
  */
 extern uint64_t vm_kernel_addrhash_salt_ext;
 
-
 /*!
  * @function vm_kernel_addrhash_internal()
  *
  * @brief
  * Internal function used to implement the @c vm_kernel_addrhash*() functions.
  */
-extern vm_offset_t vm_kernel_addrhash_internal(
-	vm_offset_t             addr,
-	uint64_t                salt);
-
+extern vm_offset_t vm_kernel_addrhash_internal(vm_offset_t addr, uint64_t salt);
 
 /*!
  * @function vm_kernel_addrhash()
@@ -404,10 +378,8 @@ extern vm_offset_t vm_kernel_addrhash_internal(
  *
  *                      a hashed value of @c addr otherwise.
  */
-static inline vm_offset_t
-vm_kernel_addrhash(vm_offset_t addr)
-{
-	return vm_kernel_addrhash_internal(addr, vm_kernel_addrhash_salt);
+static inline vm_offset_t vm_kernel_addrhash(vm_offset_t addr) {
+  return vm_kernel_addrhash_internal(addr, vm_kernel_addrhash_salt);
 }
 
 #pragma GCC visibility pop
@@ -424,12 +396,11 @@ vm_kernel_addrhash(vm_offset_t addr)
  * in the Mach VM subsystem.
  */
 #ifdef XNU_KERNEL_PRIVATE
-typedef struct vm_allocation_site       kern_allocation_name;
-typedef kern_allocation_name           *kern_allocation_name_t;
+typedef struct vm_allocation_site kern_allocation_name;
+typedef kern_allocation_name *kern_allocation_name_t;
 #else
-typedef struct kern_allocation_name    *kern_allocation_name_t;
+typedef struct kern_allocation_name *kern_allocation_name_t;
 #endif
-
 
 /*!
  * @brief
@@ -441,19 +412,17 @@ typedef struct kern_allocation_name    *kern_allocation_name_t;
  * @returns             the new allocated accounting structure,
  *                      this function never fails.
  */
-extern kern_allocation_name_t kern_allocation_name_allocate(
-	const char             *name,
-	uint16_t                suballocs);
+extern kern_allocation_name_t kern_allocation_name_allocate(const char *name,
+                                                            uint16_t suballocs);
 
 /*!
  * @brief
  * Frees a kernel allocation accounting structure.
  *
- * @param allocation    a structure made with @c kern_allocation_name_allocate().
+ * @param allocation    a structure made with @c
+ * kern_allocation_name_allocate().
  */
-extern void kern_allocation_name_release(
-	kern_allocation_name_t  allocation);
-
+extern void kern_allocation_name_release(kern_allocation_name_t allocation);
 
 /*!
  * @brief
@@ -462,11 +431,10 @@ extern void kern_allocation_name_release(
  * @returns             the name associated with that accounting structure,
  *                      when made with @c kern_allocation_name_allocate().
  */
-extern const char *kern_allocation_get_name(
-	kern_allocation_name_t  allocation);
+extern const char *kern_allocation_get_name(kern_allocation_name_t allocation);
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 
 __END_DECLS
 
-#endif  /* _VM_VM_KERN_H_ */
+#endif /* _VM_VM_KERN_H_ */

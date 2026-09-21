@@ -60,17 +60,17 @@
 #ifndef FS_NULL_H
 #define FS_NULL_H
 
-#include <sys/appleapiopts.h>
 #include <libkern/libkern.h>
+#include <sys/appleapiopts.h>
+#include <sys/lock.h>
+#include <sys/ubc.h>
 #include <sys/vnode.h>
 #include <sys/vnode_if.h>
-#include <sys/ubc.h>
 #include <vfs/vfs_support.h>
-#include <sys/lock.h>
 
 #include <sys/cdefs.h>
-#include <sys/types.h>
 #include <sys/syslimits.h>
+#include <sys/types.h>
 
 #if KERNEL
 #include <libkern/tree.h>
@@ -87,21 +87,21 @@
 typedef int (*vop_t)(void *);
 
 struct null_mount {
-	struct vnode * nullm_rootvp;       /* Reference to root null_node (inode 1) */
-	struct vnode * nullm_secondvp;     /* Reference to virtual directory vnode to wrap app
-	                                    *  bundles (inode 2) */
-	struct vnode * nullm_lowerrootvp;  /* reference to the root of the tree we are
-	                                    * relocating (in the other file system) */
-	uint32_t nullm_lowerrootvid;       /* store the lower root vid so we can check
-	                                    *  before we build the shadow vnode lazily*/
-	lck_mtx_t nullm_lock;              /* lock to protect rootvp and secondvp above */
-	uint64_t nullm_flags;
-	uid_t uid;
-	gid_t gid;
+  struct vnode *nullm_rootvp;   /* Reference to root null_node (inode 1) */
+  struct vnode *nullm_secondvp; /* Reference to virtual directory vnode to wrap
+                                 * app bundles (inode 2) */
+  struct vnode *nullm_lowerrootvp; /* reference to the root of the tree we are
+                                    * relocating (in the other file system) */
+  uint32_t nullm_lowerrootvid;     /* store the lower root vid so we can check
+                                    *  before we build the shadow vnode lazily*/
+  lck_mtx_t nullm_lock; /* lock to protect rootvp and secondvp above */
+  uint64_t nullm_flags;
+  uid_t uid;
+  gid_t gid;
 };
 
 struct null_mount_conf {
-	uint64_t flags;
+  uint64_t flags;
 };
 
 #ifdef KERNEL
@@ -112,19 +112,19 @@ struct null_mount_conf {
  * A cache of vnode references
  */
 struct null_node {
-	LIST_ENTRY(null_node) null_hash; /* Hash list */
-	struct vnode * null_lowervp;     /* VREFed once */
-	struct vnode * null_vnode;       /* Back pointer */
-	uint32_t null_lowervid;          /* vid for lowervp to detect lowervp getting recycled out
-	                                  *  from under us */
-	uint32_t null_myvid;
-	uint32_t null_flags;
+  LIST_ENTRY(null_node) null_hash; /* Hash list */
+  struct vnode *null_lowervp;      /* VREFed once */
+  struct vnode *null_vnode;        /* Back pointer */
+  uint32_t null_lowervid; /* vid for lowervp to detect lowervp getting recycled
+                           * out from under us */
+  uint32_t null_myvid;
+  uint32_t null_flags;
 };
 
 struct vnodeop_desc_fake {
-	int vdesc_offset;
-	const char * vdesc_name;
-	/* other stuff */
+  int vdesc_offset;
+  const char *vdesc_name;
+  /* other stuff */
 };
 
 #define NULLV_NOUNLOCK 0x0001
@@ -136,21 +136,23 @@ struct vnodeop_desc_fake {
 
 __BEGIN_DECLS
 
-int nullfs_init(struct vfsconf * vfsp);
-void nullfs_init_lck(lck_mtx_t * lck);
-void nullfs_destroy_lck(lck_mtx_t * lck);
+int nullfs_init(struct vfsconf *vfsp);
+void nullfs_init_lck(lck_mtx_t *lck);
+void nullfs_destroy_lck(lck_mtx_t *lck);
 int nullfs_uninit(void);
-int null_nodeget(
-	struct mount * mp, struct vnode * lowervp, struct vnode * dvp, struct vnode ** vpp, struct componentname * cnp, int root);
-int null_hashget(struct mount * mp, struct vnode * lowervp, struct vnode ** vpp);
-int null_getnewvnode(
-	struct mount * mp, struct vnode * lowervp, struct vnode * dvp, struct vnode ** vpp, struct componentname * cnp, int root);
-void null_hashrem(struct null_node * xp);
+int null_nodeget(struct mount *mp, struct vnode *lowervp, struct vnode *dvp,
+                 struct vnode **vpp, struct componentname *cnp, int root);
+int null_hashget(struct mount *mp, struct vnode *lowervp, struct vnode **vpp);
+int null_getnewvnode(struct mount *mp, struct vnode *lowervp, struct vnode *dvp,
+                     struct vnode **vpp, struct componentname *cnp, int root);
+void null_hashrem(struct null_node *xp);
 
-int nullfs_getbackingvnode(vnode_t in_vp, vnode_t* out_vpp);
+int nullfs_getbackingvnode(vnode_t in_vp, vnode_t *out_vpp);
 
-vfs_context_t nullfs_get_patched_context(struct null_mount * null_mp, vfs_context_t ctx);
-void nullfs_cleanup_patched_context(struct null_mount * null_mp, vfs_context_t ctx);
+vfs_context_t nullfs_get_patched_context(struct null_mount *null_mp,
+                                         vfs_context_t ctx);
+void nullfs_cleanup_patched_context(struct null_mount *null_mp,
+                                    vfs_context_t ctx);
 
 #define NULLVPTOLOWERVP(vp) (VTONULL(vp)->null_lowervp)
 #define NULLVPTOLOWERVID(vp) (VTONULL(vp)->null_lowervid)
@@ -158,7 +160,7 @@ void nullfs_cleanup_patched_context(struct null_mount * null_mp, vfs_context_t c
 
 extern const struct vnodeopv_desc nullfs_vnodeop_opv_desc;
 
-extern vop_t * nullfs_vnodeop_p;
+extern vop_t *nullfs_vnodeop_p;
 
 __END_DECLS
 

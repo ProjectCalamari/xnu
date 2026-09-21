@@ -92,49 +92,45 @@
 
 #include <sys/cdefs.h>
 
-#include <sys/mcache.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/kernel.h>
-#include <libkern/libkern.h>
 #include <dev/random/randomdev.h>
+#include <libkern/libkern.h>
+#include <sys/kernel.h>
+#include <sys/mcache.h>
+#include <sys/param.h>
+#include <sys/types.h>
 
 #include <netinet/ip6.h>
 #include <netinet6/ip6_var.h>
 
-uint32_t
-ip6_randomid(uint64_t salt)
-{
-	uint32_t new_id;
-	/*
-	 * Mostly the salt value is heap or stack pointer value.
-	 * To avoid any chance of leaking address apply macro that
-	 * adds per-boot random number to it.
-	 */
-	uint64_t salt_tmp = VM_KERNEL_ADDRPERM(salt);
-	VERIFY(salt_tmp != 0);
+uint32_t ip6_randomid(uint64_t salt) {
+  uint32_t new_id;
+  /*
+   * Mostly the salt value is heap or stack pointer value.
+   * To avoid any chance of leaking address apply macro that
+   * adds per-boot random number to it.
+   */
+  uint64_t salt_tmp = VM_KERNEL_ADDRPERM(salt);
+  VERIFY(salt_tmp != 0);
 
-	/*
-	 * When the passed salt values are addresses, it is possible some bits
-	 * to not change at all, for example some higher order bits may not change
-	 * and some lower order bits may be all 0s given particular alignment and object
-	 * sizes.
-	 * Therefore we compute a XOR'd 16bit value by considering all the bits
-	 * of the salt to increase the likelihood of it being different.
-	 */
-	uint32_t new_id_salt = (uint32_t)(((salt_tmp >> 48) ^ (salt_tmp >> 32) ^
-	    (salt_tmp >> 16) ^ salt_tmp) & 0xFF);
+  /*
+   * When the passed salt values are addresses, it is possible some bits
+   * to not change at all, for example some higher order bits may not change
+   * and some lower order bits may be all 0s given particular alignment and
+   * object sizes. Therefore we compute a XOR'd 16bit value by considering all
+   * the bits of the salt to increase the likelihood of it being different.
+   */
+  uint32_t new_id_salt = (uint32_t)(((salt_tmp >> 48) ^ (salt_tmp >> 32) ^
+                                     (salt_tmp >> 16) ^ salt_tmp) &
+                                    0xFF);
 
-	/* Avoid returning IP ID value of 0 */
-	do {
-		read_random(&new_id, sizeof(new_id));
-	} while (new_id == new_id_salt);
+  /* Avoid returning IP ID value of 0 */
+  do {
+    read_random(&new_id, sizeof(new_id));
+  } while (new_id == new_id_salt);
 
-	return new_id ^ new_id_salt;
+  return new_id ^ new_id_salt;
 }
 
-uint32_t
-ip6_randomflowlabel(void)
-{
-	return RandomULong() & IPV6_FLOWLABEL_MASK;
+uint32_t ip6_randomflowlabel(void) {
+  return RandomULong() & IPV6_FLOWLABEL_MASK;
 }

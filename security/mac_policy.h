@@ -81,11 +81,12 @@
 #define _SECURITY_MAC_POLICY_H_
 
 #ifndef PRIVATE
-#warning "MAC policy is not KPI, see Technical Q&A QA1574, this header will be removed in next version"
+#warning                                                                       \
+    "MAC policy is not KPI, see Technical Q&A QA1574, this header will be removed in next version"
 #endif
 
-#include <security/_label.h>
 #include <kern/cs_blobs.h>
+#include <security/_label.h>
 
 struct attrlist;
 struct auditinfo;
@@ -120,7 +121,6 @@ struct vnode;
 struct sockaddr;
 /** @struct dummy */
 
-
 /*
  * proc_ident_t support, see: rdar://problem/58928152
  * Should be removed once all dependent parties adopt
@@ -139,7 +139,7 @@ struct sockaddr;
 #ifndef _KAUTH_CRED_T
 #define _KAUTH_CRED_T
 typedef struct ucred *kauth_cred_t;
-#endif  /* !_KAUTH_CRED_T */
+#endif /* !_KAUTH_CRED_T */
 
 #ifndef __IOKIT_PORTS_DEFINED__
 #define __IOKIT_PORTS_DEFINED__
@@ -193,7 +193,6 @@ typedef struct OSObject *io_object_t;
  *  potentially non-sleepable requests.
  */
 
-
 /**
  *  @brief Audit event postselection
  *  @param cred Subject credential
@@ -214,13 +213,9 @@ typedef struct OSObject *io_object_t;
  *  Any other value results in the audit record being committed.
  *
  */
-typedef int mpo_audit_check_postselect_t(
-	kauth_cred_t cred,
-	unsigned short syscode,
-	void *args,
-	int error,
-	int retval
-	);
+typedef int mpo_audit_check_postselect_t(kauth_cred_t cred,
+                                         unsigned short syscode, void *args,
+                                         int error, int retval);
 /**
  *  @brief Audit event preselection
  *  @param cred Subject credential
@@ -234,11 +229,11 @@ typedef int mpo_audit_check_postselect_t(
  *  be suppressed. Returning MAC_POLICY_DEFAULT indicates that the policy wants
  *  to defer to the system's existing preselection mechanism.
  *
- *  When policies return different preferences, the Framework decides what action
- *  to take based on the following policy.  If any policy returns MAC_AUDIT_YES,
- *  then create an audit record, else if any policy returns MAC_AUDIT_NO, then
- *  suppress the creations of an audit record, else defer to the system's
- *  existing preselection mechanism.
+ *  When policies return different preferences, the Framework decides what
+ * action to take based on the following policy.  If any policy returns
+ * MAC_AUDIT_YES, then create an audit record, else if any policy returns
+ * MAC_AUDIT_NO, then suppress the creations of an audit record, else defer to
+ * the system's existing preselection mechanism.
  *
  *  @warning The audit implementation in Apple's current version is
  *  incomplete, so the MAC policies have priority over the system's existing
@@ -250,11 +245,8 @@ typedef int mpo_audit_check_postselect_t(
  *  to allow auditing mechanisms to determine if the syscall is audited.
  *
  */
-typedef int mpo_audit_check_preselect_t(
-	kauth_cred_t cred,
-	unsigned short syscode,
-	void *args
-	);
+typedef int mpo_audit_check_preselect_t(kauth_cred_t cred,
+                                        unsigned short syscode, void *args);
 /**
  *  @brief Indicate desire to change the process label at exec time
  *  @param old Existing subject credential
@@ -298,17 +290,10 @@ typedef int mpo_audit_check_preselect_t(
  *  @return Non-zero if a transition is required, 0 otherwise.
  */
 typedef int mpo_cred_check_label_update_execve_t(
-	kauth_cred_t old,
-	struct vnode *vp,
-	off_t offset,
-	struct vnode *scriptvp,
-	struct label *vnodelabel,
-	struct label *scriptvnodelabel,
-	struct label *execlabel,
-	struct proc *p,
-	void *macpolicyattr,
-	size_t macpolicyattrlen
-	);
+    kauth_cred_t old, struct vnode *vp, off_t offset, struct vnode *scriptvp,
+    struct label *vnodelabel, struct label *scriptvnodelabel,
+    struct label *execlabel, struct proc *p, void *macpolicyattr,
+    size_t macpolicyattrlen);
 /**
  *  @brief Access control check for relabelling processes
  *  @param cred Subject credential
@@ -325,10 +310,8 @@ typedef int mpo_cred_check_label_update_execve_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_cred_check_label_update_t(
-	kauth_cred_t cred,
-	struct label *newlabel
-	);
+typedef int mpo_cred_check_label_update_t(kauth_cred_t cred,
+                                          struct label *newlabel);
 /**
  *  @brief Access control check for visibility of other subjects
  *  @param u1 Subject credential
@@ -343,10 +326,7 @@ typedef int mpo_cred_check_label_update_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch,
  *  EPERM for lack of privilege, or ESRCH to hide visibility.
  */
-typedef int mpo_cred_check_visible_t(
-	kauth_cred_t u1,
-	kauth_cred_t u2
-	);
+typedef int mpo_cred_check_visible_t(kauth_cred_t u1, kauth_cred_t u2);
 /**
  *  @brief Associate a credential with a new process at fork
  *  @param cred credential to inherited by new process
@@ -358,10 +338,7 @@ typedef int mpo_cred_check_visible_t(
  *       than exit - so this strategy is flawed - should just
  *       catch label destroy callback.
  */
-typedef void mpo_cred_label_associate_fork_t(
-	kauth_cred_t cred,
-	proc_t proc
-	);
+typedef void mpo_cred_label_associate_fork_t(kauth_cred_t cred, proc_t proc);
 /**
  *  @brief Create the first process
  *  @param cred Subject credential to be labeled
@@ -370,9 +347,7 @@ typedef void mpo_cred_label_associate_fork_t(
  *  kernel processes.  Policies should update the label in the
  *  previously initialized credential structure.
  */
-typedef void mpo_cred_label_associate_kernel_t(
-	kauth_cred_t cred
-	);
+typedef void mpo_cred_label_associate_kernel_t(kauth_cred_t cred);
 /**
  *  @brief Create a credential label
  *  @param parent_cred Parent credential
@@ -385,10 +360,8 @@ typedef void mpo_cred_label_associate_kernel_t(
  *  newly created struct ucred, and should not be confused with a
  *  process fork or creation event.
  */
-typedef void mpo_cred_label_associate_t(
-	kauth_cred_t parent_cred,
-	kauth_cred_t child_cred
-	);
+typedef void mpo_cred_label_associate_t(kauth_cred_t parent_cred,
+                                        kauth_cred_t child_cred);
 /**
  *  @brief Create the first process
  *  @param cred Subject credential to be labeled
@@ -397,9 +370,7 @@ typedef void mpo_cred_label_associate_t(
  *  user processes.  Policies should update the label in the previously
  *  initialized credential structure.  This is the 'init' process.
  */
-typedef void mpo_cred_label_associate_user_t(
-	kauth_cred_t cred
-	);
+typedef void mpo_cred_label_associate_user_t(kauth_cred_t cred);
 /**
  *  @brief Destroy credential label
  *  @param label The label to be destroyed
@@ -408,9 +379,7 @@ typedef void mpo_cred_label_associate_user_t(
  *  is going out of scope, policy modules should free any internal
  *  storage associated with the label so that it may be destroyed.
  */
-typedef void mpo_cred_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_cred_label_destroy_t(struct label *label);
 /**
  *  @brief Externalize a user credential label for auditing
  *  @param label Label to be externalized
@@ -428,11 +397,9 @@ typedef void mpo_cred_label_destroy_t(
  *  externalizing the label data.
  *
  */
-typedef int mpo_cred_label_externalize_audit_t(
-	struct label *label,
-	char *element_name,
-	struct sbuf *sb
-	);
+typedef int mpo_cred_label_externalize_audit_t(struct label *label,
+                                               char *element_name,
+                                               struct sbuf *sb);
 /**
  *  @brief Externalize a user credential label
  *  @param label Label to be externalized
@@ -450,11 +417,8 @@ typedef int mpo_cred_label_externalize_audit_t(
  *  externalizing the label data.
  *
  */
-typedef int mpo_cred_label_externalize_t(
-	struct label *label,
-	char *element_name,
-	struct sbuf *sb
-	);
+typedef int mpo_cred_label_externalize_t(struct label *label,
+                                         char *element_name, struct sbuf *sb);
 /**
  *  @brief Initialize user credential label
  *  @param label New label to initialize
@@ -462,9 +426,7 @@ typedef int mpo_cred_label_externalize_t(
  *  Initialize the label for a newly instantiated user credential.
  *  Sleeping is permitted.
  */
-typedef void mpo_cred_label_init_t(
-	struct label *label
-	);
+typedef void mpo_cred_label_init_t(struct label *label);
 /**
  *  @brief Internalize a user credential label
  *  @param label Label to be internalized
@@ -485,11 +447,9 @@ typedef void mpo_cred_label_init_t(
  *  while internalizing the label data.
  *
  */
-typedef int mpo_cred_label_internalize_t(
-	struct label *label,
-	char *element_name,
-	char *element_data
-	);
+typedef int mpo_cred_label_internalize_t(struct label *label,
+                                         char *element_name,
+                                         char *element_data);
 /**
  *  @brief Update credential at exec time
  *  @param old_cred Existing subject credential
@@ -533,20 +493,11 @@ typedef int mpo_cred_label_internalize_t(
  *  termination of child.
  */
 typedef int mpo_cred_label_update_execve_t(
-	kauth_cred_t old_cred,
-	kauth_cred_t new_cred,
-	struct proc *p,
-	struct vnode *vp,
-	off_t offset,
-	struct vnode *scriptvp,
-	struct label *vnodelabel,
-	struct label *scriptvnodelabel,
-	struct label *execlabel,
-	u_int *csflags,
-	void *macpolicyattr,
-	size_t macpolicyattrlen,
-	int *disjointp
-	);
+    kauth_cred_t old_cred, kauth_cred_t new_cred, struct proc *p,
+    struct vnode *vp, off_t offset, struct vnode *scriptvp,
+    struct label *vnodelabel, struct label *scriptvnodelabel,
+    struct label *execlabel, u_int *csflags, void *macpolicyattr,
+    size_t macpolicyattrlen, int *disjointp);
 /**
  *  @brief Update a credential label
  *  @param cred The existing credential
@@ -558,36 +509,31 @@ typedef int mpo_cred_label_update_execve_t(
  *  This is called as a result of a process relabel operation.  Access
  *  control was already confirmed by mpo_cred_check_label_update.
  */
-typedef void mpo_cred_label_update_t(
-	kauth_cred_t cred,
-	struct label *newlabel
-	);
+typedef void mpo_cred_label_update_t(kauth_cred_t cred, struct label *newlabel);
 /**
  *  @brief Access control for launching a process with constraints
  *  @param curr_p The new process
- *  @param original_parent_id The pid of the original parent that spawned this process
- *  @param responsible_pid  The pid of the responsible process that spawned this process
+ *  @param original_parent_id The pid of the original parent that spawned this
+ * process
+ *  @param responsible_pid  The pid of the responsible process that spawned this
+ * process
  *  @param macpolicyattr MAC policy-specific spawn attribute data
  *  @param macpolicyattrlen Length of policy-specific spawn attribute data
  *  @param fatal_failure_desc Description of fatal failure
- *  @param fatal_failure_desc_len Failure description len, failure is fatal if non-0
+ *  @param fatal_failure_desc_len Failure description len, failure is fatal if
+ * non-0
  *
  *  Detemine whether the process being spawned adheres to the launch
  *  constraints (e.g. whether the process is spawned by launchd) and should
  *  be allowed to execute. This call occurs during execve or posix_spawn.
  *
- *  @return Return 0 if process can be created, otherwise an appropriate value for
- *  errno should be returned.
+ *  @return Return 0 if process can be created, otherwise an appropriate value
+ * for errno should be returned.
  */
 typedef int mpo_proc_check_launch_constraints_t(
-	proc_t curr_p,
-	pid_t original_parent_id,
-	pid_t responsible_pid,
-	void *macpolicyattr,
-	size_t macpolicyattrlen,
-	launch_constraint_data_t lcd,
-	char **fatal_failure_desc, size_t *fatal_failure_desc_len
-	);
+    proc_t curr_p, pid_t original_parent_id, pid_t responsible_pid,
+    void *macpolicyattr, size_t macpolicyattrlen, launch_constraint_data_t lcd,
+    char **fatal_failure_desc, size_t *fatal_failure_desc_len);
 /**
  *  @brief Create a new devfs device
  *  @param dev Major and minor numbers of special file
@@ -599,12 +545,9 @@ typedef int mpo_proc_check_launch_constraints_t(
  *  on the path to the device, or the major and minor numbers.
  *  The policy should store an appropriate label into 'label'.
  */
-typedef void mpo_devfs_label_associate_device_t(
-	dev_t dev,
-	struct devnode *de,
-	struct label *label,
-	const char *fullpath
-	);
+typedef void mpo_devfs_label_associate_device_t(dev_t dev, struct devnode *de,
+                                                struct label *label,
+                                                const char *fullpath);
 /**
  *  @brief Create a new devfs directory
  *  @param dirname Name of new directory
@@ -614,16 +557,15 @@ typedef void mpo_devfs_label_associate_device_t(
  *  @param fullpath Path relative to mount (e.g. /dev) of new directory
  *
  *  This entry point labels a new devfs directory. The label will likely be
- *  based on the path of the new directory. The policy should store an appropriate
- *  label into 'label'. The devfs root directory is labelled in this way.
+ *  based on the path of the new directory. The policy should store an
+ * appropriate label into 'label'. The devfs root directory is labelled in this
+ * way.
  */
-typedef void mpo_devfs_label_associate_directory_t(
-	const char *dirname,
-	int dirnamelen,
-	struct devnode *de,
-	struct label *label,
-	const char *fullpath
-	);
+typedef void mpo_devfs_label_associate_directory_t(const char *dirname,
+                                                   int dirnamelen,
+                                                   struct devnode *de,
+                                                   struct label *label,
+                                                   const char *fullpath);
 /**
  *  @brief Copy a devfs label
  *  @param src Source devfs label
@@ -633,10 +575,7 @@ typedef void mpo_devfs_label_associate_directory_t(
  *  often duplicates (splits) existing device nodes rather than creating
  *  new ones.
  */
-typedef void mpo_devfs_label_copy_t(
-	struct label *src,
-	struct label *dest
-	);
+typedef void mpo_devfs_label_copy_t(struct label *src, struct label *dest);
 /**
  *  @brief Destroy devfs label
  *  @param label The label to be destroyed
@@ -645,9 +584,7 @@ typedef void mpo_devfs_label_copy_t(
  *  of scope, policy modules should free any internal storage associated
  *  with the label so that it may be destroyed.
  */
-typedef void mpo_devfs_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_devfs_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize devfs label
  *  @param label New label to initialize
@@ -655,9 +592,7 @@ typedef void mpo_devfs_label_destroy_t(
  *  Initialize the label for a newly instantiated devfs entry.  Sleeping
  *  is permitted.
  */
-typedef void mpo_devfs_label_init_t(
-	struct label *label
-	);
+typedef void mpo_devfs_label_init_t(struct label *label);
 /**
  *  @brief Update a devfs label after relabelling its vnode
  *  @param mp Devfs mount point
@@ -670,13 +605,9 @@ typedef void mpo_devfs_label_init_t(
  *  for example with setfmac(1). Typically, this will simply copy
  *  the vnode label into the devfs label.
  */
-typedef void mpo_devfs_label_update_t(
-	struct mount *mp,
-	struct devnode *de,
-	struct label *delabel,
-	struct vnode *vp,
-	struct label *vnodelabel
-	);
+typedef void mpo_devfs_label_update_t(struct mount *mp, struct devnode *de,
+                                      struct label *delabel, struct vnode *vp,
+                                      struct label *vnodelabel);
 /**
  *  @brief Access control for sending an exception to an exception action
  *  @param crashlabel The crashing process's label
@@ -695,11 +626,10 @@ typedef void mpo_devfs_label_update_t(
  *  @return Return 0 if the message can be sent, otherwise an
  *  appropriate value for errno should be returned.
  */
-typedef int mpo_exc_action_check_exception_send_t(
-	struct label *crashlabel,
-	struct exception_action *action,
-	struct label *exclabel
-	);
+typedef int
+mpo_exc_action_check_exception_send_t(struct label *crashlabel,
+                                      struct exception_action *action,
+                                      struct label *exclabel);
 /**
  *  @brief Associate an exception action label
  *  @param action Exception action to label
@@ -707,10 +637,8 @@ typedef int mpo_exc_action_check_exception_send_t(
  *
  *  Set the label on an exception action.
  */
-typedef void mpo_exc_action_label_associate_t(
-	struct exception_action *action,
-	struct label *exclabel
-	);
+typedef void mpo_exc_action_label_associate_t(struct exception_action *action,
+                                              struct label *exclabel);
 /**
  *  @brief Destroy exception action label
  *  @param label The label to be destroyed
@@ -720,9 +648,7 @@ typedef void mpo_exc_action_label_associate_t(
  *  associated with the label so that it may be destroyed. Sleeping is
  *  permitted.
  */
-typedef void mpo_exc_action_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_exc_action_label_destroy_t(struct label *label);
 /**
  *  @brief Populate an exception action label with process credentials
  *  @param label The label to be populated
@@ -735,10 +661,8 @@ typedef void mpo_exc_action_label_destroy_t(
  *  process that set the port may not exist at that time anymore, so
  *  labels should carry copies of live credentials if necessary.
  */
-typedef void mpo_exc_action_label_populate_t(
-	struct label *label,
-	struct proc *proc
-	);
+typedef void mpo_exc_action_label_populate_t(struct label *label,
+                                             struct proc *proc);
 /**
  *  @brief Initialize exception action label
  *  @param label New label to initialize
@@ -746,9 +670,7 @@ typedef void mpo_exc_action_label_populate_t(
  *  Initialize a label for an exception action. Usually performs
  *  policy specific allocations. Sleeping is permitted.
  */
-typedef int mpo_exc_action_label_init_t(
-	struct label *label
-	);
+typedef int mpo_exc_action_label_init_t(struct label *label);
 /**
  *  @brief Update the label on an exception action
  *  @param action Exception action that the label belongs to (may be
@@ -761,11 +683,9 @@ typedef int mpo_exc_action_label_init_t(
  *  otherwise) from the new label into the label to update. Must not
  *  sleep, must be quick and can be called with locks held.
  */
-typedef int mpo_exc_action_label_update_t(
-	struct exception_action *action,
-	struct label *label,
-	struct label *newlabel
-	);
+typedef int mpo_exc_action_label_update_t(struct exception_action *action,
+                                          struct label *label,
+                                          struct label *newlabel);
 /**
  *  @brief Access control for changing the offset of a file descriptor
  *  @param cred Subject credential
@@ -778,11 +698,9 @@ typedef int mpo_exc_action_label_update_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_file_check_change_offset_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label
-	);
+typedef int mpo_file_check_change_offset_t(kauth_cred_t cred,
+                                           struct fileglob *fg,
+                                           struct label *label);
 /**
  *  @brief Access control for creating a file descriptor
  *  @param cred Subject credential
@@ -793,9 +711,7 @@ typedef int mpo_file_check_change_offset_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_file_check_create_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_file_check_create_t(kauth_cred_t cred);
 /**
  *  @brief Access control for duplicating a file descriptor
  *  @param cred Subject credential
@@ -810,12 +726,8 @@ typedef int mpo_file_check_create_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_file_check_dup_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	int newfd
-	);
+typedef int mpo_file_check_dup_t(kauth_cred_t cred, struct fileglob *fg,
+                                 struct label *label, int newfd);
 /**
  *  @brief Access control check for fcntl
  *  @param cred Subject credential
@@ -830,13 +742,9 @@ typedef int mpo_file_check_dup_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_file_check_fcntl_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	int cmd,
-	user_long_t arg
-	);
+typedef int mpo_file_check_fcntl_t(kauth_cred_t cred, struct fileglob *fg,
+                                   struct label *label, int cmd,
+                                   user_long_t arg);
 /**
  *  @brief Access control check for mac_get_fd
  *  @param cred Subject credential
@@ -850,12 +758,8 @@ typedef int mpo_file_check_fcntl_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_file_check_get_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	char *elements,
-	size_t len
-	);
+typedef int mpo_file_check_get_t(kauth_cred_t cred, struct fileglob *fg,
+                                 char *elements, size_t len);
 /**
  *  @brief Access control for getting the offset of a file descriptor
  *  @param cred Subject credential
@@ -868,11 +772,8 @@ typedef int mpo_file_check_get_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_file_check_get_offset_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label
-	);
+typedef int mpo_file_check_get_offset_t(kauth_cred_t cred, struct fileglob *fg,
+                                        struct label *label);
 /**
  *  @brief Access control for inheriting a file descriptor
  *  @param cred Subject credential
@@ -885,11 +786,8 @@ typedef int mpo_file_check_get_offset_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_file_check_inherit_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label
-	);
+typedef int mpo_file_check_inherit_t(kauth_cred_t cred, struct fileglob *fg,
+                                     struct label *label);
 /**
  *  @brief Access control check for file ioctl
  *  @param cred Subject credential
@@ -908,12 +806,8 @@ typedef int mpo_file_check_inherit_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_file_check_ioctl_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	unsigned long cmd
-	);
+typedef int mpo_file_check_ioctl_t(kauth_cred_t cred, struct fileglob *fg,
+                                   struct label *label, unsigned long cmd);
 /**
  *  @brief Access control check for file locking
  *  @param cred Subject credential
@@ -929,19 +823,17 @@ typedef int mpo_file_check_ioctl_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_file_check_lock_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	int op,
-	struct flock *fl
-	);
+typedef int mpo_file_check_lock_t(kauth_cred_t cred, struct fileglob *fg,
+                                  struct label *label, int op,
+                                  struct flock *fl);
 /**
- *  @brief Check with library validation if a Mach-O slice is allowed to be combined into a proc.
+ *  @brief Check with library validation if a Mach-O slice is allowed to be
+ * combined into a proc.
  *  @param p Subject process
  *  @param fg Fileglob structure
  *  @param slice_offset offset of the code slice
- *  @param error_message error message returned to user-space in case of error (userspace pointer)
+ *  @param error_message error message returned to user-space in case of error
+ * (userspace pointer)
  *  @param error_message_size error message size
  *
  *  It's a little odd that the MAC/kext writes into userspace since this
@@ -954,13 +846,11 @@ typedef int mpo_file_check_lock_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_file_check_library_validation_t(
-	struct proc *p,
-	struct fileglob *fg,
-	off_t slice_offset,
-	user_long_t error_message,
-	size_t error_message_size
-	);
+typedef int mpo_file_check_library_validation_t(struct proc *p,
+                                                struct fileglob *fg,
+                                                off_t slice_offset,
+                                                user_long_t error_message,
+                                                size_t error_message_size);
 /**
  *  @brief Access control check for mapping a file
  *  @param cred Subject credential
@@ -981,15 +871,9 @@ typedef int mpo_file_check_library_validation_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_file_check_mmap_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	int prot,
-	int flags,
-	uint64_t file_pos,
-	int *maxprot
-	);
+typedef int mpo_file_check_mmap_t(kauth_cred_t cred, struct fileglob *fg,
+                                  struct label *label, int prot, int flags,
+                                  uint64_t file_pos, int *maxprot);
 /**
  *  @brief Downgrade the mmap protections
  *  @param cred Subject credential
@@ -999,12 +883,9 @@ typedef int mpo_file_check_mmap_t(
  *
  *  Downgrade the mmap protections based on the subject and object labels.
  */
-typedef void mpo_file_check_mmap_downgrade_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	int *prot
-	);
+typedef void mpo_file_check_mmap_downgrade_t(kauth_cred_t cred,
+                                             struct fileglob *fg,
+                                             struct label *label, int *prot);
 /**
  *  @brief Access control for receiving a file descriptor
  *  @param cred Subject credential
@@ -1017,11 +898,8 @@ typedef void mpo_file_check_mmap_downgrade_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_file_check_receive_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label
-	);
+typedef int mpo_file_check_receive_t(kauth_cred_t cred, struct fileglob *fg,
+                                     struct label *label);
 /**
  *  @brief Access control check for mac_set_fd
  *  @param cred Subject credential
@@ -1036,12 +914,8 @@ typedef int mpo_file_check_receive_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_file_check_set_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	char *elements,
-	size_t len
-	);
+typedef int mpo_file_check_set_t(kauth_cred_t cred, struct fileglob *fg,
+                                 char *elements, size_t len);
 /**
  *  @brief Inform MAC policies that file is being closed
  *  @param cred Subject credential
@@ -1052,23 +926,16 @@ typedef int mpo_file_check_set_t(
  *  Called when an open file is being closed, as a result of a call to
  *  close(2), the process exiting, or exec(2) w/O_CLOEXEC set.
  */
-typedef void mpo_file_notify_close_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label,
-	int modified
-	);
+typedef void mpo_file_notify_close_t(kauth_cred_t cred, struct fileglob *fg,
+                                     struct label *label, int modified);
 /**
  *  @brief Create file label
  *  @param cred Subject credential
  *  @param fg Fileglob structure
  *  @param label Policy label for fg
  */
-typedef void mpo_file_label_associate_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	struct label *label
-	);
+typedef void mpo_file_label_associate_t(kauth_cred_t cred, struct fileglob *fg,
+                                        struct label *label);
 /**
  *  @brief Destroy file label
  *  @param label The label to be destroyed
@@ -1077,16 +944,12 @@ typedef void mpo_file_label_associate_t(
  *  policy module should free any internal storage associated with
  *  label so that it may be destroyed.
  */
-typedef void mpo_file_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_file_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize file label
  *  @param label New label to initialize
  */
-typedef void mpo_file_label_init_t(
-	struct label *label
-	);
+typedef void mpo_file_label_init_t(struct label *label);
 /**
  *  @brief Access control check for opening an I/O Kit device
  *  @param cred Subject credential
@@ -1101,11 +964,8 @@ typedef void mpo_file_label_init_t(
  *  @return Return 0 if access is granted, or an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_iokit_check_open_t(
-	kauth_cred_t cred,
-	io_object_t user_client,
-	unsigned int user_client_type
-	);
+typedef int mpo_iokit_check_open_t(kauth_cred_t cred, io_object_t user_client,
+                                   unsigned int user_client_type);
 /**
  *  @brief Access control check for opening an I/O Kit device
  *  @param cred Subject credential
@@ -1120,11 +980,9 @@ typedef int mpo_iokit_check_open_t(
  *  @return Return 0 if access is granted, or an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_iokit_check_open_service_t(
-	kauth_cred_t cred,
-	io_object_t service,
-	unsigned int user_client_type
-	);
+typedef int mpo_iokit_check_open_service_t(kauth_cred_t cred,
+                                           io_object_t service,
+                                           unsigned int user_client_type);
 /**
  *  @brief Access control check for setting I/O Kit device properties
  *  @param cred Subject credential
@@ -1137,11 +995,9 @@ typedef int mpo_iokit_check_open_service_t(
  *  @return Return 0 if access is granted, or an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_iokit_check_set_properties_t(
-	kauth_cred_t cred,
-	io_object_t entry,
-	io_object_t properties
-	);
+typedef int mpo_iokit_check_set_properties_t(kauth_cred_t cred,
+                                             io_object_t entry,
+                                             io_object_t properties);
 /**
  *  @brief Indicate desire to filter I/O Kit devices properties
  *  @param cred Subject credential
@@ -1165,10 +1021,8 @@ typedef int mpo_iokit_check_set_properties_t(
  *
  *  @return Non-zero if a transition is required, 0 otherwise.
  */
-typedef int mpo_iokit_check_filter_properties_t(
-	kauth_cred_t cred,
-	io_object_t entry
-	);
+typedef int mpo_iokit_check_filter_properties_t(kauth_cred_t cred,
+                                                io_object_t entry);
 /**
  *  @brief Access control check for getting I/O Kit device properties
  *  @param cred Subject credential
@@ -1181,11 +1035,8 @@ typedef int mpo_iokit_check_filter_properties_t(
  *  @return Return 0 if access is granted, or an appropriate value for
  *  errno.
  */
-typedef int mpo_iokit_check_get_property_t(
-	kauth_cred_t cred,
-	io_object_t entry,
-	const char *name
-	);
+typedef int mpo_iokit_check_get_property_t(kauth_cred_t cred, io_object_t entry,
+                                           const char *name);
 /**
  *  @brief Access control check for software HID control
  *  @param cred Subject credential
@@ -1197,9 +1048,7 @@ typedef int mpo_iokit_check_get_property_t(
  *  @return Return 0 if access is granted, or an appropriate value for
  *  errno.
  */
-typedef int mpo_iokit_check_hid_control_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_iokit_check_hid_control_t(kauth_cred_t cred);
 /**
  *  @brief Access control check for fsctl
  *  @param cred Subject credential
@@ -1218,12 +1067,8 @@ typedef int mpo_iokit_check_hid_control_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_mount_check_fsctl_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *label,
-	unsigned long cmd
-	);
+typedef int mpo_mount_check_fsctl_t(kauth_cred_t cred, struct mount *mp,
+                                    struct label *label, unsigned long cmd);
 /**
  *  @brief Access control check for the retrieval of file system attributes
  *  @param cred Subject credential
@@ -1241,12 +1086,9 @@ typedef int mpo_mount_check_fsctl_t(
  *  file system attributes returned.
  */
 
-typedef int mpo_mount_check_getattr_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mp_label,
-	struct vfs_attr *vfa
-	);
+typedef int mpo_mount_check_getattr_t(kauth_cred_t cred, struct mount *mp,
+                                      struct label *mp_label,
+                                      struct vfs_attr *vfa);
 /**
  *  @brief Access control check for mount point relabeling
  *  @param cred Subject credential
@@ -1260,11 +1102,8 @@ typedef int mpo_mount_check_getattr_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch
  *  or EPERM for lack of privilege.
  */
-typedef int mpo_mount_check_label_update_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mntlabel
-	);
+typedef int mpo_mount_check_label_update_t(kauth_cred_t cred, struct mount *mp,
+                                           struct label *mntlabel);
 /**
  *  @brief Access control check for mounting a file system
  *  @param cred Subject credential
@@ -1279,13 +1118,10 @@ typedef int mpo_mount_check_label_update_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_mount_check_mount_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct componentname *cnp,
-	const char *vfc_name
-	);
+typedef int mpo_mount_check_mount_t(kauth_cred_t cred, struct vnode *vp,
+                                    struct label *vlabel,
+                                    struct componentname *cnp,
+                                    const char *vfc_name);
 /**
  *  @brief Access control check for mounting a file system (late)
  *  @param cred Subject credential
@@ -1298,10 +1134,7 @@ typedef int mpo_mount_check_mount_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_mount_check_mount_late_t(
-	kauth_cred_t cred,
-	struct mount *mp
-	);
+typedef int mpo_mount_check_mount_late_t(kauth_cred_t cred, struct mount *mp);
 
 /**
  *  @brief Access control check for quotactl
@@ -1315,12 +1148,8 @@ typedef int mpo_mount_check_mount_late_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_mount_check_quotactl_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	int cmd,
-	int id
-	);
+typedef int mpo_mount_check_quotactl_t(kauth_cred_t cred, struct mount *mp,
+                                       int cmd, int id);
 /**
  *  @brief Access control check for fs_snapshot_create
  *  @param cred Subject credential
@@ -1333,11 +1162,9 @@ typedef int mpo_mount_check_quotactl_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value
  *  for errno should be returned.
  */
-typedef int mpo_mount_check_snapshot_create_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	const char *name
-	);
+typedef int mpo_mount_check_snapshot_create_t(kauth_cred_t cred,
+                                              struct mount *mp,
+                                              const char *name);
 /**
  *  @brief Access control check for fs_snapshot_delete
  *  @param cred Subject credential
@@ -1351,11 +1178,9 @@ typedef int mpo_mount_check_snapshot_create_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value
  *  for errno should be returned.
  */
-typedef int mpo_mount_check_snapshot_delete_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	const char *name
-	);
+typedef int mpo_mount_check_snapshot_delete_t(kauth_cred_t cred,
+                                              struct mount *mp,
+                                              const char *name);
 /**
  *  @brief Access control check for fs_snapshot_mount
  *  @param cred Subject credential
@@ -1374,14 +1199,10 @@ typedef int mpo_mount_check_snapshot_delete_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value
  *  for errno should be returned.
  */
-typedef int mpo_mount_check_snapshot_mount_t(
-	kauth_cred_t cred,
-	struct vnode *rvp,
-	struct vnode *vp,
-	struct componentname *cnp,
-	const char *name,
-	const char *vfc_name
-	);
+typedef int
+mpo_mount_check_snapshot_mount_t(kauth_cred_t cred, struct vnode *rvp,
+                                 struct vnode *vp, struct componentname *cnp,
+                                 const char *name, const char *vfc_name);
 /**
  *  @brief Access control check for fs_snapshot_revert
  *  @param cred Subject credential
@@ -1394,11 +1215,9 @@ typedef int mpo_mount_check_snapshot_mount_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value
  *  for errno should be returned.
  */
-typedef int mpo_mount_check_snapshot_revert_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	const char *name
-	);
+typedef int mpo_mount_check_snapshot_revert_t(kauth_cred_t cred,
+                                              struct mount *mp,
+                                              const char *name);
 /**
  *  @brief Access control check remounting a filesystem
  *  @param cred Subject credential
@@ -1412,20 +1231,18 @@ typedef int mpo_mount_check_snapshot_revert_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-#define NEEDS_RDAR_103115865 1 // Required until both EndpointSecurity & Sandbox are updated
-typedef int mpo_mount_check_remount_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mlabel,
-	uint64_t flags
-	);
+#define NEEDS_RDAR_103115865                                                   \
+  1 // Required until both EndpointSecurity & Sandbox are updated
+typedef int mpo_mount_check_remount_t(kauth_cred_t cred, struct mount *mp,
+                                      struct label *mlabel, uint64_t flags);
 /**
- *  @brief Access control check for remounting a filesystem with modifiable flags
+ *  @brief Access control check for remounting a filesystem with modifiable
+ * flags
  *  @param cred Subject credential
  *  @param mp The mount point
  *  @param mlabel Label currently associated with the mount point
- *  @param flagsp A pointer to requested update flags. This can be modified by the function
- *                to reflect changes in the operation flags.
+ *  @param flagsp A pointer to requested update flags. This can be modified by
+ * the function to reflect changes in the operation flags.
  *
  *  This function is a variant of mpo_mount_check_remount_t, allowing
  *  the caller to specify and potentially overwrite the flags via a
@@ -1434,12 +1251,10 @@ typedef int mpo_mount_check_remount_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_mount_check_remount_with_flags_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mlabel,
-	int *flagsp
-	);
+typedef int mpo_mount_check_remount_with_flags_t(kauth_cred_t cred,
+                                                 struct mount *mp,
+                                                 struct label *mlabel,
+                                                 int *flagsp);
 /**
  *  @brief Access control check for the settting of file system attributes
  *  @param cred Subject credential
@@ -1453,12 +1268,9 @@ typedef int mpo_mount_check_remount_with_flags_t(
  *  errno should be returned.
  */
 
-typedef int mpo_mount_check_setattr_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mp_label,
-	struct vfs_attr *vfa
-	);
+typedef int mpo_mount_check_setattr_t(kauth_cred_t cred, struct mount *mp,
+                                      struct label *mp_label,
+                                      struct vfs_attr *vfa);
 /**
  *  @brief Access control check for file system statistics
  *  @param cred Subject credential
@@ -1476,11 +1288,8 @@ typedef int mpo_mount_check_setattr_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch
  *  or EPERM for lack of privilege.
  */
-typedef int mpo_mount_check_stat_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mntlabel
-	);
+typedef int mpo_mount_check_stat_t(kauth_cred_t cred, struct mount *mp,
+                                   struct label *mntlabel);
 /**
  *  @brief Access control check for unmounting a filesystem
  *  @param cred Subject credential
@@ -1493,11 +1302,8 @@ typedef int mpo_mount_check_stat_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_mount_check_umount_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mlabel
-	);
+typedef int mpo_mount_check_umount_t(kauth_cred_t cred, struct mount *mp,
+                                     struct label *mlabel);
 /**
  *  @brief Create mount labels
  *  @param cred Subject credential
@@ -1508,11 +1314,8 @@ typedef int mpo_mount_check_umount_t(
  *  Fill out the labels on the mount point being created by the supplied
  *  user credential.  This call is made when file systems are first mounted.
  */
-typedef void mpo_mount_label_associate_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mntlabel
-	);
+typedef void mpo_mount_label_associate_t(kauth_cred_t cred, struct mount *mp,
+                                         struct label *mntlabel);
 /**
  *  @brief Destroy mount label
  *  @param label The label to be destroyed
@@ -1522,9 +1325,7 @@ typedef void mpo_mount_label_associate_t(
  *  internal storage associated with the label so that it may be
  *  destroyed.
  */
-typedef void mpo_mount_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_mount_label_destroy_t(struct label *label);
 /**
  *  @brief Externalize a mount point label
  *  @param label Label to be externalized
@@ -1544,11 +1345,8 @@ typedef void mpo_mount_label_destroy_t(
  *  externalizing the label data.
  *
  */
-typedef int mpo_mount_label_externalize_t(
-	struct label *label,
-	char *element_name,
-	struct sbuf *sb
-	);
+typedef int mpo_mount_label_externalize_t(struct label *label,
+                                          char *element_name, struct sbuf *sb);
 /**
  *  @brief Initialize mount point label
  *  @param label New label to initialize
@@ -1561,9 +1359,7 @@ typedef int mpo_mount_label_externalize_t(
  *  a default label separately from the label of the mount point
  *  itself.  Sleeping is permitted.
  */
-typedef void mpo_mount_label_init_t(
-	struct label *label
-	);
+typedef void mpo_mount_label_init_t(struct label *label);
 /**
  *  @brief Internalize a mount point label
  *  @param label Label to be internalized
@@ -1584,11 +1380,9 @@ typedef void mpo_mount_label_init_t(
  *  while internalizing the label data.
  *
  */
-typedef int mpo_mount_label_internalize_t(
-	struct label *label,
-	char *element_name,
-	char *element_data
-	);
+typedef int mpo_mount_label_internalize_t(struct label *label,
+                                          char *element_name,
+                                          char *element_data);
 /**
  *  @brief Notify on successful filesystem mount
  *  @param cred Subject credential
@@ -1600,11 +1394,8 @@ typedef int mpo_mount_label_internalize_t(
  *  to this mount point should be initalized with mac_mount_label_init
  *  prior to this call.
  */
-typedef void mpo_mount_notify_mount_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mntlabel
-	);
+typedef void mpo_mount_notify_mount_t(kauth_cred_t cred, struct mount *mp,
+                                      struct label *mntlabel);
 /**
  *  @brief Access control check for opening an NECP file descriptor
  *  @param cred Subject credential
@@ -1617,10 +1408,7 @@ typedef void mpo_mount_notify_mount_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_necp_check_open_t(
-	kauth_cred_t cred,
-	int flags
-	);
+typedef int mpo_necp_check_open_t(kauth_cred_t cred, int flags);
 /**
  *  @brief Access control check for necp_client_action(2)
  *  @param cred Subject credential
@@ -1634,11 +1422,9 @@ typedef int mpo_necp_check_open_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_necp_check_client_action_t(
-	kauth_cred_t cred,
-	struct fileglob *fg,
-	uint32_t action
-	);
+typedef int mpo_necp_check_client_action_t(kauth_cred_t cred,
+                                           struct fileglob *fg,
+                                           uint32_t action);
 /**
  *  @brief Access control check for pipe ioctl
  *  @param cred Subject credential
@@ -1657,12 +1443,8 @@ typedef int mpo_necp_check_client_action_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_pipe_check_ioctl_t(
-	kauth_cred_t cred,
-	struct pipe *cpipe,
-	struct label *pipelabel,
-	unsigned long cmd
-	);
+typedef int mpo_pipe_check_ioctl_t(kauth_cred_t cred, struct pipe *cpipe,
+                                   struct label *pipelabel, unsigned long cmd);
 /**
  *  @brief Access control check for pipe kqfilter
  *  @param cred Subject credential
@@ -1676,12 +1458,9 @@ typedef int mpo_pipe_check_ioctl_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_pipe_check_kqfilter_t(
-	kauth_cred_t cred,
-	struct knote *kn,
-	struct pipe *cpipe,
-	struct label *pipelabel
-	);
+typedef int mpo_pipe_check_kqfilter_t(kauth_cred_t cred, struct knote *kn,
+                                      struct pipe *cpipe,
+                                      struct label *pipelabel);
 /**
  *  @brief Access control check for pipe read
  *  @param cred Subject credential
@@ -1696,11 +1475,8 @@ typedef int mpo_pipe_check_kqfilter_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_pipe_check_read_t(
-	kauth_cred_t cred,
-	struct pipe *cpipe,
-	struct label *pipelabel
-	);
+typedef int mpo_pipe_check_read_t(kauth_cred_t cred, struct pipe *cpipe,
+                                  struct label *pipelabel);
 /**
  *  @brief Access control check for pipe select
  *  @param cred Subject credential
@@ -1716,12 +1492,8 @@ typedef int mpo_pipe_check_read_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_pipe_check_select_t(
-	kauth_cred_t cred,
-	struct pipe *cpipe,
-	struct label *pipelabel,
-	int which
-	);
+typedef int mpo_pipe_check_select_t(kauth_cred_t cred, struct pipe *cpipe,
+                                    struct label *pipelabel, int which);
 /**
  *  @brief Access control check for pipe stat
  *  @param cred Subject credential
@@ -1736,11 +1508,8 @@ typedef int mpo_pipe_check_select_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_pipe_check_stat_t(
-	kauth_cred_t cred,
-	struct pipe *cpipe,
-	struct label *pipelabel
-	);
+typedef int mpo_pipe_check_stat_t(kauth_cred_t cred, struct pipe *cpipe,
+                                  struct label *pipelabel);
 /**
  *  @brief Access control check for pipe write
  *  @param cred Subject credential
@@ -1755,11 +1524,8 @@ typedef int mpo_pipe_check_stat_t(
  *  errno should be returned.
  *
  */
-typedef int mpo_pipe_check_write_t(
-	kauth_cred_t cred,
-	struct pipe *cpipe,
-	struct label *pipelabel
-	);
+typedef int mpo_pipe_check_write_t(kauth_cred_t cred, struct pipe *cpipe,
+                                   struct label *pipelabel);
 /**
  *  @brief Create a pipe label
  *  @param cred Subject credential
@@ -1770,11 +1536,8 @@ typedef int mpo_pipe_check_write_t(
  *  user credential. This call is made when a pipe pair is being created.
  *  The label is shared by both ends of the pipe.
  */
-typedef void mpo_pipe_label_associate_t(
-	kauth_cred_t cred,
-	struct pipe *cpipe,
-	struct label *pipelabel
-	);
+typedef void mpo_pipe_label_associate_t(kauth_cred_t cred, struct pipe *cpipe,
+                                        struct label *pipelabel);
 /**
  *  @brief Destroy pipe label
  *  @param label The label to be destroyed
@@ -1783,9 +1546,7 @@ typedef void mpo_pipe_label_associate_t(
  *  policy modules should free any internal storage associated with the
  *  label so that it may be destroyed.
  */
-typedef void mpo_pipe_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_pipe_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize pipe label
  *  @param label New label to initialize
@@ -1793,9 +1554,7 @@ typedef void mpo_pipe_label_destroy_t(
  *  Initialize label storage for use with a newly instantiated pipe object.
  *  Sleeping is permitted.
  */
-typedef void mpo_pipe_label_init_t(
-	struct label *label
-	);
+typedef void mpo_pipe_label_init_t(struct label *label);
 /**
  *  @brief Policy unload event
  *  @param mpc MAC policy configuration
@@ -1812,9 +1571,7 @@ typedef void mpo_pipe_label_init_t(
  *
  *  @see MPC_LOADTIME_FLAG_UNLOADOK
  */
-typedef void mpo_policy_destroy_t(
-	struct mac_policy_conf *mpc
-	);
+typedef void mpo_policy_destroy_t(struct mac_policy_conf *mpc);
 /**
  *  @brief Policy initialization event
  *  @param mpc MAC policy configuration
@@ -1836,9 +1593,7 @@ typedef void mpo_policy_destroy_t(
  *  sleep operations cannot be performed, and calls out to other kernel
  *  subsystems must be made with caution.
  */
-typedef void mpo_policy_init_t(
-	struct mac_policy_conf *mpc
-	);
+typedef void mpo_policy_init_t(struct mac_policy_conf *mpc);
 /**
  *  @brief Policy BSD initialization event
  *  @param mpc MAC policy configuration
@@ -1858,9 +1613,7 @@ typedef void mpo_policy_init_t(
  *  sleep operations cannot be performed, and calls out to other kernel
  *  subsystems must be made with caution.
  */
-typedef void mpo_policy_initbsd_t(
-	struct mac_policy_conf *mpc
-	);
+typedef void mpo_policy_initbsd_t(struct mac_policy_conf *mpc);
 /**
  *  @brief Policy extension service
  *  @param p Calling process
@@ -1888,11 +1641,7 @@ typedef void mpo_policy_initbsd_t(
  *  @return In the event of an error, an appropriate value for errno
  *  should be returned, otherwise return 0 upon success.
  */
-typedef int mpo_policy_syscall_t(
-	struct proc *p,
-	int call,
-	user_addr_t arg
-	);
+typedef int mpo_policy_syscall_t(struct proc *p, int call, user_addr_t arg);
 /**
  *  @brief Access control check for POSIX semaphore create
  *  @param cred Subject credential
@@ -1904,10 +1653,7 @@ typedef int mpo_policy_syscall_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixsem_check_create_t(
-	kauth_cred_t cred,
-	const char *name
-	);
+typedef int mpo_posixsem_check_create_t(kauth_cred_t cred, const char *name);
 /**
  *  @brief Access control check for POSIX semaphore open
  *  @param cred Subject credential
@@ -1920,11 +1666,8 @@ typedef int mpo_posixsem_check_create_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixsem_check_open_t(
-	kauth_cred_t cred,
-	struct pseminfo *ps,
-	struct label *semlabel
-	);
+typedef int mpo_posixsem_check_open_t(kauth_cred_t cred, struct pseminfo *ps,
+                                      struct label *semlabel);
 /**
  *  @brief Access control check for POSIX semaphore post
  *  @param cred Subject credential
@@ -1937,11 +1680,8 @@ typedef int mpo_posixsem_check_open_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixsem_check_post_t(
-	kauth_cred_t cred,
-	struct pseminfo *ps,
-	struct label *semlabel
-	);
+typedef int mpo_posixsem_check_post_t(kauth_cred_t cred, struct pseminfo *ps,
+                                      struct label *semlabel);
 /**
  *  @brief Access control check for POSIX semaphore unlink
  *  @param cred Subject credential
@@ -1955,12 +1695,9 @@ typedef int mpo_posixsem_check_post_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixsem_check_unlink_t(
-	kauth_cred_t cred,
-	struct pseminfo *ps,
-	struct label *semlabel,
-	const char *name
-	);
+typedef int mpo_posixsem_check_unlink_t(kauth_cred_t cred, struct pseminfo *ps,
+                                        struct label *semlabel,
+                                        const char *name);
 /**
  *  @brief Access control check for POSIX semaphore wait
  *  @param cred Subject credential
@@ -1973,11 +1710,8 @@ typedef int mpo_posixsem_check_unlink_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixsem_check_wait_t(
-	kauth_cred_t cred,
-	struct pseminfo *ps,
-	struct label *semlabel
-	);
+typedef int mpo_posixsem_check_wait_t(kauth_cred_t cred, struct pseminfo *ps,
+                                      struct label *semlabel);
 /**
  *  @brief Create a POSIX semaphore label
  *  @param cred Subject credential
@@ -1990,12 +1724,10 @@ typedef int mpo_posixsem_check_wait_t(
  *  appropriate initial label value should be assigned to the object and
  *  stored in semalabel.
  */
-typedef void mpo_posixsem_label_associate_t(
-	kauth_cred_t cred,
-	struct pseminfo *ps,
-	struct label *semlabel,
-	const char *name
-	);
+typedef void mpo_posixsem_label_associate_t(kauth_cred_t cred,
+                                            struct pseminfo *ps,
+                                            struct label *semlabel,
+                                            const char *name);
 /**
  *  @brief Destroy POSIX semaphore label
  *  @param label The label to be destroyed
@@ -2004,9 +1736,7 @@ typedef void mpo_posixsem_label_associate_t(
  *  going out of scope, policy modules should free any internal storage
  *  associated with the label so that it may be destroyed.
  */
-typedef void mpo_posixsem_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_posixsem_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize POSIX semaphore label
  *  @param label New label to initialize
@@ -2014,9 +1744,7 @@ typedef void mpo_posixsem_label_destroy_t(
  *  Initialize the label for a newly instantiated POSIX semaphore. Sleeping
  *  is permitted.
  */
-typedef void mpo_posixsem_label_init_t(
-	struct label *label
-	);
+typedef void mpo_posixsem_label_init_t(struct label *label);
 /**
  *  @brief Access control check for POSIX shared memory region create
  *  @param cred Subject credential
@@ -2028,10 +1756,7 @@ typedef void mpo_posixsem_label_init_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixshm_check_create_t(
-	kauth_cred_t cred,
-	const char *name
-	);
+typedef int mpo_posixshm_check_create_t(kauth_cred_t cred, const char *name);
 /**
  *  @brief Access control check for mapping POSIX shared memory
  *  @param cred Subject credential
@@ -2046,13 +1771,9 @@ typedef int mpo_posixshm_check_create_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixshm_check_mmap_t(
-	kauth_cred_t cred,
-	struct pshminfo *ps,
-	struct label *shmlabel,
-	int prot,
-	int flags
-	);
+typedef int mpo_posixshm_check_mmap_t(kauth_cred_t cred, struct pshminfo *ps,
+                                      struct label *shmlabel, int prot,
+                                      int flags);
 /**
  *  @brief Access control check for POSIX shared memory region open
  *  @param cred Subject credential
@@ -2066,12 +1787,8 @@ typedef int mpo_posixshm_check_mmap_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixshm_check_open_t(
-	kauth_cred_t cred,
-	struct pshminfo *ps,
-	struct label *shmlabel,
-	int fflags
-	);
+typedef int mpo_posixshm_check_open_t(kauth_cred_t cred, struct pshminfo *ps,
+                                      struct label *shmlabel, int fflags);
 /**
  *  @brief Access control check for POSIX shared memory stat
  *  @param cred Subject credential
@@ -2084,11 +1801,8 @@ typedef int mpo_posixshm_check_open_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixshm_check_stat_t(
-	kauth_cred_t cred,
-	struct pshminfo *ps,
-	struct label *shmlabel
-	);
+typedef int mpo_posixshm_check_stat_t(kauth_cred_t cred, struct pshminfo *ps,
+                                      struct label *shmlabel);
 /**
  *  @brief Access control check for POSIX shared memory truncate
  *  @param cred Subject credential
@@ -2102,12 +1816,9 @@ typedef int mpo_posixshm_check_stat_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixshm_check_truncate_t(
-	kauth_cred_t cred,
-	struct pshminfo *ps,
-	struct label *shmlabel,
-	off_t len
-	);
+typedef int mpo_posixshm_check_truncate_t(kauth_cred_t cred,
+                                          struct pshminfo *ps,
+                                          struct label *shmlabel, off_t len);
 /**
  *  @brief Access control check for POSIX shared memory unlink
  *  @param cred Subject credential
@@ -2121,12 +1832,9 @@ typedef int mpo_posixshm_check_truncate_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_posixshm_check_unlink_t(
-	kauth_cred_t cred,
-	struct pshminfo *ps,
-	struct label *shmlabel,
-	const char *name
-	);
+typedef int mpo_posixshm_check_unlink_t(kauth_cred_t cred, struct pshminfo *ps,
+                                        struct label *shmlabel,
+                                        const char *name);
 /**
  *  @brief Create a POSIX shared memory region label
  *  @param cred Subject credential
@@ -2139,12 +1847,10 @@ typedef int mpo_posixshm_check_unlink_t(
  *  time, an appropriate initial label value should be assigned to the
  *  object and stored in shmlabel.
  */
-typedef void mpo_posixshm_label_associate_t(
-	kauth_cred_t cred,
-	struct pshminfo *ps,
-	struct label *shmlabel,
-	const char *name
-	);
+typedef void mpo_posixshm_label_associate_t(kauth_cred_t cred,
+                                            struct pshminfo *ps,
+                                            struct label *shmlabel,
+                                            const char *name);
 /**
  *  @brief Destroy POSIX shared memory label
  *  @param label The label to be destroyed
@@ -2154,9 +1860,7 @@ typedef void mpo_posixshm_label_associate_t(
  *  internal storage associated with the label so that it may be
  *  destroyed.
  */
-typedef void mpo_posixshm_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_posixshm_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize POSIX Shared Memory region label
  *  @param label New label to initialize
@@ -2164,9 +1868,7 @@ typedef void mpo_posixshm_label_destroy_t(
  *  Initialize the label for newly a instantiated POSIX Shared Memory
  *  region. Sleeping is permitted.
  */
-typedef void mpo_posixshm_label_init_t(
-	struct label *label
-	);
+typedef void mpo_posixshm_label_init_t(struct label *label);
 /**
  *  @brief Access control check for privileged operations
  *  @param cred Subject credential
@@ -2179,10 +1881,7 @@ typedef void mpo_posixshm_label_init_t(
  *
  *  @return Return 0 if access is granted, otherwise EPERM should be returned.
  */
-typedef int mpo_priv_check_t(
-	kauth_cred_t cred,
-	int priv
-	);
+typedef int mpo_priv_check_t(kauth_cred_t cred, int priv);
 /**
  *  @brief Grant regular users the ability to perform privileged operations
  *  @param cred Subject credential
@@ -2202,10 +1901,7 @@ typedef int mpo_priv_check_t(
  *  @return Return 0 if additional privilege is granted, otherwise EPERM
  *  should be returned.
  */
-typedef int mpo_priv_grant_t(
-	kauth_cred_t cred,
-	int priv
-	);
+typedef int mpo_priv_grant_t(kauth_cred_t cred, int priv);
 /**
  *  @brief Access control over process core dumps
  *  @param proc Subject process
@@ -2216,9 +1912,7 @@ typedef int mpo_priv_grant_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_dump_core_t(
-	struct proc *proc
-	);
+typedef int mpo_proc_check_dump_core_t(struct proc *proc);
 /**
  *  @brief Access control over remote thread creation
  *  @param cred Subject credential
@@ -2236,13 +1930,10 @@ typedef int mpo_proc_check_dump_core_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_remote_thread_create_t(
-	kauth_cred_t cred,
-	struct proc *proc,
-	int flavor,
-	thread_state_t new_state,
-	mach_msg_type_number_t new_state_count
-	);
+typedef int
+mpo_proc_check_remote_thread_create_t(kauth_cred_t cred, struct proc *proc,
+                                      int flavor, thread_state_t new_state,
+                                      mach_msg_type_number_t new_state_count);
 /**
  *  @brief Access control check for debugging process
  *  @param cred Subject credential
@@ -2257,10 +1948,8 @@ typedef int mpo_proc_check_remote_thread_create_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch,
  *  EPERM for lack of privilege, or ESRCH to hide visibility of the target.
  */
-typedef int mpo_proc_check_debug_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident
-	);
+typedef int mpo_proc_check_debug_t(kauth_cred_t cred,
+                                   struct proc_ident *pident);
 /**
  *  @brief Access control over fork
  *  @param cred Subject credential
@@ -2271,10 +1960,7 @@ typedef int mpo_proc_check_debug_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_fork_t(
-	kauth_cred_t cred,
-	struct proc *proc
-	);
+typedef int mpo_proc_check_fork_t(kauth_cred_t cred, struct proc *proc);
 /**
  *  @brief Access control check for setting host special ports.
  *  @param cred Subject credential
@@ -2284,11 +1970,8 @@ typedef int mpo_proc_check_fork_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_set_host_special_port_t(
-	kauth_cred_t cred,
-	int id,
-	struct ipc_port *port
-	);
+typedef int mpo_proc_check_set_host_special_port_t(kauth_cred_t cred, int id,
+                                                   struct ipc_port *port);
 /**
  *  @brief Access control check for setting host exception ports.
  *  @param cred Subject credential
@@ -2297,24 +1980,21 @@ typedef int mpo_proc_check_set_host_special_port_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_set_host_exception_port_t(
-	kauth_cred_t cred,
-	unsigned int exception
-	);
+typedef int mpo_proc_check_set_host_exception_port_t(kauth_cred_t cred,
+                                                     unsigned int exception);
 /**
  *  @brief Access control check for getting task special ports.
  *  @param cred Subject credential
- *  @param pident Object unique process identifier, NULL if target is a corpse task
+ *  @param pident Object unique process identifier, NULL if target is a corpse
+ * task
  *  @param which The task special port to get
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_get_task_special_port_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident,
-	int which
-	);
+typedef int mpo_proc_check_get_task_special_port_t(kauth_cred_t cred,
+                                                   struct proc_ident *pident,
+                                                   int which);
 /**
  *  @brief Access control check for setting task special ports.
  *  @param cred Subject credential
@@ -2325,14 +2005,13 @@ typedef int mpo_proc_check_get_task_special_port_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_set_task_special_port_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident,
-	int which,
-	struct ipc_port *port
-	);
+typedef int mpo_proc_check_set_task_special_port_t(kauth_cred_t cred,
+                                                   struct proc_ident *pident,
+                                                   int which,
+                                                   struct ipc_port *port);
 /**
- *  @brief Access control check for setting task exception ports for current task.
+ *  @brief Access control check for setting task exception ports for current
+ * task.
  *  @param cred Subject credential
  *  @param pident Object unique process identifier
  *  @param exception Exception port to set
@@ -2341,12 +2020,10 @@ typedef int mpo_proc_check_set_task_special_port_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_set_task_exception_port_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident,
-	unsigned int exception,
-	int new_behavior
-	);
+typedef int mpo_proc_check_set_task_exception_port_t(kauth_cred_t cred,
+                                                     struct proc_ident *pident,
+                                                     unsigned int exception,
+                                                     int new_behavior);
 /**
  *  @brief Access control check for setting thread exception ports.
  *  @param cred Subject credential
@@ -2358,32 +2035,28 @@ typedef int mpo_proc_check_set_task_exception_port_t(
  *  errno should be returned.
  */
 typedef int mpo_proc_check_set_thread_exception_port_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident,
-	unsigned int exception,
-	int new_behavior
-	);
+    kauth_cred_t cred, struct proc_ident *pident, unsigned int exception,
+    int new_behavior);
 /**
- *  @brief Access control check for getting movable task/thread control port for current task.
+ *  @brief Access control check for getting movable task/thread control port for
+ * current task.
  *  @param cred Subject credential
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_get_movable_control_port_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_proc_check_get_movable_control_port_t(kauth_cred_t cred);
 /**
- *  @brief Access control check for calling task_dyld_process_info_notify_register
- *  and task_dyld_process_info_notify_deregister.
+ *  @brief Access control check for calling
+ * task_dyld_process_info_notify_register and
+ * task_dyld_process_info_notify_deregister.
  *  @param cred Subject credential
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_dyld_process_info_notify_register_t(
-	kauth_cred_t cred
-	);
+typedef int
+mpo_proc_check_dyld_process_info_notify_register_t(kauth_cred_t cred);
 /**
  *  @brief Access control over pid_suspend, pid_resume and family
  *  @param cred Subject credential
@@ -2401,11 +2074,8 @@ typedef int mpo_proc_check_dyld_process_info_notify_register_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_suspend_resume_t(
-	kauth_cred_t cred,
-	struct proc *proc,
-	int sr
-	);
+typedef int mpo_proc_check_suspend_resume_t(kauth_cred_t cred,
+                                            struct proc *proc, int sr);
 /**
  *  @brief Access control check for retrieving audit information
  *  @param cred Subject credential
@@ -2417,9 +2087,7 @@ typedef int mpo_proc_check_suspend_resume_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_getaudit_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_proc_check_getaudit_t(kauth_cred_t cred);
 /**
  *  @brief Access control check for retrieving audit user ID
  *  @param cred Subject credential
@@ -2431,9 +2099,7 @@ typedef int mpo_proc_check_getaudit_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_getauid_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_proc_check_getauid_t(kauth_cred_t cred);
 /**
  *  @brief Access control check for retrieving ledger information
  *  @param cred Subject credential
@@ -2448,28 +2114,21 @@ typedef int mpo_proc_check_getauid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_ledger_t(
-	kauth_cred_t cred,
-	struct proc *target,
-	int op
-	);
+typedef int mpo_proc_check_ledger_t(kauth_cred_t cred, struct proc *target,
+                                    int op);
 /**
  *  @brief Access control check for retrieving process information.
  *  @param cred Subject credential
  *  @param target Target process (may be null, may be zombie)
  *
- *  Determine if a credential has permission to access process information as defined
- *  by call number and flavor on target process
+ *  Determine if a credential has permission to access process information as
+ * defined by call number and flavor on target process
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_proc_info_t(
-	kauth_cred_t cred,
-	struct proc *target,
-	int callnum,
-	int flavor
-	);
+typedef int mpo_proc_check_proc_info_t(kauth_cred_t cred, struct proc *target,
+                                       int callnum, int flavor);
 /**
  *  @brief Access control check for retrieving code signing information.
  *  @param cred Subject credential
@@ -2482,11 +2141,8 @@ typedef int mpo_proc_check_proc_info_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_get_cs_info_t(
-	kauth_cred_t cred,
-	struct proc *target,
-	unsigned int op
-	);
+typedef int mpo_proc_check_get_cs_info_t(kauth_cred_t cred, struct proc *target,
+                                         unsigned int op);
 /**
  *  @brief Access control check for setting code signing information.
  *  @param cred Subject credential
@@ -2499,11 +2155,8 @@ typedef int mpo_proc_check_get_cs_info_t(
  *  @return Return 0 if permission is granted, otherwise an appropriate
  *  value of errno should be returned.
  */
-typedef int mpo_proc_check_set_cs_info_t(
-	kauth_cred_t cred,
-	struct proc *target,
-	unsigned int op
-	);
+typedef int mpo_proc_check_set_cs_info_t(kauth_cred_t cred, struct proc *target,
+                                         unsigned int op);
 /**
  *  @brief Access control check for mmap MAP_ANON
  *  @param proc User process requesting the memory
@@ -2526,15 +2179,9 @@ typedef int mpo_proc_check_set_cs_info_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned. Suggested failure: EPERM for lack of privilege.
  */
-typedef int mpo_proc_check_map_anon_t(
-	struct proc *proc,
-	kauth_cred_t cred,
-	user_addr_t u_addr,
-	user_size_t u_size,
-	int prot,
-	int flags,
-	int *maxprot
-	);
+typedef int mpo_proc_check_map_anon_t(struct proc *proc, kauth_cred_t cred,
+                                      user_addr_t u_addr, user_size_t u_size,
+                                      int prot, int flags, int *maxprot);
 /**
  *  @brief Access control check for memorystatus_control(2)
  *  @param cred Subject credential
@@ -2547,11 +2194,8 @@ typedef int mpo_proc_check_map_anon_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_memorystatus_control_t(
-	kauth_cred_t cred,
-	int32_t command,
-	pid_t pid
-	);
+typedef int mpo_proc_check_memorystatus_control_t(kauth_cred_t cred,
+                                                  int32_t command, pid_t pid);
 /**
  *  @brief Access control check for setting memory protections
  *  @param cred Subject credential
@@ -2567,13 +2211,9 @@ typedef int mpo_proc_check_memorystatus_control_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_mprotect_t(
-	kauth_cred_t cred,
-	struct proc *proc,
-	user_addr_t addr,
-	user_size_t size,
-	int prot
-	);
+typedef int mpo_proc_check_mprotect_t(kauth_cred_t cred, struct proc *proc,
+                                      user_addr_t addr, user_size_t size,
+                                      int prot);
 /**
  *  @brief Access control check for changing scheduling parameters
  *  @param cred Subject credential
@@ -2586,10 +2226,7 @@ typedef int mpo_proc_check_mprotect_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch,
  *  EPERM for lack of privilege, or ESRCH to limit visibility.
  */
-typedef int mpo_proc_check_sched_t(
-	kauth_cred_t cred,
-	struct proc *proc
-	);
+typedef int mpo_proc_check_sched_t(kauth_cred_t cred, struct proc *proc);
 /**
  *  @brief Access control check for setting audit information
  *  @param cred Subject credential
@@ -2602,10 +2239,8 @@ typedef int mpo_proc_check_sched_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setaudit_t(
-	kauth_cred_t cred,
-	struct auditinfo_addr *ai
-	);
+typedef int mpo_proc_check_setaudit_t(kauth_cred_t cred,
+                                      struct auditinfo_addr *ai);
 /**
  *  @brief Access control check for setting audit user ID
  *  @param cred Subject credential
@@ -2618,10 +2253,7 @@ typedef int mpo_proc_check_setaudit_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setauid_t(
-	kauth_cred_t cred,
-	uid_t auid
-	);
+typedef int mpo_proc_check_setauid_t(kauth_cred_t cred, uid_t auid);
 /**
  *  @brief Access control check for delivering signal
  *  @param cred Subject credential
@@ -2646,13 +2278,10 @@ typedef int mpo_proc_check_setauid_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch,
  *  EPERM for lack of privilege, or ESRCH to limit visibility.
  */
-#define NEEDS_RDAR_132584934 1 // Required until both EndpointSecurity & Sandbox are updated
-typedef int mpo_proc_check_signal_t(
-	kauth_cred_t cred,
-	proc_ident_t instigator,
-	proc_ident_t target,
-	int signum
-	);
+#define NEEDS_RDAR_132584934                                                   \
+  1 // Required until both EndpointSecurity & Sandbox are updated
+typedef int mpo_proc_check_signal_t(kauth_cred_t cred, proc_ident_t instigator,
+                                    proc_ident_t target, int signum);
 /**
  *  @brief Access control check for MAC syscalls.
  *  @param proc Subject process
@@ -2664,17 +2293,15 @@ typedef int mpo_proc_check_signal_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned. Suggested failure: EPERM for lack of privilege.
  */
-typedef int mpo_proc_check_syscall_mac_t(
-	struct proc *proc,
-	const char *policy,
-	int callnum
-	);
+typedef int mpo_proc_check_syscall_mac_t(struct proc *proc, const char *policy,
+                                         int callnum);
 /**
  *  @brief Access control check for Unix syscalls.
  *  @param proc Subject process
  *  @param scnum Syscall number; see bsd/kern/syscalls.master.
  *
- *  Determine whether the subject process can perform the passed syscall (number).
+ *  Determine whether the subject process can perform the passed syscall
+ * (number).
  *
  *  @warning Programs typically expect to be able to make syscalls as part of
  *  their normal process lifecycle; caution should be exercised when restricting
@@ -2683,10 +2310,7 @@ typedef int mpo_proc_check_syscall_mac_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned. Suggested failure: EPERM for lack of privilege.
  */
-typedef int mpo_proc_check_syscall_unix_t(
-	struct proc *proc,
-	int scnum
-	);
+typedef int mpo_proc_check_syscall_unix_t(struct proc *proc, int scnum);
 /**
  *  @brief Access control check for wait
  *  @param cred Subject credential
@@ -2703,10 +2327,7 @@ typedef int mpo_proc_check_syscall_unix_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_wait_t(
-	kauth_cred_t cred,
-	struct proc *proc
-	);
+typedef int mpo_proc_check_wait_t(kauth_cred_t cred, struct proc *proc);
 /**
  *  @brief Inform MAC policies that a process has exited.
  *  @param proc Object process
@@ -2717,9 +2338,7 @@ typedef int mpo_proc_check_wait_t(
  *  identifies the process by the object process pointer functions
  *  normally.  proc_exiting() returns true for the object process.
  */
-typedef void mpo_proc_notify_exit_t(
-	struct proc *proc
-	);
+typedef void mpo_proc_notify_exit_t(struct proc *proc);
 /**
  *  @brief Access control check for skywalk flow connect
  *  @param cred Subject credential
@@ -2735,13 +2354,9 @@ typedef void mpo_proc_notify_exit_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_skywalk_flow_check_connect_t(
-	kauth_cred_t cred,
-	void *flow,
-	const struct sockaddr *addr,
-	int type,
-	int protocol
-	);
+typedef int mpo_skywalk_flow_check_connect_t(kauth_cred_t cred, void *flow,
+                                             const struct sockaddr *addr,
+                                             int type, int protocol);
 /**
  *  @brief Access control check for skywalk flow listen
  *  @param cred Subject credential
@@ -2757,13 +2372,9 @@ typedef int mpo_skywalk_flow_check_connect_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_skywalk_flow_check_listen_t(
-	kauth_cred_t cred,
-	void *flow,
-	const struct sockaddr *addr,
-	int type,
-	int protocol
-	);
+typedef int mpo_skywalk_flow_check_listen_t(kauth_cred_t cred, void *flow,
+                                            const struct sockaddr *addr,
+                                            int type, int protocol);
 /**
  *  @brief Access control check for socket accept
  *  @param cred Subject credential
@@ -2776,11 +2387,8 @@ typedef int mpo_skywalk_flow_check_listen_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_accept_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel
-	);
+typedef int mpo_socket_check_accept_t(kauth_cred_t cred, socket_t so,
+                                      struct label *socklabel);
 /**
  *  @brief Access control check for a pending socket accept
  *  @param cred Subject credential
@@ -2794,12 +2402,9 @@ typedef int mpo_socket_check_accept_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_accepted_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel,
-	struct sockaddr *addr
-	);
+typedef int mpo_socket_check_accepted_t(kauth_cred_t cred, socket_t so,
+                                        struct label *socklabel,
+                                        struct sockaddr *addr);
 /**
  *  @brief Access control check for socket bind
  *  @param cred Subject credential
@@ -2813,12 +2418,9 @@ typedef int mpo_socket_check_accepted_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_bind_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel,
-	struct sockaddr *addr
-	);
+typedef int mpo_socket_check_bind_t(kauth_cred_t cred, socket_t so,
+                                    struct label *socklabel,
+                                    struct sockaddr *addr);
 /**
  *  @brief Access control check for socket connect
  *  @param cred Subject credential
@@ -2832,12 +2434,9 @@ typedef int mpo_socket_check_bind_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_connect_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel,
-	struct sockaddr *addr
-	);
+typedef int mpo_socket_check_connect_t(kauth_cred_t cred, socket_t so,
+                                       struct label *socklabel,
+                                       struct sockaddr *addr);
 /**
  *  @brief Access control check for socket() system call.
  *  @param cred Subject credential
@@ -2851,12 +2450,8 @@ typedef int mpo_socket_check_connect_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_create_t(
-	kauth_cred_t cred,
-	int domain,
-	int type,
-	int protocol
-	);
+typedef int mpo_socket_check_create_t(kauth_cred_t cred, int domain, int type,
+                                      int protocol);
 /**
  *  @brief Access control check for socket ioctl.
  *  @param cred Subject credential
@@ -2875,12 +2470,9 @@ typedef int mpo_socket_check_create_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_socket_check_ioctl_t(
-	kauth_cred_t cred,
-	socket_t so,
-	unsigned long cmd,
-	struct label *socklabel
-	);
+typedef int mpo_socket_check_ioctl_t(kauth_cred_t cred, socket_t so,
+                                     unsigned long cmd,
+                                     struct label *socklabel);
 /**
  *  @brief Access control check for socket listen
  *  @param cred Subject credential
@@ -2893,11 +2485,8 @@ typedef int mpo_socket_check_ioctl_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_listen_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel
-	);
+typedef int mpo_socket_check_listen_t(kauth_cred_t cred, socket_t so,
+                                      struct label *socklabel);
 /**
  *  @brief Access control check for socket receive
  *  @param cred Subject credential
@@ -2910,11 +2499,8 @@ typedef int mpo_socket_check_listen_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_receive_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel
-	);
+typedef int mpo_socket_check_receive_t(kauth_cred_t cred, socket_t so,
+                                       struct label *socklabel);
 
 /**
  *  @brief Access control check for socket receive
@@ -2929,12 +2515,9 @@ typedef int mpo_socket_check_receive_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_received_t(
-	kauth_cred_t cred,
-	struct socket *sock,
-	struct label *socklabel,
-	struct sockaddr *saddr
-	);
+typedef int mpo_socket_check_received_t(kauth_cred_t cred, struct socket *sock,
+                                        struct label *socklabel,
+                                        struct sockaddr *saddr);
 
 /**
  *  @brief Access control check for socket send
@@ -2949,12 +2532,9 @@ typedef int mpo_socket_check_received_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_send_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel,
-	struct sockaddr *addr
-	);
+typedef int mpo_socket_check_send_t(kauth_cred_t cred, socket_t so,
+                                    struct label *socklabel,
+                                    struct sockaddr *addr);
 /**
  *  @brief Access control check for retrieving socket status
  *  @param cred Subject credential
@@ -2967,11 +2547,8 @@ typedef int mpo_socket_check_send_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_stat_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel
-	);
+typedef int mpo_socket_check_stat_t(kauth_cred_t cred, socket_t so,
+                                    struct label *socklabel);
 /**
  *  @brief Access control check for setting socket options
  *  @param cred Subject credential
@@ -2985,12 +2562,9 @@ typedef int mpo_socket_check_stat_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_setsockopt_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel,
-	struct sockopt *sopt
-	);
+typedef int mpo_socket_check_setsockopt_t(kauth_cred_t cred, socket_t so,
+                                          struct label *socklabel,
+                                          struct sockopt *sopt);
 /**
  *  @brief Access control check for getting socket options
  *  @param cred Subject credential
@@ -3004,12 +2578,9 @@ typedef int mpo_socket_check_setsockopt_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_socket_check_getsockopt_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *socklabel,
-	struct sockopt *sopt
-	);
+typedef int mpo_socket_check_getsockopt_t(kauth_cred_t cred, socket_t so,
+                                          struct label *socklabel,
+                                          struct sockopt *sopt);
 /**
  *  @brief Access control check for enabling accounting
  *  @param cred Subject credential
@@ -3026,11 +2597,8 @@ typedef int mpo_socket_check_getsockopt_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_acct_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef int mpo_system_check_acct_t(kauth_cred_t cred, struct vnode *vp,
+                                    struct label *vlabel);
 /**
  *  @brief Access control check for audit
  *  @param cred Subject credential
@@ -3043,11 +2611,8 @@ typedef int mpo_system_check_acct_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_audit_t(
-	kauth_cred_t cred,
-	void *record,
-	int length
-	);
+typedef int mpo_system_check_audit_t(kauth_cred_t cred, void *record,
+                                     int length);
 /**
  *  @brief Access control check for controlling audit
  *  @param cred Subject credential
@@ -3061,11 +2626,8 @@ typedef int mpo_system_check_audit_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_auditctl_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vl
-	);
+typedef int mpo_system_check_auditctl_t(kauth_cred_t cred, struct vnode *vp,
+                                        struct label *vl);
 /**
  *  @brief Access control check for manipulating auditing
  *  @param cred Subject credential
@@ -3077,10 +2639,7 @@ typedef int mpo_system_check_auditctl_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_auditon_t(
-	kauth_cred_t cred,
-	int cmd
-	);
+typedef int mpo_system_check_auditon_t(kauth_cred_t cred, int cmd);
 /**
  *  @brief Access control check for obtaining the host control port
  *  @param cred Subject credential
@@ -3090,9 +2649,7 @@ typedef int mpo_system_check_auditon_t(
  *
  *  @return Return 0 if access is granted, or non-zero otherwise.
  */
-typedef int mpo_system_check_host_priv_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_system_check_host_priv_t(kauth_cred_t cred);
 /**
  *  @brief Access control check for obtaining system information
  *  @param cred Subject credential
@@ -3109,10 +2666,7 @@ typedef int mpo_system_check_host_priv_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_info_t(
-	kauth_cred_t cred,
-	const char *info_type
-	);
+typedef int mpo_system_check_info_t(kauth_cred_t cred, const char *info_type);
 /**
  *  @brief Access control check for calling NFS services
  *  @param cred Subject credential
@@ -3123,9 +2677,7 @@ typedef int mpo_system_check_info_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_nfsd_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_system_check_nfsd_t(kauth_cred_t cred);
 /**
  *  @brief Access control check for reboot
  *  @param cred Subject credential
@@ -3137,10 +2689,7 @@ typedef int mpo_system_check_nfsd_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_reboot_t(
-	kauth_cred_t cred,
-	int howto
-	);
+typedef int mpo_system_check_reboot_t(kauth_cred_t cred, int howto);
 /**
  *  @brief Access control check for setting system clock
  *  @param cred Subject credential
@@ -3151,9 +2700,7 @@ typedef int mpo_system_check_reboot_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_settime_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_system_check_settime_t(kauth_cred_t cred);
 /**
  *  @brief Access control check for removing swap devices
  *  @param cred Subject credential
@@ -3166,11 +2713,8 @@ typedef int mpo_system_check_settime_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_swapoff_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_system_check_swapoff_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *label);
 /**
  *  @brief Access control check for adding swap devices
  *  @param cred Subject credential
@@ -3183,11 +2727,8 @@ typedef int mpo_system_check_swapoff_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_swapon_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_system_check_swapon_t(kauth_cred_t cred, struct vnode *vp,
+                                      struct label *label);
 /**
  *  @brief Access control check for sysctl
  *  @param cred Subject credential
@@ -3209,16 +2750,13 @@ typedef int mpo_system_check_swapon_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_sysctlbyname_t(
-	kauth_cred_t cred,
-	const char *namestring,
-	int *name,
-	size_t namelen,
-	user_addr_t old,        /* NULLOK */
-	size_t oldlen,
-	user_addr_t newvalue,   /* NULLOK */
-	size_t newlen
-	);
+typedef int mpo_system_check_sysctlbyname_t(kauth_cred_t cred,
+                                            const char *namestring, int *name,
+                                            size_t namelen,
+                                            user_addr_t old, /* NULLOK */
+                                            size_t oldlen,
+                                            user_addr_t newvalue, /* NULLOK */
+                                            size_t newlen);
 /**
  *  @brief Access control check for kas_info
  *  @param cred Subject credential
@@ -3231,10 +2769,7 @@ typedef int mpo_system_check_sysctlbyname_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_system_check_kas_info_t(
-	kauth_cred_t cred,
-	int selector
-	);
+typedef int mpo_system_check_kas_info_t(kauth_cred_t cred, int selector);
 /**
  *  @brief Create a System V message label
  *  @param cred Subject credential
@@ -3245,13 +2780,11 @@ typedef int mpo_system_check_kas_info_t(
  *
  *  Label the message as its placed in the message queue.
  */
-typedef void mpo_sysvmsg_label_associate_t(
-	kauth_cred_t cred,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel,
-	struct msg *msgptr,
-	struct label *msglabel
-	);
+typedef void mpo_sysvmsg_label_associate_t(kauth_cred_t cred,
+                                           struct msqid_kernel *msqptr,
+                                           struct label *msqlabel,
+                                           struct msg *msgptr,
+                                           struct label *msglabel);
 /**
  *  @brief Destroy System V message label
  *  @param label The label to be destroyed
@@ -3260,18 +2793,14 @@ typedef void mpo_sysvmsg_label_associate_t(
  *  going out of scope, policy modules should free any internal storage
  *  associated with the label so that it may be destroyed.
  */
-typedef void mpo_sysvmsg_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_sysvmsg_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize System V message label
  *  @param label New label to initialize
  *
  *  Initialize the label for a newly instantiated System V message.
  */
-typedef void mpo_sysvmsg_label_init_t(
-	struct label *label
-	);
+typedef void mpo_sysvmsg_label_init_t(struct label *label);
 /**
  *  @brief Clean up a System V message label
  *  @param label The label to be destroyed
@@ -3282,9 +2811,7 @@ typedef void mpo_sysvmsg_label_init_t(
  *  pool", policies can cleanup or overwrite any information present in
  *  the label.
  */
-typedef void mpo_sysvmsg_label_recycle_t(
-	struct label *label
-	);
+typedef void mpo_sysvmsg_label_recycle_t(struct label *label);
 /**
  *  @brief Access control check for System V message enqueuing
  *  @param cred Subject credential
@@ -3299,13 +2826,10 @@ typedef void mpo_sysvmsg_label_recycle_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_enqueue_t(
-	kauth_cred_t cred,
-	struct msg *msgptr,
-	struct label *msglabel,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel
-	);
+typedef int mpo_sysvmsq_check_enqueue_t(kauth_cred_t cred, struct msg *msgptr,
+                                        struct label *msglabel,
+                                        struct msqid_kernel *msqptr,
+                                        struct label *msqlabel);
 /**
  *  @brief Access control check for System V message reception
  *  @param cred The credential of the intended recipient
@@ -3318,11 +2842,8 @@ typedef int mpo_sysvmsq_check_enqueue_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_msgrcv_t(
-	kauth_cred_t cred,
-	struct msg *msgptr,
-	struct label *msglabel
-	);
+typedef int mpo_sysvmsq_check_msgrcv_t(kauth_cred_t cred, struct msg *msgptr,
+                                       struct label *msglabel);
 /**
  *  @brief Access control check for System V message queue removal
  *  @param cred The credential of the caller
@@ -3337,11 +2858,8 @@ typedef int mpo_sysvmsq_check_msgrcv_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_msgrmid_t(
-	kauth_cred_t cred,
-	struct msg *msgptr,
-	struct label *msglabel
-	);
+typedef int mpo_sysvmsq_check_msgrmid_t(kauth_cred_t cred, struct msg *msgptr,
+                                        struct label *msglabel);
 /**
  *  @brief Access control check for msgctl()
  *  @param cred The credential of the caller
@@ -3353,12 +2871,9 @@ typedef int mpo_sysvmsq_check_msgrmid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_msqctl_t(
-	kauth_cred_t cred,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel,
-	int cmd
-	);
+typedef int mpo_sysvmsq_check_msqctl_t(kauth_cred_t cred,
+                                       struct msqid_kernel *msqptr,
+                                       struct label *msqlabel, int cmd);
 /**
  *  @brief Access control check to get a System V message queue
  *  @param cred The credential of the caller
@@ -3372,13 +2887,12 @@ typedef int mpo_sysvmsq_check_msqctl_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_msqget_t(
-	kauth_cred_t cred,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel
-	);
+typedef int mpo_sysvmsq_check_msqget_t(kauth_cred_t cred,
+                                       struct msqid_kernel *msqptr,
+                                       struct label *msqlabel);
 /**
- *  @brief Access control check to receive a System V message from the given queue
+ *  @brief Access control check to receive a System V message from the given
+ * queue
  *  @param cred The credential of the caller
  *  @param msqptr The message queue to receive from
  *  @param msqlabel The message queue's label
@@ -3389,11 +2903,9 @@ typedef int mpo_sysvmsq_check_msqget_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_msqrcv_t(
-	kauth_cred_t cred,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel
-	);
+typedef int mpo_sysvmsq_check_msqrcv_t(kauth_cred_t cred,
+                                       struct msqid_kernel *msqptr,
+                                       struct label *msqlabel);
 /**
  *  @brief Access control check to send a System V message to the given queue
  *  @param cred The credential of the caller
@@ -3406,11 +2918,9 @@ typedef int mpo_sysvmsq_check_msqrcv_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvmsq_check_msqsnd_t(
-	kauth_cred_t cred,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel
-	);
+typedef int mpo_sysvmsq_check_msqsnd_t(kauth_cred_t cred,
+                                       struct msqid_kernel *msqptr,
+                                       struct label *msqlabel);
 /**
  *  @brief Create a System V message queue label
  *  @param cred Subject credential
@@ -3418,11 +2928,9 @@ typedef int mpo_sysvmsq_check_msqsnd_t(
  *  @param msqlabel The label of the message queue
  *
  */
-typedef void mpo_sysvmsq_label_associate_t(
-	kauth_cred_t cred,
-	struct msqid_kernel *msqptr,
-	struct label *msqlabel
-	);
+typedef void mpo_sysvmsq_label_associate_t(kauth_cred_t cred,
+                                           struct msqid_kernel *msqptr,
+                                           struct label *msqlabel);
 /**
  *  @brief Destroy System V message queue label
  *  @param label The label to be destroyed
@@ -3431,18 +2939,14 @@ typedef void mpo_sysvmsq_label_associate_t(
  *  going out of scope, policy modules should free any internal storage
  *  associated with the label so that it may be destroyed.
  */
-typedef void mpo_sysvmsq_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_sysvmsq_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize System V message queue label
  *  @param label New label to initialize
  *
  *  Initialize the label for a newly instantiated System V message queue.
  */
-typedef void mpo_sysvmsq_label_init_t(
-	struct label *label
-	);
+typedef void mpo_sysvmsq_label_init_t(struct label *label);
 /**
  *  @brief Clean up a System V message queue label
  *  @param label The label to be destroyed
@@ -3453,9 +2957,7 @@ typedef void mpo_sysvmsq_label_init_t(
  *  pool", policies can cleanup or overwrite any information present in
  *  the label.
  */
-typedef void mpo_sysvmsq_label_recycle_t(
-	struct label *label
-	);
+typedef void mpo_sysvmsq_label_recycle_t(struct label *label);
 /**
  *  @brief Access control check for System V semaphore control operation
  *  @param cred Subject credential
@@ -3469,12 +2971,9 @@ typedef void mpo_sysvmsq_label_recycle_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvsem_check_semctl_t(
-	kauth_cred_t cred,
-	struct semid_kernel *semakptr,
-	struct label *semaklabel,
-	int cmd
-	);
+typedef int mpo_sysvsem_check_semctl_t(kauth_cred_t cred,
+                                       struct semid_kernel *semakptr,
+                                       struct label *semaklabel, int cmd);
 /**
  *  @brief Access control check for obtaining a System V semaphore
  *  @param cred Subject credential
@@ -3487,11 +2986,9 @@ typedef int mpo_sysvsem_check_semctl_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvsem_check_semget_t(
-	kauth_cred_t cred,
-	struct semid_kernel *semakptr,
-	struct label *semaklabel
-	);
+typedef int mpo_sysvsem_check_semget_t(kauth_cred_t cred,
+                                       struct semid_kernel *semakptr,
+                                       struct label *semaklabel);
 /**
  *  @brief Access control check for System V semaphore operations
  *  @param cred Subject credential
@@ -3509,12 +3006,10 @@ typedef int mpo_sysvsem_check_semget_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvsem_check_semop_t(
-	kauth_cred_t cred,
-	struct semid_kernel *semakptr,
-	struct label *semaklabel,
-	size_t accesstype
-	);
+typedef int mpo_sysvsem_check_semop_t(kauth_cred_t cred,
+                                      struct semid_kernel *semakptr,
+                                      struct label *semaklabel,
+                                      size_t accesstype);
 /**
  *  @brief Create a System V semaphore label
  *  @param cred Subject credential
@@ -3526,11 +3021,9 @@ typedef int mpo_sysvsem_check_semop_t(
  *  appropriate initial label value should be assigned to the object and
  *  stored in semalabel.
  */
-typedef void mpo_sysvsem_label_associate_t(
-	kauth_cred_t cred,
-	struct semid_kernel *semakptr,
-	struct label *semalabel
-	);
+typedef void mpo_sysvsem_label_associate_t(kauth_cred_t cred,
+                                           struct semid_kernel *semakptr,
+                                           struct label *semalabel);
 /**
  *  @brief Destroy System V semaphore label
  *  @param label The label to be destroyed
@@ -3539,9 +3032,7 @@ typedef void mpo_sysvsem_label_associate_t(
  *  going out of scope, policy modules should free any internal storage
  *  associated with the label so that it may be destroyed.
  */
-typedef void mpo_sysvsem_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_sysvsem_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize System V semaphore label
  *  @param label New label to initialize
@@ -3549,9 +3040,7 @@ typedef void mpo_sysvsem_label_destroy_t(
  *  Initialize the label for a newly instantiated System V semaphore.  Sleeping
  *  is permitted.
  */
-typedef void mpo_sysvsem_label_init_t(
-	struct label *label
-	);
+typedef void mpo_sysvsem_label_init_t(struct label *label);
 /**
  *  @brief Clean up a System V semaphore label
  *  @param label The label to be cleaned
@@ -3562,9 +3051,7 @@ typedef void mpo_sysvsem_label_init_t(
  *  pool", policies can cleanup or overwrite any information present in
  *  the label.
  */
-typedef void mpo_sysvsem_label_recycle_t(
-	struct label *label
-	);
+typedef void mpo_sysvsem_label_recycle_t(struct label *label);
 /**
  *  @brief Access control check for mapping System V shared memory
  *  @param cred Subject credential
@@ -3578,12 +3065,9 @@ typedef void mpo_sysvsem_label_recycle_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvshm_check_shmat_t(
-	kauth_cred_t cred,
-	struct shmid_kernel *shmsegptr,
-	struct label *shmseglabel,
-	int shmflg
-	);
+typedef int mpo_sysvshm_check_shmat_t(kauth_cred_t cred,
+                                      struct shmid_kernel *shmsegptr,
+                                      struct label *shmseglabel, int shmflg);
 /**
  *  @brief Access control check for System V shared memory control operation
  *  @param cred Subject credential
@@ -3598,12 +3082,9 @@ typedef int mpo_sysvshm_check_shmat_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvshm_check_shmctl_t(
-	kauth_cred_t cred,
-	struct shmid_kernel *shmsegptr,
-	struct label *shmseglabel,
-	int cmd
-	);
+typedef int mpo_sysvshm_check_shmctl_t(kauth_cred_t cred,
+                                       struct shmid_kernel *shmsegptr,
+                                       struct label *shmseglabel, int cmd);
 /**
  *  @brief Access control check for unmapping System V shared memory
  *  @param cred Subject credential
@@ -3616,11 +3097,9 @@ typedef int mpo_sysvshm_check_shmctl_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvshm_check_shmdt_t(
-	kauth_cred_t cred,
-	struct shmid_kernel *shmsegptr,
-	struct label *shmseglabel
-	);
+typedef int mpo_sysvshm_check_shmdt_t(kauth_cred_t cred,
+                                      struct shmid_kernel *shmsegptr,
+                                      struct label *shmseglabel);
 /**
  *  @brief Access control check obtaining System V shared memory identifier
  *  @param cred Subject credential
@@ -3634,12 +3113,9 @@ typedef int mpo_sysvshm_check_shmdt_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_sysvshm_check_shmget_t(
-	kauth_cred_t cred,
-	struct shmid_kernel *shmsegptr,
-	struct label *shmseglabel,
-	int shmflg
-	);
+typedef int mpo_sysvshm_check_shmget_t(kauth_cred_t cred,
+                                       struct shmid_kernel *shmsegptr,
+                                       struct label *shmseglabel, int shmflg);
 /**
  *  @brief Create a System V shared memory region label
  *  @param cred Subject credential
@@ -3651,11 +3127,9 @@ typedef int mpo_sysvshm_check_shmget_t(
  *  time, an appropriate initial label value should be assigned to the
  *  object and stored in shmlabel.
  */
-typedef void mpo_sysvshm_label_associate_t(
-	kauth_cred_t cred,
-	struct shmid_kernel *shmsegptr,
-	struct label *shmlabel
-	);
+typedef void mpo_sysvshm_label_associate_t(kauth_cred_t cred,
+                                           struct shmid_kernel *shmsegptr,
+                                           struct label *shmlabel);
 /**
  *  @brief Destroy System V shared memory label
  *  @param label The label to be destroyed
@@ -3665,9 +3139,7 @@ typedef void mpo_sysvshm_label_associate_t(
  *  internal storage associated with the label so that it may be
  *  destroyed.
  */
-typedef void mpo_sysvshm_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_sysvshm_label_destroy_t(struct label *label);
 /**
  *  @brief Initialize System V Shared Memory region label
  *  @param label New label to initialize
@@ -3675,9 +3147,7 @@ typedef void mpo_sysvshm_label_destroy_t(
  *  Initialize the label for a newly instantiated System V Shared Memory
  *  region.  Sleeping is permitted.
  */
-typedef void mpo_sysvshm_label_init_t(
-	struct label *label
-	);
+typedef void mpo_sysvshm_label_init_t(struct label *label);
 /**
  *  @brief Clean up a System V Share Memory Region label
  *  @param shmlabel The label to be cleaned
@@ -3688,12 +3158,11 @@ typedef void mpo_sysvshm_label_init_t(
  *  returned to the "free pool", policies can cleanup or overwrite any
  *  information present in the label.
  */
-typedef void mpo_sysvshm_label_recycle_t(
-	struct label *shmlabel
-	);
+typedef void mpo_sysvshm_label_recycle_t(struct label *shmlabel);
 
 /**
- *  @brief Access control check for getting a process's task ports of different flavors
+ *  @brief Access control check for getting a process's task ports of different
+ * flavors
  *  @param cred Subject credential
  *  @param pident Object unique process identifier
  *  @param flavor Requested task port flavor
@@ -3706,14 +3175,13 @@ typedef void mpo_sysvshm_label_recycle_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch,
  *  EPERM for lack of privilege, or ESRCH to hide visibility of the target.
  */
-typedef int mpo_proc_check_get_task_with_flavor_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident,
-	mach_task_flavor_t flavor
-	);
+typedef int mpo_proc_check_get_task_with_flavor_t(kauth_cred_t cred,
+                                                  struct proc_ident *pident,
+                                                  mach_task_flavor_t flavor);
 
 /**
- *  @brief Access control check for exposing a process's task ports of different flavors
+ *  @brief Access control check for exposing a process's task ports of different
+ * flavors
  *  @param cred Subject credential
  *  @param pident Object unique process identifier
  *  @param flavor Requested task port flavor
@@ -3727,20 +3195,20 @@ typedef int mpo_proc_check_get_task_with_flavor_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch,
  *  EPERM for lack of privilege, or ESRCH to hide visibility of the target.
  */
-typedef int mpo_proc_check_expose_task_with_flavor_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident,
-	mach_task_flavor_t flavor
-	);
+typedef int mpo_proc_check_expose_task_with_flavor_t(kauth_cred_t cred,
+                                                     struct proc_ident *pident,
+                                                     mach_task_flavor_t flavor);
 
 /**
- *  @brief Access control check for upgrading to task port with a task identity token
+ *  @brief Access control check for upgrading to task port with a task identity
+ * token
  *  @param cred Subject credential
- *  @param pident Object unique process identifier, NULL if token represents a corpse task
+ *  @param pident Object unique process identifier, NULL if token represents a
+ * corpse task
  *  @param flavor Requested task port flavor
  *
- *  Determine whether the subject identified by the credential can upgrade to task port
- *  of given flavor with a task identity token of the passed process.
+ *  Determine whether the subject identified by the credential can upgrade to
+ * task port of given flavor with a task identity token of the passed process.
  *  This call is used by task_identity_token_get_task_port().
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
@@ -3748,10 +3216,8 @@ typedef int mpo_proc_check_expose_task_with_flavor_t(
  *  EPERM for lack of privilege, or ESRCH to hide visibility of the target.
  */
 typedef int mpo_proc_check_task_id_token_get_task_t(
-	kauth_cred_t cred,
-	struct proc_ident *pident, /* Nullable */
-	mach_task_flavor_t flavor
-	);
+    kauth_cred_t cred, struct proc_ident *pident, /* Nullable */
+    mach_task_flavor_t flavor);
 
 /**
  *  @brief Check whether task's IPC may inherit across process exec
@@ -3765,14 +3231,10 @@ typedef int mpo_proc_check_task_id_token_get_task_t(
  *       EPERM     if parent does not have any entitlements.
  *       EACCESS   if mismatch in entitlements
  */
-typedef int mpo_proc_check_inherit_ipc_ports_t(
-	struct proc *p,
-	struct vnode *cur_vp,
-	off_t cur_offset,
-	struct vnode *img_vp,
-	off_t img_offset,
-	struct vnode *scriptvp
-	);
+typedef int
+mpo_proc_check_inherit_ipc_ports_t(struct proc *p, struct vnode *cur_vp,
+                                   off_t cur_offset, struct vnode *img_vp,
+                                   off_t img_offset, struct vnode *scriptvp);
 
 /**
  *  @brief Access control check for iopolicysys
@@ -3789,14 +3251,9 @@ typedef int mpo_proc_check_inherit_ipc_ports_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_iopolicysys_t(
-	struct proc *p,
-	kauth_cred_t cred,
-	int cmd,
-	int type,
-	int scope,
-	int policy
-	);
+typedef int mpo_proc_check_iopolicysys_t(struct proc *p, kauth_cred_t cred,
+                                         int cmd, int type, int scope,
+                                         int policy);
 
 /**
  *  @brief Privilege check for a process to run invalid
@@ -3808,9 +3265,7 @@ typedef int mpo_proc_check_iopolicysys_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_run_cs_invalid_t(
-	struct proc *p
-	);
+typedef int mpo_proc_check_run_cs_invalid_t(struct proc *p);
 
 /**
  * @brief Notification a process was invalidated
@@ -3822,28 +3277,25 @@ typedef int mpo_proc_check_run_cs_invalid_t(
  * marked invalid via a csops(CS_OPS_MARKINVALID) syscall.
  *
  * @warning This hook can be called from the page fault handler; it should not
- * perform any operations that may result in paging, and stack space is extremely
- * limited.  Furthermore, the hook is called with proc lock held, and if called
- * from the fault handler, with vm object lock held.  Consumers reacting to this
- * hook being called are expected to defer processing to a userret, possibly
- * after suspending the task.
+ * perform any operations that may result in paging, and stack space is
+ * extremely limited.  Furthermore, the hook is called with proc lock held, and
+ * if called from the fault handler, with vm object lock held.  Consumers
+ * reacting to this hook being called are expected to defer processing to a
+ * userret, possibly after suspending the task.
  */
-typedef void mpo_proc_notify_cs_invalidated_t(
-	struct proc *p
-	);
+typedef void mpo_proc_notify_cs_invalidated_t(struct proc *p);
 
 /**
- *  @brief Notification a process is finished with exec and will jump to userspace
+ *  @brief Notification a process is finished with exec and will jump to
+ * userspace
  *  @param p Object process
  *
- *  Notifies all MAC policies that a process has completed an exec and is about to
- *  jump to userspace to continue execution. This may result in process termination
- *  via signals. Hook is designed to hold no/minimal locks so it can be used for any
- *  necessary upcalls.
+ *  Notifies all MAC policies that a process has completed an exec and is about
+ * to jump to userspace to continue execution. This may result in process
+ * termination via signals. Hook is designed to hold no/minimal locks so it can
+ * be used for any necessary upcalls.
  */
-typedef void mpo_proc_notify_exec_complete_t(
-	struct proc *p
-	);
+typedef void mpo_proc_notify_exec_complete_t(struct proc *p);
 
 /**
  *  @brief Access control check for setting user ID
@@ -3857,10 +3309,7 @@ typedef void mpo_proc_notify_exec_complete_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setuid_t(
-	kauth_cred_t cred,
-	uid_t uid
-	);
+typedef int mpo_proc_check_setuid_t(kauth_cred_t cred, uid_t uid);
 
 /**
  *  @brief Access control check for setting effective user ID
@@ -3873,10 +3322,7 @@ typedef int mpo_proc_check_setuid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_seteuid_t(
-	kauth_cred_t cred,
-	uid_t euid
-	);
+typedef int mpo_proc_check_seteuid_t(kauth_cred_t cred, uid_t euid);
 
 /**
  *  @brief Access control check for setting real and effective user ID
@@ -3891,11 +3337,8 @@ typedef int mpo_proc_check_seteuid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setreuid_t(
-	kauth_cred_t cred,
-	uid_t ruid,
-	uid_t euid
-	);
+typedef int mpo_proc_check_setreuid_t(kauth_cred_t cred, uid_t ruid,
+                                      uid_t euid);
 
 /**
  *  @brief Access control check for setting group ID
@@ -3909,10 +3352,7 @@ typedef int mpo_proc_check_setreuid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setgid_t(
-	kauth_cred_t cred,
-	gid_t gid
-	);
+typedef int mpo_proc_check_setgid_t(kauth_cred_t cred, gid_t gid);
 
 /**
  *  @brief Access control check for setting effective group ID
@@ -3925,10 +3365,7 @@ typedef int mpo_proc_check_setgid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setegid_t(
-	kauth_cred_t cred,
-	gid_t egid
-	);
+typedef int mpo_proc_check_setegid_t(kauth_cred_t cred, gid_t egid);
 
 /**
  *  @brief Access control check for setting real and effective group ID
@@ -3943,11 +3380,8 @@ typedef int mpo_proc_check_setegid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_setregid_t(
-	kauth_cred_t cred,
-	gid_t rgid,
-	gid_t egid
-	);
+typedef int mpo_proc_check_setregid_t(kauth_cred_t cred, gid_t rgid,
+                                      gid_t egid);
 
 /**
  *  @brief Access control check for setting thread assumed identity
@@ -3963,12 +3397,8 @@ typedef int mpo_proc_check_setregid_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_proc_check_settid_t(
-	kauth_cred_t pcred,
-	kauth_cred_t tcred,
-	uid_t uid,
-	gid_t gid
-	);
+typedef int mpo_proc_check_settid_t(kauth_cred_t pcred, kauth_cred_t tcred,
+                                    uid_t uid, gid_t gid);
 
 /**
  *  @brief Notification of connection port derivation from service port
@@ -3984,10 +3414,9 @@ typedef int mpo_proc_check_settid_t(
  *    this hook.
  *  - Only called on macOS.
  */
-typedef void mpo_proc_notify_service_port_derive_t(
-	kauth_cred_t cred,
-	struct mach_service_port_info *sp_info
-	);
+typedef void
+mpo_proc_notify_service_port_derive_t(kauth_cred_t cred,
+                                      struct mach_service_port_info *sp_info);
 
 /**
  *  @brief Perform MAC-related analysis of telemetry data.
@@ -4003,12 +3432,8 @@ typedef void mpo_proc_notify_service_port_derive_t(
  *  case it is expected that the client will cleanup any necessary state
  *  recorded back when the telemetry was first scheduled.
  */
-typedef void mpo_thread_telemetry_t(
-	struct thread *thread,
-	int err,
-	const void *data,
-	size_t length
-	);
+typedef void mpo_thread_telemetry_t(struct thread *thread, int err,
+                                    const void *data, size_t length);
 
 /**
  *  @brief Perform MAC-related events when a thread returns to user space
@@ -4018,9 +3443,7 @@ typedef void mpo_thread_telemetry_t(
  *  events when a thread returns to user space, via a system call
  *  return or trap return.
  */
-typedef void mpo_thread_userret_t(
-	struct thread *thread
-	);
+typedef void mpo_thread_userret_t(struct thread *thread);
 
 /**
  *  @brief Check vnode access
@@ -4039,12 +3462,8 @@ typedef void mpo_thread_userret_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_access_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	int acc_mode
-	);
+typedef int mpo_vnode_check_access_t(kauth_cred_t cred, struct vnode *vp,
+                                     struct label *label, int acc_mode);
 /**
  *  @brief Access control check for changing working directory
  *  @param cred Subject credential
@@ -4058,11 +3477,8 @@ typedef int mpo_vnode_check_access_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_chdir_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel
-	);
+typedef int mpo_vnode_check_chdir_t(kauth_cred_t cred, struct vnode *dvp,
+                                    struct label *dlabel);
 /**
  *  @brief Access control check for changing root directory
  *  @param cred Subject credential
@@ -4076,12 +3492,9 @@ typedef int mpo_vnode_check_chdir_t(
  *  @return In the event of an error, an appropriate value for errno
  *  should be returned, otherwise return 0 upon success.
  */
-typedef int mpo_vnode_check_chroot_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_chroot_t(kauth_cred_t cred, struct vnode *dvp,
+                                     struct label *dlabel,
+                                     struct componentname *cnp);
 /**
  *  @brief Access control check for creating clone
  *  @param cred Subject credential
@@ -4097,14 +3510,10 @@ typedef int mpo_vnode_check_chroot_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_clone_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *label,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_clone_t(kauth_cred_t cred, struct vnode *dvp,
+                                    struct label *dlabel, struct vnode *vp,
+                                    struct label *label,
+                                    struct componentname *cnp);
 /**
  *  @brief Access control check for creating vnode
  *  @param cred Subject credential
@@ -4123,13 +3532,10 @@ typedef int mpo_vnode_check_clone_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_create_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct componentname *cnp,
-	struct vnode_attr *vap
-	);
+typedef int mpo_vnode_check_create_t(kauth_cred_t cred, struct vnode *dvp,
+                                     struct label *dlabel,
+                                     struct componentname *cnp,
+                                     struct vnode_attr *vap);
 /**
  *  @brief Access control check for deleting extended attribute
  *  @param cred Subject credential
@@ -4144,12 +3550,9 @@ typedef int mpo_vnode_check_create_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_deleteextattr_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel,
-	const char *name
-	);
+typedef int mpo_vnode_check_deleteextattr_t(kauth_cred_t cred, struct vnode *vp,
+                                            struct label *vlabel,
+                                            const char *name);
 /**
  *  @brief Access control check for exchanging file data
  *  @param cred Subject credential
@@ -4165,13 +3568,9 @@ typedef int mpo_vnode_check_deleteextattr_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_exchangedata_t(
-	kauth_cred_t cred,
-	struct vnode *v1,
-	struct label *vl1,
-	struct vnode *v2,
-	struct label *vl2
-	);
+typedef int mpo_vnode_check_exchangedata_t(kauth_cred_t cred, struct vnode *v1,
+                                           struct label *vl1, struct vnode *v2,
+                                           struct label *vl2);
 /**
  *  @brief Access control check for executing the vnode
  *  @param cred Subject credential
@@ -4197,18 +3596,14 @@ typedef int mpo_vnode_check_exchangedata_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_exec_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct vnode *scriptvp,
-	struct label *vnodelabel,
-	struct label *scriptlabel,
-	struct label *execlabel,        /* NULLOK */
-	struct componentname *cnp,
-	u_int *csflags,
-	void *macpolicyattr,
-	size_t macpolicyattrlen
-	);
+typedef int mpo_vnode_check_exec_t(kauth_cred_t cred, struct vnode *vp,
+                                   struct vnode *scriptvp,
+                                   struct label *vnodelabel,
+                                   struct label *scriptlabel,
+                                   struct label *execlabel, /* NULLOK */
+                                   struct componentname *cnp, u_int *csflags,
+                                   void *macpolicyattr,
+                                   size_t macpolicyattrlen);
 /**
  *  @brief Access control check for fsgetpath
  *  @param cred Subject credential
@@ -4221,11 +3616,8 @@ typedef int mpo_vnode_check_exec_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_fsgetpath_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_fsgetpath_t(kauth_cred_t cred, struct vnode *vp,
+                                        struct label *label);
 /**
  *  @brief Access control check for retrieving file attributes
  *  @param active_cred Subject credential
@@ -4248,13 +3640,10 @@ typedef int mpo_vnode_check_fsgetpath_t(
  *  @note Policies may change the contents of va to alter the list of
  *  file attributes returned.
  */
-typedef int mpo_vnode_check_getattr_t(
-	kauth_cred_t active_cred,
-	kauth_cred_t file_cred, /* NULLOK */
-	struct vnode *vp,
-	struct label *vlabel,
-	struct vnode_attr *va
-	);
+typedef int mpo_vnode_check_getattr_t(kauth_cred_t active_cred,
+                                      kauth_cred_t file_cred, /* NULLOK */
+                                      struct vnode *vp, struct label *vlabel,
+                                      struct vnode_attr *va);
 /**
  *  @brief Access control check for retrieving file attributes
  *  @param cred Subject credential
@@ -4274,15 +3663,13 @@ typedef int mpo_vnode_check_getattr_t(
  *  with this call; the security policy is not permitted to change the set of
  *  attributes requested.
  */
-typedef int mpo_vnode_check_getattrlist_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct attrlist *alist,
-	uint64_t options
-	);
+typedef int mpo_vnode_check_getattrlist_t(kauth_cred_t cred, struct vnode *vp,
+                                          struct label *vlabel,
+                                          struct attrlist *alist,
+                                          uint64_t options);
 /**
- *  @brief Access control check for retrieving file attributes for multiple directory entries
+ *  @brief Access control check for retrieving file attributes for multiple
+ * directory entries
  *  @param cred Subject credential
  *  @param dvp Directory vnode
  *  @param alist List of attributes to retrieve
@@ -4299,12 +3686,10 @@ typedef int mpo_vnode_check_getattrlist_t(
  *  with this call; the security policy is not permitted to change the set of
  *  attributes requested.
  */
-typedef int mpo_vnode_check_getattrlistbulk_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct attrlist *alist,
-	uint64_t options
-	);
+typedef int mpo_vnode_check_getattrlistbulk_t(kauth_cred_t cred,
+                                              struct vnode *dvp,
+                                              struct attrlist *alist,
+                                              uint64_t options);
 /**
  *  @brief Access control check for retrieving an extended attribute
  *  @param cred Subject credential
@@ -4322,13 +3707,11 @@ typedef int mpo_vnode_check_getattrlistbulk_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_getextattr_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,            /* NULLOK */
-	const char *name,
-	struct uio *uio                 /* NULLOK */
-	);
+typedef int mpo_vnode_check_getextattr_t(kauth_cred_t cred, struct vnode *vp,
+                                         struct label *label, /* NULLOK */
+                                         const char *name,
+                                         struct uio *uio /* NULLOK */
+);
 /**
  *  @brief Access control check for ioctl
  *  @param cred Subject credential
@@ -4347,12 +3730,8 @@ typedef int mpo_vnode_check_getextattr_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_ioctl_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	unsigned long cmd
-	);
+typedef int mpo_vnode_check_ioctl_t(kauth_cred_t cred, struct vnode *vp,
+                                    struct label *label, unsigned long cmd);
 /**
  *  @brief Access control check for vnode kqfilter
  *  @param active_cred Subject credential
@@ -4366,13 +3745,10 @@ typedef int mpo_vnode_check_ioctl_t(
  *  @return Return 0 if access if granted, otherwise an appropriate
  *  value for errno should be returned.
  */
-typedef int mpo_vnode_check_kqfilter_t(
-	kauth_cred_t active_cred,
-	kauth_cred_t file_cred,         /* NULLOK */
-	struct knote *kn,
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_kqfilter_t(kauth_cred_t active_cred,
+                                       kauth_cred_t file_cred, /* NULLOK */
+                                       struct knote *kn, struct vnode *vp,
+                                       struct label *label);
 /**
  *  @brief Access control check for relabel
  *  @param cred Subject credential
@@ -4389,12 +3765,9 @@ typedef int mpo_vnode_check_kqfilter_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_label_update_t(
-	struct ucred *cred,
-	struct vnode *vp,
-	struct label *vnodelabel,
-	struct label *newlabel
-	);
+typedef int mpo_vnode_check_label_update_t(struct ucred *cred, struct vnode *vp,
+                                           struct label *vnodelabel,
+                                           struct label *newlabel);
 /**
  *  @brief Access control check for creating link
  *  @param cred Subject credential
@@ -4410,14 +3783,10 @@ typedef int mpo_vnode_check_label_update_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_link_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *label,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_link_t(kauth_cred_t cred, struct vnode *dvp,
+                                   struct label *dlabel, struct vnode *vp,
+                                   struct label *label,
+                                   struct componentname *cnp);
 /**
  *  @brief Access control check for listing extended attributes
  *  @param cred Subject credential
@@ -4430,11 +3799,8 @@ typedef int mpo_vnode_check_link_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_listextattr_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef int mpo_vnode_check_listextattr_t(kauth_cred_t cred, struct vnode *vp,
+                                          struct label *vlabel);
 /**
  *  @brief Access control check for lookup
  *  @param cred Subject credential
@@ -4454,13 +3820,11 @@ typedef int mpo_vnode_check_listextattr_t(
  *  on the path; if a component is found to be a symlink then this hook is
  *  called again with the updated path.
  */
-typedef int mpo_vnode_check_lookup_preflight_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	const char *path,
-	size_t pathlen
-	);
+typedef int mpo_vnode_check_lookup_preflight_t(kauth_cred_t cred,
+                                               struct vnode *dvp,
+                                               struct label *dlabel,
+                                               const char *path,
+                                               size_t pathlen);
 /**
  *  @brief Access control check for lookup
  *  @param cred Subject credential
@@ -4475,12 +3839,9 @@ typedef int mpo_vnode_check_lookup_preflight_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_lookup_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_lookup_t(kauth_cred_t cred, struct vnode *dvp,
+                                     struct label *dlabel,
+                                     struct componentname *cnp);
 /**
  *  @brief Access control check for open
  *  @param cred Subject credential
@@ -4495,12 +3856,8 @@ typedef int mpo_vnode_check_lookup_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_open_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	int acc_mode
-	);
+typedef int mpo_vnode_check_open_t(kauth_cred_t cred, struct vnode *vp,
+                                   struct label *label, int acc_mode);
 /**
  *  @brief Access control check for read
  *  @param active_cred Subject credential
@@ -4517,12 +3874,11 @@ typedef int mpo_vnode_check_open_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_read_t(
-	kauth_cred_t active_cred,       /* SUBJECT */
-	kauth_cred_t file_cred, /* NULLOK */
-	struct vnode *vp,               /* OBJECT */
-	struct label *label             /* LABEL */
-	);
+typedef int mpo_vnode_check_read_t(kauth_cred_t active_cred, /* SUBJECT */
+                                   kauth_cred_t file_cred,   /* NULLOK */
+                                   struct vnode *vp,         /* OBJECT */
+                                   struct label *label       /* LABEL */
+);
 /**
  *  @brief Access control check for read directory
  *  @param cred Subject credential
@@ -4536,11 +3892,10 @@ typedef int mpo_vnode_check_read_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_readdir_t(
-	kauth_cred_t cred,              /* SUBJECT */
-	struct vnode *dvp,              /* OBJECT */
-	struct label *dlabel            /* LABEL */
-	);
+typedef int mpo_vnode_check_readdir_t(kauth_cred_t cred,   /* SUBJECT */
+                                      struct vnode *dvp,   /* OBJECT */
+                                      struct label *dlabel /* LABEL */
+);
 /**
  *  @brief Access control check for read link
  *  @param cred Subject credential
@@ -4557,11 +3912,8 @@ typedef int mpo_vnode_check_readdir_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_readlink_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_readlink_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *label);
 /**
  *  @brief Access control check for rename
  *  @param cred Subject credential
@@ -4582,19 +3934,13 @@ typedef int mpo_vnode_check_readlink_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_rename_t(
-	kauth_cred_t cred,
-	struct vnode *fdvp,
-	struct label *fdlabel,
-	struct vnode *fvp,
-	struct label *flabel,
-	struct componentname *fcnp,
-	struct vnode *tdvp,
-	struct label *tdlabel,
-	struct vnode *tvp,
-	struct label *tlabel,
-	struct componentname *tcnp
-	);
+typedef int mpo_vnode_check_rename_t(kauth_cred_t cred, struct vnode *fdvp,
+                                     struct label *fdlabel, struct vnode *fvp,
+                                     struct label *flabel,
+                                     struct componentname *fcnp,
+                                     struct vnode *tdvp, struct label *tdlabel,
+                                     struct vnode *tvp, struct label *tlabel,
+                                     struct componentname *tcnp);
 /**
  *  @brief Access control check for rename from
  *  @param cred Subject credential
@@ -4618,14 +3964,10 @@ typedef int mpo_vnode_check_rename_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_rename_from_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *label,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_rename_from_t(kauth_cred_t cred, struct vnode *dvp,
+                                          struct label *dlabel,
+                                          struct vnode *vp, struct label *label,
+                                          struct componentname *cnp);
 /**
  *  @brief Access control check for rename to
  *  @param cred Subject credential
@@ -4633,7 +3975,8 @@ typedef int mpo_vnode_check_rename_from_t(
  *  @param dlabel Policy label associated with dvp
  *  @param vp Overwritten vnode
  *  @param label Policy label associated with vp
- *  @param samedir Boolean; 1 if the source and destination directories are the same
+ *  @param samedir Boolean; 1 if the source and destination directories are the
+ * same
  *  @param cnp Destination component name
  *  @see mpo_vnode_check_rename_t
  *  @see mpo_vnode_check_rename_from_t
@@ -4652,15 +3995,11 @@ typedef int mpo_vnode_check_rename_from_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_rename_to_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,                       /* NULLOK */
-	struct label *label,                    /* NULLOK */
-	int samedir,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_rename_to_t(kauth_cred_t cred, struct vnode *dvp,
+                                        struct label *dlabel,
+                                        struct vnode *vp,    /* NULLOK */
+                                        struct label *label, /* NULLOK */
+                                        int samedir, struct componentname *cnp);
 /**
  *  @brief Access control check for revoke
  *  @param cred Subject credential
@@ -4674,11 +4013,8 @@ typedef int mpo_vnode_check_rename_to_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_revoke_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_revoke_t(kauth_cred_t cred, struct vnode *vp,
+                                     struct label *label);
 /**
  *  @brief Access control check for searchfs
  *  @param cred Subject credential
@@ -4693,13 +4029,10 @@ typedef int mpo_vnode_check_revoke_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_searchfs_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct attrlist *returnattrs,
-	struct attrlist *searchattrs
-	);
+typedef int mpo_vnode_check_searchfs_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *vlabel,
+                                       struct attrlist *returnattrs,
+                                       struct attrlist *searchattrs);
 /**
  *  @brief Access control check for select
  *  @param cred Subject credential
@@ -4713,12 +4046,8 @@ typedef int mpo_vnode_check_searchfs_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_select_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	int which
-	);
+typedef int mpo_vnode_check_select_t(kauth_cred_t cred, struct vnode *vp,
+                                     struct label *label, int which);
 /**
  *  @brief Access control check for setting ACL
  *  @param cred Subject credential
@@ -4733,12 +4062,9 @@ typedef int mpo_vnode_check_select_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_setacl_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	struct kauth_acl *acl
-	);
+typedef int mpo_vnode_check_setacl_t(kauth_cred_t cred, struct vnode *vp,
+                                     struct label *label,
+                                     struct kauth_acl *acl);
 /**
  *  @brief Access control check for setting file attributes
  *  @param cred Subject credential
@@ -4756,12 +4082,9 @@ typedef int mpo_vnode_check_setacl_t(
  *  EPERM for lack of privilege. Access control covers all attributes requested
  *  with this call.
  */
-typedef int mpo_vnode_check_setattrlist_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct attrlist *alist
-	);
+typedef int mpo_vnode_check_setattrlist_t(kauth_cred_t cred, struct vnode *vp,
+                                          struct label *vlabel,
+                                          struct attrlist *alist);
 /**
  *  @brief Access control check for setting extended attribute
  *  @param cred Subject credential
@@ -4783,13 +4106,9 @@ typedef int mpo_vnode_check_setattrlist_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_setextattr_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	const char *name,
-	struct uio *uio
-	);
+typedef int mpo_vnode_check_setextattr_t(kauth_cred_t cred, struct vnode *vp,
+                                         struct label *label, const char *name,
+                                         struct uio *uio);
 /**
  *  @brief Access control check for setting flags
  *  @param cred Subject credential
@@ -4804,12 +4123,8 @@ typedef int mpo_vnode_check_setextattr_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_setflags_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	u_long flags
-	);
+typedef int mpo_vnode_check_setflags_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *label, u_long flags);
 /**
  *  @brief Access control check for setting mode
  *  @param cred Subject credential
@@ -4824,12 +4139,8 @@ typedef int mpo_vnode_check_setflags_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_setmode_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	mode_t mode
-	);
+typedef int mpo_vnode_check_setmode_t(kauth_cred_t cred, struct vnode *vp,
+                                      struct label *label, mode_t mode);
 /**
  *  @brief Access control check for setting uid and gid
  *  @param cred Subject credential
@@ -4846,13 +4157,9 @@ typedef int mpo_vnode_check_setmode_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_setowner_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	uid_t uid,
-	gid_t gid
-	);
+typedef int mpo_vnode_check_setowner_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *label, uid_t uid,
+                                       gid_t gid);
 /**
  *  @brief Access control check for setting timestamps
  *  @param cred Subject credential
@@ -4868,13 +4175,10 @@ typedef int mpo_vnode_check_setowner_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_setutimes_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	struct timespec atime,
-	struct timespec mtime
-	);
+typedef int mpo_vnode_check_setutimes_t(kauth_cred_t cred, struct vnode *vp,
+                                        struct label *label,
+                                        struct timespec atime,
+                                        struct timespec mtime);
 /**
  *  @brief Access control check after determining the code directory hash
  *  @param vp vnode vnode to combine into proc
@@ -4886,22 +4190,17 @@ typedef int mpo_vnode_check_setutimes_t(
  *  @param flags operational flag to mpo_vnode_check_signature
  *  @param platform platform of the signature being checked
  *  @param fatal_failure_desc description of fatal failure
- *  @param fatal_failure_desc_len failure description len, failure is fatal if non-0
+ *  @param fatal_failure_desc_len failure description len, failure is fatal if
+ * non-0
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
 typedef int mpo_vnode_check_signature_t(
-	struct vnode *vp,
-	struct label *label,
-	cpu_type_t cpu_type,
-	struct cs_blob *cs_blob,
-	unsigned int *cs_flags,
-	unsigned int *signer_type,
-	int flags,
-	unsigned int platform,
-	char **fatal_failure_desc, size_t *fatal_failure_desc_len
-	);
+    struct vnode *vp, struct label *label, cpu_type_t cpu_type,
+    struct cs_blob *cs_blob, unsigned int *cs_flags, unsigned int *signer_type,
+    int flags, unsigned int platform, char **fatal_failure_desc,
+    size_t *fatal_failure_desc_len);
 /**
  *  @brief Access control check for stat
  *  @param active_cred Subject credential
@@ -4919,12 +4218,9 @@ typedef int mpo_vnode_check_signature_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_stat_t(
-	struct ucred *active_cred,
-	struct ucred *file_cred,        /* NULLOK */
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_stat_t(struct ucred *active_cred,
+                                   struct ucred *file_cred, /* NULLOK */
+                                   struct vnode *vp, struct label *label);
 /**
  *  @brief Access control check for supplemental signature attachement
  *  @param vp the vnode to which the signature will be attached
@@ -4932,19 +4228,16 @@ typedef int mpo_vnode_check_stat_t(
  *  @param cs_blob the code signature to check
  *  @param linked_vp vnode to which this new vp is related
  *  @param linked_cs_blob the code signature of the linked vnode
- *  @param signer_type output parameter for the signer type of the code signature being checked.
+ *  @param signer_type output parameter for the signer type of the code
+ * signature being checked.
  *
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
 typedef int mpo_vnode_check_supplemental_signature_t(
-	struct vnode *vp,
-	struct label *label,
-	struct cs_blob *cs_blob,
-	struct vnode *linked_vp,
-	struct cs_blob *linked_cs_blob,
-	unsigned int *signer_type
-	);
+    struct vnode *vp, struct label *label, struct cs_blob *cs_blob,
+    struct vnode *linked_vp, struct cs_blob *linked_cs_blob,
+    unsigned int *signer_type);
 /**
  *  @brief Access control check for atomically swapping two vnodes.
  *  @param cred User credential for the swapping process
@@ -4957,15 +4250,12 @@ typedef int mpo_vnode_check_supplemental_signature_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_swap_t(
-	kauth_cred_t cred,
-	struct vnode *v1,
-	struct label *vl1,
-	struct vnode *v2,
-	struct label *vl2
-	);
+typedef int mpo_vnode_check_swap_t(kauth_cred_t cred, struct vnode *v1,
+                                   struct label *vl1, struct vnode *v2,
+                                   struct label *vl2);
 /**
- * @brief Access control and clamping for changing dataprotection class of a vnode.
+ * @brief Access control and clamping for changing dataprotection class of a
+ * vnode.
  * @param cred User credential for process changing dataprotection class
  * @param vp the vnode that is being changed
  * @param dataprotect_class a pointer to the desired new dataprotection class
@@ -4976,11 +4266,9 @@ typedef int mpo_vnode_check_swap_t(
  * @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_dataprotect_set_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	uint32_t *dataprotect_class
-	);
+typedef int mpo_vnode_check_dataprotect_set_t(kauth_cred_t cred,
+                                              struct vnode *vp,
+                                              uint32_t *dataprotect_class);
 /**
  *  @brief Access control check for vnode trigger resolution
  *  @param cred Subject credential
@@ -4996,12 +4284,10 @@ typedef int mpo_vnode_check_dataprotect_set_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_trigger_resolve_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_trigger_resolve_t(kauth_cred_t cred,
+                                              struct vnode *dvp,
+                                              struct label *dlabel,
+                                              struct componentname *cnp);
 /**
  *  @brief Access control check for truncate/ftruncate
  *  @param active_cred Subject credential
@@ -5019,12 +4305,9 @@ typedef int mpo_vnode_check_trigger_resolve_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_truncate_t(
-	kauth_cred_t active_cred,
-	kauth_cred_t file_cred, /* NULLOK */
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_truncate_t(kauth_cred_t active_cred,
+                                       kauth_cred_t file_cred, /* NULLOK */
+                                       struct vnode *vp, struct label *label);
 /**
  *  @brief Access control check for binding UNIX domain socket
  *  @param cred Subject credential
@@ -5041,13 +4324,10 @@ typedef int mpo_vnode_check_truncate_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_uipc_bind_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct componentname *cnp,
-	struct vnode_attr *vap
-	);
+typedef int mpo_vnode_check_uipc_bind_t(kauth_cred_t cred, struct vnode *dvp,
+                                        struct label *dlabel,
+                                        struct componentname *cnp,
+                                        struct vnode_attr *vap);
 /**
  *  @brief Access control check for connecting UNIX domain socket
  *  @param cred Subject credential
@@ -5062,12 +4342,8 @@ typedef int mpo_vnode_check_uipc_bind_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_uipc_connect_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	socket_t so
-	);
+typedef int mpo_vnode_check_uipc_connect_t(kauth_cred_t cred, struct vnode *vp,
+                                           struct label *label, socket_t so);
 /**
  *  @brief Access control check for deleting vnode
  *  @param cred Subject credential
@@ -5089,14 +4365,10 @@ typedef int mpo_vnode_check_uipc_connect_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_unlink_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *label,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_check_unlink_t(kauth_cred_t cred, struct vnode *dvp,
+                                     struct label *dlabel, struct vnode *vp,
+                                     struct label *label,
+                                     struct componentname *cnp);
 /**
  *  @brief Access control check for write
  *  @param active_cred Subject credential
@@ -5114,12 +4386,9 @@ typedef int mpo_vnode_check_unlink_t(
  *  errno should be returned. Suggested failure: EACCES for label mismatch or
  *  EPERM for lack of privilege.
  */
-typedef int mpo_vnode_check_write_t(
-	kauth_cred_t active_cred,
-	kauth_cred_t file_cred, /* NULLOK */
-	struct vnode *vp,
-	struct label *label
-	);
+typedef int mpo_vnode_check_write_t(kauth_cred_t active_cred,
+                                    kauth_cred_t file_cred, /* NULLOK */
+                                    struct vnode *vp, struct label *label);
 /**
  *  @brief Access control check for copyfile
  *  @param cred Subject credential
@@ -5140,18 +4409,13 @@ typedef int mpo_vnode_check_write_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_vnode_check_copyfile_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *tvp,      /* NULLOK */
-	struct label *tlabel,   /* NULLOK */
-	struct vnode *fvp,
-	struct label *flabel,
-	struct componentname *cnp,
-	mode_t mode,
-	int flags
-	);
+typedef int mpo_vnode_check_copyfile_t(kauth_cred_t cred, struct vnode *dvp,
+                                       struct label *dlabel,
+                                       struct vnode *tvp,    /* NULLOK */
+                                       struct label *tlabel, /* NULLOK */
+                                       struct vnode *fvp, struct label *flabel,
+                                       struct componentname *cnp, mode_t mode,
+                                       int flags);
 /**
  *  @brief Associate a vnode with a devfs entry
  *  @param mp Devfs mount point
@@ -5165,14 +4429,10 @@ typedef int mpo_vnode_check_copyfile_t(
  *  label is typically derived from the label on the devfs directory
  *  entry or the label on the filesystem, supplied as parameters.
  */
-typedef void mpo_vnode_label_associate_devfs_t(
-	struct mount *mp,
-	struct label *mntlabel,
-	struct devnode *de,
-	struct label *delabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void
+mpo_vnode_label_associate_devfs_t(struct mount *mp, struct label *mntlabel,
+                                  struct devnode *de, struct label *delabel,
+                                  struct vnode *vp, struct label *vlabel);
 /**
  *  @brief Associate a label with a vnode
  *  @param mp File system mount point
@@ -5196,12 +4456,10 @@ typedef void mpo_vnode_label_associate_devfs_t(
  *  @return In the event of an error, an appropriate value for errno
  *  should be returned, otherwise return 0 upon success.
  */
-typedef int mpo_vnode_label_associate_extattr_t(
-	struct mount *mp,
-	struct label *mntlabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef int mpo_vnode_label_associate_extattr_t(struct mount *mp,
+                                                struct label *mntlabel,
+                                                struct vnode *vp,
+                                                struct label *vlabel);
 /**
  *  @brief Associate a file label with a vnode
  *  @param cred User credential
@@ -5216,15 +4474,11 @@ typedef int mpo_vnode_label_associate_extattr_t(
  *  the open file descriptor described by fg.
  *  The label should be stored in the supplied vlabel parameter.
  */
-typedef void mpo_vnode_label_associate_file_t(
-	struct ucred *cred,
-	struct mount *mp,
-	struct label *mntlabel,
-	struct fileglob *fg,
-	struct label *label,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void
+mpo_vnode_label_associate_file_t(struct ucred *cred, struct mount *mp,
+                                 struct label *mntlabel, struct fileglob *fg,
+                                 struct label *label, struct vnode *vp,
+                                 struct label *vlabel);
 /**
  *  @brief Associate a pipe label with a vnode
  *  @param cred User credential for the process that opened the pipe
@@ -5237,13 +4491,11 @@ typedef void mpo_vnode_label_associate_file_t(
  *  the pipe described by the pipe structure cpipe.
  *  The label should be stored in the supplied vlabel parameter.
  */
-typedef void mpo_vnode_label_associate_pipe_t(
-	struct ucred *cred,
-	struct pipe *cpipe,
-	struct label *pipelabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void mpo_vnode_label_associate_pipe_t(struct ucred *cred,
+                                              struct pipe *cpipe,
+                                              struct label *pipelabel,
+                                              struct vnode *vp,
+                                              struct label *vlabel);
 /**
  *  @brief Associate a POSIX semaphore label with a vnode
  *  @param cred User credential for the process that create psem
@@ -5256,13 +4508,11 @@ typedef void mpo_vnode_label_associate_pipe_t(
  *  the POSIX semaphore described by psem.
  *  The label should be stored in the supplied vlabel parameter.
  */
-typedef void mpo_vnode_label_associate_posixsem_t(
-	struct ucred *cred,
-	struct pseminfo *psem,
-	struct label *psemlabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void mpo_vnode_label_associate_posixsem_t(struct ucred *cred,
+                                                  struct pseminfo *psem,
+                                                  struct label *psemlabel,
+                                                  struct vnode *vp,
+                                                  struct label *vlabel);
 /**
  *  @brief Associate a POSIX shared memory label with a vnode
  *  @param cred User credential for the process that created pshm
@@ -5275,13 +4525,11 @@ typedef void mpo_vnode_label_associate_posixsem_t(
  *  the POSIX shared memory region described by pshm.
  *  The label should be stored in the supplied vlabel parameter.
  */
-typedef void mpo_vnode_label_associate_posixshm_t(
-	struct ucred *cred,
-	struct pshminfo *pshm,
-	struct label *pshmlabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void mpo_vnode_label_associate_posixshm_t(struct ucred *cred,
+                                                  struct pshminfo *pshm,
+                                                  struct label *pshmlabel,
+                                                  struct vnode *vp,
+                                                  struct label *vlabel);
 /**
  *  @brief Associate a label with a vnode
  *  @param mp File system mount point
@@ -5292,12 +4540,10 @@ typedef void mpo_vnode_label_associate_posixshm_t(
  *  On non-multilabel file systems, set the label for a vnode.  The
  *  label will most likely be based on the file system label.
  */
-typedef void mpo_vnode_label_associate_singlelabel_t(
-	struct mount *mp,
-	struct label *mntlabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void mpo_vnode_label_associate_singlelabel_t(struct mount *mp,
+                                                     struct label *mntlabel,
+                                                     struct vnode *vp,
+                                                     struct label *vlabel);
 /**
  *  @brief Associate a socket label with a vnode
  *  @param cred User credential for the process that opened the socket
@@ -5310,13 +4556,10 @@ typedef void mpo_vnode_label_associate_singlelabel_t(
  *  the open socket described by the socket structure so.
  *  The label should be stored in the supplied vlabel parameter.
  */
-typedef void mpo_vnode_label_associate_socket_t(
-	kauth_cred_t cred,
-	socket_t so,
-	struct label *solabel,
-	struct vnode *vp,
-	struct label *vlabel
-	);
+typedef void mpo_vnode_label_associate_socket_t(kauth_cred_t cred, socket_t so,
+                                                struct label *solabel,
+                                                struct vnode *vp,
+                                                struct label *vlabel);
 /**
  *  @brief Copy a vnode label
  *  @param src Source vnode label
@@ -5327,10 +4570,7 @@ typedef void mpo_vnode_label_associate_socket_t(
  *  will later be used if vnode label externalization cannot be an
  *  atomic operation.
  */
-typedef void mpo_vnode_label_copy_t(
-	struct label *src,
-	struct label *dest
-	);
+typedef void mpo_vnode_label_copy_t(struct label *src, struct label *dest);
 /**
  *  @brief Destroy vnode label
  *  @param label The label to be destroyed
@@ -5339,9 +4579,7 @@ typedef void mpo_vnode_label_copy_t(
  *  policy modules should free any internal storage associated with the
  *  label so that it may be destroyed.
  */
-typedef void mpo_vnode_label_destroy_t(
-	struct label *label
-	);
+typedef void mpo_vnode_label_destroy_t(struct label *label);
 /**
  *  @brief Externalize a vnode label for auditing
  *  @param label Label to be externalized
@@ -5359,11 +4597,9 @@ typedef void mpo_vnode_label_destroy_t(
  *  externalizing the label data.
  *
  */
-typedef int mpo_vnode_label_externalize_audit_t(
-	struct label *label,
-	char *element_name,
-	struct sbuf *sb
-	);
+typedef int mpo_vnode_label_externalize_audit_t(struct label *label,
+                                                char *element_name,
+                                                struct sbuf *sb);
 /**
  *  @brief Externalize a vnode label
  *  @param label Label to be externalized
@@ -5380,11 +4616,8 @@ typedef int mpo_vnode_label_externalize_audit_t(
  *  externalizing the label data.
  *
  */
-typedef int mpo_vnode_label_externalize_t(
-	struct label *label,
-	char *element_name,
-	struct sbuf *sb
-	);
+typedef int mpo_vnode_label_externalize_t(struct label *label,
+                                          char *element_name, struct sbuf *sb);
 /**
  *  @brief Initialize vnode label
  *  @param label New label to initialize
@@ -5396,9 +4629,7 @@ typedef int mpo_vnode_label_externalize_t(
  *  with persistent label storage facilities, such as extended attributes.
  *  Sleeping is permitted.
  */
-typedef void mpo_vnode_label_init_t(
-	struct label *label
-	);
+typedef void mpo_vnode_label_init_t(struct label *label);
 /**
  *  @brief Internalize a vnode label
  *  @param label Label to be internalized
@@ -5418,23 +4649,19 @@ typedef void mpo_vnode_label_init_t(
  *  @return 0 on success, Otherwise, return non-zero if an error occurs
  *  while internalizing the label data.
  */
-typedef int mpo_vnode_label_internalize_t(
-	struct label *label,
-	char *element_name,
-	char *element_data
-	);
+typedef int mpo_vnode_label_internalize_t(struct label *label,
+                                          char *element_name,
+                                          char *element_data);
 /**
  *  @brief Clean up a vnode label
  *  @param label The label to be cleaned or purged
  *
  *  Clean up a vnode label.  Darwin (Tiger, 8.x) allocates vnodes on demand, but
  *  typically never frees them.  Before vnodes are placed back on free lists for
- *  re-use, policies can cleanup or overwrite any information present in the label,
- *  or free any internal resources used for the label.
+ *  re-use, policies can cleanup or overwrite any information present in the
+ * label, or free any internal resources used for the label.
  */
-typedef void mpo_vnode_label_recycle_t(
-	struct label *label
-	);
+typedef void mpo_vnode_label_recycle_t(struct label *label);
 /**
  *  @brief Write a label to a extended attribute
  *  @param cred Subject credential
@@ -5453,12 +4680,9 @@ typedef void mpo_vnode_label_recycle_t(
  *  @warning XXX After examining the extended attribute implementation on
  *  Apple's future release, this entry point may be changed.
  */
-typedef int mpo_vnode_label_store_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct label *intlabel
-	);
+typedef int mpo_vnode_label_store_t(kauth_cred_t cred, struct vnode *vp,
+                                    struct label *vlabel,
+                                    struct label *intlabel);
 /**
  *  @brief Update vnode label from extended attributes
  *  @param mp File system mount point
@@ -5486,13 +4710,11 @@ typedef int mpo_vnode_label_store_t(
  *  a non-zero value.  The vnode label will be marked for re-association
  *  by the framework.
  */
-typedef int mpo_vnode_label_update_extattr_t(
-	struct mount *mp,
-	struct label *mntlabel,
-	struct vnode *vp,
-	struct label *vlabel,
-	const char *name
-	);
+typedef int mpo_vnode_label_update_extattr_t(struct mount *mp,
+                                             struct label *mntlabel,
+                                             struct vnode *vp,
+                                             struct label *vlabel,
+                                             const char *name);
 /**
  *  @brief Update a vnode label
  *  @param cred Subject credential
@@ -5506,26 +4728,20 @@ typedef int mpo_vnode_label_update_extattr_t(
  *  policies to perform the actual relabel operation.  Policies should
  *  update vnodelabel using the label stored in the label parameter.
  */
-typedef void mpo_vnode_label_update_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *vnodelabel,
-	struct label *label
-	);
+typedef void mpo_vnode_label_update_t(kauth_cred_t cred, struct vnode *vp,
+                                      struct label *vnodelabel,
+                                      struct label *label);
 /**
  *  @brief Find deatched signatures for a shared library
  *  @param p file trying to find the signature
  *  @param vp The vnode to relabel
- *  @param offset offset in the Mach-O that the signature is requested for (for fat binaries)
+ *  @param offset offset in the Mach-O that the signature is requested for (for
+ * fat binaries)
  *  @param label Existing vnode label
  *
  */
-typedef int mpo_vnode_find_sigs_t(
-	struct proc *p,
-	struct vnode *vp,
-	off_t offset,
-	struct label *label
-	);
+typedef int mpo_vnode_find_sigs_t(struct proc *p, struct vnode *vp,
+                                  off_t offset, struct label *label);
 /**
  *  @brief Create a new vnode, backed by extended attributes
  *  @param cred User credential for the creating process
@@ -5546,16 +4762,11 @@ typedef int mpo_vnode_find_sigs_t(
  *  @return If the operation succeeds, store the new label in vlabel and
  *  return 0.  Otherwise, return an appropriate errno value.
  */
-typedef int mpo_vnode_notify_create_t(
-	kauth_cred_t cred,
-	struct mount *mp,
-	struct label *mntlabel,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct componentname *cnp
-	);
+typedef int mpo_vnode_notify_create_t(kauth_cred_t cred, struct mount *mp,
+                                      struct label *mntlabel, struct vnode *dvp,
+                                      struct label *dlabel, struct vnode *vp,
+                                      struct label *vlabel,
+                                      struct componentname *cnp);
 
 /**
  *  @brief Inform MAC policies that a vnode has been opened
@@ -5567,12 +4778,8 @@ typedef int mpo_vnode_notify_create_t(
  *  Inform Mac policies that a vnode have been successfully opened
  *  (passing all MAC polices and DAC).
  */
-typedef void mpo_vnode_notify_open_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	int acc_mode
-	);
+typedef void mpo_vnode_notify_open_t(kauth_cred_t cred, struct vnode *vp,
+                                     struct label *label, int acc_mode);
 
 /**
  *  @brief Inform MAC policies that a vnode has been renamed
@@ -5585,14 +4792,10 @@ typedef void mpo_vnode_notify_open_t(
  *
  *  Inform MAC policies that a vnode has been renamed.
  */
-typedef void mpo_vnode_notify_rename_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct componentname *cnp
-	);
+typedef void mpo_vnode_notify_rename_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *label, struct vnode *dvp,
+                                       struct label *dlabel,
+                                       struct componentname *cnp);
 
 /**
  *  @brief Inform MAC policies that two vnodes were atomically swapped.
@@ -5607,13 +4810,9 @@ typedef void mpo_vnode_notify_rename_t(
  *  called instead of two calls to the vnode_notify_rename hook (one for each
  *  member of the swap).
  */
-typedef void mpo_vnode_notify_swap_t(
-	kauth_cred_t cred,
-	struct vnode *v1,
-	struct label *vl1,
-	struct vnode *v2,
-	struct label *vl2
-	);
+typedef void mpo_vnode_notify_swap_t(kauth_cred_t cred, struct vnode *v1,
+                                     struct label *vl1, struct vnode *v2,
+                                     struct label *vl2);
 
 /**
  *  @brief Inform MAC policies that a vnode has been linked
@@ -5626,31 +4825,26 @@ typedef void mpo_vnode_notify_swap_t(
  *
  *  Inform MAC policies that a vnode has been linked.
  */
-typedef void mpo_vnode_notify_link_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *vlabel,
-	struct componentname *cnp
-	);
+typedef void mpo_vnode_notify_link_t(kauth_cred_t cred, struct vnode *dvp,
+                                     struct label *dlabel, struct vnode *vp,
+                                     struct label *vlabel,
+                                     struct componentname *cnp);
 
 /**
- *  @brief Inform MAC policies that an extended attribute has been removed from a vnode
+ *  @brief Inform MAC policies that an extended attribute has been removed from
+ * a vnode
  *  @param cred Subject credential
  *  @param vp Object node
  *  @param label Policy label for vp
  *  @param name Extended attribute name
  *
- *  Inform MAC policies that an extended attribute has been removed from a vnode.
+ *  Inform MAC policies that an extended attribute has been removed from a
+ * vnode.
  */
-typedef void mpo_vnode_notify_deleteextattr_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	const char *name
-	);
-
+typedef void mpo_vnode_notify_deleteextattr_t(kauth_cred_t cred,
+                                              struct vnode *vp,
+                                              struct label *label,
+                                              const char *name);
 
 /**
  *  @brief Inform MAC policies that an ACL has been set on a vnode
@@ -5661,12 +4855,9 @@ typedef void mpo_vnode_notify_deleteextattr_t(
  *
  *  Inform MAC policies that an ACL has been set on a vnode.
  */
-typedef void mpo_vnode_notify_setacl_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	struct kauth_acl *acl
-	);
+typedef void mpo_vnode_notify_setacl_t(kauth_cred_t cred, struct vnode *vp,
+                                       struct label *label,
+                                       struct kauth_acl *acl);
 
 /**
  *  @brief Inform MAC policies that an attributes have been set on a vnode
@@ -5677,15 +4868,13 @@ typedef void mpo_vnode_notify_setacl_t(
  *
  *  Inform MAC policies that an attributes have been set on a vnode.
  */
-typedef void mpo_vnode_notify_setattrlist_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	struct attrlist *alist
-	);
+typedef void mpo_vnode_notify_setattrlist_t(kauth_cred_t cred, struct vnode *vp,
+                                            struct label *label,
+                                            struct attrlist *alist);
 
 /**
- *  @brief Inform MAC policies that an extended attribute has been set on a vnode
+ *  @brief Inform MAC policies that an extended attribute has been set on a
+ * vnode
  *  @param cred Subject credential
  *  @param vp Object vnode
  *  @param label Policy label for vp
@@ -5694,13 +4883,9 @@ typedef void mpo_vnode_notify_setattrlist_t(
  *
  *  Inform MAC policies that an extended attribute has been set on a vnode.
  */
-typedef void mpo_vnode_notify_setextattr_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	const char *name,
-	struct uio *uio
-	);
+typedef void mpo_vnode_notify_setextattr_t(kauth_cred_t cred, struct vnode *vp,
+                                           struct label *label,
+                                           const char *name, struct uio *uio);
 
 /**
  *  @brief Inform MAC policies that flags have been set on a vnode
@@ -5711,12 +4896,8 @@ typedef void mpo_vnode_notify_setextattr_t(
  *
  *  Inform MAC policies that flags have been set on a vnode.
  */
-typedef void mpo_vnode_notify_setflags_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	u_long flags
-	);
+typedef void mpo_vnode_notify_setflags_t(kauth_cred_t cred, struct vnode *vp,
+                                         struct label *label, u_long flags);
 
 /**
  *  @brief Inform MAC policies that a new mode has been set on a vnode
@@ -5727,12 +4908,8 @@ typedef void mpo_vnode_notify_setflags_t(
  *
  *  Inform MAC policies that a new mode has been set on a vnode.
  */
-typedef void mpo_vnode_notify_setmode_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	mode_t mode
-	);
+typedef void mpo_vnode_notify_setmode_t(kauth_cred_t cred, struct vnode *vp,
+                                        struct label *label, mode_t mode);
 
 /**
  *  @brief Inform MAC policies that new uid/gid have been set on a vnode
@@ -5744,13 +4921,9 @@ typedef void mpo_vnode_notify_setmode_t(
  *
  *  Inform MAC policies that new uid/gid have been set on a vnode.
  */
-typedef void mpo_vnode_notify_setowner_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	uid_t uid,
-	gid_t gid
-	);
+typedef void mpo_vnode_notify_setowner_t(kauth_cred_t cred, struct vnode *vp,
+                                         struct label *label, uid_t uid,
+                                         gid_t gid);
 
 /**
  *  @brief Inform MAC policies that new timestamps have been set on a vnode
@@ -5762,13 +4935,10 @@ typedef void mpo_vnode_notify_setowner_t(
  *
  *  Inform MAC policies that new timestamps have been set on a vnode.
  */
-typedef void mpo_vnode_notify_setutimes_t(
-	kauth_cred_t cred,
-	struct vnode *vp,
-	struct label *label,
-	struct timespec atime,
-	struct timespec mtime
-	);
+typedef void mpo_vnode_notify_setutimes_t(kauth_cred_t cred, struct vnode *vp,
+                                          struct label *label,
+                                          struct timespec atime,
+                                          struct timespec mtime);
 
 /**
  *  @brief Inform MAC policies that a vnode has been truncated
@@ -5779,13 +4949,9 @@ typedef void mpo_vnode_notify_setutimes_t(
  *
  *  Inform MAC policies that a vnode has been truncated.
  */
-typedef void mpo_vnode_notify_truncate_t(
-	kauth_cred_t cred,
-	kauth_cred_t file_cred,
-	struct vnode *vp,
-	struct label *label
-	);
-
+typedef void mpo_vnode_notify_truncate_t(kauth_cred_t cred,
+                                         kauth_cred_t file_cred,
+                                         struct vnode *vp, struct label *label);
 
 /**
  *  @brief Inform MAC policies that a pty slave has been granted
@@ -5796,12 +4962,8 @@ typedef void mpo_vnode_notify_truncate_t(
  *
  *  Inform MAC policies that a pty slave has been granted.
  */
-typedef void mpo_pty_notify_grant_t(
-	proc_t p,
-	struct tty *tp,
-	dev_t dev,
-	struct label *label
-	);
+typedef void mpo_pty_notify_grant_t(proc_t p, struct tty *tp, dev_t dev,
+                                    struct label *label);
 
 /**
  *  @brief Inform MAC policies that a pty master has been closed
@@ -5812,12 +4974,8 @@ typedef void mpo_pty_notify_grant_t(
  *
  *  Inform MAC policies that a pty master has been closed.
  */
-typedef void mpo_pty_notify_close_t(
-	proc_t p,
-	struct tty *tp,
-	dev_t dev,
-	struct label *label
-	);
+typedef void mpo_pty_notify_close_t(proc_t p, struct tty *tp, dev_t dev,
+                                    struct label *label);
 
 /**
  *  @brief Access control check for kext loading
@@ -5830,10 +4988,7 @@ typedef void mpo_pty_notify_close_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned. Suggested failure: EPERM for lack of privilege.
  */
-typedef int mpo_kext_check_load_t(
-	kauth_cred_t cred,
-	const char *identifier
-	);
+typedef int mpo_kext_check_load_t(kauth_cred_t cred, const char *identifier);
 
 /**
  *  @brief Access control check for kext unloading
@@ -5846,10 +5001,7 @@ typedef int mpo_kext_check_load_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned. Suggested failure: EPERM for lack of privilege.
  */
-typedef int mpo_kext_check_unload_t(
-	kauth_cred_t cred,
-	const char *identifier
-	);
+typedef int mpo_kext_check_unload_t(kauth_cred_t cred, const char *identifier);
 
 /**
  *  @brief Access control check for querying information about loaded kexts
@@ -5861,19 +5013,16 @@ typedef int mpo_kext_check_unload_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.  Suggested failure: EPERM for lack of privilege.
  */
-typedef int mpo_kext_check_query_t(
-	kauth_cred_t cred
-	);
+typedef int mpo_kext_check_query_t(kauth_cred_t cred);
 
 /**
  *  @brief Inform MAC policies that a vnode is being reclaimed
  *  @param vp Object vnode
  *
- *  Any external accounting tracking this vnode must consider it to be no longer valid.
+ *  Any external accounting tracking this vnode must consider it to be no longer
+ * valid.
  */
-typedef void mpo_vnode_notify_reclaim_t(
-	struct vnode *vp
-	);
+typedef void mpo_vnode_notify_reclaim_t(struct vnode *vp);
 
 /**
  *  @brief Inform MAC policies that a vnode has been deleted
@@ -5887,14 +5036,10 @@ typedef void mpo_vnode_notify_reclaim_t(
  *  Inform Mac policies that a vnode have been successfully deleted
  *  (passing all MAC polices and DAC).
  */
-typedef void mpo_vnode_notify_unlink_t(
-	kauth_cred_t cred,
-	struct vnode *dvp,
-	struct label *dlabel,
-	struct vnode *vp,
-	struct label *label,
-	struct componentname *cnp
-	);
+typedef void mpo_vnode_notify_unlink_t(kauth_cred_t cred, struct vnode *dvp,
+                                       struct label *dlabel, struct vnode *vp,
+                                       struct label *label,
+                                       struct componentname *cnp);
 
 /**
  *  @brief Access control check for grafting a Cryptex
@@ -5907,10 +5052,8 @@ typedef void mpo_vnode_notify_unlink_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_graft_check_graft_t(
-	kauth_cred_t cred,
-	struct vnode *graft_dir_vp
-	);
+typedef int mpo_graft_check_graft_t(kauth_cred_t cred,
+                                    struct vnode *graft_dir_vp);
 
 /**
  *  @brief Access control check for ungrafting a Cryptex
@@ -5923,10 +5066,8 @@ typedef int mpo_graft_check_graft_t(
  *  @return Return 0 if access is granted, otherwise an appropriate value for
  *  errno should be returned.
  */
-typedef int mpo_graft_check_ungraft_t(
-	kauth_cred_t cred,
-	struct vnode *graft_dir_vp
-	);
+typedef int mpo_graft_check_ungraft_t(kauth_cred_t cred,
+                                      struct vnode *graft_dir_vp);
 
 /**
  *  @brief Notify on successful Cryptex graft
@@ -5935,10 +5076,8 @@ typedef int mpo_graft_check_ungraft_t(
  *
  *  Notify on successful Cryptex graft.
  */
-typedef void mpo_graft_notify_graft_t(
-	kauth_cred_t cred,
-	struct vnode *graft_dir_vp
-	);
+typedef void mpo_graft_notify_graft_t(kauth_cred_t cred,
+                                      struct vnode *graft_dir_vp);
 
 /**
  *  @brief Notify on successful Cryptex ungraft
@@ -5947,10 +5086,8 @@ typedef void mpo_graft_notify_graft_t(
  *
  *  Notify on successful Cryptex ungraft.
  */
-typedef void mpo_graft_notify_ungraft_t(
-	kauth_cred_t cred,
-	struct vnode *graft_dir_vp
-	);
+typedef void mpo_graft_notify_ungraft_t(kauth_cred_t cred,
+                                        struct vnode *graft_dir_vp);
 
 /*
  * Placeholder for future events that may need mac hooks.
@@ -5965,390 +5102,402 @@ typedef void mpo_reserved_hook_t(void);
  */
 #define MAC_POLICY_OPS_VERSION 91 /* inc when new reserved slots are taken */
 struct mac_policy_ops {
-	mpo_audit_check_postselect_t            *mpo_audit_check_postselect;
-	mpo_audit_check_preselect_t             *mpo_audit_check_preselect;
+  mpo_audit_check_postselect_t *mpo_audit_check_postselect;
+  mpo_audit_check_preselect_t *mpo_audit_check_preselect;
 
-	mpo_graft_check_graft_t                 *mpo_graft_check_graft;
-	mpo_graft_check_ungraft_t               *mpo_graft_check_ungraft;
-	mpo_graft_notify_graft_t                *mpo_graft_notify_graft;
-	mpo_graft_notify_ungraft_t              *mpo_graft_notify_ungraft;
+  mpo_graft_check_graft_t *mpo_graft_check_graft;
+  mpo_graft_check_ungraft_t *mpo_graft_check_ungraft;
+  mpo_graft_notify_graft_t *mpo_graft_notify_graft;
+  mpo_graft_notify_ungraft_t *mpo_graft_notify_ungraft;
 
-	mpo_cred_check_label_update_execve_t    *mpo_cred_check_label_update_execve;
-	mpo_cred_check_label_update_t           *mpo_cred_check_label_update;
-	mpo_cred_check_visible_t                *mpo_cred_check_visible;
-	mpo_cred_label_associate_fork_t         *mpo_cred_label_associate_fork;
-	mpo_cred_label_associate_kernel_t       *mpo_cred_label_associate_kernel;
-	mpo_cred_label_associate_t              *mpo_cred_label_associate;
-	mpo_cred_label_associate_user_t         *mpo_cred_label_associate_user;
-	mpo_cred_label_destroy_t                *mpo_cred_label_destroy;
-	mpo_cred_label_externalize_audit_t      *mpo_cred_label_externalize_audit;
-	mpo_cred_label_externalize_t            *mpo_cred_label_externalize;
-	mpo_cred_label_init_t                   *mpo_cred_label_init;
-	mpo_cred_label_internalize_t            *mpo_cred_label_internalize;
-	mpo_cred_label_update_execve_t          *mpo_cred_label_update_execve;
-	mpo_cred_label_update_t                 *mpo_cred_label_update;
+  mpo_cred_check_label_update_execve_t *mpo_cred_check_label_update_execve;
+  mpo_cred_check_label_update_t *mpo_cred_check_label_update;
+  mpo_cred_check_visible_t *mpo_cred_check_visible;
+  mpo_cred_label_associate_fork_t *mpo_cred_label_associate_fork;
+  mpo_cred_label_associate_kernel_t *mpo_cred_label_associate_kernel;
+  mpo_cred_label_associate_t *mpo_cred_label_associate;
+  mpo_cred_label_associate_user_t *mpo_cred_label_associate_user;
+  mpo_cred_label_destroy_t *mpo_cred_label_destroy;
+  mpo_cred_label_externalize_audit_t *mpo_cred_label_externalize_audit;
+  mpo_cred_label_externalize_t *mpo_cred_label_externalize;
+  mpo_cred_label_init_t *mpo_cred_label_init;
+  mpo_cred_label_internalize_t *mpo_cred_label_internalize;
+  mpo_cred_label_update_execve_t *mpo_cred_label_update_execve;
+  mpo_cred_label_update_t *mpo_cred_label_update;
 
-	mpo_devfs_label_associate_device_t      *mpo_devfs_label_associate_device;
-	mpo_devfs_label_associate_directory_t   *mpo_devfs_label_associate_directory;
-	mpo_devfs_label_copy_t                  *mpo_devfs_label_copy;
-	mpo_devfs_label_destroy_t               *mpo_devfs_label_destroy;
-	mpo_devfs_label_init_t                  *mpo_devfs_label_init;
-	mpo_devfs_label_update_t                *mpo_devfs_label_update;
+  mpo_devfs_label_associate_device_t *mpo_devfs_label_associate_device;
+  mpo_devfs_label_associate_directory_t *mpo_devfs_label_associate_directory;
+  mpo_devfs_label_copy_t *mpo_devfs_label_copy;
+  mpo_devfs_label_destroy_t *mpo_devfs_label_destroy;
+  mpo_devfs_label_init_t *mpo_devfs_label_init;
+  mpo_devfs_label_update_t *mpo_devfs_label_update;
 
-	mpo_file_check_change_offset_t          *mpo_file_check_change_offset;
-	mpo_file_check_create_t                 *mpo_file_check_create;
-	mpo_file_check_dup_t                    *mpo_file_check_dup;
-	mpo_file_check_fcntl_t                  *mpo_file_check_fcntl;
-	mpo_file_check_get_offset_t             *mpo_file_check_get_offset;
-	mpo_file_check_get_t                    *mpo_file_check_get;
-	mpo_file_check_inherit_t                *mpo_file_check_inherit;
-	mpo_file_check_ioctl_t                  *mpo_file_check_ioctl;
-	mpo_file_check_lock_t                   *mpo_file_check_lock;
-	mpo_file_check_mmap_downgrade_t         *mpo_file_check_mmap_downgrade;
-	mpo_file_check_mmap_t                   *mpo_file_check_mmap;
-	mpo_file_check_receive_t                *mpo_file_check_receive;
-	mpo_file_check_set_t                    *mpo_file_check_set;
-	mpo_file_label_init_t                   *mpo_file_label_init;       /* deprecated not called anymore */
-	mpo_file_label_destroy_t                *mpo_file_label_destroy;    /* deprecated not called anymore */
-	mpo_file_label_associate_t              *mpo_file_label_associate;  /* deprecated not called anymore */
-	mpo_file_notify_close_t                 *mpo_file_notify_close;
+  mpo_file_check_change_offset_t *mpo_file_check_change_offset;
+  mpo_file_check_create_t *mpo_file_check_create;
+  mpo_file_check_dup_t *mpo_file_check_dup;
+  mpo_file_check_fcntl_t *mpo_file_check_fcntl;
+  mpo_file_check_get_offset_t *mpo_file_check_get_offset;
+  mpo_file_check_get_t *mpo_file_check_get;
+  mpo_file_check_inherit_t *mpo_file_check_inherit;
+  mpo_file_check_ioctl_t *mpo_file_check_ioctl;
+  mpo_file_check_lock_t *mpo_file_check_lock;
+  mpo_file_check_mmap_downgrade_t *mpo_file_check_mmap_downgrade;
+  mpo_file_check_mmap_t *mpo_file_check_mmap;
+  mpo_file_check_receive_t *mpo_file_check_receive;
+  mpo_file_check_set_t *mpo_file_check_set;
+  mpo_file_label_init_t
+      *mpo_file_label_init; /* deprecated not called anymore */
+  mpo_file_label_destroy_t
+      *mpo_file_label_destroy; /* deprecated not called anymore */
+  mpo_file_label_associate_t
+      *mpo_file_label_associate; /* deprecated not called anymore */
+  mpo_file_notify_close_t *mpo_file_notify_close;
 
-	mpo_proc_check_launch_constraints_t     *mpo_proc_check_launch_constraints;
-	mpo_proc_notify_service_port_derive_t   *mpo_proc_notify_service_port_derive;
-	mpo_proc_check_set_task_exception_port_t *mpo_proc_check_set_task_exception_port;
-	mpo_proc_check_set_thread_exception_port_t *mpo_proc_check_set_thread_exception_port;
+  mpo_proc_check_launch_constraints_t *mpo_proc_check_launch_constraints;
+  mpo_proc_notify_service_port_derive_t *mpo_proc_notify_service_port_derive;
+  mpo_proc_check_set_task_exception_port_t
+      *mpo_proc_check_set_task_exception_port;
+  mpo_proc_check_set_thread_exception_port_t
+      *mpo_proc_check_set_thread_exception_port;
 
-	mpo_reserved_hook_t                     *mpo_reserved08;
-	mpo_reserved_hook_t                     *mpo_reserved09;
-	mpo_reserved_hook_t                     *mpo_reserved10;
-	mpo_reserved_hook_t                     *mpo_reserved11;
-	mpo_reserved_hook_t                     *mpo_reserved12;
-	mpo_reserved_hook_t                     *mpo_reserved13;
-	mpo_reserved_hook_t                     *mpo_reserved14;
-	mpo_reserved_hook_t                     *mpo_reserved15;
-	mpo_reserved_hook_t                     *mpo_reserved16;
-	mpo_reserved_hook_t                     *mpo_reserved17;
-	mpo_reserved_hook_t                     *mpo_reserved18;
-	mpo_reserved_hook_t                     *mpo_reserved19;
-	mpo_reserved_hook_t                     *mpo_reserved20;
-	mpo_reserved_hook_t                     *mpo_reserved21;
-	mpo_reserved_hook_t                     *mpo_reserved22;
+  mpo_reserved_hook_t *mpo_reserved08;
+  mpo_reserved_hook_t *mpo_reserved09;
+  mpo_reserved_hook_t *mpo_reserved10;
+  mpo_reserved_hook_t *mpo_reserved11;
+  mpo_reserved_hook_t *mpo_reserved12;
+  mpo_reserved_hook_t *mpo_reserved13;
+  mpo_reserved_hook_t *mpo_reserved14;
+  mpo_reserved_hook_t *mpo_reserved15;
+  mpo_reserved_hook_t *mpo_reserved16;
+  mpo_reserved_hook_t *mpo_reserved17;
+  mpo_reserved_hook_t *mpo_reserved18;
+  mpo_reserved_hook_t *mpo_reserved19;
+  mpo_reserved_hook_t *mpo_reserved20;
+  mpo_reserved_hook_t *mpo_reserved21;
+  mpo_reserved_hook_t *mpo_reserved22;
 
-	mpo_necp_check_open_t                   *mpo_necp_check_open;
-	mpo_necp_check_client_action_t          *mpo_necp_check_client_action;
+  mpo_necp_check_open_t *mpo_necp_check_open;
+  mpo_necp_check_client_action_t *mpo_necp_check_client_action;
 
-	mpo_file_check_library_validation_t     *mpo_file_check_library_validation;
+  mpo_file_check_library_validation_t *mpo_file_check_library_validation;
 
-	mpo_vnode_notify_setacl_t               *mpo_vnode_notify_setacl;
-	mpo_vnode_notify_setattrlist_t          *mpo_vnode_notify_setattrlist;
-	mpo_vnode_notify_setextattr_t           *mpo_vnode_notify_setextattr;
-	mpo_vnode_notify_setflags_t             *mpo_vnode_notify_setflags;
-	mpo_vnode_notify_setmode_t              *mpo_vnode_notify_setmode;
-	mpo_vnode_notify_setowner_t             *mpo_vnode_notify_setowner;
-	mpo_vnode_notify_setutimes_t            *mpo_vnode_notify_setutimes;
-	mpo_vnode_notify_truncate_t             *mpo_vnode_notify_truncate;
-	mpo_vnode_check_getattrlistbulk_t       *mpo_vnode_check_getattrlistbulk;
+  mpo_vnode_notify_setacl_t *mpo_vnode_notify_setacl;
+  mpo_vnode_notify_setattrlist_t *mpo_vnode_notify_setattrlist;
+  mpo_vnode_notify_setextattr_t *mpo_vnode_notify_setextattr;
+  mpo_vnode_notify_setflags_t *mpo_vnode_notify_setflags;
+  mpo_vnode_notify_setmode_t *mpo_vnode_notify_setmode;
+  mpo_vnode_notify_setowner_t *mpo_vnode_notify_setowner;
+  mpo_vnode_notify_setutimes_t *mpo_vnode_notify_setutimes;
+  mpo_vnode_notify_truncate_t *mpo_vnode_notify_truncate;
+  mpo_vnode_check_getattrlistbulk_t *mpo_vnode_check_getattrlistbulk;
 
-	mpo_proc_check_get_task_special_port_t  *mpo_proc_check_get_task_special_port;
-	mpo_proc_check_set_task_special_port_t  *mpo_proc_check_set_task_special_port;
+  mpo_proc_check_get_task_special_port_t *mpo_proc_check_get_task_special_port;
+  mpo_proc_check_set_task_special_port_t *mpo_proc_check_set_task_special_port;
 
-	mpo_vnode_notify_swap_t                 *mpo_vnode_notify_swap;
-	mpo_vnode_notify_unlink_t               *mpo_vnode_notify_unlink;
-	mpo_vnode_check_swap_t                  *mpo_vnode_check_swap;
-	mpo_vnode_check_dataprotect_set_t       *mpo_vnode_check_dataprotect_set;
-	mpo_mount_check_remount_with_flags_t    *mpo_mount_check_remount_with_flags;
-	mpo_mount_notify_mount_t                *mpo_mount_notify_mount;
-	mpo_vnode_check_copyfile_t              *mpo_vnode_check_copyfile;
+  mpo_vnode_notify_swap_t *mpo_vnode_notify_swap;
+  mpo_vnode_notify_unlink_t *mpo_vnode_notify_unlink;
+  mpo_vnode_check_swap_t *mpo_vnode_check_swap;
+  mpo_vnode_check_dataprotect_set_t *mpo_vnode_check_dataprotect_set;
+  mpo_mount_check_remount_with_flags_t *mpo_mount_check_remount_with_flags;
+  mpo_mount_notify_mount_t *mpo_mount_notify_mount;
+  mpo_vnode_check_copyfile_t *mpo_vnode_check_copyfile;
 
-	mpo_mount_check_quotactl_t              *mpo_mount_check_quotactl;
-	mpo_mount_check_fsctl_t                 *mpo_mount_check_fsctl;
-	mpo_mount_check_getattr_t               *mpo_mount_check_getattr;
-	mpo_mount_check_label_update_t          *mpo_mount_check_label_update;
-	mpo_mount_check_mount_t                 *mpo_mount_check_mount;
-	mpo_mount_check_remount_t               *mpo_mount_check_remount;
-	mpo_mount_check_setattr_t               *mpo_mount_check_setattr;
-	mpo_mount_check_stat_t                  *mpo_mount_check_stat;
-	mpo_mount_check_umount_t                *mpo_mount_check_umount;
-	mpo_mount_label_associate_t             *mpo_mount_label_associate;
-	mpo_mount_label_destroy_t               *mpo_mount_label_destroy;
-	mpo_mount_label_externalize_t           *mpo_mount_label_externalize;
-	mpo_mount_label_init_t                  *mpo_mount_label_init;
-	mpo_mount_label_internalize_t           *mpo_mount_label_internalize;
+  mpo_mount_check_quotactl_t *mpo_mount_check_quotactl;
+  mpo_mount_check_fsctl_t *mpo_mount_check_fsctl;
+  mpo_mount_check_getattr_t *mpo_mount_check_getattr;
+  mpo_mount_check_label_update_t *mpo_mount_check_label_update;
+  mpo_mount_check_mount_t *mpo_mount_check_mount;
+  mpo_mount_check_remount_t *mpo_mount_check_remount;
+  mpo_mount_check_setattr_t *mpo_mount_check_setattr;
+  mpo_mount_check_stat_t *mpo_mount_check_stat;
+  mpo_mount_check_umount_t *mpo_mount_check_umount;
+  mpo_mount_label_associate_t *mpo_mount_label_associate;
+  mpo_mount_label_destroy_t *mpo_mount_label_destroy;
+  mpo_mount_label_externalize_t *mpo_mount_label_externalize;
+  mpo_mount_label_init_t *mpo_mount_label_init;
+  mpo_mount_label_internalize_t *mpo_mount_label_internalize;
 
-	mpo_proc_check_expose_task_with_flavor_t *mpo_proc_check_expose_task_with_flavor;
-	mpo_proc_check_get_task_with_flavor_t   *mpo_proc_check_get_task_with_flavor;
-	mpo_proc_check_task_id_token_get_task_t *mpo_proc_check_task_id_token_get_task;
+  mpo_proc_check_expose_task_with_flavor_t
+      *mpo_proc_check_expose_task_with_flavor;
+  mpo_proc_check_get_task_with_flavor_t *mpo_proc_check_get_task_with_flavor;
+  mpo_proc_check_task_id_token_get_task_t
+      *mpo_proc_check_task_id_token_get_task;
 
-	mpo_pipe_check_ioctl_t                  *mpo_pipe_check_ioctl;
-	mpo_pipe_check_kqfilter_t               *mpo_pipe_check_kqfilter;
-	mpo_reserved_hook_t                     *mpo_reserved41;
-	mpo_pipe_check_read_t                   *mpo_pipe_check_read;
-	mpo_pipe_check_select_t                 *mpo_pipe_check_select;
-	mpo_pipe_check_stat_t                   *mpo_pipe_check_stat;
-	mpo_pipe_check_write_t                  *mpo_pipe_check_write;
-	mpo_pipe_label_associate_t              *mpo_pipe_label_associate;
-	mpo_reserved_hook_t                     *mpo_reserved42;
-	mpo_pipe_label_destroy_t                *mpo_pipe_label_destroy;
-	mpo_reserved_hook_t                     *mpo_reserved43;
-	mpo_pipe_label_init_t                   *mpo_pipe_label_init;
-	mpo_reserved_hook_t                     *mpo_reserved44;
-	mpo_proc_check_syscall_mac_t            *mpo_proc_check_syscall_mac;
+  mpo_pipe_check_ioctl_t *mpo_pipe_check_ioctl;
+  mpo_pipe_check_kqfilter_t *mpo_pipe_check_kqfilter;
+  mpo_reserved_hook_t *mpo_reserved41;
+  mpo_pipe_check_read_t *mpo_pipe_check_read;
+  mpo_pipe_check_select_t *mpo_pipe_check_select;
+  mpo_pipe_check_stat_t *mpo_pipe_check_stat;
+  mpo_pipe_check_write_t *mpo_pipe_check_write;
+  mpo_pipe_label_associate_t *mpo_pipe_label_associate;
+  mpo_reserved_hook_t *mpo_reserved42;
+  mpo_pipe_label_destroy_t *mpo_pipe_label_destroy;
+  mpo_reserved_hook_t *mpo_reserved43;
+  mpo_pipe_label_init_t *mpo_pipe_label_init;
+  mpo_reserved_hook_t *mpo_reserved44;
+  mpo_proc_check_syscall_mac_t *mpo_proc_check_syscall_mac;
 
-	mpo_policy_destroy_t                    *mpo_policy_destroy;
-	mpo_policy_init_t                       *mpo_policy_init;
-	mpo_policy_initbsd_t                    *mpo_policy_initbsd;
-	mpo_policy_syscall_t                    *mpo_policy_syscall;
+  mpo_policy_destroy_t *mpo_policy_destroy;
+  mpo_policy_init_t *mpo_policy_init;
+  mpo_policy_initbsd_t *mpo_policy_initbsd;
+  mpo_policy_syscall_t *mpo_policy_syscall;
 
-	mpo_system_check_sysctlbyname_t         *mpo_system_check_sysctlbyname;
-	mpo_proc_check_inherit_ipc_ports_t      *mpo_proc_check_inherit_ipc_ports;
-	mpo_vnode_check_rename_t                *mpo_vnode_check_rename;
-	mpo_kext_check_query_t                  *mpo_kext_check_query;
-	mpo_proc_notify_exec_complete_t         *mpo_proc_notify_exec_complete;
-	mpo_proc_notify_cs_invalidated_t        *mpo_proc_notify_cs_invalidated;
-	mpo_proc_check_syscall_unix_t           *mpo_proc_check_syscall_unix;
-	mpo_reserved_hook_t                     *mpo_reserved45;
-	mpo_proc_check_set_host_special_port_t  *mpo_proc_check_set_host_special_port;
-	mpo_proc_check_set_host_exception_port_t *mpo_proc_check_set_host_exception_port;
-	mpo_exc_action_check_exception_send_t   *mpo_exc_action_check_exception_send;
-	mpo_exc_action_label_associate_t        *mpo_exc_action_label_associate;
-	mpo_exc_action_label_populate_t         *mpo_exc_action_label_populate;
-	mpo_exc_action_label_destroy_t          *mpo_exc_action_label_destroy;
-	mpo_exc_action_label_init_t             *mpo_exc_action_label_init;
-	mpo_exc_action_label_update_t           *mpo_exc_action_label_update;
+  mpo_system_check_sysctlbyname_t *mpo_system_check_sysctlbyname;
+  mpo_proc_check_inherit_ipc_ports_t *mpo_proc_check_inherit_ipc_ports;
+  mpo_vnode_check_rename_t *mpo_vnode_check_rename;
+  mpo_kext_check_query_t *mpo_kext_check_query;
+  mpo_proc_notify_exec_complete_t *mpo_proc_notify_exec_complete;
+  mpo_proc_notify_cs_invalidated_t *mpo_proc_notify_cs_invalidated;
+  mpo_proc_check_syscall_unix_t *mpo_proc_check_syscall_unix;
+  mpo_reserved_hook_t *mpo_reserved45;
+  mpo_proc_check_set_host_special_port_t *mpo_proc_check_set_host_special_port;
+  mpo_proc_check_set_host_exception_port_t
+      *mpo_proc_check_set_host_exception_port;
+  mpo_exc_action_check_exception_send_t *mpo_exc_action_check_exception_send;
+  mpo_exc_action_label_associate_t *mpo_exc_action_label_associate;
+  mpo_exc_action_label_populate_t *mpo_exc_action_label_populate;
+  mpo_exc_action_label_destroy_t *mpo_exc_action_label_destroy;
+  mpo_exc_action_label_init_t *mpo_exc_action_label_init;
+  mpo_exc_action_label_update_t *mpo_exc_action_label_update;
 
-	mpo_vnode_check_trigger_resolve_t       *mpo_vnode_check_trigger_resolve;
-	mpo_mount_check_mount_late_t            *mpo_mount_check_mount_late;
-	mpo_mount_check_snapshot_mount_t        *mpo_mount_check_snapshot_mount;
-	mpo_vnode_notify_reclaim_t              *mpo_vnode_notify_reclaim;
-	mpo_skywalk_flow_check_connect_t        *mpo_skywalk_flow_check_connect;
-	mpo_skywalk_flow_check_listen_t         *mpo_skywalk_flow_check_listen;
+  mpo_vnode_check_trigger_resolve_t *mpo_vnode_check_trigger_resolve;
+  mpo_mount_check_mount_late_t *mpo_mount_check_mount_late;
+  mpo_mount_check_snapshot_mount_t *mpo_mount_check_snapshot_mount;
+  mpo_vnode_notify_reclaim_t *mpo_vnode_notify_reclaim;
+  mpo_skywalk_flow_check_connect_t *mpo_skywalk_flow_check_connect;
+  mpo_skywalk_flow_check_listen_t *mpo_skywalk_flow_check_listen;
 
-	mpo_posixsem_check_create_t             *mpo_posixsem_check_create;
-	mpo_posixsem_check_open_t               *mpo_posixsem_check_open;
-	mpo_posixsem_check_post_t               *mpo_posixsem_check_post;
-	mpo_posixsem_check_unlink_t             *mpo_posixsem_check_unlink;
-	mpo_posixsem_check_wait_t               *mpo_posixsem_check_wait;
-	mpo_posixsem_label_associate_t          *mpo_posixsem_label_associate;
-	mpo_posixsem_label_destroy_t            *mpo_posixsem_label_destroy;
-	mpo_posixsem_label_init_t               *mpo_posixsem_label_init;
-	mpo_posixshm_check_create_t             *mpo_posixshm_check_create;
-	mpo_posixshm_check_mmap_t               *mpo_posixshm_check_mmap;
-	mpo_posixshm_check_open_t               *mpo_posixshm_check_open;
-	mpo_posixshm_check_stat_t               *mpo_posixshm_check_stat;
-	mpo_posixshm_check_truncate_t           *mpo_posixshm_check_truncate;
-	mpo_posixshm_check_unlink_t             *mpo_posixshm_check_unlink;
-	mpo_posixshm_label_associate_t          *mpo_posixshm_label_associate;
-	mpo_posixshm_label_destroy_t            *mpo_posixshm_label_destroy;
-	mpo_posixshm_label_init_t               *mpo_posixshm_label_init;
+  mpo_posixsem_check_create_t *mpo_posixsem_check_create;
+  mpo_posixsem_check_open_t *mpo_posixsem_check_open;
+  mpo_posixsem_check_post_t *mpo_posixsem_check_post;
+  mpo_posixsem_check_unlink_t *mpo_posixsem_check_unlink;
+  mpo_posixsem_check_wait_t *mpo_posixsem_check_wait;
+  mpo_posixsem_label_associate_t *mpo_posixsem_label_associate;
+  mpo_posixsem_label_destroy_t *mpo_posixsem_label_destroy;
+  mpo_posixsem_label_init_t *mpo_posixsem_label_init;
+  mpo_posixshm_check_create_t *mpo_posixshm_check_create;
+  mpo_posixshm_check_mmap_t *mpo_posixshm_check_mmap;
+  mpo_posixshm_check_open_t *mpo_posixshm_check_open;
+  mpo_posixshm_check_stat_t *mpo_posixshm_check_stat;
+  mpo_posixshm_check_truncate_t *mpo_posixshm_check_truncate;
+  mpo_posixshm_check_unlink_t *mpo_posixshm_check_unlink;
+  mpo_posixshm_label_associate_t *mpo_posixshm_label_associate;
+  mpo_posixshm_label_destroy_t *mpo_posixshm_label_destroy;
+  mpo_posixshm_label_init_t *mpo_posixshm_label_init;
 
-	mpo_proc_check_debug_t                  *mpo_proc_check_debug;
-	mpo_proc_check_fork_t                   *mpo_proc_check_fork;
-	mpo_reserved_hook_t                     *mpo_reserved61;
-	mpo_reserved_hook_t                     *mpo_reserved62;
-	mpo_proc_check_getaudit_t               *mpo_proc_check_getaudit;
-	mpo_proc_check_getauid_t                *mpo_proc_check_getauid;
-	mpo_reserved_hook_t                     *mpo_reserved63;
-	mpo_proc_check_mprotect_t               *mpo_proc_check_mprotect;
-	mpo_proc_check_sched_t                  *mpo_proc_check_sched;
-	mpo_proc_check_setaudit_t               *mpo_proc_check_setaudit;
-	mpo_proc_check_setauid_t                *mpo_proc_check_setauid;
-	mpo_proc_check_iopolicysys_t            *mpo_proc_check_iopolicysys;
-	mpo_proc_check_signal_t                 *mpo_proc_check_signal;
-	mpo_proc_check_wait_t                   *mpo_proc_check_wait;
-	mpo_proc_check_dump_core_t              *mpo_proc_check_dump_core;
-	mpo_proc_check_remote_thread_create_t   *mpo_proc_check_remote_thread_create;
+  mpo_proc_check_debug_t *mpo_proc_check_debug;
+  mpo_proc_check_fork_t *mpo_proc_check_fork;
+  mpo_reserved_hook_t *mpo_reserved61;
+  mpo_reserved_hook_t *mpo_reserved62;
+  mpo_proc_check_getaudit_t *mpo_proc_check_getaudit;
+  mpo_proc_check_getauid_t *mpo_proc_check_getauid;
+  mpo_reserved_hook_t *mpo_reserved63;
+  mpo_proc_check_mprotect_t *mpo_proc_check_mprotect;
+  mpo_proc_check_sched_t *mpo_proc_check_sched;
+  mpo_proc_check_setaudit_t *mpo_proc_check_setaudit;
+  mpo_proc_check_setauid_t *mpo_proc_check_setauid;
+  mpo_proc_check_iopolicysys_t *mpo_proc_check_iopolicysys;
+  mpo_proc_check_signal_t *mpo_proc_check_signal;
+  mpo_proc_check_wait_t *mpo_proc_check_wait;
+  mpo_proc_check_dump_core_t *mpo_proc_check_dump_core;
+  mpo_proc_check_remote_thread_create_t *mpo_proc_check_remote_thread_create;
 
-	mpo_socket_check_accept_t               *mpo_socket_check_accept;
-	mpo_socket_check_accepted_t             *mpo_socket_check_accepted;
-	mpo_socket_check_bind_t                 *mpo_socket_check_bind;
-	mpo_socket_check_connect_t              *mpo_socket_check_connect;
-	mpo_socket_check_create_t               *mpo_socket_check_create;
-	mpo_reserved_hook_t                     *mpo_reserved46;
-	mpo_reserved_hook_t                     *mpo_reserved47;
-	mpo_reserved_hook_t                     *mpo_reserved48;
-	mpo_socket_check_listen_t               *mpo_socket_check_listen;
-	mpo_socket_check_receive_t              *mpo_socket_check_receive;
-	mpo_socket_check_received_t             *mpo_socket_check_received;
-	mpo_reserved_hook_t                     *mpo_reserved49;
-	mpo_socket_check_send_t                 *mpo_socket_check_send;
-	mpo_socket_check_stat_t                 *mpo_socket_check_stat;
-	mpo_socket_check_setsockopt_t           *mpo_socket_check_setsockopt;
-	mpo_socket_check_getsockopt_t           *mpo_socket_check_getsockopt;
+  mpo_socket_check_accept_t *mpo_socket_check_accept;
+  mpo_socket_check_accepted_t *mpo_socket_check_accepted;
+  mpo_socket_check_bind_t *mpo_socket_check_bind;
+  mpo_socket_check_connect_t *mpo_socket_check_connect;
+  mpo_socket_check_create_t *mpo_socket_check_create;
+  mpo_reserved_hook_t *mpo_reserved46;
+  mpo_reserved_hook_t *mpo_reserved47;
+  mpo_reserved_hook_t *mpo_reserved48;
+  mpo_socket_check_listen_t *mpo_socket_check_listen;
+  mpo_socket_check_receive_t *mpo_socket_check_receive;
+  mpo_socket_check_received_t *mpo_socket_check_received;
+  mpo_reserved_hook_t *mpo_reserved49;
+  mpo_socket_check_send_t *mpo_socket_check_send;
+  mpo_socket_check_stat_t *mpo_socket_check_stat;
+  mpo_socket_check_setsockopt_t *mpo_socket_check_setsockopt;
+  mpo_socket_check_getsockopt_t *mpo_socket_check_getsockopt;
 
-	mpo_proc_check_get_movable_control_port_t *mpo_proc_check_get_movable_control_port;
-	mpo_proc_check_dyld_process_info_notify_register_t *mpo_proc_check_dyld_process_info_notify_register;
-	mpo_proc_check_setuid_t                 *mpo_proc_check_setuid;
-	mpo_proc_check_seteuid_t                *mpo_proc_check_seteuid;
-	mpo_proc_check_setreuid_t               *mpo_proc_check_setreuid;
-	mpo_proc_check_setgid_t                 *mpo_proc_check_setgid;
-	mpo_proc_check_setegid_t                *mpo_proc_check_setegid;
-	mpo_proc_check_setregid_t               *mpo_proc_check_setregid;
-	mpo_proc_check_settid_t                 *mpo_proc_check_settid;
-	mpo_proc_check_memorystatus_control_t   *mpo_proc_check_memorystatus_control;
-	mpo_reserved_hook_t                     *mpo_reserved60;
+  mpo_proc_check_get_movable_control_port_t
+      *mpo_proc_check_get_movable_control_port;
+  mpo_proc_check_dyld_process_info_notify_register_t
+      *mpo_proc_check_dyld_process_info_notify_register;
+  mpo_proc_check_setuid_t *mpo_proc_check_setuid;
+  mpo_proc_check_seteuid_t *mpo_proc_check_seteuid;
+  mpo_proc_check_setreuid_t *mpo_proc_check_setreuid;
+  mpo_proc_check_setgid_t *mpo_proc_check_setgid;
+  mpo_proc_check_setegid_t *mpo_proc_check_setegid;
+  mpo_proc_check_setregid_t *mpo_proc_check_setregid;
+  mpo_proc_check_settid_t *mpo_proc_check_settid;
+  mpo_proc_check_memorystatus_control_t *mpo_proc_check_memorystatus_control;
+  mpo_reserved_hook_t *mpo_reserved60;
 
-	mpo_thread_telemetry_t                  *mpo_thread_telemetry;
+  mpo_thread_telemetry_t *mpo_thread_telemetry;
 
-	mpo_iokit_check_open_service_t          *mpo_iokit_check_open_service;
+  mpo_iokit_check_open_service_t *mpo_iokit_check_open_service;
 
-	mpo_system_check_acct_t                 *mpo_system_check_acct;
-	mpo_system_check_audit_t                *mpo_system_check_audit;
-	mpo_system_check_auditctl_t             *mpo_system_check_auditctl;
-	mpo_system_check_auditon_t              *mpo_system_check_auditon;
-	mpo_system_check_host_priv_t            *mpo_system_check_host_priv;
-	mpo_system_check_nfsd_t                 *mpo_system_check_nfsd;
-	mpo_system_check_reboot_t               *mpo_system_check_reboot;
-	mpo_system_check_settime_t              *mpo_system_check_settime;
-	mpo_system_check_swapoff_t              *mpo_system_check_swapoff;
-	mpo_system_check_swapon_t               *mpo_system_check_swapon;
-	mpo_socket_check_ioctl_t                *mpo_socket_check_ioctl;
+  mpo_system_check_acct_t *mpo_system_check_acct;
+  mpo_system_check_audit_t *mpo_system_check_audit;
+  mpo_system_check_auditctl_t *mpo_system_check_auditctl;
+  mpo_system_check_auditon_t *mpo_system_check_auditon;
+  mpo_system_check_host_priv_t *mpo_system_check_host_priv;
+  mpo_system_check_nfsd_t *mpo_system_check_nfsd;
+  mpo_system_check_reboot_t *mpo_system_check_reboot;
+  mpo_system_check_settime_t *mpo_system_check_settime;
+  mpo_system_check_swapoff_t *mpo_system_check_swapoff;
+  mpo_system_check_swapon_t *mpo_system_check_swapon;
+  mpo_socket_check_ioctl_t *mpo_socket_check_ioctl;
 
-	mpo_sysvmsg_label_associate_t           *mpo_sysvmsg_label_associate;
-	mpo_sysvmsg_label_destroy_t             *mpo_sysvmsg_label_destroy;
-	mpo_sysvmsg_label_init_t                *mpo_sysvmsg_label_init;
-	mpo_sysvmsg_label_recycle_t             *mpo_sysvmsg_label_recycle;
-	mpo_sysvmsq_check_enqueue_t             *mpo_sysvmsq_check_enqueue;
-	mpo_sysvmsq_check_msgrcv_t              *mpo_sysvmsq_check_msgrcv;
-	mpo_sysvmsq_check_msgrmid_t             *mpo_sysvmsq_check_msgrmid;
-	mpo_sysvmsq_check_msqctl_t              *mpo_sysvmsq_check_msqctl;
-	mpo_sysvmsq_check_msqget_t              *mpo_sysvmsq_check_msqget;
-	mpo_sysvmsq_check_msqrcv_t              *mpo_sysvmsq_check_msqrcv;
-	mpo_sysvmsq_check_msqsnd_t              *mpo_sysvmsq_check_msqsnd;
-	mpo_sysvmsq_label_associate_t           *mpo_sysvmsq_label_associate;
-	mpo_sysvmsq_label_destroy_t             *mpo_sysvmsq_label_destroy;
-	mpo_sysvmsq_label_init_t                *mpo_sysvmsq_label_init;
-	mpo_sysvmsq_label_recycle_t             *mpo_sysvmsq_label_recycle;
-	mpo_sysvsem_check_semctl_t              *mpo_sysvsem_check_semctl;
-	mpo_sysvsem_check_semget_t              *mpo_sysvsem_check_semget;
-	mpo_sysvsem_check_semop_t               *mpo_sysvsem_check_semop;
-	mpo_sysvsem_label_associate_t           *mpo_sysvsem_label_associate;
-	mpo_sysvsem_label_destroy_t             *mpo_sysvsem_label_destroy;
-	mpo_sysvsem_label_init_t                *mpo_sysvsem_label_init;
-	mpo_sysvsem_label_recycle_t             *mpo_sysvsem_label_recycle;
-	mpo_sysvshm_check_shmat_t               *mpo_sysvshm_check_shmat;
-	mpo_sysvshm_check_shmctl_t              *mpo_sysvshm_check_shmctl;
-	mpo_sysvshm_check_shmdt_t               *mpo_sysvshm_check_shmdt;
-	mpo_sysvshm_check_shmget_t              *mpo_sysvshm_check_shmget;
-	mpo_sysvshm_label_associate_t           *mpo_sysvshm_label_associate;
-	mpo_sysvshm_label_destroy_t             *mpo_sysvshm_label_destroy;
-	mpo_sysvshm_label_init_t                *mpo_sysvshm_label_init;
-	mpo_sysvshm_label_recycle_t             *mpo_sysvshm_label_recycle;
+  mpo_sysvmsg_label_associate_t *mpo_sysvmsg_label_associate;
+  mpo_sysvmsg_label_destroy_t *mpo_sysvmsg_label_destroy;
+  mpo_sysvmsg_label_init_t *mpo_sysvmsg_label_init;
+  mpo_sysvmsg_label_recycle_t *mpo_sysvmsg_label_recycle;
+  mpo_sysvmsq_check_enqueue_t *mpo_sysvmsq_check_enqueue;
+  mpo_sysvmsq_check_msgrcv_t *mpo_sysvmsq_check_msgrcv;
+  mpo_sysvmsq_check_msgrmid_t *mpo_sysvmsq_check_msgrmid;
+  mpo_sysvmsq_check_msqctl_t *mpo_sysvmsq_check_msqctl;
+  mpo_sysvmsq_check_msqget_t *mpo_sysvmsq_check_msqget;
+  mpo_sysvmsq_check_msqrcv_t *mpo_sysvmsq_check_msqrcv;
+  mpo_sysvmsq_check_msqsnd_t *mpo_sysvmsq_check_msqsnd;
+  mpo_sysvmsq_label_associate_t *mpo_sysvmsq_label_associate;
+  mpo_sysvmsq_label_destroy_t *mpo_sysvmsq_label_destroy;
+  mpo_sysvmsq_label_init_t *mpo_sysvmsq_label_init;
+  mpo_sysvmsq_label_recycle_t *mpo_sysvmsq_label_recycle;
+  mpo_sysvsem_check_semctl_t *mpo_sysvsem_check_semctl;
+  mpo_sysvsem_check_semget_t *mpo_sysvsem_check_semget;
+  mpo_sysvsem_check_semop_t *mpo_sysvsem_check_semop;
+  mpo_sysvsem_label_associate_t *mpo_sysvsem_label_associate;
+  mpo_sysvsem_label_destroy_t *mpo_sysvsem_label_destroy;
+  mpo_sysvsem_label_init_t *mpo_sysvsem_label_init;
+  mpo_sysvsem_label_recycle_t *mpo_sysvsem_label_recycle;
+  mpo_sysvshm_check_shmat_t *mpo_sysvshm_check_shmat;
+  mpo_sysvshm_check_shmctl_t *mpo_sysvshm_check_shmctl;
+  mpo_sysvshm_check_shmdt_t *mpo_sysvshm_check_shmdt;
+  mpo_sysvshm_check_shmget_t *mpo_sysvshm_check_shmget;
+  mpo_sysvshm_label_associate_t *mpo_sysvshm_label_associate;
+  mpo_sysvshm_label_destroy_t *mpo_sysvshm_label_destroy;
+  mpo_sysvshm_label_init_t *mpo_sysvshm_label_init;
+  mpo_sysvshm_label_recycle_t *mpo_sysvshm_label_recycle;
 
-	mpo_proc_notify_exit_t                  *mpo_proc_notify_exit;
-	mpo_mount_check_snapshot_revert_t       *mpo_mount_check_snapshot_revert;
-	mpo_vnode_check_getattr_t               *mpo_vnode_check_getattr;
-	mpo_mount_check_snapshot_create_t       *mpo_mount_check_snapshot_create;
-	mpo_mount_check_snapshot_delete_t       *mpo_mount_check_snapshot_delete;
-	mpo_vnode_check_clone_t                 *mpo_vnode_check_clone;
-	mpo_proc_check_get_cs_info_t            *mpo_proc_check_get_cs_info;
-	mpo_proc_check_set_cs_info_t            *mpo_proc_check_set_cs_info;
+  mpo_proc_notify_exit_t *mpo_proc_notify_exit;
+  mpo_mount_check_snapshot_revert_t *mpo_mount_check_snapshot_revert;
+  mpo_vnode_check_getattr_t *mpo_vnode_check_getattr;
+  mpo_mount_check_snapshot_create_t *mpo_mount_check_snapshot_create;
+  mpo_mount_check_snapshot_delete_t *mpo_mount_check_snapshot_delete;
+  mpo_vnode_check_clone_t *mpo_vnode_check_clone;
+  mpo_proc_check_get_cs_info_t *mpo_proc_check_get_cs_info;
+  mpo_proc_check_set_cs_info_t *mpo_proc_check_set_cs_info;
 
-	mpo_iokit_check_hid_control_t           *mpo_iokit_check_hid_control;
+  mpo_iokit_check_hid_control_t *mpo_iokit_check_hid_control;
 
-	mpo_vnode_check_access_t                *mpo_vnode_check_access;
-	mpo_vnode_check_chdir_t                 *mpo_vnode_check_chdir;
-	mpo_vnode_check_chroot_t                *mpo_vnode_check_chroot;
-	mpo_vnode_check_create_t                *mpo_vnode_check_create;
-	mpo_vnode_check_deleteextattr_t         *mpo_vnode_check_deleteextattr;
-	mpo_vnode_check_exchangedata_t          *mpo_vnode_check_exchangedata;
-	mpo_vnode_check_exec_t                  *mpo_vnode_check_exec;
-	mpo_vnode_check_getattrlist_t           *mpo_vnode_check_getattrlist;
-	mpo_vnode_check_getextattr_t            *mpo_vnode_check_getextattr;
-	mpo_vnode_check_ioctl_t                 *mpo_vnode_check_ioctl;
-	mpo_vnode_check_kqfilter_t              *mpo_vnode_check_kqfilter;
-	mpo_vnode_check_label_update_t          *mpo_vnode_check_label_update;
-	mpo_vnode_check_link_t                  *mpo_vnode_check_link;
-	mpo_vnode_check_listextattr_t           *mpo_vnode_check_listextattr;
-	mpo_vnode_check_lookup_t                *mpo_vnode_check_lookup;
-	mpo_vnode_check_open_t                  *mpo_vnode_check_open;
-	mpo_vnode_check_read_t                  *mpo_vnode_check_read;
-	mpo_vnode_check_readdir_t               *mpo_vnode_check_readdir;
-	mpo_vnode_check_readlink_t              *mpo_vnode_check_readlink;
-	mpo_vnode_check_rename_from_t           *mpo_vnode_check_rename_from;
-	mpo_vnode_check_rename_to_t             *mpo_vnode_check_rename_to;
-	mpo_vnode_check_revoke_t                *mpo_vnode_check_revoke;
-	mpo_vnode_check_select_t                *mpo_vnode_check_select;
-	mpo_vnode_check_setattrlist_t           *mpo_vnode_check_setattrlist;
-	mpo_vnode_check_setextattr_t            *mpo_vnode_check_setextattr;
-	mpo_vnode_check_setflags_t              *mpo_vnode_check_setflags;
-	mpo_vnode_check_setmode_t               *mpo_vnode_check_setmode;
-	mpo_vnode_check_setowner_t              *mpo_vnode_check_setowner;
-	mpo_vnode_check_setutimes_t             *mpo_vnode_check_setutimes;
-	mpo_vnode_check_stat_t                  *mpo_vnode_check_stat;
-	mpo_vnode_check_truncate_t              *mpo_vnode_check_truncate;
-	mpo_vnode_check_unlink_t                *mpo_vnode_check_unlink;
-	mpo_vnode_check_write_t                 *mpo_vnode_check_write;
-	mpo_vnode_label_associate_devfs_t       *mpo_vnode_label_associate_devfs;
-	mpo_vnode_label_associate_extattr_t     *mpo_vnode_label_associate_extattr;
-	mpo_vnode_label_associate_file_t        *mpo_vnode_label_associate_file;
-	mpo_vnode_label_associate_pipe_t        *mpo_vnode_label_associate_pipe;
-	mpo_vnode_label_associate_posixsem_t    *mpo_vnode_label_associate_posixsem;
-	mpo_vnode_label_associate_posixshm_t    *mpo_vnode_label_associate_posixshm;
-	mpo_vnode_label_associate_singlelabel_t *mpo_vnode_label_associate_singlelabel;
-	mpo_vnode_label_associate_socket_t      *mpo_vnode_label_associate_socket;
-	mpo_vnode_label_copy_t                  *mpo_vnode_label_copy;
-	mpo_vnode_label_destroy_t               *mpo_vnode_label_destroy;
-	mpo_vnode_label_externalize_audit_t     *mpo_vnode_label_externalize_audit;
-	mpo_vnode_label_externalize_t           *mpo_vnode_label_externalize;
-	mpo_vnode_label_init_t                  *mpo_vnode_label_init;
-	mpo_vnode_label_internalize_t           *mpo_vnode_label_internalize;
-	mpo_vnode_label_recycle_t               *mpo_vnode_label_recycle;
-	mpo_vnode_label_store_t                 *mpo_vnode_label_store;
-	mpo_vnode_label_update_extattr_t        *mpo_vnode_label_update_extattr;
-	mpo_vnode_label_update_t                *mpo_vnode_label_update;
-	mpo_vnode_notify_create_t               *mpo_vnode_notify_create;
-	mpo_vnode_check_signature_t             *mpo_vnode_check_signature;
-	mpo_vnode_check_uipc_bind_t             *mpo_vnode_check_uipc_bind;
-	mpo_vnode_check_uipc_connect_t          *mpo_vnode_check_uipc_connect;
+  mpo_vnode_check_access_t *mpo_vnode_check_access;
+  mpo_vnode_check_chdir_t *mpo_vnode_check_chdir;
+  mpo_vnode_check_chroot_t *mpo_vnode_check_chroot;
+  mpo_vnode_check_create_t *mpo_vnode_check_create;
+  mpo_vnode_check_deleteextattr_t *mpo_vnode_check_deleteextattr;
+  mpo_vnode_check_exchangedata_t *mpo_vnode_check_exchangedata;
+  mpo_vnode_check_exec_t *mpo_vnode_check_exec;
+  mpo_vnode_check_getattrlist_t *mpo_vnode_check_getattrlist;
+  mpo_vnode_check_getextattr_t *mpo_vnode_check_getextattr;
+  mpo_vnode_check_ioctl_t *mpo_vnode_check_ioctl;
+  mpo_vnode_check_kqfilter_t *mpo_vnode_check_kqfilter;
+  mpo_vnode_check_label_update_t *mpo_vnode_check_label_update;
+  mpo_vnode_check_link_t *mpo_vnode_check_link;
+  mpo_vnode_check_listextattr_t *mpo_vnode_check_listextattr;
+  mpo_vnode_check_lookup_t *mpo_vnode_check_lookup;
+  mpo_vnode_check_open_t *mpo_vnode_check_open;
+  mpo_vnode_check_read_t *mpo_vnode_check_read;
+  mpo_vnode_check_readdir_t *mpo_vnode_check_readdir;
+  mpo_vnode_check_readlink_t *mpo_vnode_check_readlink;
+  mpo_vnode_check_rename_from_t *mpo_vnode_check_rename_from;
+  mpo_vnode_check_rename_to_t *mpo_vnode_check_rename_to;
+  mpo_vnode_check_revoke_t *mpo_vnode_check_revoke;
+  mpo_vnode_check_select_t *mpo_vnode_check_select;
+  mpo_vnode_check_setattrlist_t *mpo_vnode_check_setattrlist;
+  mpo_vnode_check_setextattr_t *mpo_vnode_check_setextattr;
+  mpo_vnode_check_setflags_t *mpo_vnode_check_setflags;
+  mpo_vnode_check_setmode_t *mpo_vnode_check_setmode;
+  mpo_vnode_check_setowner_t *mpo_vnode_check_setowner;
+  mpo_vnode_check_setutimes_t *mpo_vnode_check_setutimes;
+  mpo_vnode_check_stat_t *mpo_vnode_check_stat;
+  mpo_vnode_check_truncate_t *mpo_vnode_check_truncate;
+  mpo_vnode_check_unlink_t *mpo_vnode_check_unlink;
+  mpo_vnode_check_write_t *mpo_vnode_check_write;
+  mpo_vnode_label_associate_devfs_t *mpo_vnode_label_associate_devfs;
+  mpo_vnode_label_associate_extattr_t *mpo_vnode_label_associate_extattr;
+  mpo_vnode_label_associate_file_t *mpo_vnode_label_associate_file;
+  mpo_vnode_label_associate_pipe_t *mpo_vnode_label_associate_pipe;
+  mpo_vnode_label_associate_posixsem_t *mpo_vnode_label_associate_posixsem;
+  mpo_vnode_label_associate_posixshm_t *mpo_vnode_label_associate_posixshm;
+  mpo_vnode_label_associate_singlelabel_t
+      *mpo_vnode_label_associate_singlelabel;
+  mpo_vnode_label_associate_socket_t *mpo_vnode_label_associate_socket;
+  mpo_vnode_label_copy_t *mpo_vnode_label_copy;
+  mpo_vnode_label_destroy_t *mpo_vnode_label_destroy;
+  mpo_vnode_label_externalize_audit_t *mpo_vnode_label_externalize_audit;
+  mpo_vnode_label_externalize_t *mpo_vnode_label_externalize;
+  mpo_vnode_label_init_t *mpo_vnode_label_init;
+  mpo_vnode_label_internalize_t *mpo_vnode_label_internalize;
+  mpo_vnode_label_recycle_t *mpo_vnode_label_recycle;
+  mpo_vnode_label_store_t *mpo_vnode_label_store;
+  mpo_vnode_label_update_extattr_t *mpo_vnode_label_update_extattr;
+  mpo_vnode_label_update_t *mpo_vnode_label_update;
+  mpo_vnode_notify_create_t *mpo_vnode_notify_create;
+  mpo_vnode_check_signature_t *mpo_vnode_check_signature;
+  mpo_vnode_check_uipc_bind_t *mpo_vnode_check_uipc_bind;
+  mpo_vnode_check_uipc_connect_t *mpo_vnode_check_uipc_connect;
 
-	mpo_proc_check_run_cs_invalid_t         *mpo_proc_check_run_cs_invalid;
-	mpo_proc_check_suspend_resume_t         *mpo_proc_check_suspend_resume;
+  mpo_proc_check_run_cs_invalid_t *mpo_proc_check_run_cs_invalid;
+  mpo_proc_check_suspend_resume_t *mpo_proc_check_suspend_resume;
 
-	mpo_thread_userret_t                    *mpo_thread_userret;
+  mpo_thread_userret_t *mpo_thread_userret;
 
-	mpo_iokit_check_set_properties_t        *mpo_iokit_check_set_properties;
+  mpo_iokit_check_set_properties_t *mpo_iokit_check_set_properties;
 
-	mpo_vnode_check_supplemental_signature_t *mpo_vnode_check_supplemental_signature;
+  mpo_vnode_check_supplemental_signature_t
+      *mpo_vnode_check_supplemental_signature;
 
-	mpo_vnode_check_searchfs_t              *mpo_vnode_check_searchfs;
+  mpo_vnode_check_searchfs_t *mpo_vnode_check_searchfs;
 
-	mpo_priv_check_t                        *mpo_priv_check;
-	mpo_priv_grant_t                        *mpo_priv_grant;
+  mpo_priv_check_t *mpo_priv_check;
+  mpo_priv_grant_t *mpo_priv_grant;
 
-	mpo_proc_check_map_anon_t               *mpo_proc_check_map_anon;
+  mpo_proc_check_map_anon_t *mpo_proc_check_map_anon;
 
-	mpo_vnode_check_fsgetpath_t             *mpo_vnode_check_fsgetpath;
+  mpo_vnode_check_fsgetpath_t *mpo_vnode_check_fsgetpath;
 
-	mpo_iokit_check_open_t                  *mpo_iokit_check_open;
+  mpo_iokit_check_open_t *mpo_iokit_check_open;
 
-	mpo_proc_check_ledger_t                 *mpo_proc_check_ledger;
+  mpo_proc_check_ledger_t *mpo_proc_check_ledger;
 
-	mpo_vnode_notify_rename_t               *mpo_vnode_notify_rename;
+  mpo_vnode_notify_rename_t *mpo_vnode_notify_rename;
 
-	mpo_vnode_check_setacl_t                *mpo_vnode_check_setacl;
+  mpo_vnode_check_setacl_t *mpo_vnode_check_setacl;
 
-	mpo_vnode_notify_deleteextattr_t        *mpo_vnode_notify_deleteextattr;
+  mpo_vnode_notify_deleteextattr_t *mpo_vnode_notify_deleteextattr;
 
-	mpo_system_check_kas_info_t             *mpo_system_check_kas_info;
+  mpo_system_check_kas_info_t *mpo_system_check_kas_info;
 
-	mpo_vnode_check_lookup_preflight_t      *mpo_vnode_check_lookup_preflight;
+  mpo_vnode_check_lookup_preflight_t *mpo_vnode_check_lookup_preflight;
 
-	mpo_vnode_notify_open_t                 *mpo_vnode_notify_open;
+  mpo_vnode_notify_open_t *mpo_vnode_notify_open;
 
-	mpo_system_check_info_t                 *mpo_system_check_info;
+  mpo_system_check_info_t *mpo_system_check_info;
 
-	mpo_pty_notify_grant_t                  *mpo_pty_notify_grant;
-	mpo_pty_notify_close_t                  *mpo_pty_notify_close;
+  mpo_pty_notify_grant_t *mpo_pty_notify_grant;
+  mpo_pty_notify_close_t *mpo_pty_notify_close;
 
-	mpo_vnode_find_sigs_t                   *mpo_vnode_find_sigs;
+  mpo_vnode_find_sigs_t *mpo_vnode_find_sigs;
 
-	mpo_kext_check_load_t                   *mpo_kext_check_load;
-	mpo_kext_check_unload_t                 *mpo_kext_check_unload;
+  mpo_kext_check_load_t *mpo_kext_check_load;
+  mpo_kext_check_unload_t *mpo_kext_check_unload;
 
-	mpo_proc_check_proc_info_t              *mpo_proc_check_proc_info;
-	mpo_vnode_notify_link_t                 *mpo_vnode_notify_link;
-	mpo_iokit_check_filter_properties_t     *mpo_iokit_check_filter_properties;
-	mpo_iokit_check_get_property_t          *mpo_iokit_check_get_property;
+  mpo_proc_check_proc_info_t *mpo_proc_check_proc_info;
+  mpo_vnode_notify_link_t *mpo_vnode_notify_link;
+  mpo_iokit_check_filter_properties_t *mpo_iokit_check_filter_properties;
+  mpo_iokit_check_get_property_t *mpo_iokit_check_get_property;
 };
 
 /**
@@ -6361,7 +5510,7 @@ struct mac_policy_ops {
  */
 typedef unsigned int mac_policy_handle_t;
 
-#define mpc_t   struct mac_policy_conf *
+#define mpc_t struct mac_policy_conf *
 
 /**
  *  @brief Mac policy configuration
@@ -6384,16 +5533,16 @@ typedef unsigned int mac_policy_handle_t;
  */
 /* XXX - reorder these for better alignment on 64bit platforms */
 struct mac_policy_conf {
-	const char              *mpc_name;              /** policy name */
-	const char              *mpc_fullname;          /** full name */
-	char const * const *mpc_labelnames;     /** managed label namespaces */
-	unsigned int             mpc_labelname_count;   /** number of managed label namespaces */
-	const struct mac_policy_ops     *mpc_ops;               /** operation vector */
-	int                      mpc_loadtime_flags;    /** load time flags */
-	int                     *mpc_field_off;         /** label slot */
-	int                      mpc_runtime_flags;     /** run time flags */
-	mpc_t                    mpc_list;              /** List reference */
-	void                    *mpc_data;              /** module data */
+  const char *mpc_name;              /** policy name */
+  const char *mpc_fullname;          /** full name */
+  char const *const *mpc_labelnames; /** managed label namespaces */
+  unsigned int mpc_labelname_count;  /** number of managed label namespaces */
+  const struct mac_policy_ops *mpc_ops; /** operation vector */
+  int mpc_loadtime_flags;               /** load time flags */
+  int *mpc_field_off;                   /** label slot */
+  int mpc_runtime_flags;                /** run time flags */
+  mpc_t mpc_list;                       /** List reference */
+  void *mpc_data;                       /** module data */
 };
 
 /**
@@ -6403,8 +5552,8 @@ struct mac_policy_conf {
  *  MAC framework.  A policy module will typically call this from the
  *  Darwin KEXT registration routine.
  */
-int     mac_policy_register(struct mac_policy_conf *mpc,
-    mac_policy_handle_t *handlep, void *xd);
+int mac_policy_register(struct mac_policy_conf *mpc,
+                        mac_policy_handle_t *handlep, void *xd);
 
 /**
  *  @brief MAC policy module de-registration routine
@@ -6413,20 +5562,19 @@ int     mac_policy_register(struct mac_policy_conf *mpc,
  *  MAC framework.  A policy module will typically call this from the
  *  Darwin KEXT de-registration routine.
  */
-int     mac_policy_unregister(mac_policy_handle_t handle);
+int mac_policy_unregister(mac_policy_handle_t handle);
 
 /*
  * Framework entry points for the policies to add audit data.
  */
-int     mac_audit_text(char *text, mac_policy_handle_t handle);
+int mac_audit_text(char *text, mac_policy_handle_t handle);
 
 /*
  * Calls to assist with use of Apple XATTRs within policy modules.
  */
-int     mac_vnop_setxattr(struct vnode *, const char *, char *, size_t);
-int     mac_vnop_getxattr(struct vnode *, const char *, char *, size_t,
-    size_t *);
-int     mac_vnop_removexattr(struct vnode *, const char *);
+int mac_vnop_setxattr(struct vnode *, const char *, char *, size_t);
+int mac_vnop_getxattr(struct vnode *, const char *, char *, size_t, size_t *);
+int mac_vnop_removexattr(struct vnode *, const char *);
 
 /**
  *  @brief Set an extended attribute on a vnode-based fileglob.
@@ -6440,7 +5588,8 @@ int     mac_vnop_removexattr(struct vnode *, const char *);
  *  Caller must hold an iocount on the vnode represented by the fileglob.
  */
 #ifdef KERNEL_PRIVATE
-int     mac_file_setxattr(struct fileglob *fg, const char *name, char *buf, size_t len);
+int mac_file_setxattr(struct fileglob *fg, const char *name, char *buf,
+                      size_t len);
 #endif
 
 /**
@@ -6456,8 +5605,8 @@ int     mac_file_setxattr(struct fileglob *fg, const char *name, char *buf, size
  *       Caller must hold an iocount on the vnode represented by the fileglob.
  */
 #ifdef KERNEL_PRIVATE
-int     mac_file_getxattr(struct fileglob *fg, const char *name, char *buf, size_t len,
-    size_t *attrlen);
+int mac_file_getxattr(struct fileglob *fg, const char *name, char *buf,
+                      size_t len, size_t *attrlen);
 #endif
 
 /**
@@ -6470,23 +5619,23 @@ int     mac_file_getxattr(struct fileglob *fg, const char *name, char *buf, size
  *       Caller must hold an iocount on the vnode represented by the fileglob.
  */
 #ifdef KERNEL_PRIVATE
-int     mac_file_removexattr(struct fileglob *fg, const char *name);
+int mac_file_removexattr(struct fileglob *fg, const char *name);
 #endif
 
 /*
  * Arbitrary limit on how much data will be logged by the audit
  * entry points above.
  */
-#define MAC_AUDIT_DATA_LIMIT    1024
+#define MAC_AUDIT_DATA_LIMIT 1024
 
 /*
  * Values returned by mac_audit_{pre,post}select. To combine the responses
  * of the security policies into a single decision,
  * mac_audit_{pre,post}select() choose the greatest value returned.
  */
-#define MAC_AUDIT_DEFAULT       0       /* use system behavior */
-#define MAC_AUDIT_NO            1       /* force not auditing this event */
-#define MAC_AUDIT_YES           2       /* force auditing this event */
+#define MAC_AUDIT_DEFAULT 0 /* use system behavior */
+#define MAC_AUDIT_NO 1      /* force not auditing this event */
+#define MAC_AUDIT_YES 2     /* force auditing this event */
 
 //  \defgroup mpc_loadtime_flags Flags for the mpc_loadtime_flags field
 
@@ -6512,7 +5661,7 @@ int     mac_file_removexattr(struct fileglob *fg, const char *name);
  *  system objects, and cannot handle objects that have not been
  *  properly initialized by the policy.
  */
-#define MPC_LOADTIME_FLAG_NOTLATE       0x00000001
+#define MPC_LOADTIME_FLAG_NOTLATE 0x00000001
 
 /**
  *  @brief Flag to indicate unload preference
@@ -6523,14 +5672,14 @@ int     mac_file_removexattr(struct fileglob *fg, const char *name);
  *  label state and are unable to free that state at runtime, or for
  *  modules that simply do not want to permit unload operations.
  */
-#define MPC_LOADTIME_FLAG_UNLOADOK      0x00000002
+#define MPC_LOADTIME_FLAG_UNLOADOK 0x00000002
 
 /**
  *  @brief Unsupported
  *
  *  XXX This flag is not yet supported.
  */
-#define MPC_LOADTIME_FLAG_LABELMBUFS    0x00000004
+#define MPC_LOADTIME_FLAG_LABELMBUFS 0x00000004
 
 /**
  *  @brief Flag to indicate a base policy
@@ -6539,7 +5688,7 @@ int     mac_file_removexattr(struct fileglob *fg, const char *name);
  *  one module can declare itself as base, otherwise the boot process
  *  will be halted.
  */
-#define MPC_LOADTIME_BASE_POLICY        0x00000008
+#define MPC_LOADTIME_BASE_POLICY 0x00000008
 
 /*@}*/
 
@@ -6552,48 +5701,43 @@ int     mac_file_removexattr(struct fileglob *fg, const char *name);
  *  set this flag in the mpc_runtime_flags field of the policy's
  *  mac_policy_conf structure after registering the policy.
  */
-#define MPC_RUNTIME_FLAG_REGISTERED     0x00000001
+#define MPC_RUNTIME_FLAG_REGISTERED 0x00000001
 
 /*
  * Depends on POLICY_VER
  */
 
 #ifndef POLICY_VER
-#define POLICY_VER      1.0
+#define POLICY_VER 1.0
 #endif
 
-#define MAC_POLICY_SET(handle, mpops, mpname, mpfullname, lnames, lcount, slot, lflags, rflags) \
-	static struct mac_policy_conf mpname##_mac_policy_conf = {      \
-	        .mpc_name		= #mpname,                      \
-	        .mpc_fullname		= mpfullname,                   \
-	        .mpc_labelnames		= lnames,                       \
-	        .mpc_labelname_count	= lcount,                       \
-	        .mpc_ops		= mpops,                        \
-	        .mpc_loadtime_flags	= lflags,                       \
-	        .mpc_field_off		= slot,                         \
-	        .mpc_runtime_flags	= rflags                        \
-	};                                                              \
-                                                                        \
-	static kern_return_t                                            \
-	kmod_start(kmod_info_t *ki, void *xd)                           \
-	{                                                               \
-	        return mac_policy_register(&mpname##_mac_policy_conf,   \
-	            &handle, xd);                                       \
-	}                                                               \
-                                                                        \
-	static kern_return_t                                            \
-	kmod_stop(kmod_info_t *ki, void *xd)                            \
-	{                                                               \
-	        return mac_policy_unregister(handle);                   \
-	}                                                               \
-                                                                        \
-	extern kern_return_t _start(kmod_info_t *ki, void *data);       \
-	extern kern_return_t _stop(kmod_info_t *ki, void *data);        \
-                                                                        \
-	KMOD_EXPLICIT_DECL(security.mpname, POLICY_VER, _start, _stop)  \
-	kmod_start_func_t *_realmain = kmod_start;                      \
-	kmod_stop_func_t *_antimain = kmod_stop;                        \
-	int _kext_apple_cc = __APPLE_CC__
+#define MAC_POLICY_SET(handle, mpops, mpname, mpfullname, lnames, lcount,      \
+                       slot, lflags, rflags)                                   \
+  static struct mac_policy_conf mpname##_mac_policy_conf = {                   \
+      .mpc_name = #mpname,                                                     \
+      .mpc_fullname = mpfullname,                                              \
+      .mpc_labelnames = lnames,                                                \
+      .mpc_labelname_count = lcount,                                           \
+      .mpc_ops = mpops,                                                        \
+      .mpc_loadtime_flags = lflags,                                            \
+      .mpc_field_off = slot,                                                   \
+      .mpc_runtime_flags = rflags};                                            \
+                                                                               \
+  static kern_return_t kmod_start(kmod_info_t *ki, void *xd) {                 \
+    return mac_policy_register(&mpname##_mac_policy_conf, &handle, xd);        \
+  }                                                                            \
+                                                                               \
+  static kern_return_t kmod_stop(kmod_info_t *ki, void *xd) {                  \
+    return mac_policy_unregister(handle);                                      \
+  }                                                                            \
+                                                                               \
+  extern kern_return_t _start(kmod_info_t *ki, void *data);                    \
+  extern kern_return_t _stop(kmod_info_t *ki, void *data);                     \
+                                                                               \
+  KMOD_EXPLICIT_DECL(security.mpname, POLICY_VER, _start, _stop)               \
+  kmod_start_func_t *_realmain = kmod_start;                                   \
+  kmod_stop_func_t *_antimain = kmod_stop;                                     \
+  int _kext_apple_cc = __APPLE_CC__
 
 /*
  * Policy interface to map a struct label pointer to per-policy data.
@@ -6601,25 +5745,26 @@ int     mac_file_removexattr(struct fileglob *fg, const char *name);
  * intptr_t to a policy-specific data type.
  */
 #ifdef KERNEL_PRIVATE
-struct label *  mac_label_verify(struct label **labelp);
-intptr_t        mac_label_get(struct label *l, int slot);
+struct label *mac_label_verify(struct label **labelp);
+intptr_t mac_label_get(struct label *l, int slot);
 /*
  * Sets a label slot to the given pointer value, `v`.  `v` cannot be `~0ULL`.
  */
-void            mac_label_set(struct label *l, int slot, intptr_t v);
-struct label *  mac_labelzone_alloc(int flags);
-struct label *  mac_labelzone_alloc_for_owner(struct label **labelp, int flags,
-    void (^extra_setup)(struct label *));
-struct label *  mac_labelzone_alloc_owned(struct label **labelp, int flags,
-    void (^extra_setup)(struct label *));
-void            mac_labelzone_free(struct label *l);
-void            mac_labelzone_free_owned(struct label **labelp,
-    void (^extra_deinit)(struct label *));
-intptr_t        mac_vnode_label_get(struct vnode *vp, int slot, intptr_t sentinel);
-void            mac_vnode_label_set(struct vnode *vp, int slot, intptr_t v);
+void mac_label_set(struct label *l, int slot, intptr_t v);
+struct label *mac_labelzone_alloc(int flags);
+struct label *
+mac_labelzone_alloc_for_owner(struct label **labelp, int flags,
+                              void (^extra_setup)(struct label *));
+struct label *mac_labelzone_alloc_owned(struct label **labelp, int flags,
+                                        void (^extra_setup)(struct label *));
+void mac_labelzone_free(struct label *l);
+void mac_labelzone_free_owned(struct label **labelp,
+                              void (^extra_deinit)(struct label *));
+intptr_t mac_vnode_label_get(struct vnode *vp, int slot, intptr_t sentinel);
+void mac_vnode_label_set(struct vnode *vp, int slot, intptr_t v);
 #endif
 
-#define mac_get_mpc(h)          (mac_policy_list.entries[h].mpc)
+#define mac_get_mpc(h) (mac_policy_list.entries[h].mpc)
 
 /**
  *  @name Flags for MAC allocator interfaces
@@ -6640,7 +5785,7 @@ void            mac_vnode_label_set(struct vnode *vp, int slot, intptr_t v);
  *
  *   @warning Inappropriate use of this flag may cause kernel panics.
  */
-#define MAC_WAITOK  0
+#define MAC_WAITOK 0
 
 /**
  *   @brief Allocation operations may not block
@@ -6649,7 +5794,7 @@ void            mac_vnode_label_set(struct vnode *vp, int slot, intptr_t v);
  *   is not immediately available.  This type of allocation will not
  *   sleep, preserving locking semantics.
  */
-#define MAC_NOWAIT  1
+#define MAC_NOWAIT 1
 
 /*@}*/
 

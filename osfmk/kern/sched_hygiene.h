@@ -42,14 +42,14 @@
 #error SCHED_HYGIENE_DEBUG defined without DEVELOPMENT/DEBUG
 #endif
 
+#include <kern/startup.h>
 #include <mach/mach_types.h>
 #include <machine/static_if.h>
-#include <kern/startup.h>
 
 typedef enum sched_hygiene_mode {
-	SCHED_HYGIENE_MODE_OFF = 0,
-	SCHED_HYGIENE_MODE_TRACE = 1,
-	SCHED_HYGIENE_MODE_PANIC = 2,
+  SCHED_HYGIENE_MODE_OFF = 0,
+  SCHED_HYGIENE_MODE_TRACE = 1,
+  SCHED_HYGIENE_MODE_PANIC = 2,
 } sched_hygiene_mode_t;
 
 STATIC_IF_KEY_DECLARE_TRUE(sched_debug_pmc);
@@ -75,9 +75,11 @@ extern machine_timeout_t stackshot_interrupt_masked_timeout;
 
 extern bool sched_hygiene_nonspec_tb;
 
-#define ml_get_sched_hygiene_timebase() (sched_hygiene_nonspec_tb ? ml_get_timebase() : ml_get_speculative_timebase())
+#define ml_get_sched_hygiene_timebase()                                        \
+  (sched_hygiene_nonspec_tb ? ml_get_timebase() : ml_get_speculative_timebase())
 #define ml_use_sched_hygiene_nonspec_timebase() (sched_hygiene_nonspec_tb)
-#define ML_TIMEOUT_TIMEBASE_FLAGS (ml_use_sched_hygiene_nonspec_timebase() ? TF_NONSPEC_TIMEBASE : 0)
+#define ML_TIMEOUT_TIMEBASE_FLAGS                                              \
+  (ml_use_sched_hygiene_nonspec_timebase() ? TF_NONSPEC_TIMEBASE : 0)
 #define ML_TIMEOUT_PMC_FLAGS (static_if(sched_debug_pmc) ? TF_SAMPLE_PMC : 0)
 
 extern bool kprintf_spam_mt_pred(struct machine_timeout_spec const *spec);

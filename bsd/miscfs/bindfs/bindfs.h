@@ -60,17 +60,17 @@
 #ifndef FS_BIND_H
 #define FS_BIND_H
 
-#include <sys/appleapiopts.h>
 #include <libkern/libkern.h>
+#include <sys/appleapiopts.h>
+#include <sys/lock.h>
+#include <sys/ubc.h>
 #include <sys/vnode.h>
 #include <sys/vnode_if.h>
-#include <sys/ubc.h>
 #include <vfs/vfs_support.h>
-#include <sys/lock.h>
 
 #include <sys/cdefs.h>
-#include <sys/types.h>
 #include <sys/syslimits.h>
+#include <sys/types.h>
 
 #if KERNEL
 #include <libkern/tree.h>
@@ -78,7 +78,7 @@
 #include <System/libkern/tree.h>
 #endif
 
-//#define BINDFS_DEBUG 0
+// #define BINDFS_DEBUG 0
 
 #define BINDM_CACHE 0x0001
 #define BINDM_CASEINSENSITIVE 0x0000000000000002
@@ -86,12 +86,12 @@
 typedef int (*vop_t)(void *);
 
 struct bind_mount {
-	struct vnode * bindm_rootvp;       /* Reference to root bind_node (inode 1) */
-	struct vnode * bindm_lowerrootvp;  /* reference to the root of the tree we are
-	                                    * relocating (in the other file system) */
-	uint32_t bindm_lowerrootvid;       /* store the lower root vid so we can check
-	                                    * before we build the shadow vnode lazily */
-	uint64_t bindm_flags;
+  struct vnode *bindm_rootvp;      /* Reference to root bind_node (inode 1) */
+  struct vnode *bindm_lowerrootvp; /* reference to the root of the tree we are
+                                    * relocating (in the other file system) */
+  uint32_t bindm_lowerrootvid;     /* store the lower root vid so we can check
+                                    * before we build the shadow vnode lazily */
+  uint64_t bindm_flags;
 };
 
 #ifdef KERNEL
@@ -102,19 +102,19 @@ struct bind_mount {
  * A cache of vnode references
  */
 struct bind_node {
-	LIST_ENTRY(bind_node) bind_hash; /* Hash list */
-	struct vnode * bind_lowervp;     /* VREFed once */
-	struct vnode * bind_vnode;       /* Back pointer */
-	uint32_t bind_lowervid;          /* vid for lowervp to detect lowervp getting recycled out
-	                                  *  from under us */
-	uint32_t bind_myvid;
-	uint32_t bind_flags;
+  LIST_ENTRY(bind_node) bind_hash; /* Hash list */
+  struct vnode *bind_lowervp;      /* VREFed once */
+  struct vnode *bind_vnode;        /* Back pointer */
+  uint32_t bind_lowervid; /* vid for lowervp to detect lowervp getting recycled
+                           * out from under us */
+  uint32_t bind_myvid;
+  uint32_t bind_flags;
 };
 
 struct vnodeop_desc_fake {
-	int vdesc_offset;
-	const char * vdesc_name;
-	/* other stuff */
+  int vdesc_offset;
+  const char *vdesc_name;
+  /* other stuff */
 };
 
 #define BINDV_NOUNLOCK 0x0001
@@ -126,16 +126,16 @@ struct vnodeop_desc_fake {
 
 __BEGIN_DECLS
 
-int bindfs_init(struct vfsconf * vfsp);
+int bindfs_init(struct vfsconf *vfsp);
 int bindfs_destroy(void);
-int bind_nodeget(
-	struct mount * mp, struct vnode * lowervp, struct vnode * dvp, struct vnode ** vpp, struct componentname * cnp, int root);
-int bind_hashget(struct mount * mp, struct vnode * lowervp, struct vnode ** vpp);
-int bind_getnewvnode(
-	struct mount * mp, struct vnode * lowervp, struct vnode * dvp, struct vnode ** vpp, struct componentname * cnp, int root);
-void bind_hashrem(struct bind_node * xp);
+int bind_nodeget(struct mount *mp, struct vnode *lowervp, struct vnode *dvp,
+                 struct vnode **vpp, struct componentname *cnp, int root);
+int bind_hashget(struct mount *mp, struct vnode *lowervp, struct vnode **vpp);
+int bind_getnewvnode(struct mount *mp, struct vnode *lowervp, struct vnode *dvp,
+                     struct vnode **vpp, struct componentname *cnp, int root);
+void bind_hashrem(struct bind_node *xp);
 
-int bindfs_getbackingvnode(vnode_t in_vp, vnode_t* out_vpp);
+int bindfs_getbackingvnode(vnode_t in_vp, vnode_t *out_vpp);
 
 #define BINDVPTOLOWERVP(vp) (VTOBIND(vp)->bind_lowervp)
 #define BINDVPTOLOWERVID(vp) (VTOBIND(vp)->bind_lowervid)
@@ -143,17 +143,19 @@ int bindfs_getbackingvnode(vnode_t in_vp, vnode_t* out_vpp);
 
 extern const struct vnodeopv_desc bindfs_vnodeop_opv_desc;
 
-extern vop_t * bindfs_vnodeop_p;
+extern vop_t *bindfs_vnodeop_p;
 
 __END_DECLS
 
 #ifdef BINDFS_DEBUG
-#define BINDFSDEBUG(format, args...) printf("DEBUG: BindFS %s: " format, __FUNCTION__, ##args)
+#define BINDFSDEBUG(format, args...)                                           \
+  printf("DEBUG: BindFS %s: " format, __FUNCTION__, ##args)
 #else
 #define BINDFSDEBUG(format, args...)
 #endif /* BINDFS_DEBUG */
 
-#define BINDFSERROR(format, args...) printf("ERROR: BindFS %s: " format, __FUNCTION__, ##args)
+#define BINDFSERROR(format, args...)                                           \
+  printf("ERROR: BindFS %s: " format, __FUNCTION__, ##args)
 
 #endif /* KERNEL */
 

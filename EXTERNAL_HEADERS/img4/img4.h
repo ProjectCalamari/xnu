@@ -6,8 +6,8 @@
 #define __IMG4_H
 
 #include <os/base.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/kernel_types.h>
 #include <sys/types.h>

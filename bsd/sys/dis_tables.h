@@ -45,4 +45,4 @@
 
 #include <machine/dis_tables.h>
 
-#endif  /* _SYS_DIS_TABLES_H_ */
+#endif /* _SYS_DIS_TABLES_H_ */

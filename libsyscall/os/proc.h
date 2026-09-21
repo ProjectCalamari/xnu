@@ -29,9 +29,9 @@
 #ifndef __OS_PROC__
 #define __OS_PROC__
 
+#include <os/availability.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
-#include <os/availability.h>
 
 /*!
  * @header
@@ -55,22 +55,24 @@ __BEGIN_DECLS
  * advised. The result may be instantaneously invalidated by actions taken in
  * another thread or another framework.
  *
- * Memory limits can change during the app life cycle. Make sure to check accordingly.
+ * Memory limits can change during the app life cycle. Make sure to check
+ * accordingly.
  *
  * The size returned is not representative of the total memory of the device, it
- * is the current dirty memory limit minus the dirty memory footprint used at the
- * time of the query.
+ * is the current dirty memory limit minus the dirty memory footprint used at
+ * the time of the query.
  *
- * This interface allows an app to efficiently consume all available memory resources.
- * Significant memory use, even under the current memory limit, may still cause
- * system-wide performance including the termination of other apps and system
- * processes. Take care to use the minimum amount of memory needed to satisfy the
- * user’s need.
+ * This interface allows an app to efficiently consume all available memory
+ * resources. Significant memory use, even under the current memory limit, may
+ * still cause system-wide performance including the termination of other apps
+ * and system processes. Take care to use the minimum amount of memory needed to
+ * satisfy the user’s need.
  *
- * If you need more information than just the available memory, you can use task_info().
- * The information returned is equivalent to the task_vm_info.limit_bytes_remaining
- * field. task_info() is a more expensive call, and will return information such
- * as your phys_footprint, which is used to calculate the return of this function.
+ * If you need more information than just the available memory, you can use
+ * task_info(). The information returned is equivalent to the
+ * task_vm_info.limit_bytes_remaining field. task_info() is a more expensive
+ * call, and will return information such as your phys_footprint, which is used
+ * to calculate the return of this function.
  *
  * Dirty memory contains data that must be kept in RAM (or the equivalent) even
  * when unused. It is memory that has been modified.
@@ -82,9 +84,9 @@ __BEGIN_DECLS
  * the calling process exceeds its memory limit.
  */
 
-API_UNAVAILABLE(macos) API_AVAILABLE(ios(13.0), tvos(13.0), watchos(6.0), bridgeos(4.0))
-extern
-size_t os_proc_available_memory(void);
+API_UNAVAILABLE(macos)
+API_AVAILABLE(ios(13.0), tvos(13.0), watchos(6.0), bridgeos(4.0)) extern size_t
+    os_proc_available_memory(void);
 
 __END_DECLS
 

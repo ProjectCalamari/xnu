@@ -33,4 +33,4 @@
 
 #define __AMP__ __ARM_AMP__
 
-#endif  /* _ARM_SMP_H_ */
+#endif /* _ARM_SMP_H_ */

@@ -90,16 +90,17 @@
 #ifndef _ARM___ENDIAN_H_
 #define _ARM___ENDIAN_H_
 
-#if defined (__arm__) || defined (__arm64__)
+#if defined(__arm__) || defined(__arm64__)
 
 #include <sys/__endian.h>
 
-#define __DARWIN_BYTE_ORDER     __DARWIN_LITTLE_ENDIAN
+#define __DARWIN_BYTE_ORDER __DARWIN_LITTLE_ENDIAN
 
-#if     defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
+#if defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 
-#define BYTE_ORDER      __DARWIN_BYTE_ORDER
+#define BYTE_ORDER __DARWIN_BYTE_ORDER
 
-#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)) */
+#endif /* defined(KERNEL) || (!defined(_POSIX_C_SOURCE) ||                     \
+          defined(_DARWIN_C_SOURCE)) */
 #endif /* defined (__arm__) || defined (__arm64__) */
 #endif /* !_ARM___ENDIAN_H_ */

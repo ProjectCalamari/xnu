@@ -28,8 +28,8 @@
 #ifndef _SKYWALK_TEST_DRIVER_H_
 #define _SKYWALK_TEST_DRIVER_H_
 
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "skywalk_test_common.h"
 #include "skywalk_test_utils.h"
@@ -37,36 +37,36 @@
 #define SKT_MAX_ARGV 8
 
 struct skywalk_test {
-	const char *skt_testname;
-	const char *skt_testdesc;
-	uint64_t skt_required_features;
-	int (*skt_main)(int argc, char **);
-	char *skt_argv[SKT_MAX_ARGV];
-	void (*skt_init)(void);
-	void (*skt_fini)(void);
-	uint64_t skt_expected_exception_code;
-	uint64_t skt_expected_exception_code_ignore;
-	char skt_argv2[11]; // dynamically initialized default argv2
+  const char *skt_testname;
+  const char *skt_testdesc;
+  uint64_t skt_required_features;
+  int (*skt_main)(int argc, char **);
+  char *skt_argv[SKT_MAX_ARGV];
+  void (*skt_init)(void);
+  void (*skt_fini)(void);
+  uint64_t skt_expected_exception_code;
+  uint64_t skt_expected_exception_code_ignore;
+  char skt_argv2[11]; // dynamically initialized default argv2
 };
 
 extern int skywalk_test_driver_run(struct skywalk_test *, int, char **,
-    uint32_t, bool, bool, int);
+                                   uint32_t, bool, bool, int);
 
 struct skywalk_mptest {
-	const char *skt_testname;
-	const char *skt_testdesc;
-	uint64_t skt_required_features;
-	int skt_nchildren;
-	int (*skt_main)(int argc, char *argv[]);
-	char *skt_argv[SKT_MAX_ARGV];
-	void (*skt_init)(void);
-	void (*skt_fini)(void);
-	char skt_argv2[11]; // dynamically initialized default argv2
+  const char *skt_testname;
+  const char *skt_testdesc;
+  uint64_t skt_required_features;
+  int skt_nchildren;
+  int (*skt_main)(int argc, char *argv[]);
+  char *skt_argv[SKT_MAX_ARGV];
+  void (*skt_init)(void);
+  void (*skt_fini)(void);
+  char skt_argv2[11]; // dynamically initialized default argv2
 };
 
 struct skywalk_mptest_check {
-	const char *skt_testname;
-	bool (*skt_supported)(void);
+  const char *skt_testname;
+  bool (*skt_supported)(void);
 };
 
 #define MPTEST_SEQ_FILENO 3
@@ -230,7 +230,6 @@ extern struct skywalk_test skt_flowlookup;
 extern struct skywalk_test skt_libcuckoo;
 extern struct skywalk_test skt_restricted_port;
 extern struct skywalk_test skt_steering;
-
 
 extern struct skywalk_mptest skt_mp100noop;
 extern struct skywalk_mptest skt_mc10x10;

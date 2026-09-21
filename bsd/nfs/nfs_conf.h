@@ -30,8 +30,7 @@
 #define _BSD_NFS_NFS_CONF_H_
 
 #if NFSSERVER
-#define CONFIG_NFS_SERVER     1
+#define CONFIG_NFS_SERVER 1
 #endif /* NFSSERVER */
-
 
 #endif /* _BSD_NFS_NFS_CONF_H_ */

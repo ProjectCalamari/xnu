@@ -32,36 +32,32 @@
 
 pktsched_ops_list_t pktsched_ops_list;
 
-void
-pktsched_ops_register(pktsched_ops_t *new_ops)
-{
-	pktsched_ops_t *ops;
+void pktsched_ops_register(pktsched_ops_t *new_ops) {
+  pktsched_ops_t *ops;
 
-	ASSERT(new_ops->ps_deq != NULL);
-	ASSERT(new_ops->ps_enq != NULL);
-	ASSERT(new_ops->ps_deq_sc != NULL);
-	ASSERT(new_ops->ps_setup != NULL);
-	ASSERT(new_ops->ps_teardown != NULL);
-	ASSERT(new_ops->ps_req != NULL);
-	ASSERT(new_ops->ps_allow_dequeue != NULL);
+  ASSERT(new_ops->ps_deq != NULL);
+  ASSERT(new_ops->ps_enq != NULL);
+  ASSERT(new_ops->ps_deq_sc != NULL);
+  ASSERT(new_ops->ps_setup != NULL);
+  ASSERT(new_ops->ps_teardown != NULL);
+  ASSERT(new_ops->ps_req != NULL);
+  ASSERT(new_ops->ps_allow_dequeue != NULL);
 
-	LIST_FOREACH(ops, &pktsched_ops_list, ps_ops_link) {
-		VERIFY(ops->ps_id != new_ops->ps_id);
-	}
+  LIST_FOREACH(ops, &pktsched_ops_list, ps_ops_link) {
+    VERIFY(ops->ps_id != new_ops->ps_id);
+  }
 
-	LIST_INSERT_HEAD(&pktsched_ops_list, new_ops, ps_ops_link);
+  LIST_INSERT_HEAD(&pktsched_ops_list, new_ops, ps_ops_link);
 }
 
-pktsched_ops_t *
-pktsched_ops_find(uint8_t ops_id)
-{
-	pktsched_ops_t *ops;
+pktsched_ops_t *pktsched_ops_find(uint8_t ops_id) {
+  pktsched_ops_t *ops;
 
-	LIST_FOREACH(ops, &pktsched_ops_list, ps_ops_link) {
-		if (ops->ps_id == ops_id) {
-			return ops;
-		}
-	}
+  LIST_FOREACH(ops, &pktsched_ops_list, ps_ops_link) {
+    if (ops->ps_id == ops_id) {
+      return ops;
+    }
+  }
 
-	return NULL;
+  return NULL;
 }

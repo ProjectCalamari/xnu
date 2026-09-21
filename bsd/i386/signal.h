@@ -33,7 +33,7 @@
 #ifndef _I386_SIGNAL_H_
 #define _I386_SIGNAL_H_ 1
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 
 #include <sys/cdefs.h>
 
@@ -44,4 +44,4 @@ typedef int sig_atomic_t;
 
 #endif /* defined (__i386__) || defined (__x86_64__) */
 
-#endif  /* _I386_SIGNAL_H_ */
+#endif /* _I386_SIGNAL_H_ */

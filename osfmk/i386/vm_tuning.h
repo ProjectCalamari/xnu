@@ -64,4 +64,4 @@
 #ifndef _I386_VM_TUNING_H_
 #define _I386_VM_TUNING_H_
 
-#endif  /* _I386_VM_TUNING_H_ */
+#endif /* _I386_VM_TUNING_H_ */

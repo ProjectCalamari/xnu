@@ -30,32 +30,45 @@
 #error "do not include this file directly, use <machine/static_if.h>"
 #else
 
-#define STATIC_IF_RELATIVE      1
-#define STATIC_IF_INSN_SIZE     4
+#define STATIC_IF_RELATIVE 1
+#define STATIC_IF_INSN_SIZE 4
 
 typedef int static_if_offset_t;
 
 struct static_if_entry {
-	static_if_offset_t      sie_base;
-	static_if_offset_t      sie_target;
-	unsigned long           sie_link;
+  static_if_offset_t sie_base;
+  static_if_offset_t sie_target;
+  unsigned long sie_link;
 };
 
 /* generates a struct static_if_entry */
-#define STATIC_IF_ENTRY(n) \
-	".pushsection " STATIC_IF_SEGSECT ",regular,live_support"       "\n\t" \
-	".align 3"                                                      "\n\t" \
-	".long 1b - ."                                                  "\n\t" \
-	".long %l1 - 1b"                                                "\n\t" \
-	".quad _" #n "_jump_key + %c0"                                  "\n\t" \
-	".popsection"
+#define STATIC_IF_ENTRY(n)                                                     \
+  ".pushsection " STATIC_IF_SEGSECT ",regular,live_support"                    \
+  "\n\t"                                                                       \
+  ".align 3"                                                                   \
+  "\n\t"                                                                       \
+  ".long 1b - ."                                                               \
+  "\n\t"                                                                       \
+  ".long %l1 - 1b"                                                             \
+  "\n\t"                                                                       \
+  ".quad _" #n "_jump_key + %c0"                                               \
+  "\n\t"                                                                       \
+  ".popsection"
 
-#define STATIC_IF_NOP(n, label) \
-	asm goto("1: nop"                                               "\n\t" \
-	    STATIC_IF_ENTRY(n) : : "i"(0) : : label)
+#define STATIC_IF_NOP(n, label)                                                \
+  asm goto("1: nop"                                                            \
+           "\n\t" STATIC_IF_ENTRY(n)                                           \
+           :                                                                   \
+           : "i"(0)                                                            \
+           :                                                                   \
+           : label)
 
-#define STATIC_IF_BRANCH(n, label) \
-	asm goto("1: b %l1"                                             "\n\t" \
-	    STATIC_IF_ENTRY(n) : : "i"(1) : : label)
+#define STATIC_IF_BRANCH(n, label)                                             \
+  asm goto("1: b %l1"                                                          \
+           "\n\t" STATIC_IF_ENTRY(n)                                           \
+           :                                                                   \
+           : "i"(1)                                                            \
+           :                                                                   \
+           : label)
 
 #endif /* _MACHINE_STATIC_IF_H */

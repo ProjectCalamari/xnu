@@ -29,107 +29,85 @@
 #ifndef _I386_LOCKS_I386_INLINES_H_
 #define _I386_LOCKS_I386_INLINES_H_
 
-#include <kern/locks.h>
 #include <kern/lock_stat.h>
+#include <kern/locks.h>
 #include <kern/turnstile.h>
 
 #if LCK_MTX_USE_ARCH
 
 // Enforce program order of loads and stores.
 #define ordered_load(target) os_atomic_load(target, compiler_acq_rel)
-#define ordered_store_release(target, value) ({ \
-	        os_atomic_store(target, value, release); \
-	        os_compiler_barrier(); \
-})
+#define ordered_store_release(target, value)                                   \
+  ({                                                                           \
+    os_atomic_store(target, value, release);                                   \
+    os_compiler_barrier();                                                     \
+  })
 
 /* Enforce program order of loads and stores. */
-#define ordered_load_mtx_state(lock)                    ordered_load(&(lock)->lck_mtx_state)
-#define ordered_store_mtx_state_release(lock, value)    ordered_store_release(&(lock)->lck_mtx_state, (value))
-#define ordered_store_mtx_owner(lock, value)            os_atomic_store(&(lock)->lck_mtx_owner, (value), compiler_acq_rel)
+#define ordered_load_mtx_state(lock) ordered_load(&(lock)->lck_mtx_state)
+#define ordered_store_mtx_state_release(lock, value)                           \
+  ordered_store_release(&(lock)->lck_mtx_state, (value))
+#define ordered_store_mtx_owner(lock, value)                                   \
+  os_atomic_store(&(lock)->lck_mtx_owner, (value), compiler_acq_rel)
 
 #if DEVELOPMENT | DEBUG
-void lck_mtx_owner_check_panic(lck_mtx_t       *mutex) __abortlike;
+void lck_mtx_owner_check_panic(lck_mtx_t *mutex) __abortlike;
 #endif
 
-__attribute__((always_inline))
-static inline void
-lck_mtx_ilk_unlock_inline(
-	lck_mtx_t       *mutex,
-	uint32_t        state)
-{
-	state &= ~LCK_MTX_ILOCKED_MSK;
-	ordered_store_mtx_state_release(mutex, state);
+__attribute__((always_inline)) static inline void
+lck_mtx_ilk_unlock_inline(lck_mtx_t *mutex, uint32_t state) {
+  state &= ~LCK_MTX_ILOCKED_MSK;
+  ordered_store_mtx_state_release(mutex, state);
 
-	enable_preemption();
+  enable_preemption();
 }
 
-__attribute__((always_inline))
-static inline void
-lck_mtx_lock_finish_inline(
-	lck_mtx_t       *mutex,
-	uint32_t        state)
-{
-	assert(state & LCK_MTX_ILOCKED_MSK);
+__attribute__((always_inline)) static inline void
+lck_mtx_lock_finish_inline(lck_mtx_t *mutex, uint32_t state) {
+  assert(state & LCK_MTX_ILOCKED_MSK);
 
-	/* release the interlock and re-enable preemption */
-	lck_mtx_ilk_unlock_inline(mutex, state);
+  /* release the interlock and re-enable preemption */
+  lck_mtx_ilk_unlock_inline(mutex, state);
 
-	LCK_MTX_ACQUIRED(mutex, mutex->lck_mtx_grp, false,
-	    state & LCK_MTX_PROFILE_MSK);
+  LCK_MTX_ACQUIRED(mutex, mutex->lck_mtx_grp, false,
+                   state & LCK_MTX_PROFILE_MSK);
 }
 
-__attribute__((always_inline))
-static inline void
-lck_mtx_lock_finish_inline_with_cleanup(
-	lck_mtx_t       *mutex,
-	uint32_t        state)
-{
-	assert(state & LCK_MTX_ILOCKED_MSK);
+__attribute__((always_inline)) static inline void
+lck_mtx_lock_finish_inline_with_cleanup(lck_mtx_t *mutex, uint32_t state) {
+  assert(state & LCK_MTX_ILOCKED_MSK);
 
-	/* release the interlock and re-enable preemption */
-	lck_mtx_ilk_unlock_inline(mutex, state);
+  /* release the interlock and re-enable preemption */
+  lck_mtx_ilk_unlock_inline(mutex, state);
 
-	LCK_MTX_ACQUIRED(mutex, mutex->lck_mtx_grp, false,
-	    state & LCK_MTX_PROFILE_MSK);
+  LCK_MTX_ACQUIRED(mutex, mutex->lck_mtx_grp, false,
+                   state & LCK_MTX_PROFILE_MSK);
 
-	turnstile_cleanup();
+  turnstile_cleanup();
 }
 
-__attribute__((always_inline))
-static inline void
-lck_mtx_try_lock_finish_inline(
-	lck_mtx_t       *mutex,
-	uint32_t        state)
-{
-	/* release the interlock and re-enable preemption */
-	lck_mtx_ilk_unlock_inline(mutex, state);
-	LCK_MTX_TRY_ACQUIRED(mutex, mutex->lck_mtx_grp, false,
-	    state & LCK_MTX_PROFILE_MSK);
+__attribute__((always_inline)) static inline void
+lck_mtx_try_lock_finish_inline(lck_mtx_t *mutex, uint32_t state) {
+  /* release the interlock and re-enable preemption */
+  lck_mtx_ilk_unlock_inline(mutex, state);
+  LCK_MTX_TRY_ACQUIRED(mutex, mutex->lck_mtx_grp, false,
+                       state & LCK_MTX_PROFILE_MSK);
 }
 
-__attribute__((always_inline))
-static inline void
-lck_mtx_convert_spin_finish_inline(
-	lck_mtx_t       *mutex,
-	uint32_t        state)
-{
-	/* release the interlock and acquire it as mutex */
-	state &= ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK);
-	state |= LCK_MTX_MLOCKED_MSK;
+__attribute__((always_inline)) static inline void
+lck_mtx_convert_spin_finish_inline(lck_mtx_t *mutex, uint32_t state) {
+  /* release the interlock and acquire it as mutex */
+  state &= ~(LCK_MTX_ILOCKED_MSK | LCK_MTX_SPIN_MSK);
+  state |= LCK_MTX_MLOCKED_MSK;
 
-	ordered_store_mtx_state_release(mutex, state);
-	enable_preemption();
+  ordered_store_mtx_state_release(mutex, state);
+  enable_preemption();
 }
 
-__attribute__((always_inline))
-static inline void
-lck_mtx_unlock_finish_inline(
-	lck_mtx_t       *mutex,
-	uint32_t        state)
-{
-	enable_preemption();
-	LCK_MTX_RELEASED(mutex, mutex->lck_mtx_grp,
-	    state & LCK_MTX_PROFILE_MSK);
+__attribute__((always_inline)) static inline void
+lck_mtx_unlock_finish_inline(lck_mtx_t *mutex, uint32_t state) {
+  enable_preemption();
+  LCK_MTX_RELEASED(mutex, mutex->lck_mtx_grp, state & LCK_MTX_PROFILE_MSK);
 }
 
 #endif /* LCK_MTX_USE_ARCH */

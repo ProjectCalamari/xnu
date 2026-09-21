@@ -30,12 +30,12 @@
 #define _TESTPOINTS_H_
 
 #ifdef KERNEL
-#include <kern/kern_types.h>
 #include <kern/assert.h>
+#include <kern/kern_types.h>
 #include <kern/locks.h>
 #else /* KERNEL */
-#include <sys/types.h>
 #include <assert.h>
+#include <sys/types.h>
 #endif /* KERNEL */
 
 #include <sys/cdefs.h>
@@ -46,40 +46,49 @@
  * test scenario which can be set via sysctl. */
 
 /* Testpoints scenarios */
-__enum_decl(tps_id_t, uint64_t, {
-	TPS_NONE,                       // nothing enabled
-	TPS_STACKSHOT_UPCALL,           // c-hello-exclaves thread is going to hang in upcall during stackshot and tries to return as soon as it can
-	TPS_STACKSHOT_LONG_UPCALL,      // c-hello-exclaves thread is going to hang in upcall during stackshot and returns when stackshot is completely done
-});
+__enum_decl(
+    tps_id_t, uint64_t,
+    {
+        TPS_NONE,             // nothing enabled
+        TPS_STACKSHOT_UPCALL, // c-hello-exclaves thread is going to hang in
+                              // upcall during stackshot and tries to return as
+                              // soon as it can
+        TPS_STACKSHOT_LONG_UPCALL, // c-hello-exclaves thread is going to hang
+                                   // in upcall during stackshot and returns
+                                   // when stackshot is completely done
+    });
 
 /* Testpoint definitions */
-__enum_decl(tp_id_t, uint16_t, {
-	TP_BLOCK_START_STACKSHOT,       // this action will mark stackshot blocked
-	TP_WAIT_START_STACKSHOT,        // stackshot thread is waiting here until test thread is in upcall
-	TP_UPCALL,                      // upcall handler, unblocks stackshot and waits
-	TP_START_COLLECTION,            // just before exclave threads collection starts, unblocks upcall and waits
-	TP_AST,                         // before going back to exclaves, unblocks exclaves collection
-	TP_STACKSHOT_DONE,              // stackshot is done
-	TESTPOINT_COUNT,
-});
+__enum_decl(
+    tp_id_t, uint16_t,
+    {
+        TP_BLOCK_START_STACKSHOT, // this action will mark stackshot blocked
+        TP_WAIT_START_STACKSHOT,  // stackshot thread is waiting here until test
+                                  // thread is in upcall
+        TP_UPCALL,           // upcall handler, unblocks stackshot and waits
+        TP_START_COLLECTION, // just before exclave threads collection starts,
+                             // unblocks upcall and waits
+        TP_AST, // before going back to exclaves, unblocks exclaves collection
+        TP_STACKSHOT_DONE, // stackshot is done
+        TESTPOINT_COUNT,
+    });
 
 typedef uint32_t tp_val_t;
 
 // must fit 64 bits
 typedef struct tp_sysctl_msg {
-	uint16_t id;
-	uint16_t _unused;
-	uint32_t val;
+  uint16_t id;
+  uint16_t _unused;
+  uint32_t val;
 } tp_sysctl_msg_t;
 
-static_assert(sizeof(uint64_t) == sizeof(tp_sysctl_msg_t), "tp_sysctl_msg_t does have 64 bits");
-
+static_assert(sizeof(uint64_t) == sizeof(tp_sysctl_msg_t),
+              "tp_sysctl_msg_t does have 64 bits");
 
 #if DEBUG || DEVELOPMENT || TESTPOINTS
 
 /* Action is determined by current scenario */
-void
-tp_call(tp_id_t testpoint, tp_val_t val);
+void tp_call(tp_id_t testpoint, tp_val_t val);
 
 #define TESTPOINT(x) tp_call(x, 0);
 
@@ -98,20 +107,16 @@ tp_call(tp_id_t testpoint, tp_val_t val);
 extern lck_mtx_t tp_mtx;
 
 /* Set given testpoint value to 1. */
-void
-tp_block(tp_id_t testpoint);
+void tp_block(tp_id_t testpoint);
 
 /* Set given testpoint value to 0 and wakeup waiting threads. */
-void
-tp_unblock(tp_id_t other_testpoint);
+void tp_unblock(tp_id_t other_testpoint);
 
 /* Wait until given testpoint value is zero. */
-void
-tp_wait(tp_id_t testpoint);
+void tp_wait(tp_id_t testpoint);
 
 /* Unblock other testpoint, then block and wait. */
-void
-tp_relay(tp_id_t testpoint, tp_id_t other_testpoint);
+void tp_relay(tp_id_t testpoint, tp_id_t other_testpoint);
 
 #endif /* (DEBUG || DEVELOPMENT) && KERNEL */
 

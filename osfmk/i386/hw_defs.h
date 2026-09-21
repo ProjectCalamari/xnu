@@ -28,23 +28,22 @@
 #ifndef _I386_HW_DEFS_H_
 #define _I386_HW_DEFS_H_
 
-
-#define pmMwaitC1       0x00
-#define pmMwaitC2       0x10
-#define pmMwaitC3       0x20
-#define pmMwaitC4       0x30
+#define pmMwaitC1 0x00
+#define pmMwaitC2 0x10
+#define pmMwaitC3 0x20
+#define pmMwaitC4 0x30
 #define pmMwaitBrInt 0x1
 
-#define pmBase          0x400
-#define pmCtl1          0x04
-#define pmCtl2          0x20
-#define pmC3Res         0x54
-#define pmStatus        0x00
-#define msrTSC          0x10
+#define pmBase 0x400
+#define pmCtl1 0x04
+#define pmCtl2 0x20
+#define pmC3Res 0x54
+#define pmStatus 0x00
+#define msrTSC 0x10
 
-#define cfgAdr          0xCF8
-#define cfgDat          0xCFC
+#define cfgAdr 0xCF8
+#define cfgDat 0xCFC
 
-#define XeonCapID5      (0x80000000 | (1 << 16) | (30 << 11) | (3 << 8) | 0x98)
+#define XeonCapID5 (0x80000000 | (1 << 16) | (30 << 11) | (3 << 8) | 0x98)
 
 #endif /* _I386_HW_DEFS_H_ */

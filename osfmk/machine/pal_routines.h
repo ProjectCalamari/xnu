@@ -28,9 +28,9 @@
 #ifndef _MACHINE_PAL_ROUTINES_H
 #define _MACHINE_PAL_ROUTINES_H
 
-#if defined (__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/pal_routines.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/pal_routines.h"
 #else
 #error architecture not supported

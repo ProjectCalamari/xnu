@@ -273,7 +273,14 @@ _pfz_trylock_and_enqueue:
 	mov		w11, #1			 // locked value = w11 = 1
 
 	// Try to grab the lock
-	casa	w10, w11, [x3]	 // Atomic CAS with acquire barrier
+1:
+	ldaxr	w9, [x3]
+	cmp		w9, w10
+	b.ne	2f
+	stxr	w12, w11, [x3]
+	cbnz	w12, 1b
+2:
+	mov		w10, w9
 	cbz		w10, Ltrylock_enqueue_success
 
 	mov		x0, #-1			// Failed
@@ -323,7 +330,14 @@ _pfz_trylock_and_dequeue:
 	mov		w10, wzr		 // unlock value = w10 = 0
 	mov		w11, #1			 // locked value = w11 = 1
 
-	casa	w10, w11, [x2]	 // Atomic CAS with acquire barrier
+1:
+	ldaxr	w9, [x2]
+	cmp		w9, w10
+	b.ne	2f
+	stxr	w12, w11, [x2]
+	cbnz	w12, 1b
+2:
+	mov		w10, w9
 	cbz		w10, Ltrylock_dequeue_success
 
 	mov		x0, #-1			// Failed

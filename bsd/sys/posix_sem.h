@@ -45,35 +45,35 @@
 #define _SYS_POSIX_SEM_H_
 
 #include <sys/appleapiopts.h>
-#include <sys/types.h>
 #include <sys/proc.h>
+#include <sys/types.h>
 
 struct label;
 
-#define PSEMNAMLEN      31      /* maximum name segment length we bother with */
+#define PSEMNAMLEN 31 /* maximum name segment length we bother with */
 
 struct pseminfo {
-	unsigned int    psem_flags;
-	unsigned int    psem_usecount;
-	mode_t          psem_mode;
-	uid_t           psem_uid;
-	gid_t           psem_gid;
-	char            psem_name[PSEMNAMLEN + 1];      /* segment name */
-	void *          psem_semobject;
-	struct label *  psem_label;
-	pid_t           psem_creator_pid;
-	uint64_t        psem_creator_uniqueid;
+  unsigned int psem_flags;
+  unsigned int psem_usecount;
+  mode_t psem_mode;
+  uid_t psem_uid;
+  gid_t psem_gid;
+  char psem_name[PSEMNAMLEN + 1]; /* segment name */
+  void *psem_semobject;
+  struct label *psem_label;
+  pid_t psem_creator_pid;
+  uint64_t psem_creator_uniqueid;
 };
 
 #define PSEMINFO_NULL (struct pseminfo *)0
 
-#define PSEM_NONE       1
-#define PSEM_DEFINED    2
-#define PSEM_ALLOCATED  4
-#define PSEM_MAPPED     8
-#define PSEM_INUSE      0x10
-#define PSEM_REMOVED    0x20
-#define PSEM_INCREATE   0x40
-#define PSEM_INDELETE   0x80
+#define PSEM_NONE 1
+#define PSEM_DEFINED 2
+#define PSEM_ALLOCATED 4
+#define PSEM_MAPPED 8
+#define PSEM_INUSE 0x10
+#define PSEM_REMOVED 0x20
+#define PSEM_INCREATE 0x40
+#define PSEM_INDELETE 0x80
 
 #endif

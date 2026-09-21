@@ -26,8 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
- #ifndef _NET_SYSCTL_H_
- #define _NET_SYSCTL_H_
+#ifndef _NET_SYSCTL_H_
+#define _NET_SYSCTL_H_
 
 #include <sys/cdefs.h>
 #include <sys/sysctl.h>
@@ -60,16 +60,13 @@
  * will return from the sysctl handler function with the
  * EINVAL code.
  */
-#define DECLARE_SYSCTL_HANDLER_ARG_ARRAY(element_type,                     \
-	    expected_array_size,                                               \
-	    array_var,                                                         \
-	    len_var)                                                           \
-    unsigned int len_var = (unsigned int)arg2;                             \
-    if (len_var != (expected_array_size)) {                                \
-	    return EINVAL;                                                     \
-    }                                                                      \
-    element_type * array_var = __unsafe_forge_bidi_indexable(              \
-	element_type *, arg1, len_var * sizeof(element_type))
+#define DECLARE_SYSCTL_HANDLER_ARG_ARRAY(element_type, expected_array_size,    \
+                                         array_var, len_var)                   \
+  unsigned int len_var = (unsigned int)arg2;                                   \
+  if (len_var != (expected_array_size)) {                                      \
+    return EINVAL;                                                             \
+  }                                                                            \
+  element_type *array_var = __unsafe_forge_bidi_indexable(                     \
+      element_type *, arg1, len_var * sizeof(element_type))
 
-
- #endif /* _NET_SYSCTL_H_ */
+#endif /* _NET_SYSCTL_H_ */

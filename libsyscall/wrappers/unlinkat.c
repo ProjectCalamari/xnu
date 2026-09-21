@@ -24,12 +24,10 @@
 void __inc_remove_counter(void);
 int __unlinkat(int fd, const char *path, int flag);
 
-int
-unlinkat(int fd, const char *path, int flag)
-{
-	int res = __unlinkat(fd, path, flag);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int unlinkat(int fd, const char *path, int flag) {
+  int res = __unlinkat(fd, path, flag);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }

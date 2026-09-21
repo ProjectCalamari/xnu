@@ -26,9 +26,9 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <mach/mach_types.h>
-#include <kern/task.h> /* task_ledgers */
 #include <kern/ledger.h>
+#include <kern/task.h> /* task_ledgers */
+#include <mach/mach_types.h>
 
 #include <kperf/kperf.h>
 
@@ -37,42 +37,38 @@
 #include <kperf/meminfo.h>
 
 /* collect current memory info */
-void
-kperf_meminfo_sample(task_t task, struct meminfo *mi)
-{
-	ledger_amount_t credit, debit;
-	kern_return_t kr;
+void kperf_meminfo_sample(task_t task, struct meminfo *mi) {
+  ledger_amount_t credit, debit;
+  kern_return_t kr;
 
-	assert(mi != NULL);
+  assert(mi != NULL);
 
-	BUF_INFO(PERF_MI_SAMPLE | DBG_FUNC_START);
+  BUF_INFO(PERF_MI_SAMPLE | DBG_FUNC_START);
 
-	mi->phys_footprint = get_task_phys_footprint(task);
+  mi->phys_footprint = get_task_phys_footprint(task);
 
-	kr = ledger_get_entries(task->ledger, task_ledgers.purgeable_volatile,
-	    &credit, &debit);
-	if (kr == KERN_SUCCESS) {
-		mi->purgeable_volatile = credit - debit;
-	} else {
-		mi->purgeable_volatile = UINT64_MAX;
-	}
+  kr = ledger_get_entries(task->ledger, task_ledgers.purgeable_volatile,
+                          &credit, &debit);
+  if (kr == KERN_SUCCESS) {
+    mi->purgeable_volatile = credit - debit;
+  } else {
+    mi->purgeable_volatile = UINT64_MAX;
+  }
 
-	kr = ledger_get_entries(task->ledger,
-	    task_ledgers.purgeable_volatile_compressed,
-	    &credit, &debit);
-	if (kr == KERN_SUCCESS) {
-		mi->purgeable_volatile_compressed = credit - debit;
-	} else {
-		mi->purgeable_volatile_compressed = UINT64_MAX;
-	}
+  kr = ledger_get_entries(task->ledger,
+                          task_ledgers.purgeable_volatile_compressed, &credit,
+                          &debit);
+  if (kr == KERN_SUCCESS) {
+    mi->purgeable_volatile_compressed = credit - debit;
+  } else {
+    mi->purgeable_volatile_compressed = UINT64_MAX;
+  }
 
-	BUF_INFO(PERF_MI_SAMPLE | DBG_FUNC_END);
+  BUF_INFO(PERF_MI_SAMPLE | DBG_FUNC_END);
 }
 
 /* log an existing sample into the buffer */
-void
-kperf_meminfo_log(struct meminfo *mi)
-{
-	BUF_DATA(PERF_MI_DATA, mi->phys_footprint, mi->purgeable_volatile,
-	    mi->purgeable_volatile_compressed);
+void kperf_meminfo_log(struct meminfo *mi) {
+  BUF_DATA(PERF_MI_DATA, mi->phys_footprint, mi->purgeable_volatile,
+           mi->purgeable_volatile_compressed);
 }

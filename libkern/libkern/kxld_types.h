@@ -28,56 +28,56 @@
 #ifndef _KXLD_TYPES_H
 #define _KXLD_TYPES_H
 
+#include <mach/boolean.h> // boolean_t
+#include <mach/kern_return.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <mach/boolean.h>       // boolean_t
-#include <mach/kern_return.h>
 
 /*******************************************************************************
-* Macros
-*******************************************************************************/
+ * Macros
+ *******************************************************************************/
 
 /* For 32-bit-specific linking code */
 #if (!KERNEL || !__LP64__)
-    #define KXLD_USER_OR_ILP32 1
+#define KXLD_USER_OR_ILP32 1
 #endif
 
 /* For 64-bit-specific linking code */
 #if (!KERNEL || __LP64__)
-    #define KXLD_USER_OR_LP64 1
+#define KXLD_USER_OR_LP64 1
 #endif
 
 /* For i386-specific linking code */
 #if (!KERNEL || __i386__)
-    #define KXLD_USER_OR_I386 1
+#define KXLD_USER_OR_I386 1
 #endif
 
 /* For x86_64-specific linking code */
 #if (!KERNEL || __x86_64__)
-    #define KXLD_USER_OR_X86_64 1
+#define KXLD_USER_OR_X86_64 1
 #endif
 
 /* For arm-specific linking code */
 #if (!KERNEL || __arm__)
-    #define KXLD_USER_OR_ARM 1
+#define KXLD_USER_OR_ARM 1
 #endif
 
 /* For arm64-specific linking code */
 #if (!KERNEL || __arm64__)
-    #define KXLD_USER_OR_ARM64 1
+#define KXLD_USER_OR_ARM64 1
 #endif
 
 /* For linking code specific to architectures that support common symbols */
 #if (!KERNEL || __i386__)
-    #define KXLD_USER_OR_COMMON 1
+#define KXLD_USER_OR_COMMON 1
 #endif
 
 /* For linking code specific to architectures that support strict patching */
-    #define KXLD_USER_OR_STRICT_PATCHING 1
+#define KXLD_USER_OR_STRICT_PATCHING 1
 
 /* For linking code specific to architectures that use MH_OBJECT */
 #if (!KERNEL || __i386__)
-    #define KXLD_USER_OR_OBJECT 1
+#define KXLD_USER_OR_OBJECT 1
 #endif
 
 /* For linking code specific to architectures that use MH_KEXT_BUNDLE */
@@ -90,14 +90,14 @@
 
 /* for building the dysymtab command generation into the dylib */
 #if (!KERNEL)
-    #define KXLD_PIC_KEXTS 1
+#define KXLD_PIC_KEXTS 1
 //    #define SPLIT_KEXTS 1
-    #define SPLIT_KEXTS_DEBUG 0
+#define SPLIT_KEXTS_DEBUG 0
 #endif
 
 /*******************************************************************************
-* Types
-*******************************************************************************/
+ * Types
+ *******************************************************************************/
 
 /* Maintains linker state across links.  One context should be allocated for
  * each link thread.
@@ -118,31 +118,28 @@ typedef uint64_t kxld_size_t;
 #endif /* KERNEL && !__LP64__ */
 
 typedef struct splitKextLinkInfo {
-	u_char *        kextExecutable; // kext we will link
-	size_t          kextSize;       // size of kextExecutable
-	u_char *        linkedKext;     // linked kext
-	size_t          linkedKextSize; // size of linkedKext
-	uint64_t        vmaddr_TEXT;    // vmaddr of kext __TEXT segment
-	uint64_t        vmaddr_TEXT_EXEC;// vmaddr of kext __TEXT_EXEC segment
-	uint64_t        vmaddr_DATA;    // vmaddr of kext __DATA segment
-	uint64_t        vmaddr_DATA_CONST;// vmaddr of kext __DATA_CONST segment
-	uint64_t        vmaddr_LINKEDIT;// vmaddr of kext __LINKEDIT segment
-	uint64_t        vmaddr_LLVM_COV;// vmaddr of kext __LLVM_COV segment
-	uint32_t        kaslr_offsets_count;// offsets into the kext to slide
-	uint32_t *      kaslr_offsets;  // offsets into the kext to slide
+  u_char *kextExecutable;       // kext we will link
+  size_t kextSize;              // size of kextExecutable
+  u_char *linkedKext;           // linked kext
+  size_t linkedKextSize;        // size of linkedKext
+  uint64_t vmaddr_TEXT;         // vmaddr of kext __TEXT segment
+  uint64_t vmaddr_TEXT_EXEC;    // vmaddr of kext __TEXT_EXEC segment
+  uint64_t vmaddr_DATA;         // vmaddr of kext __DATA segment
+  uint64_t vmaddr_DATA_CONST;   // vmaddr of kext __DATA_CONST segment
+  uint64_t vmaddr_LINKEDIT;     // vmaddr of kext __LINKEDIT segment
+  uint64_t vmaddr_LLVM_COV;     // vmaddr of kext __LLVM_COV segment
+  uint32_t kaslr_offsets_count; // offsets into the kext to slide
+  uint32_t *kaslr_offsets;      // offsets into the kext to slide
 } splitKextLinkInfo;
 
 /* Flags for general linker behavior */
-enum kxld_flags {
-	kKxldFlagDefault = 0x0,
-	kKXLDFlagIncludeRelocs = 0x01
-};
+enum kxld_flags { kKxldFlagDefault = 0x0, kKXLDFlagIncludeRelocs = 0x01 };
 typedef enum kxld_flags KXLDFlags;
 
 /* Flags for the allocation callback */
 enum kxld_allocate_flags {
-	kKxldAllocateDefault = 0x0,
-	kKxldAllocateWritable = 0x1,    /* kxld may write into the allocated memory */
+  kKxldAllocateDefault = 0x0,
+  kKxldAllocateWritable = 0x1, /* kxld may write into the allocated memory */
 };
 typedef enum kxld_allocate_flags KXLDAllocateFlags;
 
@@ -152,21 +149,22 @@ typedef enum kxld_allocate_flags KXLDAllocateFlags;
  * malloc).
  */
 typedef kxld_addr_t (*KXLDAllocateCallback)(size_t size,
-    KXLDAllocateFlags *flags, void *user_data);
+                                            KXLDAllocateFlags *flags,
+                                            void *user_data);
 
 /* Flags for the logging callback */
 typedef enum kxld_log_subsystem {
-	kKxldLogLinking = 0x0,
-	kKxldLogPatching = 0x01
+  kKxldLogLinking = 0x0,
+  kKxldLogPatching = 0x01
 } KXLDLogSubsystem;
 
 typedef enum kxld_log_level {
-	kKxldLogExplicit = 0x0,
-	kKxldLogErr = 0x1,
-	kKxldLogWarn = 0x2,
-	kKxldLogBasic = 0x3,
-	kKxldLogDetail = 0x4,
-	kKxldLogDebug = 0x5
+  kKxldLogExplicit = 0x0,
+  kKxldLogErr = 0x1,
+  kKxldLogWarn = 0x2,
+  kKxldLogBasic = 0x3,
+  kKxldLogDetail = 0x4,
+  kKxldLogDebug = 0x5
 } KXLDLogLevel;
 
 /* This structure is used to describe a dependency kext. The kext field
@@ -179,16 +177,17 @@ typedef enum kxld_log_level {
  * to the KPI's Mach-O binary.
  */
 typedef struct kxld_dependency {
-	u_char      * kext;
-	u_long        kext_size;
-	char        * kext_name;
-	u_char      * interface;
-	u_long        interface_size;
-	char        * interface_name;
-	boolean_t     is_direct_dependency;
+  u_char *kext;
+  u_long kext_size;
+  char *kext_name;
+  u_char *interface;
+  u_long interface_size;
+  char *interface_name;
+  boolean_t is_direct_dependency;
 } KXLDDependency;
 
-typedef void (*KXLDLoggingCallback) (KXLDLogSubsystem sys, KXLDLogLevel level,
-    const char *format, va_list ap, void *user_data);
+typedef void (*KXLDLoggingCallback)(KXLDLogSubsystem sys, KXLDLogLevel level,
+                                    const char *format, va_list ap,
+                                    void *user_data);
 
 #endif /* _KXLD_TYPES_H */

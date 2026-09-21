@@ -31,16 +31,16 @@
 
 #ifdef PRIVATE
 
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/cdefs.h>
-#include <uuid/uuid.h>
 #include <mach/vm_types.h>
 #include <skywalk/os_nexus.h>
 #include <skywalk/os_packet.h>
+#include <stdint.h>
+#include <sys/cdefs.h>
+#include <sys/types.h>
+#include <uuid/uuid.h>
 #ifndef KERNEL
-#include <skywalk/os_channel_event.h>
 #include <net/if_var.h>
+#include <skywalk/os_channel_event.h>
 #endif /* !KERNEL */
 
 /*
@@ -53,47 +53,47 @@
 
 /* Flow advisory table index */
 typedef uint32_t flowadv_idx_t;
-#define FLOWADV_IDX_NONE                ((flowadv_idx_t)-1)
+#define FLOWADV_IDX_NONE ((flowadv_idx_t) - 1)
 
 /*
  * Channel ring direction.
  */
 typedef enum {
-	CHANNEL_DIR_TX_RX,      /* default: TX and RX ring(s) */
-	CHANNEL_DIR_TX,         /* only TX ring(s) */
-	CHANNEL_DIR_RX          /* only RX ring(s) */
+  CHANNEL_DIR_TX_RX, /* default: TX and RX ring(s) */
+  CHANNEL_DIR_TX,    /* only TX ring(s) */
+  CHANNEL_DIR_RX     /* only RX ring(s) */
 } ring_dir_t;
 
 /*
  * Channel ring ID.
  */
 typedef uint32_t ring_id_t;
-#define CHANNEL_RING_ID_ANY             ((ring_id_t)-1)
+#define CHANNEL_RING_ID_ANY ((ring_id_t) - 1)
 
 typedef enum {
-	CHANNEL_FIRST_TX_RING,
-	CHANNEL_LAST_TX_RING,
-	CHANNEL_FIRST_RX_RING,
-	CHANNEL_LAST_RX_RING
+  CHANNEL_FIRST_TX_RING,
+  CHANNEL_LAST_TX_RING,
+  CHANNEL_FIRST_RX_RING,
+  CHANNEL_LAST_RX_RING
 } ring_id_type_t;
 
 /* Sync mode values */
 typedef enum {
-	CHANNEL_SYNC_TX,        /* synchronize TX ring(s) */
-	CHANNEL_SYNC_RX,        /* synchronize RX ring(s) */
+  CHANNEL_SYNC_TX, /* synchronize TX ring(s) */
+  CHANNEL_SYNC_RX, /* synchronize RX ring(s) */
 #if defined(LIBSYSCALL_INTERFACE) || defined(BSD_KERNEL_PRIVATE)
-	CHANNEL_SYNC_UPP        /* synchronize packet pool rings only */
-#endif /* LIBSYSCALL_INTERFACE || BSD_KERNEL_PRIVATE */
+  CHANNEL_SYNC_UPP /* synchronize packet pool rings only */
+#endif             /* LIBSYSCALL_INTERFACE || BSD_KERNEL_PRIVATE */
 } sync_mode_t;
 
 /* Sync flags */
 typedef uint32_t sync_flags_t;
 #if defined(LIBSYSCALL_INTERFACE) || defined(BSD_KERNEL_PRIVATE)
-#define CHANNEL_SYNCF_ALLOC        0x1     /* synchronize alloc ring */
-#define CHANNEL_SYNCF_FREE         0x2     /* synchronize free ring */
-#define CHANNEL_SYNCF_PURGE        0x4     /* purge user packet pool */
-#define CHANNEL_SYNCF_ALLOC_BUF    0x8     /* synchronize buflet alloc ring */
-#define CHANNEL_SYNCF_LARGE_ALLOC  0x10    /* synchronize large alloc ring */
+#define CHANNEL_SYNCF_ALLOC 0x1        /* synchronize alloc ring */
+#define CHANNEL_SYNCF_FREE 0x2         /* synchronize free ring */
+#define CHANNEL_SYNCF_PURGE 0x4        /* purge user packet pool */
+#define CHANNEL_SYNCF_ALLOC_BUF 0x8    /* synchronize buflet alloc ring */
+#define CHANNEL_SYNCF_LARGE_ALLOC 0x10 /* synchronize large alloc ring */
 #endif /* LIBSYSCALL_INTERFACE || BSD_KERNEL_PRIVATE */
 
 /*
@@ -104,17 +104,17 @@ struct channel_ring_desc;
 struct __slot_desc;
 struct channel_attr;
 
-typedef struct channel                  *channel_t;
-typedef struct channel_ring_desc        *channel_ring_t;
-typedef struct __slot_desc              *channel_slot_t;
-typedef struct channel_attr             *channel_attr_t;
+typedef struct channel *channel_t;
+typedef struct channel_ring_desc *channel_ring_t;
+typedef struct __slot_desc *channel_slot_t;
+typedef struct channel_attr *channel_attr_t;
 
 /*
  * Channel threshold unit types.
  */
 typedef enum {
-	CHANNEL_THRESHOLD_UNIT_SLOTS,   /* unit in slots (default) */
-	CHANNEL_THRESHOLD_UNIT_BYTES,   /* unit in bytes */
+  CHANNEL_THRESHOLD_UNIT_SLOTS, /* unit in slots (default) */
+  CHANNEL_THRESHOLD_UNIT_BYTES, /* unit in bytes */
 } channel_threshold_unit_t;
 
 /*
@@ -125,73 +125,73 @@ typedef enum {
  *     S: settable once, only at creation time
  */
 typedef enum {
-	CHANNEL_ATTR_TX_RINGS,          /* (g) # of transmit rings */
-	CHANNEL_ATTR_RX_RINGS,          /* (g) # of receive rings */
-	CHANNEL_ATTR_TX_SLOTS,          /* (g) # of slots per transmit ring */
-	CHANNEL_ATTR_RX_SLOTS,          /* (g) # of slots per receive ring */
-	CHANNEL_ATTR_SLOT_BUF_SIZE,     /* (g) buffer per slot (bytes) */
-	CHANNEL_ATTR_SLOT_META_SIZE,    /* (g) metadata per slot (bytes) */
-	CHANNEL_ATTR_EXCLUSIVE,         /* (g/s) bool: exclusive open */
-	CHANNEL_ATTR_NO_AUTO_SYNC,      /* (g/s) bool: will do explicit sync */
-	CHANNEL_ATTR_UNUSED_1,          /* unused */
-	CHANNEL_ATTR_TX_LOWAT_UNIT,     /* (g/s) see channel_threshold_unit_t */
-	CHANNEL_ATTR_TX_LOWAT_VALUE,    /* (g/s) transmit low-watermark */
-	CHANNEL_ATTR_RX_LOWAT_UNIT,     /* (g/s) see channel_threshold_unit_t */
-	CHANNEL_ATTR_RX_LOWAT_VALUE,    /* (g/s) receive low-watermark */
-	CHANNEL_ATTR_NEXUS_TYPE,        /* (g) nexus type */
-	CHANNEL_ATTR_NEXUS_EXTENSIONS,  /* (g) nexus extension(s) */
-	CHANNEL_ATTR_NEXUS_MHINTS,      /* (g) nexus memory usage hints */
-	CHANNEL_ATTR_TX_HOST_RINGS,     /* (g) # of transmit host rings */
-	CHANNEL_ATTR_RX_HOST_RINGS,     /* (g) # of receive host rings */
-	CHANNEL_ATTR_NEXUS_IFINDEX,     /* (g) nexus network interface index */
-	CHANNEL_ATTR_NEXUS_STATS_SIZE,  /* (g) nexus statistics region size */
-	CHANNEL_ATTR_NEXUS_FLOWADV_MAX, /* (g) # of flow advisory entries */
-	CHANNEL_ATTR_NEXUS_META_TYPE,   /* (g) nexus metadata type */
-	CHANNEL_ATTR_NEXUS_META_SUBTYPE, /* (g) nexus metadata subtype */
-	CHANNEL_ATTR_NEXUS_CHECKSUM_OFFLOAD, /* (g) nexus checksum offload */
-	CHANNEL_ATTR_USER_PACKET_POOL,  /* (g/s) bool: use user packet pool */
-	CHANNEL_ATTR_NEXUS_ADV_SIZE,    /* (g) nexus advisory region size */
-	CHANNEL_ATTR_NEXUS_DEFUNCT_OK,  /* (g/s) bool: allow defunct */
-	CHANNEL_ATTR_FILTER,            /* (g/s) bool: filter mode */
-	CHANNEL_ATTR_EVENT_RING,        /* (g/s) bool: enable event ring */
-	CHANNEL_ATTR_MAX_FRAGS,         /* (g) max length of buflet chain */
-	CHANNEL_ATTR_NUM_BUFFERS,       /* (g) # of buffers in user pool */
-	CHANNEL_ATTR_LOW_LATENCY,       /* (g/s) bool: low latency channel */
-	CHANNEL_ATTR_LARGE_BUF_SIZE,    /* (g) large buffer size (bytes) */
+  CHANNEL_ATTR_TX_RINGS,               /* (g) # of transmit rings */
+  CHANNEL_ATTR_RX_RINGS,               /* (g) # of receive rings */
+  CHANNEL_ATTR_TX_SLOTS,               /* (g) # of slots per transmit ring */
+  CHANNEL_ATTR_RX_SLOTS,               /* (g) # of slots per receive ring */
+  CHANNEL_ATTR_SLOT_BUF_SIZE,          /* (g) buffer per slot (bytes) */
+  CHANNEL_ATTR_SLOT_META_SIZE,         /* (g) metadata per slot (bytes) */
+  CHANNEL_ATTR_EXCLUSIVE,              /* (g/s) bool: exclusive open */
+  CHANNEL_ATTR_NO_AUTO_SYNC,           /* (g/s) bool: will do explicit sync */
+  CHANNEL_ATTR_UNUSED_1,               /* unused */
+  CHANNEL_ATTR_TX_LOWAT_UNIT,          /* (g/s) see channel_threshold_unit_t */
+  CHANNEL_ATTR_TX_LOWAT_VALUE,         /* (g/s) transmit low-watermark */
+  CHANNEL_ATTR_RX_LOWAT_UNIT,          /* (g/s) see channel_threshold_unit_t */
+  CHANNEL_ATTR_RX_LOWAT_VALUE,         /* (g/s) receive low-watermark */
+  CHANNEL_ATTR_NEXUS_TYPE,             /* (g) nexus type */
+  CHANNEL_ATTR_NEXUS_EXTENSIONS,       /* (g) nexus extension(s) */
+  CHANNEL_ATTR_NEXUS_MHINTS,           /* (g) nexus memory usage hints */
+  CHANNEL_ATTR_TX_HOST_RINGS,          /* (g) # of transmit host rings */
+  CHANNEL_ATTR_RX_HOST_RINGS,          /* (g) # of receive host rings */
+  CHANNEL_ATTR_NEXUS_IFINDEX,          /* (g) nexus network interface index */
+  CHANNEL_ATTR_NEXUS_STATS_SIZE,       /* (g) nexus statistics region size */
+  CHANNEL_ATTR_NEXUS_FLOWADV_MAX,      /* (g) # of flow advisory entries */
+  CHANNEL_ATTR_NEXUS_META_TYPE,        /* (g) nexus metadata type */
+  CHANNEL_ATTR_NEXUS_META_SUBTYPE,     /* (g) nexus metadata subtype */
+  CHANNEL_ATTR_NEXUS_CHECKSUM_OFFLOAD, /* (g) nexus checksum offload */
+  CHANNEL_ATTR_USER_PACKET_POOL,       /* (g/s) bool: use user packet pool */
+  CHANNEL_ATTR_NEXUS_ADV_SIZE,         /* (g) nexus advisory region size */
+  CHANNEL_ATTR_NEXUS_DEFUNCT_OK,       /* (g/s) bool: allow defunct */
+  CHANNEL_ATTR_FILTER,                 /* (g/s) bool: filter mode */
+  CHANNEL_ATTR_EVENT_RING,             /* (g/s) bool: enable event ring */
+  CHANNEL_ATTR_MAX_FRAGS,              /* (g) max length of buflet chain */
+  CHANNEL_ATTR_NUM_BUFFERS,            /* (g) # of buffers in user pool */
+  CHANNEL_ATTR_LOW_LATENCY,            /* (g/s) bool: low latency channel */
+  CHANNEL_ATTR_LARGE_BUF_SIZE,         /* (g) large buffer size (bytes) */
 } channel_attr_type_t;
 
 /*
  * Channel nexus metadata type.
  */
 typedef enum {
-	CHANNEL_NEXUS_META_TYPE_INVALID = 0,
-	CHANNEL_NEXUS_META_TYPE_QUANTUM, /* OK for os_packet quantum APIs */
-	CHANNEL_NEXUS_META_TYPE_PACKET,  /* OK for all os_packet APIs */
+  CHANNEL_NEXUS_META_TYPE_INVALID = 0,
+  CHANNEL_NEXUS_META_TYPE_QUANTUM, /* OK for os_packet quantum APIs */
+  CHANNEL_NEXUS_META_TYPE_PACKET,  /* OK for all os_packet APIs */
 } channel_nexus_meta_type_t;
 
 /*
  * Channel nexus metadata subtype.
  */
 typedef enum {
-	CHANNEL_NEXUS_META_SUBTYPE_INVALID = 0,
-	CHANNEL_NEXUS_META_SUBTYPE_PAYLOAD,
-	CHANNEL_NEXUS_META_SUBTYPE_RAW,
+  CHANNEL_NEXUS_META_SUBTYPE_INVALID = 0,
+  CHANNEL_NEXUS_META_SUBTYPE_PAYLOAD,
+  CHANNEL_NEXUS_META_SUBTYPE_RAW,
 } channel_nexus_meta_subtype_t;
 
 /*
  * Valid values for CHANNEL_ATTR_NEXUS_CHECKSUM_OFFLOAD
  */
-#define CHANNEL_NEXUS_CHECKSUM_PARTIAL  0x1     /* partial checksum */
+#define CHANNEL_NEXUS_CHECKSUM_PARTIAL 0x1 /* partial checksum */
 
 /*
  * Channel statistics ID.
  */
 typedef enum {
-	CHANNEL_STATS_ID_IP = 0,        /* struct ip_stats */
-	CHANNEL_STATS_ID_IP6,           /* struct ip6_stats */
-	CHANNEL_STATS_ID_TCP,           /* struct tcp_stats */
-	CHANNEL_STATS_ID_UDP,           /* struct udp_stats */
-	CHANNEL_STATS_ID_QUIC,          /* struct quic_stats */
+  CHANNEL_STATS_ID_IP = 0, /* struct ip_stats */
+  CHANNEL_STATS_ID_IP6,    /* struct ip6_stats */
+  CHANNEL_STATS_ID_TCP,    /* struct tcp_stats */
+  CHANNEL_STATS_ID_UDP,    /* struct udp_stats */
+  CHANNEL_STATS_ID_QUIC,   /* struct quic_stats */
 } channel_stats_id_t;
 
 /*
@@ -204,13 +204,13 @@ typedef enum {
  * memory corruption.
  */
 typedef struct slot_prop {
-	uint16_t sp_flags;              /* private flags */
-	uint16_t sp_len;                /* length for this slot */
-	uint32_t sp_idx;                /* (I) slot index */
-	mach_vm_address_t sp_ext_ptr;   /* (I) pointer for indirect buffer */
-	mach_vm_address_t sp_buf_ptr;   /* (I) pointer for native buffer */
-	mach_vm_address_t sp_mdata_ptr; /* (I) pointer for metadata */
-	uint32_t _sp_pad[8];            /* reserved */
+  uint16_t sp_flags;              /* private flags */
+  uint16_t sp_len;                /* length for this slot */
+  uint32_t sp_idx;                /* (I) slot index */
+  mach_vm_address_t sp_ext_ptr;   /* (I) pointer for indirect buffer */
+  mach_vm_address_t sp_buf_ptr;   /* (I) pointer for native buffer */
+  mach_vm_address_t sp_mdata_ptr; /* (I) pointer for metadata */
+  uint32_t _sp_pad[8];            /* reserved */
 } slot_prop_t __attribute__((aligned(sizeof(uint64_t))));
 
 #ifndef KERNEL
@@ -238,7 +238,8 @@ extern channel_attr_t os_channel_attr_clone(const channel_attr_t);
  * Sets a value for a given attribute type on a Channel attribute object.
  */
 extern int os_channel_attr_set(const channel_attr_t attr,
-    const channel_attr_type_t type, const uint64_t value);
+                               const channel_attr_type_t type,
+                               const uint64_t value);
 
 /*
  * Sets a key blob on a Channel attribute object.  Existing key blob
@@ -247,22 +248,22 @@ extern int os_channel_attr_set(const channel_attr_t attr,
  * clear the key stored in the attribute object.  The maximum key
  * length is specified by NEXUS_MAX_KEY_LEN.
  */
-extern int os_channel_attr_set_key(const channel_attr_t attr,
-    const void *key, const uint32_t key_len);
+extern int os_channel_attr_set_key(const channel_attr_t attr, const void *key,
+                                   const uint32_t key_len);
 
 /*
  * Gets a value for a given attribute type on a Channel attribute object.
  */
 extern int os_channel_attr_get(const channel_attr_t attr,
-    const channel_attr_type_t type, uint64_t *value);
+                               const channel_attr_type_t type, uint64_t *value);
 
 /*
  * Gets a key blob on a Channel attribute object.  If key is NULL,
  * returns the length of the key blob with key_len, so caller knows
  * how much to allocate space for key blob.
  */
-extern int os_channel_attr_get_key(const channel_attr_t attr,
-    void *key, uint32_t *key_len);
+extern int os_channel_attr_get_key(const channel_attr_t attr, void *key,
+                                   uint32_t *key_len);
 
 /*
  * Destroys a Channel attribute object, along with all resources
@@ -283,8 +284,10 @@ extern channel_t os_channel_create(const uuid_t uuid, const nexus_port_t port);
  * Extended version of os_channel_create().
  */
 extern channel_t os_channel_create_extended(const uuid_t uuid,
-    const nexus_port_t port, const ring_dir_t dir, const ring_id_t rid,
-    const channel_attr_t attr);
+                                            const nexus_port_t port,
+                                            const ring_dir_t dir,
+                                            const ring_id_t rid,
+                                            const channel_attr_t attr);
 
 /*
  * Retrieves the file descriptor associated with the Channel.
@@ -308,7 +311,8 @@ extern int os_channel_write_attr(const channel_t channel, channel_attr_t attr);
  * provider-specific extension attribute into *ext.
  */
 extern int os_channel_read_nexus_extension_info(const channel_t channel,
-    nexus_type_t *nexus_type, uint64_t *ext);
+                                                nexus_type_t *nexus_type,
+                                                uint64_t *ext);
 
 /*
  * Non-blocking synchronization.  Channel handle may also be used
@@ -368,11 +372,11 @@ extern int os_channel_is_defunct(const channel_t channel);
  * either/all directions.
  */
 extern ring_id_t os_channel_ring_id(const channel_t channel,
-    const ring_id_type_t type);
+                                    const ring_id_type_t type);
 extern channel_ring_t os_channel_tx_ring(const channel_t channel,
-    const ring_id_t rid);
+                                         const ring_id_t rid);
 extern channel_ring_t os_channel_rx_ring(const channel_t channel,
-    const ring_id_t rid);
+                                         const ring_id_t rid);
 extern int os_channel_pending(const channel_ring_t ring);
 
 /*
@@ -397,17 +401,19 @@ extern uint64_t os_channel_ring_notify_time(const channel_ring_t ring);
  */
 extern uint32_t os_channel_available_slot_count(const channel_ring_t ring);
 extern channel_slot_t os_channel_get_next_slot(const channel_ring_t ring,
-    const channel_slot_t slot, slot_prop_t *prop);
+                                               const channel_slot_t slot,
+                                               slot_prop_t *prop);
 extern int os_channel_advance_slot(channel_ring_t ring,
-    const channel_slot_t slot);
+                                   const channel_slot_t slot);
 extern void os_channel_set_slot_properties(const channel_ring_t ring,
-    const channel_slot_t slot, const slot_prop_t *prop);
+                                           const channel_slot_t slot,
+                                           const slot_prop_t *prop);
 
 /*
  * Return the packet handle associated with a given slot of a ring.
  */
 extern packet_t os_channel_slot_get_packet(const channel_ring_t ring,
-    const channel_slot_t slot);
+                                           const channel_slot_t slot);
 
 /*
  * Each nexus that the channel is connected to determines whether or
@@ -416,7 +422,7 @@ extern packet_t os_channel_slot_get_packet(const channel_ring_t ring,
  * such a region upon success, or NULL if not supported by the nexus.
  */
 extern void *os_channel_get_stats_region(const channel_t channel,
-    const channel_stats_id_t id);
+                                         const channel_stats_id_t id);
 
 /*
  * Each nexus that the channel is connected to determines whether or
@@ -436,25 +442,26 @@ extern void *os_channel_get_advisory_region(const channel_t channel);
  * that either the nexus doesn't support admission control, or the
  * arguments aren't valid.
  */
-extern int os_channel_flow_admissible(const channel_ring_t ring,
-    uuid_t flow_id, const flowadv_idx_t flow_index);
+extern int os_channel_flow_admissible(const channel_ring_t ring, uuid_t flow_id,
+                                      const flowadv_idx_t flow_index);
 
 extern int os_channel_flow_adv_get_ce_count(const channel_ring_t chrd,
-    uuid_t flow_id, const flowadv_idx_t flow_index, uint32_t *ce_cnt,
-    uint32_t *pkt_cnt);
+                                            uuid_t flow_id,
+                                            const flowadv_idx_t flow_index,
+                                            uint32_t *ce_cnt,
+                                            uint32_t *pkt_cnt);
 
 #define AQM_CONGESTION_FEEDBACK 1
-extern int os_channel_flow_adv_get_feedback(const channel_ring_t chrd,
-    uuid_t flow_id, const flowadv_idx_t flow_index, uint32_t *congestion_cnt,
-    uint32_t *ce_cnt, uint32_t *pkt_cnt);
+extern int os_channel_flow_adv_get_feedback(
+    const channel_ring_t chrd, uuid_t flow_id, const flowadv_idx_t flow_index,
+    uint32_t *congestion_cnt, uint32_t *ce_cnt, uint32_t *pkt_cnt);
 /*
  * Allocate a packet from the channel's packet pool.
  * Returns 0 on success with the packet handle in packet arg.
  * Note: os_channel_packet_alloc() & os_channel_packet_free() should be
  * serialized and should not be called from the different thread context.
  */
-extern int
-os_channel_packet_alloc(const channel_t chd, packet_t *packet);
+extern int os_channel_packet_alloc(const channel_t chd, packet_t *packet);
 
 /*
  * Allocate a large packet from the channel's packet pool.
@@ -462,8 +469,7 @@ os_channel_packet_alloc(const channel_t chd, packet_t *packet);
  * Note: os_channel_large_packet_alloc() & os_channel_packet_free() should be
  * serialized and should not be called from the different thread context.
  */
-extern int
-os_channel_large_packet_alloc(const channel_t chd, packet_t *packet);
+extern int os_channel_large_packet_alloc(const channel_t chd, packet_t *packet);
 
 /*
  * Free a packet allocated from the channel's packet pool.
@@ -471,22 +477,21 @@ os_channel_large_packet_alloc(const channel_t chd, packet_t *packet);
  * Note: os_channel_packet_alloc() & os_channel_packet_free() should be
  * serialized and should not be called from the different thread context.
  */
-extern int
-os_channel_packet_free(const channel_t chd, packet_t packet);
+extern int os_channel_packet_free(const channel_t chd, packet_t packet);
 
 /*
  * Attach the given packet to a channel slot
  */
-extern int
-os_channel_slot_attach_packet(const channel_ring_t chrd,
-    const channel_slot_t slot, packet_t packet);
+extern int os_channel_slot_attach_packet(const channel_ring_t chrd,
+                                         const channel_slot_t slot,
+                                         packet_t packet);
 
 /*
  * Detach a given packet from a channel slot
  */
-extern int
-os_channel_slot_detach_packet(const channel_ring_t chrd,
-    const channel_slot_t slot, packet_t packet);
+extern int os_channel_slot_detach_packet(const channel_ring_t chrd,
+                                         const channel_slot_t slot,
+                                         packet_t packet);
 
 /*
  * purge packets from the channel's packet pool.
@@ -498,8 +503,7 @@ os_channel_slot_detach_packet(const channel_ring_t chrd,
  * os_channel_packet_free() and should not be called from different
  * thread context.
  */
-extern int
-os_channel_packet_pool_purge(const channel_t chd);
+extern int os_channel_packet_pool_purge(const channel_t chd);
 
 /*
  * Retrieve handle to the next available event(s) on the channel.
@@ -507,17 +511,17 @@ os_channel_packet_pool_purge(const channel_t chd);
  * retrieve the individual events from the handle.
  * Returns 0 on success, ENXIO if the channel is defunct.
  */
-extern int
-os_channel_get_next_event_handle(const channel_t chd,
-    os_channel_event_handle_t *ehandle, os_channel_event_type_t *etype,
-    uint32_t *nevents);
+extern int os_channel_get_next_event_handle(const channel_t chd,
+                                            os_channel_event_handle_t *ehandle,
+                                            os_channel_event_type_t *etype,
+                                            uint32_t *nevents);
 
 /*
  * Free an event retrieved from the channel.
  * Returns 0 on success, ENXIO if the channel is defunct.
  */
-extern int
-os_channel_event_free(const channel_t chd, os_channel_event_handle_t ehandle);
+extern int os_channel_event_free(const channel_t chd,
+                                 os_channel_event_handle_t ehandle);
 
 /*
  * API to retrieve the latest interface advisory report on the channel.
@@ -526,27 +530,25 @@ os_channel_event_free(const channel_t chd, os_channel_event_handle_t ehandle);
  */
 extern int
 os_channel_get_interface_advisory(const channel_t chd,
-    struct ifnet_interface_advisory *advisory);
+                                  struct ifnet_interface_advisory *advisory);
 
 /*
  * API to configure interface advisory report on the channel.
  * Returns 0 on succcess.
  */
-extern int
-os_channel_configure_interface_advisory(const channel_t chd, boolean_t enable);
+extern int os_channel_configure_interface_advisory(const channel_t chd,
+                                                   boolean_t enable);
 
-extern int
-os_channel_buflet_alloc(const channel_t chd, buflet_t *bft);
+extern int os_channel_buflet_alloc(const channel_t chd, buflet_t *bft);
 
-extern int
-os_channel_buflet_free(const channel_t chd, buflet_t ubft);
+extern int os_channel_buflet_free(const channel_t chd, buflet_t ubft);
 
-extern int
-os_channel_get_upp_buffer_stats(const channel_t chd, uint64_t *buffer_total,
-    uint64_t *buffer_inuse);
+extern int os_channel_get_upp_buffer_stats(const channel_t chd,
+                                           uint64_t *buffer_total,
+                                           uint64_t *buffer_inuse);
 __END_DECLS
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-#else /* KERNEL */
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+#else  /* KERNEL */
 /*
  * Kernel APIs.
  */
@@ -557,15 +559,15 @@ __END_DECLS
 struct kern_channel;
 struct __kern_channel_ring;
 
-typedef struct kern_channel             *kern_channel_t;
-typedef struct __kern_channel_ring      *kern_channel_ring_t;
-typedef struct __slot_desc              *kern_channel_slot_t;
+typedef struct kern_channel *kern_channel_t;
+typedef struct __kern_channel_ring *kern_channel_ring_t;
+typedef struct __slot_desc *kern_channel_slot_t;
 
 /*
  * Slot properties (deprecated).
  */
 struct kern_slot_prop {
-	uint32_t _sp_pad[16];           /* reserved */
+  uint32_t _sp_pad[16]; /* reserved */
 } __attribute__((aligned(sizeof(uint64_t))));
 
 /*
@@ -575,8 +577,8 @@ struct kern_slot_prop {
  * @filed kcrsi_bytes_transferred  number of bytes transferred
  */
 struct kern_channel_ring_stat_increment {
-	uint32_t        kcrsi_slots_transferred;
-	uint32_t        kcrsi_bytes_transferred;
+  uint32_t kcrsi_slots_transferred;
+  uint32_t kcrsi_bytes_transferred;
 };
 
 /*
@@ -604,8 +606,8 @@ struct kern_channel_ring_stat_increment {
  */
 __BEGIN_DECLS
 extern uint32_t kern_channel_notify(const kern_channel_ring_t, uint32_t flags);
-extern uint32_t kern_channel_available_slot_count(
-	const kern_channel_ring_t ring);
+extern uint32_t
+kern_channel_available_slot_count(const kern_channel_ring_t ring);
 /*
  * NOTE: kern_channel_set_slot_properties(), kern_channel_get_next_slot(),
  * kern_channel_reclaim() and kern_channel_advance_slot() require that the
@@ -613,19 +615,22 @@ extern uint32_t kern_channel_available_slot_count(
  * assert otherwise.
  */
 extern void kern_channel_set_slot_properties(const kern_channel_ring_t,
-    const kern_channel_slot_t slot, const struct kern_slot_prop *prop);
-extern kern_channel_slot_t kern_channel_get_next_slot(
-	const kern_channel_ring_t kring, const kern_channel_slot_t slot,
-	struct kern_slot_prop *slot_prop);
+                                             const kern_channel_slot_t slot,
+                                             const struct kern_slot_prop *prop);
+extern kern_channel_slot_t
+kern_channel_get_next_slot(const kern_channel_ring_t kring,
+                           const kern_channel_slot_t slot,
+                           struct kern_slot_prop *slot_prop);
 extern uint32_t kern_channel_reclaim(const kern_channel_ring_t);
 extern void kern_channel_advance_slot(const kern_channel_ring_t kring,
-    kern_channel_slot_t slot);
+                                      kern_channel_slot_t slot);
 
 /*
  * Packet.
  */
-extern kern_packet_t kern_channel_slot_get_packet(
-	const kern_channel_ring_t ring, const kern_channel_slot_t slot);
+extern kern_packet_t
+kern_channel_slot_get_packet(const kern_channel_ring_t ring,
+                             const kern_channel_slot_t slot);
 
 /*
  * NOTE: kern_channel_slot_attach_packet(), kern_channel_slot_detach_packet()
@@ -633,18 +638,22 @@ extern kern_packet_t kern_channel_slot_get_packet(
  * from within the sync callback context; they will assert otherwise.
  */
 extern errno_t kern_channel_slot_attach_packet(const kern_channel_ring_t ring,
-    const kern_channel_slot_t slot, kern_packet_t packet);
+                                               const kern_channel_slot_t slot,
+                                               kern_packet_t packet);
 extern errno_t kern_channel_slot_detach_packet(const kern_channel_ring_t ring,
-    const kern_channel_slot_t slot, kern_packet_t packet);
+                                               const kern_channel_slot_t slot,
+                                               kern_packet_t packet);
 extern errno_t kern_channel_ring_get_container(const kern_channel_ring_t ring,
-    kern_packet_t **array, uint32_t *count);
+                                               kern_packet_t **array,
+                                               uint32_t *count);
 extern errno_t kern_channel_tx_refill(const kern_channel_ring_t ring,
-    uint32_t pkt_limit, uint32_t byte_limit, boolean_t tx_doorbell_ctxt,
-    boolean_t *pkts_pending);
+                                      uint32_t pkt_limit, uint32_t byte_limit,
+                                      boolean_t tx_doorbell_ctxt,
+                                      boolean_t *pkts_pending);
 extern errno_t kern_channel_get_service_class(const kern_channel_ring_t ring,
-    kern_packet_svc_class_t *svc);
+                                              kern_packet_svc_class_t *svc);
 extern errno_t kern_netif_queue_get_service_class(kern_netif_queue_t,
-    kern_packet_svc_class_t *);
+                                                  kern_packet_svc_class_t *);
 
 /*
  * Misc.
@@ -652,17 +661,18 @@ extern errno_t kern_netif_queue_get_service_class(kern_netif_queue_t,
 extern void *kern_channel_get_context(const kern_channel_t channel);
 extern void *kern_channel_ring_get_context(const kern_channel_ring_t ring);
 extern void *kern_channel_slot_get_context(const kern_channel_ring_t ring,
-    const kern_channel_slot_t slot);
+                                           const kern_channel_slot_t slot);
 
 /*
  * NOTE: kern_channel_increment_ring_{net}_stats() requires
  * that the caller invokes it from within the sync callback context;
  * it will assert otherwise.
  */
-extern void kern_channel_increment_ring_stats(kern_channel_ring_t ring,
+extern void kern_channel_increment_ring_stats(
+    kern_channel_ring_t ring, struct kern_channel_ring_stat_increment *stats);
+extern void kern_channel_increment_ring_net_stats(
+    kern_channel_ring_t ring, ifnet_t,
     struct kern_channel_ring_stat_increment *stats);
-extern void kern_channel_increment_ring_net_stats(kern_channel_ring_t ring,
-    ifnet_t, struct kern_channel_ring_stat_increment *stats);
 
 #ifdef BSD_KERNEL_PRIVATE
 /* forward declare */
@@ -674,20 +684,24 @@ typedef uint32_t flowadv_token_t;
 /*
  * Private, unexported KPIs.
  */
-__private_extern__ errno_t kern_channel_slot_attach_packet_byidx(
-	const kern_channel_ring_t kring, const uint32_t sidx, kern_packet_t ph);
-__private_extern__ errno_t kern_channel_slot_detach_packet_byidx(
-	const kern_channel_ring_t kring, const uint32_t sidx, kern_packet_t ph);
+__private_extern__ errno_t
+kern_channel_slot_attach_packet_byidx(const kern_channel_ring_t kring,
+                                      const uint32_t sidx, kern_packet_t ph);
+__private_extern__ errno_t
+kern_channel_slot_detach_packet_byidx(const kern_channel_ring_t kring,
+                                      const uint32_t sidx, kern_packet_t ph);
 __private_extern__ void kern_channel_flowadv_clear(struct flowadv_fcentry *);
 __private_extern__ void kern_channel_flowadv_set(struct flowadv_fcentry *);
-__private_extern__ void kern_channel_flowadv_report_congestion_event(
-	struct flowadv_fcentry *, uint32_t, uint32_t, uint32_t);
+__private_extern__ void
+kern_channel_flowadv_report_congestion_event(struct flowadv_fcentry *, uint32_t,
+                                             uint32_t, uint32_t);
 __private_extern__ void kern_channel_memstatus(struct proc *, uint32_t,
-    struct kern_channel *);
+                                               struct kern_channel *);
 __private_extern__ void kern_channel_defunct(struct proc *,
-    struct kern_channel *);
-__private_extern__ errno_t kern_channel_tx_refill_canblock(
-	const kern_channel_ring_t, uint32_t, uint32_t, boolean_t, boolean_t *);
+                                             struct kern_channel *);
+__private_extern__ errno_t
+kern_channel_tx_refill_canblock(const kern_channel_ring_t, uint32_t, uint32_t,
+                                boolean_t, boolean_t *);
 #endif /* BSD_KERNEL_PRIVATE */
 __END_DECLS
 #endif /* KERNEL */

@@ -2,28 +2,26 @@
 // Make sure `safe_allocation` works nicely with the range-based for-loop.
 //
 
-#include <libkern/c++/safe_allocation.h>
-#include <darwintest.h>
 #include "test_utils.h"
+#include <darwintest.h>
+#include <libkern/c++/safe_allocation.h>
 
 struct T {
-	int i;
+  int i;
 };
 
-template <typename T>
-static void
-tests()
-{
-	test_safe_allocation<T> array(10, libkern::allocate_memory);
-	for (T& element : array) {
-		element = T{3};
-	}
+template <typename T> static void tests() {
+  test_safe_allocation<T> array(10, libkern::allocate_memory);
+  for (T &element : array) {
+    element = T{3};
+  }
 
-	for (T const& element : array) {
-		CHECK(element.i == 3);
-	}
+  for (T const &element : array) {
+    CHECK(element.i == 3);
+  }
 }
 
-T_DECL(usage_for_loop, "safe_allocation.usage.for_loop", T_META_TAG_VM_PREFERRED) {
-	tests<T>();
+T_DECL(usage_for_loop, "safe_allocation.usage.for_loop",
+       T_META_TAG_VM_PREFERRED) {
+  tests<T>();
 }

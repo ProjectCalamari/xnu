@@ -30,105 +30,102 @@
 #include <vm/vm_kern_internal.h>
 
 #define UT_MODULE osfmk
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.unit.mach_vm_range_contains"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_OWNER("tgal2"),
-	T_META_RUN_CONCURRENTLY(false)
-	);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.unit.mach_vm_range_contains"),
+              T_META_RADAR_COMPONENT_NAME("xnu"), T_META_OWNER("tgal2"),
+              T_META_RUN_CONCURRENTLY(false));
 
-T_DECL(prevent_overflow_with_large_address, "make sure false is returned for addr causing overflow (if !DEBUG && !DEVELOPMENT, it will panic)")
-{
-	const struct mach_vm_range r = {0x1000, 0x2000};
-	mach_vm_offset_t addr = 0xFFFFFFFFFFFFFF00;
-	mach_vm_offset_t size = 0x1100;
+T_DECL(prevent_overflow_with_large_address,
+       "make sure false is returned for addr causing overflow (if !DEBUG && "
+       "!DEVELOPMENT, it will panic)") {
+  const struct mach_vm_range r = {0x1000, 0x2000};
+  mach_vm_offset_t addr = 0xFFFFFFFFFFFFFF00;
+  mach_vm_offset_t size = 0x1100;
 
-	T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
-	    "got true for overflow (exploit exploit)");
+  T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
+                 "got true for overflow (exploit exploit)");
 
-	T_PASS("false returned for address overflow as expected");
+  T_PASS("false returned for address overflow as expected");
 }
 
-T_DECL(prevent_overflow_with_large_size, "make sure false is returned for size causing overflow (if !DEBUG && !DEVELOPMENT, it will panic)")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x2000;
-	mach_vm_offset_t size = 0xFFFFFFFFFFFFFFF0;
+T_DECL(prevent_overflow_with_large_size,
+       "make sure false is returned for size causing overflow (if !DEBUG && "
+       "!DEVELOPMENT, it will panic)") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x2000;
+  mach_vm_offset_t size = 0xFFFFFFFFFFFFFFF0;
 
-	T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
-	    "got true for overflow (exploit exploit)");
+  T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
+                 "got true for overflow (exploit exploit)");
 
-	T_PASS("false returned for size overflow as expected");
+  T_PASS("false returned for size overflow as expected");
 }
 
-T_DECL(allow_valid_range, "make sure true is returned for a valid range")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x1500;
-	mach_vm_offset_t size = 0x500;
+T_DECL(allow_valid_range, "make sure true is returned for a valid range") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x1500;
+  mach_vm_offset_t size = 0x500;
 
-	T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
-	    "got false for valid range");
+  T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
+                "got false for valid range");
 
-	T_PASS("true returned for valid range as expected");
+  T_PASS("true returned for valid range as expected");
 }
 
-T_DECL(dont_allow_out_of_bounds_start, "make sure false is returned for address out of bounds")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x500;
-	mach_vm_offset_t size = 0x500;
+T_DECL(dont_allow_out_of_bounds_start,
+       "make sure false is returned for address out of bounds") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x500;
+  mach_vm_offset_t size = 0x500;
 
-	T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
-	    "got true for out-of-bounds start address");
+  T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
+                 "got true for out-of-bounds start address");
 
-	T_PASS("false returned for out-of-bounds start address as expected");
+  T_PASS("false returned for out-of-bounds start address as expected");
 }
 
-T_DECL(dont_allow_out_of_bounds_end, "make sure false is returned for size extending out of bounds")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x2000;
-	mach_vm_offset_t size = 0x2000;
+T_DECL(dont_allow_out_of_bounds_end,
+       "make sure false is returned for size extending out of bounds") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x2000;
+  mach_vm_offset_t size = 0x2000;
 
-	T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
-	    "got true for out-of-bounds end address");
+  T_ASSERT_FALSE(mach_vm_range_contains(&r, addr, size),
+                 "got true for out-of-bounds end address");
 
-	T_PASS("false returned for out-of-bounds end address as expected");
+  T_PASS("false returned for out-of-bounds end address as expected");
 }
 
-T_DECL(allow_exact_range_match_start, "make sure true is returned for exact range match - start of range")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x1000;
-	mach_vm_offset_t size = 0x0;
+T_DECL(allow_exact_range_match_start,
+       "make sure true is returned for exact range match - start of range") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x1000;
+  mach_vm_offset_t size = 0x0;
 
-	T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
-	    "got false for exact range match");
+  T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
+                "got false for exact range match");
 
-	T_PASS("true returned for exact range match as expected");
+  T_PASS("true returned for exact range match as expected");
 }
 
-T_DECL(allow_exact_range_match_end, "make sure true is returned for exact range match - end of range")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x1000;
-	mach_vm_offset_t size = 0x2000;
+T_DECL(allow_exact_range_match_end,
+       "make sure true is returned for exact range match - end of range") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x1000;
+  mach_vm_offset_t size = 0x2000;
 
-	T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
-	    "got false for exact range match");
+  T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
+                "got false for exact range match");
 
-	T_PASS("true returned for exact range match as expected");
+  T_PASS("true returned for exact range match as expected");
 }
 
-T_DECL(prevent_invalid_size_zero, "make sure false is returned for size == 0")
-{
-	const struct mach_vm_range r = {0x1000, 0x3000};
-	mach_vm_offset_t addr = 0x1500;
-	mach_vm_offset_t size = 0x0;
+T_DECL(prevent_invalid_size_zero, "make sure false is returned for size == 0") {
+  const struct mach_vm_range r = {0x1000, 0x3000};
+  mach_vm_offset_t addr = 0x1500;
+  mach_vm_offset_t size = 0x0;
 
-	T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
-	    "got false for size == 0 with addr in range");
+  T_ASSERT_TRUE(mach_vm_range_contains(&r, addr, size),
+                "got false for size == 0 with addr in range");
 
-	T_PASS("true returned for size == 0 with addr in range as expected");
+  T_PASS("true returned for size == 0 with addr in range as expected");
 }

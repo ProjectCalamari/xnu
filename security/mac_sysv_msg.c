@@ -58,194 +58,164 @@
 
 #include <sys/cdefs.h>
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <sys/file.h>
 #include <sys/kernel.h>
 #include <sys/lock.h>
 #include <sys/malloc.h>
+#include <sys/mount.h>
+#include <sys/msg.h>
+#include <sys/namei.h>
+#include <sys/param.h>
 #include <sys/sbuf.h>
+#include <sys/sysctl.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
-#include <sys/mount.h>
-#include <sys/file.h>
-#include <sys/namei.h>
-#include <sys/sysctl.h>
-#include <sys/msg.h>
 
 #include <security/mac_internal.h>
 
-void
-mac_sysvmsg_label_init(struct msg *msgptr)
-{
-	mac_labelzone_alloc_owned(&msgptr->label, MAC_WAITOK, ^(struct label *label) {
-		MAC_PERFORM(sysvmsg_label_init, label);
-	});
+void mac_sysvmsg_label_init(struct msg *msgptr) {
+  mac_labelzone_alloc_owned(&msgptr->label, MAC_WAITOK, ^(struct label *label) {
+    MAC_PERFORM(sysvmsg_label_init, label);
+  });
 }
 
-struct label *
-mac_sysvmsg_label(struct msg *msgptr)
-{
-	return mac_label_verify(&msgptr->label);
+struct label *mac_sysvmsg_label(struct msg *msgptr) {
+  return mac_label_verify(&msgptr->label);
 }
 
-void
-mac_sysvmsq_label_init(struct msqid_kernel *msqptr)
-{
-	mac_labelzone_alloc_owned(&msqptr->label, MAC_WAITOK, ^(struct label *label) {
-		MAC_PERFORM(sysvmsq_label_init, label);
-	});
+void mac_sysvmsq_label_init(struct msqid_kernel *msqptr) {
+  mac_labelzone_alloc_owned(&msqptr->label, MAC_WAITOK, ^(struct label *label) {
+    MAC_PERFORM(sysvmsq_label_init, label);
+  });
 }
 
-struct label *
-mac_sysvmsq_label(struct msqid_kernel *msqptr)
-{
-	return mac_label_verify(&msqptr->label);
+struct label *mac_sysvmsq_label(struct msqid_kernel *msqptr) {
+  return mac_label_verify(&msqptr->label);
 }
 
-void
-mac_sysvmsg_label_associate(kauth_cred_t cred, struct msqid_kernel *msqptr,
-    struct msg *msgptr)
-{
-	MAC_PERFORM(sysvmsg_label_associate, cred, msqptr, mac_sysvmsq_label(msqptr),
-	    msgptr, mac_sysvmsg_label(msgptr));
+void mac_sysvmsg_label_associate(kauth_cred_t cred, struct msqid_kernel *msqptr,
+                                 struct msg *msgptr) {
+  MAC_PERFORM(sysvmsg_label_associate, cred, msqptr, mac_sysvmsq_label(msqptr),
+              msgptr, mac_sysvmsg_label(msgptr));
 }
 
-void
-mac_sysvmsq_label_associate(kauth_cred_t cred, struct msqid_kernel *msqptr)
-{
-	MAC_PERFORM(sysvmsq_label_associate, cred, msqptr, mac_sysvmsq_label(msqptr));
+void mac_sysvmsq_label_associate(kauth_cred_t cred,
+                                 struct msqid_kernel *msqptr) {
+  MAC_PERFORM(sysvmsq_label_associate, cred, msqptr, mac_sysvmsq_label(msqptr));
 }
 
-void
-mac_sysvmsg_label_recycle(struct msg *msgptr)
-{
-	MAC_PERFORM(sysvmsg_label_recycle, mac_sysvmsg_label(msgptr));
+void mac_sysvmsg_label_recycle(struct msg *msgptr) {
+  MAC_PERFORM(sysvmsg_label_recycle, mac_sysvmsg_label(msgptr));
 }
 
-void
-mac_sysvmsq_label_recycle(struct msqid_kernel *msqptr)
-{
-	MAC_PERFORM(sysvmsq_label_recycle, mac_sysvmsq_label(msqptr));
+void mac_sysvmsq_label_recycle(struct msqid_kernel *msqptr) {
+  MAC_PERFORM(sysvmsq_label_recycle, mac_sysvmsq_label(msqptr));
 }
 
-int
-mac_sysvmsq_check_enqueue(kauth_cred_t cred, struct msg *msgptr,
-    struct msqid_kernel *msqptr)
-{
-	int error;
+int mac_sysvmsq_check_enqueue(kauth_cred_t cred, struct msg *msgptr,
+                              struct msqid_kernel *msqptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_enqueue, cred, msgptr, mac_sysvmsg_label(msgptr), msqptr,
-	    mac_sysvmsq_label(msqptr));
+  MAC_CHECK(sysvmsq_check_enqueue, cred, msgptr, mac_sysvmsg_label(msgptr),
+            msqptr, mac_sysvmsq_label(msqptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvmsq_check_msgrcv(kauth_cred_t cred, struct msg *msgptr)
-{
-	int error;
+int mac_sysvmsq_check_msgrcv(kauth_cred_t cred, struct msg *msgptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_msgrcv, cred, msgptr, mac_sysvmsg_label(msgptr));
+  MAC_CHECK(sysvmsq_check_msgrcv, cred, msgptr, mac_sysvmsg_label(msgptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvmsq_check_msgrmid(kauth_cred_t cred, struct msg *msgptr)
-{
-	int error;
+int mac_sysvmsq_check_msgrmid(kauth_cred_t cred, struct msg *msgptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_msgrmid, cred, msgptr, mac_sysvmsg_label(msgptr));
+  MAC_CHECK(sysvmsq_check_msgrmid, cred, msgptr, mac_sysvmsg_label(msgptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvmsq_check_msqget(kauth_cred_t cred, struct msqid_kernel *msqptr)
-{
-	int error;
+int mac_sysvmsq_check_msqget(kauth_cred_t cred, struct msqid_kernel *msqptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_msqget, cred, msqptr, mac_sysvmsq_label(msqptr));
+  MAC_CHECK(sysvmsq_check_msqget, cred, msqptr, mac_sysvmsq_label(msqptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvmsq_check_msqsnd(kauth_cred_t cred, struct msqid_kernel *msqptr)
-{
-	int error;
+int mac_sysvmsq_check_msqsnd(kauth_cred_t cred, struct msqid_kernel *msqptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_msqsnd, cred, msqptr, mac_sysvmsq_label(msqptr));
+  MAC_CHECK(sysvmsq_check_msqsnd, cred, msqptr, mac_sysvmsq_label(msqptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvmsq_check_msqrcv(kauth_cred_t cred, struct msqid_kernel *msqptr)
-{
-	int error;
+int mac_sysvmsq_check_msqrcv(kauth_cred_t cred, struct msqid_kernel *msqptr) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_msqrcv, cred, msqptr, mac_sysvmsq_label(msqptr));
+  MAC_CHECK(sysvmsq_check_msqrcv, cred, msqptr, mac_sysvmsq_label(msqptr));
 
-	return error;
+  return error;
 }
 
-int
-mac_sysvmsq_check_msqctl(kauth_cred_t cred, struct msqid_kernel *msqptr,
-    int cmd)
-{
-	int error;
+int mac_sysvmsq_check_msqctl(kauth_cred_t cred, struct msqid_kernel *msqptr,
+                             int cmd) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_sysvmsg_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_sysvmsg_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(sysvmsq_check_msqctl, cred, msqptr, mac_sysvmsq_label(msqptr), cmd);
+  MAC_CHECK(sysvmsq_check_msqctl, cred, msqptr, mac_sysvmsq_label(msqptr), cmd);
 
-	return error;
+  return error;
 }

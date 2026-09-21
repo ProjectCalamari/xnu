@@ -29,8 +29,8 @@
 #ifndef _SYS_UCONTEXT_H_
 #define _SYS_UCONTEXT_H_
 
-#include <sys/cdefs.h>
 #include <sys/_types.h>
+#include <sys/cdefs.h>
 
 #include <machine/_mcontext.h>
 #include <sys/_types/_ucontext.h>
@@ -38,27 +38,27 @@
 #include <sys/_types/_sigset_t.h>
 
 #ifdef KERNEL
-#include <machine/types.h>      /* user_addr_t, user_size_t */
+#include <machine/types.h> /* user_addr_t, user_size_t */
 
 /* kernel representation of struct ucontext64 for 64 bit processes */
 typedef struct user_ucontext64 {
-	int                             uc_onstack;
-	sigset_t                        uc_sigmask;     /* signal mask */
-	struct user64_sigaltstack       uc_stack;       /* stack */
-	user_addr_t                     uc_link;        /* ucontext pointer */
-	user_size_t                     uc_mcsize;      /* mcontext size */
-	user_addr_t                     uc_mcontext64;  /* machine context */
+  int uc_onstack;
+  sigset_t uc_sigmask;                /* signal mask */
+  struct user64_sigaltstack uc_stack; /* stack */
+  user_addr_t uc_link;                /* ucontext pointer */
+  user_size_t uc_mcsize;              /* mcontext size */
+  user_addr_t uc_mcontext64;          /* machine context */
 } user_ucontext64_t;
 
 typedef struct user_ucontext32 {
-	int                             uc_onstack;
-	sigset_t                        uc_sigmask;     /* signal mask */
-	struct user32_sigaltstack       uc_stack;       /* stack */
-	user32_addr_t                   uc_link;        /* ucontext pointer */
-	user32_size_t                   uc_mcsize;      /* mcontext size */
-	user32_addr_t                   uc_mcontext;    /* machine context */
+  int uc_onstack;
+  sigset_t uc_sigmask;                /* signal mask */
+  struct user32_sigaltstack uc_stack; /* stack */
+  user32_addr_t uc_link;              /* ucontext pointer */
+  user32_size_t uc_mcsize;            /* mcontext size */
+  user32_addr_t uc_mcontext;          /* machine context */
 } user_ucontext32_t;
 
-#endif  /* KERNEL */
+#endif /* KERNEL */
 
 #endif /* _SYS_UCONTEXT_H_ */

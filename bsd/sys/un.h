@@ -63,9 +63,9 @@
 #ifndef _SYS_UN_H_
 #define _SYS_UN_H_
 
+#include <sys/_types.h>
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
-#include <sys/_types.h>
 
 /* [XSI] The sa_family_t type shall be defined as described in <sys/socket.h> */
 #include <sys/_types/_sa_family_t.h>
@@ -73,27 +73,26 @@
 /*
  * [XSI] Definitions for UNIX IPC domain.
  */
-struct  sockaddr_un {
-	unsigned char   sun_len;        /* sockaddr len including null */
-	sa_family_t     sun_family;     /* [XSI] AF_UNIX */
-	char            sun_path[104];  /* [XSI] path name (gag) */
+struct sockaddr_un {
+  unsigned char sun_len;  /* sockaddr len including null */
+  sa_family_t sun_family; /* [XSI] AF_UNIX */
+  char sun_path[104];     /* [XSI] path name (gag) */
 };
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 
 /* Level number of get/setsockopt for local domain sockets */
-#define SOL_LOCAL               0
+#define SOL_LOCAL 0
 
 /* Socket options. */
-#define LOCAL_PEERCRED          0x001           /* retrieve peer credentials */
-#define LOCAL_PEERPID           0x002           /* retrieve peer pid */
-#define LOCAL_PEEREPID          0x003           /* retrieve eff. peer pid */
-#define LOCAL_PEERUUID          0x004           /* retrieve peer UUID */
-#define LOCAL_PEEREUUID         0x005           /* retrieve eff. peer UUID */
-#define LOCAL_PEERTOKEN         0x006           /* retrieve peer audit token */
+#define LOCAL_PEERCRED 0x001  /* retrieve peer credentials */
+#define LOCAL_PEERPID 0x002   /* retrieve peer pid */
+#define LOCAL_PEEREPID 0x003  /* retrieve eff. peer pid */
+#define LOCAL_PEERUUID 0x004  /* retrieve peer UUID */
+#define LOCAL_PEEREUUID 0x005 /* retrieve eff. peer UUID */
+#define LOCAL_PEERTOKEN 0x006 /* retrieve peer audit token */
 
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
 #ifdef KERNEL
 #ifdef PRIVATE
@@ -103,31 +102,30 @@ struct mbuf;
 struct socket;
 struct sockopt;
 
-int     uipc_usrreq(struct socket *so, int req, struct mbuf *m,
-    struct mbuf *nam, struct mbuf *control);
-int     uipc_ctloutput(struct socket *so, struct sockopt *sopt);
-int     unp_connect2(struct socket *so, struct socket *so2);
-void    unp_dispose(struct mbuf *m);
-int     unp_externalize(struct mbuf *rights);
-void    unp_init(void);
-extern  struct pr_usrreqs uipc_usrreqs;
-int     unp_lock(struct socket *, int, void *);
-int     unp_unlock(struct socket *, int, void *);
-lck_mtx_t* unp_getlock(struct socket *, int);
+int uipc_usrreq(struct socket *so, int req, struct mbuf *m, struct mbuf *nam,
+                struct mbuf *control);
+int uipc_ctloutput(struct socket *so, struct sockopt *sopt);
+int unp_connect2(struct socket *so, struct socket *so2);
+void unp_dispose(struct mbuf *m);
+int unp_externalize(struct mbuf *rights);
+void unp_init(void);
+extern struct pr_usrreqs uipc_usrreqs;
+int unp_lock(struct socket *, int, void *);
+int unp_unlock(struct socket *, int, void *);
+lck_mtx_t *unp_getlock(struct socket *, int);
 
-#define UNP_FORGE_PATH(sun, len) ({                                     \
-	__unsafe_forge_bidi_indexable(char *, &sun->sun_path, len);     \
-})
+#define UNP_FORGE_PATH(sun, len)                                               \
+  ({ __unsafe_forge_bidi_indexable(char *, &sun->sun_path, len); })
 
 __END_DECLS
 #endif /* PRIVATE */
-#else /* !KERNEL */
+#else  /* !KERNEL */
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 /* actual length of an initialized sockaddr_un */
-#define SUN_LEN(su) \
-	(sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
+#define SUN_LEN(su)                                                            \
+  (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 #endif /* KERNEL */
 
 #endif /* !_SYS_UN_H_ */

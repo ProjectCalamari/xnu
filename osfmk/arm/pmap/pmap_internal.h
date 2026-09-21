@@ -96,25 +96,34 @@ extern void pmap_ledger_free_internal(ledger_t);
 #define PMAP_SUPPORT_PROTOTYPES_BTI_LANDING_PAD ""
 #endif /* BTI_ENFROCED */
 
-#define PMAP_SUPPORT_PROTOTYPES_WITH_ASM_INTERNAL(__return_type, __function_name, __function_args, __function_index, __assembly_function_name) \
-	extern __return_type __function_name##_internal __function_args; \
-	extern __return_type __function_name##_ppl __function_args; \
-	__asm__ (".text \n" \
-	         ".align 2 \n" \
-	         ".globl " #__assembly_function_name "\n" \
-	         #__assembly_function_name ":\n" \
-	         PMAP_SUPPORT_PROTOTYPES_BTI_LANDING_PAD \
-	         "mov x15, " #__function_index "\n" \
-	         "b _aprr_ppl_enter\n")
+#define PMAP_SUPPORT_PROTOTYPES_WITH_ASM_INTERNAL(                             \
+    __return_type, __function_name, __function_args, __function_index,         \
+    __assembly_function_name)                                                  \
+  extern __return_type __function_name##_internal __function_args;             \
+  extern __return_type __function_name##_ppl __function_args;                  \
+  __asm__(".text \n"                                                           \
+          ".align 2 \n"                                                        \
+          ".globl " #__assembly_function_name "\n" #__assembly_function_name   \
+          ":\n" PMAP_SUPPORT_PROTOTYPES_BTI_LANDING_PAD                        \
+          "mov x15, " #__function_index "\n"                                   \
+          "b _aprr_ppl_enter\n")
 
-#define PMAP_SUPPORT_PROTOTYPES_WITH_ASM(__return_type, __function_name, __function_args, __function_index, __assembly_function_name) \
-	PMAP_SUPPORT_PROTOTYPES_WITH_ASM_INTERNAL(__return_type, __function_name, __function_args, __function_index, __assembly_function_name)
+#define PMAP_SUPPORT_PROTOTYPES_WITH_ASM(__return_type, __function_name,       \
+                                         __function_args, __function_index,    \
+                                         __assembly_function_name)             \
+  PMAP_SUPPORT_PROTOTYPES_WITH_ASM_INTERNAL(__return_type, __function_name,    \
+                                            __function_args, __function_index, \
+                                            __assembly_function_name)
 
-#define PMAP_SUPPORT_PROTOTYPES(__return_type, __function_name, __function_args, __function_index) \
-	PMAP_SUPPORT_PROTOTYPES_WITH_ASM(__return_type, __function_name, __function_args, __function_index, GEN_ASM_NAME(__function_name))
+#define PMAP_SUPPORT_PROTOTYPES(__return_type, __function_name,                \
+                                __function_args, __function_index)             \
+  PMAP_SUPPORT_PROTOTYPES_WITH_ASM(__return_type, __function_name,             \
+                                   __function_args, __function_index,          \
+                                   GEN_ASM_NAME(__function_name))
 #else /* XNU_MONITOR */
-#define PMAP_SUPPORT_PROTOTYPES(__return_type, __function_name, __function_args, __function_index) \
-	extern __return_type __function_name##_internal __function_args
+#define PMAP_SUPPORT_PROTOTYPES(__return_type, __function_name,                \
+                                __function_args, __function_index)             \
+  extern __return_type __function_name##_internal __function_args
 #endif /* XNU_MONITOR */
 
 /**
@@ -132,19 +141,20 @@ extern uint32_t pmap_max_asids;
 
 #if XNU_MONITOR
 extern void pmap_set_xprr_perm(unsigned int, unsigned int, unsigned int);
-extern void pa_set_range_xprr_perm(pmap_paddr_t, pmap_paddr_t, unsigned int, unsigned int);
+extern void pa_set_range_xprr_perm(pmap_paddr_t, pmap_paddr_t, unsigned int,
+                                   unsigned int);
 #endif /* XNU_MONITOR */
 
-extern int pmap_remove_range_options(
-	pmap_t, vm_map_address_t, pt_entry_t *, pt_entry_t *, vm_map_address_t *, bool *, int);
+extern int pmap_remove_range_options(pmap_t, vm_map_address_t, pt_entry_t *,
+                                     pt_entry_t *, vm_map_address_t *, bool *,
+                                     int);
 
-extern void pmap_tte_deallocate(
-	pmap_t, vm_offset_t, vm_offset_t, bool, tt_entry_t *, unsigned int);
+extern void pmap_tte_deallocate(pmap_t, vm_offset_t, vm_offset_t, bool,
+                                tt_entry_t *, unsigned int);
 
 #if defined(PVH_FLAG_EXEC)
 extern void pmap_set_ptov_ap(unsigned int, unsigned int, boolean_t);
 #endif /* defined(PVH_FLAG_EXEC) */
-
 
 extern pmap_t current_pmap(void);
 extern void pmap_tt_ledger_credit(pmap_t, vm_size_t);
@@ -175,7 +185,8 @@ extern void qsort(void *a, size_t n, size_t es, cmpfunc_t cmp);
  * modules. In reality, many of these functions probably don't need to be inline
  * and can be moved back into a .c file.
  *
- * TODO: rdar://70538514 (PMAP Cleanup: re-evaluate whether inline functions should actually be inline)
+ * TODO: rdar://70538514 (PMAP Cleanup: re-evaluate whether inline functions
+ * should actually be inline)
  */
 
 /**
@@ -183,8 +194,10 @@ extern void qsort(void *a, size_t n, size_t es, cmpfunc_t cmp);
  * hibernation image copying.
  */
 #if HIBERNATION
-#define ASSERT_NOT_HIBERNATING() (assertf(!hib_entry_pmap_lockdown, \
-	"Attempted to modify PMAP data structures after hibernation image copying has begun."))
+#define ASSERT_NOT_HIBERNATING()                                               \
+  (assertf(!hib_entry_pmap_lockdown,                                           \
+           "Attempted to modify PMAP data structures after hibernation image " \
+           "copying has begun."))
 #else
 #define ASSERT_NOT_HIBERNATING()
 #endif /* HIBERNATION */
@@ -202,11 +215,9 @@ extern void qsort(void *a, size_t n, size_t es, cmpfunc_t cmp);
  *
  * @param pmap The pmap whose lock to initialize.
  */
-static inline void
-pmap_lock_init(pmap_t pmap)
-{
-	lck_rw_init(&pmap->rwlock, &pmap_lck_grp, 0);
-	pmap->rwlock.lck_rw_can_sleep = FALSE;
+static inline void pmap_lock_init(pmap_t pmap) {
+  lck_rw_init(&pmap->rwlock, &pmap_lck_grp, 0);
+  pmap->rwlock.lck_rw_can_sleep = FALSE;
 }
 
 /**
@@ -214,10 +225,8 @@ pmap_lock_init(pmap_t pmap)
  *
  * @param pmap The pmap whose lock to destroy.
  */
-static inline void
-pmap_lock_destroy(pmap_t pmap)
-{
-	lck_rw_destroy(&pmap->rwlock, &pmap_lck_grp);
+static inline void pmap_lock_destroy(pmap_t pmap) {
+  lck_rw_destroy(&pmap->rwlock, &pmap_lck_grp);
 }
 
 /**
@@ -226,20 +235,20 @@ pmap_lock_destroy(pmap_t pmap)
  * @param pmap The pmap whose lock to assert is being held.
  * @param mode The mode the lock should be held in.
  */
-static inline void
-pmap_assert_locked(__unused pmap_t pmap, __unused pmap_lock_mode_t mode)
-{
+static inline void pmap_assert_locked(__unused pmap_t pmap,
+                                      __unused pmap_lock_mode_t mode) {
 #if MACH_ASSERT
-	switch (mode) {
-	case PMAP_LOCK_SHARED:
-		LCK_RW_ASSERT(&pmap->rwlock, LCK_RW_ASSERT_SHARED);
-		break;
-	case PMAP_LOCK_EXCLUSIVE:
-		LCK_RW_ASSERT(&pmap->rwlock, LCK_RW_ASSERT_EXCLUSIVE);
-		break;
-	default:
-		panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __FUNCTION__, pmap, mode);
-	}
+  switch (mode) {
+  case PMAP_LOCK_SHARED:
+    LCK_RW_ASSERT(&pmap->rwlock, LCK_RW_ASSERT_SHARED);
+    break;
+  case PMAP_LOCK_EXCLUSIVE:
+    LCK_RW_ASSERT(&pmap->rwlock, LCK_RW_ASSERT_EXCLUSIVE);
+    break;
+  default:
+    panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __FUNCTION__, pmap,
+          mode);
+  }
 #endif
 }
 
@@ -248,10 +257,8 @@ pmap_assert_locked(__unused pmap_t pmap, __unused pmap_lock_mode_t mode)
  *
  * @param pmap The pmap whose lock should be held.
  */
-__unused static inline void
-pmap_assert_locked_any(__unused pmap_t pmap)
-{
-	LCK_RW_ASSERT(&pmap->rwlock, LCK_RW_ASSERT_HELD);
+__unused static inline void pmap_assert_locked_any(__unused pmap_t pmap) {
+  LCK_RW_ASSERT(&pmap->rwlock, LCK_RW_ASSERT_HELD);
 }
 
 /**
@@ -262,25 +269,24 @@ pmap_assert_locked_any(__unused pmap_t pmap)
  *       until the lock can be acquired.
  *
  * @param pmap The pmap whose lock to acquire.
- * @param mode Whether to grab the lock as shared (read-only) or exclusive (read/write).
+ * @param mode Whether to grab the lock as shared (read-only) or exclusive
+ * (read/write).
  */
-static inline void
-pmap_lock(pmap_t pmap, pmap_lock_mode_t mode)
-{
+static inline void pmap_lock(pmap_t pmap, pmap_lock_mode_t mode) {
 #if !XNU_MONITOR
-	mp_disable_preemption();
+  mp_disable_preemption();
 #endif
 
-	switch (mode) {
-	case PMAP_LOCK_SHARED:
-		lck_rw_lock_shared(&pmap->rwlock);
-		break;
-	case PMAP_LOCK_EXCLUSIVE:
-		lck_rw_lock_exclusive(&pmap->rwlock);
-		break;
-	default:
-		panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
-	}
+  switch (mode) {
+  case PMAP_LOCK_SHARED:
+    lck_rw_lock_shared(&pmap->rwlock);
+    break;
+  case PMAP_LOCK_EXCLUSIVE:
+    lck_rw_lock_exclusive(&pmap->rwlock);
+    break;
+  default:
+    panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
+  }
 }
 
 /**
@@ -288,52 +294,54 @@ pmap_lock(pmap_t pmap, pmap_lock_mode_t mode)
  * be acquired, then spin until it can be or a preemption is pending.
  *
  * @param pmap The pmap whose lock to attempt to acquire.
- * @param mode Whether to grab the lock as shared (read-only) or exclusive (read/write).
+ * @param mode Whether to grab the lock as shared (read-only) or exclusive
+ * (read/write).
  *
- * @return true if the lock was acquired, false if it was not and the caller should
- *         abort to some preemptible state to allow the preemption.
+ * @return true if the lock was acquired, false if it was not and the caller
+ * should abort to some preemptible state to allow the preemption.
  */
-static inline bool
-pmap_lock_preempt(pmap_t pmap, pmap_lock_mode_t mode)
-{
-	bool ret = false;
+static inline bool pmap_lock_preempt(pmap_t pmap, pmap_lock_mode_t mode) {
+  bool ret = false;
 
-	/**
-	 * When the lock cannot be acquired, we check if we are preemptible.
-	 *
-	 * If we are already preemptible, there's no point of exiting this function and aborting.
-	 *
-	 * Also, if we are very early in boot, we should just spin. This is similar to how
-	 * pmap_verify_preemptible() is used in pmap.
-	 */
-	do {
+  /**
+   * When the lock cannot be acquired, we check if we are preemptible.
+   *
+   * If we are already preemptible, there's no point of exiting this function
+   * and aborting.
+   *
+   * Also, if we are very early in boot, we should just spin. This is similar to
+   * how pmap_verify_preemptible() is used in pmap.
+   */
+  do {
 #if !XNU_MONITOR
-		mp_disable_preemption();
+    mp_disable_preemption();
 #endif
 
-		bool (^check_preemption)(void) = ^{
-			return pmap_pending_preemption();
-		};
+    bool (^check_preemption)(void) = ^{
+      return pmap_pending_preemption();
+    };
 
-		switch (mode) {
-		case PMAP_LOCK_SHARED:
-			ret = lck_rw_lock_shared_b(&pmap->rwlock, check_preemption);
-			break;
-		case PMAP_LOCK_EXCLUSIVE:
-			ret = lck_rw_lock_exclusive_b(&pmap->rwlock, check_preemption);
-			break;
-		default:
-			panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
-		}
+    switch (mode) {
+    case PMAP_LOCK_SHARED:
+      ret = lck_rw_lock_shared_b(&pmap->rwlock, check_preemption);
+      break;
+    case PMAP_LOCK_EXCLUSIVE:
+      ret = lck_rw_lock_exclusive_b(&pmap->rwlock, check_preemption);
+      break;
+    default:
+      panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap,
+            mode);
+    }
 
-		if (!ret) {
+    if (!ret) {
 #if !XNU_MONITOR
-			mp_enable_preemption();
+      mp_enable_preemption();
 #endif
-		}
-	} while (!ret && (preemption_enabled() || (startup_phase < STARTUP_SUB_EARLY_BOOT)));
+    }
+  } while (!ret &&
+           (preemption_enabled() || (startup_phase < STARTUP_SUB_EARLY_BOOT)));
 
-	return ret;
+  return ret;
 }
 
 /**
@@ -341,37 +349,36 @@ pmap_lock_preempt(pmap_t pmap, pmap_lock_mode_t mode)
  * be acquired, then return immediately instead of spinning.
  *
  * @param pmap The pmap whose lock to attempt to acquire.
- * @param mode Whether to grab the lock as shared (read-only) or exclusive (read/write).
+ * @param mode Whether to grab the lock as shared (read-only) or exclusive
+ * (read/write).
  *
  * @return True if the lock was acquired, false otherwise.
  */
-static inline bool
-pmap_try_lock(pmap_t pmap, pmap_lock_mode_t mode)
-{
-	bool ret = false;
+static inline bool pmap_try_lock(pmap_t pmap, pmap_lock_mode_t mode) {
+  bool ret = false;
 
 #if !XNU_MONITOR
-	mp_disable_preemption();
+  mp_disable_preemption();
 #endif
 
-	switch (mode) {
-	case PMAP_LOCK_SHARED:
-		ret = lck_rw_try_lock_shared(&pmap->rwlock);
-		break;
-	case PMAP_LOCK_EXCLUSIVE:
-		ret = lck_rw_try_lock_exclusive(&pmap->rwlock);
-		break;
-	default:
-		panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
-	}
+  switch (mode) {
+  case PMAP_LOCK_SHARED:
+    ret = lck_rw_try_lock_shared(&pmap->rwlock);
+    break;
+  case PMAP_LOCK_EXCLUSIVE:
+    ret = lck_rw_try_lock_exclusive(&pmap->rwlock);
+    break;
+  default:
+    panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
+  }
 
-	if (!ret) {
+  if (!ret) {
 #if !XNU_MONITOR
-		mp_enable_preemption();
+    mp_enable_preemption();
 #endif
-	}
+  }
 
-	return ret;
+  return ret;
 }
 
 /**
@@ -382,20 +389,18 @@ pmap_try_lock(pmap_t pmap, pmap_lock_mode_t mode)
  * @return True if successfully promoted, otherwise false upon failure in
  *         which case the shared lock is dropped.
  */
-static inline bool
-pmap_lock_shared_to_exclusive(pmap_t pmap)
-{
-	pmap_assert_locked(pmap, PMAP_LOCK_SHARED);
+static inline bool pmap_lock_shared_to_exclusive(pmap_t pmap) {
+  pmap_assert_locked(pmap, PMAP_LOCK_SHARED);
 
-	bool locked = lck_rw_lock_shared_to_exclusive(&pmap->rwlock);
+  bool locked = lck_rw_lock_shared_to_exclusive(&pmap->rwlock);
 
 #if !XNU_MONITOR
-	if (!locked) {
-		mp_enable_preemption();
-	}
+  if (!locked) {
+    mp_enable_preemption();
+  }
 #endif
 
-	return locked;
+  return locked;
 }
 
 /**
@@ -404,22 +409,20 @@ pmap_lock_shared_to_exclusive(pmap_t pmap)
  * @param pmap The pmap whose lock to release.
  * @param mode Which mode the lock should be in at time of release.
  */
-static inline void
-pmap_unlock(pmap_t pmap, pmap_lock_mode_t mode)
-{
-	switch (mode) {
-	case PMAP_LOCK_SHARED:
-		lck_rw_unlock_shared(&pmap->rwlock);
-		break;
-	case PMAP_LOCK_EXCLUSIVE:
-		lck_rw_unlock_exclusive(&pmap->rwlock);
-		break;
-	default:
-		panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
-	}
+static inline void pmap_unlock(pmap_t pmap, pmap_lock_mode_t mode) {
+  switch (mode) {
+  case PMAP_LOCK_SHARED:
+    lck_rw_unlock_shared(&pmap->rwlock);
+    break;
+  case PMAP_LOCK_EXCLUSIVE:
+    lck_rw_unlock_exclusive(&pmap->rwlock);
+    break;
+  default:
+    panic("%s: Unknown pmap_lock_mode. pmap=%p, mode=%d", __func__, pmap, mode);
+  }
 
 #if !XNU_MONITOR
-	mp_enable_preemption();
+  mp_enable_preemption();
 #endif
 }
 
@@ -436,18 +439,17 @@ pmap_unlock(pmap_t pmap, pmap_lock_mode_t mode)
  *         pmap_interrupts_restore().
  */
 static inline uint64_t __attribute__((warn_unused_result)) __used
-pmap_interrupts_disable(void)
-{
-	uint64_t state = __builtin_arm_rsr64("DAIF");
+pmap_interrupts_disable(void) {
+  uint64_t state = __builtin_arm_rsr64("DAIF");
 
-	/* Ensure that debug exceptions are masked. */
-	assert((state & DAIF_DEBUGF) == DAIF_DEBUGF);
+  /* Ensure that debug exceptions are masked. */
+  assert((state & DAIF_DEBUGF) == DAIF_DEBUGF);
 
-	if ((state & DAIF_ALL) != DAIF_ALL) {
-		__builtin_arm_wsr64("DAIFSet", DAIFSC_ALL);
-	}
+  if ((state & DAIF_ALL) != DAIF_ALL) {
+    __builtin_arm_wsr64("DAIFSet", DAIFSC_ALL);
+  }
 
-	return state;
+  return state;
 }
 
 /*
@@ -455,18 +457,16 @@ pmap_interrupts_disable(void)
  *
  * @param state The previous interrupt state to restore.
  */
-static inline void __used
-pmap_interrupts_restore(uint64_t state)
-{
-	// no unknown bits?
-	assert((state & ~DAIF_ALL) == 0);
+static inline void __used pmap_interrupts_restore(uint64_t state) {
+  // no unknown bits?
+  assert((state & ~DAIF_ALL) == 0);
 
-	/* Assert that previous state had debug exceptions masked. */
-	assert((state & DAIF_DEBUGF) == DAIF_DEBUGF);
+  /* Assert that previous state had debug exceptions masked. */
+  assert((state & DAIF_DEBUGF) == DAIF_DEBUGF);
 
-	if (state != DAIF_ALL) {
-		__builtin_arm_wsr64("DAIF", state);
-	}
+  if (state != DAIF_ALL) {
+    __builtin_arm_wsr64("DAIF", state);
+  }
 }
 
 /*
@@ -481,9 +481,8 @@ pmap_interrupts_restore(uint64_t state)
  */
 
 static inline bool __attribute__((warn_unused_result)) __used
-pmap_interrupts_enabled(void)
-{
-	return (__builtin_arm_rsr64("DAIF") & DAIF_ALL) != DAIF_ALL;
+pmap_interrupts_enabled(void) {
+  return (__builtin_arm_rsr64("DAIF") & DAIF_ALL) != DAIF_ALL;
 }
 #endif /* __arm64__ */
 

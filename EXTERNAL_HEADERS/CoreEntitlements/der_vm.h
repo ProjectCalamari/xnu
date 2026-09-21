@@ -7,49 +7,51 @@
 #define CORE_ENTITLEMENTS_DER_VM_H
 
 #include <CoreEntitlements/CoreEntitlements.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 __ptrcheck_abi_assume_single();
 
 // The kernel doesn't have access to this one
-#if __has_include (<corecrypto/ccder.h>)
+#if __has_include(<corecrypto/ccder.h>)
 #include <corecrypto/ccder.h>
 #else
 typedef unsigned long ccder_tag;
 #endif
 
-
 /*!
  * @typedef der_vm_context_t
  * Represents the current execution state of the DERQL interpreter.
- * The context can be initialized with der_vm_context_create  and subsequently used in invocations of der_vm_execute.
- * This object is passed by value and the functions that operate on the der_vm_context_t do not modify it but instead return a copy.
- * As a consequence, the state of the interpreter can be captured at any execution point by holding on to the context.
+ * The context can be initialized with der_vm_context_create  and subsequently
+ * used in invocations of der_vm_execute. This object is passed by value and the
+ * functions that operate on the der_vm_context_t do not modify it but instead
+ * return a copy. As a consequence, the state of the interpreter can be captured
+ * at any execution point by holding on to the context.
  */
 typedef struct der_vm_context {
-    CERuntime_t runtime;
+  CERuntime_t runtime;
 #if CE_ACCELERATION_SUPPORTED
-    struct CEAccelerationContext lookup;
+  struct CEAccelerationContext lookup;
 #endif
-    ccder_tag dictionary_tag;
-    bool sorted;
-    bool valid;
-    union {
-        // the one you should use
-        ccder_read_blob ccstate;
-        
-        // for compatibility
-        struct {
-            const uint8_t *__ended_by(der_end) der_start;
-            const uint8_t *der_end;
-        } state;
-    };
+  ccder_tag dictionary_tag;
+  bool sorted;
+  bool valid;
+  union {
+    // the one you should use
+    ccder_read_blob ccstate;
+
+    // for compatibility
+    struct {
+      const uint8_t *__ended_by(der_end) der_start;
+      const uint8_t *der_end;
+    } state;
+  };
 } der_vm_context_t;
 
 /*!
  * @function der_vm_context_create
- * Returns an initialized, valid,  der_vm_context_t against which query operations may be performed
+ * Returns an initialized, valid,  der_vm_context_t against which query
+ * operations may be performed
  * @param rt
  * Active runtime
  * @param dictionary_tag
@@ -61,14 +63,20 @@ typedef struct der_vm_context {
  * @param der_end
  * Pointer to one byte past the end of the DER object
  * @discussion
- * The caller must ensure that the memory pointed to by der remains valid as long as the der_vm_context_t is used.
- * The caller must ensure that the DER object has been validated.
+ * The caller must ensure that the memory pointed to by der remains valid as
+ * long as the der_vm_context_t is used. The caller must ensure that the DER
+ * object has been validated.
  */
-der_vm_context_t der_vm_context_create(const CERuntime_t rt, ccder_tag dictionary_tag, bool sorted_keys, const uint8_t *__ended_by(der_end) der, const uint8_t *der_end);
+der_vm_context_t der_vm_context_create(const CERuntime_t rt,
+                                       ccder_tag dictionary_tag,
+                                       bool sorted_keys,
+                                       const uint8_t *__ended_by(der_end) der,
+                                       const uint8_t *der_end);
 
 /*!
  * @function der_vm_execute
- * Returns a new context that is derived by applying the op to the passed in context
+ * Returns a new context that is derived by applying the op to the passed in
+ * context
  *
  * @param context
  * Context to execute against
@@ -83,13 +91,16 @@ der_vm_context_t der_vm_context_create(const CERuntime_t rt, ccder_tag dictionar
  *      2. An operation that fails to execute
  *      3. Invalid state
  * The VM will attempt to return an invalid context.
- * If the VM encounters an operation that it does not understand, the runtime's abort function will be executed.
+ * If the VM encounters an operation that it does not understand, the runtime's
+ * abort function will be executed.
  */
-der_vm_context_t der_vm_execute(const der_vm_context_t context, CEQueryOperation_t op);
+der_vm_context_t der_vm_execute(const der_vm_context_t context,
+                                CEQueryOperation_t op);
 
 /*!
  * @function der_vm_execute_nocopy
- * Returns a new context that is derived by applying the op to the passed in context
+ * Returns a new context that is derived by applying the op to the passed in
+ * context
  *
  * @param context
  * Context to execute against
@@ -105,25 +116,33 @@ der_vm_context_t der_vm_execute(const der_vm_context_t context, CEQueryOperation
  *      2. An operation that fails to execute
  *      3. Invalid state
  * The VM will attempt to return an invalid context.
- * If the VM encounters an operation that it does not understand, the runtime's abort function will be executed.
+ * If the VM encounters an operation that it does not understand, the runtime's
+ * abort function will be executed.
  */
-der_vm_context_t der_vm_execute_nocopy(const der_vm_context_t context, const CEQueryOperation_t* op);
+der_vm_context_t der_vm_execute_nocopy(const der_vm_context_t context,
+                                       const CEQueryOperation_t *op);
 
 /*!
  * @function der_vm_execute_seq_nocopy
- * Returns a new context that is derived by applying the operation sequence to the passed in context
+ * Returns a new context that is derived by applying the operation sequence to
+ * the passed in context
  *
  * @param context
  * Context to execute against
  *
  * @param query
- * Operations to be performed against the context, see der_vm_execute_nocopy for more
+ * Operations to be performed against the context, see der_vm_execute_nocopy for
+ * more
  *
  * @param queryLength
  * Number of operations in the query
  *
  */
-der_vm_context_t der_vm_execute_seq_nocopy(const der_vm_context_t context, const CEQueryOperation_t *__counted_by(queryLength) query, size_t queryLength);
+der_vm_context_t
+der_vm_execute_seq_nocopy(const der_vm_context_t context,
+                          const CEQueryOperation_t *__counted_by(queryLength)
+                              query,
+                          size_t queryLength);
 
 /*!
  * @typedef der_vm_iteration_context
@@ -145,11 +164,11 @@ der_vm_context_t der_vm_execute_seq_nocopy(const der_vm_context_t context, const
  * The object you passed in the call to der_vm_iterate
  */
 typedef struct {
-    der_vm_context_t original;
-    der_vm_context_t active;
-    CEType_t parent_type;
-    CEType_t active_type;
-    void* user_data;
+  der_vm_context_t original;
+  der_vm_context_t active;
+  CEType_t parent_type;
+  CEType_t active_type;
+  void *user_data;
 } der_vm_iteration_context;
 
 /*!
@@ -161,19 +180,19 @@ typedef struct {
  */
 typedef bool (*der_vm_iteration_callback)(der_vm_iteration_context ctx);
 
-
-
 /*!
  * @function der_vm_iterate
  * @brief Iterates over a DER container, caliing the callback for every element
  *
  * @param context The context that points to a container
- * @param user_data This will be passed in verbatim in the der_vm_iteration_context
+ * @param user_data This will be passed in verbatim in the
+ * der_vm_iteration_context
  * @param callback This function is called for every element
  *
  * @returns kCENoError if the function exited normally
  */
-CEError_t der_vm_iterate(const der_vm_context_t context, void* user_data, der_vm_iteration_callback callback);
+CEError_t der_vm_iterate(const der_vm_context_t context, void *user_data,
+                         der_vm_iteration_callback callback);
 
 #ifdef __BLOCKS__
 /*!
@@ -181,20 +200,23 @@ CEError_t der_vm_iterate(const der_vm_context_t context, void* user_data, der_vm
  *
  * @brief Function definition for the callback that der_vm_iterate_b uses
  *
- * @param ctx The information about the iterable is stored here, you may modify it
+ * @param ctx The information about the iterable is stored here, you may modify
+ * it
  */
-typedef bool (^der_vm_iteration_block)(der_vm_iteration_context* ctx);
+typedef bool (^der_vm_iteration_block)(der_vm_iteration_context *ctx);
 
 /*!
  * @function der_vm_iterate_b
  * @brief Iterates over a DER container, calling the block for every element
- * @note dev_vm_iterate is implemented using the block interface. Using this function directly is more efficient.
+ * @note dev_vm_iterate is implemented using the block interface. Using this
+ * function directly is more efficient.
  * @param context The context that points to a container
  * @param callback This block is called for every element
  *
  * @returns kCENoError if the function exited normally
  */
-CEError_t der_vm_iterate_b(const der_vm_context_t* context, der_vm_iteration_block callback);
+CEError_t der_vm_iterate_b(const der_vm_context_t *context,
+                           der_vm_iteration_block callback);
 #endif
 
 /*!
@@ -212,25 +234,29 @@ bool der_vm_context_is_valid(const der_vm_context_t context);
 
 /*!
  * @function der_vm_CEType_from_context
- * Returns a CEType_t corresponding to the item currently pointed to by the context's DER state
+ * Returns a CEType_t corresponding to the item currently pointed to by the
+ * context's DER state
  *
  * @param context
  * The context in question
  * @param tag
  * Nullable pointer to where to store the decoded DER tag
  */
-CEType_t der_vm_CEType_from_context(const der_vm_context_t context, ccder_tag* tag);
+CEType_t der_vm_CEType_from_context(const der_vm_context_t context,
+                                    ccder_tag *tag);
 
 /*!
  * @function der_vm_CEType_from_ccder_tag
- * Returns a CEType_t corresponding to the tag value, without touching the context's DER state
+ * Returns a CEType_t corresponding to the tag value, without touching the
+ * context's DER state
  *
  * @param context
  * The context in question
  * @param tag
  * Nullable pointer to where to store the decoded DER tag
  */
-CEType_t der_vm_CEType_from_ccder_tag(const der_vm_context_t context, ccder_tag tag);
+CEType_t der_vm_CEType_from_ccder_tag(const der_vm_context_t context,
+                                      ccder_tag tag);
 
 /*!
  * @function der_vm_integer_from_context

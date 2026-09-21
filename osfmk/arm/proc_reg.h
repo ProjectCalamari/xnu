@@ -32,7 +32,8 @@
 #ifndef _ARM_PROC_REG_H_
 #define _ARM_PROC_REG_H_
 
-#pragma GCC warning "arm/proc_reg.h is deprecated.  Please use arm64/proc_reg.h."
+#pragma GCC warning                                                            \
+    "arm/proc_reg.h is deprecated.  Please use arm64/proc_reg.h."
 
 #include <arm64/proc_reg.h>
 

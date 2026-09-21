@@ -31,33 +31,32 @@
 
 #ifndef KERNEL
 
-#include <sys/appleapiopts.h>
-#include <sys/cdefs.h>
-#include <sys/_types/_ssize_t.h>
-#include <sys/_types/_size_t.h>
-#include <sys/_types/_fsid_t.h>
+#include <Availability.h>
 #include <_types/_uint32_t.h>
 #include <_types/_uint64_t.h>
-#include <Availability.h>
+#include <sys/_types/_fsid_t.h>
+#include <sys/_types/_size_t.h>
+#include <sys/_types/_ssize_t.h>
+#include <sys/appleapiopts.h>
+#include <sys/cdefs.h>
 
 /*
  * These are only included for compatibility with previous header
  */
-#include <sys/types.h>
 #include <sys/mount.h>
+#include <sys/types.h>
 #ifdef __APPLE_API_PRIVATE
 #include <sys/attr.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-#endif  /* __APPLE_API_PRIVATE */
+#endif /* __APPLE_API_PRIVATE */
 
-#include <sys/attr_private.h>
 #include <sys/_types/_fsobj_id_t.h>
+#include <sys/attr_private.h>
 
 __BEGIN_DECLS
 
 #ifdef __APPLE_API_PRIVATE
-
 
 /*
  * openbyid_np: open a file given a file system id and a file system object id
@@ -69,15 +68,17 @@ __BEGIN_DECLS
  *		  attribute , or
  *		  value of stat's st.st_ino (node id); set objid =  st.st_ino
  *
- * For hfs the value of getattlist ATTR_CMN_FSID is a link id which uniquely identifies a
- * parent in the case of hard linked files; this allows unique path access validation.
- * Not all file systems support getattrlist ATTR_CMN_OBJID (link id).
- * A node id does not uniquely identify a parent in the case of hard linked files and may
- * resolve to a path for which access validation can fail.
+ * For hfs the value of getattlist ATTR_CMN_FSID is a link id which uniquely
+ * identifies a parent in the case of hard linked files; this allows unique path
+ * access validation. Not all file systems support getattrlist ATTR_CMN_OBJID
+ * (link id). A node id does not uniquely identify a parent in the case of hard
+ * linked files and may resolve to a path for which access validation can fail.
  */
-int openbyid_np(fsid_t* fsid, fsobj_id_t* objid, int flags);
+int openbyid_np(fsid_t *fsid, fsobj_id_t *objid, int flags);
 
-ssize_t fsgetpath_ext(char *, size_t, fsid_t *, uint64_t, uint32_t) __OSX_AVAILABLE(10.15) __IOS_AVAILABLE(13.0) __TVOS_AVAILABLE(13.0) __WATCHOS_AVAILABLE(6.0);
+ssize_t fsgetpath_ext(char *, size_t, fsid_t *, uint64_t, uint32_t)
+    __OSX_AVAILABLE(10.15) __IOS_AVAILABLE(13.0) __TVOS_AVAILABLE(13.0)
+        __WATCHOS_AVAILABLE(6.0);
 
 #endif /* __APPLE_API_PRIVATE */
 

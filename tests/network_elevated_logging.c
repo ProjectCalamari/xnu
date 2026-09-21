@@ -26,34 +26,35 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/types.h>
-#include <sys/sysctl.h>
 #include <darwintest.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.net"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("networking"),
-	T_META_ASROOT(false)
-	);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.net"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("networking"),
+              T_META_ASROOT(false));
 
-static void
-test_sysctl(const char* name)
-{
-	int value, previous_value = 0, current_value = 0;
-	size_t len = sizeof(value);
+static void test_sysctl(const char *name) {
+  int value, previous_value = 0, current_value = 0;
+  size_t len = sizeof(value);
 
-	T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, &value, &len, NULL, 0), "Get current value of sysctl %s", name);
-	previous_value = value;
-	value = 66;
-	T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, NULL, NULL, &value, sizeof(value)), "Set value of sysctl %s, prev=%d new=%d", name, previous_value, value);
-	T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, &current_value, &len, NULL, 0), "Get new value of sysctl %s", name);
-	T_ASSERT_EQ(value, current_value, "Verify value was actually set");
-	T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, NULL, NULL, &previous_value, sizeof(previous_value)), "Restore value of sysctl %s to %d", name, previous_value);
+  T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, &value, &len, NULL, 0),
+                         "Get current value of sysctl %s", name);
+  previous_value = value;
+  value = 66;
+  T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, NULL, NULL, &value, sizeof(value)),
+                         "Set value of sysctl %s, prev=%d new=%d", name,
+                         previous_value, value);
+  T_ASSERT_POSIX_SUCCESS(sysctlbyname(name, &current_value, &len, NULL, 0),
+                         "Get new value of sysctl %s", name);
+  T_ASSERT_EQ(value, current_value, "Verify value was actually set");
+  T_ASSERT_POSIX_SUCCESS(
+      sysctlbyname(name, NULL, NULL, &previous_value, sizeof(previous_value)),
+      "Restore value of sysctl %s to %d", name, previous_value);
 }
 
-T_DECL(nework_elevated_logging, "Tests enforcement of entitlement as non-root")
-{
-	test_sysctl("net.route.verbose");
-	test_sysctl("net.inet6.icmp6.nd6_debug");
+T_DECL(nework_elevated_logging,
+       "Tests enforcement of entitlement as non-root") {
+  test_sysctl("net.route.verbose");
+  test_sysctl("net.inet6.icmp6.nd6_debug");
 }

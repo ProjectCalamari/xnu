@@ -35,27 +35,23 @@ __BEGIN_DECLS
 #include <kern/kern_types.h>
 
 typedef enum thread_urgency {
-	THREAD_URGENCY_NONE             = 0,    /* processor is idle */
-	THREAD_URGENCY_BACKGROUND       = 1,    /* "background" thread (i.e. min-power) */
-	THREAD_URGENCY_NORMAL           = 2,    /* "normal" thread */
-	THREAD_URGENCY_REAL_TIME        = 3,    /* "real-time" or urgent thread */
-	THREAD_URGENCY_LOWPRI           = 4,    /* low priority but not "background" hint for performance management subsystem */
-	THREAD_URGENCY_MAX              = 5,    /* Max */
+  THREAD_URGENCY_NONE = 0,       /* processor is idle */
+  THREAD_URGENCY_BACKGROUND = 1, /* "background" thread (i.e. min-power) */
+  THREAD_URGENCY_NORMAL = 2,     /* "normal" thread */
+  THREAD_URGENCY_REAL_TIME = 3,  /* "real-time" or urgent thread */
+  THREAD_URGENCY_LOWPRI = 4,     /* low priority but not "background" hint for
+                                    performance management subsystem */
+  THREAD_URGENCY_MAX = 5,        /* Max */
 } thread_urgency_t;
 
 /* Returns the "urgency" of a thread (provided by scheduler) */
-extern thread_urgency_t      thread_get_urgency(
-	thread_t        thread,
-	uint64_t        *rt_period,
-	uint64_t        *rt_deadline);
+extern thread_urgency_t thread_get_urgency(thread_t thread, uint64_t *rt_period,
+                                           uint64_t *rt_deadline);
 
 /* Tells the "urgency" of the just scheduled thread (provided by CPU PM) */
-extern void     thread_tell_urgency(
-	thread_urgency_t             urgency,
-	uint64_t        rt_period,
-	uint64_t        rt_deadline,
-	uint64_t        sched_latency,
-	thread_t nthread);
+extern void thread_tell_urgency(thread_urgency_t urgency, uint64_t rt_period,
+                                uint64_t rt_deadline, uint64_t sched_latency,
+                                thread_t nthread);
 
 __END_DECLS
 #endif /* defined(MACH_KERNEL_PRIVATE) || SCHED_TEST_HARNESS */

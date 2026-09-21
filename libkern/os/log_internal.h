@@ -27,11 +27,11 @@
 #include <os/log_private.h>
 
 typedef struct {
-	firehose_tracepoint_id_u    lp_ftid;
-	uint64_t                    lp_timestamp;
-	uint16_t                    lp_pub_data_size;
-	uint16_t                    lp_data_size;
-	firehose_stream_t           lp_stream;
+  firehose_tracepoint_id_u lp_ftid;
+  uint64_t lp_timestamp;
+  uint16_t lp_pub_data_size;
+  uint16_t lp_data_size;
+  firehose_stream_t lp_stream;
 } log_payload_s, *log_payload_t;
 
 bool log_payload_send(log_payload_t, const void *, bool);

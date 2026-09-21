@@ -26,32 +26,26 @@
  */
 
 #include <kern/assert.h>
-#include <kern/cpu_data.h>
 #include <kern/counter.h>
+#include <kern/cpu_data.h>
 #include <kern/zalloc.h>
 #include <machine/atomic.h>
-#include <machine/machine_routines.h>
 #include <machine/cpu_number.h>
+#include <machine/machine_routines.h>
 
 OS_OVERLOADABLE
-void
-counter_add(scalable_counter_t *counter, uint64_t amount)
-{
-	os_atomic_add(zpercpu_get(*counter), amount, relaxed);
+void counter_add(scalable_counter_t *counter, uint64_t amount) {
+  os_atomic_add(zpercpu_get(*counter), amount, relaxed);
 }
 
 OS_OVERLOADABLE
-void
-counter_inc(scalable_counter_t *counter)
-{
-	os_atomic_inc(zpercpu_get(*counter), relaxed);
+void counter_inc(scalable_counter_t *counter) {
+  os_atomic_inc(zpercpu_get(*counter), relaxed);
 }
 
 OS_OVERLOADABLE
-void
-counter_dec(scalable_counter_t *counter)
-{
-	os_atomic_dec(zpercpu_get(*counter), relaxed);
+void counter_dec(scalable_counter_t *counter) {
+  os_atomic_dec(zpercpu_get(*counter), relaxed);
 }
 
 /*
@@ -60,22 +54,17 @@ counter_dec(scalable_counter_t *counter)
  * callers never mix the interfaces for the same counter.
  */
 OS_OVERLOADABLE
-void
-counter_add_preemption_disabled(scalable_counter_t *counter, uint64_t amount)
-{
-	counter_add(counter, amount);
+void counter_add_preemption_disabled(scalable_counter_t *counter,
+                                     uint64_t amount) {
+  counter_add(counter, amount);
 }
 
 OS_OVERLOADABLE
-void
-counter_inc_preemption_disabled(scalable_counter_t *counter)
-{
-	counter_inc(counter);
+void counter_inc_preemption_disabled(scalable_counter_t *counter) {
+  counter_inc(counter);
 }
 
 OS_OVERLOADABLE
-void
-counter_dec_preemption_disabled(scalable_counter_t *counter)
-{
-	counter_dec(counter);
+void counter_dec_preemption_disabled(scalable_counter_t *counter) {
+  counter_dec(counter);
 }

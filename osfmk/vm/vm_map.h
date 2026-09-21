@@ -72,33 +72,32 @@
 
 #include <sys/cdefs.h>
 
-#include <mach/mach_types.h>
-#include <mach/kern_return.h>
 #include <mach/boolean.h>
-#include <mach/vm_types.h>
-#include <mach/vm_prot.h>
-#include <mach/vm_inherit.h>
-#include <mach/vm_behavior.h>
-#include <mach/vm_param.h>
+#include <mach/kern_return.h>
+#include <mach/mach_types.h>
 #include <mach/sdt.h>
-#include <vm/pmap.h>
+#include <mach/vm_behavior.h>
+#include <mach/vm_inherit.h>
+#include <mach/vm_param.h>
+#include <mach/vm_prot.h>
+#include <mach/vm_types.h>
 #include <os/overflow.h>
+#include <vm/pmap.h>
 #ifdef XNU_KERNEL_PRIVATE
 #include <vm/vm_protos.h>
 #endif /* XNU_KERNEL_PRIVATE */
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
+#include <kern/locks.h>
+#include <kern/macro_help.h>
+#include <kern/zalloc.h>
 #include <mach_assert.h>
 #include <vm/vm_map_store_internal.h>
 #include <vm/vm_object_xnu.h>
 #include <vm/vm_page.h>
-#include <kern/locks.h>
-#include <kern/zalloc.h>
-#include <kern/macro_help.h>
 
 #include <kern/thread.h>
 #include <os/refcnt.h>
 #endif /* MACH_KERNEL_PRIVATE */
-
 
 __BEGIN_DECLS
 
@@ -138,12 +137,8 @@ __BEGIN_DECLS
  * @param max_off       the upper address bound of this map
  * @param pageable      whether the map will support paging.
  */
-extern vm_map_t         vm_map_create(
-	pmap_t                  pmap,
-	vm_map_offset_t         min_off,
-	vm_map_offset_t         max_off,
-	boolean_t               pageable);
-
+extern vm_map_t vm_map_create(pmap_t pmap, vm_map_offset_t min_off,
+                              vm_map_offset_t max_off, boolean_t pageable);
 
 /*!
  * @function vm_map_deallocate()
@@ -157,9 +152,7 @@ extern vm_map_t         vm_map_create(
  *
  * @param map           the map to deallocate.
  */
-extern void             vm_map_deallocate(
-	vm_map_t                map);
-
+extern void vm_map_deallocate(vm_map_t map);
 
 /*!
  * @function vm_map_page_shift()
@@ -170,9 +163,7 @@ extern void             vm_map_deallocate(
  * @param map           the specified map
  * @returns             the page shift for this map
  */
-extern int              vm_map_page_shift(
-	vm_map_t                map) __pure2;
-
+extern int vm_map_page_shift(vm_map_t map) __pure2;
 
 /*!
  * @function vm_map_page_mask()
@@ -186,9 +177,7 @@ extern int              vm_map_page_shift(
  * @param map           the specified map
  * @returns             the page mask for this map
  */
-extern vm_map_offset_t  vm_map_page_mask(
-	vm_map_t                map) __pure2;
-
+extern vm_map_offset_t vm_map_page_mask(vm_map_t map) __pure2;
 
 /*!
  * @function vm_map_page_size()
@@ -202,9 +191,7 @@ extern vm_map_offset_t  vm_map_page_mask(
  * @param map           the specified map
  * @returns             the page size for this map
  */
-extern int              vm_map_page_size(
-	vm_map_t                map) __pure2;
-
+extern int vm_map_page_size(vm_map_t map) __pure2;
 
 /*!
  * @function vm_map_round_page()
@@ -221,8 +208,8 @@ extern int              vm_map_page_size(
  * @param mask          the page mask to use for the operation
  * @returns             @c offset rounded up to the next page boundary
  */
-#define vm_map_round_page(x, pgmask) \
-	(((vm_map_offset_t)(x) + (pgmask)) & ~((signed)(pgmask)))
+#define vm_map_round_page(x, pgmask)                                           \
+  (((vm_map_offset_t)(x) + (pgmask)) & ~((signed)(pgmask)))
 
 /*!
  * @function vm_map_round_page_mask()
@@ -241,16 +228,15 @@ extern int              vm_map_page_size(
  * @param mask          the page mask to use for the operation
  * @returns             @c offset rounded up to the next page boundary
  */
-extern vm_map_offset_t  vm_map_round_page_mask(
-	vm_map_offset_t         offset,
-	vm_map_offset_t         mask) __pure2;
-
+extern vm_map_offset_t vm_map_round_page_mask(vm_map_offset_t offset,
+                                              vm_map_offset_t mask) __pure2;
 
 /*!
  * @function vm_map_trunc_page()
  *
  * @brief
- * Truncates a given address to the previous page boundary for a given page mask.
+ * Truncates a given address to the previous page boundary for a given page
+ * mask.
  *
  * @discussion
  * This is equivalent to @c vm_map_trunc_page(offset, mask)
@@ -259,14 +245,15 @@ extern vm_map_offset_t  vm_map_round_page_mask(
  * @param mask          the page mask to use for the operation
  * @returns             @c offset truncated to the previous page boundary
  */
-#define vm_map_trunc_page(offset, pgmask) \
-	((vm_map_offset_t)(offset) & ~((signed)(pgmask)))
+#define vm_map_trunc_page(offset, pgmask)                                      \
+  ((vm_map_offset_t)(offset) & ~((signed)(pgmask)))
 
 /*!
  * @function vm_map_trunc_page_mask()
  *
  * @brief
- * Truncates a given address to the previous page boundary for a given page mask.
+ * Truncates a given address to the previous page boundary for a given page
+ * mask.
  *
  * @discussion
  * This is equivalent to @c vm_map_trunc_page(offset, mask)
@@ -275,10 +262,8 @@ extern vm_map_offset_t  vm_map_round_page_mask(
  * @param mask          the page mask to use for the operation
  * @returns             @c offset truncated to the previous page boundary
  */
-extern vm_map_offset_t  vm_map_trunc_page_mask(
-	vm_map_offset_t         offset,
-	vm_map_offset_t         mask) __pure2;
-
+extern vm_map_offset_t vm_map_trunc_page_mask(vm_map_offset_t offset,
+                                              vm_map_offset_t mask) __pure2;
 
 /*!
  * @function vm_map_disable_hole_optimization()
@@ -292,8 +277,7 @@ extern vm_map_offset_t  vm_map_trunc_page_mask(
  *
  * @param map           the map to disable hole list for.
  */
-extern void vm_map_disable_hole_optimization(
-	vm_map_t                map);
+extern void vm_map_disable_hole_optimization(vm_map_t map);
 
 #ifdef MACH_KERNEL_PRIVATE
 
@@ -306,8 +290,7 @@ extern void vm_map_disable_hole_optimization(
  * @brief
  * MIG intran for the @c vm_task_entry_t type, do not use directly.
  */
-extern vm_map_t         convert_port_entry_to_map(
-	ipc_port_t              port) __exported;
+extern vm_map_t convert_port_entry_to_map(ipc_port_t port) __exported;
 
 /*!
  * @function vm_map_inspect_deallocate()
@@ -316,9 +299,7 @@ extern vm_map_t         convert_port_entry_to_map(
  * MIG destructor function for the @c vm_map_inspect_t type,
  * do not use directly.
  */
-extern void             vm_map_inspect_deallocate(
-	vm_map_inspect_t        map);
-
+extern void vm_map_inspect_deallocate(vm_map_inspect_t map);
 
 /*!
  * @function vm_map_read_deallocate()
@@ -327,8 +308,7 @@ extern void             vm_map_inspect_deallocate(
  * MIG destructor function for the @c vm_map_read_t type,
  * do not use directly.
  */
-extern void             vm_map_read_deallocate(
-	vm_map_read_t           map);
+extern void vm_map_read_deallocate(vm_map_read_t map);
 
 #pragma GCC visibility pop
 #endif /* MACH_KERNEL_PRIVATE */
@@ -386,12 +366,9 @@ extern void             vm_map_read_deallocate(
  * - KERN_RESOURCE_SHORTAGE
  *                      the process would overflow its user wiring limits.
  */
-extern kern_return_t    vm_map_wire(
-	vm_map_t                map,
-	vm_map_offset_ut        start_u,
-	vm_map_offset_ut        end_u,
-	vm_prot_ut              prot_u,
-	boolean_t               user_wire);
+extern kern_return_t vm_map_wire(vm_map_t map, vm_map_offset_ut start_u,
+                                 vm_map_offset_ut end_u, vm_prot_ut prot_u,
+                                 boolean_t user_wire);
 
 #endif /* !XNU_KERNEL_PRIVATE */
 
@@ -417,12 +394,8 @@ extern kern_return_t    vm_map_wire(
  * @param end_u         the upper bound of the address range to wire
  * @param user_wire     whether the wiring is on behalf of userspace.
  */
-extern kern_return_t    vm_map_unwire(
-	vm_map_t                map,
-	vm_map_offset_ut        start_u,
-	vm_map_offset_ut        end_u,
-	boolean_t               user_wire);
-
+extern kern_return_t vm_map_unwire(vm_map_t map, vm_map_offset_ut start_u,
+                                   vm_map_offset_ut end_u, boolean_t user_wire);
 
 #if XNU_PLATFORM_MacOSX
 
@@ -451,12 +424,11 @@ extern kern_return_t    vm_map_unwire(
  * @returns             @c KERN_SUCCESS or an error denoting the reason for
  *                      failure.
  */
-extern kern_return_t    vm_map_wire_and_extract(
-	vm_map_t                map,
-	vm_map_offset_ut        address,
-	vm_prot_ut              access_type,
-	boolean_t               user_wire,
-	ppnum_t                *physpage_p);
+extern kern_return_t vm_map_wire_and_extract(vm_map_t map,
+                                             vm_map_offset_ut address,
+                                             vm_prot_ut access_type,
+                                             boolean_t user_wire,
+                                             ppnum_t *physpage_p);
 
 #endif /* XNU_PLATFORM_MacOSX */
 
@@ -470,8 +442,7 @@ extern kern_return_t    vm_map_wire_and_extract(
  * Note: this constant has unfortunately been exposed historically
  *       but should not be considered ABI.
  */
-#define VM_MAP_COPY_OVERWRITE_OPTIMIZATION_THRESHOLD_PAGES      (3)
-
+#define VM_MAP_COPY_OVERWRITE_OPTIMIZATION_THRESHOLD_PAGES (3)
 
 /*!
  * @function vm_map_copyin()
@@ -510,13 +481,9 @@ extern kern_return_t    vm_map_wire_and_extract(
  *                      a signal was received during the copy
  *
  */
-extern kern_return_t    vm_map_copyin(
-	vm_map_t                src_map,
-	vm_map_address_ut       src_addr,
-	vm_map_size_ut          len,
-	boolean_t               src_destroy,
-	vm_map_copy_t          *copy_result); /* OUT */
-
+extern kern_return_t vm_map_copyin(vm_map_t src_map, vm_map_address_ut src_addr,
+                                   vm_map_size_ut len, boolean_t src_destroy,
+                                   vm_map_copy_t *copy_result); /* OUT */
 
 /*!
  * @function vm_map_copyout()
@@ -541,10 +508,9 @@ extern kern_return_t    vm_map_copyin(
  *                      aligned, requiring different physical pages within the
  *                      same 16k page boundary.
  */
-extern kern_return_t    vm_map_copyout(
-	vm_map_t                dst_map,
-	vm_map_address_t       *addr, /* OUT */
-	vm_map_copy_t           copy);
+extern kern_return_t vm_map_copyout(vm_map_t dst_map,
+                                    vm_map_address_t *addr, /* OUT */
+                                    vm_map_copy_t copy);
 
 /*!
  * @function vm_map_copy_discard()
@@ -559,9 +525,7 @@ extern kern_return_t    vm_map_copyout(
  *
  * @param copy          the VM map copy object to dispose of.
  */
-extern void             vm_map_copy_discard(
-	vm_map_copy_t           copy);
-
+extern void vm_map_copy_discard(vm_map_copy_t copy);
 
 /**
  * @function vm_map_kernel_max_simple_mappable_size()
@@ -579,8 +543,8 @@ extern void             vm_map_copy_discard(
  */
 extern vm_size_t vm_map_kernel_max_simple_mappable_size(void);
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 
 __END_DECLS
 
-#endif  /* _VM_VM_MAP_H_ */
+#endif /* _VM_VM_MAP_H_ */

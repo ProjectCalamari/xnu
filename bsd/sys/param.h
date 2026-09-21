@@ -69,12 +69,12 @@
 #ifndef _SYS_PARAM_H_
 #define _SYS_PARAM_H_
 
-#define BSD     199506          /* System version (year & month). */
-#define BSD4_3  1
-#define BSD4_4  1
+#define BSD 199506 /* System version (year & month). */
+#define BSD4_3 1
+#define BSD4_4 1
 
-#define NeXTBSD 1995064         /* NeXTBSD version (year, month, release) */
-#define NeXTBSD4_0 0            /* NeXTBSD 4.0 */
+#define NeXTBSD 1995064 /* NeXTBSD version (year, month, release) */
+#define NeXTBSD4_0 0    /* NeXTBSD 4.0 */
 
 #include <sys/_types.h>
 #include <sys/_types/_null.h>
@@ -92,16 +92,16 @@
  */
 #include <sys/syslimits.h>
 
-#define MAXCOMLEN       16              /* max command name remembered */
-#define MAXINTERP       64              /* max interpreter file name length */
-#define MAXLOGNAME      255             /* max login name length */
-#define MAXUPRC         CHILD_MAX       /* max simultaneous processes */
-#define NCARGS          ARG_MAX         /* max bytes for an exec function */
-#define NGROUPS         NGROUPS_MAX     /* max number groups */
-#define NOFILE          256             /* default max open files per process */
-#define NOGROUP         65535           /* marker for empty group set member */
-#define MAXHOSTNAMELEN  256             /* max hostname size */
-#define MAXDOMNAMELEN   256             /* maximum domain name length */
+#define MAXCOMLEN 16        /* max command name remembered */
+#define MAXINTERP 64        /* max interpreter file name length */
+#define MAXLOGNAME 255      /* max login name length */
+#define MAXUPRC CHILD_MAX   /* max simultaneous processes */
+#define NCARGS ARG_MAX      /* max bytes for an exec function */
+#define NGROUPS NGROUPS_MAX /* max number groups */
+#define NOFILE 256          /* default max open files per process */
+#define NOGROUP 65535       /* marker for empty group set member */
+#define MAXHOSTNAMELEN 256  /* max hostname size */
+#define MAXDOMNAMELEN 256   /* maximum domain name length */
 
 /* Machine type dependent parameters. */
 #include <machine/param.h>
@@ -111,8 +111,8 @@
 #include <machine/limits.h>
 #include <sys/cdefs.h>
 #include <sys/errno.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
 #include <sys/ucred.h>
 #include <sys/uio.h>
 #else
@@ -126,56 +126,58 @@
  * Priorities.  Note that with 32 run queues, differences less than 4 are
  * insignificant.
  */
-#define PSWP    0
-#define PVM     4
-#define PINOD   8
-#define PRIBIO  16
-#define PVFS    20
-#define PZERO   22              /* No longer magic, shouldn't be here.  XXX */
-#define PSOCK   24
-#define PWAIT   32
-#define PLOCK   36
-#define PPAUSE  40
-#define PUSER   50
-#define MAXPRI  127             /* Priorities range from 0 through MAXPRI. */
+#define PSWP 0
+#define PVM 4
+#define PINOD 8
+#define PRIBIO 16
+#define PVFS 20
+#define PZERO 22 /* No longer magic, shouldn't be here.  XXX */
+#define PSOCK 24
+#define PWAIT 32
+#define PLOCK 36
+#define PPAUSE 40
+#define PUSER 50
+#define MAXPRI 127 /* Priorities range from 0 through MAXPRI. */
 
 #define PRIMASK 0x0ff
-#define PCATCH  0x100           /* OR'd with pri for tsleep to check signals */
-#define PTTYBLOCK 0x200         /* for tty SIGTTOU and SIGTTIN blocking */
-#define PDROP   0x400           /* OR'd with pri to stop re-aquistion of mutex upon wakeup */
-#define PSPIN   0x800           /* OR'd with pri to require mutex in spin mode upon wakeup */
+#define PCATCH 0x100    /* OR'd with pri for tsleep to check signals */
+#define PTTYBLOCK 0x200 /* for tty SIGTTOU and SIGTTIN blocking */
+#define PDROP                                                                  \
+  0x400 /* OR'd with pri to stop re-aquistion of mutex upon wakeup */
+#define PSPIN                                                                  \
+  0x800 /* OR'd with pri to require mutex in spin mode upon wakeup */
 
-#define NBPW    sizeof(int)     /* number of bytes per word (integer) */
+#define NBPW sizeof(int) /* number of bytes per word (integer) */
 
-#define CMASK   022             /* default file mask: S_IWGRP|S_IWOTH */
-#define NODEV   (dev_t)(-1)     /* non-existent device */
+#define CMASK 022         /* default file mask: S_IWGRP|S_IWOTH */
+#define NODEV (dev_t)(-1) /* non-existent device */
 
 /*
  * Clustering of hardware pages on machines with ridiculously small
  * page sizes is done here.  The paging subsystem deals with units of
  * CLSIZE pte's describing NBPG (from machine/param.h) pages each.
  */
-#define CLBYTES         (CLSIZE*NBPG)
-#define CLOFSET         (CLSIZE*NBPG-1) /* for clusters, like PGOFSET */
-#define claligned(x)    ((((int)(x))&CLOFSET)==0)
-#define CLOFF           CLOFSET
-#define CLSHIFT         (PGSHIFT+CLSIZELOG2)
+#define CLBYTES (CLSIZE * NBPG)
+#define CLOFSET (CLSIZE * NBPG - 1) /* for clusters, like PGOFSET */
+#define claligned(x) ((((int)(x)) & CLOFSET) == 0)
+#define CLOFF CLOFSET
+#define CLSHIFT (PGSHIFT + CLSIZELOG2)
 
 #if CLSIZE == 1
-#define clbase(i)       (i)
-#define clrnd(i)        (i)
+#define clbase(i) (i)
+#define clrnd(i) (i)
 #else
 /* Give the base virtual address (first of CLSIZE). */
-#define clbase(i)       ((i) &~ (CLSIZE-1))
+#define clbase(i) ((i) & ~(CLSIZE - 1))
 /* Round a number of clicks up to a whole cluster. */
-#define clrnd(i)        (((i) + (CLSIZE-1)) &~ (CLSIZE-1))
+#define clrnd(i) (((i) + (CLSIZE - 1)) & ~(CLSIZE - 1))
 #endif
 
-#define CBLOCK  64              /* Clist block size, must be a power of 2. */
-#define CBQSIZE (CBLOCK/NBBY)   /* Quote bytes/cblock - can do better. */
+#define CBLOCK 64               /* Clist block size, must be a power of 2. */
+#define CBQSIZE (CBLOCK / NBBY) /* Quote bytes/cblock - can do better. */
                                 /* Data chars/clist. */
-#define CBSIZE  (CBLOCK - sizeof(struct cblock *) - CBQSIZE)
-#define CROUND  (CBLOCK - 1)    /* Clist rounding. */
+#define CBSIZE (CBLOCK - sizeof(struct cblock *) - CBQSIZE)
+#define CROUND (CBLOCK - 1) /* Clist rounding. */
 
 /*
  * File system parameters and macros.
@@ -188,9 +190,9 @@
  * We set this to track the value of MAX_UPL_TRANSFER_BYTES from
  * osfmk/mach/memory_object_types.h to bound it at the maximum UPL size.
  */
-#define MAXBSIZE        (256 * 4096)
-#define MAXPHYSIO       MAXPHYS
-#define MAXFRAG         8
+#define MAXBSIZE (256 * 4096)
+#define MAXPHYSIO MAXPHYS
+#define MAXFRAG 8
 
 #define MAXPHYSIO_WIRED (16 * 1024 * 1024)
 
@@ -203,30 +205,31 @@
  * It should be set high enough to allow all legitimate uses, but halt
  * infinite loops reasonably quickly.
  */
-#define MAXPATHLEN      PATH_MAX
-#define MAXSYMLINKS     32
+#define MAXPATHLEN PATH_MAX
+#define MAXSYMLINKS 32
 
 /* Bit map related macros. */
-#define setbit(a, i)     (((unsigned char *)(a))[(i)/NBBY] |= 1u<<((i)%NBBY))
-#define clrbit(a, i)     (((unsigned char *)(a))[(i)/NBBY] &= ~(1u<<((i)%NBBY)))
-#define isset(a, i)      (((unsigned char *)(a))[(i)/NBBY] & (1u<<((i)%NBBY)))
-#define isclr(a, i)      ((((unsigned char *)(a))[(i)/NBBY] & (1u<<((i)%NBBY))) == 0)
+#define setbit(a, i) (((unsigned char *)(a))[(i) / NBBY] |= 1u << ((i) % NBBY))
+#define clrbit(a, i)                                                           \
+  (((unsigned char *)(a))[(i) / NBBY] &= ~(1u << ((i) % NBBY)))
+#define isset(a, i) (((unsigned char *)(a))[(i) / NBBY] & (1u << ((i) % NBBY)))
+#define isclr(a, i)                                                            \
+  ((((unsigned char *)(a))[(i) / NBBY] & (1u << ((i) % NBBY))) == 0)
 
 /* Macros for counting, rounding. */
 #ifndef howmany
-#define howmany(x, y)   ((((x) % (y)) == 0) ? ((x) / (y)) : (((x) / (y)) + 1))
+#define howmany(x, y) ((((x) % (y)) == 0) ? ((x) / (y)) : (((x) / (y)) + 1))
 #endif
-#define roundup(x, y)   ((((x) % (y)) == 0) ? \
-	                (x) : ((x) + ((y) - ((x) % (y)))))
-#define powerof2(x)     ((((x)-1)&(x))==0)
+#define roundup(x, y) ((((x) % (y)) == 0) ? (x) : ((x) + ((y) - ((x) % (y)))))
+#define powerof2(x) ((((x) - 1) & (x)) == 0)
 
 /* Macros for min/max. */
 #ifndef MIN
-#define MIN(a, b) (((a)<(b))?(a):(b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif /* MIN */
 #ifndef MAX
-#define MAX(a, b) (((a)>(b))?(a):(b))
-#endif  /* MAX */
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#endif /* MAX */
 
 /*
  * Scale factor for scaled integers used to count %cpu time and load avgs.
@@ -239,7 +242,7 @@
  * For the scheduler to maintain a 1:1 mapping of CPU `tick' to `%age',
  * FSHIFT must be at least 11; this gives us a maximum load avg of ~1024.
  */
-#define FSHIFT  11              /* bits to right of fixed binary point */
-#define FSCALE  (1<<FSHIFT)
+#define FSHIFT 11 /* bits to right of fixed binary point */
+#define FSCALE (1 << FSHIFT)
 
-#endif  /* _SYS_PARAM_H_ */
+#endif /* _SYS_PARAM_H_ */

@@ -39,9 +39,9 @@
 #ifndef _MACH_H_
 #define _MACH_H_
 
+#include <mach/mach_interface.h>
 #include <mach/mach_types.h>
 #include <mach/message.h>
 #include <mach/thread_switch.h>
-#include <mach/mach_interface.h>
 
-#endif  /* _MACH_H_ */
+#endif /* _MACH_H_ */

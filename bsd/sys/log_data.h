@@ -38,6 +38,7 @@
  * rdar://problem/48252465
  * This header should be exported only to dexts.
  */
-int log_data_as_kernel(unsigned int tag, unsigned int flags, void *buffer, unsigned int size);
+int log_data_as_kernel(unsigned int tag, unsigned int flags, void *buffer,
+                       unsigned int size);
 
 #endif /* _DATA_LOG_H_ */

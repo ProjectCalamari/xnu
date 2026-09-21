@@ -29,40 +29,40 @@
  * Copyright (c) 1987 NeXT, Inc.
  */
 
-#include <sys/_types/_dev_t.h>     /* dev_t */
+#include <sys/_types/_dev_t.h> /* dev_t */
 
 struct consdev {
-	char    *cn_name;       /* name of device in dev_name_list */
-	int     (*cn_probe)(void);      /* probe and fill in consdev info */
-	int     (*cn_init)(void);       /* turn on as console */
-	int     (*cn_getc)(void);       /* kernel getchar interface */
-	int     (*cn_putc)(void);       /* kernel putchar interface */
-	struct  tty *cn_tp;     /* tty structure for console device */
-	dev_t   cn_dev;         /* major/minor of device */
-	short   cn_pri;         /* pecking order; the higher the better */
+  char *cn_name;         /* name of device in dev_name_list */
+  int (*cn_probe)(void); /* probe and fill in consdev info */
+  int (*cn_init)(void);  /* turn on as console */
+  int (*cn_getc)(void);  /* kernel getchar interface */
+  int (*cn_putc)(void);  /* kernel putchar interface */
+  struct tty *cn_tp;     /* tty structure for console device */
+  dev_t cn_dev;          /* major/minor of device */
+  short cn_pri;          /* pecking order; the higher the better */
 };
 
 /* values for cn_pri - reflect our policy for console selection */
-#define CN_DEAD         0       /* device doesn't exist */
-#define CN_NORMAL       1       /* device exists but is nothing special */
-#define CN_INTERNAL     2       /* "internal" bit-mapped display */
-#define CN_REMOTE       3       /* serial interface with remote bit set */
+#define CN_DEAD 0     /* device doesn't exist */
+#define CN_NORMAL 1   /* device exists but is nothing special */
+#define CN_INTERNAL 2 /* "internal" bit-mapped display */
+#define CN_REMOTE 3   /* serial interface with remote bit set */
 
 /* XXX */
-#define CONSMAJOR       0
+#define CONSMAJOR 0
 
 #ifdef KERNEL
 
-#include <sys/types.h>
 #include <sys/conf.h>
+#include <sys/types.h>
 
-extern  struct consdev constab[];
-extern  struct consdev *cn_tab;
-extern  struct tty *cn_tty;
+extern struct consdev constab[];
+extern struct consdev *cn_tab;
+extern struct tty *cn_tty;
 
 /* Returns tty with +1 retain count, use ttyfree() to release. */
-extern struct tty       *copy_constty(void);               /* current console device */
-extern struct tty       *set_constty(struct tty *);
+extern struct tty *copy_constty(void); /* current console device */
+extern struct tty *set_constty(struct tty *);
 
 int consopen(dev_t, int, int, struct proc *);
 int consclose(dev_t, int, int, struct proc *);

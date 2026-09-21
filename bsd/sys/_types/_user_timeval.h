@@ -27,11 +27,10 @@
  */
 #ifdef KERNEL
 #ifndef _STRUCT_USER_TIMEVAL
-#define _STRUCT_USER_TIMEVAL            struct user_timeval
-_STRUCT_USER_TIMEVAL
-{
-	user_time_t             tv_sec;         /* seconds */
-	__int32_t               tv_usec;        /* and microseconds */
+#define _STRUCT_USER_TIMEVAL struct user_timeval
+_STRUCT_USER_TIMEVAL {
+  user_time_t tv_sec; /* seconds */
+  __int32_t tv_usec;  /* and microseconds */
 };
 #endif /* _STRUCT_USER_TIMEVAL */
 #endif /* KERNEL */

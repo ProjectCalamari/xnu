@@ -30,30 +30,27 @@
 #include <pexpert/GearImage.h>
 
 struct boot_progress_element {
-	unsigned int        width;
-	unsigned int        height;
-	int                 yOffset;
-	unsigned int        res[5];
-	unsigned char       data[0];
+  unsigned int width;
+  unsigned int height;
+  int yOffset;
+  unsigned int res[5];
+  unsigned char data[0];
 };
 typedef struct boot_progress_element boot_progress_element;
 
-static const unsigned char * default_noroot_data;
+static const unsigned char *default_noroot_data;
 
-static const unsigned char * default_progress_data1x = gGearPict;
-static const unsigned char * default_progress_data2x = gGearPict2x;
+static const unsigned char *default_progress_data1x = gGearPict;
+static const unsigned char *default_progress_data2x = gGearPict2x;
 #if !PEXPERT_NO_3X_IMAGES
-static const unsigned char * default_progress_data3x = gGearPict3x;
+static const unsigned char *default_progress_data3x = gGearPict3x;
 #else
-static const unsigned char * default_progress_data3x = NULL;
+static const unsigned char *default_progress_data3x = NULL;
 #endif
 
-static vc_progress_element default_progress =
-{   0, 4 | 1, 1000 / kGearFPS, kGearFrames, {0, 0, 0},
-    kGearWidth, kGearHeight, 0, kGearOffset,
-    0, {0, 0, 0} };
+static vc_progress_element default_progress = {
+    0,           4 | 1, 1000 / kGearFPS, kGearFrames, {0, 0, 0}, kGearWidth,
+    kGearHeight, 0,     kGearOffset,     0,           {0, 0, 0}};
 
-static vc_progress_element default_noroot =
-{   0, 1, 0, 0, {0, 0, 0},
-    128, 128, 0, 0,
-    -1, {0, 0, 0} };
+static vc_progress_element default_noroot = {0,   1, 0, 0,  {0, 0, 0}, 128,
+                                             128, 0, 0, -1, {0, 0, 0}};

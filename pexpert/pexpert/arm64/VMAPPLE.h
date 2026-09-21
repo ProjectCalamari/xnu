@@ -29,63 +29,63 @@
 #ifndef _PEXPERT_ARM64_VMAPPLE_H
 #define _PEXPERT_ARM64_VMAPPLE_H
 
-#define NO_MONITOR                1
-#define NO_ECORE                  1
-#define HAS_PARAVIRTUALIZED_CTRR  1
+#define NO_MONITOR 1
+#define NO_ECORE 1
+#define HAS_PARAVIRTUALIZED_CTRR 1
 
-#define VMAPPLE                   1
-#define APPLEVIRTUALPLATFORM      1
+#define VMAPPLE 1
+#define APPLEVIRTUALPLATFORM 1
 
-#define CPU_HAS_APPLE_PAC         1
-#define HAS_PARAVIRTUALIZED_PAC   1
-#define HAS_GIC_V3                1
-#define HAS_ARM_FEAT_SSBS2        1
-#define HAS_ARM_FEAT_SME          1
-#define HAS_ARM_FEAT_SME2         1
-#define HAS_ARM_FEAT_PAN3         1
+#define CPU_HAS_APPLE_PAC 1
+#define HAS_PARAVIRTUALIZED_PAC 1
+#define HAS_GIC_V3 1
+#define HAS_ARM_FEAT_SSBS2 1
+#define HAS_ARM_FEAT_SME 1
+#define HAS_ARM_FEAT_SME2 1
+#define HAS_ARM_FEAT_PAN3 1
 
-#define __ARM_PAN_AVAILABLE__     1
-#define __ARM_16K_PG__            1
-#define __ARM_RANGE_TLBI__        1
+#define __ARM_PAN_AVAILABLE__ 1
+#define __ARM_16K_PG__ 1
+#define __ARM_RANGE_TLBI__ 1
 
-#define ARM_PARAMETERIZED_PMAP    1
-#define __ARM_MIXED_PAGE_SIZE__   1
-
+#define ARM_PARAMETERIZED_PMAP 1
+#define __ARM_MIXED_PAGE_SIZE__ 1
 
 #include <pexpert/arm64/apple_arm64_common.h>
-#undef  __ARM64_PMAP_SUBPAGE_L1__
-#undef  __ARM64_PMAP_KERN_SUBPAGE_L1__
+#undef BTI_ENFORCED
+#define BTI_ENFORCED 0
+#undef __ARM64_PMAP_SUBPAGE_L1__
+#undef __ARM64_PMAP_KERN_SUBPAGE_L1__
 
 #ifndef ASSEMBLER
 #define PL011_UART
 #define PLATFORM_PANIC_LOG_DISABLED
 #endif /* ! ASSEMBLER */
 
+#define GIC_SPURIOUS_IRQ 1023 // IRQ no. for GIC spurious interrupt
 
-#define GIC_SPURIOUS_IRQ          1023    // IRQ no. for GIC spurious interrupt
+#define GICR_PE_SIZE 0x20000 // Size of each redistributor region
 
-#define GICR_PE_SIZE              0x20000 // Size of each redistributor region
+/* GICv3 reigster definitions; see GICv3 spec (Arm IHI 0069G) for more about
+ * these registers */
+#define GICD_CTLR 0x0
 
+#define GICD_CTLR_ENABLEGRP0 0x1
 
-/* GICv3 reigster definitions; see GICv3 spec (Arm IHI 0069G) for more about these registers */
-#define GICD_CTLR                 0x0
+#define GICR_TYPER 0x08
+#define GICR_WAKER 0x14
+#define GICR_IGROUPR0 0x10080
+#define GICR_ISENABLER0 0x10100
 
-#define GICD_CTLR_ENABLEGRP0      0x1
+#define GICR_TYPER_AFFINITY_VALUE_SHIFT 32
+#define GICR_TYPER_LAST 0x10
 
-#define GICR_TYPER                              0x08
-#define GICR_WAKER                              0x14
-#define GICR_IGROUPR0                           0x10080
-#define GICR_ISENABLER0                         0x10100
+#define GICR_WAKER_PROCESSORSLEEP 0x2
+#define GICR_WAKER_CHILDRENASLEEP 0x4
 
-#define GICR_TYPER_AFFINITY_VALUE_SHIFT         32
-#define GICR_TYPER_LAST                         0x10
+#define ICC_CTLR_EOIMODE 0x1
 
-#define GICR_WAKER_PROCESSORSLEEP               0x2
-#define GICR_WAKER_CHILDRENASLEEP               0x4
-
-#define ICC_CTLR_EOIMODE                        0x1
-
-#define ICC_SRE_SRE                             0x1
+#define ICC_SRE_SRE 0x1
 /* End of GICv3 register definitions */
 
 #endif /* ! _PEXPERT_ARM64_VMAPPLE_H */

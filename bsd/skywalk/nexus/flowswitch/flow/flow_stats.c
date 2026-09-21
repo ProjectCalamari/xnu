@@ -26,81 +26,74 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <skywalk/os_skywalk_private.h>
 #include <skywalk/nexus/flowswitch/flow/flow_var.h>
 #include <skywalk/nexus/flowswitch/fsw_var.h>
+#include <skywalk/os_skywalk_private.h>
 
-#define FS_ZONE_NAME            "flow.stats"
+#define FS_ZONE_NAME "flow.stats"
 
-unsigned int flow_stats_size;           /* size of zone element */
-struct skmem_cache *flow_stats_cache;   /* cache for flow_stats */
+unsigned int flow_stats_size;         /* size of zone element */
+struct skmem_cache *flow_stats_cache; /* cache for flow_stats */
 
 os_refgrp_decl(static, flow_stats_refgrp, "flow_stats", NULL);
 
 static int __flow_stats_inited = 0;
 
-void
-flow_stats_init(void)
-{
-	ASSERT(!__flow_stats_inited);
+void flow_stats_init(void) {
+  ASSERT(!__flow_stats_inited);
 
-	flow_stats_size = sizeof(struct flow_stats);
-	/* request for 16-bytes alignment (due to fe_key) */
-	flow_stats_cache = skmem_cache_create(FS_ZONE_NAME, flow_stats_size,
-	    16, NULL, NULL, NULL, NULL, NULL, 0);
-	if (flow_stats_cache == NULL) {
-		panic("%s: skmem_cache create failed (%s)",
-		    __func__, FS_ZONE_NAME);
-		/* NOTREACHED */
-		__builtin_unreachable();
-	}
+  flow_stats_size = sizeof(struct flow_stats);
+  /* request for 16-bytes alignment (due to fe_key) */
+  flow_stats_cache = skmem_cache_create(FS_ZONE_NAME, flow_stats_size, 16, NULL,
+                                        NULL, NULL, NULL, NULL, 0);
+  if (flow_stats_cache == NULL) {
+    panic("%s: skmem_cache create failed (%s)", __func__, FS_ZONE_NAME);
+    /* NOTREACHED */
+    __builtin_unreachable();
+  }
 
-	__flow_stats_inited = 1;
+  __flow_stats_inited = 1;
 }
 
-void
-flow_stats_fini(void)
-{
-	if (__flow_stats_inited) {
-		skmem_cache_destroy(flow_stats_cache);
-		flow_stats_cache = NULL;
-		__flow_stats_inited = 0;
-	}
+void flow_stats_fini(void) {
+  if (__flow_stats_inited) {
+    skmem_cache_destroy(flow_stats_cache);
+    flow_stats_cache = NULL;
+    __flow_stats_inited = 0;
+  }
 }
 
-struct flow_stats *
-flow_stats_alloc(boolean_t cansleep)
-{
-	struct flow_stats *fs;
+struct flow_stats *flow_stats_alloc(boolean_t cansleep) {
+  struct flow_stats *fs;
 
-	static_assert((offsetof(struct flow_stats, fs_stats) % 16) == 0);
-	static_assert((offsetof(struct sk_stats_flow, sf_key) % 16) == 0);
+  static_assert((offsetof(struct flow_stats, fs_stats) % 16) == 0);
+  static_assert((offsetof(struct sk_stats_flow, sf_key) % 16) == 0);
 
-	/* XXX -fbounds-safety: fix after skmem merge */
-	fs = __unsafe_forge_bidi_indexable(struct flow_stats *,
-	    skmem_cache_alloc(flow_stats_cache,
-	    (cansleep ? SKMEM_SLEEP : SKMEM_NOSLEEP)), flow_stats_size);
+  /* XXX -fbounds-safety: fix after skmem merge */
+  fs = __unsafe_forge_bidi_indexable(
+      struct flow_stats *,
+      skmem_cache_alloc(flow_stats_cache,
+                        (cansleep ? SKMEM_SLEEP : SKMEM_NOSLEEP)),
+      flow_stats_size);
 
-	if (fs == NULL) {
-		return NULL;
-	}
-	/*
-	 * sf_key is 16-bytes aligned which requires fe to begin on
-	 * a 16-bytes boundary as well.  This alignment is specified
-	 * at flow_stats_cache creation time and we assert here.
-	 */
-	ASSERT(IS_P2ALIGNED(fs, 16));
-	bzero(fs, flow_stats_size);
-	os_ref_init(&fs->fs_refcnt, &flow_stats_refgrp);
-	SK_DF(SK_VERB_MEM, "allocated fs %p", SK_KVA(fs));
-	return fs;
+  if (fs == NULL) {
+    return NULL;
+  }
+  /*
+   * sf_key is 16-bytes aligned which requires fe to begin on
+   * a 16-bytes boundary as well.  This alignment is specified
+   * at flow_stats_cache creation time and we assert here.
+   */
+  ASSERT(IS_P2ALIGNED(fs, 16));
+  bzero(fs, flow_stats_size);
+  os_ref_init(&fs->fs_refcnt, &flow_stats_refgrp);
+  SK_DF(SK_VERB_MEM, "allocated fs %p", SK_KVA(fs));
+  return fs;
 }
 
-void
-flow_stats_free(struct flow_stats *fs)
-{
-	VERIFY(os_ref_get_count(&fs->fs_refcnt) == 0);
+void flow_stats_free(struct flow_stats *fs) {
+  VERIFY(os_ref_get_count(&fs->fs_refcnt) == 0);
 
-	SK_DF(SK_VERB_MEM, "freeing fs %p", SK_KVA(fs));
-	skmem_cache_free(flow_stats_cache, fs);
+  SK_DF(SK_VERB_MEM, "freeing fs %p", SK_KVA(fs));
+  skmem_cache_free(flow_stats_cache, fs);
 }

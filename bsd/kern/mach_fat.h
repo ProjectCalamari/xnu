@@ -29,17 +29,23 @@
 #ifndef _BSD_KERN_MACH_FAT_H_
 #define _BSD_KERN_MACH_FAT_H_
 
-#include <mach/mach_types.h>
 #include <kern/mach_loader.h>
 #include <mach-o/fat.h>
+#include <mach/mach_types.h>
 #include <sys/vnode.h>
 
-load_return_t fatfile_validate_fatarches(vm_offset_t data_ptr, vm_size_t data_size, off_t file_size);
+load_return_t fatfile_validate_fatarches(vm_offset_t data_ptr,
+                                         vm_size_t data_size, off_t file_size);
 
-load_return_t fatfile_getbestarch(vm_offset_t data_ptr, vm_size_t data_size, struct image_params *imgp, struct fat_arch *archret, bool affinity);
-load_return_t fatfile_getbestarch_for_cputype(cpu_type_t cputype, cpu_subtype_t cpusubtype,
-    vm_offset_t data_ptr, vm_size_t data_size, struct image_params *imgp, struct fat_arch *archret);
+load_return_t fatfile_getbestarch(vm_offset_t data_ptr, vm_size_t data_size,
+                                  struct image_params *imgp,
+                                  struct fat_arch *archret, bool affinity);
+load_return_t fatfile_getbestarch_for_cputype(
+    cpu_type_t cputype, cpu_subtype_t cpusubtype, vm_offset_t data_ptr,
+    vm_size_t data_size, struct image_params *imgp, struct fat_arch *archret);
 load_return_t fatfile_getarch_with_bits(integer_t archbits,
-    vm_offset_t data_ptr, vm_size_t data_size, struct fat_arch *archret);
+                                        vm_offset_t data_ptr,
+                                        vm_size_t data_size,
+                                        struct fat_arch *archret);
 
 #endif /* _BSD_KERN_MACH_FAT_H_ */

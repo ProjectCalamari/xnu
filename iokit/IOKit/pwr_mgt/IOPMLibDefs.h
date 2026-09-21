@@ -26,25 +26,24 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#define kPMSetAggressiveness 0
+#define kPMGetAggressiveness 1
+#define kPMSleepSystem 2
+#define kPMAllowPowerChange 3
+#define kPMCancelPowerChange 4
+#define kPMShutdownSystem 5
+#define kPMRestartSystem 6
+#define kPMSleepSystemOptions 7
+#define kPMSetMaintenanceWakeCalendar 8
+#define kPMSetUserAssertionLevels 9
+#define kPMActivityTickle 10
+#define kPMGetSystemSleepType 11
+#define kPMSetClamshellSleepState 12
+#define kPMSleepWakeWatchdogEnable 13
+#define kPMSleepWakeDebugTrig 14
+#define kPMSetDisplayPowerOn 15
+#define kPMSetDisplayState 16
+#define kPMRequestIdleSleepRevert 17
+#define kPMSetLDMHibernationDisable 18
 
-#define kPMSetAggressiveness            0
-#define kPMGetAggressiveness            1
-#define kPMSleepSystem                  2
-#define kPMAllowPowerChange             3
-#define kPMCancelPowerChange            4
-#define kPMShutdownSystem               5
-#define kPMRestartSystem                6
-#define kPMSleepSystemOptions           7
-#define kPMSetMaintenanceWakeCalendar   8
-#define kPMSetUserAssertionLevels       9
-#define kPMActivityTickle               10
-#define kPMGetSystemSleepType           11
-#define kPMSetClamshellSleepState       12
-#define kPMSleepWakeWatchdogEnable      13
-#define kPMSleepWakeDebugTrig           14
-#define kPMSetDisplayPowerOn            15
-#define kPMSetDisplayState              16
-#define kPMRequestIdleSleepRevert       17
-#define kPMSetLDMHibernationDisable     18
-
-#define kNumPMMethods                   19
+#define kNumPMMethods 19

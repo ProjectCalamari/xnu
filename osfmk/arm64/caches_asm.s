@@ -354,6 +354,17 @@ LEXT(CleanPoC_DcacheRegion_Force)
 	b		EXT(CleanPoC_DcacheRegion_internal)
 #endif /* APPLE_ARM64_ARCH_FAMILY */
 
+#if !defined(APPLE_ARM64_ARCH_FAMILY)
+	.text
+	.align 2
+	.globl EXT(CleanPoC_DcacheRegion_Force_nopreempt)
+	.globl EXT(CleanPoC_DcacheRegion_Force_nopreempt_nohid)
+LEXT(CleanPoC_DcacheRegion_Force_nopreempt)
+LEXT(CleanPoC_DcacheRegion_Force_nopreempt_nohid)
+	ARM64_PROLOG
+	b		EXT(CleanPoC_DcacheRegion_internal)
+#endif /* !APPLE_ARM64_ARCH_FAMILY */
+
 /*
  *	void FlushPoC_Dcache(void)
  *

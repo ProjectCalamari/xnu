@@ -25,61 +25,59 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <stdlib.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <semaphore.h>
-#include <sys/posix_sem.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/posix_sem.h>
 
 /* spawned helper binary, so we don't have darwintest here */
 /* usage: posix_sem_namespace_helper_teamN <semaphore_name> <operation> */
-int
-main(int argc, char *argv[])
-{
-	if (argc != 3) {
-		fprintf(stderr, "error: wrong number of arguments (%d)\n", argc);
-		return -1;
-	}
+int main(int argc, char *argv[]) {
+  if (argc != 3) {
+    fprintf(stderr, "error: wrong number of arguments (%d)\n", argc);
+    return -1;
+  }
 
-	assert(argv[0] != NULL && strlen(argv[0]) > 0);
-	int team_id = argv[0][strlen(argv[0]) - 1] - '0';
-	if (team_id != 0 && team_id != 1) {
-		fprintf(stderr, "error: invalid team_id %d\n", team_id);
-		return -1;
-	}
+  assert(argv[0] != NULL && strlen(argv[0]) > 0);
+  int team_id = argv[0][strlen(argv[0]) - 1] - '0';
+  if (team_id != 0 && team_id != 1) {
+    fprintf(stderr, "error: invalid team_id %d\n", team_id);
+    return -1;
+  }
 
-	char *sem_name = argv[1];
-	char *op = argv[2];
+  char *sem_name = argv[1];
+  char *op = argv[2];
 
-	printf("running %s (%s)\n", op, sem_name);
-	fflush(stdout);
+  printf("running %s (%s)\n", op, sem_name);
+  fflush(stdout);
 
-	if (!strcmp(op, "open_excl")) {
-		if (sem_open(sem_name, O_CREAT | O_EXCL, 0755, 0) == SEM_FAILED) {
-			fprintf(stderr, "%s: ", sem_name);
-			perror("sem_open (create exclusive)");
-			return -1;
-		}
-	} else if (!strcmp(op, "check_access")) {
-		if (sem_open(sem_name, 0) == SEM_FAILED) {
-			fprintf(stderr, "%s: ", sem_name);
-			perror("sem_open (check_access)");
-			return -1;
-		}
-	} else if (!strcmp(op, "check_no_access")) {
-		if (sem_open(sem_name, 0) != SEM_FAILED) {
-			fprintf(stderr, "%s: sem_open unexpectedly succeeded\n", sem_name);
-			return -1;
-		}
-	} else if (!strcmp(op, "unlink")) {
-		if (sem_unlink(sem_name) != 0) {
-			fprintf(stderr, "%s: ", sem_name);
-			perror("sem_unlink");
-			return -1;
-		}
-	} else if (!strcmp(op, "unlink_force")) {
-		sem_unlink(sem_name);
-	}
+  if (!strcmp(op, "open_excl")) {
+    if (sem_open(sem_name, O_CREAT | O_EXCL, 0755, 0) == SEM_FAILED) {
+      fprintf(stderr, "%s: ", sem_name);
+      perror("sem_open (create exclusive)");
+      return -1;
+    }
+  } else if (!strcmp(op, "check_access")) {
+    if (sem_open(sem_name, 0) == SEM_FAILED) {
+      fprintf(stderr, "%s: ", sem_name);
+      perror("sem_open (check_access)");
+      return -1;
+    }
+  } else if (!strcmp(op, "check_no_access")) {
+    if (sem_open(sem_name, 0) != SEM_FAILED) {
+      fprintf(stderr, "%s: sem_open unexpectedly succeeded\n", sem_name);
+      return -1;
+    }
+  } else if (!strcmp(op, "unlink")) {
+    if (sem_unlink(sem_name) != 0) {
+      fprintf(stderr, "%s: ", sem_name);
+      perror("sem_unlink");
+      return -1;
+    }
+  } else if (!strcmp(op, "unlink_force")) {
+    sem_unlink(sem_name);
+  }
 }

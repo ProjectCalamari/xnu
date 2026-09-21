@@ -29,9 +29,9 @@
 #ifndef _CRYPTO_CRYPTO_H_
 #define _CRYPTO_CRYPTO_H_
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS

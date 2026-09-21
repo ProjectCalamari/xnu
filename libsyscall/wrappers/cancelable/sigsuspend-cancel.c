@@ -21,6 +21,6 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
-#define __SIGSUSPEND    __sigsuspend
+#define __SIGSUSPEND __sigsuspend
 
 #include "../sigsuspend-base.c"

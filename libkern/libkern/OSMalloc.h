@@ -29,8 +29,8 @@
 #ifndef LIBKERN_OSMALLOC_h
 #define LIBKERN_OSMALLOC_h
 
-#include <sys/cdefs.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
 #ifdef XNU_KERNEL_PRIVATE
 #include <kern/queue.h>
 #endif
@@ -68,22 +68,22 @@ __BEGIN_DECLS
 
 #ifdef XNU_KERNEL_PRIVATE
 
-#define OSMT_MAX_NAME  (64)
+#define OSMT_MAX_NAME (64)
 
 typedef struct _OSMallocTag_ {
-	queue_chain_t   OSMT_link;
-	uint32_t        OSMT_refcnt;
-	uint32_t        OSMT_state;
-	uint32_t        OSMT_attr;
-	char            OSMT_name[OSMT_MAX_NAME];
-} * OSMallocTag;
+  queue_chain_t OSMT_link;
+  uint32_t OSMT_refcnt;
+  uint32_t OSMT_state;
+  uint32_t OSMT_attr;
+  char OSMT_name[OSMT_MAX_NAME];
+} *OSMallocTag;
 
-#define OSMT_VALID_MASK   0xFFFF0000
-#define OSMT_VALID        0xDEAB0000
-#define OSMT_RELEASED     0x00000001
+#define OSMT_VALID_MASK 0xFFFF0000
+#define OSMT_VALID 0xDEAB0000
+#define OSMT_RELEASED 0x00000001
 
 /*! @parseOnly */
-#define OSMT_ATTR_PAGEABLE  0x01
+#define OSMT_ATTR_PAGEABLE 0x01
 
 #else
 /*!
@@ -92,8 +92,7 @@ typedef struct _OSMallocTag_ {
  * @abstract
  * An opaque type used to track memory allocations.
  */
-typedef struct __OSMallocTag__ * OSMallocTag;
-
+typedef struct __OSMallocTag__ *OSMallocTag;
 
 /*!
  * @typedef OSMallocTag_t
@@ -101,7 +100,7 @@ typedef struct __OSMallocTag__ * OSMallocTag;
  * @abstract
  * See <code>@link OSMallocTag OSMallocTag@/link</code>.
  */
-typedef struct __OSMallocTag__ * OSMallocTag_t;
+typedef struct __OSMallocTag__ *OSMallocTag_t;
 #endif
 
 /*!
@@ -115,8 +114,7 @@ typedef struct __OSMallocTag__ * OSMallocTag_t;
  * An <code>@link OSMallocTag OSMallocTag@/link</code> created
  * with this attribute allocates all blocks in wired memory.
  */
-#define OSMT_DEFAULT   0x00
-
+#define OSMT_DEFAULT 0x00
 
 /*!
  * @define OSMT_PAGEABLE
@@ -131,8 +129,7 @@ typedef struct __OSMallocTag__ * OSMallocTag_t;
  * in pageable memory,
  * and blocks smaller than a full page size in wired memory.
  */
-#define OSMT_PAGEABLE  0x01
-
+#define OSMT_PAGEABLE 0x01
 
 /*!
  * @function OSMalloc_Tagalloc
@@ -164,10 +161,7 @@ typedef struct __OSMallocTag__ * OSMallocTag_t;
 #if KERNEL_PRIVATE
 OSMallocDeprecatedMsg("Please adopt IOMallocType()/kalloc_type()")
 #endif
-extern OSMallocTag OSMalloc_Tagalloc(
-	const char * name,
-	uint32_t    flags);
-
+    extern OSMallocTag OSMalloc_Tagalloc(const char *name, uint32_t flags);
 
 /*!
  * @function OSMalloc_Tagfree
@@ -187,8 +181,7 @@ extern OSMallocTag OSMalloc_Tagalloc(
 #if KERNEL_PRIVATE
 OSMallocDeprecatedMsg("Please adopt IOMallocType()/kalloc_type()")
 #endif
-extern void OSMalloc_Tagfree(OSMallocTag tag);
-
+    extern void OSMalloc_Tagfree(OSMallocTag tag);
 
 /*!
  * @function OSMalloc
@@ -214,9 +207,8 @@ extern void OSMalloc_Tagfree(OSMallocTag tag);
 #if KERNEL_PRIVATE
 OSMallocDeprecatedMsg("Please use IOMallocType()/kalloc_type() instead")
 #endif
-extern void * OSMalloc(
-	uint32_t    size,
-	OSMallocTag tag) __attribute__((alloc_size(1)));
+    extern void *OSMalloc(uint32_t size, OSMallocTag tag)
+        __attribute__((alloc_size(1)));
 
 /*!
  * @function OSMalloc_nowait
@@ -227,9 +219,8 @@ extern void * OSMalloc(
 #if KERNEL_PRIVATE
 OSMallocDeprecatedMsg("Please use IOMallocType()/kalloc_type() instead")
 #endif
-extern void * OSMalloc_nowait(
-	uint32_t    size,
-	OSMallocTag tag) __attribute__((alloc_size(1)));
+    extern void *OSMalloc_nowait(uint32_t size, OSMallocTag tag)
+        __attribute__((alloc_size(1)));
 
 /*!
  * @function OSMalloc_noblock
@@ -259,15 +250,15 @@ extern void * OSMalloc_nowait(
 #if KERNEL_PRIVATE
 OSMallocDeprecatedMsg("Please use IOMallocType()/kalloc_type() instead")
 #endif
-extern void * OSMalloc_noblock(
-	uint32_t    size,
-	OSMallocTag tag) __attribute__((alloc_size(1)));
+    extern void *OSMalloc_noblock(uint32_t size, OSMallocTag tag)
+        __attribute__((alloc_size(1)));
 
 /*!
  * @function OSFree
  *
  * @abstract
- * Frees a block of memory allocated by <code>@link OSMalloc OSMalloc@/link</code>.
+ * Frees a block of memory allocated by <code>@link OSMalloc
+ * OSMalloc@/link</code>.
  *
  * @param addr  A pointer to the memory block to free.
  * @param size  The size of the memory block to free.
@@ -277,13 +268,10 @@ extern void * OSMalloc_noblock(
 #if KERNEL_PRIVATE
 OSMallocDeprecatedMsg("Please use IOFreeType()/kfree_type() instead")
 #endif
-extern void OSFree(
-	void      * addr,
-	uint32_t    size,
-	OSMallocTag tag);
+    extern void OSFree(void *addr, uint32_t size, OSMallocTag tag);
 
 #endif /* XNU_PLATFORM_MacOSX */
 
 __END_DECLS
 
-#endif  /* LIBKERN_OSMALLOC_h */
+#endif /* LIBKERN_OSMALLOC_h */

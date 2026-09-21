@@ -38,9 +38,9 @@
  * See target `try_read_write_test` in tests/Makefile for an example.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
 #include <mach/mach_types.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 /*
  * Set verbose_exc_helper = true to log exception information with T_LOG().
@@ -53,19 +53,15 @@ extern bool verbose_exc_helper;
  * Returns true if the read succeeded.
  * Aborts if an exception other than EXC_BAD_ACCESS is generated.
  * On exit:
- *     *out_byte is the value read, or an indeterminate value if the read failed.
- *     *out_error is the EXC_BAD_ACCESS error code
- *         (typically KERN_PROTECTION_FAILURE or KERN_INVALID_ADDRESS)
- *         or 0 if the read succeeded.
+ *     *out_byte is the value read, or an indeterminate value if the read
+ * failed. *out_error is the EXC_BAD_ACCESS error code (typically
+ * KERN_PROTECTION_FAILURE or KERN_INVALID_ADDRESS) or 0 if the read succeeded.
  *
  * To use this function in your test you must set additional build options.
  * See target `try_read_write_test` in tests/Makefile for an example.
  */
-extern bool
-try_read_byte(
-	mach_vm_address_t addr,
-	uint8_t * const out_byte,
-	kern_return_t * const out_error);
+extern bool try_read_byte(mach_vm_address_t addr, uint8_t *const out_byte,
+                          kern_return_t *const out_error);
 
 /*
  * Tries to write a single byte to an address.
@@ -79,8 +75,5 @@ try_read_byte(
  * To use this function in your test you must set additional build options.
  * See target `try_read_write_test` in tests/Makefile for an example.
  */
-extern bool
-try_write_byte(
-	mach_vm_address_t addr,
-	uint8_t byte,
-	kern_return_t * const out_error);
+extern bool try_write_byte(mach_vm_address_t addr, uint8_t byte,
+                           kern_return_t *const out_error);

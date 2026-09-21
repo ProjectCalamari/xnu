@@ -26,5 +26,4 @@
 
 #include <TargetConditionals.h>
 
-
 #endif /* __SPAWN_FILTERING_H */

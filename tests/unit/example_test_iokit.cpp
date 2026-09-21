@@ -26,18 +26,15 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <darwintest.h>
 #include "IOKit/IOUserClient.h"
+#include <darwintest.h>
 
 #define UT_MODULE iokit
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.unit.example_test_iokit"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_OWNER("s_shalom"),
-	T_META_RUN_CONCURRENTLY(false)
-	);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.unit.example_test_iokit"),
+              T_META_RADAR_COMPONENT_NAME("xnu"), T_META_OWNER("s_shalom"),
+              T_META_RUN_CONCURRENTLY(false));
 
 T_DECL(xnu_example_test_iokit, "an IOKit example") {
-	IOUserClient::clientHasPrivilege(NULL, "foo");
-	T_PASS("ok");
+  IOUserClient::clientHasPrivilege(NULL, "foo");
+  T_PASS("ok");
 }

@@ -26,21 +26,22 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-/* compile: xcrun -sdk macosx.internal clang -ldarwintest -o fmount_funmount fmount_funmount.c -g -Weverything */
+/* compile: xcrun -sdk macosx.internal clang -ldarwintest -o fmount_funmount
+ * fmount_funmount.c -g -Weverything */
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
 #include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <darwintest.h>
 #include <darwintest/utils.h>
 
-#define RUN_TEST     TARGET_OS_OSX
+#define RUN_TEST TARGET_OS_OSX
 
 #define FSTYPE_APFS "apfs"
 #define FSTYPE_DEVFS "devfs"
@@ -48,68 +49,69 @@
 static char template[MAXPATHLEN];
 static char *testdir = NULL;
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.vfs"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("vfs"),
-	T_META_ASROOT(false),
-	T_META_ENABLED(RUN_TEST),
-	T_META_CHECK_LEAKS(false));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.vfs"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("vfs"), T_META_ASROOT(false),
+              T_META_ENABLED(RUN_TEST), T_META_CHECK_LEAKS(false));
 
-static int
-verify_fstypename(const char *name)
-{
-	int error;
-	struct statfs statfs_buf;;
+static int verify_fstypename(const char *name) {
+  int error;
+  struct statfs statfs_buf;
+  ;
 
-	error = statfs(testdir, &statfs_buf);
-	if (error) {
-		return errno;
-	}
+  error = statfs(testdir, &statfs_buf);
+  if (error) {
+    return errno;
+  }
 
-	if (strncmp(name, statfs_buf.f_fstypename, MFSNAMELEN)) {
-		return EINVAL;
-	}
+  if (strncmp(name, statfs_buf.f_fstypename, MFSNAMELEN)) {
+    return EINVAL;
+  }
 
-	return 0;
+  return 0;
 }
 
-static void
-cleanup(void)
-{
-	if (testdir) {
-		rmdir(testdir);
-	}
+static void cleanup(void) {
+  if (testdir) {
+    rmdir(testdir);
+  }
 }
 
-T_DECL(fmount_funmount,
-    "Test fmount() and funmount() system calls")
-{
+T_DECL(fmount_funmount, "Test fmount() and funmount() system calls") {
 #if (!RUN_TEST)
-	T_SKIP("Not macOS");
+  T_SKIP("Not macOS");
 #endif
 
-	int fd;
+  int fd;
 
-	T_ATEND(cleanup);
+  T_ATEND(cleanup);
 
-	T_SETUPBEGIN;
+  T_SETUPBEGIN;
 
-	snprintf(template, sizeof(template), "%s/fmount_funmount-XXXXXX", dt_tmpdir());
-	T_ASSERT_POSIX_NOTNULL((testdir = mkdtemp(template)), "Creating test root dir");
-	T_ASSERT_POSIX_ZERO(verify_fstypename(FSTYPE_APFS), "Verifing fstype name equals %s", FSTYPE_APFS);
+  snprintf(template, sizeof(template), "%s/fmount_funmount-XXXXXX",
+           dt_tmpdir());
+  T_ASSERT_POSIX_NOTNULL((testdir = mkdtemp(template)),
+                         "Creating test root dir");
+  T_ASSERT_POSIX_ZERO(verify_fstypename(FSTYPE_APFS),
+                      "Verifing fstype name equals %s", FSTYPE_APFS);
 
-	T_SETUPEND;
+  T_SETUPEND;
 
-	/* Mount phase */
-	T_ASSERT_POSIX_SUCCESS((fd = open(testdir, O_DIRECTORY)), "Open test root dir: %s", testdir);
-	T_ASSERT_POSIX_SUCCESS(fmount(FSTYPE_DEVFS, fd, MNT_RDONLY, NULL), "Mounting temporary %s mount using fmount(fd = %d)", FSTYPE_DEVFS, fd);
-	T_ASSERT_POSIX_ZERO(verify_fstypename(FSTYPE_DEVFS), "Verifing fstype name equals %s", FSTYPE_DEVFS);
-	T_ASSERT_POSIX_SUCCESS(close(fd), "Closing (fd = %d)", fd);
+  /* Mount phase */
+  T_ASSERT_POSIX_SUCCESS((fd = open(testdir, O_DIRECTORY)),
+                         "Open test root dir: %s", testdir);
+  T_ASSERT_POSIX_SUCCESS(fmount(FSTYPE_DEVFS, fd, MNT_RDONLY, NULL),
+                         "Mounting temporary %s mount using fmount(fd = %d)",
+                         FSTYPE_DEVFS, fd);
+  T_ASSERT_POSIX_ZERO(verify_fstypename(FSTYPE_DEVFS),
+                      "Verifing fstype name equals %s", FSTYPE_DEVFS);
+  T_ASSERT_POSIX_SUCCESS(close(fd), "Closing (fd = %d)", fd);
 
-	/* Unmount phase */
-	T_ASSERT_POSIX_SUCCESS((fd = open(testdir, O_DIRECTORY)), "Open test root dir: %s", testdir);
-	T_ASSERT_POSIX_SUCCESS(funmount(fd, MNT_FORCE), "Unmounting %s using funmount(fd = %d)", testdir, fd);
-	T_ASSERT_POSIX_ZERO(verify_fstypename(FSTYPE_APFS), "Verifing fstype name equals %s", FSTYPE_APFS);
-	T_ASSERT_POSIX_SUCCESS(close(fd), "Closing (fd = %d)", fd);
+  /* Unmount phase */
+  T_ASSERT_POSIX_SUCCESS((fd = open(testdir, O_DIRECTORY)),
+                         "Open test root dir: %s", testdir);
+  T_ASSERT_POSIX_SUCCESS(funmount(fd, MNT_FORCE),
+                         "Unmounting %s using funmount(fd = %d)", testdir, fd);
+  T_ASSERT_POSIX_ZERO(verify_fstypename(FSTYPE_APFS),
+                      "Verifing fstype name equals %s", FSTYPE_APFS);
+  T_ASSERT_POSIX_SUCCESS(close(fd), "Closing (fd = %d)", fd);
 }

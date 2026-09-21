@@ -33,8 +33,8 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 
 #include "_errno.h"
 
@@ -43,16 +43,14 @@ extern int __socketpair(int, int, int, int[2]);
 /*
  * socketpair stub, legacy version
  */
-int
-socketpair(int domain, int type, int protocol, int socket_vector[2])
-{
-	int ret = __socketpair(domain, type, protocol, socket_vector);
+int socketpair(int domain, int type, int protocol, int socket_vector[2]) {
+  int ret = __socketpair(domain, type, protocol, socket_vector);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif

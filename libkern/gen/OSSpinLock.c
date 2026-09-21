@@ -31,14 +31,10 @@
 
 _Static_assert(sizeof(int) == sizeof(OSSpinLock), "OSSpinLock size mismatch");
 
-void
-OSSpinLockUnlock(volatile OSSpinLock *lock)
-{
-	os_atomic_store(lock, 0, release);
+void OSSpinLockUnlock(volatile OSSpinLock *lock) {
+  os_atomic_store(lock, 0, release);
 }
 
-Boolean
-OSSpinLockTry(volatile OSSpinLock *lock)
-{
-	return os_atomic_cmpxchg(lock, 0, 1, acquire);
+Boolean OSSpinLockTry(volatile OSSpinLock *lock) {
+  return os_atomic_cmpxchg(lock, 0, 1, acquire);
 }

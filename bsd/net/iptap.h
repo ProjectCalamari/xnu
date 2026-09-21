@@ -28,14 +28,14 @@
 #ifndef IPTAP_H
 #define IPTAP_H
 
-#include <sys/param.h>
 #include <net/if.h>
+#include <sys/param.h>
 
 #ifdef PRIVATE
 
 #include <net/pktap.h>
 
-#define IPTAP_IFNAME                    "iptap"
+#define IPTAP_IFNAME "iptap"
 
 #ifdef KERNEL_PRIVATE
 

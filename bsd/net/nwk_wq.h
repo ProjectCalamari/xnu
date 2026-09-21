@@ -27,14 +27,15 @@
  */
 #ifndef NWK_WQ_H
 #define NWK_WQ_H
-#include <sys/queue.h>
 #include <kern/kern_types.h>
 #include <os/base.h>
+#include <sys/queue.h>
 
 #ifdef BSD_KERNEL_PRIVATE
 struct nwk_wq_entry {
-	void(*XNU_PTRAUTH_SIGNED_FUNCTION_PTR("nkw_wq_entry.func") func)(struct nwk_wq_entry *);
-	TAILQ_ENTRY(nwk_wq_entry) nwk_wq_link;
+  void (*XNU_PTRAUTH_SIGNED_FUNCTION_PTR("nkw_wq_entry.func")
+            func)(struct nwk_wq_entry *);
+  TAILQ_ENTRY(nwk_wq_entry) nwk_wq_link;
 };
 
 void nwk_wq_init(void);

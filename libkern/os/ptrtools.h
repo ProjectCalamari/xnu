@@ -34,6 +34,9 @@
 /* ensure the compiler emits at most one access to 'val' */
 #define os_access_once(val) (*((volatile __typeof__((val)) *)&(val)))
 
-#define __os_unaligned_type(p) struct { __typeof__(*(p)) val; } __attribute__((packed)) *
+#define __os_unaligned_type(p)                                                 \
+  struct {                                                                     \
+    __typeof__(*(p)) val;                                                      \
+  } __attribute__((packed)) *
 
 #endif /* _OS_PTRTOOLS_H */

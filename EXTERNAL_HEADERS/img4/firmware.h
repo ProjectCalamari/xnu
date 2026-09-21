@@ -24,8 +24,8 @@
 #if IMG4_TARGET_XNU
 #if MACH_KERNEL_PRIVATE
 #define _SYS_TYPES_H_ 1
-#include <sys/kernel_types.h>
 #include <sys/_types/_errno_t.h>
+#include <sys/kernel_types.h>
 #else
 #include <sys/kernel_types.h>
 #include <sys/types.h>
@@ -37,10 +37,10 @@
 #endif // IMG4_TARGET_XNU
 
 #if IMG4_TARGET_DARWIN
+#include <img4/4MSU.h>
+#include <img4/4ignition.h>
 #include <os/stdio.h>
 #include <sys/types.h>
-#include <img4/4ignition.h>
-#include <img4/4MSU.h>
 #endif
 
 #include <sys/cdefs.h>
@@ -93,9 +93,9 @@ typedef struct _img4_buff img4_buff_t;
  */
 IMG4_API_AVAILABLE_20200508
 typedef struct _img4_dgst {
-	img4_struct_version_t i4d_version;
-	size_t i4d_len;
-	uint8_t i4d_bytes[IMG4_DGST_MAX_LEN];
+  img4_struct_version_t i4d_version;
+  size_t i4d_len;
+  uint8_t i4d_bytes[IMG4_DGST_MAX_LEN];
 } img4_dgst_t;
 
 /*!
@@ -103,23 +103,24 @@ typedef struct _img4_dgst {
  * A convenience initializer for an {@link img4_dgst_t} structure.
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define IMG4_DGST_INIT (img4_dgst_t){ \
-	.i4d_version = IMG4_DGST_STRUCT_VERSION, \
-	.i4d_len = 0, \
-	.i4d_bytes = {0}, \
-}
+#define IMG4_DGST_INIT                                                         \
+  (img4_dgst_t) {                                                              \
+    .i4d_version = IMG4_DGST_STRUCT_VERSION, .i4d_len = 0, .i4d_bytes = {0},   \
+  }
 #elif defined(__cplusplus) && __cplusplus >= 201103L
-#define IMG4_DGST_INIT (img4_dgst_t{ \
-	IMG4_DGST_STRUCT_VERSION, \
-	0, \
-	{0}, \
-})
+#define IMG4_DGST_INIT                                                         \
+  (img4_dgst_t{                                                                \
+      IMG4_DGST_STRUCT_VERSION,                                                \
+      0,                                                                       \
+      {0},                                                                     \
+  })
 #elif defined(__cplusplus)
-#define IMG4_DGST_INIT (img4_nonce_t((img4_nonce_t){ \
-	IMG4_DGST_STRUCT_VERSION, \
-	0, \
-	{0}, \
-}))
+#define IMG4_DGST_INIT                                                         \
+  (img4_nonce_t((img4_nonce_t){                                                \
+      IMG4_DGST_STRUCT_VERSION,                                                \
+      0,                                                                       \
+      {0},                                                                     \
+  }))
 #else
 #define IMG4_DGST_INIT {IMG4_DGST_STRUCT_VERSION}
 #endif
@@ -142,8 +143,8 @@ typedef struct _img4_dgst {
  */
 IMG4_API_AVAILABLE_20210113
 typedef struct _img4_cstr {
-	size_t i4cs_len;
-	char i4cs_cstr[64];
+  size_t i4cs_len;
+  char i4cs_cstr[64];
 } img4_cstr_t;
 
 /*!
@@ -151,21 +152,20 @@ typedef struct _img4_cstr {
  * A convenience initializer for an {@link img4_cstr_t}.
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define IMG4_CSTR_INIT (img4_cstr_t){ \
-	.i4cs_len = 0, \
-	.i4cs_cstr = {0}, \
-}
+#define IMG4_CSTR_INIT                                                         \
+  (img4_cstr_t) { .i4cs_len = 0, .i4cs_cstr = {0}, }
 #elif defined(__cplusplus) && __cplusplus >= 201103L
-#define IMG4_CSTR_INIT (img4_cstr_t{ \
-	0, \
-	{0}, \
-})
+#define IMG4_CSTR_INIT                                                         \
+  (img4_cstr_t{                                                                \
+      0,                                                                       \
+      {0},                                                                     \
+  })
 #elif defined(__cplusplus)
-#define IMG4_CSTR_INIT \
-		(img4_cstr_t((img4_cstr_t){ \
-	0, \
-	{0}, \
-}))
+#define IMG4_CSTR_INIT                                                         \
+  (img4_cstr_t((img4_cstr_t){                                                  \
+      0,                                                                       \
+      {0},                                                                     \
+  }))
 #else
 #define IMG4_CSTR_INIT {0}
 #endif
@@ -203,8 +203,6 @@ typedef struct _img4_runtime img4_runtime_t;
 OS_ASSUME_PTR_ABI_SINGLE_END
 OS_ASSUME_NONNULL_END
 
-#include <img4/nonce.h>
-#include <img4/object.h>
 #include <img4/chip.h>
 #include <img4/chip_ap.h>
 #include <img4/chip_ap_category.h>
@@ -213,6 +211,8 @@ OS_ASSUME_NONNULL_END
 #include <img4/chip_sep.h>
 #include <img4/chip_x86.h>
 #include <img4/image.h>
+#include <img4/nonce.h>
+#include <img4/object.h>
 #include <img4/runtime.h>
 
 #if TXM
@@ -262,19 +262,13 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  */
 IMG4_API_AVAILABLE_20200508
 typedef void (*img4_firmware_authenticated_execute_t)(
-	const img4_firmware_t fw,
-	img4_image_t _Nullable image,
-	errno_t error,
-	void *_ctx
-);
+    const img4_firmware_t fw, img4_image_t _Nullable image, errno_t error,
+    void *_ctx);
 
 #if IMG4_TARGET_EFI
 typedef void (*img4_firmware_authenticated_execute_efi_t)(
-	const img4_firmware_t fw,
-	img4_image_t _Nullable image,
-	EFI_STATUS status,
-	void *_ctx
-);
+    const img4_firmware_t fw, img4_image_t _Nullable image, EFI_STATUS status,
+    void *_ctx);
 #endif
 
 /*!
@@ -312,12 +306,12 @@ typedef void (*img4_firmware_authenticated_execute_efi_t)(
  */
 IMG4_API_AVAILABLE_20200508
 typedef struct _img4_firmware_execution_context {
-	img4_struct_version_t i4fex_version;
-	img4_firmware_authenticated_execute_t i4fex_execute;
+  img4_struct_version_t i4fex_version;
+  img4_firmware_authenticated_execute_t i4fex_execute;
 #if IMG4_TARGET_EFI
-	img4_firmware_authenticated_execute_efi_t i4fex_execute_efi;
+  img4_firmware_authenticated_execute_efi_t i4fex_execute_efi;
 #endif
-	void *i4fex_context;
+  void *i4fex_context;
 } img4_firmware_execution_context_t;
 
 /*!
@@ -367,15 +361,13 @@ typedef struct _img4_firmware_execution_context {
  * be passed in since anti-replay enforcement is always enabled.
  */
 IMG4_API_AVAILABLE_20200508
-OS_CLOSED_OPTIONS(img4_firmware_flags, uint64_t,
-	IMG4_FIRMWARE_FLAG_INIT,
-	IMG4_FIRMWARE_FLAG_ATTACHED_MANIFEST = (1 << 0),
-	IMG4_FIRMWARE_FLAG_BARE = (1 << 1),
-	IMG4_FIRMWARE_FLAG_SUBSEQUENT_STAGE = (1 << 2),
-	IMG4_FIRMWARE_FLAG_RESPECT_AMNM = (1 << 3),
-	IMG4_FIRMWARE_FLAG_PASSTHROUGH = (1 << 4),
-	IMG4_FIRMWARE_FLAG_FORCE_ANTI_REPLAY = (1 << 5),
-);
+OS_CLOSED_OPTIONS(img4_firmware_flags, uint64_t, IMG4_FIRMWARE_FLAG_INIT,
+                  IMG4_FIRMWARE_FLAG_ATTACHED_MANIFEST = (1 << 0),
+                  IMG4_FIRMWARE_FLAG_BARE = (1 << 1),
+                  IMG4_FIRMWARE_FLAG_SUBSEQUENT_STAGE = (1 << 2),
+                  IMG4_FIRMWARE_FLAG_RESPECT_AMNM = (1 << 3),
+                  IMG4_FIRMWARE_FLAG_PASSTHROUGH = (1 << 4),
+                  IMG4_FIRMWARE_FLAG_FORCE_ANTI_REPLAY = (1 << 5), );
 
 /*!
  * @function img4_firmware_new
@@ -409,12 +401,9 @@ OS_CLOSED_OPTIONS(img4_firmware_flags, uint64_t,
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
 OS_EXPORT OS_WARN_RESULT OS_MALLOC OS_NONNULL1 OS_NONNULL2 OS_NONNULL4
-img4_firmware_t _Nullable
-img4_firmware_new(const img4_runtime_t *rt,
-		const img4_firmware_execution_context_t *exec,
-		img4_4cc_t _4cc,
-		img4_buff_t *buff,
-		img4_firmware_flags_t flags);
+    img4_firmware_t _Nullable img4_firmware_new(
+        const img4_runtime_t *rt, const img4_firmware_execution_context_t *exec,
+        img4_4cc_t _4cc, img4_buff_t *buff, img4_firmware_flags_t flags);
 #else
 #define img4_firmware_new(...) (img4if->i4if_v7.firmware_new(__VA_ARGS__))
 #endif
@@ -459,15 +448,12 @@ img4_firmware_new(const img4_runtime_t *rt,
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
 OS_EXPORT OS_WARN_RESULT OS_MALLOC OS_NONNULL1 OS_NONNULL2 OS_NONNULL4
-img4_firmware_t _Nullable
-img4_firmware_new_from_vnode_4xnu(const img4_runtime_t *rt,
-		const img4_firmware_execution_context_t *exec,
-		img4_4cc_t _4cc,
-		vnode_t vn,
-		img4_firmware_flags_t flags);
+    img4_firmware_t _Nullable img4_firmware_new_from_vnode_4xnu(
+        const img4_runtime_t *rt, const img4_firmware_execution_context_t *exec,
+        img4_4cc_t _4cc, vnode_t vn, img4_firmware_flags_t flags);
 #else
-#define img4_firmware_new_from_vnode_4xnu(...) \
-		(img4if->i4if_v7.firmware_new_from_vnode_4xnu(__VA_ARGS__))
+#define img4_firmware_new_from_vnode_4xnu(...)                                 \
+  (img4if->i4if_v7.firmware_new_from_vnode_4xnu(__VA_ARGS__))
 #endif // !XNU_KERNEL_PRIVATE
 #endif // IMG4_TARGET_XNU
 
@@ -501,13 +487,11 @@ img4_firmware_new_from_vnode_4xnu(const img4_runtime_t *rt,
  */
 #if IMG4_TARGET_DARWIN
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT OS_MALLOC OS_NONNULL1 OS_NONNULL2
-img4_firmware_t
+OS_EXPORT OS_WARN_RESULT OS_MALLOC OS_NONNULL1 OS_NONNULL2 img4_firmware_t
 img4_firmware_new_from_fd_4MSM(const img4_runtime_t *rt,
-		const img4_firmware_execution_context_t *exec,
-		img4_4cc_t _4cc,
-		os_fd_t *fd,
-		img4_firmware_flags_t flags);
+                               const img4_firmware_execution_context_t *exec,
+                               img4_4cc_t _4cc, os_fd_t *fd,
+                               img4_firmware_flags_t flags);
 #endif
 
 /*!
@@ -536,12 +520,11 @@ img4_firmware_new_from_fd_4MSM(const img4_runtime_t *rt,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1
-img4_firmware_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 img4_firmware_t
 img4_firmware_init_from_buff(void *__sized_by(len) buff, size_t len);
 #else
-#define img4_firmware_init_from_buff(...) \
-		(img4if->i4if_v7.firmware_init_from_buff(__VA_ARGS__))
+#define img4_firmware_init_from_buff(...)                                      \
+  (img4if->i4if_v7.firmware_init_from_buff(__VA_ARGS__))
 #endif
 
 /*!
@@ -577,14 +560,11 @@ img4_firmware_init_from_buff(void *__sized_by(len) buff, size_t len);
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3 OS_NONNULL5
-void
-img4_firmware_init(img4_firmware_t fw,
-		const img4_runtime_t *rt,
-		const img4_firmware_execution_context_t *exec,
-		img4_4cc_t _4cc,
-		img4_buff_t *buff,
-		img4_firmware_flags_t flags);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3 OS_NONNULL5 void
+img4_firmware_init(img4_firmware_t fw, const img4_runtime_t *rt,
+                   const img4_firmware_execution_context_t *exec,
+                   img4_4cc_t _4cc, img4_buff_t *buff,
+                   img4_firmware_flags_t flags);
 #else
 #define img4_firmware_init(...) (img4if->i4if_v7.firmware_init(__VA_ARGS__))
 #endif
@@ -617,14 +597,12 @@ img4_firmware_init(img4_firmware_t fw,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20211126
-OS_EXPORT OS_NONNULL1 OS_NONNULL2
-void
-img4_firmware_init_sentinel(img4_firmware_t fw,
-		const img4_runtime_t *rt,
-		img4_firmware_flags_t flags);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 void
+img4_firmware_init_sentinel(img4_firmware_t fw, const img4_runtime_t *rt,
+                            img4_firmware_flags_t flags);
 #else
-#define img4_firmware_init_sentinel(...) \
-		(img4if->i4if_v17.firmware_init_sentinel(__VA_ARGS__))
+#define img4_firmware_init_sentinel(...)                                       \
+  (img4if->i4if_v17.firmware_init_sentinel(__VA_ARGS__))
 #endif
 
 /*!
@@ -653,13 +631,11 @@ img4_firmware_init_sentinel(img4_firmware_t fw,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_NONNULL1 OS_NONNULL2
-void
-img4_firmware_attach_manifest(img4_firmware_t fw,
-		img4_buff_t *buff);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 void
+img4_firmware_attach_manifest(img4_firmware_t fw, img4_buff_t *buff);
 #else
-#define img4_firmware_attach_manifest(...) \
-		(img4if->i4if_v7.firmware_attach_manifest(__VA_ARGS__))
+#define img4_firmware_attach_manifest(...)                                     \
+  (img4if->i4if_v7.firmware_attach_manifest(__VA_ARGS__))
 #endif
 
 /*!
@@ -696,14 +672,13 @@ img4_firmware_attach_manifest(img4_firmware_t fw,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200724
-OS_EXPORT OS_WARN_RESULT
-const img4_chip_t *_Nullable
-img4_firmware_select_chip(const img4_firmware_t fw,
-		const img4_chip_select_array_t __counted_by(chips_cnt) _Nonnull chips,
-		size_t chips_cnt);
+OS_EXPORT OS_WARN_RESULT const img4_chip_t *_Nullable img4_firmware_select_chip(
+    const img4_firmware_t fw,
+    const img4_chip_select_array_t __counted_by(chips_cnt) _Nonnull chips,
+    size_t chips_cnt);
 #else
-#define img4_firmware_select_chip(...) \
-		(img4if->i4if_v10.firmware_select_chip(__VA_ARGS__))
+#define img4_firmware_select_chip(...)                                         \
+  (img4if->i4if_v10.firmware_select_chip(__VA_ARGS__))
 #endif
 
 /*!
@@ -736,14 +711,12 @@ img4_firmware_select_chip(const img4_firmware_t fw,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_NONNULL1 OS_NONNULL2
-void
-img4_firmware_execute(img4_firmware_t fw,
-		const img4_chip_t *chip,
-		const img4_nonce_t *_Nullable nonce);
+OS_EXPORT OS_NONNULL1 OS_NONNULL2 void
+img4_firmware_execute(img4_firmware_t fw, const img4_chip_t *chip,
+                      const img4_nonce_t *_Nullable nonce);
 #else
-#define img4_firmware_execute(...) \
-		(img4if->i4if_v7.firmware_execute(__VA_ARGS__))
+#define img4_firmware_execute(...)                                             \
+  (img4if->i4if_v7.firmware_execute(__VA_ARGS__))
 #endif
 
 /*!
@@ -797,14 +770,12 @@ img4_firmware_execute(img4_firmware_t fw,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200608
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2
-errno_t
-img4_firmware_evaluate(img4_firmware_t fw,
-		const img4_chip_t *chip,
-		const img4_nonce_t *_Nullable nonce);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 errno_t
+img4_firmware_evaluate(img4_firmware_t fw, const img4_chip_t *chip,
+                       const img4_nonce_t *_Nullable nonce);
 #else
-#define img4_firmware_evaluate(...) \
-		(img4if->i4if_v9.firmware_evaluate(__VA_ARGS__))
+#define img4_firmware_evaluate(...)                                            \
+  (img4if->i4if_v9.firmware_evaluate(__VA_ARGS__))
 #endif
 
 /*!
@@ -826,11 +797,10 @@ img4_firmware_evaluate(img4_firmware_t fw,
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
 OS_EXPORT
-void
-img4_firmware_destroy(img4_firmware_t _Nullable *_Nonnull fw);
+void img4_firmware_destroy(img4_firmware_t _Nullable *_Nonnull fw);
 #else
-#define img4_firmware_destroy(...) \
-		(img4if->i4if_v7.firmware_destroy(__VA_ARGS__))
+#define img4_firmware_destroy(...)                                             \
+  (img4if->i4if_v7.firmware_destroy(__VA_ARGS__))
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

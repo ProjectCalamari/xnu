@@ -67,5 +67,4 @@
 #ifndef __UNION_UNION_H__
 #define __UNION_UNION_H__
 
-
 #endif /* __UNION_UNION_H__ */

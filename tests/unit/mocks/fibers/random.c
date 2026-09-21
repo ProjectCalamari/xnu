@@ -31,52 +31,40 @@
 #include <machine/machine_routines.h>
 
 // written in 2015 by Sebastiano Vigna https://prng.di.unimi.it/splitmix64.c
-static inline uint64_t
-splitmix64_next(uint64_t *state)
-{
-	uint64_t z = (*state += 0x9e3779b97f4a7c15);
-	z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
-	z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
-	return z ^ (z >> 31);
+static inline uint64_t splitmix64_next(uint64_t *state) {
+  uint64_t z = (*state += 0x9e3779b97f4a7c15);
+  z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
+  z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
+  return z ^ (z >> 31);
 }
 
-static inline uint64_t
-rotl64(uint64_t x, int8_t r)
-{
-	return (x << r) | (x >> (64 - r));
+static inline uint64_t rotl64(uint64_t x, int8_t r) {
+  return (x << r) | (x >> (64 - r));
 }
 
 // fast alternative to x % n
-static inline uint64_t
-fast_bound(uint64_t x, uint64_t n)
-{
-	uint128_t mul = (uint128_t)x * (uint128_t)n;
-	return (uint64_t)(mul >> 64);
+static inline uint64_t fast_bound(uint64_t x, uint64_t n) {
+  uint128_t mul = (uint128_t)x * (uint128_t)n;
+  return (uint64_t)(mul >> 64);
 }
 
 // initial state as if random_set_seed(1337) was called
 uint64_t romuduojr_x_state = 13161956497586561035ull;
 uint64_t romuduojr_y_state = 14663483216071361993ull;
 
-void
-random_set_seed(uint64_t seed)
-{
-	romuduojr_x_state = splitmix64_next(&seed);
-	romuduojr_y_state = splitmix64_next(&seed);
+void random_set_seed(uint64_t seed) {
+  romuduojr_x_state = splitmix64_next(&seed);
+  romuduojr_y_state = splitmix64_next(&seed);
 }
 
-uint64_t
-random_next(void)
-{
-	const uint64_t xp = romuduojr_x_state;
-	romuduojr_x_state = 15241094284759029579ull * romuduojr_y_state;
-	romuduojr_y_state = romuduojr_y_state - xp;
-	romuduojr_y_state = rotl64(romuduojr_y_state, 27);
-	return xp;
+uint64_t random_next(void) {
+  const uint64_t xp = romuduojr_x_state;
+  romuduojr_x_state = 15241094284759029579ull * romuduojr_y_state;
+  romuduojr_y_state = romuduojr_y_state - xp;
+  romuduojr_y_state = rotl64(romuduojr_y_state, 27);
+  return xp;
 }
 
-uint64_t
-random_below(uint64_t upper_bound)
-{
-	return fast_bound(random_next(), upper_bound);
+uint64_t random_below(uint64_t upper_bound) {
+  return fast_bound(random_next(), upper_bound);
 }

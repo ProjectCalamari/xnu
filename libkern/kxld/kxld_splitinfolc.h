@@ -39,36 +39,35 @@ struct linkedit_data_command;
 typedef struct kxld_splitinfolc KXLDsplitinfolc;
 
 struct kxld_splitinfolc {
-	uint32_t    cmdsize;
-	uint32_t    dataoff;
-	uint32_t    datasize;
-	boolean_t   has_splitinfolc;
+  uint32_t cmdsize;
+  uint32_t dataoff;
+  uint32_t datasize;
+  boolean_t has_splitinfolc;
 };
 
 /*******************************************************************************
-* Constructors and destructors
-*******************************************************************************/
+ * Constructors and destructors
+ *******************************************************************************/
 
-void kxld_splitinfolc_init_from_macho(KXLDsplitinfolc *splitinfolc, struct linkedit_data_command *src)
-__attribute__((nonnull, visibility("hidden")));
+void kxld_splitinfolc_init_from_macho(KXLDsplitinfolc *splitinfolc,
+                                      struct linkedit_data_command *src)
+    __attribute__((nonnull, visibility("hidden")));
 
 void kxld_splitinfolc_clear(KXLDsplitinfolc *splitinfolc)
-__attribute__((nonnull, visibility("hidden")));
+    __attribute__((nonnull, visibility("hidden")));
 
 /*******************************************************************************
-* Accessors
-*******************************************************************************/
+ * Accessors
+ *******************************************************************************/
 
 u_long kxld_splitinfolc_get_macho_header_size(void)
-__attribute__((pure, visibility("hidden")));
+    __attribute__((pure, visibility("hidden")));
 
-kern_return_t
-kxld_splitinfolc_export_macho(const KXLDsplitinfolc *splitinfolc,
-    splitKextLinkInfo *linked_object,
-    u_long *header_offset,
-    u_long header_size,
-    u_long *data_offset,
-    u_long size)
-__attribute__((pure, nonnull, visibility("hidden")));
+kern_return_t kxld_splitinfolc_export_macho(const KXLDsplitinfolc *splitinfolc,
+                                            splitKextLinkInfo *linked_object,
+                                            u_long *header_offset,
+                                            u_long header_size,
+                                            u_long *data_offset, u_long size)
+    __attribute__((pure, nonnull, visibility("hidden")));
 
 #endif /* _KXLD_SPLITINFOLC_H_ */

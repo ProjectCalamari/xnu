@@ -32,25 +32,18 @@
  *
  */
 
-#if     KERNEL_PRIVATE
+#if KERNEL_PRIVATE
 
 #ifndef _BSD_I386_PSL_H_
 #define _BSD_I386_PSL_H_
 
-#define EFL_ALLCC       (               \
-	                    EFL_CF |    \
-	                    EFL_PF |    \
-	                    EFL_AF |    \
-	                    EFL_ZF |    \
-	                    EFL_SF |    \
-	                    EFL_OF      \
-	                )
-#define EFL_USERSET     ( EFL_IF | EFL_SET )
-#define EFL_USERCLR     ( EFL_VM | EFL_NT | EFL_IOPL | EFL_CLR )
+#define EFL_ALLCC (EFL_CF | EFL_PF | EFL_AF | EFL_ZF | EFL_SF | EFL_OF)
+#define EFL_USERSET (EFL_IF | EFL_SET)
+#define EFL_USERCLR (EFL_VM | EFL_NT | EFL_IOPL | EFL_CLR)
 
-#define PSL_ALLCC       EFL_ALLCC
-#define PSL_T           EFL_TF
+#define PSL_ALLCC EFL_ALLCC
+#define PSL_T EFL_TF
 
-#endif  /* _BSD_I386_PSL_H_ */
+#endif /* _BSD_I386_PSL_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

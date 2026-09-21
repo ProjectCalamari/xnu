@@ -29,14 +29,14 @@
 #include <kern/queue.h>
 #include <libkern/OSAtomic.h>
 #include <libkern/section_keywords.h>
-#include <pexpert/device_tree.h>
 #include <os/atomic_private.h>
+#include <pexpert/device_tree.h>
 #include <vm/cpm_internal.h>
 #include <vm/vm_kern.h>
-#include <vm/vm_protos.h>
 #include <vm/vm_object_xnu.h>
 #include <vm/vm_page_internal.h>
 #include <vm/vm_pageout.h>
+#include <vm/vm_protos.h>
 
 #include <arm64/sptm/pmap/pmap_internal.h>
 
@@ -52,7 +52,8 @@
  *       and is aware that all hardware pages within each VM page share
  *       attributes.
  */
-SECURITY_READ_ONLY_LATE(volatile pp_attr_t*) pp_attr_table = (volatile pp_attr_t*)NULL;
+SECURITY_READ_ONLY_LATE(volatile pp_attr_t *)
+pp_attr_table = (volatile pp_attr_t *)NULL;
 
 /**
  * Physical to Virtual Table.
@@ -69,19 +70,19 @@ SECURITY_READ_ONLY_LATE(volatile pp_attr_t*) pp_attr_table = (volatile pp_attr_t
  * so it's recommended to use the provided API in pmap_data.h to access the
  * pv_head_table since it handles these details for you.
  */
-SECURITY_READ_ONLY_LATE(uintptr_t*) pv_head_table = NULL;
+SECURITY_READ_ONLY_LATE(uintptr_t *) pv_head_table = NULL;
 
 /* Simple linked-list structure used in various page free lists. */
 typedef struct page_free_entry {
-	/**
-	 * The first word in an empty page on a free list is used as a pointer to
-	 * the next free page in the list.
-	 */
-	struct page_free_entry *next;
+  /**
+   * The first word in an empty page on a free list is used as a pointer to
+   * the next free page in the list.
+   */
+  struct page_free_entry *next;
 } page_free_entry_t;
 
 /* Represents a NULL entry in various page free lists. */
-#define PAGE_FREE_ENTRY_NULL ((page_free_entry_t *) 0)
+#define PAGE_FREE_ENTRY_NULL ((page_free_entry_t *)0)
 
 /**
  * This VM object will contain every VM page being used by the pmap. This acts
@@ -90,13 +91,14 @@ typedef struct page_free_entry {
  */
 struct vm_object pmap_object_store VM_PAGE_PACKED_ALIGNED;
 
-/* Pointer to the pmap's VM object that can't be modified after machine_lockdown(). */
+/* Pointer to the pmap's VM object that can't be modified after
+ * machine_lockdown(). */
 SECURITY_READ_ONLY_LATE(vm_object_t) pmap_object = &pmap_object_store;
 
 /**
- * This variable, used for debugging purposes only, keeps track of how many pages
- * are currently in use by the pmap layer. Once a page is given back to the VM,
- * then inuse_pmap_pages_count will be decremented.
+ * This variable, used for debugging purposes only, keeps track of how many
+ * pages are currently in use by the pmap layer. Once a page is given back to
+ * the VM, then inuse_pmap_pages_count will be decremented.
  *
  * Even if a page is sitting in one of the pmap's various free lists and hasn't
  * been allocated for usage, it is still considered "used" by the pmap, from
@@ -110,8 +112,8 @@ unsigned int inuse_pmap_pages_count = 0;
  * tree (see pmap_compute_pv_targets() for more info).
  */
 #define PV_KERN_LOW_WATER_MARK_DEFAULT (0x400)
-#define PV_ALLOC_CHUNK_INITIAL         (0x400)
-#define PV_KERN_ALLOC_CHUNK_INITIAL    (0x400)
+#define PV_ALLOC_CHUNK_INITIAL (0x400)
+#define PV_KERN_ALLOC_CHUNK_INITIAL (0x400)
 
 /**
  * The pv_free array acts as a ring buffer where each entry points to a linked
@@ -119,7 +121,8 @@ unsigned int inuse_pmap_pages_count = 0;
  */
 #define PV_BATCH_SIZE (PAGE_SIZE / sizeof(pv_entry_t))
 
-/* The batch allocation code assumes that a batch can fit within a single page. */
+/* The batch allocation code assumes that a batch can fit within a single page.
+ */
 #if __ARM_16K_PG__
 /**
  * PAGE_SIZE is a variable on arm64 systems with 4K VM pages, so no static
@@ -132,14 +135,17 @@ static_assert((PV_BATCH_SIZE * sizeof(pv_entry_t)) <= PAGE_SIZE);
  * The number of PVEs to attempt to keep in the kernel-dedicated free list. If
  * the number of entries is below this value, then allocate more.
  */
-static uint32_t pv_kern_low_water_mark MARK_AS_PMAP_DATA = PV_KERN_LOW_WATER_MARK_DEFAULT;
+static uint32_t pv_kern_low_water_mark MARK_AS_PMAP_DATA =
+    PV_KERN_LOW_WATER_MARK_DEFAULT;
 
 /**
  * The initial number of PVEs to allocate during bootstrap (can be overriden in
  * the device tree, see pmap_compute_pv_targets() for more info).
  */
-uint32_t pv_alloc_initial_target MARK_AS_PMAP_DATA = PV_ALLOC_CHUNK_INITIAL * MAX_CPUS;
-uint32_t pv_kern_alloc_initial_target MARK_AS_PMAP_DATA = PV_KERN_ALLOC_CHUNK_INITIAL;
+uint32_t pv_alloc_initial_target MARK_AS_PMAP_DATA =
+    PV_ALLOC_CHUNK_INITIAL * MAX_CPUS;
+uint32_t pv_kern_alloc_initial_target MARK_AS_PMAP_DATA =
+    PV_KERN_ALLOC_CHUNK_INITIAL;
 
 /**
  * Global variables strictly used for debugging purposes. These variables keep
@@ -181,10 +187,8 @@ static_assert(PV_FREE_ARRAY_SIZE <= (1 << (sizeof(pv_free_read_idx) * 8)));
  *
  * @note This function requires that PV_FREE_ARRAY_SIZE is a power of two.
  */
-static inline uint16_t
-pv_free_array_n_elems(void)
-{
-	return (pv_free_write_idx - pv_free_read_idx) & (PV_FREE_ARRAY_SIZE - 1);
+static inline uint16_t pv_free_array_n_elems(void) {
+  return (pv_free_write_idx - pv_free_read_idx) & (PV_FREE_ARRAY_SIZE - 1);
 }
 
 /* Free list of PV entries dedicated for usage by the kernel. */
@@ -195,7 +199,7 @@ static MARK_AS_PMAP_DATA SIMPLE_LOCK_DECLARE(pv_free_array_lock, 0);
 static MARK_AS_PMAP_DATA SIMPLE_LOCK_DECLARE(pv_kern_free_list_lock, 0);
 
 /* Represents a null page table descriptor (PTD). */
-#define PTD_ENTRY_NULL ((pt_desc_t *) 0)
+#define PTD_ENTRY_NULL ((pt_desc_t *)0)
 
 /* Running free list of PTD nodes. */
 static pt_desc_t *ptd_free_list MARK_AS_PMAP_DATA = PTD_ENTRY_NULL;
@@ -240,7 +244,7 @@ SECURITY_READ_ONLY_LATE(bool) sdsb_io_rgns_present = false;
  * Sorted representation of the pmap-io-ranges nodes in the device tree. These
  * nodes describe all of the SPTM/PPL-owned I/O ranges.
  */
-SECURITY_READ_ONLY_LATE(pmap_io_range_t*) io_attr_table = (pmap_io_range_t*)0;
+SECURITY_READ_ONLY_LATE(pmap_io_range_t *) io_attr_table = (pmap_io_range_t *)0;
 
 /* The number of ranges described by io_attr_table. */
 SECURITY_READ_ONLY_LATE(unsigned int) num_io_rgns = 0;
@@ -249,7 +253,8 @@ SECURITY_READ_ONLY_LATE(unsigned int) num_io_rgns = 0;
  * Sorted representation of the pmap-io-filter entries in the device tree
  * The entries are sorted and queried by {signature, range}.
  */
-SECURITY_READ_ONLY_LATE(pmap_io_filter_entry_t*) io_filter_table = (pmap_io_filter_entry_t*)0;
+SECURITY_READ_ONLY_LATE(pmap_io_filter_entry_t *)
+io_filter_table = (pmap_io_filter_entry_t *)0;
 
 /* Number of total pmap-io-filter entries. */
 SECURITY_READ_ONLY_LATE(unsigned int) num_io_filter_entries = 0;
@@ -282,7 +287,8 @@ bool surt_ready = false;
 #endif /* __ARM64_PMAP_SUBPAGE_L1__ */
 
 #if DEBUG || DEVELOPMENT
-/* Track number of instances a WC/RT mapping request is converted to Device-GRE. */
+/* Track number of instances a WC/RT mapping request is converted to Device-GRE.
+ */
 static _Atomic unsigned int pmap_wcrt_on_non_dram_count = 0;
 #endif /* DEBUG || DEVELOPMENT */
 
@@ -299,120 +305,123 @@ static _Atomic unsigned int pmap_wcrt_on_non_dram_count = 0;
  *       returns. If avail_start needs to be aligned to a specific value then it
  *       must be done so by the caller before they use it for more allocations.
  */
-void
-pmap_data_bootstrap(void)
-{
-	/**
-	 * Set ptd_per_page to the maximum number of (pt_desc_t + ptd_info_t) we can
-	 * fit in a single page. We need to allow for some padding between the two,
-	 * so that no ptd_info_t shares a cache line with a pt_desc_t.
-	 */
-	const unsigned ptd_info_size = sizeof(ptd_info_t);
-	const unsigned l2_cline_bytes = 1 << MAX_L2_CLINE;
-	ptd_per_page = (PAGE_SIZE - (l2_cline_bytes - 1)) / (sizeof(pt_desc_t) + ptd_info_size);
-	unsigned increment = 0;
-	bool try_next = true;
+void pmap_data_bootstrap(void) {
+  /**
+   * Set ptd_per_page to the maximum number of (pt_desc_t + ptd_info_t) we can
+   * fit in a single page. We need to allow for some padding between the two,
+   * so that no ptd_info_t shares a cache line with a pt_desc_t.
+   */
+  const unsigned ptd_info_size = sizeof(ptd_info_t);
+  const unsigned l2_cline_bytes = 1 << MAX_L2_CLINE;
+  ptd_per_page =
+      (PAGE_SIZE - (l2_cline_bytes - 1)) / (sizeof(pt_desc_t) + ptd_info_size);
+  unsigned increment = 0;
+  bool try_next = true;
 
-	/**
-	 * The current ptd_per_page calculation was done assuming the worst-case
-	 * scenario in terms of padding between the two object arrays that reside in
-	 * the same page. The following loop attempts to optimize this further by
-	 * finding the smallest possible amount of padding while still ensuring that
-	 * the two object arrays don't share a cache line.
-	 */
-	while (try_next) {
-		increment++;
-		const unsigned pt_desc_total_size =
-		    PMAP_ALIGN((ptd_per_page + increment) * sizeof(pt_desc_t), l2_cline_bytes);
-		const unsigned ptd_info_total_size = (ptd_per_page + increment) * ptd_info_size;
-		try_next = (pt_desc_total_size + ptd_info_total_size) <= PAGE_SIZE;
-	}
-	ptd_per_page += increment - 1;
-	assert(ptd_per_page > 0);
+  /**
+   * The current ptd_per_page calculation was done assuming the worst-case
+   * scenario in terms of padding between the two object arrays that reside in
+   * the same page. The following loop attempts to optimize this further by
+   * finding the smallest possible amount of padding while still ensuring that
+   * the two object arrays don't share a cache line.
+   */
+  while (try_next) {
+    increment++;
+    const unsigned pt_desc_total_size = PMAP_ALIGN(
+        (ptd_per_page + increment) * sizeof(pt_desc_t), l2_cline_bytes);
+    const unsigned ptd_info_total_size =
+        (ptd_per_page + increment) * ptd_info_size;
+    try_next = (pt_desc_total_size + ptd_info_total_size) <= PAGE_SIZE;
+  }
+  ptd_per_page += increment - 1;
+  assert(ptd_per_page > 0);
 
-	/**
-	 * ptd_info objects reside after the ptd descriptor objects, with some
-	 * padding in between if necessary to ensure that they don't co-exist in the
-	 * same cache line.
-	 */
-	const unsigned pt_desc_bytes = ptd_per_page * sizeof(pt_desc_t);
-	ptd_info_offset = PMAP_ALIGN(pt_desc_bytes, l2_cline_bytes);
+  /**
+   * ptd_info objects reside after the ptd descriptor objects, with some
+   * padding in between if necessary to ensure that they don't co-exist in the
+   * same cache line.
+   */
+  const unsigned pt_desc_bytes = ptd_per_page * sizeof(pt_desc_t);
+  ptd_info_offset = PMAP_ALIGN(pt_desc_bytes, l2_cline_bytes);
 
-	/* The maximum amount of padding should be (l2_cline_bytes - 1). */
-	assert((ptd_info_offset - pt_desc_bytes) < l2_cline_bytes);
+  /* The maximum amount of padding should be (l2_cline_bytes - 1). */
+  assert((ptd_info_offset - pt_desc_bytes) < l2_cline_bytes);
 
-	/**
-	 * Allocate enough initial PTDs to map twice the available physical memory.
-	 *
-	 * To do this, start by calculating the number of leaf page tables that are
-	 * needed to cover all of kernel-managed physical memory.
-	 */
-	const uint32_t num_leaf_page_tables =
-	    (uint32_t)(mem_size / ((PAGE_SIZE / sizeof(pt_entry_t)) * ARM_PGBYTES));
+  /**
+   * Allocate enough initial PTDs to map twice the available physical memory.
+   *
+   * To do this, start by calculating the number of leaf page tables that are
+   * needed to cover all of kernel-managed physical memory.
+   */
+  const uint32_t num_leaf_page_tables =
+      (uint32_t)(mem_size / ((PAGE_SIZE / sizeof(pt_entry_t)) * ARM_PGBYTES));
 
-	/**
-	 * There should be one PTD per page table (times 2 since we want twice the
-	 * number of required PTDs), plus round the number of PTDs up to the next
-	 * `ptd_per_page` value so there's no wasted space.
-	 */
-	const uint32_t ptd_root_table_n_ptds =
-	    (ptd_per_page * ((num_leaf_page_tables * 2) / ptd_per_page)) + ptd_per_page;
+  /**
+   * There should be one PTD per page table (times 2 since we want twice the
+   * number of required PTDs), plus round the number of PTDs up to the next
+   * `ptd_per_page` value so there's no wasted space.
+   */
+  const uint32_t ptd_root_table_n_ptds =
+      (ptd_per_page * ((num_leaf_page_tables * 2) / ptd_per_page)) +
+      ptd_per_page;
 
-	/* Lastly, calculate the number of VM pages and bytes these PTDs take up. */
-	const uint32_t num_ptd_pages = ptd_root_table_n_ptds / ptd_per_page;
-	vm_size_t ptd_root_table_size = num_ptd_pages * PAGE_SIZE;
+  /* Lastly, calculate the number of VM pages and bytes these PTDs take up. */
+  const uint32_t num_ptd_pages = ptd_root_table_n_ptds / ptd_per_page;
+  vm_size_t ptd_root_table_size = num_ptd_pages * PAGE_SIZE;
 
-	/* Number of VM pages that span all of kernel-managed memory. */
-	unsigned int npages = (unsigned int)atop(mem_size);
+  /* Number of VM pages that span all of kernel-managed memory. */
+  unsigned int npages = (unsigned int)atop(mem_size);
 
+  /* The pv_head_table and pp_attr_table both have one entry per VM page. */
+  const vm_size_t pp_attr_table_size = npages * sizeof(pp_attr_t);
+  const vm_size_t pv_head_size = round_page(npages * sizeof(*pv_head_table));
 
-	/* The pv_head_table and pp_attr_table both have one entry per VM page. */
-	const vm_size_t pp_attr_table_size = npages * sizeof(pp_attr_t);
-	const vm_size_t pv_head_size = round_page(npages * sizeof(*pv_head_table));
+  /* Scan the device tree and override heuristics in the PV entry management
+   * code. */
+  pmap_compute_pv_targets();
 
-	/* Scan the device tree and override heuristics in the PV entry management code. */
-	pmap_compute_pv_targets();
+  io_attr_table = (pmap_io_range_t *)SPTMArgs->sptm_pmap_io_ranges;
+  num_io_rgns = SPTMArgs->sptm_pmap_io_ranges_count;
+  io_filter_table = (pmap_io_filter_entry_t *)SPTMArgs->sptm_pmap_io_filters;
+  num_io_filter_entries = SPTMArgs->sptm_pmap_io_filters_count;
 
-	io_attr_table = (pmap_io_range_t *) SPTMArgs->sptm_pmap_io_ranges;
-	num_io_rgns = SPTMArgs->sptm_pmap_io_ranges_count;
-	io_filter_table = (pmap_io_filter_entry_t *) SPTMArgs->sptm_pmap_io_filters;
-	num_io_filter_entries = SPTMArgs->sptm_pmap_io_filters_count;
+  /**
+   * Don't make any assumptions about the alignment of avail_start before
+   * execution of this function. Always re-align it to ensure the first
+   * allocated data structure is aligned correctly.
+   */
+  avail_start = PMAP_ALIGN(avail_start, __alignof(pp_attr_t));
 
-	/**
-	 * Don't make any assumptions about the alignment of avail_start before
-	 * execution of this function. Always re-align it to ensure the first
-	 * allocated data structure is aligned correctly.
-	 */
-	avail_start = PMAP_ALIGN(avail_start, __alignof(pp_attr_t));
+  /**
+   * Keep track of where the data structures start so we can clear this memory
+   * later.
+   */
+  const pmap_paddr_t pmap_struct_start = avail_start;
 
-	/**
-	 * Keep track of where the data structures start so we can clear this memory
-	 * later.
-	 */
-	const pmap_paddr_t pmap_struct_start = avail_start;
+  pp_attr_table = (pp_attr_t *)phystokv(avail_start);
+  avail_start =
+      PMAP_ALIGN(avail_start + pp_attr_table_size, __alignof(pv_entry_t *));
 
-	pp_attr_table = (pp_attr_t *)phystokv(avail_start);
-	avail_start = PMAP_ALIGN(avail_start + pp_attr_table_size, __alignof(pv_entry_t *));
+  pv_head_table = (uintptr_t *)phystokv(avail_start);
 
-	pv_head_table = (uintptr_t *)phystokv(avail_start);
+  /**
+   * ptd_root_table must start on a page boundary because all of the math for
+   * associating pt_desc_t objects with ptd_info objects assumes the first
+   * pt_desc_t in a page starts at the beginning of the page it resides in.
+   */
+  avail_start = round_page(avail_start + pv_head_size);
 
-	/**
-	 * ptd_root_table must start on a page boundary because all of the math for
-	 * associating pt_desc_t objects with ptd_info objects assumes the first
-	 * pt_desc_t in a page starts at the beginning of the page it resides in.
-	 */
-	avail_start = round_page(avail_start + pv_head_size);
+  pt_desc_t *ptd_root_table = (pt_desc_t *)phystokv(avail_start);
+  avail_start = round_page(avail_start + ptd_root_table_size);
 
-	pt_desc_t *ptd_root_table = (pt_desc_t *)phystokv(avail_start);
-	avail_start = round_page(avail_start + ptd_root_table_size);
+  memset((char *)phystokv(pmap_struct_start), 0,
+         avail_start - pmap_struct_start);
 
-	memset((char *)phystokv(pmap_struct_start), 0, avail_start - pmap_struct_start);
+  /* This function assumes that ptd_root_table has been zeroed out already. */
+  ptd_bootstrap(ptd_root_table, num_ptd_pages);
 
-	/* This function assumes that ptd_root_table has been zeroed out already. */
-	ptd_bootstrap(ptd_root_table, num_ptd_pages);
-
-	/* Setup the pmap per-cpu data structures. */
-	pmap_cpu_data_array_init();
+  /* Setup the pmap per-cpu data structures. */
+  pmap_cpu_data_array_init();
 }
 
 /**
@@ -426,21 +435,19 @@ pmap_data_bootstrap(void)
  *
  * @param mem The head of the queue of VM pages to add to the pmap's VM object.
  */
-void
-pmap_enqueue_pages(vm_page_t mem)
-{
-	vm_page_t m_prev;
-	vm_object_lock(pmap_object);
-	while (mem != VM_PAGE_NULL) {
-		const vm_object_offset_t offset =
-		    (vm_object_offset_t) ((ptoa(VM_PAGE_GET_PHYS_PAGE(mem))) - gPhysBase);
+void pmap_enqueue_pages(vm_page_t mem) {
+  vm_page_t m_prev;
+  vm_object_lock(pmap_object);
+  while (mem != VM_PAGE_NULL) {
+    const vm_object_offset_t offset =
+        (vm_object_offset_t)((ptoa(VM_PAGE_GET_PHYS_PAGE(mem))) - gPhysBase);
 
-		vm_page_insert_wired(mem, pmap_object, offset, VM_KERN_MEMORY_PTE);
-		m_prev = mem;
-		mem = NEXT_PAGE(m_prev);
-		*(NEXT_PAGE_PTR(m_prev)) = VM_PAGE_NULL;
-	}
-	vm_object_unlock(pmap_object);
+    vm_page_insert_wired(mem, pmap_object, offset, VM_KERN_MEMORY_PTE);
+    m_prev = mem;
+    mem = NEXT_PAGE(m_prev);
+    *(NEXT_PAGE_PTR(m_prev)) = VM_PAGE_NULL;
+  }
+  vm_object_unlock(pmap_object);
 }
 
 /**
@@ -475,80 +482,80 @@ pmap_enqueue_pages(vm_page_t mem)
  *         value should always be KERN_SUCCESS (as the thread will block until
  *         there are free pages available).
  */
-MARK_AS_PMAP_TEXT kern_return_t
-pmap_page_alloc(pmap_paddr_t *ppa, unsigned options)
-{
-	assert(ppa != NULL);
-	pmap_paddr_t pa = 0;
-	PMAP_ASSERT_NOT_WRITING_HIB();
-	vm_page_t mem = VM_PAGE_NULL;
-	thread_t self = current_thread();
+MARK_AS_PMAP_TEXT kern_return_t pmap_page_alloc(pmap_paddr_t *ppa,
+                                                unsigned options) {
+  assert(ppa != NULL);
+  pmap_paddr_t pa = 0;
+  PMAP_ASSERT_NOT_WRITING_HIB();
+  vm_page_t mem = VM_PAGE_NULL;
+  thread_t self = current_thread();
 
-	/**
-	 * It's not possible to allocate memory from the VM in a preemption disabled
-	 * environment except during early boot (since the VM needs to grab a mutex).
-	 * In those cases just return a resource shortage error and let the caller
-	 * deal with it.
-	 *
-	 * We don't panic here as there are genuinely some cases where pmap_enter()
-	 * is called with preemption disabled, and it's better to return an error
-	 * to those callers to notify them to try again with preemption enabled.
-	 */
-	if (!pmap_is_preemptible()) {
-		return KERN_RESOURCE_SHORTAGE;
-	}
+  /**
+   * It's not possible to allocate memory from the VM in a preemption disabled
+   * environment except during early boot (since the VM needs to grab a mutex).
+   * In those cases just return a resource shortage error and let the caller
+   * deal with it.
+   *
+   * We don't panic here as there are genuinely some cases where pmap_enter()
+   * is called with preemption disabled, and it's better to return an error
+   * to those callers to notify them to try again with preemption enabled.
+   */
+  if (!pmap_is_preemptible()) {
+    return KERN_RESOURCE_SHORTAGE;
+  }
 
-	*ppa = 0;
+  *ppa = 0;
 
-	/**
-	 * We qualify for allocating reserved memory so set TH_OPT_VMPRIV to inform
-	 * the VM of this.
-	 *
-	 * This field should only be modified by the local thread itself, so no lock
-	 * needs to be taken.
-	 */
-	uint16_t thread_options = self->options;
-	self->options |= TH_OPT_VMPRIV;
+  /**
+   * We qualify for allocating reserved memory so set TH_OPT_VMPRIV to inform
+   * the VM of this.
+   *
+   * This field should only be modified by the local thread itself, so no lock
+   * needs to be taken.
+   */
+  uint16_t thread_options = self->options;
+  self->options |= TH_OPT_VMPRIV;
 
-	/**
-	 * If we're only allocating a single page, just grab one off the VM's
-	 * global page free list.
-	 */
-	vm_grab_options_t grab_options = VM_PAGE_GRAB_OPTIONS_NONE;
-	while ((mem = vm_page_grab_options(grab_options)) == VM_PAGE_NULL) {
-		if (options & PMAP_PAGE_ALLOCATE_NOWAIT) {
-			break;
-		}
+  /**
+   * If we're only allocating a single page, just grab one off the VM's
+   * global page free list.
+   */
+  vm_grab_options_t grab_options = VM_PAGE_GRAB_OPTIONS_NONE;
+  while ((mem = vm_page_grab_options(grab_options)) == VM_PAGE_NULL) {
+    if (options & PMAP_PAGE_ALLOCATE_NOWAIT) {
+      break;
+    }
 
-		VM_PAGE_WAIT();
-	}
+    VM_PAGE_WAIT();
+  }
 
-	if (mem != VM_PAGE_NULL) {
-		vm_page_lock_queues();
-		vm_page_wire(mem, VM_KERN_MEMORY_PTE, TRUE);
-		vm_page_unlock_queues();
-	}
+  if (mem != VM_PAGE_NULL) {
+    vm_page_lock_queues();
+    vm_page_wire(mem, VM_KERN_MEMORY_PTE, TRUE);
+    vm_page_unlock_queues();
+  }
 
-	self->options = thread_options;
+  self->options = thread_options;
 
-	if (mem == VM_PAGE_NULL) {
-		return KERN_RESOURCE_SHORTAGE;
-	}
+  if (mem == VM_PAGE_NULL) {
+    return KERN_RESOURCE_SHORTAGE;
+  }
 
-	pa = (pmap_paddr_t)ptoa(VM_PAGE_GET_PHYS_PAGE(mem));
+  pa = (pmap_paddr_t)ptoa(VM_PAGE_GET_PHYS_PAGE(mem));
 
-	/* Add the allocated VM page(s) to the pmap's VM object. */
-	pmap_enqueue_pages(mem);
+  /* Add the allocated VM page(s) to the pmap's VM object. */
+  pmap_enqueue_pages(mem);
 
-	/* Pages are considered "in use" by the pmap until returned to the VM. */
-	OSAddAtomic(1, &inuse_pmap_pages_count);
+  /* Pages are considered "in use" by the pmap until returned to the VM. */
+  OSAddAtomic(1, &inuse_pmap_pages_count);
 
-	/* SPTM TODO: assert that the returned page is of type XNU_DEFAULT in frame table */
-	if (!(options & PMAP_PAGE_NOZEROFILL)) {
-		bzero((void*)phystokv(pa), PAGE_SIZE);
-	}
-	*ppa = pa;
-	return KERN_SUCCESS;
+  /* SPTM TODO: assert that the returned page is of type XNU_DEFAULT in frame
+   * table */
+  if (!(options & PMAP_PAGE_NOZEROFILL)) {
+    bzero((void *)phystokv(pa), PAGE_SIZE);
+  }
+  *ppa = pa;
+  return KERN_SUCCESS;
 }
 
 /**
@@ -556,28 +563,27 @@ pmap_page_alloc(pmap_paddr_t *ppa, unsigned options)
  *
  * @param pa Physical address of the page(s) to free.
  */
-void
-pmap_page_free(pmap_paddr_t pa)
-{
-	/* SPTM TODO: assert that the page to be freed is of type XNU_DEFAULT in frame table */
+void pmap_page_free(pmap_paddr_t pa) {
+  /* SPTM TODO: assert that the page to be freed is of type XNU_DEFAULT in frame
+   * table */
 
-	/* Pages are considered "in use" until given back to the VM. */
-	OSAddAtomic(-1, &inuse_pmap_pages_count);
+  /* Pages are considered "in use" until given back to the VM. */
+  OSAddAtomic(-1, &inuse_pmap_pages_count);
 
-	vm_page_t mem = VM_PAGE_NULL;
-	vm_object_lock(pmap_object);
+  vm_page_t mem = VM_PAGE_NULL;
+  vm_object_lock(pmap_object);
 
-	/**
-	 * Remove the page from the pmap's VM object and return it back to the
-	 * VM's global free list of pages.
-	 */
-	mem = vm_page_lookup(pmap_object, (pa - gPhysBase));
-	assert(mem != VM_PAGE_NULL);
-	assert(VM_PAGE_WIRED(mem));
-	vm_page_lock_queues();
-	vm_page_free(mem);
-	vm_page_unlock_queues();
-	vm_object_unlock(pmap_object);
+  /**
+   * Remove the page from the pmap's VM object and return it back to the
+   * VM's global free list of pages.
+   */
+  mem = vm_page_lookup(pmap_object, (pa - gPhysBase));
+  assert(mem != VM_PAGE_NULL);
+  assert(VM_PAGE_WIRED(mem));
+  vm_page_lock_queues();
+  vm_page_free(mem);
+  vm_page_unlock_queues();
+  vm_object_unlock(pmap_object);
 }
 
 /**
@@ -587,11 +593,7 @@ pmap_page_free(pmap_paddr_t pa)
  *
  * @return The number of pages returned to the VM.
  */
-uint64_t
-pmap_release_pages_fast(void)
-{
-	return 0;
-}
+uint64_t pmap_release_pages_fast(void) { return 0; }
 
 /**
  * Allocates a batch (list) of pv_entry_t's from the global PV free array.
@@ -599,27 +601,26 @@ pmap_release_pages_fast(void)
  * @return A pointer to the head of the newly-allocated batch, or PV_ENTRY_NULL
  *         if empty.
  */
-MARK_AS_PMAP_TEXT static pv_entry_t *
-pv_free_array_get_batch(void)
-{
-	pv_entry_t *new_batch = PV_ENTRY_NULL;
+MARK_AS_PMAP_TEXT static pv_entry_t *pv_free_array_get_batch(void) {
+  pv_entry_t *new_batch = PV_ENTRY_NULL;
 
-	pmap_simple_lock(&pv_free_array_lock);
-	if (pv_free_array_n_elems() > 0) {
-		/**
-		 * The global PV array acts as a ring buffer where each entry points to
-		 * a linked list of PVEs of length PV_BATCH_SIZE. Get the next free
-		 * batch.
-		 */
-		const size_t index = pv_free_read_idx++ & (PV_FREE_ARRAY_SIZE - 1);
-		pv_free_list_t *free_list = &pv_free_ring[index];
+  pmap_simple_lock(&pv_free_array_lock);
+  if (pv_free_array_n_elems() > 0) {
+    /**
+     * The global PV array acts as a ring buffer where each entry points to
+     * a linked list of PVEs of length PV_BATCH_SIZE. Get the next free
+     * batch.
+     */
+    const size_t index = pv_free_read_idx++ & (PV_FREE_ARRAY_SIZE - 1);
+    pv_free_list_t *free_list = &pv_free_ring[index];
 
-		assert((free_list->count == PV_BATCH_SIZE) && (free_list->list != PV_ENTRY_NULL));
-		new_batch = free_list->list;
-	}
-	pmap_simple_unlock(&pv_free_array_lock);
+    assert((free_list->count == PV_BATCH_SIZE) &&
+           (free_list->list != PV_ENTRY_NULL));
+    new_batch = free_list->list;
+  }
+  pmap_simple_unlock(&pv_free_array_lock);
 
-	return new_batch;
+  return new_batch;
 }
 
 /**
@@ -632,23 +633,22 @@ pv_free_array_get_batch(void)
  * @return KERN_SUCCESS, or KERN_FAILURE if the global array is full.
  */
 MARK_AS_PMAP_TEXT static kern_return_t
-pv_free_array_give_batch(pv_entry_t *batch_head)
-{
-	assert(batch_head != NULL);
+pv_free_array_give_batch(pv_entry_t *batch_head) {
+  assert(batch_head != NULL);
 
-	pmap_simple_lock(&pv_free_array_lock);
-	if (pv_free_array_n_elems() == (PV_FREE_ARRAY_SIZE - 1)) {
-		pmap_simple_unlock(&pv_free_array_lock);
-		return KERN_FAILURE;
-	}
+  pmap_simple_lock(&pv_free_array_lock);
+  if (pv_free_array_n_elems() == (PV_FREE_ARRAY_SIZE - 1)) {
+    pmap_simple_unlock(&pv_free_array_lock);
+    return KERN_FAILURE;
+  }
 
-	const size_t index = pv_free_write_idx++ & (PV_FREE_ARRAY_SIZE - 1);
-	pv_free_list_t *free_list = &pv_free_ring[index];
-	free_list->list = batch_head;
-	free_list->count = PV_BATCH_SIZE;
-	pmap_simple_unlock(&pv_free_array_lock);
+  const size_t index = pv_free_write_idx++ & (PV_FREE_ARRAY_SIZE - 1);
+  pv_free_list_t *free_list = &pv_free_ring[index];
+  free_list->list = batch_head;
+  free_list->count = PV_BATCH_SIZE;
+  pmap_simple_unlock(&pv_free_array_lock);
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /**
@@ -659,19 +659,18 @@ pv_free_array_give_batch(pv_entry_t *batch_head)
  *              allocated node if the free list isn't empty, or a pointer to
  *              NULL if the list is empty.
  */
-MARK_AS_PMAP_TEXT static void
-pv_free_list_alloc(pv_free_list_t *free_list, pv_entry_t **pvepp)
-{
-	assert(pvepp != NULL);
-	assert(((free_list->list != NULL) && (free_list->count > 0)) ||
-	    ((free_list->list == NULL) && (free_list->count == 0)));
+MARK_AS_PMAP_TEXT static void pv_free_list_alloc(pv_free_list_t *free_list,
+                                                 pv_entry_t **pvepp) {
+  assert(pvepp != NULL);
+  assert(((free_list->list != NULL) && (free_list->count > 0)) ||
+         ((free_list->list == NULL) && (free_list->count == 0)));
 
-	if ((*pvepp = free_list->list) != NULL) {
-		pv_entry_t *pvep = *pvepp;
-		free_list->list = pvep->pve_next;
-		pvep->pve_next = PV_ENTRY_NULL;
-		free_list->count--;
-	}
+  if ((*pvepp = free_list->list) != NULL) {
+    pv_entry_t *pvep = *pvepp;
+    free_list->list = pvep->pve_next;
+    pvep->pve_next = PV_ENTRY_NULL;
+    free_list->count--;
+  }
 }
 
 /**
@@ -685,16 +684,14 @@ pv_free_list_alloc(pv_free_list_t *free_list, pv_entry_t **pvepp)
  *              NULL if the list is empty. This pointer can't already be
  *              pointing to a valid entry before allocation.
  */
-MARK_AS_PMAP_TEXT static void
-pv_list_kern_alloc(pv_entry_t **pvepp)
-{
-	assert((pvepp != NULL) && (*pvepp == PV_ENTRY_NULL));
-	pmap_simple_lock(&pv_kern_free_list_lock);
-	if (pv_kern_free.count > 0) {
-		pmap_kern_reserve_alloc_stat++;
-	}
-	pv_free_list_alloc(&pv_kern_free, pvepp);
-	pmap_simple_unlock(&pv_kern_free_list_lock);
+MARK_AS_PMAP_TEXT static void pv_list_kern_alloc(pv_entry_t **pvepp) {
+  assert((pvepp != NULL) && (*pvepp == PV_ENTRY_NULL));
+  pmap_simple_lock(&pv_kern_free_list_lock);
+  if (pv_kern_free.count > 0) {
+    pmap_kern_reserve_alloc_stat++;
+  }
+  pv_free_list_alloc(&pv_kern_free, pvepp);
+  pmap_simple_unlock(&pv_kern_free_list_lock);
 }
 
 /**
@@ -705,15 +702,14 @@ pv_list_kern_alloc(pv_entry_t **pvepp)
  * @param pv_cnt Number of elements in the list to be returned.
  */
 MARK_AS_PMAP_TEXT static void
-pv_list_kern_free(pv_entry_t *pve_head, pv_entry_t *pve_tail, int pv_cnt)
-{
-	assert((pve_head != PV_ENTRY_NULL) && (pve_tail != PV_ENTRY_NULL));
+pv_list_kern_free(pv_entry_t *pve_head, pv_entry_t *pve_tail, int pv_cnt) {
+  assert((pve_head != PV_ENTRY_NULL) && (pve_tail != PV_ENTRY_NULL));
 
-	pmap_simple_lock(&pv_kern_free_list_lock);
-	pve_tail->pve_next = pv_kern_free.list;
-	pv_kern_free.list = pve_head;
-	pv_kern_free.count += pv_cnt;
-	pmap_simple_unlock(&pv_kern_free_list_lock);
+  pmap_simple_lock(&pv_kern_free_list_lock);
+  pve_tail->pve_next = pv_kern_free.list;
+  pv_kern_free.list = pve_head;
+  pv_kern_free.count += pv_cnt;
+  pmap_simple_unlock(&pv_kern_free_list_lock);
 }
 
 /**
@@ -727,48 +723,46 @@ pv_list_kern_free(pv_entry_t *pve_head, pv_entry_t *pve_tail, int pv_cnt)
  *              pointer can't already be pointing to a valid entry before
  *              allocation.
  */
-MARK_AS_PMAP_TEXT static void
-pv_list_alloc(pv_entry_t **pvepp)
-{
-	assert((pvepp != NULL) && (*pvepp == PV_ENTRY_NULL));
+MARK_AS_PMAP_TEXT static void pv_list_alloc(pv_entry_t **pvepp) {
+  assert((pvepp != NULL) && (*pvepp == PV_ENTRY_NULL));
 
-	/* Disable preemption while working with per-CPU data. */
-	mp_disable_preemption();
+  /* Disable preemption while working with per-CPU data. */
+  mp_disable_preemption();
 
-	pmap_cpu_data_t *pmap_cpu_data = pmap_get_cpu_data();
-	pv_free_list_alloc(&pmap_cpu_data->pv_free, pvepp);
+  pmap_cpu_data_t *pmap_cpu_data = pmap_get_cpu_data();
+  pv_free_list_alloc(&pmap_cpu_data->pv_free, pvepp);
 
-	if (*pvepp != PV_ENTRY_NULL) {
-		goto pv_list_alloc_done;
-	}
+  if (*pvepp != PV_ENTRY_NULL) {
+    goto pv_list_alloc_done;
+  }
 
-	if (pv_kern_free.count < pv_kern_low_water_mark) {
-		/**
-		 * If the kernel reserved pool is low, let non-kernel mappings wait for
-		 * a page from the VM.
-		 */
-		goto pv_list_alloc_done;
-	}
+  if (pv_kern_free.count < pv_kern_low_water_mark) {
+    /**
+     * If the kernel reserved pool is low, let non-kernel mappings wait for
+     * a page from the VM.
+     */
+    goto pv_list_alloc_done;
+  }
 
-	/**
-	 * Attempt to replenish the local list off the global one, and return the
-	 * first element. If the global list is empty, then the allocation failed.
-	 */
-	pv_entry_t *new_batch = pv_free_array_get_batch();
+  /**
+   * Attempt to replenish the local list off the global one, and return the
+   * first element. If the global list is empty, then the allocation failed.
+   */
+  pv_entry_t *new_batch = pv_free_array_get_batch();
 
-	if (new_batch != PV_ENTRY_NULL) {
-		pmap_cpu_data->pv_free.count = PV_BATCH_SIZE - 1;
-		pmap_cpu_data->pv_free.list = new_batch->pve_next;
-		assert(pmap_cpu_data->pv_free.list != NULL);
+  if (new_batch != PV_ENTRY_NULL) {
+    pmap_cpu_data->pv_free.count = PV_BATCH_SIZE - 1;
+    pmap_cpu_data->pv_free.list = new_batch->pve_next;
+    assert(pmap_cpu_data->pv_free.list != NULL);
 
-		new_batch->pve_next = PV_ENTRY_NULL;
-		*pvepp = new_batch;
-	}
+    new_batch->pve_next = PV_ENTRY_NULL;
+    *pvepp = new_batch;
+  }
 
 pv_list_alloc_done:
-	mp_enable_preemption();
+  mp_enable_preemption();
 
-	return;
+  return;
 }
 
 /**
@@ -780,104 +774,107 @@ pv_list_alloc_done:
  * @param pve_tail Tail of the list to be returned.
  * @param pv_cnt Number of elements in the list to be returned.
  */
-MARK_AS_PMAP_TEXT void
-pv_list_free(pv_entry_t *pve_head, pv_entry_t *pve_tail, unsigned int pv_cnt)
-{
-	assert((pve_head != PV_ENTRY_NULL) && (pve_tail != PV_ENTRY_NULL));
+MARK_AS_PMAP_TEXT void pv_list_free(pv_entry_t *pve_head, pv_entry_t *pve_tail,
+                                    unsigned int pv_cnt) {
+  assert((pve_head != PV_ENTRY_NULL) && (pve_tail != PV_ENTRY_NULL));
 
-	/* Disable preemption while working with per-CPU data. */
-	disable_preemption();
+  /* Disable preemption while working with per-CPU data. */
+  disable_preemption();
 
-	pmap_cpu_data_t *pmap_cpu_data = pmap_get_cpu_data();
+  pmap_cpu_data_t *pmap_cpu_data = pmap_get_cpu_data();
 
-	/**
-	 * How many more PVEs need to be added to the last allocated batch to get it
-	 * back up to a PV_BATCH_SIZE number of objects.
-	 */
-	const uint32_t available = PV_BATCH_SIZE - (pmap_cpu_data->pv_free.count % PV_BATCH_SIZE);
+  /**
+   * How many more PVEs need to be added to the last allocated batch to get it
+   * back up to a PV_BATCH_SIZE number of objects.
+   */
+  const uint32_t available =
+      PV_BATCH_SIZE - (pmap_cpu_data->pv_free.count % PV_BATCH_SIZE);
 
-	/**
-	 * The common case is that the number of PVEs to be freed fit in the current
-	 * PV_BATCH_SIZE boundary. If that is the case, quickly prepend the whole
-	 * list and return.
-	 */
-	if (__probable((pv_cnt <= available) &&
-	    ((pmap_cpu_data->pv_free.count % PV_BATCH_SIZE != 0) || (pmap_cpu_data->pv_free.count == 0)))) {
-		pve_tail->pve_next = pmap_cpu_data->pv_free.list;
-		pmap_cpu_data->pv_free.list = pve_head;
-		pmap_cpu_data->pv_free.count += pv_cnt;
-		goto pv_list_free_done;
-	}
+  /**
+   * The common case is that the number of PVEs to be freed fit in the current
+   * PV_BATCH_SIZE boundary. If that is the case, quickly prepend the whole
+   * list and return.
+   */
+  if (__probable((pv_cnt <= available) &&
+                 ((pmap_cpu_data->pv_free.count % PV_BATCH_SIZE != 0) ||
+                  (pmap_cpu_data->pv_free.count == 0)))) {
+    pve_tail->pve_next = pmap_cpu_data->pv_free.list;
+    pmap_cpu_data->pv_free.list = pve_head;
+    pmap_cpu_data->pv_free.count += pv_cnt;
+    goto pv_list_free_done;
+  }
 
-	unsigned int freed_count = 0;
+  unsigned int freed_count = 0;
 
-	/**
-	 * In the degenerate case, we need to process PVEs one by one, to make sure
-	 * we spill out to the global list, or update the spill marker as
-	 * appropriate.
-	 */
-	while (pv_cnt) {
-		/**
-		 * Check for (and if necessary reenable) preemption every PV_BATCH_SIZE PVEs to
-		 * avoid leaving preemption disabled for an excessive duration if we happen to be
-		 * processing a very large PV list.
-		 */
-		if (__improbable(freed_count == PV_BATCH_SIZE)) {
-			freed_count = 0;
-			if (__improbable(pmap_pending_preemption())) {
-				enable_preemption();
-				assert(preemption_enabled() || PMAP_IS_HIBERNATING());
-				disable_preemption();
-				pmap_cpu_data = pmap_get_cpu_data();
-			}
-		}
+  /**
+   * In the degenerate case, we need to process PVEs one by one, to make sure
+   * we spill out to the global list, or update the spill marker as
+   * appropriate.
+   */
+  while (pv_cnt) {
+    /**
+     * Check for (and if necessary reenable) preemption every PV_BATCH_SIZE PVEs
+     * to avoid leaving preemption disabled for an excessive duration if we
+     * happen to be processing a very large PV list.
+     */
+    if (__improbable(freed_count == PV_BATCH_SIZE)) {
+      freed_count = 0;
+      if (__improbable(pmap_pending_preemption())) {
+        enable_preemption();
+        assert(preemption_enabled() || PMAP_IS_HIBERNATING());
+        disable_preemption();
+        pmap_cpu_data = pmap_get_cpu_data();
+      }
+    }
 
-		/**
-		 * Take the node off the top of the passed in list and prepend it to the
-		 * per-cpu list.
-		 */
-		pv_entry_t *pv_next = pve_head->pve_next;
-		pve_head->pve_next = pmap_cpu_data->pv_free.list;
-		pmap_cpu_data->pv_free.list = pve_head;
-		pve_head = pv_next;
-		pmap_cpu_data->pv_free.count++;
-		pv_cnt--;
-		freed_count++;
+    /**
+     * Take the node off the top of the passed in list and prepend it to the
+     * per-cpu list.
+     */
+    pv_entry_t *pv_next = pve_head->pve_next;
+    pve_head->pve_next = pmap_cpu_data->pv_free.list;
+    pmap_cpu_data->pv_free.list = pve_head;
+    pve_head = pv_next;
+    pmap_cpu_data->pv_free.count++;
+    pv_cnt--;
+    freed_count++;
 
-		if (__improbable(pmap_cpu_data->pv_free.count == (PV_BATCH_SIZE + 1))) {
-			/**
-			 * A full batch of entries have been freed to the per-cpu list.
-			 * Update the spill marker which is used to remember the end of a
-			 * batch (remember, we prepend nodes) to eventually return back to
-			 * the global list (we try to only keep one PV_BATCH_SIZE worth of
-			 * nodes in any single per-cpu list).
-			 */
-			pmap_cpu_data->pv_free_spill_marker = pmap_cpu_data->pv_free.list;
-		} else if (__improbable(pmap_cpu_data->pv_free.count == (PV_BATCH_SIZE * 2) + 1)) {
-			/* Spill out excess PVEs to the global PVE array */
-			pv_entry_t *spill_head = pmap_cpu_data->pv_free.list->pve_next;
-			pv_entry_t *spill_tail = pmap_cpu_data->pv_free_spill_marker;
-			pmap_cpu_data->pv_free.list->pve_next = pmap_cpu_data->pv_free_spill_marker->pve_next;
-			spill_tail->pve_next = PV_ENTRY_NULL;
-			pmap_cpu_data->pv_free.count -= PV_BATCH_SIZE;
-			pmap_cpu_data->pv_free_spill_marker = pmap_cpu_data->pv_free.list;
+    if (__improbable(pmap_cpu_data->pv_free.count == (PV_BATCH_SIZE + 1))) {
+      /**
+       * A full batch of entries have been freed to the per-cpu list.
+       * Update the spill marker which is used to remember the end of a
+       * batch (remember, we prepend nodes) to eventually return back to
+       * the global list (we try to only keep one PV_BATCH_SIZE worth of
+       * nodes in any single per-cpu list).
+       */
+      pmap_cpu_data->pv_free_spill_marker = pmap_cpu_data->pv_free.list;
+    } else if (__improbable(pmap_cpu_data->pv_free.count ==
+                            (PV_BATCH_SIZE * 2) + 1)) {
+      /* Spill out excess PVEs to the global PVE array */
+      pv_entry_t *spill_head = pmap_cpu_data->pv_free.list->pve_next;
+      pv_entry_t *spill_tail = pmap_cpu_data->pv_free_spill_marker;
+      pmap_cpu_data->pv_free.list->pve_next =
+          pmap_cpu_data->pv_free_spill_marker->pve_next;
+      spill_tail->pve_next = PV_ENTRY_NULL;
+      pmap_cpu_data->pv_free.count -= PV_BATCH_SIZE;
+      pmap_cpu_data->pv_free_spill_marker = pmap_cpu_data->pv_free.list;
 
-			if (__improbable(pv_free_array_give_batch(spill_head) != KERN_SUCCESS)) {
-				/**
-				 * This is extremely unlikely to happen, as it would imply that
-				 * we have (PV_FREE_ARRAY_SIZE * PV_BATCH_SIZE) PVEs sitting in
-				 * the global array. Just in case, push the excess down to the
-				 * kernel PVE free list.
-				 */
-				pv_list_kern_free(spill_head, spill_tail, PV_BATCH_SIZE);
-			}
-		}
-	}
+      if (__improbable(pv_free_array_give_batch(spill_head) != KERN_SUCCESS)) {
+        /**
+         * This is extremely unlikely to happen, as it would imply that
+         * we have (PV_FREE_ARRAY_SIZE * PV_BATCH_SIZE) PVEs sitting in
+         * the global array. Just in case, push the excess down to the
+         * kernel PVE free list.
+         */
+        pv_list_kern_free(spill_head, spill_tail, PV_BATCH_SIZE);
+      }
+    }
+  }
 
 pv_list_free_done:
-	enable_preemption();
+  enable_preemption();
 
-	return;
+  return;
 }
 
 /**
@@ -896,44 +893,42 @@ pv_list_free_done:
  * @return KERN_SUCCESS, or the value returned by pmap_page_alloc() upon
  *         failure.
  */
-MARK_AS_PMAP_TEXT static kern_return_t
-pve_feed_page(unsigned alloc_flags)
-{
-	kern_return_t kr = KERN_FAILURE;
+MARK_AS_PMAP_TEXT static kern_return_t pve_feed_page(unsigned alloc_flags) {
+  kern_return_t kr = KERN_FAILURE;
 
-	pv_entry_t *pve_head = PV_ENTRY_NULL;
-	pv_entry_t *pve_tail = PV_ENTRY_NULL;
-	pmap_paddr_t pa = 0;
+  pv_entry_t *pve_head = PV_ENTRY_NULL;
+  pv_entry_t *pve_tail = PV_ENTRY_NULL;
+  pmap_paddr_t pa = 0;
 
-	kr = pmap_page_alloc(&pa, alloc_flags);
+  kr = pmap_page_alloc(&pa, alloc_flags);
 
-	if (kr != KERN_SUCCESS) {
-		return kr;
-	}
+  if (kr != KERN_SUCCESS) {
+    return kr;
+  }
 
-	/* Update statistics globals. See the variables' definitions for more info. */
-	os_atomic_inc(&pv_page_count, relaxed);
-	pmap_reserve_replenish_stat += PV_BATCH_SIZE;
+  /* Update statistics globals. See the variables' definitions for more info. */
+  os_atomic_inc(&pv_page_count, relaxed);
+  pmap_reserve_replenish_stat += PV_BATCH_SIZE;
 
-	/* Prepare a new list by linking all of the entries in advance. */
-	pve_head = (pv_entry_t *)phystokv(pa);
-	pve_tail = &pve_head[PV_BATCH_SIZE - 1];
+  /* Prepare a new list by linking all of the entries in advance. */
+  pve_head = (pv_entry_t *)phystokv(pa);
+  pve_tail = &pve_head[PV_BATCH_SIZE - 1];
 
-	for (int i = 0; i < PV_BATCH_SIZE; i++) {
-		pve_head[i].pve_next = &pve_head[i + 1];
-	}
-	pve_head[PV_BATCH_SIZE - 1].pve_next = PV_ENTRY_NULL;
+  for (int i = 0; i < PV_BATCH_SIZE; i++) {
+    pve_head[i].pve_next = &pve_head[i + 1];
+  }
+  pve_head[PV_BATCH_SIZE - 1].pve_next = PV_ENTRY_NULL;
 
-	/**
-	 * Add the new list to the kernel PVE free list if we are running low on
-	 * kernel-dedicated entries or the global free array is full.
-	 */
-	if ((pv_kern_free.count < pv_kern_low_water_mark) ||
-	    (pv_free_array_give_batch(pve_head) != KERN_SUCCESS)) {
-		pv_list_kern_free(pve_head, pve_tail, PV_BATCH_SIZE);
-	}
+  /**
+   * Add the new list to the kernel PVE free list if we are running low on
+   * kernel-dedicated entries or the global free array is full.
+   */
+  if ((pv_kern_free.count < pv_kern_low_water_mark) ||
+      (pv_free_array_give_batch(pve_head) != KERN_SUCCESS)) {
+    pv_list_kern_free(pve_head, pve_tail, PV_BATCH_SIZE);
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /**
@@ -963,8 +958,8 @@ pve_feed_page(unsigned alloc_flags)
  *                   re-locked.
  * @param refcountp Pointer to a reference count that will be temporarily
  *                  atomically incremented in the event that [pmap]'s lock needs
- *                  to be temporarily dropped in order to satisfy the allocation.
- *                  This is typically used to prevent a page table from being
+ *                  to be temporarily dropped in order to satisfy the
+ * allocation. This is typically used to prevent a page table from being
  *                  reclaimed while the lock is dropped.  May be NULL.
  *
  * @return These are the possible return values:
@@ -979,132 +974,132 @@ pve_feed_page(unsigned alloc_flags)
  *                     held. Note that the locks have already been re-acquired
  *                     before this function exits.
  */
-MARK_AS_PMAP_TEXT pv_alloc_return_t
-pv_alloc(
-	pmap_t pmap,
-	pmap_lock_mode_t lock_mode,
-	unsigned int options,
-	pv_entry_t **pvepp,
-	locked_pvh_t *locked_pvh,
-	volatile uint16_t *refcountp)
-{
-	assert((pvepp != NULL) && (*pvepp == PV_ENTRY_NULL));
-	assert(locked_pvh != NULL);
+MARK_AS_PMAP_TEXT pv_alloc_return_t pv_alloc(pmap_t pmap,
+                                             pmap_lock_mode_t lock_mode,
+                                             unsigned int options,
+                                             pv_entry_t **pvepp,
+                                             locked_pvh_t *locked_pvh,
+                                             volatile uint16_t *refcountp) {
+  assert((pvepp != NULL) && (*pvepp == PV_ENTRY_NULL));
+  assert(locked_pvh != NULL);
 
-	if (pmap != NULL) {
-		pmap_assert_locked(pmap, lock_mode);
-	}
+  if (pmap != NULL) {
+    pmap_assert_locked(pmap, lock_mode);
+  }
 
-	pv_list_alloc(pvepp);
-	if (PV_ENTRY_NULL != *pvepp) {
-		return PV_ALLOC_SUCCESS;
-	}
+  pv_list_alloc(pvepp);
+  if (PV_ENTRY_NULL != *pvepp) {
+    return PV_ALLOC_SUCCESS;
+  }
 
-	unsigned alloc_flags = 0;
+  unsigned alloc_flags = 0;
 
-	/**
-	 * We got here because both the per-CPU and the global lists are empty. If
-	 * this allocation is for the kernel pmap or an IOMMU kernel driver, we try
-	 * to get an entry from the kernel list next.
-	 */
-	if ((pmap == NULL) || (kernel_pmap == pmap)) {
-		pv_list_kern_alloc(pvepp);
-		if (PV_ENTRY_NULL != *pvepp) {
-			return PV_ALLOC_SUCCESS;
-		}
-	}
+  /**
+   * We got here because both the per-CPU and the global lists are empty. If
+   * this allocation is for the kernel pmap or an IOMMU kernel driver, we try
+   * to get an entry from the kernel list next.
+   */
+  if ((pmap == NULL) || (kernel_pmap == pmap)) {
+    pv_list_kern_alloc(pvepp);
+    if (PV_ENTRY_NULL != *pvepp) {
+      return PV_ALLOC_SUCCESS;
+    }
+  }
 
-	/**
-	 * Make sure we have PMAP_PAGES_ALLOCATE_NOWAIT set in alloc_flags when the
-	 * input options argument has PMAP_OPTIONS_NOWAIT set.
-	 */
-	alloc_flags |= (options & PMAP_OPTIONS_NOWAIT) ? PMAP_PAGE_ALLOCATE_NOWAIT : 0;
+  /**
+   * Make sure we have PMAP_PAGES_ALLOCATE_NOWAIT set in alloc_flags when the
+   * input options argument has PMAP_OPTIONS_NOWAIT set.
+   */
+  alloc_flags |=
+      (options & PMAP_OPTIONS_NOWAIT) ? PMAP_PAGE_ALLOCATE_NOWAIT : 0;
 
-	/**
-	 * We ran out of PV entries all across the board, or this allocation is not
-	 * for the kernel. Let's make sure that the kernel list is not too full
-	 * (very unlikely), in which case we can rebalance here.
-	 */
-	if (__improbable(pv_kern_free.count > (PV_BATCH_SIZE * 2))) {
-		pmap_simple_lock(&pv_kern_free_list_lock);
-		/* Re-check, now that the lock is held. */
-		if (pv_kern_free.count > (PV_BATCH_SIZE * 2)) {
-			pv_entry_t *pve_head = pv_kern_free.list;
-			pv_entry_t *pve_tail = pve_head;
+  /**
+   * We ran out of PV entries all across the board, or this allocation is not
+   * for the kernel. Let's make sure that the kernel list is not too full
+   * (very unlikely), in which case we can rebalance here.
+   */
+  if (__improbable(pv_kern_free.count > (PV_BATCH_SIZE * 2))) {
+    pmap_simple_lock(&pv_kern_free_list_lock);
+    /* Re-check, now that the lock is held. */
+    if (pv_kern_free.count > (PV_BATCH_SIZE * 2)) {
+      pv_entry_t *pve_head = pv_kern_free.list;
+      pv_entry_t *pve_tail = pve_head;
 
-			for (int i = 0; i < (PV_BATCH_SIZE - 1); i++) {
-				pve_tail = pve_tail->pve_next;
-			}
+      for (int i = 0; i < (PV_BATCH_SIZE - 1); i++) {
+        pve_tail = pve_tail->pve_next;
+      }
 
-			pv_kern_free.list = pve_tail->pve_next;
-			pv_kern_free.count -= PV_BATCH_SIZE;
-			pve_tail->pve_next = PV_ENTRY_NULL;
-			pmap_simple_unlock(&pv_kern_free_list_lock);
+      pv_kern_free.list = pve_tail->pve_next;
+      pv_kern_free.count -= PV_BATCH_SIZE;
+      pve_tail->pve_next = PV_ENTRY_NULL;
+      pmap_simple_unlock(&pv_kern_free_list_lock);
 
-			/* Return back every node except the first one to the free lists. */
-			pv_list_free(pve_head->pve_next, pve_tail, PV_BATCH_SIZE - 1);
-			pve_head->pve_next = PV_ENTRY_NULL;
-			*pvepp = pve_head;
-			return PV_ALLOC_SUCCESS;
-		}
-		pmap_simple_unlock(&pv_kern_free_list_lock);
-	}
+      /* Return back every node except the first one to the free lists. */
+      pv_list_free(pve_head->pve_next, pve_tail, PV_BATCH_SIZE - 1);
+      pve_head->pve_next = PV_ENTRY_NULL;
+      *pvepp = pve_head;
+      return PV_ALLOC_SUCCESS;
+    }
+    pmap_simple_unlock(&pv_kern_free_list_lock);
+  }
 
-	/**
-	 * If all else fails, try to get a new pmap page so that the allocation
-	 * succeeds once the caller retries it.
-	 */
-	kern_return_t kr = KERN_FAILURE;
-	pv_alloc_return_t pv_status = PV_ALLOC_FAIL;
-	const unsigned int pai = locked_pvh->pai;
+  /**
+   * If all else fails, try to get a new pmap page so that the allocation
+   * succeeds once the caller retries it.
+   */
+  kern_return_t kr = KERN_FAILURE;
+  pv_alloc_return_t pv_status = PV_ALLOC_FAIL;
+  const unsigned int pai = locked_pvh->pai;
 
-	/**
-	 * Drop the lock during page allocation since that can take a while and
-	 * because preemption must be enabled when attempting to allocate memory
-	 * from the VM (which requires grabbing a mutex).
-	 */
-	pvh_unlock(locked_pvh);
-	if (pmap != NULL) {
-		/**
-		 * Bump the provided refcount before we drop the pmap lock in order to prevent
-		 * page table reclamation while the lock is dropped.
-		 */
-		if (__improbable((refcountp != NULL) && (os_atomic_inc_orig(refcountp, relaxed) == UINT16_MAX))) {
-			panic("%s: pmap %p refcount %p overflow", __func__, pmap, refcountp);
-		}
-		pmap_unlock(pmap, lock_mode);
-	}
+  /**
+   * Drop the lock during page allocation since that can take a while and
+   * because preemption must be enabled when attempting to allocate memory
+   * from the VM (which requires grabbing a mutex).
+   */
+  pvh_unlock(locked_pvh);
+  if (pmap != NULL) {
+    /**
+     * Bump the provided refcount before we drop the pmap lock in order to
+     * prevent page table reclamation while the lock is dropped.
+     */
+    if (__improbable((refcountp != NULL) &&
+                     (os_atomic_inc_orig(refcountp, relaxed) == UINT16_MAX))) {
+      panic("%s: pmap %p refcount %p overflow", __func__, pmap, refcountp);
+    }
+    pmap_unlock(pmap, lock_mode);
+  }
 
-	if ((kr = pve_feed_page(alloc_flags)) == KERN_SUCCESS) {
-		/**
-		 * Since the lock was dropped, even though we successfully allocated a
-		 * new page to be used for PVE nodes, the code that relies on this
-		 * function might have depended on the lock being held for consistency,
-		 * so return out early and let them retry the allocation with the lock
-		 * re-held.
-		 */
-		pv_status = PV_ALLOC_RETRY;
-	} else {
-		pv_status = PV_ALLOC_FAIL;
-	}
+  if ((kr = pve_feed_page(alloc_flags)) == KERN_SUCCESS) {
+    /**
+     * Since the lock was dropped, even though we successfully allocated a
+     * new page to be used for PVE nodes, the code that relies on this
+     * function might have depended on the lock being held for consistency,
+     * so return out early and let them retry the allocation with the lock
+     * re-held.
+     */
+    pv_status = PV_ALLOC_RETRY;
+  } else {
+    pv_status = PV_ALLOC_FAIL;
+  }
 
-	if (pmap != NULL) {
-		pmap_lock(pmap, lock_mode);
-		if (__improbable((refcountp != NULL) && (os_atomic_dec_orig(refcountp, relaxed) == 0))) {
-			panic("%s: pmap %p refcount %p underflow", __func__, pmap, refcountp);
-		}
-	}
+  if (pmap != NULL) {
+    pmap_lock(pmap, lock_mode);
+    if (__improbable((refcountp != NULL) &&
+                     (os_atomic_dec_orig(refcountp, relaxed) == 0))) {
+      panic("%s: pmap %p refcount %p underflow", __func__, pmap, refcountp);
+    }
+  }
 
-	if (__improbable(options & PMAP_OPTIONS_NOPREEMPT)) {
-		*locked_pvh = pvh_lock_nopreempt(pai);
-	} else {
-		*locked_pvh = pvh_lock(pai);
-	}
+  if (__improbable(options & PMAP_OPTIONS_NOPREEMPT)) {
+    *locked_pvh = pvh_lock_nopreempt(pai);
+  } else {
+    *locked_pvh = pvh_lock(pai);
+  }
 
-	/* Ensure that no node was created if we're not returning successfully. */
-	assert(*pvepp == PV_ENTRY_NULL);
+  /* Ensure that no node was created if we're not returning successfully. */
+  assert(*pvepp == PV_ENTRY_NULL);
 
-	return pv_status;
+  return pv_status;
 }
 
 /**
@@ -1112,12 +1107,10 @@ pv_alloc(
  *
  * @param pvep Pointer to the PVE object to free.
  */
-MARK_AS_PMAP_TEXT void
-pv_free(pv_entry_t *pvep)
-{
-	assert(pvep != PV_ENTRY_NULL);
+MARK_AS_PMAP_TEXT void pv_free(pv_entry_t *pvep) {
+  assert(pvep != PV_ENTRY_NULL);
 
-	pv_list_free(pvep, pvep, 1);
+  pv_list_free(pvep, pvep, 1);
 }
 
 /**
@@ -1125,48 +1118,45 @@ pv_free(pv_entry_t *pvep)
  * default PV allocation amounts and the watermark level which determines how
  * many PVE objects are kept in the kernel-dedicated free list.
  */
-MARK_AS_PMAP_TEXT void
-pmap_compute_pv_targets(void)
-{
-	DTEntry entry = NULL;
-	void const *prop = NULL;
-	int err = 0;
-	unsigned int prop_size = 0;
+MARK_AS_PMAP_TEXT void pmap_compute_pv_targets(void) {
+  DTEntry entry = NULL;
+  void const *prop = NULL;
+  int err = 0;
+  unsigned int prop_size = 0;
 
-	err = SecureDTLookupEntry(NULL, "/defaults", &entry);
-	assert(err == kSuccess);
+  err = SecureDTLookupEntry(NULL, "/defaults", &entry);
+  assert(err == kSuccess);
 
-	if (kSuccess == SecureDTGetProperty(entry, "pmap-pv-count", &prop, &prop_size)) {
-		if (prop_size != sizeof(pv_alloc_initial_target)) {
-			panic("pmap-pv-count property is not a 32-bit integer");
-		}
-		pv_alloc_initial_target = *((uint32_t const *)prop);
-	}
+  if (kSuccess ==
+      SecureDTGetProperty(entry, "pmap-pv-count", &prop, &prop_size)) {
+    if (prop_size != sizeof(pv_alloc_initial_target)) {
+      panic("pmap-pv-count property is not a 32-bit integer");
+    }
+    pv_alloc_initial_target = *((uint32_t const *)prop);
+  }
 
-	if (kSuccess == SecureDTGetProperty(entry, "pmap-kern-pv-count", &prop, &prop_size)) {
-		if (prop_size != sizeof(pv_kern_alloc_initial_target)) {
-			panic("pmap-kern-pv-count property is not a 32-bit integer");
-		}
-		pv_kern_alloc_initial_target = *((uint32_t const *)prop);
-	}
+  if (kSuccess ==
+      SecureDTGetProperty(entry, "pmap-kern-pv-count", &prop, &prop_size)) {
+    if (prop_size != sizeof(pv_kern_alloc_initial_target)) {
+      panic("pmap-kern-pv-count property is not a 32-bit integer");
+    }
+    pv_kern_alloc_initial_target = *((uint32_t const *)prop);
+  }
 
-	if (kSuccess == SecureDTGetProperty(entry, "pmap-kern-pv-min", &prop, &prop_size)) {
-		if (prop_size != sizeof(pv_kern_low_water_mark)) {
-			panic("pmap-kern-pv-min property is not a 32-bit integer");
-		}
-		pv_kern_low_water_mark = *((uint32_t const *)prop);
-	}
+  if (kSuccess ==
+      SecureDTGetProperty(entry, "pmap-kern-pv-min", &prop, &prop_size)) {
+    if (prop_size != sizeof(pv_kern_low_water_mark)) {
+      panic("pmap-kern-pv-min property is not a 32-bit integer");
+    }
+    pv_kern_low_water_mark = *((uint32_t const *)prop);
+  }
 }
 
 /**
  * This would normally be used to adjust the amount of PVE objects available in
  * the system, but we do that dynamically at runtime anyway so this is unneeded.
  */
-void
-mapping_adjust(void)
-{
-	/* Not implemented for arm/arm64. */
-}
+void mapping_adjust(void) { /* Not implemented for arm/arm64. */ }
 
 /**
  * Creates a target number of free pv_entry_t objects for the kernel free list
@@ -1178,23 +1168,22 @@ mapping_adjust(void)
  *         return value from pve_feed_page() on failure (could be caused by not
  *         being able to allocate a page).
  */
-MARK_AS_PMAP_TEXT kern_return_t
-mapping_free_prime_internal(void)
-{
-	kern_return_t kr = KERN_FAILURE;
+MARK_AS_PMAP_TEXT kern_return_t mapping_free_prime_internal(void) {
+  kern_return_t kr = KERN_FAILURE;
 
-	/*
-	 * We do not need to hold the pv_free_array lock to calculate the number of
-	 * elements in it because no other core is running at this point.
-	 */
-	while (((pv_free_array_n_elems() * PV_BATCH_SIZE) < pv_alloc_initial_target) ||
-	    (pv_kern_free.count < pv_kern_alloc_initial_target)) {
-		if ((kr = pve_feed_page(0)) != KERN_SUCCESS) {
-			return kr;
-		}
-	}
+  /*
+   * We do not need to hold the pv_free_array lock to calculate the number of
+   * elements in it because no other core is running at this point.
+   */
+  while (
+      ((pv_free_array_n_elems() * PV_BATCH_SIZE) < pv_alloc_initial_target) ||
+      (pv_kern_free.count < pv_kern_alloc_initial_target)) {
+    if ((kr = pve_feed_page(0)) != KERN_SUCCESS) {
+      return kr;
+    }
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /**
@@ -1224,52 +1213,49 @@ mapping_free_prime_internal(void)
  *         possible return values.
  */
 MARK_AS_PMAP_TEXT static pv_alloc_return_t
-pepv_convert_ptep_to_pvep(
-	pmap_t pmap,
-	pmap_lock_mode_t lock_mode,
-	unsigned int options,
-	locked_pvh_t *locked_pvh)
-{
-	assert(locked_pvh != NULL);
-	assert(pvh_test_type(locked_pvh->pvh, PVH_TYPE_PTEP));
+pepv_convert_ptep_to_pvep(pmap_t pmap, pmap_lock_mode_t lock_mode,
+                          unsigned int options, locked_pvh_t *locked_pvh) {
+  assert(locked_pvh != NULL);
+  assert(pvh_test_type(locked_pvh->pvh, PVH_TYPE_PTEP));
 
-	pv_entry_t *pvep = PV_ENTRY_NULL;
-	pv_alloc_return_t ret = pv_alloc(pmap, lock_mode, options, &pvep, locked_pvh, NULL);
-	if (ret != PV_ALLOC_SUCCESS) {
-		return ret;
-	}
+  pv_entry_t *pvep = PV_ENTRY_NULL;
+  pv_alloc_return_t ret =
+      pv_alloc(pmap, lock_mode, options, &pvep, locked_pvh, NULL);
+  if (ret != PV_ALLOC_SUCCESS) {
+    return ret;
+  }
 
-	const unsigned int pai = locked_pvh->pai;
+  const unsigned int pai = locked_pvh->pai;
 
-	/* If we've gotten this far then a node should've been allocated. */
-	assert(pvep != PV_ENTRY_NULL);
+  /* If we've gotten this far then a node should've been allocated. */
+  assert(pvep != PV_ENTRY_NULL);
 
-	/* The new PVE should have the same PTE pointer as the previous PVH entry. */
-	pve_init(pvep);
-	pve_set_ptep(pvep, 0, pvh_ptep(locked_pvh->pvh));
+  /* The new PVE should have the same PTE pointer as the previous PVH entry. */
+  pve_init(pvep);
+  pve_set_ptep(pvep, 0, pvh_ptep(locked_pvh->pvh));
 
-	assert(!pve_get_internal(pvep, 0));
-	assert(!pve_get_altacct(pvep, 0));
-	if (ppattr_is_internal(pai)) {
-		/**
-		 * Transfer "internal" status from pp_attr to this pve. See the comment
-		 * above PP_ATTR_INTERNAL for more information on this.
-		 */
-		ppattr_clear_internal(pai);
-		pve_set_internal(pvep, 0);
-	}
-	if (ppattr_is_altacct(pai)) {
-		/**
-		 * Transfer "altacct" status from pp_attr to this pve. See the comment
-		 * above PP_ATTR_ALTACCT for more information on this.
-		 */
-		ppattr_clear_altacct(pai);
-		pve_set_altacct(pvep, 0);
-	}
+  assert(!pve_get_internal(pvep, 0));
+  assert(!pve_get_altacct(pvep, 0));
+  if (ppattr_is_internal(pai)) {
+    /**
+     * Transfer "internal" status from pp_attr to this pve. See the comment
+     * above PP_ATTR_INTERNAL for more information on this.
+     */
+    ppattr_clear_internal(pai);
+    pve_set_internal(pvep, 0);
+  }
+  if (ppattr_is_altacct(pai)) {
+    /**
+     * Transfer "altacct" status from pp_attr to this pve. See the comment
+     * above PP_ATTR_ALTACCT for more information on this.
+     */
+    ppattr_clear_altacct(pai);
+    pve_set_altacct(pvep, 0);
+  }
 
-	pvh_update_head(locked_pvh, pvep, PVH_TYPE_PVEP);
+  pvh_update_head(locked_pvh, pvep, PVH_TYPE_PVEP);
 
-	return PV_ALLOC_SUCCESS;
+  return PV_ALLOC_SUCCESS;
 }
 
 /**
@@ -1316,132 +1302,129 @@ pepv_convert_ptep_to_pvep(
  *
  * @return PV_ALLOC_SUCCESS if the entry at [locked_pvh->pai] was successfully
  *         updated with the new mapping, or the return value of pv_alloc()
- *         otherwise. See pv_alloc()'s function header for a detailed explanation
- *         of the possible return values.
+ *         otherwise. See pv_alloc()'s function header for a detailed
+ * explanation of the possible return values.
  */
-MARK_AS_PMAP_TEXT pv_alloc_return_t
-pmap_enter_pv(
-	pmap_t pmap,
-	pt_entry_t *ptep,
-	unsigned int options,
-	pmap_lock_mode_t lock_mode,
-	locked_pvh_t *locked_pvh,
-	pv_entry_t **new_pvepp,
-	int *new_pve_ptep_idx)
-{
-	assert(ptep != PT_ENTRY_NULL);
-	assert(locked_pvh != NULL);
+MARK_AS_PMAP_TEXT pv_alloc_return_t pmap_enter_pv(pmap_t pmap, pt_entry_t *ptep,
+                                                  unsigned int options,
+                                                  pmap_lock_mode_t lock_mode,
+                                                  locked_pvh_t *locked_pvh,
+                                                  pv_entry_t **new_pvepp,
+                                                  int *new_pve_ptep_idx) {
+  assert(ptep != PT_ENTRY_NULL);
+  assert(locked_pvh != NULL);
 
-	bool first_cpu_mapping = false;
+  bool first_cpu_mapping = false;
 
-	PMAP_ASSERT_NOT_WRITING_HIB();
+  PMAP_ASSERT_NOT_WRITING_HIB();
 
-	if (pmap != NULL) {
-		pmap_assert_locked(pmap, lock_mode);
-	}
+  if (pmap != NULL) {
+    pmap_assert_locked(pmap, lock_mode);
+  }
 
-	uintptr_t pvh_flags = pvh_get_flags(locked_pvh->pvh);
-	const unsigned int pai = locked_pvh->pai;
+  uintptr_t pvh_flags = pvh_get_flags(locked_pvh->pvh);
+  const unsigned int pai = locked_pvh->pai;
 
+  /**
+   * An IOMMU mapping may already be present for a page that hasn't yet had a
+   * CPU mapping established, so we use PVH_FLAG_CPU to determine if this is
+   * the first CPU mapping. We base internal/reusable accounting on the
+   * options specified for the first CPU mapping. PVH_FLAG_CPU, and thus this
+   * accounting, will then persist as long as there are *any* mappings of the
+   * page. The accounting for a page should not need to change until the page
+   * is recycled by the VM layer, and we assert that there are no mappings
+   * when a page is recycled. An IOMMU mapping of a freed/recycled page is
+   * considered a security violation & potential DMA corruption path.
+   */
+  first_cpu_mapping = ((pmap != NULL) && !(pvh_flags & PVH_FLAG_CPU));
+  if (first_cpu_mapping) {
+    pvh_flags |= PVH_FLAG_CPU;
+    pvh_set_flags(locked_pvh, pvh_flags);
+  }
 
-	/**
-	 * An IOMMU mapping may already be present for a page that hasn't yet had a
-	 * CPU mapping established, so we use PVH_FLAG_CPU to determine if this is
-	 * the first CPU mapping. We base internal/reusable accounting on the
-	 * options specified for the first CPU mapping. PVH_FLAG_CPU, and thus this
-	 * accounting, will then persist as long as there are *any* mappings of the
-	 * page. The accounting for a page should not need to change until the page
-	 * is recycled by the VM layer, and we assert that there are no mappings
-	 * when a page is recycled. An IOMMU mapping of a freed/recycled page is
-	 * considered a security violation & potential DMA corruption path.
-	 */
-	first_cpu_mapping = ((pmap != NULL) && !(pvh_flags & PVH_FLAG_CPU));
-	if (first_cpu_mapping) {
-		pvh_flags |= PVH_FLAG_CPU;
-		pvh_set_flags(locked_pvh, pvh_flags);
-	}
+  /**
+   * Internal/reusable flags are based on the first CPU mapping made to a
+   * page. These will persist until all mappings to the page are removed.
+   */
+  if (first_cpu_mapping) {
+    if ((options & PMAP_OPTIONS_INTERNAL) &&
+        (options & PMAP_OPTIONS_REUSABLE)) {
+      ppattr_set_reusable(pai);
+    } else {
+      ppattr_clear_reusable(pai);
+    }
+  }
 
-	/**
-	 * Internal/reusable flags are based on the first CPU mapping made to a
-	 * page. These will persist until all mappings to the page are removed.
-	 */
-	if (first_cpu_mapping) {
-		if ((options & PMAP_OPTIONS_INTERNAL) &&
-		    (options & PMAP_OPTIONS_REUSABLE)) {
-			ppattr_set_reusable(pai);
-		} else {
-			ppattr_clear_reusable(pai);
-		}
-	}
+  /* Visit the definitions for the PVH_TYPEs to learn more about each one. */
+  if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_NULL)) {
+    /* If this is the first mapping, upgrade the type to store a single PTEP. */
+    pvh_update_head(locked_pvh, ptep, PVH_TYPE_PTEP);
+  } else {
+    pv_alloc_return_t ret = PV_ALLOC_FAIL;
 
-	/* Visit the definitions for the PVH_TYPEs to learn more about each one. */
-	if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_NULL)) {
-		/* If this is the first mapping, upgrade the type to store a single PTEP. */
-		pvh_update_head(locked_pvh, ptep, PVH_TYPE_PTEP);
-	} else {
-		pv_alloc_return_t ret = PV_ALLOC_FAIL;
+    if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_PTEP)) {
+      /**
+       * There was already a single mapping to the page. Convert the PVH
+       * entry from PVH_TYPE_PTEP to PVH_TYPE_PVEP so that multiple
+       * mappings can be tracked. If PVEs cannot hold more than a single
+       * mapping, a second PVE will be added farther down.
+       */
+      if ((ret = pepv_convert_ptep_to_pvep(pmap, lock_mode, options,
+                                           locked_pvh)) != PV_ALLOC_SUCCESS) {
+        return ret;
+      }
 
-		if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_PTEP)) {
-			/**
-			 * There was already a single mapping to the page. Convert the PVH
-			 * entry from PVH_TYPE_PTEP to PVH_TYPE_PVEP so that multiple
-			 * mappings can be tracked. If PVEs cannot hold more than a single
-			 * mapping, a second PVE will be added farther down.
-			 */
-			if ((ret = pepv_convert_ptep_to_pvep(pmap, lock_mode, options, locked_pvh)) != PV_ALLOC_SUCCESS) {
-				return ret;
-			}
+      /**
+       * At this point, the PVH flags have been clobbered due to updating
+       * PTEP->PVEP, but that's ok because the locks are being held and
+       * the flags will get set again below before pv_alloc() is called
+       * and the locks are potentially dropped again.
+       */
+    } else if (__improbable(!pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP))) {
+      panic("%s: unexpected PV head %p, ptep=%p pmap=%p", __func__,
+            (void *)locked_pvh->pvh, ptep, pmap);
+    }
 
-			/**
-			 * At this point, the PVH flags have been clobbered due to updating
-			 * PTEP->PVEP, but that's ok because the locks are being held and
-			 * the flags will get set again below before pv_alloc() is called
-			 * and the locks are potentially dropped again.
-			 */
-		} else if (__improbable(!pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP))) {
-			panic("%s: unexpected PV head %p, ptep=%p pmap=%p",
-			    __func__, (void*)locked_pvh->pvh, ptep, pmap);
-		}
+    /**
+     * Check if we have room for one more mapping in this PVE
+     */
+    pv_entry_t *pvep = pvh_pve_list(locked_pvh->pvh);
+    assert(pvep != PV_ENTRY_NULL);
 
-		/**
-		 * Check if we have room for one more mapping in this PVE
-		 */
-		pv_entry_t *pvep = pvh_pve_list(locked_pvh->pvh);
-		assert(pvep != PV_ENTRY_NULL);
+    int pve_ptep_idx = pve_find_ptep_index(pvep, PT_ENTRY_NULL);
 
-		int pve_ptep_idx = pve_find_ptep_index(pvep, PT_ENTRY_NULL);
+    if (pve_ptep_idx == -1) {
+      /**
+       * Set up the pv_entry for this new mapping and then add it to the list
+       * for this physical page.
+       */
+      pve_ptep_idx = 0;
+      pvep = PV_ENTRY_NULL;
+      if ((ret = pv_alloc(pmap, lock_mode, options, &pvep, locked_pvh, NULL)) !=
+          PV_ALLOC_SUCCESS) {
+        return ret;
+      }
 
-		if (pve_ptep_idx == -1) {
-			/**
-			 * Set up the pv_entry for this new mapping and then add it to the list
-			 * for this physical page.
-			 */
-			pve_ptep_idx = 0;
-			pvep = PV_ENTRY_NULL;
-			if ((ret = pv_alloc(pmap, lock_mode, options, &pvep, locked_pvh, NULL)) != PV_ALLOC_SUCCESS) {
-				return ret;
-			}
+      /* If we've gotten this far then a node should've been allocated. */
+      assert(pvep != PV_ENTRY_NULL);
+      pve_init(pvep);
+      pve_add(locked_pvh, pvep);
+    }
 
-			/* If we've gotten this far then a node should've been allocated. */
-			assert(pvep != PV_ENTRY_NULL);
-			pve_init(pvep);
-			pve_add(locked_pvh, pvep);
-		}
+    pve_set_ptep(pvep, pve_ptep_idx, ptep);
 
-		pve_set_ptep(pvep, pve_ptep_idx, ptep);
+    /*
+     * The PTEP was successfully entered into the PVE object.
+     * If the caller requests it, set new_pvepp and new_pve_ptep_idx
+     * appropriately.
+     */
+    if (new_pvepp != NULL) {
+      *new_pvepp = pvep;
+      *new_pve_ptep_idx = pve_ptep_idx;
+    }
+  }
 
-		/*
-		 * The PTEP was successfully entered into the PVE object.
-		 * If the caller requests it, set new_pvepp and new_pve_ptep_idx
-		 * appropriately.
-		 */
-		if (new_pvepp != NULL) {
-			*new_pvepp = pvep;
-			*new_pve_ptep_idx = pve_ptep_idx;
-		}
-	}
-
-	return PV_ALLOC_SUCCESS;
+  return PV_ALLOC_SUCCESS;
 }
 
 /**
@@ -1461,8 +1444,8 @@ pmap_enter_pv(
  * @param ptep The mapping that's getting removed.
  * @param locked_pvh Input/output parameter pointing to the wrapped value of the
  *                   pv_head_table entry previously obtained from pvh_lock().
- *                   If the removal is successful, locked_pvh->pvh may be updated
- *                   to reflect a new PV list head.
+ *                   If the removal is successful, locked_pvh->pvh may be
+ * updated to reflect a new PV list head.
  * @param is_internal_p The internal bit of the PTE that was removed.
  * @param is_altacct_p The altacct bit of the PTE that was removed.
  * @return These are the possible return values:
@@ -1474,166 +1457,165 @@ pmap_enter_pv(
  *                        of the mapping and acquisition of the PV lock in
  *                        pmap_remove();
  */
-pv_remove_return_t
-pmap_remove_pv(
-	pmap_t pmap __assert_only,
-	pt_entry_t *ptep,
-	locked_pvh_t *locked_pvh,
-	bool *is_internal_p,
-	bool *is_altacct_p)
-{
-	PMAP_ASSERT_NOT_WRITING_HIB();
-	assert(locked_pvh != NULL);
+pv_remove_return_t pmap_remove_pv(pmap_t pmap __assert_only, pt_entry_t *ptep,
+                                  locked_pvh_t *locked_pvh, bool *is_internal_p,
+                                  bool *is_altacct_p) {
+  PMAP_ASSERT_NOT_WRITING_HIB();
+  assert(locked_pvh != NULL);
 
-	pv_remove_return_t ret = PV_REMOVE_SUCCESS;
-	const unsigned int pai = locked_pvh->pai;
-	bool is_internal = false;
-	bool is_altacct = false;
+  pv_remove_return_t ret = PV_REMOVE_SUCCESS;
+  const unsigned int pai = locked_pvh->pai;
+  bool is_internal = false;
+  bool is_altacct = false;
 
+  if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_PTEP)) {
+    if (__improbable((ptep != pvh_ptep(locked_pvh->pvh)))) {
+      return PV_REMOVE_FAIL;
+    }
 
-	if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_PTEP)) {
-		if (__improbable((ptep != pvh_ptep(locked_pvh->pvh)))) {
-			return PV_REMOVE_FAIL;
-		}
+    pvh_update_head(locked_pvh, PV_ENTRY_NULL, PVH_TYPE_NULL);
+    is_internal = ppattr_is_internal(pai);
+    is_altacct = ppattr_is_altacct(pai);
+  } else if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP)) {
+    pv_entry_t **pvepp = NULL;
+    pv_entry_t *pvep = pvh_pve_list(locked_pvh->pvh);
+    assert(pvep != PV_ENTRY_NULL);
+    unsigned int npves = 0;
+    int pve_pte_idx = 0;
+    /* Find the PVE that represents the mapping we're removing. */
+    while ((pvep != PV_ENTRY_NULL) &&
+           ((pve_pte_idx = pve_find_ptep_index(pvep, ptep)) == -1)) {
+      if (__improbable(npves == (SPTM_MAPPING_LIMIT / PTE_PER_PVE))) {
+        pvh_lock_enter_sleep_mode(locked_pvh);
+      }
+      pvepp = pve_next_ptr(pvep);
+      pvep = pve_next(pvep);
+      npves++;
+    }
 
-		pvh_update_head(locked_pvh, PV_ENTRY_NULL, PVH_TYPE_NULL);
-		is_internal = ppattr_is_internal(pai);
-		is_altacct = ppattr_is_altacct(pai);
-	} else if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP)) {
-		pv_entry_t **pvepp = NULL;
-		pv_entry_t *pvep = pvh_pve_list(locked_pvh->pvh);
-		assert(pvep != PV_ENTRY_NULL);
-		unsigned int npves = 0;
-		int pve_pte_idx = 0;
-		/* Find the PVE that represents the mapping we're removing. */
-		while ((pvep != PV_ENTRY_NULL) && ((pve_pte_idx = pve_find_ptep_index(pvep, ptep)) == -1)) {
-			if (__improbable(npves == (SPTM_MAPPING_LIMIT / PTE_PER_PVE))) {
-				pvh_lock_enter_sleep_mode(locked_pvh);
-			}
-			pvepp = pve_next_ptr(pvep);
-			pvep = pve_next(pvep);
-			npves++;
-		}
+    if (__improbable((pvep == PV_ENTRY_NULL))) {
+      return PV_REMOVE_FAIL;
+    }
 
-		if (__improbable((pvep == PV_ENTRY_NULL))) {
-			return PV_REMOVE_FAIL;
-		}
-
-		is_internal = pve_get_internal(pvep, pve_pte_idx);
-		is_altacct = pve_get_altacct(pvep, pve_pte_idx);
-		pve_set_ptep(pvep, pve_pte_idx, PT_ENTRY_NULL);
+    is_internal = pve_get_internal(pvep, pve_pte_idx);
+    is_altacct = pve_get_altacct(pvep, pve_pte_idx);
+    pve_set_ptep(pvep, pve_pte_idx, PT_ENTRY_NULL);
 
 #if MACH_ASSERT
-		/**
-		 * Ensure that the mapping didn't accidentally have multiple PVEs
-		 * associated with it (there should only be one PVE per mapping). This
-		 * checking only occurs on configurations that can accept the perf hit
-		 * that walking the PVE chain on every unmap entails.
-		 *
-		 * This is skipped for IOMMU mappings because some IOMMUs don't use
-		 * normal page tables (e.g., NVMe) to map pages, so the `ptep` field in
-		 * the associated PVE won't actually point to a real page table (see the
-		 * definition of PVH_FLAG_IOMMU_TABLE for more info). Because of that,
-		 * it's perfectly possible for duplicate IOMMU PVEs to exist.
-		 */
-		if ((pmap != NULL) && (kern_feature_override(KF_PMAPV_OVRD) == FALSE)) {
-			pv_entry_t *check_pvep = pvep;
+    /**
+     * Ensure that the mapping didn't accidentally have multiple PVEs
+     * associated with it (there should only be one PVE per mapping). This
+     * checking only occurs on configurations that can accept the perf hit
+     * that walking the PVE chain on every unmap entails.
+     *
+     * This is skipped for IOMMU mappings because some IOMMUs don't use
+     * normal page tables (e.g., NVMe) to map pages, so the `ptep` field in
+     * the associated PVE won't actually point to a real page table (see the
+     * definition of PVH_FLAG_IOMMU_TABLE for more info). Because of that,
+     * it's perfectly possible for duplicate IOMMU PVEs to exist.
+     */
+    if ((pmap != NULL) && (kern_feature_override(KF_PMAPV_OVRD) == FALSE)) {
+      pv_entry_t *check_pvep = pvep;
 
-			do {
-				if (__improbable(npves == (SPTM_MAPPING_LIMIT / PTE_PER_PVE))) {
-					pvh_lock_enter_sleep_mode(locked_pvh);
-				}
-				if (pve_find_ptep_index(check_pvep, ptep) != -1) {
-					panic_plain("%s: duplicate pve entry ptep=%p pmap=%p, pvh=%p, "
-					    "pvep=%p, pai=0x%x", __func__, ptep, pmap,
-					    (void*)locked_pvh->pvh, pvep, pai);
-				}
-				npves++;
-			} while ((check_pvep = pve_next(check_pvep)) != PV_ENTRY_NULL);
-		}
+      do {
+        if (__improbable(npves == (SPTM_MAPPING_LIMIT / PTE_PER_PVE))) {
+          pvh_lock_enter_sleep_mode(locked_pvh);
+        }
+        if (pve_find_ptep_index(check_pvep, ptep) != -1) {
+          panic_plain("%s: duplicate pve entry ptep=%p pmap=%p, pvh=%p, "
+                      "pvep=%p, pai=0x%x",
+                      __func__, ptep, pmap, (void *)locked_pvh->pvh, pvep, pai);
+        }
+        npves++;
+      } while ((check_pvep = pve_next(check_pvep)) != PV_ENTRY_NULL);
+    }
 #endif /* MACH_ASSERT */
 
-		const bool pve_is_first = (pvepp == NULL);
-		const bool pve_is_last = (pve_next(pvep) == PV_ENTRY_NULL);
-		const int other_pte_idx = !pve_pte_idx;
+    const bool pve_is_first = (pvepp == NULL);
+    const bool pve_is_last = (pve_next(pvep) == PV_ENTRY_NULL);
+    const int other_pte_idx = !pve_pte_idx;
 
-		if (pve_is_empty(pvep)) {
-			/*
-			 * This PVE doesn't contain any mappings. We can get rid of it.
-			 */
-			pve_remove(locked_pvh, pvepp, pvep);
-			pv_free(pvep);
-		} else if (!pve_is_first) {
-			/*
-			 * This PVE contains a single mapping. See if we can coalesce it with the one
-			 * at the top of the list.
-			 */
-			pv_entry_t *head_pvep = pvh_pve_list(locked_pvh->pvh);
-			int head_pve_pte_empty_idx;
-			if ((head_pve_pte_empty_idx = pve_find_ptep_index(head_pvep, PT_ENTRY_NULL)) != -1) {
-				pve_set_ptep(head_pvep, head_pve_pte_empty_idx, pve_get_ptep(pvep, other_pte_idx));
-				if (pve_get_internal(pvep, other_pte_idx)) {
-					pve_set_internal(head_pvep, head_pve_pte_empty_idx);
-				}
-				if (pve_get_altacct(pvep, other_pte_idx)) {
-					pve_set_altacct(head_pvep, head_pve_pte_empty_idx);
-				}
-				pve_remove(locked_pvh, pvepp, pvep);
-				pv_free(pvep);
-			} else {
-				/*
-				 * We could not coalesce it. Move it to the start of the list, so that it
-				 * can be coalesced against in the future.
-				 */
-				*pvepp = pve_next(pvep);
-				pve_add(locked_pvh, pvep);
-			}
-		} else if (pve_is_first && pve_is_last) {
-			/*
-			 * This PVE contains a single mapping, and it's the last mapping for this PAI.
-			 * Collapse this list back into the head, turning it into a PVH_TYPE_PTEP entry.
-			 */
-			assertf(pvh_pve_list(locked_pvh->pvh) == pvep, "%s: pvh %p != pvep %p",
-			    __func__, (void*)locked_pvh->pvh, pvep);
-			pvh_update_head(locked_pvh, pve_get_ptep(pvep, other_pte_idx), PVH_TYPE_PTEP);
-			pp_attr_t attrs_to_set = 0;
-			if (pve_get_internal(pvep, other_pte_idx)) {
-				attrs_to_set |= PP_ATTR_INTERNAL;
-			}
-			if (pve_get_altacct(pvep, other_pte_idx)) {
-				attrs_to_set |= PP_ATTR_ALTACCT;
-			}
-			if (attrs_to_set != 0) {
-				ppattr_modify_bits(pai, 0, attrs_to_set);
-			}
-			pv_free(pvep);
-		}
-	} else {
-		/*
-		 * A concurrent disconnect operation may have already cleared the PVH to PVH_TYPE_NULL.
-		 * It's also possible that a subsequent page table allocation may have transitioned
-		 * the PVH to PVH_TYPE_PTDP.
-		 */
-		return PV_REMOVE_FAIL;
-	}
+    if (pve_is_empty(pvep)) {
+      /*
+       * This PVE doesn't contain any mappings. We can get rid of it.
+       */
+      pve_remove(locked_pvh, pvepp, pvep);
+      pv_free(pvep);
+    } else if (!pve_is_first) {
+      /*
+       * This PVE contains a single mapping. See if we can coalesce it with the
+       * one at the top of the list.
+       */
+      pv_entry_t *head_pvep = pvh_pve_list(locked_pvh->pvh);
+      int head_pve_pte_empty_idx;
+      if ((head_pve_pte_empty_idx =
+               pve_find_ptep_index(head_pvep, PT_ENTRY_NULL)) != -1) {
+        pve_set_ptep(head_pvep, head_pve_pte_empty_idx,
+                     pve_get_ptep(pvep, other_pte_idx));
+        if (pve_get_internal(pvep, other_pte_idx)) {
+          pve_set_internal(head_pvep, head_pve_pte_empty_idx);
+        }
+        if (pve_get_altacct(pvep, other_pte_idx)) {
+          pve_set_altacct(head_pvep, head_pve_pte_empty_idx);
+        }
+        pve_remove(locked_pvh, pvepp, pvep);
+        pv_free(pvep);
+      } else {
+        /*
+         * We could not coalesce it. Move it to the start of the list, so that
+         * it can be coalesced against in the future.
+         */
+        *pvepp = pve_next(pvep);
+        pve_add(locked_pvh, pvep);
+      }
+    } else if (pve_is_first && pve_is_last) {
+      /*
+       * This PVE contains a single mapping, and it's the last mapping for this
+       * PAI. Collapse this list back into the head, turning it into a
+       * PVH_TYPE_PTEP entry.
+       */
+      assertf(pvh_pve_list(locked_pvh->pvh) == pvep, "%s: pvh %p != pvep %p",
+              __func__, (void *)locked_pvh->pvh, pvep);
+      pvh_update_head(locked_pvh, pve_get_ptep(pvep, other_pte_idx),
+                      PVH_TYPE_PTEP);
+      pp_attr_t attrs_to_set = 0;
+      if (pve_get_internal(pvep, other_pte_idx)) {
+        attrs_to_set |= PP_ATTR_INTERNAL;
+      }
+      if (pve_get_altacct(pvep, other_pte_idx)) {
+        attrs_to_set |= PP_ATTR_ALTACCT;
+      }
+      if (attrs_to_set != 0) {
+        ppattr_modify_bits(pai, 0, attrs_to_set);
+      }
+      pv_free(pvep);
+    }
+  } else {
+    /*
+     * A concurrent disconnect operation may have already cleared the PVH to
+     * PVH_TYPE_NULL. It's also possible that a subsequent page table allocation
+     * may have transitioned the PVH to PVH_TYPE_PTDP.
+     */
+    return PV_REMOVE_FAIL;
+  }
 
-	if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_NULL)) {
-		pvh_set_flags(locked_pvh, 0);
-		pp_attr_t attrs_to_clear = 0;
-		if (is_internal) {
-			attrs_to_clear |= PP_ATTR_INTERNAL;
-		}
-		if (is_altacct) {
-			attrs_to_clear |= PP_ATTR_ALTACCT;
-		}
-		if (attrs_to_clear != 0) {
-			ppattr_modify_bits(pai, attrs_to_clear, 0);
-		}
-	}
+  if (pvh_test_type(locked_pvh->pvh, PVH_TYPE_NULL)) {
+    pvh_set_flags(locked_pvh, 0);
+    pp_attr_t attrs_to_clear = 0;
+    if (is_internal) {
+      attrs_to_clear |= PP_ATTR_INTERNAL;
+    }
+    if (is_altacct) {
+      attrs_to_clear |= PP_ATTR_ALTACCT;
+    }
+    if (attrs_to_clear != 0) {
+      ppattr_modify_bits(pai, attrs_to_clear, 0);
+    }
+  }
 
-	*is_internal_p = is_internal;
-	*is_altacct_p = is_altacct;
-	return ret;
+  *is_internal_p = is_internal;
+  *is_altacct_p = is_altacct;
+  return ret;
 }
 
 /**
@@ -1651,27 +1633,26 @@ pmap_remove_pv(
  * @param num_pages The number of virtually-contiguous pages pointed to by
  *                  `ptdp` that will be used to prime the PTD allocator.
  */
-MARK_AS_PMAP_TEXT void
-ptd_bootstrap(pt_desc_t *ptdp, unsigned int num_pages)
-{
-	assert(ptd_per_page > 0);
-	assert((ptdp != NULL) && (((uintptr_t)ptdp & PAGE_MASK) == 0) && (num_pages > 0));
+MARK_AS_PMAP_TEXT void ptd_bootstrap(pt_desc_t *ptdp, unsigned int num_pages) {
+  assert(ptd_per_page > 0);
+  assert((ptdp != NULL) && (((uintptr_t)ptdp & PAGE_MASK) == 0) &&
+         (num_pages > 0));
 
-	/**
-	 * Region represented by ptdp should be cleared by pmap_bootstrap().
-	 *
-	 * Only part of each page is being used for PTD objects (the rest is used
-	 * for each PTD's associated ptd_info_t object) so link together the last
-	 * PTD element of each page to the first element of the previous page.
-	 */
-	for (int i = 0; i < num_pages; i++) {
-		*((void**)(&ptdp[ptd_per_page - 1])) = (void*)ptd_free_list;
-		ptd_free_list = ptdp;
-		ptdp = (void *)(((uint8_t *)ptdp) + PAGE_SIZE);
-	}
+  /**
+   * Region represented by ptdp should be cleared by pmap_bootstrap().
+   *
+   * Only part of each page is being used for PTD objects (the rest is used
+   * for each PTD's associated ptd_info_t object) so link together the last
+   * PTD element of each page to the first element of the previous page.
+   */
+  for (int i = 0; i < num_pages; i++) {
+    *((void **)(&ptdp[ptd_per_page - 1])) = (void *)ptd_free_list;
+    ptd_free_list = ptdp;
+    ptdp = (void *)(((uint8_t *)ptdp) + PAGE_SIZE);
+  }
 
-	ptd_free_count = num_pages * ptd_per_page;
-	simple_lock_init(&ptd_free_list_lock, 0);
+  ptd_free_count = num_pages * ptd_per_page;
+  simple_lock_init(&ptd_free_list_lock, 0);
 }
 
 /**
@@ -1688,117 +1669,117 @@ ptd_bootstrap(pt_desc_t *ptdp, unsigned int num_pages)
  *         NULL otherwise (which indicates that a page failed to be allocated
  *         for new nodes).
  */
-MARK_AS_PMAP_TEXT pt_desc_t*
-ptd_alloc_unlinked(unsigned int alloc_flags)
-{
-	pt_desc_t *ptdp = PTD_ENTRY_NULL;
+MARK_AS_PMAP_TEXT pt_desc_t *ptd_alloc_unlinked(unsigned int alloc_flags) {
+  pt_desc_t *ptdp = PTD_ENTRY_NULL;
 
-	pmap_simple_lock(&ptd_free_list_lock);
+  pmap_simple_lock(&ptd_free_list_lock);
 
-	assert(ptd_per_page != 0);
+  assert(ptd_per_page != 0);
 
-	/**
-	 * Ensure that we either have a free list with nodes available, or a
-	 * completely empty list to allocate and prepend new nodes to.
-	 */
-	assert(((ptd_free_list != NULL) && (ptd_free_count > 0)) ||
-	    ((ptd_free_list == NULL) && (ptd_free_count == 0)));
+  /**
+   * Ensure that we either have a free list with nodes available, or a
+   * completely empty list to allocate and prepend new nodes to.
+   */
+  assert(((ptd_free_list != NULL) && (ptd_free_count > 0)) ||
+         ((ptd_free_list == NULL) && (ptd_free_count == 0)));
 
-	if (__improbable(ptd_free_count == 0)) {
-		pmap_paddr_t pa = 0;
+  if (__improbable(ptd_free_count == 0)) {
+    pmap_paddr_t pa = 0;
 
-		/**
-		 * Drop the lock while allocating pages since that can take a while and
-		 * because preemption has to be enabled when allocating memory.
-		 */
-		pmap_simple_unlock(&ptd_free_list_lock);
+    /**
+     * Drop the lock while allocating pages since that can take a while and
+     * because preemption has to be enabled when allocating memory.
+     */
+    pmap_simple_unlock(&ptd_free_list_lock);
 
-		if (pmap_page_alloc(&pa, alloc_flags) != KERN_SUCCESS) {
-			return NULL;
-		}
-		ptdp = (pt_desc_t *)phystokv(pa);
+    if (pmap_page_alloc(&pa, alloc_flags) != KERN_SUCCESS) {
+      return NULL;
+    }
+    ptdp = (pt_desc_t *)phystokv(pa);
 
-		pmap_simple_lock(&ptd_free_list_lock);
-		ptd_page_count++;
+    pmap_simple_lock(&ptd_free_list_lock);
+    ptd_page_count++;
 
-		/**
-		 * Since the lock was dropped while allocating, it's possible another
-		 * CPU already allocated a page. To be safe, prepend the current free
-		 * list (which may or may not be empty now) to the page of nodes just
-		 * allocated and update the head to point to these new nodes.
-		 */
-		*((void**)(&ptdp[ptd_per_page - 1])) = (void*)ptd_free_list;
-		ptd_free_list = ptdp;
-		ptd_free_count += ptd_per_page;
-	}
+    /**
+     * Since the lock was dropped while allocating, it's possible another
+     * CPU already allocated a page. To be safe, prepend the current free
+     * list (which may or may not be empty now) to the page of nodes just
+     * allocated and update the head to point to these new nodes.
+     */
+    *((void **)(&ptdp[ptd_per_page - 1])) = (void *)ptd_free_list;
+    ptd_free_list = ptdp;
+    ptd_free_count += ptd_per_page;
+  }
 
-	/* There should be available nodes at this point. */
-	if (__improbable((ptd_free_count == 0) || (ptd_free_list == PTD_ENTRY_NULL))) {
-		panic_plain("%s: out of PTD entries and for some reason didn't "
-		    "allocate more %d %p", __func__, ptd_free_count, ptd_free_list);
-	}
+  /* There should be available nodes at this point. */
+  if (__improbable((ptd_free_count == 0) ||
+                   (ptd_free_list == PTD_ENTRY_NULL))) {
+    panic_plain("%s: out of PTD entries and for some reason didn't "
+                "allocate more %d %p",
+                __func__, ptd_free_count, ptd_free_list);
+  }
 
-	/* Grab the top node off of the free list to return later. */
-	ptdp = ptd_free_list;
+  /* Grab the top node off of the free list to return later. */
+  ptdp = ptd_free_list;
 
-	/**
-	 * Advance the free list to the next node.
-	 *
-	 * Each free pt_desc_t-sized object in this free list uses the first few
-	 * bytes of the object to point to the next object in the list. When an
-	 * object is deallocated (in ptd_deallocate()) the object is prepended onto
-	 * the free list by setting its first few bytes to point to the current free
-	 * list head. Then the head is updated to point to that object.
-	 *
-	 * When a new page is allocated for PTD nodes, it's left zeroed out. Once we
-	 * use up all of the previously deallocated nodes, the list will point
-	 * somewhere into the last allocated, empty page. We know we're pointing at
-	 * this page because the first few bytes of the object will be NULL. In
-	 * that case just set the head to this empty object.
-	 *
-	 * This empty page can be thought of as a "reserve" of empty nodes for the
-	 * case where more nodes are being allocated than there are nodes being
-	 * deallocated.
-	 */
-	pt_desc_t *const next_node = (pt_desc_t *)(*(void **)ptd_free_list);
+  /**
+   * Advance the free list to the next node.
+   *
+   * Each free pt_desc_t-sized object in this free list uses the first few
+   * bytes of the object to point to the next object in the list. When an
+   * object is deallocated (in ptd_deallocate()) the object is prepended onto
+   * the free list by setting its first few bytes to point to the current free
+   * list head. Then the head is updated to point to that object.
+   *
+   * When a new page is allocated for PTD nodes, it's left zeroed out. Once we
+   * use up all of the previously deallocated nodes, the list will point
+   * somewhere into the last allocated, empty page. We know we're pointing at
+   * this page because the first few bytes of the object will be NULL. In
+   * that case just set the head to this empty object.
+   *
+   * This empty page can be thought of as a "reserve" of empty nodes for the
+   * case where more nodes are being allocated than there are nodes being
+   * deallocated.
+   */
+  pt_desc_t *const next_node = (pt_desc_t *)(*(void **)ptd_free_list);
 
-	/**
-	 * If the next node in the list is NULL but there are supposed to still be
-	 * nodes left, then we've hit the previously allocated empty page of nodes.
-	 * Go ahead and advance the free list to the next free node in that page.
-	 */
-	if ((next_node == PTD_ENTRY_NULL) && (ptd_free_count > 1)) {
-		ptd_free_list = ptd_free_list + 1;
-	} else {
-		ptd_free_list = next_node;
-	}
+  /**
+   * If the next node in the list is NULL but there are supposed to still be
+   * nodes left, then we've hit the previously allocated empty page of nodes.
+   * Go ahead and advance the free list to the next free node in that page.
+   */
+  if ((next_node == PTD_ENTRY_NULL) && (ptd_free_count > 1)) {
+    ptd_free_list = ptd_free_list + 1;
+  } else {
+    ptd_free_list = next_node;
+  }
 
-	ptd_free_count--;
+  ptd_free_count--;
 
-	pmap_simple_unlock(&ptd_free_list_lock);
+  pmap_simple_unlock(&ptd_free_list_lock);
 
-	ptdp->pmap = NULL;
+  ptdp->pmap = NULL;
 
-	/**
-	 * Calculate and stash the address of the ptd_info_t associated with this
-	 * PTD. This can be done easily because both structures co-exist in the same
-	 * page, with ptd_info_t's starting at a given offset from the start of the
-	 * page.
-	 *
-	 * Each PTD is associated with a ptd_info_t of the same index. For example,
-	 * the 15th PTD will use the 15th ptd_info_t in the same page.
-	 */
-	const unsigned ptd_index = ((uintptr_t)ptdp & PAGE_MASK) / sizeof(pt_desc_t);
-	assert(ptd_index < ptd_per_page);
+  /**
+   * Calculate and stash the address of the ptd_info_t associated with this
+   * PTD. This can be done easily because both structures co-exist in the same
+   * page, with ptd_info_t's starting at a given offset from the start of the
+   * page.
+   *
+   * Each PTD is associated with a ptd_info_t of the same index. For example,
+   * the 15th PTD will use the 15th ptd_info_t in the same page.
+   */
+  const unsigned ptd_index = ((uintptr_t)ptdp & PAGE_MASK) / sizeof(pt_desc_t);
+  assert(ptd_index < ptd_per_page);
 
-	const uintptr_t start_of_page = (uintptr_t)ptdp & ~PAGE_MASK;
-	ptd_info_t *first_ptd_info = (ptd_info_t *)(start_of_page + ptd_info_offset);
-	ptdp->ptd_info = &first_ptd_info[ptd_index];
+  const uintptr_t start_of_page = (uintptr_t)ptdp & ~PAGE_MASK;
+  ptd_info_t *first_ptd_info = (ptd_info_t *)(start_of_page + ptd_info_offset);
+  ptdp->ptd_info = &first_ptd_info[ptd_index];
 
-	ptdp->va = (vm_offset_t)-1;
-	ptdp->ptd_info->wiredcnt = 0;
+  ptdp->va = (vm_offset_t)-1;
+  ptdp->ptd_info->wiredcnt = 0;
 
-	return ptdp;
+  return ptdp;
 }
 
 /**
@@ -1813,27 +1794,25 @@ ptd_alloc_unlinked(unsigned int alloc_flags)
  * @return The allocated PTD object, or NULL if one failed to get allocated
  *         (which indicates that memory wasn't able to get allocated).
  */
-MARK_AS_PMAP_TEXT pt_desc_t*
-ptd_alloc(pmap_t pmap, unsigned int alloc_flags)
-{
-	pt_desc_t *ptdp = ptd_alloc_unlinked(alloc_flags);
+MARK_AS_PMAP_TEXT pt_desc_t *ptd_alloc(pmap_t pmap, unsigned int alloc_flags) {
+  pt_desc_t *ptdp = ptd_alloc_unlinked(alloc_flags);
 
-	if (ptdp == NULL) {
-		return NULL;
-	}
+  if (ptdp == NULL) {
+    return NULL;
+  }
 
-	/**
-	 * For PTDs that are linked to pmaps, initialize the wired count to 1
-	 * to prevent pmap_remove() from concurrently attempting to free a
-	 * newly-installed page table page while it is still being initialized.
-	 * This wired reference will be atomically dropped in ptd_info_init()
-	 * once page table initialization is complete.
-	 */
-	ptdp->ptd_info->wiredcnt = 1;
-	ptdp->pmap = pmap;
+  /**
+   * For PTDs that are linked to pmaps, initialize the wired count to 1
+   * to prevent pmap_remove() from concurrently attempting to free a
+   * newly-installed page table page while it is still being initialized.
+   * This wired reference will be atomically dropped in ptd_info_init()
+   * once page table initialization is complete.
+   */
+  ptdp->ptd_info->wiredcnt = 1;
+  ptdp->pmap = pmap;
 
-	pmap_tt_ledger_credit(pmap, sizeof(*ptdp));
-	return ptdp;
+  pmap_tt_ledger_credit(pmap, sizeof(*ptdp));
+  return ptdp;
 }
 
 /**
@@ -1846,25 +1825,23 @@ ptd_alloc(pmap_t pmap, unsigned int alloc_flags)
  *
  * @param ptdp Pointer to the PTD object to deallocate.
  */
-MARK_AS_PMAP_TEXT void
-ptd_deallocate(pt_desc_t *ptdp)
-{
-	pmap_t pmap = ptdp->pmap;
+MARK_AS_PMAP_TEXT void ptd_deallocate(pt_desc_t *ptdp) {
+  pmap_t pmap = ptdp->pmap;
 
-	/* Prepend the deallocated node to the free list. */
-	pmap_simple_lock(&ptd_free_list_lock);
-	(*(void **)ptdp) = (void *)ptd_free_list;
-	ptd_free_list = (pt_desc_t *)ptdp;
-	ptd_free_count++;
-	pmap_simple_unlock(&ptd_free_list_lock);
+  /* Prepend the deallocated node to the free list. */
+  pmap_simple_lock(&ptd_free_list_lock);
+  (*(void **)ptdp) = (void *)ptd_free_list;
+  ptd_free_list = (pt_desc_t *)ptdp;
+  ptd_free_count++;
+  pmap_simple_unlock(&ptd_free_list_lock);
 
-	/**
-	 * If this PTD was being used to represent an IOMMU page then there won't be
-	 * an associated pmap, and therefore no ledger statistics to update.
-	 */
-	if ((uintptr_t)pmap != IOMMU_INSTANCE_NULL) {
-		pmap_tt_ledger_debit(pmap, sizeof(*ptdp));
-	}
+  /**
+   * If this PTD was being used to represent an IOMMU page then there won't be
+   * an associated pmap, and therefore no ledger statistics to update.
+   */
+  if ((uintptr_t)pmap != IOMMU_INSTANCE_NULL) {
+    pmap_tt_ledger_debit(pmap, sizeof(*ptdp));
+  }
 }
 
 /**
@@ -1884,56 +1861,49 @@ ptd_deallocate(pt_desc_t *ptdp)
  * @param ptep A pointer into a page table that the passed in PTD manages. This
  *             page table must be owned by `pmap` and be the PTE that maps `va`.
  */
-MARK_AS_PMAP_TEXT void
-ptd_info_init(
-	pt_desc_t *ptdp,
-	pmap_t pmap,
-	vm_map_address_t va,
-	unsigned int level,
-	pt_entry_t *ptep)
-{
-	const pt_attr_t * const pt_attr = pmap_get_pt_attr(pmap);
+MARK_AS_PMAP_TEXT void ptd_info_init(pt_desc_t *ptdp, pmap_t pmap,
+                                     vm_map_address_t va, unsigned int level,
+                                     pt_entry_t *ptep) {
+  const pt_attr_t *const pt_attr = pmap_get_pt_attr(pmap);
 
-	if (ptdp->pmap != pmap) {
-		panic("%s: pmap mismatch, ptdp=%p, pmap=%p, va=%p, level=%u, ptep=%p",
-		    __func__, ptdp, pmap, (void*)va, level, ptep);
-	}
+  if (ptdp->pmap != pmap) {
+    panic("%s: pmap mismatch, ptdp=%p, pmap=%p, va=%p, level=%u, ptep=%p",
+          __func__, ptdp, pmap, (void *)va, level, ptep);
+  }
 
-	/**
-	 * Root tables are managed separately, and can be accessed through the
-	 * pmap structure itself (there's only one root table per address space).
-	 */
-	assert(level > pt_attr_root_level(pt_attr));
+  /**
+   * Root tables are managed separately, and can be accessed through the
+   * pmap structure itself (there's only one root table per address space).
+   */
+  assert(level > pt_attr_root_level(pt_attr));
 
-	/**
-	 * The "va" field represents the first virtual address that this page table
-	 * is translating for. Naturally, this is dependent on the level the page
-	 * table resides at since more VA space is mapped the closer the page
-	 * table's level is to the root.
-	 */
-	ptdp->va = (vm_offset_t) va & ~pt_attr_ln_pt_offmask(pt_attr, level - 1);
+  /**
+   * The "va" field represents the first virtual address that this page table
+   * is translating for. Naturally, this is dependent on the level the page
+   * table resides at since more VA space is mapped the closer the page
+   * table's level is to the root.
+   */
+  ptdp->va = (vm_offset_t)va & ~pt_attr_ln_pt_offmask(pt_attr, level - 1);
 }
 
 /**
  * Performs final initialization of a newly-allocated page table descriptor.
- * This function effectively marks the linked page table as eligible for deallocation
- * and should therefore be called once initialization and mapping of the page table is
- * complete.
+ * This function effectively marks the linked page table as eligible for
+ * deallocation and should therefore be called once initialization and mapping
+ * of the page table is complete.
  *
  * @param ptdp Pointer to the PTD object which contains the ptd_info_t field to
  *             finalize
  */
-void
-ptd_info_finalize(pt_desc_t *ptdp)
-{
-	/**
-	 * Atomically drop the wired count (previously initialized to 1) with
-	 * release ordering to ensure all prior page table initialization is visible
-	 * to any subsequent pmap operation that attempts to operate on the PTD.
-	 */
-	__assert_only unsigned short prev_refcnt =
-	    os_atomic_dec_orig(&ptdp->ptd_info->wiredcnt, release);
-	assert3u(prev_refcnt, >, 0);
+void ptd_info_finalize(pt_desc_t *ptdp) {
+  /**
+   * Atomically drop the wired count (previously initialized to 1) with
+   * release ordering to ensure all prior page table initialization is visible
+   * to any subsequent pmap operation that attempts to operate on the PTD.
+   */
+  __assert_only unsigned short prev_refcnt =
+      os_atomic_dec_orig(&ptdp->ptd_info->wiredcnt, release);
+  assert3u(prev_refcnt, >, 0);
 }
 
 /**
@@ -1946,12 +1916,11 @@ ptd_info_finalize(pt_desc_t *ptdp)
  *
  * @return The return value from the credit operation.
  */
-kern_return_t
-pmap_ledger_credit(pmap_t pmap, int entry, ledger_amount_t amount)
-{
-	assert(pmap != NULL);
+kern_return_t pmap_ledger_credit(pmap_t pmap, int entry,
+                                 ledger_amount_t amount) {
+  assert(pmap != NULL);
 
-	return ledger_credit(pmap->ledger, entry, amount);
+  return ledger_credit(pmap->ledger, entry, amount);
 }
 
 /**
@@ -1964,12 +1933,11 @@ pmap_ledger_credit(pmap_t pmap, int entry, ledger_amount_t amount)
  *
  * @return The return value from the debit operation.
  */
-kern_return_t
-pmap_ledger_debit(pmap_t pmap, int entry, ledger_amount_t amount)
-{
-	assert(pmap != NULL);
+kern_return_t pmap_ledger_debit(pmap_t pmap, int entry,
+                                ledger_amount_t amount) {
+  assert(pmap != NULL);
 
-	return ledger_debit(pmap->ledger, entry, amount);
+  return ledger_debit(pmap->ledger, entry, amount);
 }
 
 /**
@@ -1979,11 +1947,10 @@ pmap_ledger_debit(pmap_t pmap, int entry, ledger_amount_t amount)
  * @param func The stringized function name of the caller that will be printed
  *             in the case that the validation fails.
  */
-void
-validate_pmap_internal(const volatile struct pmap *pmap, const char *func)
-{
-	#pragma unused(pmap, func)
-	assert(pmap != NULL);
+void validate_pmap_internal(const volatile struct pmap *pmap,
+                            const char *func) {
+#pragma unused(pmap, func)
+  assert(pmap != NULL);
 }
 
 /**
@@ -1994,11 +1961,10 @@ validate_pmap_internal(const volatile struct pmap *pmap, const char *func)
  * @param func The stringized function name of the caller that will be printed
  *             in the case that the validation fails.
  */
-void
-validate_pmap_mutable_internal(const volatile struct pmap *pmap, const char *func)
-{
-	#pragma unused(pmap, func)
-	assert(pmap != NULL);
+void validate_pmap_mutable_internal(const volatile struct pmap *pmap,
+                                    const char *func) {
+#pragma unused(pmap, func)
+  assert(pmap != NULL);
 }
 
 /**
@@ -2009,12 +1975,10 @@ validate_pmap_mutable_internal(const volatile struct pmap *pmap, const char *fun
  *
  * @param pmap The object to validate.
  */
-void
-pmap_require(pmap_t pmap)
-{
-	if (pmap != kernel_pmap) {
-		zone_id_require(ZONE_ID_PMAP, sizeof(struct pmap), pmap);
-	}
+void pmap_require(pmap_t pmap) {
+  if (pmap != kernel_pmap) {
+    zone_id_require(ZONE_ID_PMAP, sizeof(struct pmap), pmap);
+  }
 }
 
 /**
@@ -2027,19 +1991,17 @@ pmap_require(pmap_t pmap)
  *           0 for a == b
  *         > 0 for a > b
  */
-static int
-cmp_io_rgns(const void *a, const void *b)
-{
-	const pmap_io_range_t *range_a = a;
-	const pmap_io_range_t *range_b = b;
+static int cmp_io_rgns(const void *a, const void *b) {
+  const pmap_io_range_t *range_a = a;
+  const pmap_io_range_t *range_b = b;
 
-	if ((range_b->addr + range_b->len) <= range_a->addr) {
-		return 1;
-	} else if ((range_a->addr + range_a->len) <= range_b->addr) {
-		return -1;
-	} else {
-		return 0;
-	}
+  if ((range_b->addr + range_b->len) <= range_a->addr) {
+    return 1;
+  } else if ((range_a->addr + range_a->len) <= range_b->addr) {
+    return -1;
+  } else {
+    return 0;
+  }
 }
 
 /**
@@ -2054,58 +2016,54 @@ cmp_io_rgns(const void *a, const void *b)
  * @return A pointer to the pmap_io_range_t structure if one of the ranges
  *         contains the passed in physical address. Otherwise, NULL.
  */
-pmap_io_range_t*
-pmap_find_io_attr(pmap_paddr_t paddr)
-{
-	unsigned int begin = 0;
-	unsigned int end = num_io_rgns - 1;
+pmap_io_range_t *pmap_find_io_attr(pmap_paddr_t paddr) {
+  unsigned int begin = 0;
+  unsigned int end = num_io_rgns - 1;
 
-	/**
-	 * If there are no I/O ranges, or the wanted address is below the lowest
-	 * range or above the highest range, then there's no point in searching
-	 * since it won't be here.
-	 */
-	if ((num_io_rgns == 0) || (paddr < io_attr_table[begin].addr) ||
-	    (paddr >= (io_attr_table[end].addr + io_attr_table[end].len))) {
-		return NULL;
-	}
+  /**
+   * If there are no I/O ranges, or the wanted address is below the lowest
+   * range or above the highest range, then there's no point in searching
+   * since it won't be here.
+   */
+  if ((num_io_rgns == 0) || (paddr < io_attr_table[begin].addr) ||
+      (paddr >= (io_attr_table[end].addr + io_attr_table[end].len))) {
+    return NULL;
+  }
 
-	/**
-	 * A dummy I/O range to compare against when searching for a range that
-	 * includes `paddr`.
-	 */
-	const pmap_io_range_t wanted_range = {
-		.addr = paddr & ~PAGE_MASK,
-		.len = PAGE_SIZE
-	};
+  /**
+   * A dummy I/O range to compare against when searching for a range that
+   * includes `paddr`.
+   */
+  const pmap_io_range_t wanted_range = {.addr = paddr & ~PAGE_MASK,
+                                        .len = PAGE_SIZE};
 
-	/* Perform a binary search to find the wanted I/O range. */
-	for (;;) {
-		const unsigned int middle = (begin + end) / 2;
-		const int cmp = cmp_io_rgns(&wanted_range, &io_attr_table[middle]);
+  /* Perform a binary search to find the wanted I/O range. */
+  for (;;) {
+    const unsigned int middle = (begin + end) / 2;
+    const int cmp = cmp_io_rgns(&wanted_range, &io_attr_table[middle]);
 
-		if (cmp == 0) {
-			pmap_io_range_t const *range = &io_attr_table[middle];
-			if (!(range->wimg & PMAP_IO_RANGE_NOT_IO)) {
-				/* Success! Found the wanted I/O range. */
-				return &io_attr_table[middle];
-			} else {
-				/* Ranges may not overlap, so we're not going to find anything. */
-				break;
-			}
-		} else if (begin == end) {
-			/* We've checked every range and didn't find a match. */
-			break;
-		} else if (cmp > 0) {
-			/* The wanted range is above the middle. */
-			begin = middle + 1;
-		} else {
-			/* The wanted range is below the middle. */
-			end = middle;
-		}
-	}
+    if (cmp == 0) {
+      pmap_io_range_t const *range = &io_attr_table[middle];
+      if (!(range->wimg & PMAP_IO_RANGE_NOT_IO)) {
+        /* Success! Found the wanted I/O range. */
+        return &io_attr_table[middle];
+      } else {
+        /* Ranges may not overlap, so we're not going to find anything. */
+        break;
+      }
+    } else if (begin == end) {
+      /* We've checked every range and didn't find a match. */
+      break;
+    } else if (cmp > 0) {
+      /* The wanted range is above the middle. */
+      begin = middle + 1;
+    } else {
+      /* The wanted range is below the middle. */
+      end = middle;
+    }
+  }
 
-	return NULL;
+  return NULL;
 }
 
 /**
@@ -2117,14 +2075,12 @@ pmap_find_io_attr(pmap_paddr_t paddr)
  *             false, iteration stops.
  */
 
-void
-pmap_range_iterate(bool (^step)(pmap_io_range_t const *))
-{
-	for (size_t i = 0; i < num_io_rgns; i++) {
-		if (!step(&io_attr_table[i])) {
-			return;
-		}
-	}
+void pmap_range_iterate(bool (^step)(pmap_io_range_t const *)) {
+  for (size_t i = 0; i < num_io_rgns; i++) {
+    if (!step(&io_attr_table[i])) {
+      return;
+    }
+  }
 }
 
 /**
@@ -2141,54 +2097,59 @@ pmap_range_iterate(bool (^step)(pmap_io_range_t const *))
  *                   initialized. This number should correspond to the CPU
  *                   executing this code.
  */
-MARK_AS_PMAP_TEXT void
-pmap_cpu_data_init_internal(unsigned int cpu_number)
-{
-	pmap_cpu_data_t *pmap_cpu_data = pmap_get_cpu_data();
+MARK_AS_PMAP_TEXT void pmap_cpu_data_init_internal(unsigned int cpu_number) {
+  pmap_cpu_data_t *pmap_cpu_data = pmap_get_cpu_data();
 
-	pmap_cpu_data->cpu_number = cpu_number;
+  pmap_cpu_data->cpu_number = cpu_number;
 
-	/* Setup per-cpu fields used when calling into the SPTM. */
-	pmap_sptm_percpu_data_t *sptm_pcpu = PERCPU_GET(pmap_sptm_percpu);
-	assert(((uintptr_t)sptm_pcpu & (PMAP_SPTM_PCPU_ALIGN - 1)) == 0);
-	sptm_pcpu->sptm_user_pointer_ops_pa = kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_user_pointer_ops);
-	sptm_pcpu->sptm_ops_pa = kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_ops);
-	sptm_pcpu->sptm_templates_pa = kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_templates);
-	sptm_pcpu->sptm_paddrs_pa = kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_paddrs);
-	sptm_pcpu->sptm_guest_dispatch_paddr = kvtophys_nofail((vm_offset_t)&sptm_pcpu->sptm_guest_dispatch);
+  /* Setup per-cpu fields used when calling into the SPTM. */
+  pmap_sptm_percpu_data_t *sptm_pcpu = PERCPU_GET(pmap_sptm_percpu);
+  assert(((uintptr_t)sptm_pcpu & (PMAP_SPTM_PCPU_ALIGN - 1)) == 0);
+  sptm_pcpu->sptm_user_pointer_ops_pa =
+      kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_user_pointer_ops);
+  sptm_pcpu->sptm_ops_pa = kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_ops);
+  sptm_pcpu->sptm_templates_pa =
+      kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_templates);
+  sptm_pcpu->sptm_paddrs_pa =
+      kvtophys_nofail((vm_offset_t)sptm_pcpu->sptm_paddrs);
+  sptm_pcpu->sptm_guest_dispatch_paddr =
+      kvtophys_nofail((vm_offset_t)&sptm_pcpu->sptm_guest_dispatch);
 
-	const uint16_t sptm_cpu_number = sptm_cpu_id(ml_get_topology_info()->cpus[cpu_number].phys_id);
-	sptm_pcpu->sptm_cpu_id = sptm_cpu_number;
+  const uint16_t sptm_cpu_number =
+      sptm_cpu_id(ml_get_topology_info()->cpus[cpu_number].phys_id);
+  sptm_pcpu->sptm_cpu_id = sptm_cpu_number;
 
-	const pmap_paddr_t iommu_scratch =
-	    sptm_cpu_iommu_scratch_start + (sptm_cpu_number * PMAP_IOMMU_SCRATCH_SIZE);
-	assert(iommu_scratch <= (sptm_cpu_iommu_scratch_end - PMAP_IOMMU_SCRATCH_SIZE));
-	sptm_pcpu->sptm_iommu_scratch = (void*)phystokv(iommu_scratch);
-	sptm_pcpu->sptm_prev_ptes = (sptm_pte_t *)((uintptr_t)(SPTMArgs->sptm_prev_ptes) + (PAGE_SIZE * sptm_cpu_number));
-	sptm_pcpu->sptm_cpu_id = sptm_cpu_number;
+  const pmap_paddr_t iommu_scratch =
+      sptm_cpu_iommu_scratch_start +
+      (sptm_cpu_number * PMAP_IOMMU_SCRATCH_SIZE);
+  assert(iommu_scratch <=
+         (sptm_cpu_iommu_scratch_end - PMAP_IOMMU_SCRATCH_SIZE));
+  sptm_pcpu->sptm_iommu_scratch = (void *)phystokv(iommu_scratch);
+  sptm_pcpu->sptm_prev_ptes =
+      (sptm_pte_t *)((uintptr_t)(SPTMArgs->sptm_prev_ptes) +
+                     (PAGE_SIZE * sptm_cpu_number));
+  sptm_pcpu->sptm_cpu_id = sptm_cpu_number;
 }
 
 /**
  * Initialize the pmap per-cpu data for the bootstrap CPU (the other CPUs should
  * just call pmap_cpu_data_init() directly).
  */
-void
-pmap_cpu_data_array_init(void)
-{
-	/**
-	 * The EL2 portion of the IOMMU drivers need to have some memory they can
-	 * use to pass data into the SPTM. To save memory (since most IOMMU drivers
-	 * need this) and to preclude the need for IOMMU drivers to dynamically
-	 * allocate memory in their mapping/unmapping paths, memory is pre-allocated
-	 * here per-cpu for their usage.
-	 *
-	 * SPTM TODO: Only allocate this memory on systems that have IOMMU drivers.
-	 */
-	sptm_cpu_iommu_scratch_start = avail_start;
-	avail_start += MAX_CPUS * PMAP_IOMMU_SCRATCH_SIZE;
-	sptm_cpu_iommu_scratch_end = avail_start;
+void pmap_cpu_data_array_init(void) {
+  /**
+   * The EL2 portion of the IOMMU drivers need to have some memory they can
+   * use to pass data into the SPTM. To save memory (since most IOMMU drivers
+   * need this) and to preclude the need for IOMMU drivers to dynamically
+   * allocate memory in their mapping/unmapping paths, memory is pre-allocated
+   * here per-cpu for their usage.
+   *
+   * SPTM TODO: Only allocate this memory on systems that have IOMMU drivers.
+   */
+  sptm_cpu_iommu_scratch_start = avail_start;
+  avail_start += MAX_CPUS * PMAP_IOMMU_SCRATCH_SIZE;
+  sptm_cpu_iommu_scratch_end = avail_start;
 
-	pmap_cpu_data_init();
+  pmap_cpu_data_init();
 }
 
 /**
@@ -2196,13 +2157,11 @@ pmap_cpu_data_array_init(void)
  *
  * @return The per-cpu pmap data for the current CPU.
  */
-pmap_cpu_data_t *
-pmap_get_cpu_data(void)
-{
-	pmap_cpu_data_t *pmap_cpu_data = NULL;
+pmap_cpu_data_t *pmap_get_cpu_data(void) {
+  pmap_cpu_data_t *pmap_cpu_data = NULL;
 
-	pmap_cpu_data = &getCpuDatap()->cpu_pmap_cpu_data;
-	return pmap_cpu_data;
+  pmap_cpu_data = &getCpuDatap()->cpu_pmap_cpu_data;
+  return pmap_cpu_data;
 }
 
 /**
@@ -2210,35 +2169,32 @@ pmap_get_cpu_data(void)
  *
  * @return The per-cpu pmap data for the CPU
  */
-pmap_cpu_data_t *
-pmap_get_remote_cpu_data(unsigned int cpu)
-{
-	cpu_data_t *cpu_data = cpu_datap((int)cpu);
-	if (cpu_data == NULL) {
-		return NULL;
-	} else {
-		return &cpu_data->cpu_pmap_cpu_data;
-	}
+pmap_cpu_data_t *pmap_get_remote_cpu_data(unsigned int cpu) {
+  cpu_data_t *cpu_data = cpu_datap((int)cpu);
+  if (cpu_data == NULL) {
+    return NULL;
+  } else {
+    return &cpu_data->cpu_pmap_cpu_data;
+  }
 }
 
 /**
  * Define the resources we need for spinning
  * until a paddr is not inflight.
  */
-__abortlike
-static hw_spin_timeout_status_t
-hw_lck_paddr_timeout_panic(void *_lock, hw_spin_timeout_t to, hw_spin_state_t st)
-{
-	panic("paddr spinlock[%p] " HW_SPIN_TIMEOUT_FMT "; "
-	    HW_SPIN_TIMEOUT_DETAILS_FMT,
-	    _lock, HW_SPIN_TIMEOUT_ARG(to, st),
-	    HW_SPIN_TIMEOUT_DETAILS_ARG(to, st));
+__abortlike static hw_spin_timeout_status_t
+hw_lck_paddr_timeout_panic(void *_lock, hw_spin_timeout_t to,
+                           hw_spin_state_t st) {
+  panic("paddr spinlock[%p] " HW_SPIN_TIMEOUT_FMT
+        "; " HW_SPIN_TIMEOUT_DETAILS_FMT,
+        _lock, HW_SPIN_TIMEOUT_ARG(to, st),
+        HW_SPIN_TIMEOUT_DETAILS_ARG(to, st));
 }
 
 static const struct hw_spin_policy hw_paddr_inflight_spin_policy = {
-	.hwsp_name              = "hw_lck_paddr_lock",
-	.hwsp_timeout_atomic    = &LockTimeOut,
-	.hwsp_op_timeout        = hw_lck_paddr_timeout_panic,
+    .hwsp_name = "hw_lck_paddr_lock",
+    .hwsp_timeout_atomic = &LockTimeOut,
+    .hwsp_op_timeout = hw_lck_paddr_timeout_panic,
 };
 
 /**
@@ -2248,19 +2204,18 @@ static const struct hw_spin_policy hw_paddr_inflight_spin_policy = {
  * @param paddr The physical address we want to spin until is not inflight.
  */
 static __attribute__((noinline)) void
-pmap_paddr_inflight_barrier(pmap_paddr_t paddr)
-{
-	hw_spin_policy_t  pol = &hw_paddr_inflight_spin_policy;
-	hw_spin_timeout_t to;
-	hw_spin_state_t   state  = { };
+pmap_paddr_inflight_barrier(pmap_paddr_t paddr) {
+  hw_spin_policy_t pol = &hw_paddr_inflight_spin_policy;
+  hw_spin_timeout_t to;
+  hw_spin_state_t state = {};
 
-	disable_preemption();
-	to  = hw_spin_compute_timeout(pol);
-	while (sptm_paddr_is_inflight(paddr) &&
-	    hw_spin_should_keep_spinning((void*)paddr, pol, to, &state)) {
-		;
-	}
-	enable_preemption();
+  disable_preemption();
+  to = hw_spin_compute_timeout(pol);
+  while (sptm_paddr_is_inflight(paddr) &&
+         hw_spin_should_keep_spinning((void *)paddr, pol, to, &state)) {
+    ;
+  }
+  enable_preemption();
 }
 
 /**
@@ -2270,29 +2225,27 @@ pmap_paddr_inflight_barrier(pmap_paddr_t paddr)
  *
  * @return true if the page in question has no mappings, false otherwise.
  */
-inline bool
-pmap_is_page_free(pmap_paddr_t paddr)
-{
-	/**
-	 * We can't query the paddr refcounts if the physical page
-	 * is currently inflight. If it does, we spin until it's not.
-	 */
-	if (__improbable(sptm_paddr_is_inflight(paddr))) {
-		pmap_paddr_inflight_barrier(paddr);
-	}
+inline bool pmap_is_page_free(pmap_paddr_t paddr) {
+  /**
+   * We can't query the paddr refcounts if the physical page
+   * is currently inflight. If it does, we spin until it's not.
+   */
+  if (__improbable(sptm_paddr_is_inflight(paddr))) {
+    pmap_paddr_inflight_barrier(paddr);
+  }
 
-	/**
-	 * A barrier from the last inflight operation. This allows us
-	 * to have proper visibility for the refcounts. Otherwise,
-	 * sptm_frame_is_last_mapping() might see stale values.
-	 */
-	os_atomic_thread_fence(acquire);
+  /**
+   * A barrier from the last inflight operation. This allows us
+   * to have proper visibility for the refcounts. Otherwise,
+   * sptm_frame_is_last_mapping() might see stale values.
+   */
+  os_atomic_thread_fence(acquire);
 
-	/**
-	 * If SPTM returns TRUE for SPTM_REFCOUNT_NONE, it means
-	 * the physical page has no mappings.
-	 */
-	return sptm_frame_is_last_mapping(paddr, SPTM_REFCOUNT_NONE);
+  /**
+   * If SPTM returns TRUE for SPTM_REFCOUNT_NONE, it means
+   * the physical page has no mappings.
+   */
+  return sptm_frame_is_last_mapping(paddr, SPTM_REFCOUNT_NONE);
 }
 
 #if MACH_ASSERT
@@ -2307,116 +2260,114 @@ pmap_is_page_free(pmap_paddr_t paddr)
  *
  * @param ppnum Physical page number to check there are no mappings to.
  */
-void
-pmap_assert_free(ppnum_t ppnum)
-{
-	const pmap_paddr_t pa = ptoa(ppnum);
+void pmap_assert_free(ppnum_t ppnum) {
+  const pmap_paddr_t pa = ptoa(ppnum);
 
-	/* Only mappings to kernel-managed physical memory are tracked. */
-	if (__probable(!pa_valid(pa) || pmap_verify_free(ppnum))) {
-		return;
-	}
+  /* Only mappings to kernel-managed physical memory are tracked. */
+  if (__probable(!pa_valid(pa) || pmap_verify_free(ppnum))) {
+    return;
+  }
 
-	const unsigned int pai = pa_index(pa);
-	const uintptr_t pvh = pai_to_pvh(pai);
+  const unsigned int pai = pa_index(pa);
+  const uintptr_t pvh = pai_to_pvh(pai);
 
-	/**
-	 * This function is always called from outside of the PPL. Because of this,
-	 * the PVH entry can't be locked. This function is generally only called
-	 * before the VM reclaims a physical page and shouldn't be creating new
-	 * mappings. Even if a new mapping is created while parsing the hierarchy,
-	 * the worst case is that the system will panic in another way, and we were
-	 * already about to panic anyway.
-	 */
+  /**
+   * This function is always called from outside of the PPL. Because of this,
+   * the PVH entry can't be locked. This function is generally only called
+   * before the VM reclaims a physical page and shouldn't be creating new
+   * mappings. Even if a new mapping is created while parsing the hierarchy,
+   * the worst case is that the system will panic in another way, and we were
+   * already about to panic anyway.
+   */
 
-	/**
-	 * Since pmap_verify_free() returned false, that means there is at least one
-	 * mapping left. Let's get some extra info on the first mapping we find to
-	 * dump in the panic string (the common case is that there is one spare
-	 * mapping that was never unmapped).
-	 */
-	pt_entry_t *first_ptep = PT_ENTRY_NULL;
+  /**
+   * Since pmap_verify_free() returned false, that means there is at least one
+   * mapping left. Let's get some extra info on the first mapping we find to
+   * dump in the panic string (the common case is that there is one spare
+   * mapping that was never unmapped).
+   */
+  pt_entry_t *first_ptep = PT_ENTRY_NULL;
 
-	if (pvh_test_type(pvh, PVH_TYPE_PTEP)) {
-		first_ptep = pvh_ptep(pvh);
-	} else if (pvh_test_type(pvh, PVH_TYPE_PVEP)) {
-		pv_entry_t *pvep = pvh_pve_list(pvh);
+  if (pvh_test_type(pvh, PVH_TYPE_PTEP)) {
+    first_ptep = pvh_ptep(pvh);
+  } else if (pvh_test_type(pvh, PVH_TYPE_PVEP)) {
+    pv_entry_t *pvep = pvh_pve_list(pvh);
 
-		/* Each PVE can contain multiple PTEs. Let's find the first one. */
-		for (int pve_ptep_idx = 0; pve_ptep_idx < PTE_PER_PVE; pve_ptep_idx++) {
-			first_ptep = pve_get_ptep(pvep, pve_ptep_idx);
-			if (first_ptep != PT_ENTRY_NULL) {
-				break;
-			}
-		}
+    /* Each PVE can contain multiple PTEs. Let's find the first one. */
+    for (int pve_ptep_idx = 0; pve_ptep_idx < PTE_PER_PVE; pve_ptep_idx++) {
+      first_ptep = pve_get_ptep(pvep, pve_ptep_idx);
+      if (first_ptep != PT_ENTRY_NULL) {
+        break;
+      }
+    }
 
-		/* The PVE should have at least one valid PTE. */
-		assert(first_ptep != PT_ENTRY_NULL);
-	} else if (pvh_test_type(pvh, PVH_TYPE_PTDP)) {
-		panic("%s: Physical page is being used as a page table at PVH %p (pai: %d)",
-		    __func__, (void*)pvh, pai);
-	} else {
-		/**
-		 * The mapping disappeared between here and the pmap_verify_free() call.
-		 * The only way that can happen is if the VM was racing this call with
-		 * a call that unmaps PTEs. Operations on this page should not be
-		 * occurring at the same time as this check, and unfortunately we can't
-		 * lock the PVH entry to prevent it, so just panic instead.
-		 */
-		panic("%s: Mapping was detected but is now gone. Is the VM racing this "
-		    "call with an operation that unmaps PTEs? PVH %p (pai: %d)",
-		    __func__, (void*)pvh, pai);
-	}
+    /* The PVE should have at least one valid PTE. */
+    assert(first_ptep != PT_ENTRY_NULL);
+  } else if (pvh_test_type(pvh, PVH_TYPE_PTDP)) {
+    panic("%s: Physical page is being used as a page table at PVH %p (pai: %d)",
+          __func__, (void *)pvh, pai);
+  } else {
+    /**
+     * The mapping disappeared between here and the pmap_verify_free() call.
+     * The only way that can happen is if the VM was racing this call with
+     * a call that unmaps PTEs. Operations on this page should not be
+     * occurring at the same time as this check, and unfortunately we can't
+     * lock the PVH entry to prevent it, so just panic instead.
+     */
+    panic("%s: Mapping was detected but is now gone. Is the VM racing this "
+          "call with an operation that unmaps PTEs? PVH %p (pai: %d)",
+          __func__, (void *)pvh, pai);
+  }
 
-	/* Panic with a unique string identifying the first bad mapping and owner. */
-	{
-		/* First PTE is mapped by the main CPUs. */
-		pmap_t pmap = ptep_get_pmap(first_ptep);
-		const char *type = (pmap == kernel_pmap) ? "Kernel" : "User";
+  /* Panic with a unique string identifying the first bad mapping and owner. */
+  {
+    /* First PTE is mapped by the main CPUs. */
+    pmap_t pmap = ptep_get_pmap(first_ptep);
+    const char *type = (pmap == kernel_pmap) ? "Kernel" : "User";
 
-		panic("%s: Found at least one mapping to %#llx. First PTEP (%p) is a "
-		    "%s CPU mapping (pmap: %p)",
-		    __func__, (uint64_t)pa, first_ptep, type, pmap);
-	}
+    panic("%s: Found at least one mapping to %#llx. First PTEP (%p) is a "
+          "%s CPU mapping (pmap: %p)",
+          __func__, (uint64_t)pa, first_ptep, type, pmap);
+  }
 }
 #endif /* MACH_ASSERT */
 
-inline void
-pmap_recycle_page(ppnum_t pn)
-{
-	const bool is_freed = pmap_is_page_free(ptoa(pn));
+inline void pmap_recycle_page(ppnum_t pn) {
+  const bool is_freed = pmap_is_page_free(ptoa(pn));
 
-	if (__improbable(!is_freed)) {
-		/*
-		 * There is a redundancy here, but we are going to panic anyways,
-		 * and ASSERT_PMAP_FREE traces useful information. So, we keep this
-		 * behavior.
-		 */
+  if (__improbable(!is_freed)) {
+    /*
+     * There is a redundancy here, but we are going to panic anyways,
+     * and ASSERT_PMAP_FREE traces useful information. So, we keep this
+     * behavior.
+     */
 #if MACH_ASSERT
-		pmap_assert_free(pn);
+    pmap_assert_free(pn);
 #endif /* MACH_ASSERT */
-		panic("%s: page 0x%llx is referenced", __func__, (unsigned long long)ptoa(pn));
-	}
+    panic("%s: page 0x%llx is referenced", __func__,
+          (unsigned long long)ptoa(pn));
+  }
 
-	const pmap_paddr_t paddr = ptoa(pn);
-	const sptm_frame_type_t frame_type = sptm_get_frame_type(paddr);
-	if (__improbable(pmap_type_requires_retype_on_recycle(frame_type))) {
-		const sptm_retype_params_t retype_params = {.raw = SPTM_RETYPE_PARAMS_NULL};
-		sptm_retype(paddr, frame_type, XNU_DEFAULT, retype_params);
-	}
+  const pmap_paddr_t paddr = ptoa(pn);
+  const sptm_frame_type_t frame_type = sptm_get_frame_type(paddr);
+  if (__improbable(pmap_type_requires_retype_on_recycle(frame_type))) {
+    const sptm_retype_params_t retype_params = {.raw = SPTM_RETYPE_PARAMS_NULL};
+    sptm_retype(paddr, frame_type, XNU_DEFAULT, retype_params);
+  }
 }
 
 #if __ARM64_PMAP_SUBPAGE_L1__
 /* A structure tracking the state of a SURT page. */
 typedef struct {
-	/* The PA of the SURT page. */
-	pmap_paddr_t surt_page_pa;
+  /* The PA of the SURT page. */
+  pmap_paddr_t surt_page_pa;
 
-	/* A bitmap tracking the allocation status of the SURTs in the page. */
-	bitmap_t surt_page_free_bitmap[SUBPAGE_USER_ROOT_TABLE_INDEXES / (sizeof(bitmap_t) * 8)];
+  /* A bitmap tracking the allocation status of the SURTs in the page. */
+  bitmap_t surt_page_free_bitmap[SUBPAGE_USER_ROOT_TABLE_INDEXES /
+                                 (sizeof(bitmap_t) * 8)];
 
-	/* A queue chain chaining all the tracking structures together. */
-	queue_chain_t surt_chain;
+  /* A queue chain chaining all the tracking structures together. */
+  queue_chain_t surt_chain;
 } surt_page_t;
 
 /**
@@ -2425,38 +2376,32 @@ typedef struct {
  * @note Expected to be called when pmap is being bootstrapped, before a user
  *       pmap is created.
  */
-void
-surt_init()
-{
-	if (__improbable(surt_ready)) {
-		panic("%s: initializing the SURT subsystem while it has already been initialized", __func__);
-	}
+void surt_init() {
+  if (__improbable(surt_ready)) {
+    panic("%s: initializing the SURT subsystem while it has already been "
+          "initialized",
+          __func__);
+  }
 
-	queue_init(&surt_list);
-	lck_mtx_init(&surt_lock, &pmap_lck_grp, LCK_ATTR_NULL);
+  queue_init(&surt_list);
+  lck_mtx_init(&surt_lock, &pmap_lck_grp, LCK_ATTR_NULL);
 
-	/* A plain write is okay only in single-core early bootstrapping. */
-	surt_ready = true;
+  /* A plain write is okay only in single-core early bootstrapping. */
+  surt_ready = true;
 }
 
 /**
  * Lock the SURT lock.
  */
-static inline void
-surt_lock_lock()
-{
-	assert(surt_ready);
-	lck_mtx_lock(&surt_lock);
+static inline void surt_lock_lock() {
+  assert(surt_ready);
+  lck_mtx_lock(&surt_lock);
 }
 
 /**
  * Unlock the SURT lock.
  */
-static inline void
-surt_lock_unlock()
-{
-	lck_mtx_unlock(&surt_lock);
-}
+static inline void surt_lock_unlock() { lck_mtx_unlock(&surt_lock); }
 
 /**
  * Try to find a SURT from the SURT page queue.
@@ -2466,29 +2411,29 @@ surt_lock_unlock()
  *
  * @return the PA of the SURT if one is found, 0 otherwise.
  */
-pmap_paddr_t
-surt_try_alloc()
-{
-	surt_lock_lock();
-	pmap_paddr_t surt_pa = 0ULL;
+pmap_paddr_t surt_try_alloc() {
+  surt_lock_lock();
+  pmap_paddr_t surt_pa = 0ULL;
 
-	/* Look for a free table on existing SURT pages. */
-	surt_page_t *surt_page;
-	qe_foreach_element(surt_page, &surt_list, surt_chain) {
-		const int first_available_index = bitmap_lsb_first(&surt_page->surt_page_free_bitmap[0], SUBPAGE_USER_ROOT_TABLE_INDEXES);
-		if (first_available_index >= 0) {
-			surt_pa = surt_pa_from_surt_page_pa_and_index(surt_page->surt_page_pa, (uint8_t) first_available_index);
-			bitmap_clear(&surt_page->surt_page_free_bitmap[0], first_available_index);
-			break;
-		}
-	}
+  /* Look for a free table on existing SURT pages. */
+  surt_page_t *surt_page;
+  qe_foreach_element(surt_page, &surt_list, surt_chain) {
+    const int first_available_index = bitmap_lsb_first(
+        &surt_page->surt_page_free_bitmap[0], SUBPAGE_USER_ROOT_TABLE_INDEXES);
+    if (first_available_index >= 0) {
+      surt_pa = surt_pa_from_surt_page_pa_and_index(
+          surt_page->surt_page_pa, (uint8_t)first_available_index);
+      bitmap_clear(&surt_page->surt_page_free_bitmap[0], first_available_index);
+      break;
+    }
+  }
 
-	/**
-	 * Either return a non-zero PA of the found SURT or zero. A zero return
-	 * value indicates the caller should allocate a new SURT page
-	 */
-	surt_lock_unlock();
-	return surt_pa;
+  /**
+   * Either return a non-zero PA of the found SURT or zero. A zero return
+   * value indicates the caller should allocate a new SURT page
+   */
+  surt_lock_unlock();
+  return surt_pa;
 }
 
 /**
@@ -2498,40 +2443,41 @@ surt_try_alloc()
  *         from the queue so that the caller can repurpose the page. False
  *         otherwise.
  */
-bool
-surt_free(pmap_paddr_t surt_pa)
-{
-	if (__improbable(surt_pa & (SUBPAGE_USER_ROOT_TABLE_SIZE - 1))) {
-		panic("%s: surt_pa %p is expected to be %u-byte aligned",
-		    __func__, (void *)surt_pa, (unsigned int) SUBPAGE_USER_ROOT_TABLE_SIZE);
-	}
+bool surt_free(pmap_paddr_t surt_pa) {
+  if (__improbable(surt_pa & (SUBPAGE_USER_ROOT_TABLE_SIZE - 1))) {
+    panic("%s: surt_pa %p is expected to be %u-byte aligned", __func__,
+          (void *)surt_pa, (unsigned int)SUBPAGE_USER_ROOT_TABLE_SIZE);
+  }
 
-	surt_lock_lock();
-	const uint8_t surt_index = (uint8_t) ((surt_pa & PAGE_MASK) / SUBPAGE_USER_ROOT_TABLE_SIZE);
+  surt_lock_lock();
+  const uint8_t surt_index =
+      (uint8_t)((surt_pa & PAGE_MASK) / SUBPAGE_USER_ROOT_TABLE_SIZE);
 
-	/* Look for a free table on existing SURT pages. */
-	surt_page_t *surt_page;
-	qe_foreach_element_safe(surt_page, &surt_list, surt_chain) {
-		if (surt_page->surt_page_pa == surt_page_pa_from_surt_pa(surt_pa)) {
-			/* Mark the SURT as free. */
-			bitmap_set(&surt_page->surt_page_free_bitmap[0], surt_index);
+  /* Look for a free table on existing SURT pages. */
+  surt_page_t *surt_page;
+  qe_foreach_element_safe(surt_page, &surt_list, surt_chain) {
+    if (surt_page->surt_page_pa == surt_page_pa_from_surt_pa(surt_pa)) {
+      /* Mark the SURT as free. */
+      bitmap_set(&surt_page->surt_page_free_bitmap[0], surt_index);
 
-			/* If the entire SURT page is free, remove it from the page queue. */
-			if (bitmap_is_full(&surt_page->surt_page_free_bitmap[0], SUBPAGE_USER_ROOT_TABLE_INDEXES)) {
-				remqueue(&surt_page->surt_chain);
+      /* If the entire SURT page is free, remove it from the page queue. */
+      if (bitmap_is_full(&surt_page->surt_page_free_bitmap[0],
+                         SUBPAGE_USER_ROOT_TABLE_INDEXES)) {
+        remqueue(&surt_page->surt_chain);
 
-				/* Done with the page queue so unlock it before freeing surt_page. */
-				surt_lock_unlock();
-				kfree_type(surt_page_t, surt_page);
-				return true;
-			} else {
-				surt_lock_unlock();
-				return false;
-			}
-		}
-	}
+        /* Done with the page queue so unlock it before freeing surt_page. */
+        surt_lock_unlock();
+        kfree_type(surt_page_t, surt_page);
+        return true;
+      } else {
+        surt_lock_unlock();
+        return false;
+      }
+    }
+  }
 
-	panic("%s: no matching surt_page_t found for surt_pa: %p", __func__, (void *)surt_pa);
+  panic("%s: no matching surt_page_t found for surt_pa: %p", __func__,
+        (void *)surt_pa);
 }
 
 /**
@@ -2543,35 +2489,31 @@ surt_free(pmap_paddr_t surt_pa)
  *
  * @param surt_page_pa The phyiscal address of the SURT page.
  */
-void
-surt_feed_page_with_first_table_allocated(pmap_paddr_t surt_page_pa)
-{
-	surt_page_t *surt_page = kalloc_type(surt_page_t, Z_ZERO | Z_WAITOK);
+void surt_feed_page_with_first_table_allocated(pmap_paddr_t surt_page_pa) {
+  surt_page_t *surt_page = kalloc_type(surt_page_t, Z_ZERO | Z_WAITOK);
 
-	if (__improbable(surt_page_pa & PAGE_MASK)) {
-		panic("%s: surt_page_pa %p is expected to be page aligned", __func__, (void *)surt_page_pa);
-	}
+  if (__improbable(surt_page_pa & PAGE_MASK)) {
+    panic("%s: surt_page_pa %p is expected to be page aligned", __func__,
+          (void *)surt_page_pa);
+  }
 
-	surt_lock_lock();
-	surt_page->surt_page_pa = surt_page_pa;
-	bitmap_full(&surt_page->surt_page_free_bitmap[0], SUBPAGE_USER_ROOT_TABLE_INDEXES);
-	bitmap_clear(&surt_page->surt_page_free_bitmap[0], 0);
-	enqueue_head(&surt_list, &surt_page->surt_chain);
-	surt_lock_unlock();
+  surt_lock_lock();
+  surt_page->surt_page_pa = surt_page_pa;
+  bitmap_full(&surt_page->surt_page_free_bitmap[0],
+              SUBPAGE_USER_ROOT_TABLE_INDEXES);
+  bitmap_clear(&surt_page->surt_page_free_bitmap[0], 0);
+  enqueue_head(&surt_list, &surt_page->surt_chain);
+  surt_lock_unlock();
 }
 
-unsigned int
-surt_list_len()
-{
-	unsigned int len = 0;
+unsigned int surt_list_len() {
+  unsigned int len = 0;
 
-	surt_lock_lock();
-	__unused surt_page_t *surt_page;
-	qe_foreach_element(surt_page, &surt_list, surt_chain) {
-		len = len + 1;
-	}
-	surt_lock_unlock();
-	return len;
+  surt_lock_lock();
+  __unused surt_page_t *surt_page;
+  qe_foreach_element(surt_page, &surt_list, surt_chain) { len = len + 1; }
+  surt_lock_unlock();
+  return len;
 }
 #endif /* __ARM64_PMAP_SUBPAGE_L1__ */
 
@@ -2581,18 +2523,14 @@ surt_list_len()
  *
  * @return The value of the counter.
  */
-unsigned int
-pmap_wcrt_on_non_dram_count_get()
-{
-	return os_atomic_load(&pmap_wcrt_on_non_dram_count, relaxed);
+unsigned int pmap_wcrt_on_non_dram_count_get() {
+  return os_atomic_load(&pmap_wcrt_on_non_dram_count, relaxed);
 }
 
 /**
  * Atomically increment the WC/RT on non-DRAM mapping request counter.
  */
-void
-pmap_wcrt_on_non_dram_count_increment_atomic()
-{
-	os_atomic_inc(&pmap_wcrt_on_non_dram_count, relaxed);
+void pmap_wcrt_on_non_dram_count_increment_atomic() {
+  os_atomic_inc(&pmap_wcrt_on_non_dram_count, relaxed);
 }
 #endif /* DEBUG || DEVELOPMENT */

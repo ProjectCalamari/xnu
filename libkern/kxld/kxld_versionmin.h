@@ -30,50 +30,52 @@
 
 #include <sys/types.h>
 #if KERNEL
-    #include <libkern/kxld_types.h>
+#include <libkern/kxld_types.h>
 #else
-    #include "kxld_types.h"
+#include "kxld_types.h"
 #endif
 
 struct version_min_command;
 typedef struct kxld_versionmin KXLDversionmin;
 
 enum kxld_versionmin_platforms {
-	kKxldVersionMinMacOSX,
-	kKxldVersionMiniPhoneOS,
-	kKxldVersionMinAppleTVOS,
-	kKxldVersionMinWatchOS
+  kKxldVersionMinMacOSX,
+  kKxldVersionMiniPhoneOS,
+  kKxldVersionMinAppleTVOS,
+  kKxldVersionMinWatchOS
 };
 
 struct kxld_versionmin {
-	enum kxld_versionmin_platforms platform;
-	uint32_t version;
-	boolean_t has_versionmin;
+  enum kxld_versionmin_platforms platform;
+  uint32_t version;
+  boolean_t has_versionmin;
 };
 
 /*******************************************************************************
-* Constructors and destructors
-*******************************************************************************/
+ * Constructors and destructors
+ *******************************************************************************/
 
-void kxld_versionmin_init_from_macho(KXLDversionmin *versionmin, struct version_min_command *src)
-__attribute__((nonnull, visibility("hidden")));
+void kxld_versionmin_init_from_macho(KXLDversionmin *versionmin,
+                                     struct version_min_command *src)
+    __attribute__((nonnull, visibility("hidden")));
 
-void kxld_versionmin_init_from_build_cmd(KXLDversionmin *versionmin, struct build_version_command *src)
-__attribute__((nonnull, visibility("hidden")));
+void kxld_versionmin_init_from_build_cmd(KXLDversionmin *versionmin,
+                                         struct build_version_command *src)
+    __attribute__((nonnull, visibility("hidden")));
 
 void kxld_versionmin_clear(KXLDversionmin *versionmin)
-__attribute__((nonnull, visibility("hidden")));
+    __attribute__((nonnull, visibility("hidden")));
 
 /*******************************************************************************
-* Accessors
-*******************************************************************************/
+ * Accessors
+ *******************************************************************************/
 
 u_long kxld_versionmin_get_macho_header_size(const KXLDversionmin *versionmin)
-__attribute__((pure, visibility("hidden")));
+    __attribute__((pure, visibility("hidden")));
 
-kern_return_t
-kxld_versionmin_export_macho(const KXLDversionmin *versionmin, u_char *buf,
-    u_long *header_offset, u_long header_size)
-__attribute__((pure, nonnull, visibility("hidden")));
+kern_return_t kxld_versionmin_export_macho(const KXLDversionmin *versionmin,
+                                           u_char *buf, u_long *header_offset,
+                                           u_long header_size)
+    __attribute__((pure, nonnull, visibility("hidden")));
 
 #endif /* _KXLD_VERSIONMIN_H_ */

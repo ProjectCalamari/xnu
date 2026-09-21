@@ -26,18 +26,17 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/sysctl.h>
 #include <darwintest.h>
+#include <sys/sysctl.h>
 
 T_DECL(validate_memmove_semantics,
-    "Ensure xnu's platform-specific memmove() implementation follows the correct semantics",
-    T_META_NAMESPACE("xnu.bcopy"),
-    T_META_RADAR_COMPONENT_NAME("xnu"),
-    T_META_RADAR_COMPONENT_VERSION("all"),
-    T_META_TAG_VM_PREFERRED
-    ) {
-	// When we invoke our sysctl that exercises the in-kernel memmove implementation
-	int ret = sysctlbyname("debug.test.test_memmove", NULL, NULL, NULL, 0);
-	// Then the kernel reports that everything looks good
-	T_ASSERT_POSIX_SUCCESS(ret, "test_memmove sysctl");
+       "Ensure xnu's platform-specific memmove() implementation follows the "
+       "correct semantics",
+       T_META_NAMESPACE("xnu.bcopy"), T_META_RADAR_COMPONENT_NAME("xnu"),
+       T_META_RADAR_COMPONENT_VERSION("all"), T_META_TAG_VM_PREFERRED) {
+  // When we invoke our sysctl that exercises the in-kernel memmove
+  // implementation
+  int ret = sysctlbyname("debug.test.test_memmove", NULL, NULL, NULL, 0);
+  // Then the kernel reports that everything looks good
+  T_ASSERT_POSIX_SUCCESS(ret, "test_memmove sysctl");
 }

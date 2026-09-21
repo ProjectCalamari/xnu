@@ -33,26 +33,26 @@
 // from AppleKeyStore & CoreStorage
 
 // aka MAX_KEY_SIZE
-#define AKS_MAX_KEY_SIZE    128
+#define AKS_MAX_KEY_SIZE 128
 
 // aka rawKey
 struct aks_raw_key_t {
-	uint32_t  keybytecount;
-	uint8_t   keybytes[AKS_MAX_KEY_SIZE];
+  uint32_t keybytecount;
+  uint8_t keybytes[AKS_MAX_KEY_SIZE];
 };
 
 // aka volumeKey
 struct aks_volume_key_t {
-	uint32_t      algorithm;
-	aks_raw_key_t key;
+  uint32_t algorithm;
+  aks_raw_key_t key;
 };
 
 // aka AKS_GETKEY
-#define AKS_PLATFORM_FUNCTION_GETKEY    "getKey"
+#define AKS_PLATFORM_FUNCTION_GETKEY "getKey"
 
 // aka kCSFDETargetVEKID
-#define PLATFORM_FUNCTION_GET_MEDIA_ENCRYPTION_KEY_UUID  "CSFDETargetVEKID"
+#define PLATFORM_FUNCTION_GET_MEDIA_ENCRYPTION_KEY_UUID "CSFDETargetVEKID"
 
-#define AKS_SERVICE_PATH                "/IOResources/AppleFDEKeyStore"
+#define AKS_SERVICE_PATH "/IOResources/AppleFDEKeyStore"
 
 #endif /* _IOKIT_APPLEKEYSTOREINTERFACE_H */

@@ -43,7 +43,7 @@ struct vm_map_header;
 
 struct vm_map_store {
 #ifdef VM_MAP_STORE_USE_RB
-	RB_ENTRY(vm_map_store) entry;
+  RB_ENTRY(vm_map_store) entry;
 #endif
 };
 
@@ -51,12 +51,14 @@ struct vm_map_store {
 RB_HEAD(rb_head, vm_map_store);
 #endif
 
-#define VM_ENTRY_PACKED_PTR_BITS         48
-#define VM_ENTRY_PACKED_PTR_SHIFT        0
-#define VM_ENTRY_PACKED_PTR_BASE         ((uintptr_t)0)
+#define VM_ENTRY_PACKED_PTR_BITS 48
+#define VM_ENTRY_PACKED_PTR_SHIFT 0
+#define VM_ENTRY_PACKED_PTR_BASE ((uintptr_t)0)
 
-#define VM_PREV_PACK(prev) (uintptr_t) (VM_PACK_POINTER((uintptr_t)(prev), VM_ENTRY_PACKED_PTR))
-#define VM_PREV_UNPACK(p) ((vm_map_entry_t) VM_UNPACK_POINTER((vm_offset_t)p, VM_ENTRY_PACKED_PTR))
+#define VM_PREV_PACK(prev)                                                     \
+  (uintptr_t)(VM_PACK_POINTER((uintptr_t)(prev), VM_ENTRY_PACKED_PTR))
+#define VM_PREV_UNPACK(p)                                                      \
+  ((vm_map_entry_t)VM_UNPACK_POINTER((vm_offset_t)p, VM_ENTRY_PACKED_PTR))
 static_assert(VM_KERNEL_POINTER_SIGNIFICANT_BITS <= VM_ENTRY_PACKED_PTR_BITS);
 
 /*
@@ -77,13 +79,12 @@ static_assert(VM_KERNEL_POINTER_SIGNIFICANT_BITS <= VM_ENTRY_PACKED_PTR_BITS);
  *		and needs to be kept in sync.
  */
 struct vm_map_links {
-	uintptr_t prev : VM_ENTRY_PACKED_PTR_BITS;
-	uint8_t vme_zero_wire_count_waiters :1;
-	struct vm_map_entry     *next;          /* next entry */
-	vm_map_offset_t         start;          /* start address */
-	vm_map_offset_t         end;            /* end address */
+  uintptr_t prev : VM_ENTRY_PACKED_PTR_BITS;
+  uint8_t vme_zero_wire_count_waiters : 1;
+  struct vm_map_entry *next; /* next entry */
+  vm_map_offset_t start;     /* start address */
+  vm_map_offset_t end;       /* end address */
 };
-
 
 /*
  *	Type:		struct vm_map_header
@@ -96,20 +97,19 @@ struct vm_map_links {
  *		and needs to be kept in sync.
  */
 struct vm_map_header {
-	struct vm_map_links     links;          /* first, last, min, max */
-	int                     nentries;       /* Number of entries */
-	uint16_t                page_shift;     /* page shift */
-	uint16_t                entries_pageable : 1;   /* are map entries pageable? */
-	uint16_t                __padding : 15;
+  struct vm_map_links links;     /* first, last, min, max */
+  int nentries;                  /* Number of entries */
+  uint16_t page_shift;           /* page shift */
+  uint16_t entries_pageable : 1; /* are map entries pageable? */
+  uint16_t __padding : 15;
 #ifdef VM_MAP_STORE_USE_RB
-	struct rb_head          rb_head_store;
+  struct rb_head rb_head_store;
 #endif /* VM_MAP_STORE_USE_RB */
 };
 
-#define VM_MAP_HDR_PAGE_SHIFT(hdr)      ((hdr)->page_shift)
-#define VM_MAP_HDR_PAGE_SIZE(hdr)       (1 << VM_MAP_HDR_PAGE_SHIFT((hdr)))
-#define VM_MAP_HDR_PAGE_MASK(hdr)       (VM_MAP_HDR_PAGE_SIZE((hdr)) - 1)
-
+#define VM_MAP_HDR_PAGE_SHIFT(hdr) ((hdr)->page_shift)
+#define VM_MAP_HDR_PAGE_SIZE(hdr) (1 << VM_MAP_HDR_PAGE_SHIFT((hdr)))
+#define VM_MAP_HDR_PAGE_MASK(hdr) (VM_MAP_HDR_PAGE_SIZE((hdr)) - 1)
 
 #include <vm/vm_map_store_ll_internal.h>
 #include <vm/vm_map_store_rb_internal.h>
@@ -122,72 +122,56 @@ struct vm_map_header {
  *      so no one else can be writing or looking
  *      until the lock is dropped.
  */
-#define SAVE_HINT_MAP_WRITE(map, value) \
-	MACRO_BEGIN                    \
-	(map)->hint = (value);         \
-	MACRO_END
+#define SAVE_HINT_MAP_WRITE(map, value)                                        \
+  MACRO_BEGIN(map)->hint = (value);                                            \
+  MACRO_END
 
-#define SAVE_HINT_HOLE_WRITE(map, value) \
-	MACRO_BEGIN                    \
-	(map)->hole_hint = (value);     \
-	MACRO_END
+#define SAVE_HINT_HOLE_WRITE(map, value)                                       \
+  MACRO_BEGIN(map)->hole_hint = (value);                                       \
+  MACRO_END
 
-#define SKIP_RB_TREE            0xBAADC0D1
+#define SKIP_RB_TREE 0xBAADC0D1
 
-extern void vm_map_store_init(
-	struct vm_map_header   *header);
+extern void vm_map_store_init(struct vm_map_header *header);
 
-extern bool vm_map_store_lookup_entry(
-	struct _vm_map         *map,
-	vm_map_offset_t         address,
-	struct vm_map_entry   **entryp);
+extern bool vm_map_store_lookup_entry(struct _vm_map *map,
+                                      vm_map_offset_t address,
+                                      struct vm_map_entry **entryp);
 
-extern void _vm_map_store_entry_link(
-	struct vm_map_header   *header,
-	struct vm_map_entry    *after_where,
-	struct vm_map_entry    *entry);
+extern void _vm_map_store_entry_link(struct vm_map_header *header,
+                                     struct vm_map_entry *after_where,
+                                     struct vm_map_entry *entry);
 
-extern void vm_map_store_entry_link(
-	struct _vm_map         *map,
-	struct vm_map_entry    *after_where,
-	struct vm_map_entry    *entry,
-	vm_map_kernel_flags_t   vmk_flags);
+extern void vm_map_store_entry_link(struct _vm_map *map,
+                                    struct vm_map_entry *after_where,
+                                    struct vm_map_entry *entry,
+                                    vm_map_kernel_flags_t vmk_flags);
 
-extern void _vm_map_store_entry_unlink(
-	struct vm_map_header   *header,
-	struct vm_map_entry    *entry,
-	bool                    check_permanent);
+extern void _vm_map_store_entry_unlink(struct vm_map_header *header,
+                                       struct vm_map_entry *entry,
+                                       bool check_permanent);
 
-extern void vm_map_store_entry_unlink(
-	struct _vm_map         *map,
-	struct vm_map_entry    *entry,
-	bool                    check_permanent);
+extern void vm_map_store_entry_unlink(struct _vm_map *map,
+                                      struct vm_map_entry *entry,
+                                      bool check_permanent);
 
-extern void vm_map_store_update_first_free(
-	struct _vm_map         *map,
-	struct vm_map_entry    *entry,
-	bool                    new_entry_creation);
+extern void vm_map_store_update_first_free(struct _vm_map *map,
+                                           struct vm_map_entry *entry,
+                                           bool new_entry_creation);
 
-extern void vm_map_store_copy_reset(
-	struct vm_map_copy     *copy_map,
-	struct vm_map_entry    *entry);
+extern void vm_map_store_copy_reset(struct vm_map_copy *copy_map,
+                                    struct vm_map_entry *entry);
 
 #if MACH_ASSERT
-extern bool first_free_is_valid_store(
-	struct _vm_map         *map);
+extern bool first_free_is_valid_store(struct _vm_map *map);
 #endif
 
-extern bool vm_map_store_has_RB_support(
-	struct vm_map_header   *header);
+extern bool vm_map_store_has_RB_support(struct vm_map_header *header);
 
-extern struct vm_map_entry *vm_map_store_find_space(
-	vm_map_t                map,
-	vm_map_offset_t         hint,
-	vm_map_offset_t         limit,
-	bool                    backwards,
-	vm_map_offset_t         guard_offset,
-	vm_map_size_t           size,
-	vm_map_offset_t         mask,
-	vm_map_offset_t        *addr_out);
+extern struct vm_map_entry *
+vm_map_store_find_space(vm_map_t map, vm_map_offset_t hint,
+                        vm_map_offset_t limit, bool backwards,
+                        vm_map_offset_t guard_offset, vm_map_size_t size,
+                        vm_map_offset_t mask, vm_map_offset_t *addr_out);
 
 #endif /* _VM_VM_MAP_STORE_H */

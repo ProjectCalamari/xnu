@@ -45,11 +45,13 @@ __BEGIN_DECLS
  */
 
 /* Return the 70th argument */
-#define _CA_NTH(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, \
-	    _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26, _27, _28, _29, \
-	    _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, _40, _41, _42, _43, _44, \
-	    _45, _46, _47, _48, _49, _50, _51, _52, _53, _54, _55, _56, _57, _58, _59, \
-	    _60, _61, _62, _63, _64, _65, _66, _67, _68, _69, _70, N, ...) N
+#define _CA_NTH(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14,   \
+                _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, _26,    \
+                _27, _28, _29, _30, _31, _32, _33, _34, _35, _36, _37, _38,    \
+                _39, _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, _50,    \
+                _51, _52, _53, _54, _55, _56, _57, _58, _59, _60, _61, _62,    \
+                _63, _64, _65, _66, _67, _68, _69, _70, N, ...)                \
+  N
 
 #define _CA_NULL_TERMINATOR "\0"
 #define _CA_NULL_EPSILON
@@ -126,12 +128,14 @@ __BEGIN_DECLS
 #define _f69(fe, e, fo, x, ...) fo(x) e _f68(fe, e, fo, __VA_ARGS__)
 #define _f70(fe, e, fo, x, ...) fe(x) e _f69(fe, e, fo, __VA_ARGS__)
 
-#define _CA_FOREACH(fe, e, fo, ...) _CA_NTH(__VA_ARGS__, \
-    _f70, _f69, _f68, _f67, _f66, _f65, _f64, _f63, _f62, _f61, \
-    _f60, _f59, _f58, _f57, _f56, _f55, _f54, _f53, _f52, _f51, _f50, _f49, _f48, _f47, _f46, _f45, _f44, _f43, \
-    _f42, _f41, _f40, _f39, _f38, _f37, _f36, _f35, _f34, _f33, _f32, _f31, _f30, _f29, _f28, _f27, _f26, _f25, \
-    _f24, _f23, _f22, _f21, _f20, _f19, _f18, _f17, _f16, _f15, _f14, _f13, _f12, _f11, _f10, _f9, _f8, _f7, \
-    _f6, _f5, _f4, _f3, _f2, _f1, _f0)(fe, e, fo, ##__VA_ARGS__)
+#define _CA_FOREACH(fe, e, fo, ...)                                            \
+  _CA_NTH(__VA_ARGS__, _f70, _f69, _f68, _f67, _f66, _f65, _f64, _f63, _f62,   \
+          _f61, _f60, _f59, _f58, _f57, _f56, _f55, _f54, _f53, _f52, _f51,    \
+          _f50, _f49, _f48, _f47, _f46, _f45, _f44, _f43, _f42, _f41, _f40,    \
+          _f39, _f38, _f37, _f36, _f35, _f34, _f33, _f32, _f31, _f30, _f29,    \
+          _f28, _f27, _f26, _f25, _f24, _f23, _f22, _f21, _f20, _f19, _f18,    \
+          _f17, _f16, _f15, _f14, _f13, _f12, _f11, _f10, _f9, _f8, _f7, _f6,  \
+          _f5, _f4, _f3, _f2, _f1, _f0)(fe, e, fo, ##__VA_ARGS__)
 
 #define _CA_TYPE_DECLARATION(T) __typeof__(T)
 
@@ -146,12 +150,12 @@ __BEGIN_DECLS
 #define _CA_EVENT_ORG "com.apple.xnu."
 
 struct _ca_event {
-	struct mpsc_queue_chain link;
-	const char *format_str;
-	void *data;
+  struct mpsc_queue_chain link;
+  const char *format_str;
+  void *data;
 };
 
-typedef struct _ca_event * ca_event_t;
+typedef struct _ca_event *ca_event_t;
 
 /*
  * DO NOT USE DIRECTLY.
@@ -167,11 +171,14 @@ extern void core_analytics_send_event_preemption_disabled(ca_event_t event);
  * DO NOT USE DIRECTLY.
  * Use CA_EVENT_ALLOCATE instead.
  */
-extern ca_event_t core_analytics_allocate_event(size_t data_size, const char *format_str, zalloc_flags_t flags);
+extern ca_event_t core_analytics_allocate_event(size_t data_size,
+                                                const char *format_str,
+                                                zalloc_flags_t flags);
 /*
  * Placeholder token.
  * Used in an event format string to indicate that this is a static string.
- * Only the name and type of this string are important. The contents are not used.
+ * Only the name and type of this string are important. The contents are not
+ * used.
  */
 typedef char ca_sstr;
 

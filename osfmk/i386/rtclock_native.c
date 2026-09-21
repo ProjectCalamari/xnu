@@ -29,118 +29,98 @@
  * @OSF_COPYRIGHT@
  */
 
-
 #include <mach/mach_types.h>
 
 #include <architecture/i386/pio.h>
-#include <i386/machine_cpu.h>
-#include <i386/cpuid.h>
 #include <i386/cpu_threads.h>
-#include <i386/mp.h>
+#include <i386/cpuid.h>
+#include <i386/lapic.h>
+#include <i386/machine_cpu.h>
 #include <i386/machine_routines.h>
+#include <i386/misc_protos.h>
+#include <i386/mp.h>
 #include <i386/pal_routines.h>
 #include <i386/proc_reg.h>
-#include <i386/misc_protos.h>
-#include <i386/lapic.h>
-#include <pexpert/pexpert.h>
-#include <machine/limits.h>
-#include <sys/kdebug.h>
-#include <i386/tsc.h>
 #include <i386/rtclock_protos.h>
-#include <i386/pal_routines.h>
+#include <i386/tsc.h>
 #include <kern/timer_queue.h>
+#include <machine/limits.h>
+#include <pexpert/pexpert.h>
+#include <sys/kdebug.h>
 
 static uint64_t rtc_decrementer_min;
 static uint64_t rtc_decrementer_max;
 
-static uint64_t
-deadline_to_decrementer(
-	uint64_t        deadline,
-	uint64_t        now)
-{
-	uint64_t        delta;
+static uint64_t deadline_to_decrementer(uint64_t deadline, uint64_t now) {
+  uint64_t delta;
 
-	if (deadline <= now) {
-		return rtc_decrementer_min;
-	} else {
-		delta = deadline - now;
-		return MIN(MAX(rtc_decrementer_min, delta), rtc_decrementer_max);
-	}
+  if (deadline <= now) {
+    return rtc_decrementer_min;
+  } else {
+    delta = deadline - now;
+    return MIN(MAX(rtc_decrementer_min, delta), rtc_decrementer_max);
+  }
 }
-
 
 /*
  * Regular local APIC timer case:
  */
-static void
-rtc_lapic_config_timer(void)
-{
-	lapic_config_timer(TRUE, one_shot, divide_by_1);
+static void rtc_lapic_config_timer(void) {
+  lapic_config_timer(TRUE, one_shot, divide_by_1);
 }
-static uint64_t
-rtc_lapic_set_timer(uint64_t deadline, uint64_t now)
-{
-	uint64_t count;
-	uint64_t set = 0;
+static uint64_t rtc_lapic_set_timer(uint64_t deadline, uint64_t now) {
+  uint64_t count;
+  uint64_t set = 0;
 
-	if (deadline > 0) {
-		/*
-		 * Convert delta to bus ticks
-		 * - time now is not relevant
-		 */
-		count = deadline_to_decrementer(deadline, now);
-		set = now + count;
-		lapic_set_timer_fast((uint32_t) tmrCvt(count, busFCvtn2t));
-	} else {
-		lapic_set_timer(FALSE, one_shot, divide_by_1, 0);
-	}
+  if (deadline > 0) {
+    /*
+     * Convert delta to bus ticks
+     * - time now is not relevant
+     */
+    count = deadline_to_decrementer(deadline, now);
+    set = now + count;
+    lapic_set_timer_fast((uint32_t)tmrCvt(count, busFCvtn2t));
+  } else {
+    lapic_set_timer(FALSE, one_shot, divide_by_1, 0);
+  }
 
-	KERNEL_DEBUG_CONSTANT(
-		DECR_SET_APIC_DEADLINE | DBG_FUNC_NONE,
-		now, deadline,
-		set, LAPIC_READ(TIMER_CURRENT_COUNT),
-		0);
+  KERNEL_DEBUG_CONSTANT(DECR_SET_APIC_DEADLINE | DBG_FUNC_NONE, now, deadline,
+                        set, LAPIC_READ(TIMER_CURRENT_COUNT), 0);
 
-	return set;
+  return set;
 }
 
 /*
  * TSC-deadline timer case:
  */
-static void
-rtc_lapic_config_tsc_deadline_timer(void)
-{
-	lapic_config_tsc_deadline_timer();
+static void rtc_lapic_config_tsc_deadline_timer(void) {
+  lapic_config_tsc_deadline_timer();
 }
-static uint64_t
-rtc_lapic_set_tsc_deadline_timer(uint64_t deadline, uint64_t now)
-{
-	uint64_t delta;
-	uint64_t delta_tsc;
-	uint64_t tsc = rdtsc64();
-	uint64_t set = 0;
-	uint64_t dead_tsc;
+static uint64_t rtc_lapic_set_tsc_deadline_timer(uint64_t deadline,
+                                                 uint64_t now) {
+  uint64_t delta;
+  uint64_t delta_tsc;
+  uint64_t tsc = rdtsc64();
+  uint64_t set = 0;
+  uint64_t dead_tsc;
 
-	if (deadline > 0) {
-		/*
-		 * Convert to TSC
-		 */
-		delta = deadline_to_decrementer(deadline, now);
-		set = now + delta;
-		delta_tsc = tmrCvt(delta, tscFCvtn2t);
-		dead_tsc = tsc + delta_tsc;
-	} else {
-		dead_tsc = 0;
-	}
-	lapic_set_tsc_deadline_timer(dead_tsc);
+  if (deadline > 0) {
+    /*
+     * Convert to TSC
+     */
+    delta = deadline_to_decrementer(deadline, now);
+    set = now + delta;
+    delta_tsc = tmrCvt(delta, tscFCvtn2t);
+    dead_tsc = tsc + delta_tsc;
+  } else {
+    dead_tsc = 0;
+  }
+  lapic_set_tsc_deadline_timer(dead_tsc);
 
-	KERNEL_DEBUG_CONSTANT(
-		DECR_SET_TSC_DEADLINE | DBG_FUNC_NONE,
-		now, deadline,
-		tsc, dead_tsc,
-		0);
+  KERNEL_DEBUG_CONSTANT(DECR_SET_TSC_DEADLINE | DBG_FUNC_NONE, now, deadline,
+                        tsc, dead_tsc, 0);
 
-	return set;
+  return set;
 }
 
 /*
@@ -148,52 +128,50 @@ rtc_lapic_set_tsc_deadline_timer(uint64_t deadline, uint64_t now)
  */
 
 rtc_timer_t rtc_timer_lapic = {
-	.rtc_config = rtc_lapic_config_timer,
-	.rtc_set    = rtc_lapic_set_timer,
+    .rtc_config = rtc_lapic_config_timer,
+    .rtc_set = rtc_lapic_set_timer,
 };
 
 rtc_timer_t rtc_timer_tsc_deadline = {
-	.rtc_config = rtc_lapic_config_tsc_deadline_timer,
-	.rtc_set    = rtc_lapic_set_tsc_deadline_timer,
+    .rtc_config = rtc_lapic_config_tsc_deadline_timer,
+    .rtc_set = rtc_lapic_set_tsc_deadline_timer,
 };
 
-rtc_timer_t     *rtc_timer = &rtc_timer_lapic; /* defaults to LAPIC timer */
+rtc_timer_t *rtc_timer = &rtc_timer_lapic; /* defaults to LAPIC timer */
 
 /*
  * rtc_timer_init() is called at startup on the boot processor only.
  */
-void
-rtc_timer_init(void)
-{
-	int     TSC_deadline_timer = 0;
+void rtc_timer_init(void) {
+  int TSC_deadline_timer = 0;
 
-	/* See whether we can use the local apic in TSC-deadline mode */
-	if ((cpuid_features() & CPUID_FEATURE_TSCTMR)) {
-		TSC_deadline_timer = 1;
-		PE_parse_boot_argn("TSC_deadline_timer", &TSC_deadline_timer,
-		    sizeof(TSC_deadline_timer));
-		printf("TSC Deadline Timer supported %s enabled\n",
-		    TSC_deadline_timer ? "and" : "but not");
-	}
+  /* See whether we can use the local apic in TSC-deadline mode */
+  if ((cpuid_features() & CPUID_FEATURE_TSCTMR)) {
+    TSC_deadline_timer = 1;
+    PE_parse_boot_argn("TSC_deadline_timer", &TSC_deadline_timer,
+                       sizeof(TSC_deadline_timer));
+    printf("TSC Deadline Timer supported %s enabled\n",
+           TSC_deadline_timer ? "and" : "but not");
+  }
 
-	if (TSC_deadline_timer) {
-		rtc_timer = &rtc_timer_tsc_deadline;
-		rtc_decrementer_max = UINT64_MAX;       /* effectively none */
-		/*
-		 * The min could be as low as 1nsec,
-		 * but we're being conservative for now and making it the same
-		 * as for the local apic timer.
-		 */
-		rtc_decrementer_min = 1 * NSEC_PER_USEC;  /* 1 usec */
-	} else {
-		/*
-		 * Compute the longest interval using LAPIC timer.
-		 */
-		rtc_decrementer_max = tmrCvt(0x7fffffffULL, busFCvtt2n);
-		kprintf("maxDec: %lld\n", rtc_decrementer_max);
-		rtc_decrementer_min = 1 * NSEC_PER_USEC;  /* 1 usec */
-	}
+  if (TSC_deadline_timer) {
+    rtc_timer = &rtc_timer_tsc_deadline;
+    rtc_decrementer_max = UINT64_MAX; /* effectively none */
+    /*
+     * The min could be as low as 1nsec,
+     * but we're being conservative for now and making it the same
+     * as for the local apic timer.
+     */
+    rtc_decrementer_min = 1 * NSEC_PER_USEC; /* 1 usec */
+  } else {
+    /*
+     * Compute the longest interval using LAPIC timer.
+     */
+    rtc_decrementer_max = tmrCvt(0x7fffffffULL, busFCvtt2n);
+    kprintf("maxDec: %lld\n", rtc_decrementer_max);
+    rtc_decrementer_min = 1 * NSEC_PER_USEC; /* 1 usec */
+  }
 
-	/* Point LAPIC interrupts to hardclock() */
-	lapic_set_timer_func((i386_intr_func_t) rtclock_intr);
+  /* Point LAPIC interrupts to hardclock() */
+  lapic_set_timer_func((i386_intr_func_t)rtclock_intr);
 }

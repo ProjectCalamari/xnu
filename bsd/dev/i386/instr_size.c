@@ -47,25 +47,19 @@
  *    have names that begin with "dtrace_".
  */
 
-typedef enum dis_isize {
-	DIS_ISIZE_INSTR,
-	DIS_ISIZE_OPERAND
-} dis_isize_t;
-
+typedef enum dis_isize { DIS_ISIZE_INSTR, DIS_ISIZE_OPERAND } dis_isize_t;
 
 /*
  * get a byte from instruction stream
  */
-static int
-dtrace_dis_get_byte(void *p)
-{
-	int ret;
-	uchar_t **instr = p;
+static int dtrace_dis_get_byte(void *p) {
+  int ret;
+  uchar_t **instr = p;
 
-	ret = **instr;
-	*instr += 1;
+  ret = **instr;
+  *instr += 1;
 
-	return (ret);
+  return (ret);
 }
 
 /*
@@ -77,41 +71,37 @@ dtrace_dis_get_byte(void *p)
  * reported as having no memory impact.
  */
 /* ARGSUSED2 */
-static __attribute__((noinline)) int
-dtrace_dis_isize(uchar_t *instr, dis_isize_t which, model_t model, int *rmindex)
-{
-	int sz;
-	dis86_t	x;
-	uint_t mode = SIZE32;
+static __attribute__((noinline)) int dtrace_dis_isize(uchar_t *instr,
+                                                      dis_isize_t which,
+                                                      model_t model,
+                                                      int *rmindex) {
+  int sz;
+  dis86_t x;
+  uint_t mode = SIZE32;
 
-	mode = (model == DATAMODEL_LP64) ? SIZE64 : SIZE32;
+  mode = (model == DATAMODEL_LP64) ? SIZE64 : SIZE32;
 
-	x.d86_data = (void **)&instr;
-	x.d86_get_byte = dtrace_dis_get_byte;
-	x.d86_check_func = NULL;
+  x.d86_data = (void **)&instr;
+  x.d86_get_byte = dtrace_dis_get_byte;
+  x.d86_check_func = NULL;
 
-	if (dtrace_disx86(&x, mode) != 0)
-		return (-1);
+  if (dtrace_disx86(&x, mode) != 0)
+    return (-1);
 
-	if (which == DIS_ISIZE_INSTR)
-		sz = x.d86_len;		/* length of the instruction */
-	else
-		sz = x.d86_memsize;	/* length of memory operand */
+  if (which == DIS_ISIZE_INSTR)
+    sz = x.d86_len; /* length of the instruction */
+  else
+    sz = x.d86_memsize; /* length of memory operand */
 
-	if (rmindex != NULL)
-		*rmindex = x.d86_rmindex;
-	return (sz);
+  if (rmindex != NULL)
+    *rmindex = x.d86_rmindex;
+  return (sz);
 }
 
-int
-dtrace_instr_size_isa(uchar_t *instr, model_t model, int *rmindex)
-{
-	return (dtrace_dis_isize(instr, DIS_ISIZE_INSTR, model, rmindex));
+int dtrace_instr_size_isa(uchar_t *instr, model_t model, int *rmindex) {
+  return (dtrace_dis_isize(instr, DIS_ISIZE_INSTR, model, rmindex));
 }
 
-int
-dtrace_instr_size(uchar_t *instr)
-{
-	return (dtrace_dis_isize(instr, DIS_ISIZE_INSTR, DATAMODEL_NATIVE,
-	    NULL));
+int dtrace_instr_size(uchar_t *instr) {
+  return (dtrace_dis_isize(instr, DIS_ISIZE_INSTR, DATAMODEL_NATIVE, NULL));
 }

@@ -27,14 +27,13 @@
  */
 
 #pragma once
-#include <sys/cdefs.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
 #ifdef KERNEL
-__abortlike __printflike(1, 2)
-extern void panic(const char *string, ...);
+__abortlike __printflike(1, 2) extern void panic(const char *string, ...);
 #endif /* KERNEL */
 
 #if KERNEL_PRIVATE
@@ -43,29 +42,32 @@ struct thread;
 struct proc;
 
 #if XNU_KERNEL_PRIVATE
-#define panic(ex, ...)  ({ \
-	__asm__("" ::: "memory"); \
-	(panic)(ex " @%s:%d", ## __VA_ARGS__, __FILE_NAME__, __LINE__); \
-})
+#define panic(ex, ...)                                                         \
+  ({                                                                           \
+    __asm__("" ::: "memory");                                                  \
+    (panic)(ex " @%s:%d", ##__VA_ARGS__, __FILE_NAME__, __LINE__);             \
+  })
 #else /* else XNU_KERNEL_PRIVATE */
-#define panic(ex, ...)  ({ \
-	__asm__("" ::: "memory"); \
-	(panic)(#ex " @%s:%d", ## __VA_ARGS__, __FILE_NAME__, __LINE__); \
-})
+#define panic(ex, ...)                                                         \
+  ({                                                                           \
+    __asm__("" ::: "memory");                                                  \
+    (panic)(#ex " @%s:%d", ##__VA_ARGS__, __FILE_NAME__, __LINE__);            \
+  })
 #endif /* else XNU_KERNEL_PRIVATE*/
-#define panic_plain(ex, ...)  (panic)(ex, ## __VA_ARGS__)
+#define panic_plain(ex, ...) (panic)(ex, ##__VA_ARGS__)
 
-__abortlike __printflike(4, 5)
-void panic_with_options(unsigned int reason, void *ctx,
-    uint64_t debugger_options_mask, const char *str, ...);
-__abortlike __printflike(5, 6)
-void panic_with_options_and_initiator(const char* initiator, unsigned int reason, void *ctx,
+__abortlike
+    __printflike(4, 5) void panic_with_options(unsigned int reason, void *ctx,
+                                               uint64_t debugger_options_mask,
+                                               const char *str, ...);
+__abortlike __printflike(5, 6) void panic_with_options_and_initiator(
+    const char *initiator, unsigned int reason, void *ctx,
     uint64_t debugger_options_mask, const char *str, ...);
 
-#if XNU_KERNEL_PRIVATE && defined (__x86_64__)
-__abortlike __printflike(5, 6)
-void panic_with_thread_context(unsigned int reason, void *ctx,
-    uint64_t debugger_options_mask, struct thread* th, const char *str, ...);
+#if XNU_KERNEL_PRIVATE && defined(__x86_64__)
+__abortlike __printflike(5, 6) void panic_with_thread_context(
+    unsigned int reason, void *ctx, uint64_t debugger_options_mask,
+    struct thread *th, const char *str, ...);
 #endif /* XNU_KERNEL_PRIVATE && defined (__x86_64__) */
 
 #endif /* KERNEL_PRIVATE */

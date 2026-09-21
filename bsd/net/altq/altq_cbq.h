@@ -62,8 +62,8 @@
 #ifndef _NET_ALTQ_ALTQ_CBQ_H_
 #define _NET_ALTQ_ALTQ_CBQ_H_
 
-#include <net/pfvar.h>
 #include <net/altq/altq.h>
+#include <net/pfvar.h>
 #include <net/pktsched/pktsched_cbq.h>
 
 #endif /* !_NET_ALTQ_ALTQ_CBQ_H_ */

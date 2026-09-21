@@ -64,13 +64,13 @@
 /*
  * Machine-dependent simple locks for the i386.
  */
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _I386_LOCK_H_
 #define _I386_LOCK_H_
 
 #warning This header is deprecated. Use <kern/locks.h> instead.
 
-#endif  /* _I386_LOCK_H_ */
+#endif /* _I386_LOCK_H_ */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

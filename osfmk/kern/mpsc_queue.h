@@ -31,9 +31,9 @@
 
 #ifdef XNU_KERNEL_PRIVATE
 
-#include <machine/atomic.h>
 #include <kern/macro_help.h>
 #include <kern/thread_call.h>
+#include <machine/atomic.h>
 
 #endif // XNU_KERNEL_PRIVATE
 
@@ -41,17 +41,17 @@
 
 __BEGIN_DECLS __ASSUME_PTR_ABI_SINGLE_BEGIN
 
-/*!
- * @typedef struct mpsc_queue_chain
- *
- * @brief
- * Type for the intrusive linkage used by MPSC queues.
- */
-typedef struct mpsc_queue_chain {
+    /*!
+     * @typedef struct mpsc_queue_chain
+     *
+     * @brief
+     * Type for the intrusive linkage used by MPSC queues.
+     */
+    typedef struct mpsc_queue_chain {
 #if __has_ptrcheck // work around 78354145
-	struct mpsc_queue_chain *volatile mpqc_next;
+  struct mpsc_queue_chain *volatile mpqc_next;
 #else
-	struct mpsc_queue_chain *_Atomic mpqc_next;
+  struct mpsc_queue_chain *_Atomic mpqc_next;
 #endif
 } *mpsc_queue_chain_t;
 
@@ -117,11 +117,11 @@ typedef struct mpsc_queue_chain {
  *       macros on an MPSC queue.
  */
 typedef struct mpsc_queue_head {
-	struct mpsc_queue_chain mpqh_head;
+  struct mpsc_queue_chain mpqh_head;
 #if __has_ptrcheck // work around 78354145
-	struct mpsc_queue_chain *volatile mpqh_tail;
+  struct mpsc_queue_chain *volatile mpqh_tail;
 #else
-	struct mpsc_queue_chain *_Atomic mpqh_tail;
+  struct mpsc_queue_chain *_Atomic mpqh_tail;
 #endif
 } *mpsc_queue_head_t;
 
@@ -134,7 +134,7 @@ typedef struct mpsc_queue_head {
  * @param head
  * The name of the variable to initialize.
  */
-#define MPSC_QUEUE_INITIALIZER(head)   { .mpqh_tail = &(head).mpqh_head }
+#define MPSC_QUEUE_INITIALIZER(head) {.mpqh_tail = &(head).mpqh_head}
 
 #ifdef XNU_KERNEL_PRIVATE
 
@@ -151,19 +151,17 @@ typedef struct mpsc_queue_head {
  * @param q
  * The queue to initialize.
  */
-static inline void
-mpsc_queue_init(mpsc_queue_head_t q)
-{
-	os_atomic_init(&q->mpqh_head.mpqc_next, NULL);
-	os_atomic_init(&q->mpqh_tail, &q->mpqh_head);
+static inline void mpsc_queue_init(mpsc_queue_head_t q) {
+  os_atomic_init(&q->mpqh_head.mpqc_next, NULL);
+  os_atomic_init(&q->mpqh_tail, &q->mpqh_head);
 }
 
 /*!
  * @typedef enum mpsc_queue_options
  */
 typedef enum mpsc_queue_options {
-	MPSC_QUEUE_NONE                = 0,
-	MPSC_QUEUE_DISABLE_PREEMPTION  = 1 << 0,
+  MPSC_QUEUE_NONE = 0,
+  MPSC_QUEUE_DISABLE_PREEMPTION = 1 << 0,
 } mpsc_queue_options_t;
 
 /*!
@@ -182,7 +180,6 @@ typedef enum mpsc_queue_options {
  * Macro to find the pointer of an element back from its MPSC chain linkage.
  */
 #define mpsc_queue_element(ptr, type, field) __container_of(ptr, type, field)
-
 
 #pragma mark Advanced Multi Producer calls
 
@@ -212,10 +209,10 @@ typedef enum mpsc_queue_options {
  * to complete the enqueue.
  */
 static inline mpsc_queue_chain_t
-__mpsc_queue_append_update_tail(mpsc_queue_head_t q, mpsc_queue_chain_t elm)
-{
-	os_atomic_store(&elm->mpqc_next, (struct mpsc_queue_chain *__single)NULL, relaxed);
-	return os_atomic_xchg(&q->mpqh_tail, elm, release);
+__mpsc_queue_append_update_tail(mpsc_queue_head_t q, mpsc_queue_chain_t elm) {
+  os_atomic_store(&elm->mpqc_next, (struct mpsc_queue_chain * __single) NULL,
+                  relaxed);
+  return os_atomic_xchg(&q->mpqh_tail, elm, release);
 }
 
 /**
@@ -234,10 +231,9 @@ __mpsc_queue_append_update_tail(mpsc_queue_head_t q, mpsc_queue_chain_t elm)
  * @returns
  * Whether the queue was empty (true) or not (false).
  */
-static inline bool
-__mpsc_queue_append_was_empty(mpsc_queue_head_t q, mpsc_queue_chain_t prev)
-{
-	return &q->mpqh_head == prev;
+static inline bool __mpsc_queue_append_was_empty(mpsc_queue_head_t q,
+                                                 mpsc_queue_chain_t prev) {
+  return &q->mpqh_head == prev;
 }
 
 /**
@@ -261,12 +257,10 @@ __mpsc_queue_append_was_empty(mpsc_queue_head_t q, mpsc_queue_chain_t prev)
  * @param elm
  * The element to append to the queue.
  */
-static inline void
-__mpsc_queue_append_update_prev(mpsc_queue_chain_t prev, mpsc_queue_chain_t elm)
-{
-	os_atomic_store(&prev->mpqc_next, elm, relaxed);
+static inline void __mpsc_queue_append_update_prev(mpsc_queue_chain_t prev,
+                                                   mpsc_queue_chain_t elm) {
+  os_atomic_store(&prev->mpqc_next, elm, relaxed);
 }
-
 
 #pragma mark Multi Producer calls
 
@@ -291,13 +285,12 @@ __mpsc_queue_append_update_prev(mpsc_queue_chain_t prev, mpsc_queue_chain_t elm)
  * @param last
  * The last of the list elements being appended.
  */
-static inline bool
-mpsc_queue_append_list(mpsc_queue_head_t q, mpsc_queue_chain_t first,
-    mpsc_queue_chain_t last)
-{
-	mpsc_queue_chain_t prev = __mpsc_queue_append_update_tail(q, last);
-	__mpsc_queue_append_update_prev(prev, first);
-	return __mpsc_queue_append_was_empty(q, prev);
+static inline bool mpsc_queue_append_list(mpsc_queue_head_t q,
+                                          mpsc_queue_chain_t first,
+                                          mpsc_queue_chain_t last) {
+  mpsc_queue_chain_t prev = __mpsc_queue_append_update_tail(q, last);
+  __mpsc_queue_append_update_prev(prev, first);
+  return __mpsc_queue_append_was_empty(q, prev);
 }
 
 /**
@@ -312,12 +305,10 @@ mpsc_queue_append_list(mpsc_queue_head_t q, mpsc_queue_chain_t first,
  * @param q    the queue to update
  * @param elm  the element to append
  */
-static inline bool
-mpsc_queue_append(mpsc_queue_head_t q, mpsc_queue_chain_t elm)
-{
-	return mpsc_queue_append_list(q, elm, elm);
+static inline bool mpsc_queue_append(mpsc_queue_head_t q,
+                                     mpsc_queue_chain_t elm) {
+  return mpsc_queue_append_list(q, elm, elm);
 }
-
 
 #pragma mark Single Consumer calls
 
@@ -344,9 +335,9 @@ mpsc_queue_append(mpsc_queue_head_t q, mpsc_queue_chain_t elm)
  * @returns
  * The first element of the batch if any, or NULL the queue was empty.
  */
-mpsc_queue_chain_t
-mpsc_queue_dequeue_batch(mpsc_queue_head_t q, mpsc_queue_chain_t *tail,
-    os_atomic_dependency_t dependency);
+mpsc_queue_chain_t mpsc_queue_dequeue_batch(mpsc_queue_head_t q,
+                                            mpsc_queue_chain_t *tail,
+                                            os_atomic_dependency_t dependency);
 
 /**
  * @function mpsc_queue_batch_next()
@@ -372,8 +363,8 @@ mpsc_queue_dequeue_batch(mpsc_queue_head_t q, mpsc_queue_chain_t *tail,
  * @returns
  * The next element if any.
  */
-mpsc_queue_chain_t
-mpsc_queue_batch_next(mpsc_queue_chain_t cur, mpsc_queue_chain_t tail);
+mpsc_queue_chain_t mpsc_queue_batch_next(mpsc_queue_chain_t cur,
+                                         mpsc_queue_chain_t tail);
 
 /**
  * @macro mpsc_queue_batch_foreach_safe
@@ -390,10 +381,10 @@ mpsc_queue_batch_next(mpsc_queue_chain_t cur, mpsc_queue_chain_t tail);
  * @param tail
  * The last element of the batch.
  */
-#define mpsc_queue_batch_foreach_safe(item, head, tail) \
-	for (mpsc_queue_chain_t __tmp, __item = (head), __tail = (tail); \
-	    __tmp = mpsc_queue_batch_next(__item, __tail), (item) = __item; \
-	    __item = __tmp)
+#define mpsc_queue_batch_foreach_safe(item, head, tail)                        \
+  for (mpsc_queue_chain_t __tmp, __item = (head), __tail = (tail);             \
+       __tmp = mpsc_queue_batch_next(__item, __tail), (item) = __item;         \
+       __item = __tmp)
 
 /**
  * @function mpsc_queue_restore_batch()
@@ -416,10 +407,8 @@ mpsc_queue_batch_next(mpsc_queue_chain_t cur, mpsc_queue_chain_t tail);
  * It is the responsibility of the caller to ensure the linkages from first to
  * last are properly set up before calling this function.
  */
-void
-mpsc_queue_restore_batch(mpsc_queue_head_t q, mpsc_queue_chain_t first,
-    mpsc_queue_chain_t last);
-
+void mpsc_queue_restore_batch(mpsc_queue_head_t q, mpsc_queue_chain_t first,
+                              mpsc_queue_chain_t last);
 
 #pragma mark "GCD"-like facilities
 
@@ -434,10 +423,11 @@ mpsc_queue_restore_batch(mpsc_queue_head_t q, mpsc_queue_chain_t first,
  * to @c mpsc_daemon_queue_activate() to start draining.
  *
  */
-__options_decl(mpsc_daemon_init_options_t, uint32_t, {
-	MPSC_DAEMON_INIT_NONE          = 0,
-	MPSC_DAEMON_INIT_INACTIVE      = 1 << 0,
-});
+__options_decl(mpsc_daemon_init_options_t, uint32_t,
+               {
+                   MPSC_DAEMON_INIT_NONE = 0,
+                   MPSC_DAEMON_INIT_INACTIVE = 1 << 0,
+               });
 
 /*!
  * @typedef struct mpsc_daemon_queue
@@ -459,7 +449,7 @@ __options_decl(mpsc_daemon_init_options_t, uint32_t, {
  */
 typedef struct mpsc_daemon_queue *mpsc_daemon_queue_t;
 
-#define MPSC_QUEUE_BATCH_END  ((mpsc_queue_chain_t)~0ul)
+#define MPSC_QUEUE_BATCH_END ((mpsc_queue_chain_t)~0ul)
 
 /*!
  * @typedef struct mpsc_daemon_queue
@@ -468,7 +458,7 @@ typedef struct mpsc_daemon_queue *mpsc_daemon_queue_t;
  * The type for MPSC Daemon Queues invoke callbacks.
  */
 typedef void (*mpsc_daemon_invoke_fn_t)(mpsc_queue_chain_t elm,
-    mpsc_daemon_queue_t dq);
+                                        mpsc_daemon_queue_t dq);
 
 /*!
  * @enum mpsc_daemon_queue_kind
@@ -476,13 +466,14 @@ typedef void (*mpsc_daemon_invoke_fn_t)(mpsc_queue_chain_t elm,
  * @brief
  * Internal type, not to be used by clients.
  */
-__enum_decl(mpsc_daemon_queue_kind_t, uint16_t, {
-	MPSC_QUEUE_KIND_UNKNOWN,
-	MPSC_QUEUE_KIND_NESTED,
-	MPSC_QUEUE_KIND_THREAD,
-	MPSC_QUEUE_KIND_THREAD_CRITICAL,
-	MPSC_QUEUE_KIND_THREAD_CALL,
-});
+__enum_decl(mpsc_daemon_queue_kind_t, uint16_t,
+            {
+                MPSC_QUEUE_KIND_UNKNOWN,
+                MPSC_QUEUE_KIND_NESTED,
+                MPSC_QUEUE_KIND_THREAD,
+                MPSC_QUEUE_KIND_THREAD_CRITICAL,
+                MPSC_QUEUE_KIND_THREAD_CALL,
+            });
 
 /*!
  * @enum mpsc_daemon_queue_options
@@ -494,9 +485,10 @@ __enum_decl(mpsc_daemon_queue_kind_t, uint16_t, {
  * Call the `invoke` callback at the end of a batch
  * with the magic @c MPSC_QUEUE_BATCH_END marker.
  */
-__options_decl(mpsc_daemon_queue_options_t, uint16_t, {
-	MPSC_QUEUE_OPTION_BATCH  = 0x0001,
-});
+__options_decl(mpsc_daemon_queue_options_t, uint16_t,
+               {
+                   MPSC_QUEUE_OPTION_BATCH = 0x0001,
+               });
 
 /*!
  * @enum mpsc_daemon_queue_state
@@ -504,25 +496,26 @@ __options_decl(mpsc_daemon_queue_options_t, uint16_t, {
  * @brief
  * Internal type, not to be used by clients.
  */
-__options_decl(mpsc_daemon_queue_state_t, uint32_t, {
-	MPSC_QUEUE_STATE_DRAINING = 0x0001,
-	MPSC_QUEUE_STATE_WAKEUP   = 0x0002,
-	MPSC_QUEUE_STATE_CANCELED = 0x0004,
-	MPSC_QUEUE_STATE_INACTIVE = 0x0008,
-});
+__options_decl(mpsc_daemon_queue_state_t, uint32_t,
+               {
+                   MPSC_QUEUE_STATE_DRAINING = 0x0001,
+                   MPSC_QUEUE_STATE_WAKEUP = 0x0002,
+                   MPSC_QUEUE_STATE_CANCELED = 0x0004,
+                   MPSC_QUEUE_STATE_INACTIVE = 0x0008,
+               });
 
 struct mpsc_daemon_queue {
-	mpsc_daemon_queue_kind_t    mpd_kind;
-	mpsc_daemon_queue_options_t mpd_options;
-	mpsc_daemon_queue_state_t _Atomic mpd_state;
-	mpsc_daemon_invoke_fn_t     mpd_invoke;
-	union {
-		mpsc_daemon_queue_t     mpd_target;
-		struct thread          *mpd_thread;
-		struct thread_call     *mpd_call;
-	};
-	struct mpsc_queue_head      mpd_queue;
-	struct mpsc_queue_chain     mpd_chain;
+  mpsc_daemon_queue_kind_t mpd_kind;
+  mpsc_daemon_queue_options_t mpd_options;
+  mpsc_daemon_queue_state_t _Atomic mpd_state;
+  mpsc_daemon_invoke_fn_t mpd_invoke;
+  union {
+    mpsc_daemon_queue_t mpd_target;
+    struct thread *mpd_thread;
+    struct thread_call *mpd_call;
+  };
+  struct mpsc_queue_head mpd_queue;
+  struct mpsc_queue_chain mpd_chain;
 };
 
 /*!
@@ -552,11 +545,9 @@ struct mpsc_daemon_queue {
  * @returns
  * Whether creating the thread was successful.
  */
-kern_return_t
-mpsc_daemon_queue_init_with_thread(mpsc_daemon_queue_t dq,
-    mpsc_daemon_invoke_fn_t invoke, int pri, const char *name,
-    mpsc_daemon_init_options_t flags);
-
+kern_return_t mpsc_daemon_queue_init_with_thread(
+    mpsc_daemon_queue_t dq, mpsc_daemon_invoke_fn_t invoke, int pri,
+    const char *name, mpsc_daemon_init_options_t flags);
 
 /*!
  * @function mpsc_daemon_queue_init_with_thread_call
@@ -576,10 +567,10 @@ mpsc_daemon_queue_init_with_thread(mpsc_daemon_queue_t dq,
  * @param flags
  * See mpsc_daemon_init_options_t.
  */
-void
-mpsc_daemon_queue_init_with_thread_call(mpsc_daemon_queue_t dq,
-    mpsc_daemon_invoke_fn_t invoke, thread_call_priority_t pri,
-    mpsc_daemon_init_options_t flags);
+void mpsc_daemon_queue_init_with_thread_call(mpsc_daemon_queue_t dq,
+                                             mpsc_daemon_invoke_fn_t invoke,
+                                             thread_call_priority_t pri,
+                                             mpsc_daemon_init_options_t flags);
 
 /*!
  * @function mpsc_daemon_queue_init_with_target
@@ -605,10 +596,10 @@ mpsc_daemon_queue_init_with_thread_call(mpsc_daemon_queue_t dq,
  * @param flags
  * See mpsc_daemon_init_options_t.
  */
-void
-mpsc_daemon_queue_init_with_target(mpsc_daemon_queue_t dq,
-    mpsc_daemon_invoke_fn_t invoke, mpsc_daemon_queue_t target,
-    mpsc_daemon_init_options_t flags);
+void mpsc_daemon_queue_init_with_target(mpsc_daemon_queue_t dq,
+                                        mpsc_daemon_invoke_fn_t invoke,
+                                        mpsc_daemon_queue_t target,
+                                        mpsc_daemon_init_options_t flags);
 
 /*!
  * @function mpsc_daemon_queue_nested_invoke
@@ -617,9 +608,8 @@ mpsc_daemon_queue_init_with_target(mpsc_daemon_queue_t dq,
  * The invoke function to pass to mpsc_daemon_queue_init_* when a queue is meant
  * to be targeted by other queues.
  */
-void
-mpsc_daemon_queue_nested_invoke(mpsc_queue_chain_t elm,
-    mpsc_daemon_queue_t dq);
+void mpsc_daemon_queue_nested_invoke(mpsc_queue_chain_t elm,
+                                     mpsc_daemon_queue_t dq);
 
 /*!
  * @function mpsc_daemon_queue_activate
@@ -630,8 +620,7 @@ mpsc_daemon_queue_nested_invoke(mpsc_queue_chain_t elm,
  * @param dq
  * The queue to activate.
  */
-void
-mpsc_daemon_queue_activate(mpsc_daemon_queue_t dq);
+void mpsc_daemon_queue_activate(mpsc_daemon_queue_t dq);
 
 /*!
  * @function mpsc_daemon_queue_cancel_and_wait
@@ -650,8 +639,7 @@ mpsc_daemon_queue_activate(mpsc_daemon_queue_t dq);
  *
  * Tearing down daemon queue hierarchies is the responsibility of the adopter.
  */
-void
-mpsc_daemon_queue_cancel_and_wait(mpsc_daemon_queue_t dq);
+void mpsc_daemon_queue_cancel_and_wait(mpsc_daemon_queue_t dq);
 
 /*!
  * @function mpsc_daemon_enqueue
@@ -674,10 +662,8 @@ mpsc_daemon_queue_cancel_and_wait(mpsc_daemon_queue_t dq);
  * MPSC_QUEUE_DISABLE_PREEMPTION makes sure preemption is properly disabled
  * during the enqueue.
  */
-void
-mpsc_daemon_enqueue(mpsc_daemon_queue_t dq, mpsc_queue_chain_t elm,
-    mpsc_queue_options_t options);
-
+void mpsc_daemon_enqueue(mpsc_daemon_queue_t dq, mpsc_queue_chain_t elm,
+                         mpsc_queue_options_t options);
 
 #pragma mark Deferred deallocation daemon
 
@@ -700,8 +686,7 @@ mpsc_daemon_enqueue(mpsc_daemon_queue_t dq, mpsc_queue_chain_t elm,
  * New queues should be added to this daemon with great care,
  * as abusing it can lead to unbounded amount of kernel work.
  */
-void
-thread_deallocate_daemon_init(void);
+void thread_deallocate_daemon_init(void);
 
 /*!
  * @function thread_deallocate_daemon_register_queue
@@ -717,16 +702,13 @@ thread_deallocate_daemon_init(void);
  * The callback called on every element of this queue by the deallocation
  * daemon.
  */
-void
-thread_deallocate_daemon_register_queue(mpsc_daemon_queue_t dq,
-    mpsc_daemon_invoke_fn_t invoke);
-
+void thread_deallocate_daemon_register_queue(mpsc_daemon_queue_t dq,
+                                             mpsc_daemon_invoke_fn_t invoke);
 
 #pragma mark tests
 #if DEBUG || DEVELOPMENT
 
-int
-mpsc_test_pingpong(uint64_t count, uint64_t *out);
+int mpsc_test_pingpong(uint64_t count, uint64_t *out);
 
 #endif /* DEBUG || DEVELOPMENT */
 

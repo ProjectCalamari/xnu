@@ -26,10 +26,10 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "tsd.h"
 #include <TargetConditionals.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "tsd.h"
 
 /*
  * cerror takes the return value of the syscall, being non-zero, and
@@ -48,32 +48,24 @@ extern void _pthread_exit_if_canceled(int error);
 #undef errno
 int errno;
 
-int *
-__error(void)
-{
-	void *ptr = _os_tsd_get_direct(__TSD_ERRNO);
-	if (ptr != NULL) {
-		return (int*)ptr;
-	}
-	return &errno;
+int *__error(void) {
+  void *ptr = _os_tsd_get_direct(__TSD_ERRNO);
+  if (ptr != NULL) {
+    return (int *)ptr;
+  }
+  return &errno;
 }
 
-__attribute__((noinline))
-cerror_return_t
-cerror_nocancel(int err)
-{
-	errno = err;
-	int *tsderrno = (int*)_os_tsd_get_direct(__TSD_ERRNO);
-	if (tsderrno) {
-		*tsderrno = err;
-	}
-	return -1;
+__attribute__((noinline)) cerror_return_t cerror_nocancel(int err) {
+  errno = err;
+  int *tsderrno = (int *)_os_tsd_get_direct(__TSD_ERRNO);
+  if (tsderrno) {
+    *tsderrno = err;
+  }
+  return -1;
 }
 
-__attribute__((noinline))
-cerror_return_t
-cerror(int err)
-{
-	_pthread_exit_if_canceled(err);
-	return cerror_nocancel(err);
+__attribute__((noinline)) cerror_return_t cerror(int err) {
+  _pthread_exit_if_canceled(err);
+  return cerror_nocancel(err);
 }

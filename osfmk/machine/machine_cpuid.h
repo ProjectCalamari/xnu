@@ -25,14 +25,14 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _MACHINE_CPUID_H
 #define _MACHINE_CPUID_H
 
-#if defined (__arm__)
+#if defined(__arm__)
 #include <arm/machine_cpuid.h>
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include <arm64/machine_cpuid.h>
 #else
 #error architecture not supported
@@ -40,4 +40,4 @@
 
 #endif /* _MACHINE_CPUID_H */
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */

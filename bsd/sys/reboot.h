@@ -64,9 +64,9 @@
 #ifndef _SYS_REBOOT_H_
 #define _SYS_REBOOT_H_
 
+#include <stdint.h>
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
-#include <stdint.h>
 #include <uuid/uuid.h>
 
 /*
@@ -74,29 +74,31 @@
  */
 
 #ifdef __APPLE_API_PRIVATE
-#define RB_AUTOBOOT     0       /* flags for system auto-booting itself */
+#define RB_AUTOBOOT 0 /* flags for system auto-booting itself */
 
-#define RB_ASKNAME      0x01    /* ask for file name to reboot from */
-#define RB_SINGLE       0x02    /* reboot to single user only */
-#define RB_NOSYNC       0x04    /* dont sync before reboot */
-#define RB_HALT         0x08    /* don't reboot, just halt */
-#define RB_INITNAME     0x10    /* name given for /etc/init */
-#define RB_DFLTROOT     0x20    /* use compiled-in rootdev */
-#define RB_ALTBOOT      0x40    /* use /boot.old vs /boot */
-#define RB_UNIPROC      0x80    /* don't start slaves */
-#define RB_SAFEBOOT     0x100   /* booting safe */
-#define RB_UPSDELAY 0x200   /* Delays restart by 5 minutes */
-#define RB_QUICK        0x400   /* quick and ungraceful reboot with file system caches flushed*/
-#define RB_PANIC        0x800   /* panic the kernel */
-#define RB_PANIC_ZPRINT 0x1000   /* add zprint info to panic string */
-#define RB_PANIC_FORCERESET 0x2000   /* do force-reset panic */
+#define RB_ASKNAME 0x01   /* ask for file name to reboot from */
+#define RB_SINGLE 0x02    /* reboot to single user only */
+#define RB_NOSYNC 0x04    /* dont sync before reboot */
+#define RB_HALT 0x08      /* don't reboot, just halt */
+#define RB_INITNAME 0x10  /* name given for /etc/init */
+#define RB_DFLTROOT 0x20  /* use compiled-in rootdev */
+#define RB_ALTBOOT 0x40   /* use /boot.old vs /boot */
+#define RB_UNIPROC 0x80   /* don't start slaves */
+#define RB_SAFEBOOT 0x100 /* booting safe */
+#define RB_UPSDELAY 0x200 /* Delays restart by 5 minutes */
+#define RB_QUICK                                                               \
+  0x400 /* quick and ungraceful reboot with file system caches flushed*/
+#define RB_PANIC 0x800             /* panic the kernel */
+#define RB_PANIC_ZPRINT 0x1000     /* add zprint info to panic string */
+#define RB_PANIC_FORCERESET 0x2000 /* do force-reset panic */
 
 __BEGIN_DECLS
-__options_closed_decl(panic_with_data_flags, unsigned int, {
-	PANIC_WITH_DATA_FLAGS_NONE = 0,
-	PANIC_WITH_DATA_FLAGS_EXCLAVE_STACKSHOT,
-	PANIC_WITH_DATA_FLAGS_MAX,
-});
+__options_closed_decl(panic_with_data_flags, unsigned int,
+                      {
+                          PANIC_WITH_DATA_FLAGS_NONE = 0,
+                          PANIC_WITH_DATA_FLAGS_EXCLAVE_STACKSHOT,
+                          PANIC_WITH_DATA_FLAGS_MAX,
+                      });
 
 #ifndef KERNEL
 /* userspace reboot control */
@@ -110,7 +112,8 @@ int reboot_np(int howto, const char *message);
 /* Used to panic the kernel from user space and add additional data to
  * the paniclog.
  */
-int panic_with_data(uuid_t uuid, void *addr, uint32_t len, uint32_t flags, const char *msg);
+int panic_with_data(uuid_t uuid, void *addr, uint32_t len, uint32_t flags,
+                    const char *msg);
 #endif /* KERNEL */
 __END_DECLS
 
@@ -129,35 +132,35 @@ __END_DECLS
  *	|MA | AD| CT| UN| PART  | TYPE |
  *	--------------------------------
  */
-#define B_ADAPTORSHIFT  24
-#define B_ADAPTORMASK   0x0f
-#define B_ADAPTOR(val)          (((val) >> B_ADAPTORSHIFT) & B_ADAPTORMASK)
-#define B_CONTROLLERSHIFT       20
-#define B_CONTROLLERMASK        0xf
-#define B_CONTROLLER(val)       (((val)>>B_CONTROLLERSHIFT) & B_CONTROLLERMASK)
-#define B_UNITSHIFT     16
-#define B_UNITMASK      0xff
-#define B_UNIT(val)             (((val) >> B_UNITSHIFT) & B_UNITMASK)
+#define B_ADAPTORSHIFT 24
+#define B_ADAPTORMASK 0x0f
+#define B_ADAPTOR(val) (((val) >> B_ADAPTORSHIFT) & B_ADAPTORMASK)
+#define B_CONTROLLERSHIFT 20
+#define B_CONTROLLERMASK 0xf
+#define B_CONTROLLER(val) (((val) >> B_CONTROLLERSHIFT) & B_CONTROLLERMASK)
+#define B_UNITSHIFT 16
+#define B_UNITMASK 0xff
+#define B_UNIT(val) (((val) >> B_UNITSHIFT) & B_UNITMASK)
 #define B_PARTITIONSHIFT 8
 #define B_PARTITIONMASK 0xff
-#define B_PARTITION(val)        (((val) >> B_PARTITIONSHIFT) & B_PARTITIONMASK)
-#define B_TYPESHIFT     0
-#define B_TYPEMASK      0xff
-#define B_TYPE(val)             (((val) >> B_TYPESHIFT) & B_TYPEMASK)
-#define B_MAGICMASK     0xf0000000
-#define B_DEVMAGIC      0xa0000000
+#define B_PARTITION(val) (((val) >> B_PARTITIONSHIFT) & B_PARTITIONMASK)
+#define B_TYPESHIFT 0
+#define B_TYPEMASK 0xff
+#define B_TYPE(val) (((val) >> B_TYPESHIFT) & B_TYPEMASK)
+#define B_MAGICMASK 0xf0000000
+#define B_DEVMAGIC 0xa0000000
 
-#define MAKEBOOTDEV(type, adaptor, controller, unit, partition) \
-	(((type) << B_TYPESHIFT) | ((adaptor) << B_ADAPTORSHIFT) | \
-	((controller) << B_CONTROLLERSHIFT) | ((unit) << B_UNITSHIFT) | \
-	((partition) << B_PARTITIONSHIFT) | B_DEVMAGIC)
+#define MAKEBOOTDEV(type, adaptor, controller, unit, partition)                \
+  (((type) << B_TYPESHIFT) | ((adaptor) << B_ADAPTORSHIFT) |                   \
+   ((controller) << B_CONTROLLERSHIFT) | ((unit) << B_UNITSHIFT) |             \
+   ((partition) << B_PARTITIONSHIFT) | B_DEVMAGIC)
 
 #endif /* __APPLE_API_OBSOLETE */
 
 #ifdef XNU_KERNEL_PRIVATE
 
 __BEGIN_DECLS
-int     reboot_kernel(int, char *);
+int reboot_kernel(int, char *);
 __END_DECLS
 
 #define PROC_SHUTDOWN_LOG "/var/log/kernel-shutdown.log"
@@ -171,4 +174,4 @@ int get_system_inuserspacereboot(void);
 __END_DECLS
 #endif /* KERNEL_PRIVATE */
 
-#endif  /* _SYS_REBOOT_H_ */
+#endif /* _SYS_REBOOT_H_ */

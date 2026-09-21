@@ -59,73 +59,57 @@
 #ifndef _KERN_IPC_HOST_H_
 #define _KERN_IPC_HOST_H_
 
-#include <mach/port.h>
 #include <kern/kern_types.h>
+#include <mach/port.h>
 
 /* Initialize IPC host services */
 extern void ipc_host_init(void);
 
 /* Initialize ipc access to processor by allocating a port */
-extern void ipc_processor_init(
-	processor_t     processor);
+extern void ipc_processor_init(processor_t processor);
 
 /* Initialize ipc control of a processor set */
-extern void ipc_pset_init(
-	processor_set_t         pset);
+extern void ipc_pset_init(processor_set_t pset);
 
 /* Initialize ipc control of a clock */
-extern void ipc_clock_init(
-	clock_t         clock);
+extern void ipc_clock_init(clock_t clock);
 
 /* Convert from a port to a clock */
-extern clock_t convert_port_to_clock(
-	ipc_port_t      port);
+extern clock_t convert_port_to_clock(ipc_port_t port);
 
 /* Convert from a clock to a port */
-extern ipc_port_t convert_clock_to_port(
-	clock_t         clock);
+extern ipc_port_t convert_clock_to_port(clock_t clock);
 
 /* Convert from a clock name to a clock pointer */
-extern clock_t port_name_to_clock(
-	mach_port_name_t clock_name);
+extern clock_t port_name_to_clock(mach_port_name_t clock_name);
 
-extern ipc_port_t host_port_copy_send(
-	ipc_port_t      port);
+extern ipc_port_t host_port_copy_send(ipc_port_t port);
 
 /* Convert from a port to a host */
-extern host_t convert_port_to_host(
-	ipc_port_t      port);
+extern host_t convert_port_to_host(ipc_port_t port);
 
 /* Convert from a port to a host privilege port */
-extern host_t convert_port_to_host_priv(
-	ipc_port_t      port);
+extern host_t convert_port_to_host_priv(ipc_port_t port);
 
 /* Convert from a host to a port */
-extern ipc_port_t convert_host_to_port(
-	host_t          host);
+extern ipc_port_t convert_host_to_port(host_t host);
 
 /* Convert from a port to a processor */
-extern processor_t convert_port_to_processor(
-	ipc_port_t      port);
+extern processor_t convert_port_to_processor(ipc_port_t port);
 
 /* Convert from a processor to a port */
-extern ipc_port_t convert_processor_to_port(
-	processor_t     processor);
+extern ipc_port_t convert_processor_to_port(processor_t processor);
 
 /* Convert from a port to a processor set */
-extern processor_set_t convert_port_to_pset(
-	ipc_port_t      port);
+extern processor_set_t convert_port_to_pset(ipc_port_t port);
 
 /* Convert from a port to a processor set name */
-extern processor_set_t convert_port_to_pset_name(
-	ipc_port_t      port);
+extern processor_set_t convert_port_to_pset_name(ipc_port_t port);
 
 /* Convert from a processor set to a port */
-extern ipc_port_t convert_pset_to_port(
-	processor_set_t         processor);
+extern ipc_port_t convert_pset_to_port(processor_set_t processor);
 
 /* Convert from a processor set name to a port */
-extern ipc_port_t convert_pset_name_to_port(
-	processor_set_t         processor);
+extern ipc_port_t convert_pset_name_to_port(processor_set_t processor);
 
-#endif  /* _KERN_IPC_HOST_H_ */
+#endif /* _KERN_IPC_HOST_H_ */

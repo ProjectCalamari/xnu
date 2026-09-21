@@ -30,40 +30,40 @@
 #define _NET_FLOWADV_H_
 
 #ifdef KERNEL_PRIVATE
-#include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/types.h>
 
 #if SKYWALK
 #include <skywalk/os_skywalk.h>
 #endif /* SKYWALK */
 
-#define FADV_SUCCESS            0       /* success */
-#define FADV_FLOW_CONTROLLED    1       /* regular flow control */
-#define FADV_SUSPENDED          2       /* flow control due to suspension */
-#define FADV_CONGESTED          3       /* AQM gives congestion notification signal */
+#define FADV_SUCCESS 0         /* success */
+#define FADV_FLOW_CONTROLLED 1 /* regular flow control */
+#define FADV_SUSPENDED 2       /* flow control due to suspension */
+#define FADV_CONGESTED 3       /* AQM gives congestion notification signal */
 
 struct flowadv {
-	int32_t         code;           /* FADV advisory code */
+  int32_t code; /* FADV advisory code */
 };
 
 typedef enum fce_event_type {
-	FCE_EVENT_TYPE_FLOW_CONTROL_FEEDBACK   = 0,
-	FCE_EVENT_TYPE_CONGESTION_EXPERIENCED  = 1,
+  FCE_EVENT_TYPE_FLOW_CONTROL_FEEDBACK = 0,
+  FCE_EVENT_TYPE_CONGESTION_EXPERIENCED = 1,
 } fce_event_type_t;
 
 #ifdef BSD_KERNEL_PRIVATE
 struct flowadv_fcentry {
-	STAILQ_ENTRY(flowadv_fcentry) fce_link;
-	u_int32_t        fce_flowsrc_type;       /* FLOWSRC values */
-	u_int32_t        fce_flowid;
-	u_int32_t        fce_congestion_cnt;
-	u_int32_t        l4s_ce_cnt;
-	u_int32_t        fce_pkts_since_last_report;
-	fce_event_type_t fce_event_type;
+  STAILQ_ENTRY(flowadv_fcentry) fce_link;
+  u_int32_t fce_flowsrc_type; /* FLOWSRC values */
+  u_int32_t fce_flowid;
+  u_int32_t fce_congestion_cnt;
+  u_int32_t l4s_ce_cnt;
+  u_int32_t fce_pkts_since_last_report;
+  fce_event_type_t fce_event_type;
 #if SKYWALK
-	flowadv_token_t fce_flowsrc_token;
-	flowadv_idx_t   fce_flowsrc_fidx;
-	struct ifnet    *fce_ifp;
+  flowadv_token_t fce_flowsrc_token;
+  flowadv_idx_t fce_flowsrc_fidx;
+  struct ifnet *fce_ifp;
 #endif /* SKYWALK */
 };
 

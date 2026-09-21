@@ -36,61 +36,48 @@
 
 #ifdef __APPLE_API_OBSOLETE
 
-typedef enum {
-	MACH_MSG_LOG_USER,
-	MACH_MSG_LOG_SERVER
-} mig_who_t;
+typedef enum { MACH_MSG_LOG_USER, MACH_MSG_LOG_SERVER } mig_who_t;
 
 typedef enum {
-	MACH_MSG_REQUEST_BEING_SENT,
-	MACH_MSG_REQUEST_BEING_RCVD,
-	MACH_MSG_REPLY_BEING_SENT,
-	MACH_MSG_REPLY_BEING_RCVD
+  MACH_MSG_REQUEST_BEING_SENT,
+  MACH_MSG_REQUEST_BEING_RCVD,
+  MACH_MSG_REPLY_BEING_SENT,
+  MACH_MSG_REPLY_BEING_RCVD
 } mig_which_event_t;
 
 typedef enum {
-	MACH_MSG_ERROR_WHILE_PARSING,
-	MACH_MSG_ERROR_UNKNOWN_ID
+  MACH_MSG_ERROR_WHILE_PARSING,
+  MACH_MSG_ERROR_UNKNOWN_ID
 } mig_which_error_t;
 
 extern void MigEventTracer
-#if     defined(__STDC__)
-(
-	mig_who_t who,
-	mig_which_event_t what,
-	mach_msg_id_t msgh_id,
-	unsigned int size,
-	unsigned int kpd,
-	unsigned int retcode,
-	unsigned int ports,
-	unsigned int oolports,
-	unsigned int ool,
-	char *file,
-	unsigned int line
-);
-#else   /* !defined(__STDC__) */
-();
-#endif  /* !defined(__STDC__) */
+#if defined(__STDC__)
+    (mig_who_t who, mig_which_event_t what, mach_msg_id_t msgh_id,
+     unsigned int size, unsigned int kpd, unsigned int retcode,
+     unsigned int ports, unsigned int oolports, unsigned int ool, char *file,
+     unsigned int line);
+#else  /* !defined(__STDC__) */
+    ();
+#endif /* !defined(__STDC__) */
 
 extern void MigEventErrors
-#if     defined(__STDC__)
-(
-	mig_who_t who,
-	mig_which_error_t what,
-	void *par,
-	char *file,
-	unsigned int line
-);
-#else   /* !defined(__STDC__) */
-();
-#endif  /* !defined(__STDC__) */
+#if defined(__STDC__)
+    (mig_who_t who, mig_which_error_t what, void *par, char *file,
+     unsigned int line);
+#else  /* !defined(__STDC__) */
+    ();
+#endif /* !defined(__STDC__) */
 
 extern int mig_errors;
 extern int mig_tracing;
 
-#define LOG_ERRORS      if (mig_errors)  MigEventErrors
-#define LOG_TRACE       if (mig_tracing) MigEventTracer
+#define LOG_ERRORS                                                             \
+  if (mig_errors)                                                              \
+  MigEventErrors
+#define LOG_TRACE                                                              \
+  if (mig_tracing)                                                             \
+  MigEventTracer
 
-#endif  /* __APPLE_API_OBSOLETE */
+#endif /* __APPLE_API_OBSOLETE */
 
-#endif  /* _mach_log_ */
+#endif /* _mach_log_ */

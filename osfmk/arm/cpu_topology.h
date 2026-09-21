@@ -40,43 +40,43 @@
 __BEGIN_DECLS
 
 typedef struct ml_topology_cpu {
-	unsigned int                    cpu_id;
-	uint32_t                        phys_id;
-	unsigned int                    cluster_id;
-	unsigned int                    die_id;
-	cluster_type_t                  cluster_type;
-	uint32_t                        l2_access_penalty; /* unused */
-	uint32_t                        l2_cache_size;
-	uint32_t                        l2_cache_id;
-	uint32_t                        l3_cache_size;
-	uint32_t                        l3_cache_id;
-	vm_offset_t                     cpu_IMPL_regs;
-	uint64_t                        cpu_IMPL_pa;
-	uint64_t                        cpu_IMPL_len;
-	vm_offset_t                     cpu_UTTDBG_regs;
-	uint64_t                        cpu_UTTDBG_pa;
-	uint64_t                        cpu_UTTDBG_len;
-	vm_offset_t                     coresight_regs;
-	uint64_t                        coresight_pa;
-	uint64_t                        coresight_len;
-	unsigned int                    die_cluster_id;
-	unsigned int                    cluster_core_id;
+  unsigned int cpu_id;
+  uint32_t phys_id;
+  unsigned int cluster_id;
+  unsigned int die_id;
+  cluster_type_t cluster_type;
+  uint32_t l2_access_penalty; /* unused */
+  uint32_t l2_cache_size;
+  uint32_t l2_cache_id;
+  uint32_t l3_cache_size;
+  uint32_t l3_cache_id;
+  vm_offset_t cpu_IMPL_regs;
+  uint64_t cpu_IMPL_pa;
+  uint64_t cpu_IMPL_len;
+  vm_offset_t cpu_UTTDBG_regs;
+  uint64_t cpu_UTTDBG_pa;
+  uint64_t cpu_UTTDBG_len;
+  vm_offset_t coresight_regs;
+  uint64_t coresight_pa;
+  uint64_t coresight_len;
+  unsigned int die_cluster_id;
+  unsigned int cluster_core_id;
 } ml_topology_cpu_t;
 
 typedef struct ml_topology_cluster {
-	unsigned int                    cluster_id;
-	cluster_type_t                  cluster_type;
-	unsigned int                    num_cpus;
-	unsigned int                    first_cpu_id;
-	uint64_t                        cpu_mask;
-	unsigned int                    die_id;
-	unsigned int                    die_cluster_id;
-	vm_offset_t                     acc_IMPL_regs;
-	uint64_t                        acc_IMPL_pa;
-	uint64_t                        acc_IMPL_len;
-	vm_offset_t                     cpm_IMPL_regs;
-	uint64_t                        cpm_IMPL_pa;
-	uint64_t                        cpm_IMPL_len;
+  unsigned int cluster_id;
+  cluster_type_t cluster_type;
+  unsigned int num_cpus;
+  unsigned int first_cpu_id;
+  uint64_t cpu_mask;
+  unsigned int die_id;
+  unsigned int die_cluster_id;
+  vm_offset_t acc_IMPL_regs;
+  uint64_t acc_IMPL_pa;
+  uint64_t acc_IMPL_len;
+  vm_offset_t cpm_IMPL_regs;
+  uint64_t cpm_IMPL_pa;
+  uint64_t cpm_IMPL_len;
 } ml_topology_cluster_t;
 
 // Bump this version number any time any ml_topology_* struct changes in a
@@ -85,27 +85,28 @@ typedef struct ml_topology_cluster {
 #define CPU_TOPOLOGY_VERSION 1
 
 typedef struct ml_topology_info {
-	unsigned int                    version;
-	unsigned int                    num_cpus;
-	unsigned int                    max_cpu_id;
-	unsigned int                    num_clusters;
-	unsigned int                    max_cluster_id;
-	unsigned int                    max_die_id;
-	ml_topology_cpu_t               *cpus;
-	ml_topology_cluster_t           *clusters;
-	ml_topology_cpu_t               *boot_cpu;
-	ml_topology_cluster_t           *boot_cluster;
-	unsigned int                    chip_revision;
-	unsigned int                    cluster_types;
-	unsigned int                    cluster_type_num_cpus[MAX_CPU_TYPES];
-	unsigned int                    cluster_type_num_clusters[MAX_CPU_TYPES];
-	unsigned int                    cluster_power_down;
+  unsigned int version;
+  unsigned int num_cpus;
+  unsigned int max_cpu_id;
+  unsigned int num_clusters;
+  unsigned int max_cluster_id;
+  unsigned int max_die_id;
+  ml_topology_cpu_t *cpus;
+  ml_topology_cluster_t *clusters;
+  ml_topology_cpu_t *boot_cpu;
+  ml_topology_cluster_t *boot_cluster;
+  unsigned int chip_revision;
+  unsigned int cluster_types;
+  unsigned int cluster_type_num_cpus[MAX_CPU_TYPES];
+  unsigned int cluster_type_num_clusters[MAX_CPU_TYPES];
+  unsigned int cluster_power_down;
 } ml_topology_info_t;
 
 /*!
  * @function ml_get_topology_info
- * @result A pointer to the read-only topology struct.  Does not need to be freed.  Returns NULL
- *         if the struct hasn't been initialized or the feature is unsupported.
+ * @result A pointer to the read-only topology struct.  Does not need to be
+ * freed.  Returns NULL if the struct hasn't been initialized or the feature is
+ * unsupported.
  */
 const ml_topology_info_t *ml_get_topology_info(void);
 

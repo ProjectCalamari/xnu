@@ -21,16 +21,14 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
-#include <sys/types.h>
-#include <stdint.h>
-#include <os/availability.h>
 #include <TargetConditionals.h>
+#include <os/availability.h>
 #include <os/proc.h>
+#include <stdint.h>
+#include <sys/types.h>
 
 extern uint64_t __memorystatus_available_memory(void);
 
-size_t
-os_proc_available_memory(void)
-{
-	return (size_t)__memorystatus_available_memory();
+size_t os_proc_available_memory(void) {
+  return (size_t)__memorystatus_available_memory();
 }

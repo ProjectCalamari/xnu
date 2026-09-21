@@ -25,43 +25,44 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <libkern/c++/OSObject.h>
 #include <IOKit/IOLocks.h>
 #include <IOKit/IOReturn.h>
+#include <libkern/c++/OSObject.h>
 
 class IOPMinformee;
 class IOService;
 extern uint32_t gSleepAckTimeout;
 
-class IOPMinformeeList : public OSObject
-{
-	OSDeclareDefaultStructors(IOPMinformeeList);
-	friend class IOPMinformee;
+class IOPMinformeeList : public OSObject {
+  OSDeclareDefaultStructors(IOPMinformeeList);
+  friend class IOPMinformee;
 
 private:
-// pointer to first informee in the list
-	IOPMinformee       *firstItem;
-// how many informees are in the list
-	unsigned long       length;
+  // pointer to first informee in the list
+  IOPMinformee *firstItem;
+  // how many informees are in the list
+  unsigned long length;
 
 public:
-	void initialize( void );
-	void free( void ) APPLE_KEXT_OVERRIDE;
+  void initialize(void);
+  void free(void) APPLE_KEXT_OVERRIDE;
 
-	unsigned long numberOfItems( void );
+  unsigned long numberOfItems(void);
 
-	LIBKERN_RETURNS_NOT_RETAINED IOPMinformee *appendNewInformee( IOService * newObject );
+  LIBKERN_RETURNS_NOT_RETAINED IOPMinformee *
+  appendNewInformee(IOService *newObject);
 
-// OBSOLETE
-// do not use addToList(); Use appendNewInformee() instead
-	IOReturn addToList(LIBKERN_CONSUMED IOPMinformee *   newInformee );
-	IOReturn removeFromList( IOService * theItem );
+  // OBSOLETE
+  // do not use addToList(); Use appendNewInformee() instead
+  IOReturn addToList(LIBKERN_CONSUMED IOPMinformee *newInformee);
+  IOReturn removeFromList(IOService *theItem);
 
-	LIBKERN_RETURNS_NOT_RETAINED IOPMinformee * firstInList( void );
-	LIBKERN_RETURNS_NOT_RETAINED IOPMinformee * nextInList( IOPMinformee * currentItem );
+  LIBKERN_RETURNS_NOT_RETAINED IOPMinformee *firstInList(void);
+  LIBKERN_RETURNS_NOT_RETAINED IOPMinformee *
+  nextInList(IOPMinformee *currentItem);
 
-	LIBKERN_RETURNS_NOT_RETAINED IOPMinformee * findItem( IOService * driverOrChild );
+  LIBKERN_RETURNS_NOT_RETAINED IOPMinformee *findItem(IOService *driverOrChild);
 
-// This lock must be held while modifying list or length
-	static IORecursiveLock * getSharedRecursiveLock( void );
+  // This lock must be held while modifying list or length
+  static IORecursiveLock *getSharedRecursiveLock(void);
 };

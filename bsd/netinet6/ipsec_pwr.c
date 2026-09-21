@@ -26,46 +26,44 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include <IOKit/pwr_mgt/IOPM.h>
 #include <netinet6/ipsec.h>
 #include <netkey/key.h>
-#include <IOKit/pwr_mgt/IOPM.h>
 
 void *sleep_wake_handle = NULL;
 
-typedef IOReturn (*IOServiceInterestHandler)( void * target, void * refCon,
-    UInt32 messageType, void * provider,
-    void * messageArgument, vm_size_t argSize );
-extern void *registerSleepWakeInterest(IOServiceInterestHandler, void *, void *);
+typedef IOReturn (*IOServiceInterestHandler)(void *target, void *refCon,
+                                             UInt32 messageType, void *provider,
+                                             void *messageArgument,
+                                             vm_size_t argSize);
+extern void *registerSleepWakeInterest(IOServiceInterestHandler, void *,
+                                       void *);
 
-static IOReturn
-ipsec_sleep_wake_handler(void *target, void *refCon, UInt32 messageType,
-    void *provider, void *messageArgument, vm_size_t argSize)
-{
+static IOReturn ipsec_sleep_wake_handler(void *target, void *refCon,
+                                         UInt32 messageType, void *provider,
+                                         void *messageArgument,
+                                         vm_size_t argSize) {
 #pragma unused(target, refCon, provider, messageArgument, argSize)
-	switch (messageType) {
-	case kIOMessageSystemWillSleep:
-	{
-		ipsec_get_local_ports();
-		break;
-	}
-	default:
-		break;
-	}
+  switch (messageType) {
+  case kIOMessageSystemWillSleep: {
+    ipsec_get_local_ports();
+    break;
+  }
+  default:
+    break;
+  }
 
-	return IOPMAckImplied;
+  return IOPMAckImplied;
 }
 
-void
-ipsec_monitor_sleep_wake(void)
-{
-	LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_OWNED);
+void ipsec_monitor_sleep_wake(void) {
+  LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_OWNED);
 
-	if (sleep_wake_handle == NULL) {
-		sleep_wake_handle = registerSleepWakeInterest(ipsec_sleep_wake_handler,
-		    NULL, NULL);
-		if (sleep_wake_handle != NULL) {
-			ipseclog((LOG_INFO,
-			    "ipsec: monitoring sleep wake"));
-		}
-	}
+  if (sleep_wake_handle == NULL) {
+    sleep_wake_handle =
+        registerSleepWakeInterest(ipsec_sleep_wake_handler, NULL, NULL);
+    if (sleep_wake_handle != NULL) {
+      ipseclog((LOG_INFO, "ipsec: monitoring sleep wake"));
+    }
+  }
 }

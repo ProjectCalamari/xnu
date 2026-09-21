@@ -26,60 +26,59 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <stdint.h>
 #include <IOKit/IOHibernatePrivate.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 
-
-enum { kIOHibernateAESKeySize = 16 };  /* bytes */
+enum { kIOHibernateAESKeySize = 16 }; /* bytes */
 
 // srcBuffer has to be big enough for a source page, the WKDM
 // compressed output, and a scratch page needed by WKDM
-#define HIBERNATION_SRC_BUFFER_SIZE (2 * page_size + WKdm_SCRATCH_BUF_SIZE_INTERNAL)
+#define HIBERNATION_SRC_BUFFER_SIZE                                            \
+  (2 * page_size + WKdm_SCRATCH_BUF_SIZE_INTERNAL)
 
 struct IOHibernateVars {
-	hibernate_page_list_t *             page_list;
-	hibernate_page_list_t *             page_list_wired;
-	hibernate_page_list_t *             page_list_pal;
-	class IOBufferMemoryDescriptor *    ioBuffer;
-	class IOBufferMemoryDescriptor *    srcBuffer;
-	class IOBufferMemoryDescriptor *    handoffBuffer;
-	class IOMemoryDescriptor *          previewBuffer;
-	OSData *                            previewData;
-	OSObject *                          saveBootDevice;
+  hibernate_page_list_t *page_list;
+  hibernate_page_list_t *page_list_wired;
+  hibernate_page_list_t *page_list_pal;
+  class IOBufferMemoryDescriptor *ioBuffer;
+  class IOBufferMemoryDescriptor *srcBuffer;
+  class IOBufferMemoryDescriptor *handoffBuffer;
+  class IOMemoryDescriptor *previewBuffer;
+  OSData *previewData;
+  OSObject *saveBootDevice;
 
-	struct IOPolledFileIOVars *         fileVars;
-	uint64_t                            fileMinSize;
-	uint64_t                            fileMaxSize;
-	vm_offset_t                         videoMapping;
-	vm_size_t                           videoAllocSize;
-	vm_size_t                           videoMapSize;
-	uint8_t *                           consoleMapping;
-	uint8_t                             haveFastBoot;
-	uint8_t                             saveBootAudioVolume;
-	uint8_t                             hwEncrypt;
-	uint8_t                             wiredCryptKey[kIOHibernateAESKeySize];
-	uint8_t                             cryptKey[kIOHibernateAESKeySize];
-	size_t                              volumeCryptKeySize;
-	uint8_t                             volumeCryptKey[64];
+  struct IOPolledFileIOVars *fileVars;
+  uint64_t fileMinSize;
+  uint64_t fileMaxSize;
+  vm_offset_t videoMapping;
+  vm_size_t videoAllocSize;
+  vm_size_t videoMapSize;
+  uint8_t *consoleMapping;
+  uint8_t haveFastBoot;
+  uint8_t saveBootAudioVolume;
+  uint8_t hwEncrypt;
+  uint8_t wiredCryptKey[kIOHibernateAESKeySize];
+  uint8_t cryptKey[kIOHibernateAESKeySize];
+  size_t volumeCryptKeySize;
+  uint8_t volumeCryptKey[64];
 };
 typedef struct IOHibernateVars IOHibernateVars;
 
-#endif          /* __cplusplus */
+#endif /* __cplusplus */
 
-enum{
-	kIOHibernateTagSignature = 0x53000000u,
-	kIOHibernateTagSigMask   = 0xff000000u,
-	kIOHibernateTagLength    = 0x00007fffu,
-	kIOHibernateTagSKCrypt   = 0x00800000u,
+enum {
+  kIOHibernateTagSignature = 0x53000000u,
+  kIOHibernateTagSigMask = 0xff000000u,
+  kIOHibernateTagLength = 0x00007fffu,
+  kIOHibernateTagSKCrypt = 0x00800000u,
 };
 
 #ifdef __cplusplus
 extern "C"
-#endif          /* __cplusplus */
-uint32_t
-hibernate_sum_page(uint8_t *buf, uint32_t ppnum);
+#endif /* __cplusplus */
+    uint32_t hibernate_sum_page(uint8_t *buf, uint32_t ppnum);
 
 #if defined(__i386__) || defined(__x86_64__)
 extern vm_offset_t segHIBB;
@@ -93,6 +92,6 @@ extern ppnum_t gIOHibernateHandoffPages[];
 extern const uint32_t gIOHibernateHandoffPageCount;
 
 // max address that can fit in a ppnum_t
-#define IO_MAX_PAGE_ADDR        (((uint64_t) UINT_MAX) << PAGE_SHIFT)
+#define IO_MAX_PAGE_ADDR (((uint64_t)UINT_MAX) << PAGE_SHIFT)
 // atop() returning ppnum_t
 #define atop_64_ppnum(x) ((ppnum_t)((uint64_t)(x) >> PAGE_SHIFT))

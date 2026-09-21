@@ -30,22 +30,17 @@
 
 __BEGIN_DECLS
 
-void
-OSPrintMemory( void )
-{
-	OSMetaClass::printInstanceCounts();
+void OSPrintMemory(void) {
+  OSMetaClass::printInstanceCounts();
 
-	IOLog("\n"
-	    "ivar kalloc()       0x%08x\n"
-	    "malloc()            0x%08x\n"
-	    "containers kalloc() 0x%08x\n"
-	    "IOMalloc()          0x%08x\n"
-	    "----------------------------------------\n",
-	    debug_ivars_size,
-	    debug_malloc_size,
-	    debug_container_malloc_size,
-	    debug_iomalloc_size
-	    );
+  IOLog("\n"
+        "ivar kalloc()       0x%08x\n"
+        "malloc()            0x%08x\n"
+        "containers kalloc() 0x%08x\n"
+        "IOMalloc()          0x%08x\n"
+        "----------------------------------------\n",
+        debug_ivars_size, debug_malloc_size, debug_container_malloc_size,
+        debug_iomalloc_size);
 }
 
 __END_DECLS

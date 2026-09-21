@@ -7,22 +7,24 @@
 #if (DEVELOPMENT || DEBUG)
 
 class TestIOUserClient2022Entitlements : public IOService {
-	OSDeclareDefaultStructors(TestIOUserClient2022Entitlements);
+  OSDeclareDefaultStructors(TestIOUserClient2022Entitlements);
 
 public:
-	virtual bool start(IOService *provider) override;
+  virtual bool start(IOService *provider) override;
 };
 
 class TestIOUserClient2022EntitlementsUserClient : public IOUserClient2022 {
-	OSDeclareDefaultStructors(TestIOUserClient2022EntitlementsUserClient);
-
+  OSDeclareDefaultStructors(TestIOUserClient2022EntitlementsUserClient);
 
 public:
-	virtual bool start(IOService * provider) override;
-	virtual IOReturn clientClose() override;
-	IOReturn externalMethod(uint32_t selector, IOExternalMethodArgumentsOpaque * args) override;
-	static IOReturn        extBasicMethod(OSObject * target, void * reference, IOExternalMethodArguments * arguments);
-	static IOReturn        extPerSelectorCheck(OSObject * target, void * reference, IOExternalMethodArguments * arguments);
+  virtual bool start(IOService *provider) override;
+  virtual IOReturn clientClose() override;
+  IOReturn externalMethod(uint32_t selector,
+                          IOExternalMethodArgumentsOpaque *args) override;
+  static IOReturn extBasicMethod(OSObject *target, void *reference,
+                                 IOExternalMethodArguments *arguments);
+  static IOReturn extPerSelectorCheck(OSObject *target, void *reference,
+                                      IOExternalMethodArguments *arguments);
 };
 
 #endif /* (DEVELOPMENT || DEBUG) */

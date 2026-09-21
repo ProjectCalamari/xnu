@@ -71,7 +71,7 @@ extern "C" {
  * RIO: RED with IN/OUT bit
  * (extended to support more than 2 drop precedence values)
  */
-#define RIO_NDROPPREC   3       /* number of drop precedence values */
+#define RIO_NDROPPREC 3 /* number of drop precedence values */
 
 #ifdef __cplusplus
 }

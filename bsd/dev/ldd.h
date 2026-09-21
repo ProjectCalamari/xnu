@@ -51,4 +51,4 @@
 
 typedef int (*PFI)();
 
-#endif  /* _BSD_DEV_LDD_PRIV_ */
+#endif /* _BSD_DEV_LDD_PRIV_ */

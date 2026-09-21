@@ -36,13 +36,11 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20211105
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const img4_buff_t *
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const img4_buff_t *
 img4_get_manifest(const void *__sized_by(len) buff, size_t len,
-		img4_buff_t *buff_storage);
+                  img4_buff_t *buff_storage);
 #else
-#define img4_get_manifest(...) \
-		(img4if->i4if_v15.get_manifest(__VA_ARGS__))
+#define img4_get_manifest(...) (img4if->i4if_v15.get_manifest(__VA_ARGS__))
 #endif
 
 /*!
@@ -66,13 +64,11 @@ img4_get_manifest(const void *__sized_by(len) buff, size_t len,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20211105
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const img4_buff_t *
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const img4_buff_t *
 img4_get_payload(const void *__sized_by(len) buff, size_t len,
-		img4_buff_t *buff_storage);
+                 img4_buff_t *buff_storage);
 #else
-#define img4_get_payload(...) \
-		(img4if->i4if_v15.get_payload(__VA_ARGS__))
+#define img4_get_payload(...) (img4if->i4if_v15.get_payload(__VA_ARGS__))
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

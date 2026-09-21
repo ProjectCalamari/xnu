@@ -45,11 +45,11 @@
 
 #ifdef __APPLE_API_UNSTABLE
 
-#define EXC_UNIX_BAD_SYSCALL    0x10000         /* SIGSYS */
+#define EXC_UNIX_BAD_SYSCALL 0x10000 /* SIGSYS */
 
-#define EXC_UNIX_BAD_PIPE       0x10001         /* SIGPIPE */
+#define EXC_UNIX_BAD_PIPE 0x10001 /* SIGPIPE */
 
-#define EXC_UNIX_ABORT          0x10002         /* SIGABRT */
+#define EXC_UNIX_ABORT 0x10002 /* SIGABRT */
 
 #endif /* __APPLE_API_UNSTABLE */
 
@@ -59,15 +59,13 @@
 
 #include <mach/mach_types.h>
 
-extern int
-machine_exception(int exception, mach_exception_code_t code,
-    mach_exception_subcode_t subcode);
+extern int machine_exception(int exception, mach_exception_code_t code,
+                             mach_exception_subcode_t subcode);
 
-extern kern_return_t
-handle_ux_exception(thread_t thread, int exception,
-    mach_exception_code_t code,
-    mach_exception_subcode_t subcode);
+extern kern_return_t handle_ux_exception(thread_t thread, int exception,
+                                         mach_exception_code_t code,
+                                         mach_exception_subcode_t subcode);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-#endif  /* _SYS_UX_EXCEPTION_H_ */
+#endif /* _SYS_UX_EXCEPTION_H_ */

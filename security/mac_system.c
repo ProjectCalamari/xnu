@@ -68,176 +68,155 @@
 
 #include <security/mac_internal.h>
 
-
-int
-mac_system_check_acct(kauth_cred_t cred, struct vnode *vp)
-{
-	int error;
+int mac_system_check_acct(kauth_cred_t cred, struct vnode *vp) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_acct, cred, vp,
-	    vp != NULL ? mac_vnode_label(vp) : NULL);
+  MAC_CHECK(system_check_acct, cred, vp,
+            vp != NULL ? mac_vnode_label(vp) : NULL);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_host_priv(kauth_cred_t cred)
-{
-	int error;
+int mac_system_check_host_priv(kauth_cred_t cred) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_host_priv, cred);
+  MAC_CHECK(system_check_host_priv, cred);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_info(kauth_cred_t cred, const char *info_type)
-{
-	int error;
+int mac_system_check_info(kauth_cred_t cred, const char *info_type) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_info, cred, info_type);
+  MAC_CHECK(system_check_info, cred, info_type);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_nfsd(kauth_cred_t cred)
-{
-	int error;
+int mac_system_check_nfsd(kauth_cred_t cred) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_nfsd, cred);
+  MAC_CHECK(system_check_nfsd, cred);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_reboot(kauth_cred_t cred, int howto)
-{
-	int error;
+int mac_system_check_reboot(kauth_cred_t cred, int howto) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_reboot, cred, howto);
+  MAC_CHECK(system_check_reboot, cred, howto);
 
-	return error;
+  return error;
 }
 
-
-int
-mac_system_check_settime(kauth_cred_t cred)
-{
-	int error;
+int mac_system_check_settime(kauth_cred_t cred) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_settime, cred);
+  MAC_CHECK(system_check_settime, cred);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_swapon(kauth_cred_t cred, struct vnode *vp)
-{
-	int error;
+int mac_system_check_swapon(kauth_cred_t cred, struct vnode *vp) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_swapon, cred, vp, mac_vnode_label(vp));
-	return error;
+  MAC_CHECK(system_check_swapon, cred, vp, mac_vnode_label(vp));
+  return error;
 }
 
-int
-mac_system_check_swapoff(kauth_cred_t cred, struct vnode *vp)
-{
-	int error;
+int mac_system_check_swapoff(kauth_cred_t cred, struct vnode *vp) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_swapoff, cred, vp, mac_vnode_label(vp));
-	return error;
+  MAC_CHECK(system_check_swapoff, cred, vp, mac_vnode_label(vp));
+  return error;
 }
 
-int
-mac_system_check_sysctlbyname(kauth_cred_t cred, const char *namestring, int *name,
-    size_t namelen, user_addr_t oldctl, size_t oldlen,
-    user_addr_t newctl, size_t newlen)
-{
-	int error;
+int mac_system_check_sysctlbyname(kauth_cred_t cred, const char *namestring,
+                                  int *name, size_t namelen, user_addr_t oldctl,
+                                  size_t oldlen, user_addr_t newctl,
+                                  size_t newlen) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_sysctlbyname, cred, namestring,
-	    name, namelen, oldctl, oldlen, newctl, newlen);
+  MAC_CHECK(system_check_sysctlbyname, cred, namestring, name, namelen, oldctl,
+            oldlen, newctl, newlen);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_kas_info(kauth_cred_t cred, int selector)
-{
-	int error;
+int mac_system_check_kas_info(kauth_cred_t cred, int selector) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_system_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_system_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(system_check_kas_info, cred, selector);
+  MAC_CHECK(system_check_kas_info, cred, selector);
 
-	return error;
+  return error;
 }

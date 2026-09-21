@@ -28,10 +28,10 @@
 
 /*
  *
- * A task identity token represents the identity of a mach task without carrying task
- * access capabilities. In applicable scenarios, task identity token can be moved between
- * tasks and be upgraded to desired level of task port flavor (namely, task name port,
- * inspect port, read port or control port) upon use.
+ * A task identity token represents the identity of a mach task without carrying
+ * task access capabilities. In applicable scenarios, task identity token can be
+ * moved between tasks and be upgraded to desired level of task port flavor
+ * (namely, task name port, inspect port, read port or control port) upon use.
  *
  */
 
@@ -64,20 +64,21 @@ __BEGIN_DECLS
  *                 KERN_INVALID_ARGUMENT  Passed identity token is invalid.
  */
 #if XNU_KERNEL_PRIVATE
-kern_return_t task_id_token_port_name_to_task(mach_port_name_t name, task_t *taskp)
-__XNU_INTERNAL(task_id_token_port_name_to_task);
+kern_return_t task_id_token_port_name_to_task(mach_port_name_t name,
+                                              task_t *taskp)
+    __XNU_INTERNAL(task_id_token_port_name_to_task);
 
 struct proc_ident {
-	uint64_t        p_uniqueid;
-	pid_t           p_pid;
-	int             p_idversion;
+  uint64_t p_uniqueid;
+  pid_t p_pid;
+  int p_idversion;
 };
 
 struct task_id_token {
-	struct proc_ident ident;
-	ipc_port_t        port;
-	uint64_t          task_uniqueid; /* for corpse task */
-	os_refcnt_t       tidt_refs;
+  struct proc_ident ident;
+  ipc_port_t port;
+  uint64_t task_uniqueid; /* for corpse task */
+  os_refcnt_t tidt_refs;
 };
 
 void task_id_token_release(task_id_token_t token);
@@ -87,11 +88,13 @@ ipc_port_t convert_task_id_token_to_port(task_id_token_t token);
 task_id_token_t convert_port_to_task_id_token(ipc_port_t port);
 
 #if MACH_KERNEL_PRIVATE
-kern_return_t task_identity_token_get_task_grp(task_id_token_t token, task_t *taskp, task_grp_t grp);
+kern_return_t task_identity_token_get_task_grp(task_id_token_t token,
+                                               task_t *taskp, task_grp_t grp);
 #endif /* MACH_KERNEL_PRIVATE */
 
 #else  /* !XNU_KERNEL_PRIVATE */
-kern_return_t task_id_token_port_name_to_task(mach_port_name_t name, task_t *taskp);
+kern_return_t task_id_token_port_name_to_task(mach_port_name_t name,
+                                              task_t *taskp);
 #endif /* !XNU_KERNEL_PRIVATE */
 
 __END_DECLS

@@ -29,23 +29,18 @@
 #include <mach/vm_types.h>
 #include <machine/static_if.h>
 
-void
-ml_static_if_entry_patch(static_if_entry_t sie, int branch)
-{
-	uint8_t insn[STATIC_IF_INSN_SIZE] = { 0x0F, 0x1F, 0x44, 0x00 };
-	vm_offset_t patch_point = __static_if_entry_patch_point(sie);
+void ml_static_if_entry_patch(static_if_entry_t sie, int branch) {
+  uint8_t insn[STATIC_IF_INSN_SIZE] = {0x0F, 0x1F, 0x44, 0x00};
+  vm_offset_t patch_point = __static_if_entry_patch_point(sie);
 
-	if (branch) {
-		int32_t delta = (int32_t)(sie->sie_target -
-		    (sie->sie_base + STATIC_IF_INSN_SIZE));
-		insn[0] = 0xE9; /* jmp 32 */
-		memcpy(insn + 1, &delta, sizeof(delta));
-	}
+  if (branch) {
+    int32_t delta =
+        (int32_t)(sie->sie_target - (sie->sie_base + STATIC_IF_INSN_SIZE));
+    insn[0] = 0xE9; /* jmp 32 */
+    memcpy(insn + 1, &delta, sizeof(delta));
+  }
 
-	bcopy(insn, (void *)patch_point, STATIC_IF_INSN_SIZE);
+  bcopy(insn, (void *)patch_point, STATIC_IF_INSN_SIZE);
 }
 
-void
-ml_static_if_flush_icache(void)
-{
-}
+void ml_static_if_flush_icache(void) {}

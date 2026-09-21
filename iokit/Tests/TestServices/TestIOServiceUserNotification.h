@@ -7,34 +7,36 @@
 #if DEVELOPMENT || DEBUG
 
 class TestIOServiceUserNotification : public IOService {
-	OSDeclareDefaultStructors(TestIOServiceUserNotification);
+  OSDeclareDefaultStructors(TestIOServiceUserNotification);
 
 public:
-	virtual bool start(IOService *provider) override;
-	virtual void free() override;
+  virtual bool start(IOService *provider) override;
+  virtual void free() override;
 
-	void registerUserNotification(OSObject * notification);
-	void trimUserNotificationsLocked(void);
-	size_t getUserNotificationLeakCount(void);
+  void registerUserNotification(OSObject *notification);
+  void trimUserNotificationsLocked(void);
+  size_t getUserNotificationLeakCount(void);
 
 private:
-	OSArray * fUserNotifications;
-	IOLock * fLock;
+  OSArray *fUserNotifications;
+  IOLock *fLock;
 };
 
 class TestIOServiceUserNotificationUserClient : public IOUserClient {
-	OSDeclareDefaultStructors(TestIOServiceUserNotificationUserClient);
+  OSDeclareDefaultStructors(TestIOServiceUserNotificationUserClient);
 
 public:
-	bool start(IOService * provider) override;
-	IONotifier * registerInterest(const OSSymbol * typeOfInterest,
-	    IOServiceInterestHandler handler,
-	    void * target, void * ref = NULL) override;
-	virtual IOReturn clientClose() override;
-	IOReturn externalMethod(uint32_t selector, IOExternalMethodArguments * args,
-	    IOExternalMethodDispatch * dispatch, OSObject * target, void * reference) override;
+  bool start(IOService *provider) override;
+  IONotifier *registerInterest(const OSSymbol *typeOfInterest,
+                               IOServiceInterestHandler handler, void *target,
+                               void *ref = NULL) override;
+  virtual IOReturn clientClose() override;
+  IOReturn externalMethod(uint32_t selector, IOExternalMethodArguments *args,
+                          IOExternalMethodDispatch *dispatch, OSObject *target,
+                          void *reference) override;
+
 private:
-	TestIOServiceUserNotification * fProvider;
+  TestIOServiceUserNotification *fProvider;
 };
 
 #endif /* DEVELOPMENT || DEBUG */

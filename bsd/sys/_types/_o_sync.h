@@ -26,5 +26,5 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #ifndef O_SYNC
-#define O_SYNC                  0x0080          /* synch I/O file integrity */
-#endif /* O_SYNC */
+#define O_SYNC 0x0080 /* synch I/O file integrity */
+#endif                /* O_SYNC */

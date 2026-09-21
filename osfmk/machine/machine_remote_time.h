@@ -28,14 +28,14 @@
 #ifndef MACHINE_REMOTE_TIME_H
 #define MACHINE_REMOTE_TIME_H
 
-#if defined (__x86_64__)
+#if defined(__x86_64__)
 #include "x86_64/machine_remote_time.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm64/machine_remote_time.h"
 #endif
 
-#define BT_SLEEP_SENTINEL_TS  (~1ULL)
-#define BT_WAKE_SENTINEL_TS   (~2ULL)
-#define BT_RESET_SENTINEL_TS  (~3ULL)
+#define BT_SLEEP_SENTINEL_TS (~1ULL)
+#define BT_WAKE_SENTINEL_TS (~2ULL)
+#define BT_RESET_SENTINEL_TS (~3ULL)
 
 #endif /* MACHINE_REMOTE_TIME_H */

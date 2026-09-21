@@ -26,26 +26,20 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <darwintest.h>
 #include "mocks/unit_test_utils.h"
+#include <darwintest.h>
 #include <sys/proc_internal.h>
 
 #define UT_MODULE bsd
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.unit.example_test_bsd"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_OWNER("s_shalom"),
-	T_META_RUN_CONCURRENTLY(false)
-	);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.unit.example_test_bsd"),
+              T_META_RADAR_COMPONENT_NAME("xnu"), T_META_OWNER("s_shalom"),
+              T_META_RUN_CONCURRENTLY(false));
 
 // If this test fails to build or run to success it means that something broke
 // with the unit-test harness.
 
-T_DECL(xnu_example_test_bsd, "a BSD test")
-{
-	T_ASSERT_PANIC({
-		proc_iterate(0, NULL, NULL, NULL, NULL);
-	}, "proc_iterate");
+T_DECL(xnu_example_test_bsd, "a BSD test") {
+  T_ASSERT_PANIC({ proc_iterate(0, NULL, NULL, NULL, NULL); }, "proc_iterate");
 
-	T_PASS("hello");
+  T_PASS("hello");
 }

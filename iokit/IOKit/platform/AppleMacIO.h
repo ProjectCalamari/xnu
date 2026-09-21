@@ -32,7 +32,6 @@
  *
  */
 
-
 #ifndef _IOKIT_APPLEMACIO_H
 #define _IOKIT_APPLEMACIO_H
 
@@ -40,40 +39,39 @@
 
 #include <IOKit/platform/AppleMacIODevice.h>
 
-class AppleMacIO : public IOService
-{
-	OSDeclareAbstractStructors(AppleMacIO);
+class AppleMacIO : public IOService {
+  OSDeclareAbstractStructors(AppleMacIO);
 
-	IOService *         fNub;
-	IOMemoryMap *       fMemory;
+  IOService *fNub;
+  IOMemoryMap *fMemory;
 
-	struct ExpansionData { };
-	ExpansionData *fReserved;
+  struct ExpansionData {};
+  ExpansionData *fReserved;
 
 protected:
-	virtual bool selfTest( void );
+  virtual bool selfTest(void);
 
 public:
-	virtual bool start( IOService * provider ) APPLE_KEXT_OVERRIDE;
+  virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
 
-	virtual IOService * createNub( IORegistryEntry * from );
+  virtual IOService *createNub(IORegistryEntry *from);
 
-	virtual void processNub( IOService * nub );
+  virtual void processNub(IOService *nub);
 
-	virtual void publishBelow( IORegistryEntry * root );
+  virtual void publishBelow(IORegistryEntry *root);
 
-	virtual const char * deleteList( void );
-	virtual const char * excludeList( void );
+  virtual const char *deleteList(void);
+  virtual const char *excludeList(void);
 
-	virtual bool compareNubName( const IOService * nub, OSString * name,
-	    OSString ** matched = 0 ) const;
+  virtual bool compareNubName(const IOService *nub, OSString *name,
+                              OSString **matched = 0) const;
 
-	virtual IOReturn getNubResources( IOService * nub );
+  virtual IOReturn getNubResources(IOService *nub);
 
-	OSMetaClassDeclareReservedUnused(AppleMacIO, 0);
-	OSMetaClassDeclareReservedUnused(AppleMacIO, 1);
-	OSMetaClassDeclareReservedUnused(AppleMacIO, 2);
-	OSMetaClassDeclareReservedUnused(AppleMacIO, 3);
+  OSMetaClassDeclareReservedUnused(AppleMacIO, 0);
+  OSMetaClassDeclareReservedUnused(AppleMacIO, 1);
+  OSMetaClassDeclareReservedUnused(AppleMacIO, 2);
+  OSMetaClassDeclareReservedUnused(AppleMacIO, 3);
 };
 
 #endif /* ! _IOKIT_APPLEMACIO_H */

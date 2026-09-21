@@ -53,57 +53,46 @@
  * the rights to redistribute these changes.
  */
 #include <kern/assert.h>
-#include <kern/cpu_data.h>
 #include <kern/counter.h>
+#include <kern/cpu_data.h>
 #include <kern/zalloc.h>
 #include <machine/atomic.h>
-#include <machine/machine_routines.h>
 #include <machine/cpu_number.h>
+#include <machine/machine_routines.h>
 
 OS_OVERLOADABLE
-void
-counter_add(scalable_counter_t *counter, uint64_t amount)
-{
-	disable_preemption();
-	(*zpercpu_get(*counter)) += amount;
-	enable_preemption();
+void counter_add(scalable_counter_t *counter, uint64_t amount) {
+  disable_preemption();
+  (*zpercpu_get(*counter)) += amount;
+  enable_preemption();
 }
 
 OS_OVERLOADABLE
-void
-counter_inc(scalable_counter_t *counter)
-{
-	disable_preemption();
-	(*zpercpu_get(*counter))++;
-	enable_preemption();
+void counter_inc(scalable_counter_t *counter) {
+  disable_preemption();
+  (*zpercpu_get(*counter))++;
+  enable_preemption();
 }
 
 OS_OVERLOADABLE
-void
-counter_dec(scalable_counter_t *counter)
-{
-	disable_preemption();
-	(*zpercpu_get(*counter))--;
-	enable_preemption();
+void counter_dec(scalable_counter_t *counter) {
+  disable_preemption();
+  (*zpercpu_get(*counter))--;
+  enable_preemption();
 }
 
 OS_OVERLOADABLE
-void
-counter_add_preemption_disabled(scalable_counter_t *counter, uint64_t amount)
-{
-	(*zpercpu_get(*counter)) += amount;
+void counter_add_preemption_disabled(scalable_counter_t *counter,
+                                     uint64_t amount) {
+  (*zpercpu_get(*counter)) += amount;
 }
 
 OS_OVERLOADABLE
-void
-counter_inc_preemption_disabled(scalable_counter_t *counter)
-{
-	(*zpercpu_get(*counter))++;
+void counter_inc_preemption_disabled(scalable_counter_t *counter) {
+  (*zpercpu_get(*counter))++;
 }
 
 OS_OVERLOADABLE
-void
-counter_dec_preemption_disabled(scalable_counter_t *counter)
-{
-	(*zpercpu_get(*counter))--;
+void counter_dec_preemption_disabled(scalable_counter_t *counter) {
+  (*zpercpu_get(*counter))--;
 }

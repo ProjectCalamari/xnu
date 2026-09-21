@@ -28,11 +28,11 @@
 #ifndef _ARM_MACHINE_CPU_H_
 #define _ARM_MACHINE_CPU_H_
 
-#include <mach/mach_types.h>
-#include <mach/boolean.h>
-#include <kern/kern_types.h>
-#include <pexpert/pexpert.h>
 #include <arm/cpu_data_internal.h>
+#include <kern/kern_types.h>
+#include <mach/boolean.h>
+#include <mach/mach_types.h>
+#include <pexpert/pexpert.h>
 
 extern void cpu_machine_init(void);
 
@@ -41,7 +41,8 @@ extern kern_return_t cpu_register(int *slot_nump);
 extern void cpu_signal_handler(void);
 extern void cpu_signal_handler_internal(boolean_t disable_signal);
 
-extern void cpu_doshutdown(void (*doshutdown)(processor_t), processor_t processor);
+extern void cpu_doshutdown(void (*doshutdown)(processor_t),
+                           processor_t processor);
 
 extern void cpu_idle(void);
 extern void cpu_idle_exit(boolean_t from_reset) __attribute__((noreturn));
@@ -56,7 +57,10 @@ extern void arm_init_idle_cpu(cpu_data_t *args);
 
 extern void init_cpu_timebase(boolean_t enable_fiq);
 
-#define cpu_pause() do {} while (0)     /* Not for this architecture */
-bool
-wfe_to_deadline_or_interrupt(uint32_t cid, uint64_t wfe_deadline, cpu_data_t *cdp, bool unmask, bool check_cluster_recommendation);
+#define cpu_pause()                                                            \
+  do {                                                                         \
+  } while (0) /* Not for this architecture */
+bool wfe_to_deadline_or_interrupt(uint32_t cid, uint64_t wfe_deadline,
+                                  cpu_data_t *cdp, bool unmask,
+                                  bool check_cluster_recommendation);
 #endif /* _ARM_MACHINE_CPU_H_ */

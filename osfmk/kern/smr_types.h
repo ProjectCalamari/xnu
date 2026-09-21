@@ -29,10 +29,10 @@
 #ifndef _KERN_SMR_TYPES_H_
 #define _KERN_SMR_TYPES_H_
 
-#include <sys/cdefs.h>
+#include <os/base.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <os/base.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
@@ -42,7 +42,7 @@ __BEGIN_DECLS
  * @brief
  * Represents an opaque SMR sequence number.
  */
-typedef unsigned long           smr_seq_t;
+typedef unsigned long smr_seq_t;
 
 /*!
  * @typedef smr_t
@@ -50,8 +50,7 @@ typedef unsigned long           smr_seq_t;
  * @brief
  * Type for an SMR domain.
  */
-typedef struct smr             *smr_t;
-
+typedef struct smr *smr_t;
 
 /*!
  * @typedef smr_node_t
@@ -60,7 +59,7 @@ typedef struct smr             *smr_t;
  * Intrusive data structure used with @c ssmr_call() to defer callbacks
  * to a safe time.
  */
-typedef struct smr_node        *smr_node_t;
+typedef struct smr_node *smr_node_t;
 
 /*!
  * @typedef smr_cb_t
@@ -71,8 +70,8 @@ typedef struct smr_node        *smr_node_t;
 typedef void (*smr_cb_t)(smr_node_t);
 
 struct smr_node {
-	struct smr_node        *smrn_next;
-	smr_cb_t XNU_PTRAUTH_SIGNED_FUNCTION_PTR("ssmr_cb_t") smrn_cb;
+  struct smr_node *smrn_next;
+  smr_cb_t XNU_PTRAUTH_SIGNED_FUNCTION_PTR("ssmr_cb_t") smrn_cb;
 };
 
 /*!
@@ -81,8 +80,10 @@ struct smr_node {
  * @brief
  * Macro to declare a pointer type that uses SMR for access.
  */
-#define SMR_POINTER_DECL(name, type_t) \
-	struct name { type_t volatile __smr_ptr; }
+#define SMR_POINTER_DECL(name, type_t)                                         \
+  struct name {                                                                \
+    type_t volatile __smr_ptr;                                                 \
+  }
 
 /*!
  * @macro SMR_POINTER
@@ -90,14 +91,11 @@ struct smr_node {
  * @brief
  * Macro to declare a pointer that uses SMR for access.
  */
-#define SMR_POINTER(type_t) \
-	SMR_POINTER_DECL(, type_t)
-
+#define SMR_POINTER(type_t) SMR_POINTER_DECL(, type_t)
 
 /* internal types that clients should not use directly */
 typedef SMR_POINTER(struct smrq_slink *) __smrq_slink_t;
-typedef SMR_POINTER(struct smrq_link *)  __smrq_link_t;
-
+typedef SMR_POINTER(struct smrq_link *) __smrq_link_t;
 
 /*!
  * @struct smrq_slink
@@ -107,7 +105,7 @@ typedef SMR_POINTER(struct smrq_link *)  __smrq_link_t;
  * (single form, with O(n) deletion).
  */
 struct smrq_slink {
-	__smrq_slink_t          next;
+  __smrq_slink_t next;
 };
 
 /*!
@@ -118,10 +116,9 @@ struct smrq_slink {
  * (double form, with O(1) deletion).
  */
 struct smrq_link {
-	__smrq_link_t           next;
-	__smrq_link_t          *prev;
+  __smrq_link_t next;
+  __smrq_link_t *prev;
 };
-
 
 /*!
  * @struct smrq_slist_head
@@ -137,11 +134,13 @@ struct smrq_link {
  * - O(n) removal / replacement.
  */
 struct smrq_slist_head {
-	__smrq_slink_t          first;
+  __smrq_slink_t first;
 };
 
-#define SMRQ_SLIST_INITIALIZER(name) \
-	{ .first = { NULL } }
+#define SMRQ_SLIST_INITIALIZER(name)                                           \
+  {                                                                            \
+    .first = { NULL }                                                          \
+  }
 
 /*!
  * @struct smrq_list_head
@@ -157,11 +156,13 @@ struct smrq_slist_head {
  * - O(1) removal / replacement.
  */
 struct smrq_list_head {
-	__smrq_link_t           first;
+  __smrq_link_t first;
 };
 
-#define SMRQ_LIST_INITIALIZER(name) \
-	{ .first = { NULL } }
+#define SMRQ_LIST_INITIALIZER(name)                                            \
+  {                                                                            \
+    .first = { NULL }                                                          \
+  }
 
 /*!
  * @struct smrq_stailq_head
@@ -178,12 +179,11 @@ struct smrq_list_head {
  * - O(n) removal / replacement.
  */
 struct smrq_stailq_head {
-	__smrq_slink_t          first;
-	__smrq_slink_t         *last;
+  __smrq_slink_t first;
+  __smrq_slink_t *last;
 };
 
-#define SMRQ_STAILQ_INITIALIZER(name) \
-	{ .first = { NULL }, .last = &(name).first }
+#define SMRQ_STAILQ_INITIALIZER(name) {.first = {NULL}, .last = &(name).first}
 
 /*!
  * @struct smrq_tailq_head
@@ -200,12 +200,11 @@ struct smrq_stailq_head {
  * - O(1) removal / replacement.
  */
 struct smrq_tailq_head {
-	__smrq_link_t           first;
-	__smrq_link_t          *last;
+  __smrq_link_t first;
+  __smrq_link_t *last;
 };
 
-#define SMRQ_TAILQ_INITIALIZER(name) \
-	{ .first = { NULL }, .last = &(name).first }
+#define SMRQ_TAILQ_INITIALIZER(name) {.first = {NULL}, .last = &(name).first}
 
 __END_DECLS
 

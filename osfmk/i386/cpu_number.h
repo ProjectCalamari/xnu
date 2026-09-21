@@ -64,11 +64,11 @@
 #ifndef _I386_CPU_NUMBER_H_
 #define _I386_CPU_NUMBER_H_
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 /* Use a function to do this less directly. */
-extern int      cpu_number(void);
+extern int cpu_number(void);
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 
-#endif  /* _I386_CPU_NUMBER_H_ */
+#endif /* _I386_CPU_NUMBER_H_ */

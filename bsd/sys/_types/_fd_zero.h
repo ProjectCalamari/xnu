@@ -27,5 +27,5 @@
  */
 #ifndef FD_ZERO
 #include <sys/_types/_fd_def.h>
-#define FD_ZERO(p)      __DARWIN_FD_ZERO(p)
+#define FD_ZERO(p) __DARWIN_FD_ZERO(p)
 #endif /* FD_ZERO */

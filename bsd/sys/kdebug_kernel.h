@@ -32,8 +32,8 @@
 #include <mach/boolean.h>
 #include <mach/clock_types.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -71,13 +71,13 @@ __BEGIN_DECLS
 /*
  * Traced on debug and development (and release macOS) kernels.
  */
-#define KDBG(x, ...) KDBG_(, x, ## __VA_ARGS__, 4, 3, 2, 1, 0)
+#define KDBG(x, ...) KDBG_(, x, ##__VA_ARGS__, 4, 3, 2, 1, 0)
 
 /*
  * Traced on debug and development (and release macOS) kernels if explicitly
  * requested.  Omitted from tracing without a typefilter.
  */
-#define KDBG_FILTERED(x, ...) KDBG_(_FILTERED, x, ## __VA_ARGS__, 4, 3, 2, 1, 0)
+#define KDBG_FILTERED(x, ...) KDBG_(_FILTERED, x, ##__VA_ARGS__, 4, 3, 2, 1, 0)
 
 #ifdef KERNEL_PRIVATE
 
@@ -85,8 +85,8 @@ __BEGIN_DECLS
  * Traced on debug and development (and release macOS) kernels, even if the
  * process filter would reject it.
  */
-#define KDBG_RELEASE_NOPROCFILT(x, ...) \
-	        KDBG_(_RELEASE_NOPROCFILT, x, ## __VA_ARGS__, 4, 3, 2, 1, 0)
+#define KDBG_RELEASE_NOPROCFILT(x, ...)                                        \
+  KDBG_(_RELEASE_NOPROCFILT, x, ##__VA_ARGS__, 4, 3, 2, 1, 0)
 
 #endif /* KERNEL_PRIVATE */
 
@@ -96,12 +96,12 @@ __BEGIN_DECLS
  * Only use this tracepoint if the events are required for a shipping trace
  * tool.
  */
-#define KDBG_RELEASE(x, ...) KDBG_(_RELEASE, x, ## __VA_ARGS__, 4, 3, 2, 1, 0)
+#define KDBG_RELEASE(x, ...) KDBG_(_RELEASE, x, ##__VA_ARGS__, 4, 3, 2, 1, 0)
 
 /*
  * Traced only on debug kernels.
  */
-#define KDBG_DEBUG(x, ...) KDBG_(_DEBUG, x, ## __VA_ARGS__, 4, 3, 2, 1, 0)
+#define KDBG_DEBUG(x, ...) KDBG_(_DEBUG, x, ##__VA_ARGS__, 4, 3, 2, 1, 0)
 
 #pragma mark - kernel API
 
@@ -164,42 +164,44 @@ uint32_t kdebug_commpage_state(void);
 #pragma mark - Coprocessor/IOP tracing
 
 typedef enum {
-	/* Trace is now enabled. */
-	KD_CALLBACK_KDEBUG_ENABLED,
-	/*
-	 * Trace is being disabled, but events are still accepted for the duration
-	 * of the callback.
-	 */
-	KD_CALLBACK_KDEBUG_DISABLED,
-	/*
-	 * Request the latest events from the IOP and block until complete.  Any
-	 * events that occur prior to this callback being called may be dropped by
-	 * the trace system.
-	 */
-	KD_CALLBACK_SYNC_FLUSH,
-	/*
-	 * The typefilter is being used.
-	 *
-	 * A read-only pointer to the typefilter is provided as the argument, valid
-	 * only in the callback.
-	 */
-	KD_CALLBACK_TYPEFILTER_CHANGED,
-	/*
-	 * The coprocessor should emit data that snapshots the current state of the
-	 * system.
-	 */
-	KD_CALLBACK_SNAPSHOT_STATE,
+  /* Trace is now enabled. */
+  KD_CALLBACK_KDEBUG_ENABLED,
+  /*
+   * Trace is being disabled, but events are still accepted for the duration
+   * of the callback.
+   */
+  KD_CALLBACK_KDEBUG_DISABLED,
+  /*
+   * Request the latest events from the IOP and block until complete.  Any
+   * events that occur prior to this callback being called may be dropped by
+   * the trace system.
+   */
+  KD_CALLBACK_SYNC_FLUSH,
+  /*
+   * The typefilter is being used.
+   *
+   * A read-only pointer to the typefilter is provided as the argument, valid
+   * only in the callback.
+   */
+  KD_CALLBACK_TYPEFILTER_CHANGED,
+  /*
+   * The coprocessor should emit data that snapshots the current state of the
+   * system.
+   */
+  KD_CALLBACK_SNAPSHOT_STATE,
 } kd_callback_type;
 
-__options_decl(kdebug_coproc_flags_t, uint32_t, {
-	/*
-	 * Event timestamps from this coprocessor are in the continuous timebase.
-	 */
-	KDCP_CONTINUOUS_TIME = 0x001,
-});
+__options_decl(kdebug_coproc_flags_t, uint32_t,
+               {
+                   /*
+                    * Event timestamps from this coprocessor are in the
+                    * continuous timebase.
+                    */
+                   KDCP_CONTINUOUS_TIME = 0x001,
+               });
 
 typedef void (*kd_callback_fn)(void *context, kd_callback_type reason,
-    void *arg);
+                               void *arg);
 
 /*
  * Register a coprocessor for participation in tracing.
@@ -210,26 +212,27 @@ typedef void (*kd_callback_fn)(void *context, kd_callback_type reason,
  * The positive core ID is returned on success, or -1 on failure.
  */
 int kdebug_register_coproc(const char *name, kdebug_coproc_flags_t flags,
-    kd_callback_fn callback, void *context);
+                           kd_callback_fn callback, void *context);
 
 void kernel_debug_enter(uint32_t coreid, uint32_t debugid, uint64_t timestamp,
-    uintptr_t arg1, uintptr_t arg2, uintptr_t arg3, uintptr_t arg4,
-    uintptr_t threadid);
+                        uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
+                        uintptr_t arg4, uintptr_t threadid);
 
 /*
  * Legacy definitions for the prior IOP tracing.
  */
 
 struct kd_callback {
-	kd_callback_fn func;
-	void *context;
-	/* name of IOP, NUL-terminated */
-	char iop_name[8];
+  kd_callback_fn func;
+  void *context;
+  /* name of IOP, NUL-terminated */
+  char iop_name[8];
 };
 typedef struct kd_callback kd_callback_t;
 
-__kpi_deprecated("use kdebug_register_coproc instead")
-int kernel_debug_register_callback(kd_callback_t callback);
+__kpi_deprecated("use kdebug_register_coproc "
+                 "instead") int kernel_debug_register_callback(
+    kd_callback_t callback);
 
 #pragma mark - internals
 
@@ -256,10 +259,10 @@ extern unsigned int kdebug_enable;
  * (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD) as a guard to protect unaudited debug
  * code.
  */
-#define KDEBUG_LEVEL_NONE     0
-#define KDEBUG_LEVEL_IST      1
+#define KDEBUG_LEVEL_NONE 0
+#define KDEBUG_LEVEL_IST 1
 #define KDEBUG_LEVEL_STANDARD 2
-#define KDEBUG_LEVEL_FULL     3
+#define KDEBUG_LEVEL_FULL 3
 
 #if NO_KDEBUG
 #define KDEBUG_LEVEL KDEBUG_LEVEL_NONE
@@ -281,39 +284,41 @@ extern unsigned int kdebug_enable;
  * tracing without a typefilter.
  */
 #if (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD)
-#define KERNEL_DEBUG_CONSTANT_FILTERED(x, a, b, c, d, ...)           \
-	do {                                                             \
-	        if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {   \
-	                kernel_debug_filtered((x), (uintptr_t)(a), (uintptr_t)(b),  \
-	                        (uintptr_t)(c), (uintptr_t)(d)); \
-	        }                                                            \
-	} while (0)
+#define KERNEL_DEBUG_CONSTANT_FILTERED(x, a, b, c, d, ...)                     \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {                 \
+      kernel_debug_filtered((x), (uintptr_t)(a), (uintptr_t)(b),               \
+                            (uintptr_t)(c), (uintptr_t)(d));                   \
+    }                                                                          \
+  } while (0)
 #else /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD) */
-#define KERNEL_DEBUG_CONSTANT_FILTERED(type, x, a, b, c, d, ...) do {} while (0)
+#define KERNEL_DEBUG_CONSTANT_FILTERED(type, x, a, b, c, d, ...)               \
+  do {                                                                         \
+  } while (0)
 #endif /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD) */
 
 #if (KDEBUG_LEVEL >= KDEBUG_LEVEL_IST)
-#define KERNEL_DEBUG_CONSTANT_RELEASE_NOPROCFILT(x, a, b, c, d, ...)   \
-	do {                                                               \
-	        if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {     \
-	                kernel_debug_flags((x), (uintptr_t)(a), (uintptr_t)(b),    \
-	                        (uintptr_t)(c), (uintptr_t)(d), KDBG_NON_PROCESS); \
-	        }                                                              \
-	} while (0)
+#define KERNEL_DEBUG_CONSTANT_RELEASE_NOPROCFILT(x, a, b, c, d, ...)           \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {                 \
+      kernel_debug_flags((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c),  \
+                         (uintptr_t)(d), KDBG_NON_PROCESS);                    \
+    }                                                                          \
+  } while (0)
 #else /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_IST) */
-#define KERNEL_DEBUG_CONSTANT_RELEASE_NOPROCFILT(x, a, b, c, d, ...) \
-	do { } while (0)
+#define KERNEL_DEBUG_CONSTANT_RELEASE_NOPROCFILT(x, a, b, c, d, ...)           \
+  do {                                                                         \
+  } while (0)
 #endif /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_IST) */
 
-
 #if (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD)
-#define KERNEL_DEBUG_CONSTANT(x, a, b, c, d, e)                               \
-	do {                                                                      \
-	        if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {            \
-	                kernel_debug((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c), \
-	                        (uintptr_t)(d),(uintptr_t)(e));                               \
-	        }                                                                     \
-	} while (0)
+#define KERNEL_DEBUG_CONSTANT(x, a, b, c, d, e)                                \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {                 \
+      kernel_debug((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c),        \
+                   (uintptr_t)(d), (uintptr_t)(e));                            \
+    }                                                                          \
+  } while (0)
 
 /*
  * DO NOT USE THIS MACRO -- it breaks fundamental assumptions about ktrace and
@@ -321,16 +326,20 @@ extern unsigned int kdebug_enable;
  * where the thread ID must be provided explicitly.
  */
 #define KERNEL_DEBUG_CONSTANT1(x, a, b, c, d, e)                               \
-	do {                                                                       \
-	        if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {             \
-	                kernel_debug1((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c), \
-	                (uintptr_t)(d), (uintptr_t)(e));                                   \
-	        }                                                                      \
-	} while (0)
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {                 \
+      kernel_debug1((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c),       \
+                    (uintptr_t)(d), (uintptr_t)(e));                           \
+    }                                                                          \
+  } while (0)
 
 #else /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD) */
-#define KERNEL_DEBUG_CONSTANT(x, a, b, c, d, e) do {} while (0)
-#define KERNEL_DEBUG_CONSTANT1(x, a, b, c, d, e) do {} while (0)
+#define KERNEL_DEBUG_CONSTANT(x, a, b, c, d, e)                                \
+  do {                                                                         \
+  } while (0)
+#define KERNEL_DEBUG_CONSTANT1(x, a, b, c, d, e)                               \
+  do {                                                                         \
+  } while (0)
 #endif /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_STANDARD) */
 
 /*
@@ -341,36 +350,42 @@ extern unsigned int kdebug_enable;
  * any PT_DENY_ATTACH processes will only emit basic traces as defined by the
  * kernel_debug_filter() routine.
  */
-#define KERNEL_DEBUG_CONSTANT_RELEASE(x, a, b, c, d, e) \
-	KERNEL_DEBUG_CONSTANT_IST(~KDEBUG_ENABLE_PPT, x, a, b, c, d, 0)
+#define KERNEL_DEBUG_CONSTANT_RELEASE(x, a, b, c, d, e)                        \
+  KERNEL_DEBUG_CONSTANT_IST(~KDEBUG_ENABLE_PPT, x, a, b, c, d, 0)
 
 #if (KDEBUG_LEVEL >= KDEBUG_LEVEL_IST)
-#define KERNEL_DEBUG_CONSTANT_IST(type, x, a, b, c, d, e)                     \
-	do {                                                                      \
-	        if (KDBG_IMPROBABLE(kdebug_enable & (type))) {                        \
-	                kernel_debug((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c), \
-	                        (uintptr_t)(d), 0);                                           \
-	        }                                                                     \
-	} while (0)
+#define KERNEL_DEBUG_CONSTANT_IST(type, x, a, b, c, d, e)                      \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & (type))) {                             \
+      kernel_debug((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c),        \
+                   (uintptr_t)(d), 0);                                         \
+    }                                                                          \
+  } while (0)
 
-#define KERNEL_DEBUG_CONSTANT_IST1(x, a, b, c, d, e)                     \
-	do {                                                                       \
-	        if (KDBG_IMPROBABLE(kdebug_enable)) {                         \
-	                kernel_debug1((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c), \
-	                        (uintptr_t)(d), (uintptr_t)(e));                               \
-	        }                                                                      \
-	} while (0)
+#define KERNEL_DEBUG_CONSTANT_IST1(x, a, b, c, d, e)                           \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable)) {                                      \
+      kernel_debug1((x), (uintptr_t)(a), (uintptr_t)(b), (uintptr_t)(c),       \
+                    (uintptr_t)(d), (uintptr_t)(e));                           \
+    }                                                                          \
+  } while (0)
 
-#define KERNEL_DEBUG_EARLY(x, a, b, c, d)                                 \
-	do {                                                                  \
-	        kernel_debug_early((uint32_t)(x), (uintptr_t)(a), (uintptr_t)(b), \
-	                (uintptr_t)(c), (uintptr_t)(d));                              \
-	} while (0)
+#define KERNEL_DEBUG_EARLY(x, a, b, c, d)                                      \
+  do {                                                                         \
+    kernel_debug_early((uint32_t)(x), (uintptr_t)(a), (uintptr_t)(b),          \
+                       (uintptr_t)(c), (uintptr_t)(d));                        \
+  } while (0)
 
 #else /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_IST) */
-#define KERNEL_DEBUG_CONSTANT_IST(type, x, a, b, c, d, e) do {} while (0)
-#define KERNEL_DEBUG_CONSTANT_IST1(x, a, b, c, d, e) do {} while (0)
-#define KERNEL_DEBUG_EARLY(x, a, b, c, d) do {} while (0)
+#define KERNEL_DEBUG_CONSTANT_IST(type, x, a, b, c, d, e)                      \
+  do {                                                                         \
+  } while (0)
+#define KERNEL_DEBUG_CONSTANT_IST1(x, a, b, c, d, e)                           \
+  do {                                                                         \
+  } while (0)
+#define KERNEL_DEBUG_EARLY(x, a, b, c, d)                                      \
+  do {                                                                         \
+  } while (0)
 #endif /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_IST) */
 
 #if NO_KDEBUG
@@ -380,56 +395,62 @@ extern unsigned int kdebug_enable;
 /*
  * KERNEL_DEBUG events are only traced for DEBUG kernels.
  */
-#define KERNEL_DEBUG_CONSTANT_DEBUG(x, a, b, c, d, e) \
-	KERNEL_DEBUG(x, a, b, c, d, e)
+#define KERNEL_DEBUG_CONSTANT_DEBUG(x, a, b, c, d, e)                          \
+  KERNEL_DEBUG(x, a, b, c, d, e)
 
 #if (KDEBUG_LEVEL >= KDEBUG_LEVEL_FULL)
 #define __kdebug_only
 
 #undef KERNEL_DEBUG
-#define KERNEL_DEBUG(x, a, b, c, d, e)                                  \
-	do {                                                                \
-	        if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {      \
-	                kernel_debug((uint32_t)(x), (uintptr_t)(a), (uintptr_t)(b), \
-	                        (uintptr_t)(c), (uintptr_t)(d), (uintptr_t)(e));        \
-	        }                                                               \
-	} while (0)
+#define KERNEL_DEBUG(x, a, b, c, d, e)                                         \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {                 \
+      kernel_debug((uint32_t)(x), (uintptr_t)(a), (uintptr_t)(b),              \
+                   (uintptr_t)(c), (uintptr_t)(d), (uintptr_t)(e));            \
+    }                                                                          \
+  } while (0)
 
 /*
  * DO NOT USE THIS MACRO -- see warning above for KERNEL_DEBUG_CONSTANT1.
  */
-#define KERNEL_DEBUG1(x, a, b, c, d, e)                                  \
-	do {                                                                 \
-	        if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {       \
-	                kernel_debug1((uint32_t)(x), (uintptr_t)(a), (uintptr_t)(b), \
-	                        (uintptr_t)(c), (uintptr_t)(d), (uintptr_t)(e));         \
-	        }                                                                \
-	} while (0)
+#define KERNEL_DEBUG1(x, a, b, c, d, e)                                        \
+  do {                                                                         \
+    if (KDBG_IMPROBABLE(kdebug_enable & ~KDEBUG_ENABLE_PPT)) {                 \
+      kernel_debug1((uint32_t)(x), (uintptr_t)(a), (uintptr_t)(b),             \
+                    (uintptr_t)(c), (uintptr_t)(d), (uintptr_t)(e));           \
+    }                                                                          \
+  } while (0)
 
 #else /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_FULL) */
 #define __kdebug_only __unused
 
 #undef KERNEL_DEBUG
-#define KERNEL_DEBUG(x, a, b, c, d, e) do {} while (0)
-#define KERNEL_DEBUG1(x, a, b, c, d, e) do {} while (0)
+#define KERNEL_DEBUG(x, a, b, c, d, e)                                         \
+  do {                                                                         \
+  } while (0)
+#define KERNEL_DEBUG1(x, a, b, c, d, e)                                        \
+  do {                                                                         \
+  } while (0)
 #endif /* (KDEBUG_LEVEL >= KDEBUG_LEVEL_FULL) */
 
 void kernel_debug(uint32_t debugid, uintptr_t arg1, uintptr_t arg2,
-    uintptr_t arg3, uintptr_t arg4, uintptr_t arg5);
+                  uintptr_t arg3, uintptr_t arg4, uintptr_t arg5);
 
 void kernel_debug1(uint32_t debugid, uintptr_t arg1, uintptr_t arg2,
-    uintptr_t arg3, uintptr_t arg4, uintptr_t arg5);
+                   uintptr_t arg3, uintptr_t arg4, uintptr_t arg5);
 
-__options_decl(kdebug_emit_flags_t, uint64_t, {
-	KDBG_FILTER_ONLY = 0x01,
-	KDBG_NON_PROCESS = 0x02,
-});
+__options_decl(kdebug_emit_flags_t, uint64_t,
+               {
+                   KDBG_FILTER_ONLY = 0x01,
+                   KDBG_NON_PROCESS = 0x02,
+               });
 
 void kernel_debug_flags(uint32_t debugid, uintptr_t arg1, uintptr_t arg2,
-    uintptr_t arg3, uintptr_t arg4, kdebug_emit_flags_t flags);
+                        uintptr_t arg3, uintptr_t arg4,
+                        kdebug_emit_flags_t flags);
 
 void kernel_debug_filtered(uint32_t debugid, uintptr_t arg1, uintptr_t arg2,
-    uintptr_t arg3, uintptr_t arg4);
+                           uintptr_t arg3, uintptr_t arg4);
 
 #pragma mark - xnu API
 
@@ -438,8 +459,8 @@ void kernel_debug_filtered(uint32_t debugid, uintptr_t arg1, uintptr_t arg2,
 void kdebug_startup(void);
 
 /* Used in early boot to log events. */
-void kernel_debug_early(uint32_t  debugid, uintptr_t arg1, uintptr_t arg2,
-    uintptr_t arg3, uintptr_t arg4);
+void kernel_debug_early(uint32_t debugid, uintptr_t arg1, uintptr_t arg2,
+                        uintptr_t arg3, uintptr_t arg4);
 /* Used in early boot to log strings spanning only a single tracepoint. */
 void kernel_debug_string_early(const char *message);
 /* Used to trace strings within kdebug tracepoints on arbitrary eventids. */
@@ -450,36 +471,37 @@ extern void kdebug_reset(void);
 void kdbg_dump_trace_to_file(const char *, bool reenable);
 
 enum kdebug_opts {
-	KDOPT_WRAPPING = 0x1,
-	KDOPT_ATBOOT = 0x2,
+  KDOPT_WRAPPING = 0x1,
+  KDOPT_ATBOOT = 0x2,
 };
 
 enum kdebug_mode {
-	KDEBUG_MODE_TRACE = 0x1, /* General purpose tracing.*/
-	KDEBUG_MODE_TRIAGE = 0x2, /* Collect more information to triage failures / gain insight into in-kernel operations of a thread.*/
+  KDEBUG_MODE_TRACE = 0x1, /* General purpose tracing.*/
+  KDEBUG_MODE_TRIAGE =
+      0x2, /* Collect more information to triage failures / gain insight into
+              in-kernel operations of a thread.*/
 };
-
 
 int kdbg_bootstrap(bool early_trace, int mode);
 void kdebug_init(unsigned int n_events, char *filterdesc,
-    enum kdebug_opts opts);
+                 enum kdebug_opts opts);
 void kdebug_trace_start(unsigned int n_events, const char *filterdesc,
-    enum kdebug_opts opts);
+                        enum kdebug_opts opts);
 uint64_t kdebug_wake(void);
 void kdebug_free_early_buf(void);
-
 
 struct proc;
 void kdbg_trace_data(struct proc *proc, long *arg_pid, long *arg_uniqueid);
 
-__options_decl(kdebug_vfs_lookup_flags_t, uint32_t, {
-	KDBG_VFSLKUP_LOOKUP = 0x01,
-	KDBG_VFSLKUP_NOPROCFILT = 0x02,
-});
+__options_decl(kdebug_vfs_lookup_flags_t, uint32_t,
+               {
+                   KDBG_VFSLKUP_LOOKUP = 0x01,
+                   KDBG_VFSLKUP_NOPROCFILT = 0x02,
+               });
 #define KDBG_VFS_LOOKUP_FLAG_LOOKUP 0x01
 #define KDBG_VFS_LOOKUP_FLAG_NOPROCFILT 0x02
 void kdebug_vfs_lookup(const char *path_words, size_t path_len, void *vnp,
-    kdebug_vfs_lookup_flags_t flags);
+                       kdebug_vfs_lookup_flags_t flags);
 
 void ktriage_extract(uint64_t thread_id, void *buf, uint32_t bufsz);
 
@@ -488,18 +510,19 @@ void ktriage_extract(uint64_t thread_id, void *buf, uint32_t bufsz);
 #ifdef KERNEL_PRIVATE
 
 typedef struct ktriage_strings {
-	int num_strings;
-	const char **strings;
+  int num_strings;
+  const char **strings;
 } ktriage_strings_t;
 
-int ktriage_register_subsystem_strings(uint8_t subsystem, ktriage_strings_t *subsystem_strings);
+int ktriage_register_subsystem_strings(uint8_t subsystem,
+                                       ktriage_strings_t *subsystem_strings);
 int ktriage_unregister_subsystem_strings(uint8_t subsystem);
 
 void ktriage_record(uint64_t thread_id, uint64_t debugid, uintptr_t arg);
 
 #define NUMPARMS 23
 void kdebug_lookup_gen_events(long *path_words, int path_len, void *vnp,
-    bool lookup);
+                              bool lookup);
 
 #pragma mark - EnergyTracing
 
@@ -507,12 +530,11 @@ void kdebug_lookup_gen_events(long *path_words, int path_len, void *vnp,
 #define ENTR_KDTRACEFUNC KDBG_RELEASE
 
 // value is int64_t, quality is uint32_t
-#define KERNEL_ENERGYTRACE(opcode, lifespan, id, quality, value)        \
-	    ENTR_KDTRACE(kEnTrCompKernel, opcode, lifespan, id,         \
-	                 quality, value)
-#define KERNEL_ENTR_ASSOCIATE(par_opcode, par_act_id, sub_opcode, sub_act_id) \
-	    ENTR_KDASSOCIATE(kEnTrCompKernel, par_opcode, par_act_id,   \
-	                     kEnTrCompKernel, sub_opcode, sub_act_id)
+#define KERNEL_ENERGYTRACE(opcode, lifespan, id, quality, value)               \
+  ENTR_KDTRACE(kEnTrCompKernel, opcode, lifespan, id, quality, value)
+#define KERNEL_ENTR_ASSOCIATE(par_opcode, par_act_id, sub_opcode, sub_act_id)  \
+  ENTR_KDASSOCIATE(kEnTrCompKernel, par_opcode, par_act_id, kEnTrCompKernel,   \
+                   sub_opcode, sub_act_id)
 
 #endif /* KERNEL_PRIVATE */
 

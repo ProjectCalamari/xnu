@@ -38,9 +38,9 @@ extern "C" {
 /*
  * Error codes
  */
-#define VMX_OK                  0 /* all ok */
+#define VMX_OK 0          /* all ok */
 #define VMX_UNSUPPORTED 1 /* VT unsupported or disabled on 1+ cores */
-#define VMX_INUSE               2 /* VT is being exclusively used already */
+#define VMX_INUSE 2       /* VT is being exclusively used already */
 
 /* SPI */
 int host_vmxon(boolean_t exclusive);

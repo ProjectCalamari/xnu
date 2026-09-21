@@ -37,14 +37,13 @@
 #include <mach/boolean.h>
 #include <netinet/in.h>
 
-int             netboot_setup(void);
-int             netboot_mountroot(void);
-int             netboot_root(void);
+int netboot_setup(void);
+int netboot_mountroot(void);
+int netboot_root(void);
 
-boolean_t       netboot_iaddr(struct in_addr * iaddr_p);
+boolean_t netboot_iaddr(struct in_addr *iaddr_p);
 
-boolean_t       netboot_rootpath(struct in_addr * server_ip,
-    char * name, size_t name_len,
-    char * path, size_t path_len);
+boolean_t netboot_rootpath(struct in_addr *server_ip, char *name,
+                           size_t name_len, char *path, size_t path_len);
 
 #endif /* _SYS_NETBOOT_H */

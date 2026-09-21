@@ -29,36 +29,35 @@
 #ifndef _BSD_I386_VMPARAM_H_
 #define _BSD_I386_VMPARAM_H_ 1
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 
 #include <sys/resource.h>
 
-#define USRSTACK        VM_USRSTACK32
-#define USRSTACK64      VM_USRSTACK64
-
+#define USRSTACK VM_USRSTACK32
+#define USRSTACK64 VM_USRSTACK64
 
 /*
  * Virtual memory related constants, all in bytes
  */
 #ifndef DFLDSIZ
-#define DFLDSIZ         (RLIM_INFINITY)         /* initial data size limit */
+#define DFLDSIZ (RLIM_INFINITY) /* initial data size limit */
 #endif
 #ifndef MAXDSIZ
-#define MAXDSIZ         (RLIM_INFINITY)         /* max data size */
+#define MAXDSIZ (RLIM_INFINITY) /* max data size */
 #endif
 #ifndef DFLSSIZ
-#define DFLSSIZ         (8*1024*1024)           /* initial stack size limit */
+#define DFLSSIZ (8 * 1024 * 1024) /* initial stack size limit */
 #endif
 #ifndef MAXSSIZ
-#define MAXSSIZ         (64*1024*1024)          /* max stack size */
+#define MAXSSIZ (64 * 1024 * 1024) /* max stack size */
 #endif
 #ifndef DFLCSIZ
-#define DFLCSIZ         (0)                     /* initial core size limit */
+#define DFLCSIZ (0) /* initial core size limit */
 #endif
 #ifndef MAXCSIZ
-#define MAXCSIZ         (RLIM_INFINITY)         /* max core size */
-#endif  /* MAXCSIZ */
+#define MAXCSIZ (RLIM_INFINITY) /* max core size */
+#endif                          /* MAXCSIZ */
 
 #endif /* defined (__i386__) || defined (__x86_64__) */
 
-#endif  /* _BSD_I386_VMPARAM_H_ */
+#endif /* _BSD_I386_VMPARAM_H_ */

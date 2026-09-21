@@ -26,5 +26,5 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #ifndef _POSIX_VDISABLE
-#define _POSIX_VDISABLE         ((unsigned char)'\377')
+#define _POSIX_VDISABLE ((unsigned char)'\377')
 #endif /* POSIX_VDISABLE */

@@ -69,11 +69,11 @@
 
 #include <mach/machine/vm_param.h>
 
-#ifdef  KERNEL
+#ifdef KERNEL
 
 #ifndef ASSEMBLER
 #include <mach/vm_types.h>
-#endif  /* ASSEMBLER */
+#endif /* ASSEMBLER */
 
 #include <os/base.h>
 #include <os/overflow.h>
@@ -85,8 +85,9 @@
 
 #ifndef ASSEMBLER
 
-#define PAGE_SIZE_64 (unsigned long long)PAGE_SIZE              /* pagesize in addr units */
-#define PAGE_MASK_64 (unsigned long long)PAGE_MASK              /* mask for off in page */
+#define PAGE_SIZE_64 (unsigned long long)PAGE_SIZE /* pagesize in addr units   \
+                                                    */
+#define PAGE_MASK_64 (unsigned long long)PAGE_MASK /* mask for off in page */
 
 /*
  *	Convert addresses to pages and vice versa.  No rounding is used.
@@ -119,30 +120,34 @@
 /*
  *	Page-size rounding macros for the Public fixed-width VM types.
  */
-#define mach_vm_round_page(x) (((mach_vm_offset_t)(x) + PAGE_MASK) & ~((signed)PAGE_MASK))
+#define mach_vm_round_page(x)                                                  \
+  (((mach_vm_offset_t)(x) + PAGE_MASK) & ~((signed)PAGE_MASK))
 #define mach_vm_trunc_page(x) ((mach_vm_offset_t)(x) & ~((signed)PAGE_MASK))
 
-#define round_page_overflow(in, out) __os_warn_unused(({ \
-	        bool __ovr = os_add_overflow(in, (__typeof__(*out))PAGE_MASK, out); \
-	        *out &= ~((__typeof__(*out))PAGE_MASK); \
-	        __ovr; \
-	}))
+#define round_page_overflow(in, out)                                           \
+  __os_warn_unused(({                                                          \
+    bool __ovr = os_add_overflow(in, (__typeof__(*out))PAGE_MASK, out);        \
+    *out &= ~((__typeof__(*out))PAGE_MASK);                                    \
+    __ovr;                                                                     \
+  }))
 
 static inline int OS_WARN_RESULT
-mach_vm_round_page_overflow(mach_vm_offset_t in, mach_vm_offset_t *out)
-{
-	return round_page_overflow(in, out);
+mach_vm_round_page_overflow(mach_vm_offset_t in, mach_vm_offset_t *out) {
+  return round_page_overflow(in, out);
 }
 
-#define memory_object_round_page(x) (((memory_object_offset_t)(x) + PAGE_MASK) & ~((signed)PAGE_MASK))
-#define memory_object_trunc_page(x) ((memory_object_offset_t)(x) & ~((signed)PAGE_MASK))
+#define memory_object_round_page(x)                                            \
+  (((memory_object_offset_t)(x) + PAGE_MASK) & ~((signed)PAGE_MASK))
+#define memory_object_trunc_page(x)                                            \
+  ((memory_object_offset_t)(x) & ~((signed)PAGE_MASK))
 
 /*
  *	Rounding macros for the legacy (scalable with the current task's
  *	address space size) VM types.
  */
 
-#define round_page(x) (((vm_offset_t)(x) + PAGE_MASK) & ~((vm_offset_t)PAGE_MASK))
+#define round_page(x)                                                          \
+  (((vm_offset_t)(x) + PAGE_MASK) & ~((vm_offset_t)PAGE_MASK))
 #define trunc_page(x) ((vm_offset_t)(x) & ~((vm_offset_t)PAGE_MASK))
 
 /*
@@ -159,12 +164,15 @@ mach_vm_round_page_overflow(mach_vm_offset_t in, mach_vm_offset_t *out)
 
 #define round_page_32(x) (((uint32_t)(x) + PAGE_MASK) & ~((uint32_t)PAGE_MASK))
 #define trunc_page_32(x) ((uint32_t)(x) & ~((uint32_t)PAGE_MASK))
-#define round_page_64(x) (((uint64_t)(x) + PAGE_MASK_64) & ~((uint64_t)PAGE_MASK_64))
+#define round_page_64(x)                                                       \
+  (((uint64_t)(x) + PAGE_MASK_64) & ~((uint64_t)PAGE_MASK_64))
 #define trunc_page_64(x) ((uint64_t)(x) & ~((uint64_t)PAGE_MASK_64))
 
-#define round_page_mask_32(x, mask) (((uint32_t)(x) + (mask)) & ~((uint32_t)(mask)))
+#define round_page_mask_32(x, mask)                                            \
+  (((uint32_t)(x) + (mask)) & ~((uint32_t)(mask)))
 #define trunc_page_mask_32(x, mask) ((uint32_t)(x) & ~((uint32_t)(mask)))
-#define round_page_mask_64(x, mask) (((uint64_t)(x) + (mask)) & ~((uint64_t)(mask)))
+#define round_page_mask_64(x, mask)                                            \
+  (((uint64_t)(x) + (mask)) & ~((uint64_t)(mask)))
 #define trunc_page_mask_64(x, mask) ((uint64_t)(x) & ~((uint64_t)(mask)))
 
 /*
@@ -191,25 +199,21 @@ mach_vm_round_page_overflow(mach_vm_offset_t in, mach_vm_offset_t *out)
 
 #ifndef __cplusplus
 
-#define atop_32(x) \
-    (__builtin_choose_expr (sizeof(x) != sizeof(uint64_t), \
-	(*(long *)0), \
-	(0UL)) = 0)
+#define atop_32(x)                                                             \
+  (__builtin_choose_expr(sizeof(x) != sizeof(uint64_t), (*(long *)0), (0UL)) = \
+       0)
 
-#define ptoa_32(x) \
-    (__builtin_choose_expr (sizeof(x) != sizeof(uint64_t), \
-	(*(long *)0), \
-	(0UL)) = 0)
+#define ptoa_32(x)                                                             \
+  (__builtin_choose_expr(sizeof(x) != sizeof(uint64_t), (*(long *)0), (0UL)) = \
+       0)
 
-#define round_page_32(x) \
-    (__builtin_choose_expr (sizeof(x) != sizeof(uint64_t), \
-	(*(long *)0), \
-	(0UL)) = 0)
+#define round_page_32(x)                                                       \
+  (__builtin_choose_expr(sizeof(x) != sizeof(uint64_t), (*(long *)0), (0UL)) = \
+       0)
 
-#define trunc_page_32(x) \
-    (__builtin_choose_expr (sizeof(x) != sizeof(uint64_t), \
-	(*(long *)0), \
-	(0UL)) = 0)
+#define trunc_page_32(x)                                                       \
+  (__builtin_choose_expr(sizeof(x) != sizeof(uint64_t), (*(long *)0), (0UL)) = \
+       0)
 #else
 
 #define atop_32(x) (0)
@@ -233,8 +237,9 @@ mach_vm_round_page_overflow(mach_vm_offset_t in, mach_vm_offset_t *out)
 
 #define page_aligned(x) (((x) & PAGE_MASK) == 0)
 
-extern vm_size_t        mem_size;               /* 32-bit size of memory - limited by maxmem - deprecated */
-extern uint64_t         max_mem;                /* 64-bit size of memory - limited by maxmem */
+extern vm_size_t
+    mem_size; /* 32-bit size of memory - limited by maxmem - deprecated */
+extern uint64_t max_mem; /* 64-bit size of memory - limited by maxmem */
 
 /*
  * The VM compressor pager uses 32-bit page numbers, so this limits the size
@@ -242,7 +247,7 @@ extern uint64_t         max_mem;                /* 64-bit size of memory - limit
  * When we need to allocate a chunk of anonymous memory over that size,
  * we have to allocate more than one chunk.
  */
-#define ANON_MAX_PAGES   0xFFFFFFFFULL
+#define ANON_MAX_PAGES 0xFFFFFFFFULL
 #define ANON_MAX_SIZE (ANON_MAX_PAGES << PAGE_SHIFT)
 /*
  * Work-around for <rdar://problem/6626493>
@@ -262,50 +267,51 @@ extern uint64_t         max_mem;                /* 64-bit size of memory - limit
 #define MALLOC_MEDIUM_CHUNK_SIZE (8ULL * 1024 * 1024) /* 8 MB */
 
 #ifdef KERNEL_PRIVATE
-extern uint64_t         sane_size;              /* Memory size to use for defaults calculations */
-#endif /* KERNEL_PRIVATE */
+extern uint64_t sane_size; /* Memory size to use for defaults calculations */
+#endif                     /* KERNEL_PRIVATE */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #include <kern/debug.h>
 #include <vm/vm_memtag.h>
 
-extern uint64_t         mem_actual;             /* 64-bit size of memory - not limited by maxmem */
-extern uint64_t         max_mem_actual;         /* Size of physical memory adjusted by maxmem */
-extern addr64_t         vm_last_addr;           /* Highest kernel virtual address known to the VM system */
-extern addr64_t         first_avail_phys;       /* First available physical address */
+extern uint64_t mem_actual; /* 64-bit size of memory - not limited by maxmem */
+extern uint64_t max_mem_actual; /* Size of physical memory adjusted by maxmem */
+extern addr64_t
+    vm_last_addr; /* Highest kernel virtual address known to the VM system */
+extern addr64_t first_avail_phys; /* First available physical address */
 
-extern const vm_offset_t        vm_min_kernel_address;
-extern const vm_offset_t        vm_max_kernel_address;
+extern const vm_offset_t vm_min_kernel_address;
+extern const vm_offset_t vm_max_kernel_address;
 
-extern vm_offset_t              vm_kernel_stext;
-extern vm_offset_t              vm_kernel_etext;
-extern vm_offset_t              vm_kernel_slid_base;
-extern vm_offset_t              vm_kernel_slid_top;
-extern vm_offset_t              vm_kernel_slide;
+extern vm_offset_t vm_kernel_stext;
+extern vm_offset_t vm_kernel_etext;
+extern vm_offset_t vm_kernel_slid_base;
+extern vm_offset_t vm_kernel_slid_top;
+extern vm_offset_t vm_kernel_slide;
 
 #if CONFIG_SPTM
 typedef struct {
-	vm_offset_t unslid_base;
-	vm_offset_t unslid_top;
-	vm_offset_t slid_base;
-	vm_offset_t slid_top;
-	vm_offset_t slide;
+  vm_offset_t unslid_base;
+  vm_offset_t unslid_top;
+  vm_offset_t slid_base;
+  vm_offset_t slid_top;
+  vm_offset_t slide;
 } vm_image_offsets;
 
-extern vm_image_offsets         vm_sptm_offsets;
-extern vm_image_offsets         vm_txm_offsets;
+extern vm_image_offsets vm_sptm_offsets;
+extern vm_image_offsets vm_txm_offsets;
 #endif /* CONFIG_SPTM */
 
-extern vm_offset_t              vm_kernel_addrperm;
-extern vm_offset_t              vm_kext_base;
-extern vm_offset_t              vm_kext_top;
-extern vm_offset_t              vm_kernel_base;
-extern vm_offset_t              vm_kernel_top;
-extern vm_offset_t              vm_hib_base;
+extern vm_offset_t vm_kernel_addrperm;
+extern vm_offset_t vm_kext_base;
+extern vm_offset_t vm_kext_top;
+extern vm_offset_t vm_kernel_base;
+extern vm_offset_t vm_kernel_top;
+extern vm_offset_t vm_hib_base;
 
-extern vm_offset_t              vm_kernel_builtinkmod_text;
-extern vm_offset_t              vm_kernel_builtinkmod_text_end;
+extern vm_offset_t vm_kernel_builtinkmod_text;
+extern vm_offset_t vm_kernel_builtinkmod_text_end;
 
 /**
  * While these function's implementations are machine specific, due to the need
@@ -327,23 +333,21 @@ __END_DECLS
  *
  * @return True if the address is a static/slid kernel address, false otherwise.
  */
-static inline bool
-vm_is_addr_slid(vm_offset_t addr)
-{
-	const vm_offset_t stripped_addr = (vm_offset_t)VM_KERNEL_STRIP_PTR(addr);
-	const bool is_slid_kern_addr =
-	    (stripped_addr >= vm_kernel_slid_base) && (stripped_addr < vm_kernel_slid_top);
+static inline bool vm_is_addr_slid(vm_offset_t addr) {
+  const vm_offset_t stripped_addr = (vm_offset_t)VM_KERNEL_STRIP_PTR(addr);
+  const bool is_slid_kern_addr = (stripped_addr >= vm_kernel_slid_base) &&
+                                 (stripped_addr < vm_kernel_slid_top);
 
 #if CONFIG_SPTM
-	const bool is_slid_sptm_addr =
-	    (stripped_addr >= vm_sptm_offsets.slid_base) && (stripped_addr < vm_sptm_offsets.slid_top);
+  const bool is_slid_sptm_addr = (stripped_addr >= vm_sptm_offsets.slid_base) &&
+                                 (stripped_addr < vm_sptm_offsets.slid_top);
 
-	const bool is_slid_txm_addr =
-	    (stripped_addr >= vm_txm_offsets.slid_base) && (stripped_addr < vm_txm_offsets.slid_top);
+  const bool is_slid_txm_addr = (stripped_addr >= vm_txm_offsets.slid_base) &&
+                                (stripped_addr < vm_txm_offsets.slid_top);
 
-	return is_slid_kern_addr || is_slid_sptm_addr || is_slid_txm_addr;
+  return is_slid_kern_addr || is_slid_sptm_addr || is_slid_txm_addr;
 #else
-	return is_slid_kern_addr;
+  return is_slid_kern_addr;
 #endif /* CONFIG_SPTM */
 }
 
@@ -362,8 +366,8 @@ vm_is_addr_slid(vm_offset_t addr)
  *
  * VM_KERNEL_UNSLIDE:
  *     Use this macro when you are exposing an address to userspace which is
- *     *guaranteed* to be a "static" kernel or kext address (i.e. coming from text
- *     or data sections). These are the addresses which get "slid" via ASLR on
+ *     *guaranteed* to be a "static" kernel or kext address (i.e. coming from
+ * text or data sections). These are the addresses which get "slid" via ASLR on
  *     kernel or kext load, and it's precisely the slide value we are trying to
  *     protect from userspace.
  *
@@ -390,29 +394,36 @@ vm_is_addr_slid(vm_offset_t addr)
  * Nesting of these macros should be considered invalid.
  */
 
-#define __DO_UNSLIDE(_v) (ml_static_unslide((vm_offset_t)VM_KERNEL_STRIP_PTR(_v)))
+#define __DO_UNSLIDE(_v)                                                       \
+  (ml_static_unslide((vm_offset_t)VM_KERNEL_STRIP_PTR(_v)))
 
 #if DEBUG || DEVELOPMENT
-#define VM_KERNEL_ADDRHIDE(_v) (VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v) : (vm_address_t)VM_KERNEL_STRIP_PTR(_v))
+#define VM_KERNEL_ADDRHIDE(_v)                                                 \
+  (VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v)                                    \
+                         : (vm_address_t)VM_KERNEL_STRIP_PTR(_v))
 #else
-#define VM_KERNEL_ADDRHIDE(_v) (VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v) : (vm_address_t)0)
+#define VM_KERNEL_ADDRHIDE(_v)                                                 \
+  (VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v) : (vm_address_t)0)
 #endif /* DEBUG || DEVELOPMENT */
 
 #define VM_KERNEL_ADDRHASH(_v) vm_kernel_addrhash((vm_offset_t)(_v))
 
 /*
- * ML_ADDRPERM is defined as a macro that dispatches to the correct machine version.
- * For systems that support the generic ml_addrperm version, the actual slide address is unused.
+ * ML_ADDRPERM is defined as a macro that dispatches to the correct machine
+ * version. For systems that support the generic ml_addrperm version, the actual
+ * slide address is unused.
  */
-#define VM_KERNEL_UNSLIDE_OR_PERM(_v) ({ \
-	        VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v) : \
-	        VM_KERNEL_ADDRESS(_v) ? (ML_ADDRPERM((uintptr_t)VM_KERNEL_STRIP_UPTR(_v), vm_kernel_addrperm)) : \
-	        (vm_offset_t)VM_KERNEL_STRIP_PTR(_v); \
-	})
+#define VM_KERNEL_UNSLIDE_OR_PERM(_v)                                          \
+  ({                                                                           \
+    VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v)                                   \
+    : VM_KERNEL_ADDRESS(_v)                                                    \
+        ? (ML_ADDRPERM((uintptr_t)VM_KERNEL_STRIP_UPTR(_v),                    \
+                       vm_kernel_addrperm))                                    \
+        : (vm_offset_t)VM_KERNEL_STRIP_PTR(_v);                                \
+  })
 
-#define VM_KERNEL_UNSLIDE(_v) ({ \
-	        VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v) : (vm_offset_t)0; \
-	})
+#define VM_KERNEL_UNSLIDE(_v)                                                  \
+  ({ VM_KERNEL_IS_SLID(_v) ? __DO_UNSLIDE(_v) : (vm_offset_t)0; })
 
 #define VM_KERNEL_ADDRPERM(_v) VM_KERNEL_UNSLIDE_OR_PERM(_v)
 
@@ -421,58 +432,45 @@ vm_is_addr_slid(vm_offset_t addr)
 #undef round_page_32
 #undef round_page_64
 
-static inline int
-mach_vm_size_unit(mach_vm_size_t size)
-{
-	uint32_t bits = 64u - (uint32_t)__builtin_clzll((size / 10) | 1);
+static inline int mach_vm_size_unit(mach_vm_size_t size) {
+  uint32_t bits = 64u - (uint32_t)__builtin_clzll((size / 10) | 1);
 
-	return "BKMGTPE"[bits / 10];
+  return "BKMGTPE"[bits / 10];
 }
 
-static inline uint32_t
-mach_vm_size_pretty(mach_vm_size_t size)
-{
-	uint32_t bits = 64u - (uint32_t)__builtin_clzll((size / 10) | 1);
+static inline uint32_t mach_vm_size_pretty(mach_vm_size_t size) {
+  uint32_t bits = 64u - (uint32_t)__builtin_clzll((size / 10) | 1);
 
-	return (uint32_t)(size >> (bits - bits % 10));
+  return (uint32_t)(size >> (bits - bits % 10));
 }
 
-static inline mach_vm_offset_t
-mach_vm_round_page(mach_vm_offset_t x)
-{
-	if (round_page_overflow(x, &x)) {
-		panic("overflow detected");
-	}
-	return x;
+static inline mach_vm_offset_t mach_vm_round_page(mach_vm_offset_t x) {
+  if (round_page_overflow(x, &x)) {
+    panic("overflow detected");
+  }
+  return x;
 }
 
-static inline vm_offset_t
-round_page(vm_offset_t x)
-{
-	if (round_page_overflow(x, &x)) {
-		panic("overflow detected");
-	}
-	return x;
+static inline vm_offset_t round_page(vm_offset_t x) {
+  if (round_page_overflow(x, &x)) {
+    panic("overflow detected");
+  }
+  return x;
 }
 
-static inline mach_vm_offset_t
-round_page_64(mach_vm_offset_t x)
-{
-	if (round_page_overflow(x, &x)) {
-		panic("overflow detected");
-	}
-	return x;
+static inline mach_vm_offset_t round_page_64(mach_vm_offset_t x) {
+  if (round_page_overflow(x, &x)) {
+    panic("overflow detected");
+  }
+  return x;
 }
 
-static inline uint32_t
-round_page_32(uint32_t x)
-{
-	if (round_page_overflow(x, &x)) {
-		panic("overflow detected");
-	}
-	return x;
+static inline uint32_t round_page_32(uint32_t x) {
+  if (round_page_overflow(x, &x)) {
+    panic("overflow detected");
+  }
+  return x;
 }
-
 
 /*!
  * @typedef vm_packing_params_t
@@ -520,12 +518,11 @@ round_page_32(uint32_t x)
  *    about it.
  */
 typedef struct vm_packing_params {
-	vm_offset_t vmpp_base;
-	uint8_t     vmpp_bits;
-	uint8_t     vmpp_shift;
-	bool        vmpp_base_relative;
+  vm_offset_t vmpp_base;
+  uint8_t vmpp_bits;
+  uint8_t vmpp_shift;
+  bool vmpp_base_relative;
 } vm_packing_params_t;
-
 
 /*!
  * @macro VM_PACKING_IS_BASE_RELATIVE
@@ -533,9 +530,8 @@ typedef struct vm_packing_params {
  * @brief
  * Whether the packing scheme with those parameters will be base-relative.
  */
-#define VM_PACKING_IS_BASE_RELATIVE(ns) \
-	(ns##_BITS + ns##_SHIFT <= VM_KERNEL_POINTER_SIGNIFICANT_BITS)
-
+#define VM_PACKING_IS_BASE_RELATIVE(ns)                                        \
+  (ns##_BITS + ns##_SHIFT <= VM_KERNEL_POINTER_SIGNIFICANT_BITS)
 
 /*!
  * @macro VM_PACKING_PARAMS
@@ -545,13 +541,11 @@ typedef struct vm_packing_params {
  * macros with the @c _BASE, @c _BITS and @c _SHIFT suffixes have been defined
  * to the proper values.
  */
-#define VM_PACKING_PARAMS(ns) \
-	(vm_packing_params_t){ \
-	    .vmpp_base  = ns##_BASE, \
-	    .vmpp_bits  = ns##_BITS, \
-	    .vmpp_shift = ns##_SHIFT, \
-	    .vmpp_base_relative = VM_PACKING_IS_BASE_RELATIVE(ns), \
-	}
+#define VM_PACKING_PARAMS(ns)                                                  \
+  (vm_packing_params_t) {                                                      \
+    .vmpp_base = ns##_BASE, .vmpp_bits = ns##_BITS, .vmpp_shift = ns##_SHIFT,  \
+    .vmpp_base_relative = VM_PACKING_IS_BASE_RELATIVE(ns),                     \
+  }
 
 /**
  * @function vm_pack_pointer
@@ -567,23 +561,21 @@ typedef struct vm_packing_params {
  * @param params        The encoding parameters.
  * @returns             The packed pointer.
  */
-static inline vm_offset_t
-vm_pack_pointer(vm_offset_t ptr, vm_packing_params_t params)
-{
-	if (ptr != 0) {
-		ptr = vm_memtag_canonicalize_kernel(ptr);
-	}
+static inline vm_offset_t vm_pack_pointer(vm_offset_t ptr,
+                                          vm_packing_params_t params) {
+  if (ptr != 0) {
+    ptr = vm_memtag_canonicalize_kernel(ptr);
+  }
 
-	if (!params.vmpp_base_relative) {
-		return ptr >> params.vmpp_shift;
-	}
-	if (ptr) {
-		return (ptr - params.vmpp_base) >> params.vmpp_shift;
-	}
-	return (vm_offset_t)0;
+  if (!params.vmpp_base_relative) {
+    return ptr >> params.vmpp_shift;
+  }
+  if (ptr) {
+    return (ptr - params.vmpp_base) >> params.vmpp_shift;
+  }
+  return (vm_offset_t)0;
 }
-#define VM_PACK_POINTER(ptr, ns) \
-	vm_pack_pointer(ptr, VM_PACKING_PARAMS(ns))
+#define VM_PACK_POINTER(ptr, ns) vm_pack_pointer(ptr, VM_PACKING_PARAMS(ns))
 
 /**
  * @function vm_unpack_pointer
@@ -599,22 +591,21 @@ vm_pack_pointer(vm_offset_t ptr, vm_packing_params_t params)
  * @param params        The encoding parameters.
  * @returns             The unpacked pointer.
  */
-static inline vm_offset_t
-vm_unpack_pointer(vm_offset_t packed, vm_packing_params_t params)
-{
-	if (!params.vmpp_base_relative) {
-		intptr_t addr = (intptr_t)packed;
-		addr <<= __WORDSIZE - params.vmpp_bits;
-		addr >>= __WORDSIZE - params.vmpp_bits - params.vmpp_shift;
-		return vm_memtag_load_tag((vm_offset_t)addr);
-	}
-	if (packed) {
-		return vm_memtag_load_tag((packed << params.vmpp_shift) + params.vmpp_base);
-	}
-	return (vm_offset_t)0;
+static inline vm_offset_t vm_unpack_pointer(vm_offset_t packed,
+                                            vm_packing_params_t params) {
+  if (!params.vmpp_base_relative) {
+    intptr_t addr = (intptr_t)packed;
+    addr <<= __WORDSIZE - params.vmpp_bits;
+    addr >>= __WORDSIZE - params.vmpp_bits - params.vmpp_shift;
+    return vm_memtag_load_tag((vm_offset_t)addr);
+  }
+  if (packed) {
+    return vm_memtag_load_tag((packed << params.vmpp_shift) + params.vmpp_base);
+  }
+  return (vm_offset_t)0;
 }
-#define VM_UNPACK_POINTER(packed, ns) \
-	vm_unpack_pointer(packed, VM_PACKING_PARAMS(ns))
+#define VM_UNPACK_POINTER(packed, ns)                                          \
+  vm_unpack_pointer(packed, VM_PACKING_PARAMS(ns))
 
 /**
  * @function vm_packing_max_packable
@@ -629,25 +620,21 @@ vm_unpack_pointer(vm_offset_t packed, vm_packing_params_t params)
  * @param params        The encoding parameters.
  * @returns             The largest packable pointer.
  */
-static inline vm_offset_t
-vm_packing_max_packable(vm_packing_params_t params)
-{
-	if (!params.vmpp_base_relative) {
-		return VM_MAX_KERNEL_ADDRESS;
-	}
+static inline vm_offset_t vm_packing_max_packable(vm_packing_params_t params) {
+  if (!params.vmpp_base_relative) {
+    return VM_MAX_KERNEL_ADDRESS;
+  }
 
-	vm_offset_t ptr = params.vmpp_base +
-	    (((1ul << params.vmpp_bits) - 1) << params.vmpp_shift);
+  vm_offset_t ptr =
+      params.vmpp_base + (((1ul << params.vmpp_bits) - 1) << params.vmpp_shift);
 
-	return ptr >= params.vmpp_base ? ptr : VM_MAX_KERNEL_ADDRESS;
+  return ptr >= params.vmpp_base ? ptr : VM_MAX_KERNEL_ADDRESS;
 }
-#define VM_PACKING_MAX_PACKABLE(ns) \
-	vm_packing_max_packable(VM_PACKING_PARAMS(ns))
+#define VM_PACKING_MAX_PACKABLE(ns)                                            \
+  vm_packing_max_packable(VM_PACKING_PARAMS(ns))
 
-
-__abortlike
-extern void
-vm_packing_pointer_invalid(vm_offset_t ptr, vm_packing_params_t params);
+__abortlike extern void vm_packing_pointer_invalid(vm_offset_t ptr,
+                                                   vm_packing_params_t params);
 
 /**
  * @function vm_verify_pointer_packable
@@ -666,29 +653,27 @@ vm_packing_pointer_invalid(vm_offset_t ptr, vm_packing_params_t params);
  * @param ptr           The packed value to decode.
  * @param params        The encoding parameters.
  */
-static inline void
-vm_verify_pointer_packable(vm_offset_t ptr, vm_packing_params_t params)
-{
-	if (ptr != 0) {
-		ptr = vm_memtag_canonicalize_kernel(ptr);
-	}
+static inline void vm_verify_pointer_packable(vm_offset_t ptr,
+                                              vm_packing_params_t params) {
+  if (ptr != 0) {
+    ptr = vm_memtag_canonicalize_kernel(ptr);
+  }
 
-	if (ptr & ((1ul << params.vmpp_shift) - 1)) {
-		vm_packing_pointer_invalid(ptr, params);
-	}
-	if (!params.vmpp_base_relative || ptr == 0) {
-		return;
-	}
-	if (ptr <= params.vmpp_base || ptr > vm_packing_max_packable(params)) {
-		vm_packing_pointer_invalid(ptr, params);
-	}
+  if (ptr & ((1ul << params.vmpp_shift) - 1)) {
+    vm_packing_pointer_invalid(ptr, params);
+  }
+  if (!params.vmpp_base_relative || ptr == 0) {
+    return;
+  }
+  if (ptr <= params.vmpp_base || ptr > vm_packing_max_packable(params)) {
+    vm_packing_pointer_invalid(ptr, params);
+  }
 }
-#define VM_VERIFY_POINTER_PACKABLE(ptr, ns) \
-	vm_verify_pointer_packable(ptr, VM_PACKING_PARAMS(ns))
+#define VM_VERIFY_POINTER_PACKABLE(ptr, ns)                                    \
+  vm_verify_pointer_packable(ptr, VM_PACKING_PARAMS(ns))
 
 #if DEBUG || DEVELOPMENT
-#define VM_ASSERT_POINTER_PACKABLE(ptr, ns) \
-    VM_VERIFY_POINTER_PACKABLE(ptr, ns)
+#define VM_ASSERT_POINTER_PACKABLE(ptr, ns) VM_VERIFY_POINTER_PACKABLE(ptr, ns)
 #else
 #define VM_ASSERT_POINTER_PACKABLE(ptr, ns) ((void)(ptr))
 #endif
@@ -705,18 +690,16 @@ vm_verify_pointer_packable(vm_offset_t ptr, vm_packing_params_t params)
  * @param max_address   The largest address of the range.
  * @param params        The encoding parameters.
  */
-extern void
-vm_packing_verify_range(
-	const char         *subsystem,
-	vm_offset_t         min_address,
-	vm_offset_t         max_address,
-	vm_packing_params_t params);
+extern void vm_packing_verify_range(const char *subsystem,
+                                    vm_offset_t min_address,
+                                    vm_offset_t max_address,
+                                    vm_packing_params_t params);
 
-#endif  /* XNU_KERNEL_PRIVATE */
+#endif /* XNU_KERNEL_PRIVATE */
 
-extern vm_size_t        page_size;
-extern vm_size_t        page_mask;
-extern int              page_shift;
+extern vm_size_t page_size;
+extern vm_size_t page_mask;
+extern int page_shift;
 
 /* We need a way to get rid of compiler warnings when we cast from   */
 /* a 64 bit value to an address (which may be 32 bits or 64-bits).   */
@@ -727,15 +710,15 @@ extern int              page_shift;
 #ifndef __CAST_DOWN_CHECK
 #define __CAST_DOWN_CHECK
 
-#define CAST_DOWN( type, addr ) \
-    ( ((type)((uintptr_t) (addr)/(sizeof(type) < sizeof(uintptr_t) ? 0 : 1))) )
+#define CAST_DOWN(type, addr)                                                  \
+  (((type)((uintptr_t)(addr) / (sizeof(type) < sizeof(uintptr_t) ? 0 : 1))))
 
-#define CAST_DOWN_EXPLICIT( type, addr )  ( ((type)((uintptr_t) (addr))) )
+#define CAST_DOWN_EXPLICIT(type, addr) (((type)((uintptr_t)(addr))))
 
 #endif /* __CAST_DOWN_CHECK */
 
-#endif  /* ASSEMBLER */
+#endif /* ASSEMBLER */
 
-#endif  /* KERNEL */
+#endif /* KERNEL */
 
-#endif  /* _MACH_VM_PARAM_H_ */
+#endif /* _MACH_VM_PARAM_H_ */

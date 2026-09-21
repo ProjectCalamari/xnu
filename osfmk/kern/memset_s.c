@@ -26,11 +26,11 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include <stdint.h>
 #include <string.h>
 #include <sys/errno.h>
-#include <stdint.h>
 
-extern void   *secure_memset(void *, int, size_t);
+extern void *secure_memset(void *, int, size_t);
 
 /*
  * The memset_s function copies the value c into the first n bytes
@@ -40,41 +40,37 @@ extern void   *secure_memset(void *, int, size_t);
  * be ''optimised away'' by a compiler, ensuring the memory copy
  * even if s is not accessed anymore after this call.
  */
-int
-memset_s(void *s, size_t smax, int c, size_t n)
-{
-	int err = 0;
+int memset_s(void *s, size_t smax, int c, size_t n) {
+  int err = 0;
 
-	if (s == NULL) {
-		return EINVAL;
-	}
-	if (smax > RSIZE_MAX) {
-		return E2BIG;
-	}
-	if (n > smax) {
-		n = smax;
-		err = EOVERFLOW;
-	}
+  if (s == NULL) {
+    return EINVAL;
+  }
+  if (smax > RSIZE_MAX) {
+    return E2BIG;
+  }
+  if (n > smax) {
+    n = smax;
+    err = EOVERFLOW;
+  }
 
-	/*
-	 * secure_memset is defined in assembly, we therefore
-	 * expect that the compiler will not inline the call.
-	 */
-	secure_memset(s, c, n);
+  /*
+   * secure_memset is defined in assembly, we therefore
+   * expect that the compiler will not inline the call.
+   */
+  secure_memset(s, c, n);
 
-	return err;
+  return err;
 }
 
-int
-timingsafe_bcmp(const void *b1, const void *b2, size_t n)
-{
-	const unsigned char *p1 = b1, *p2 = b2;
-	unsigned char ret = 0;
+int timingsafe_bcmp(const void *b1, const void *b2, size_t n) {
+  const unsigned char *p1 = b1, *p2 = b2;
+  unsigned char ret = 0;
 
-	for (; n > 0; n--) {
-		ret |= *p1++ ^ *p2++;
-	}
+  for (; n > 0; n--) {
+    ret |= *p1++ ^ *p2++;
+  }
 
-	/* map zero to zero and nonzero to one */
-	return (ret + 0xff) >> 8;
+  /* map zero to zero and nonzero to one */
+  return (ret + 0xff) >> 8;
 }

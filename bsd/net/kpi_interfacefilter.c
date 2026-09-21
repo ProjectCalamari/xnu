@@ -28,50 +28,34 @@
 
 #include "kpi_interfacefilter.h"
 
+#include <net/dlil.h>
+#include <sys/kern_event.h>
 #include <sys/malloc.h>
 #include <sys/param.h>
 #include <sys/socket.h>
-#include <sys/kern_event.h>
-#include <net/dlil.h>
 
 #undef iflt_attach
-errno_t
-iflt_attach(
-	ifnet_t interface,
-	const struct iff_filter *filter,
-	interface_filter_t *filter_ref);
+errno_t iflt_attach(ifnet_t interface, const struct iff_filter *filter,
+                    interface_filter_t *filter_ref);
 
+errno_t iflt_attach_internal(ifnet_t interface, const struct iff_filter *filter,
+                             interface_filter_t *filter_ref) {
+  if (interface == NULL) {
+    return ENOENT;
+  }
 
-errno_t
-iflt_attach_internal(
-	ifnet_t interface,
-	const struct iff_filter *filter,
-	interface_filter_t *filter_ref)
-{
-	if (interface == NULL) {
-		return ENOENT;
-	}
-
-	return dlil_attach_filter(interface, filter, filter_ref,
-	           DLIL_IFF_INTERNAL);
+  return dlil_attach_filter(interface, filter, filter_ref, DLIL_IFF_INTERNAL);
 }
 
-errno_t
-iflt_attach(
-	ifnet_t interface,
-	const struct iff_filter *filter,
-	interface_filter_t *filter_ref)
-{
-	if (interface == NULL) {
-		return ENOENT;
-	}
+errno_t iflt_attach(ifnet_t interface, const struct iff_filter *filter,
+                    interface_filter_t *filter_ref) {
+  if (interface == NULL) {
+    return ENOENT;
+  }
 
-	return dlil_attach_filter(interface, filter, filter_ref, 0);
+  return dlil_attach_filter(interface, filter, filter_ref, 0);
 }
 
-void
-iflt_detach(
-	interface_filter_t filter_ref)
-{
-	dlil_detach_filter(filter_ref);
+void iflt_detach(interface_filter_t filter_ref) {
+  dlil_detach_filter(filter_ref);
 }

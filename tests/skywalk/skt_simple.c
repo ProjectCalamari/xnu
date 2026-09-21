@@ -26,48 +26,49 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <assert.h>
-#include "skywalk_test_driver.h"
 #include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
+#include <assert.h>
 
 /****************************************************************/
 
-static int
-skt_noop_main(int argc, char *argv[])
-{
-	return 0;
-}
+static int skt_noop_main(int argc, char *argv[]) { return 0; }
 
 struct skywalk_test skt_noop = {
-	"noop", "test just returns true", 0, skt_noop_main,
+    "noop",
+    "test just returns true",
+    0,
+    skt_noop_main,
 };
 
 /****************************************************************/
 
-static int
-skt_crash_main(int argc, char *argv[])
-{
-	*(volatile int *)0 = 1; // Crash
-	return 1;
+static int skt_crash_main(int argc, char *argv[]) {
+  *(volatile int *)0 = 1; // Crash
+  return 1;
 }
 
 struct skywalk_test skt_crash = {
-	"crash", "test expects a segfault",
-	0, skt_crash_main, { NULL }, NULL, NULL, 0xb100001, 0,
+    "crash", "test expects a segfault",
+    0,       skt_crash_main,
+    {NULL},  NULL,
+    NULL,    0xb100001,
+    0,
 };
 
 /****************************************************************/
 
-static int
-skt_assert_main(int argc, char *argv[])
-{
-	assert(0);
-	return 1;
+static int skt_assert_main(int argc, char *argv[]) {
+  assert(0);
+  return 1;
 }
 
 struct skywalk_test skt_assert = {
-	"assert", "test verifies that assert catches failure",
-	0, skt_assert_main, { NULL }, NULL, NULL, 0x6000000, 0,
+    "assert", "test verifies that assert catches failure",
+    0,        skt_assert_main,
+    {NULL},   NULL,
+    NULL,     0x6000000,
+    0,
 };
 
 /****************************************************************/

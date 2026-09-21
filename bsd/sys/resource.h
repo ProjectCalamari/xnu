@@ -64,9 +64,9 @@
 #ifndef _SYS_RESOURCE_H_
 #define _SYS_RESOURCE_H_
 
+#include <sys/_types.h>
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
-#include <sys/_types.h>
 
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
 #include <stdint.h>
@@ -88,12 +88,10 @@
 /* The id_t type shall be defined as described in <sys/types.h> */
 #include <sys/_types/_id_t.h>
 
-
 /*
  * Resource limit type (low 63 bits, excluding the sign bit)
  */
-typedef __uint64_t      rlim_t;
-
+typedef __uint64_t rlim_t;
 
 /*****
  * PRIORITY
@@ -103,20 +101,22 @@ typedef __uint64_t      rlim_t;
  * Possible values of the first parameter to getpriority()/setpriority(),
  * used to indicate the type of the second parameter.
  */
-#define PRIO_PROCESS    0               /* Second argument is a PID */
-#define PRIO_PGRP       1               /* Second argument is a GID */
-#define PRIO_USER       2               /* Second argument is a UID */
+#define PRIO_PROCESS 0 /* Second argument is a PID */
+#define PRIO_PGRP 1    /* Second argument is a GID */
+#define PRIO_USER 2    /* Second argument is a UID */
 
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
-#define PRIO_DARWIN_THREAD      3               /* Second argument is always 0 (current thread) */
-#define PRIO_DARWIN_PROCESS     4               /* Second argument is a PID */
-/* Additional private parameters to getpriority()/setpriority() are in resource_private.h */
+#define PRIO_DARWIN_THREAD 3  /* Second argument is always 0 (current thread)  \
+                               */
+#define PRIO_DARWIN_PROCESS 4 /* Second argument is a PID */
+/* Additional private parameters to getpriority()/setpriority() are in
+ * resource_private.h */
 
 /*
  * Range limitations for the value of the third parameter to setpriority().
  */
-#define PRIO_MIN        -20
-#define PRIO_MAX        20
+#define PRIO_MIN -20
+#define PRIO_MAX 20
 
 /*
  * use PRIO_DARWIN_BG to set the current thread into "background" state
@@ -131,9 +131,7 @@ typedef __uint64_t      rlim_t;
  */
 #define PRIO_DARWIN_NONUI 0x1001
 
-#endif  /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
-
-
+#endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 
 /*****
  * RESOURCE USAGE
@@ -143,8 +141,8 @@ typedef __uint64_t      rlim_t;
  * Possible values of the first parameter to getrusage(), used to indicate
  * the scope of the information to be returned.
  */
-#define RUSAGE_SELF     0               /* Current process information */
-#define RUSAGE_CHILDREN -1              /* Current process' children */
+#define RUSAGE_SELF 0      /* Current process information */
+#define RUSAGE_CHILDREN -1 /* Current process' children */
 
 /*
  * A structure representing an accounting of resource utilization.  The
@@ -155,272 +153,272 @@ typedef __uint64_t      rlim_t;
  *       defined and subject to change in a future release.  Their use
  *       is discouraged for standards compliant programs.
  */
-struct  rusage {
-	struct timeval ru_utime;        /* user time used (PL) */
-	struct timeval ru_stime;        /* system time used (PL) */
+struct rusage {
+  struct timeval ru_utime; /* user time used (PL) */
+  struct timeval ru_stime; /* system time used (PL) */
 #if __DARWIN_C_LEVEL < __DARWIN_C_FULL
-	long    ru_opaque[14];          /* implementation defined */
+  long ru_opaque[14]; /* implementation defined */
 #else
-	/*
-	 * Informational aliases for source compatibility with programs
-	 * that need more information than that provided by standards,
-	 * and which do not mind being OS-dependent.
-	 */
-	long    ru_maxrss;              /* max resident set size (PL) */
-#define ru_first        ru_ixrss        /* internal: ruadd() range start */
-	long    ru_ixrss;               /* integral shared memory size (NU) */
-	long    ru_idrss;               /* integral unshared data (NU)  */
-	long    ru_isrss;               /* integral unshared stack (NU) */
-	long    ru_minflt;              /* page reclaims (NU) */
-	long    ru_majflt;              /* page faults (NU) */
-	long    ru_nswap;               /* swaps (NU) */
-	long    ru_inblock;             /* block input operations (atomic) */
-	long    ru_oublock;             /* block output operations (atomic) */
-	long    ru_msgsnd;              /* messages sent (atomic) */
-	long    ru_msgrcv;              /* messages received (atomic) */
-	long    ru_nsignals;            /* signals received (atomic) */
-	long    ru_nvcsw;               /* voluntary context switches (atomic) */
-	long    ru_nivcsw;              /* involuntary " */
-#define ru_last         ru_nivcsw       /* internal: ruadd() range end */
-#endif  /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
+  /*
+   * Informational aliases for source compatibility with programs
+   * that need more information than that provided by standards,
+   * and which do not mind being OS-dependent.
+   */
+  long ru_maxrss;   /* max resident set size (PL) */
+#define ru_first ru_ixrss /* internal: ruadd() range start */
+  long ru_ixrss;    /* integral shared memory size (NU) */
+  long ru_idrss;    /* integral unshared data (NU)  */
+  long ru_isrss;    /* integral unshared stack (NU) */
+  long ru_minflt;   /* page reclaims (NU) */
+  long ru_majflt;   /* page faults (NU) */
+  long ru_nswap;    /* swaps (NU) */
+  long ru_inblock;  /* block input operations (atomic) */
+  long ru_oublock;  /* block output operations (atomic) */
+  long ru_msgsnd;   /* messages sent (atomic) */
+  long ru_msgrcv;   /* messages received (atomic) */
+  long ru_nsignals; /* signals received (atomic) */
+  long ru_nvcsw;    /* voluntary context switches (atomic) */
+  long ru_nivcsw;   /* involuntary " */
+#define ru_last ru_nivcsw /* internal: ruadd() range end */
+#endif                    /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
 };
 
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
 /*
  * Flavors for proc_pid_rusage().
  */
-#define RUSAGE_INFO_V0  0
-#define RUSAGE_INFO_V1  1
-#define RUSAGE_INFO_V2  2
-#define RUSAGE_INFO_V3  3
-#define RUSAGE_INFO_V4  4
-#define RUSAGE_INFO_V5  5
-#define RUSAGE_INFO_V6  6
+#define RUSAGE_INFO_V0 0
+#define RUSAGE_INFO_V1 1
+#define RUSAGE_INFO_V2 2
+#define RUSAGE_INFO_V3 3
+#define RUSAGE_INFO_V4 4
+#define RUSAGE_INFO_V5 5
+#define RUSAGE_INFO_V6 6
 #define RUSAGE_INFO_CURRENT RUSAGE_INFO_V6
 
 /*
  * Flags for RUSAGE_INFO_V5
  */
-#define RU_PROC_RUNS_RESLIDE    0x00000001      /* proc has reslid shared cache */
+#define RU_PROC_RUNS_RESLIDE 0x00000001 /* proc has reslid shared cache */
 
 typedef void *rusage_info_t;
 
 struct rusage_info_v0 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
 };
 
 struct rusage_info_v1 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
 };
 
 struct rusage_info_v2 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
-	uint64_t ri_diskio_bytesread;
-	uint64_t ri_diskio_byteswritten;
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
+  uint64_t ri_diskio_bytesread;
+  uint64_t ri_diskio_byteswritten;
 };
 
 struct rusage_info_v3 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
-	uint64_t ri_diskio_bytesread;
-	uint64_t ri_diskio_byteswritten;
-	uint64_t ri_cpu_time_qos_default;
-	uint64_t ri_cpu_time_qos_maintenance;
-	uint64_t ri_cpu_time_qos_background;
-	uint64_t ri_cpu_time_qos_utility;
-	uint64_t ri_cpu_time_qos_legacy;
-	uint64_t ri_cpu_time_qos_user_initiated;
-	uint64_t ri_cpu_time_qos_user_interactive;
-	uint64_t ri_billed_system_time;
-	uint64_t ri_serviced_system_time;
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
+  uint64_t ri_diskio_bytesread;
+  uint64_t ri_diskio_byteswritten;
+  uint64_t ri_cpu_time_qos_default;
+  uint64_t ri_cpu_time_qos_maintenance;
+  uint64_t ri_cpu_time_qos_background;
+  uint64_t ri_cpu_time_qos_utility;
+  uint64_t ri_cpu_time_qos_legacy;
+  uint64_t ri_cpu_time_qos_user_initiated;
+  uint64_t ri_cpu_time_qos_user_interactive;
+  uint64_t ri_billed_system_time;
+  uint64_t ri_serviced_system_time;
 };
 
 struct rusage_info_v4 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
-	uint64_t ri_diskio_bytesread;
-	uint64_t ri_diskio_byteswritten;
-	uint64_t ri_cpu_time_qos_default;
-	uint64_t ri_cpu_time_qos_maintenance;
-	uint64_t ri_cpu_time_qos_background;
-	uint64_t ri_cpu_time_qos_utility;
-	uint64_t ri_cpu_time_qos_legacy;
-	uint64_t ri_cpu_time_qos_user_initiated;
-	uint64_t ri_cpu_time_qos_user_interactive;
-	uint64_t ri_billed_system_time;
-	uint64_t ri_serviced_system_time;
-	uint64_t ri_logical_writes;
-	uint64_t ri_lifetime_max_phys_footprint;
-	uint64_t ri_instructions;
-	uint64_t ri_cycles;
-	uint64_t ri_billed_energy;
-	uint64_t ri_serviced_energy;
-	uint64_t ri_interval_max_phys_footprint;
-	uint64_t ri_runnable_time;
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
+  uint64_t ri_diskio_bytesread;
+  uint64_t ri_diskio_byteswritten;
+  uint64_t ri_cpu_time_qos_default;
+  uint64_t ri_cpu_time_qos_maintenance;
+  uint64_t ri_cpu_time_qos_background;
+  uint64_t ri_cpu_time_qos_utility;
+  uint64_t ri_cpu_time_qos_legacy;
+  uint64_t ri_cpu_time_qos_user_initiated;
+  uint64_t ri_cpu_time_qos_user_interactive;
+  uint64_t ri_billed_system_time;
+  uint64_t ri_serviced_system_time;
+  uint64_t ri_logical_writes;
+  uint64_t ri_lifetime_max_phys_footprint;
+  uint64_t ri_instructions;
+  uint64_t ri_cycles;
+  uint64_t ri_billed_energy;
+  uint64_t ri_serviced_energy;
+  uint64_t ri_interval_max_phys_footprint;
+  uint64_t ri_runnable_time;
 };
 
 struct rusage_info_v5 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
-	uint64_t ri_diskio_bytesread;
-	uint64_t ri_diskio_byteswritten;
-	uint64_t ri_cpu_time_qos_default;
-	uint64_t ri_cpu_time_qos_maintenance;
-	uint64_t ri_cpu_time_qos_background;
-	uint64_t ri_cpu_time_qos_utility;
-	uint64_t ri_cpu_time_qos_legacy;
-	uint64_t ri_cpu_time_qos_user_initiated;
-	uint64_t ri_cpu_time_qos_user_interactive;
-	uint64_t ri_billed_system_time;
-	uint64_t ri_serviced_system_time;
-	uint64_t ri_logical_writes;
-	uint64_t ri_lifetime_max_phys_footprint;
-	uint64_t ri_instructions;
-	uint64_t ri_cycles;
-	uint64_t ri_billed_energy;
-	uint64_t ri_serviced_energy;
-	uint64_t ri_interval_max_phys_footprint;
-	uint64_t ri_runnable_time;
-	uint64_t ri_flags;
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
+  uint64_t ri_diskio_bytesread;
+  uint64_t ri_diskio_byteswritten;
+  uint64_t ri_cpu_time_qos_default;
+  uint64_t ri_cpu_time_qos_maintenance;
+  uint64_t ri_cpu_time_qos_background;
+  uint64_t ri_cpu_time_qos_utility;
+  uint64_t ri_cpu_time_qos_legacy;
+  uint64_t ri_cpu_time_qos_user_initiated;
+  uint64_t ri_cpu_time_qos_user_interactive;
+  uint64_t ri_billed_system_time;
+  uint64_t ri_serviced_system_time;
+  uint64_t ri_logical_writes;
+  uint64_t ri_lifetime_max_phys_footprint;
+  uint64_t ri_instructions;
+  uint64_t ri_cycles;
+  uint64_t ri_billed_energy;
+  uint64_t ri_serviced_energy;
+  uint64_t ri_interval_max_phys_footprint;
+  uint64_t ri_runnable_time;
+  uint64_t ri_flags;
 };
 
 struct rusage_info_v6 {
-	uint8_t  ri_uuid[16];
-	uint64_t ri_user_time;
-	uint64_t ri_system_time;
-	uint64_t ri_pkg_idle_wkups;
-	uint64_t ri_interrupt_wkups;
-	uint64_t ri_pageins;
-	uint64_t ri_wired_size;
-	uint64_t ri_resident_size;
-	uint64_t ri_phys_footprint;
-	uint64_t ri_proc_start_abstime;
-	uint64_t ri_proc_exit_abstime;
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
-	uint64_t ri_diskio_bytesread;
-	uint64_t ri_diskio_byteswritten;
-	uint64_t ri_cpu_time_qos_default;
-	uint64_t ri_cpu_time_qos_maintenance;
-	uint64_t ri_cpu_time_qos_background;
-	uint64_t ri_cpu_time_qos_utility;
-	uint64_t ri_cpu_time_qos_legacy;
-	uint64_t ri_cpu_time_qos_user_initiated;
-	uint64_t ri_cpu_time_qos_user_interactive;
-	uint64_t ri_billed_system_time;
-	uint64_t ri_serviced_system_time;
-	uint64_t ri_logical_writes;
-	uint64_t ri_lifetime_max_phys_footprint;
-	uint64_t ri_instructions;
-	uint64_t ri_cycles;
-	uint64_t ri_billed_energy;
-	uint64_t ri_serviced_energy;
-	uint64_t ri_interval_max_phys_footprint;
-	uint64_t ri_runnable_time;
-	uint64_t ri_flags;
-	uint64_t ri_user_ptime;
-	uint64_t ri_system_ptime;
-	uint64_t ri_pinstructions;
-	uint64_t ri_pcycles;
-	uint64_t ri_energy_nj;
-	uint64_t ri_penergy_nj;
-	uint64_t ri_secure_time_in_system;
-	uint64_t ri_secure_ptime_in_system;
-	uint64_t ri_neural_footprint;
-	uint64_t ri_lifetime_max_neural_footprint;
-	uint64_t ri_interval_max_neural_footprint;
-	uint64_t ri_reserved[9];
+  uint8_t ri_uuid[16];
+  uint64_t ri_user_time;
+  uint64_t ri_system_time;
+  uint64_t ri_pkg_idle_wkups;
+  uint64_t ri_interrupt_wkups;
+  uint64_t ri_pageins;
+  uint64_t ri_wired_size;
+  uint64_t ri_resident_size;
+  uint64_t ri_phys_footprint;
+  uint64_t ri_proc_start_abstime;
+  uint64_t ri_proc_exit_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
+  uint64_t ri_diskio_bytesread;
+  uint64_t ri_diskio_byteswritten;
+  uint64_t ri_cpu_time_qos_default;
+  uint64_t ri_cpu_time_qos_maintenance;
+  uint64_t ri_cpu_time_qos_background;
+  uint64_t ri_cpu_time_qos_utility;
+  uint64_t ri_cpu_time_qos_legacy;
+  uint64_t ri_cpu_time_qos_user_initiated;
+  uint64_t ri_cpu_time_qos_user_interactive;
+  uint64_t ri_billed_system_time;
+  uint64_t ri_serviced_system_time;
+  uint64_t ri_logical_writes;
+  uint64_t ri_lifetime_max_phys_footprint;
+  uint64_t ri_instructions;
+  uint64_t ri_cycles;
+  uint64_t ri_billed_energy;
+  uint64_t ri_serviced_energy;
+  uint64_t ri_interval_max_phys_footprint;
+  uint64_t ri_runnable_time;
+  uint64_t ri_flags;
+  uint64_t ri_user_ptime;
+  uint64_t ri_system_ptime;
+  uint64_t ri_pinstructions;
+  uint64_t ri_pcycles;
+  uint64_t ri_energy_nj;
+  uint64_t ri_penergy_nj;
+  uint64_t ri_secure_time_in_system;
+  uint64_t ri_secure_ptime_in_system;
+  uint64_t ri_neural_footprint;
+  uint64_t ri_lifetime_max_neural_footprint;
+  uint64_t ri_interval_max_neural_footprint;
+  uint64_t ri_reserved[9];
 };
 
 typedef struct rusage_info_v6 rusage_info_current;
@@ -430,59 +428,58 @@ typedef struct rusage_info_v6 rusage_info_current;
 #ifdef KERNEL
 
 struct rusage_superset {
-	struct rusage           ru;
-	rusage_info_current     ri;
+  struct rusage ru;
+  rusage_info_current ri;
 };
 
 struct rusage_info_child {
-	uint64_t ri_child_user_time;
-	uint64_t ri_child_system_time;
-	uint64_t ri_child_pkg_idle_wkups;
-	uint64_t ri_child_interrupt_wkups;
-	uint64_t ri_child_pageins;
-	uint64_t ri_child_elapsed_abstime;
+  uint64_t ri_child_user_time;
+  uint64_t ri_child_system_time;
+  uint64_t ri_child_pkg_idle_wkups;
+  uint64_t ri_child_interrupt_wkups;
+  uint64_t ri_child_pageins;
+  uint64_t ri_child_elapsed_abstime;
 };
 
-struct  user64_rusage {
-	struct user64_timeval ru_utime; /* user time used */
-	struct user64_timeval ru_stime; /* system time used */
-	user64_long_t   ru_maxrss;              /* max resident set size */
-	user64_long_t   ru_ixrss;               /* integral shared memory size */
-	user64_long_t   ru_idrss;               /* integral unshared data " */
-	user64_long_t   ru_isrss;               /* integral unshared stack " */
-	user64_long_t   ru_minflt;              /* page reclaims */
-	user64_long_t   ru_majflt;              /* page faults */
-	user64_long_t   ru_nswap;               /* swaps */
-	user64_long_t   ru_inblock;             /* block input operations */
-	user64_long_t   ru_oublock;             /* block output operations */
-	user64_long_t   ru_msgsnd;              /* messages sent */
-	user64_long_t   ru_msgrcv;              /* messages received */
-	user64_long_t   ru_nsignals;    /* signals received */
-	user64_long_t   ru_nvcsw;               /* voluntary context switches */
-	user64_long_t   ru_nivcsw;              /* involuntary " */
+struct user64_rusage {
+  struct user64_timeval ru_utime; /* user time used */
+  struct user64_timeval ru_stime; /* system time used */
+  user64_long_t ru_maxrss;        /* max resident set size */
+  user64_long_t ru_ixrss;         /* integral shared memory size */
+  user64_long_t ru_idrss;         /* integral unshared data " */
+  user64_long_t ru_isrss;         /* integral unshared stack " */
+  user64_long_t ru_minflt;        /* page reclaims */
+  user64_long_t ru_majflt;        /* page faults */
+  user64_long_t ru_nswap;         /* swaps */
+  user64_long_t ru_inblock;       /* block input operations */
+  user64_long_t ru_oublock;       /* block output operations */
+  user64_long_t ru_msgsnd;        /* messages sent */
+  user64_long_t ru_msgrcv;        /* messages received */
+  user64_long_t ru_nsignals;      /* signals received */
+  user64_long_t ru_nvcsw;         /* voluntary context switches */
+  user64_long_t ru_nivcsw;        /* involuntary " */
 };
 
-struct  user32_rusage {
-	struct user32_timeval ru_utime; /* user time used */
-	struct user32_timeval ru_stime; /* system time used */
-	user32_long_t   ru_maxrss;              /* max resident set size */
-	user32_long_t   ru_ixrss;               /* integral shared memory size */
-	user32_long_t   ru_idrss;               /* integral unshared data " */
-	user32_long_t   ru_isrss;               /* integral unshared stack " */
-	user32_long_t   ru_minflt;              /* page reclaims */
-	user32_long_t   ru_majflt;              /* page faults */
-	user32_long_t   ru_nswap;               /* swaps */
-	user32_long_t   ru_inblock;             /* block input operations */
-	user32_long_t   ru_oublock;             /* block output operations */
-	user32_long_t   ru_msgsnd;              /* messages sent */
-	user32_long_t   ru_msgrcv;              /* messages received */
-	user32_long_t   ru_nsignals;    /* signals received */
-	user32_long_t   ru_nvcsw;               /* voluntary context switches */
-	user32_long_t   ru_nivcsw;              /* involuntary " */
+struct user32_rusage {
+  struct user32_timeval ru_utime; /* user time used */
+  struct user32_timeval ru_stime; /* system time used */
+  user32_long_t ru_maxrss;        /* max resident set size */
+  user32_long_t ru_ixrss;         /* integral shared memory size */
+  user32_long_t ru_idrss;         /* integral unshared data " */
+  user32_long_t ru_isrss;         /* integral unshared stack " */
+  user32_long_t ru_minflt;        /* page reclaims */
+  user32_long_t ru_majflt;        /* page faults */
+  user32_long_t ru_nswap;         /* swaps */
+  user32_long_t ru_inblock;       /* block input operations */
+  user32_long_t ru_oublock;       /* block output operations */
+  user32_long_t ru_msgsnd;        /* messages sent */
+  user32_long_t ru_msgrcv;        /* messages received */
+  user32_long_t ru_nsignals;      /* signals received */
+  user32_long_t ru_nvcsw;         /* voluntary context switches */
+  user32_long_t ru_nivcsw;        /* involuntary " */
 };
 
 #endif /* KERNEL */
-
 
 /*****
  * RESOURCE LIMITS
@@ -493,38 +490,38 @@ struct  user32_rusage {
  * as a type rlim_t, we are permitted to define RLIM_SAVED_* in terms of
  * RLIM_INFINITY.
  */
-#define RLIM_INFINITY   (((__uint64_t)1 << 63) - 1)     /* no limit */
-#define RLIM_SAVED_MAX  RLIM_INFINITY   /* Unrepresentable hard limit */
-#define RLIM_SAVED_CUR  RLIM_INFINITY   /* Unrepresentable soft limit */
+#define RLIM_INFINITY (((__uint64_t)1 << 63) - 1) /* no limit */
+#define RLIM_SAVED_MAX RLIM_INFINITY /* Unrepresentable hard limit */
+#define RLIM_SAVED_CUR RLIM_INFINITY /* Unrepresentable soft limit */
 
 /*
  * Possible values of the first parameter to getrlimit()/setrlimit(), to
  * indicate for which resource the operation is being performed.
  */
-#define RLIMIT_CPU      0               /* cpu time per process */
-#define RLIMIT_FSIZE    1               /* file size */
-#define RLIMIT_DATA     2               /* data segment size */
-#define RLIMIT_STACK    3               /* stack size */
-#define RLIMIT_CORE     4               /* core file size */
-#define RLIMIT_AS       5               /* address space (resident set size) */
+#define RLIMIT_CPU 0   /* cpu time per process */
+#define RLIMIT_FSIZE 1 /* file size */
+#define RLIMIT_DATA 2  /* data segment size */
+#define RLIMIT_STACK 3 /* stack size */
+#define RLIMIT_CORE 4  /* core file size */
+#define RLIMIT_AS 5    /* address space (resident set size) */
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
-#define RLIMIT_RSS      RLIMIT_AS       /* source compatibility alias */
-#define RLIMIT_MEMLOCK  6               /* locked-in-memory address space */
-#define RLIMIT_NPROC    7               /* number of processes */
-#endif  /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
-#define RLIMIT_NOFILE   8               /* number of open files */
+#define RLIMIT_RSS RLIMIT_AS /* source compatibility alias */
+#define RLIMIT_MEMLOCK 6     /* locked-in-memory address space */
+#define RLIMIT_NPROC 7       /* number of processes */
+#endif                       /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
+#define RLIMIT_NOFILE 8      /* number of open files */
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
-#define RLIM_NLIMITS    9               /* total number of resource limits */
-#endif  /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
-#define _RLIMIT_POSIX_FLAG      0x1000  /* Set bit for strict POSIX */
+#define RLIM_NLIMITS 9            /* total number of resource limits */
+#endif                            /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
+#define _RLIMIT_POSIX_FLAG 0x1000 /* Set bit for strict POSIX */
 
 /*
  * A structure representing a resource limit.  The address of an instance
  * of this structure is the second parameter to getrlimit()/setrlimit().
  */
 struct rlimit {
-	rlim_t  rlim_cur;               /* current (soft) limit */
-	rlim_t  rlim_max;               /* maximum value for rlim_cur */
+  rlim_t rlim_cur; /* current (soft) limit */
+  rlim_t rlim_max; /* maximum value for rlim_cur */
 };
 
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
@@ -533,33 +530,37 @@ struct rlimit {
  *
  * Resource limit flavors
  */
-#define RLIMIT_WAKEUPS_MONITOR          0x1 /* Configure the wakeups monitor. */
-#define RLIMIT_CPU_USAGE_MONITOR        0x2 /* Configure the CPU usage monitor. */
-#define RLIMIT_THREAD_CPULIMITS         0x3 /* Configure a blocking, per-thread, CPU limits. */
-#define RLIMIT_FOOTPRINT_INTERVAL       0x4 /* Configure memory footprint interval tracking */
+#define RLIMIT_WAKEUPS_MONITOR 0x1   /* Configure the wakeups monitor. */
+#define RLIMIT_CPU_USAGE_MONITOR 0x2 /* Configure the CPU usage monitor. */
+#define RLIMIT_THREAD_CPULIMITS                                                \
+  0x3 /* Configure a blocking, per-thread, CPU limits. */
+#define RLIMIT_FOOTPRINT_INTERVAL                                              \
+  0x4 /* Configure memory footprint interval tracking */
 
 /*
  * Flags for wakeups monitor control.
  */
-#define WAKEMON_ENABLE                  0x01
-#define WAKEMON_DISABLE                 0x02
-#define WAKEMON_GET_PARAMS              0x04
-#define WAKEMON_SET_DEFAULTS            0x08
-#define WAKEMON_MAKE_FATAL              0x10 /* Configure the task so that violations are fatal. */
+#define WAKEMON_ENABLE 0x01
+#define WAKEMON_DISABLE 0x02
+#define WAKEMON_GET_PARAMS 0x04
+#define WAKEMON_SET_DEFAULTS 0x08
+#define WAKEMON_MAKE_FATAL                                                     \
+  0x10 /* Configure the task so that violations are fatal. */
 
 /*
  * Flags for CPU usage monitor control.
  */
-#define CPUMON_MAKE_FATAL               0x1000
+#define CPUMON_MAKE_FATAL 0x1000
 
 /*
  * Flags for memory footprint interval tracking.
  */
-#define FOOTPRINT_INTERVAL_RESET        0x1 /* Reset the footprint interval counter to zero */
+#define FOOTPRINT_INTERVAL_RESET                                               \
+  0x1 /* Reset the footprint interval counter to zero */
 
 struct proc_rlimit_control_wakeupmon {
-	uint32_t wm_flags;
-	int32_t wm_rate;
+  uint32_t wm_flags;
+  int32_t wm_rate;
 };
 
 /* Additional private I/O policies are in resource_private.h */
@@ -578,43 +579,43 @@ struct proc_rlimit_control_wakeupmon {
 #define IOPOL_TYPE_VFS_ENTITLED_RESERVE_ACCESS 14
 
 /* scope */
-#define IOPOL_SCOPE_PROCESS   0
-#define IOPOL_SCOPE_THREAD    1
+#define IOPOL_SCOPE_PROCESS 0
+#define IOPOL_SCOPE_THREAD 1
 #define IOPOL_SCOPE_DARWIN_BG 2
 
 /* I/O Priority */
-#define IOPOL_DEFAULT           0
-#define IOPOL_IMPORTANT         1
-#define IOPOL_PASSIVE           2
-#define IOPOL_THROTTLE          3
-#define IOPOL_UTILITY           4
-#define IOPOL_STANDARD          5
+#define IOPOL_DEFAULT 0
+#define IOPOL_IMPORTANT 1
+#define IOPOL_PASSIVE 2
+#define IOPOL_THROTTLE 3
+#define IOPOL_UTILITY 4
+#define IOPOL_STANDARD 5
 
 /* compatibility with older names */
-#define IOPOL_APPLICATION       IOPOL_STANDARD
-#define IOPOL_NORMAL            IOPOL_IMPORTANT
+#define IOPOL_APPLICATION IOPOL_STANDARD
+#define IOPOL_NORMAL IOPOL_IMPORTANT
 
-#define IOPOL_ATIME_UPDATES_DEFAULT     0
-#define IOPOL_ATIME_UPDATES_OFF         1
+#define IOPOL_ATIME_UPDATES_DEFAULT 0
+#define IOPOL_ATIME_UPDATES_OFF 1
 
 #define IOPOL_MATERIALIZE_DATALESS_FILES_DEFAULT 0
-#define IOPOL_MATERIALIZE_DATALESS_FILES_OFF     1
-#define IOPOL_MATERIALIZE_DATALESS_FILES_ON      2
+#define IOPOL_MATERIALIZE_DATALESS_FILES_OFF 1
+#define IOPOL_MATERIALIZE_DATALESS_FILES_ON 2
 
 #define IOPOL_VFS_STATFS_NO_DATA_VOLUME_DEFAULT 0
-#define IOPOL_VFS_STATFS_FORCE_NO_DATA_VOLUME   1
+#define IOPOL_VFS_STATFS_FORCE_NO_DATA_VOLUME 1
 
 #define IOPOL_VFS_TRIGGER_RESOLVE_DEFAULT 0
-#define IOPOL_VFS_TRIGGER_RESOLVE_OFF     1
+#define IOPOL_VFS_TRIGGER_RESOLVE_OFF 1
 
 #define IOPOL_VFS_CONTENT_PROTECTION_DEFAULT 0
-#define IOPOL_VFS_CONTENT_PROTECTION_IGNORE  1
+#define IOPOL_VFS_CONTENT_PROTECTION_IGNORE 1
 
 #define IOPOL_VFS_IGNORE_PERMISSIONS_OFF 0
-#define IOPOL_VFS_IGNORE_PERMISSIONS_ON  1
+#define IOPOL_VFS_IGNORE_PERMISSIONS_ON 1
 
-#define IOPOL_VFS_SKIP_MTIME_UPDATE_OFF    0
-#define IOPOL_VFS_SKIP_MTIME_UPDATE_ON     1
+#define IOPOL_VFS_SKIP_MTIME_UPDATE_OFF 0
+#define IOPOL_VFS_SKIP_MTIME_UPDATE_ON 1
 #define IOPOL_VFS_SKIP_MTIME_UPDATE_IGNORE 2
 
 #define IOPOL_VFS_ALLOW_LOW_SPACE_WRITES_OFF 0
@@ -634,23 +635,24 @@ struct proc_rlimit_control_wakeupmon {
 #ifndef KERNEL
 
 __BEGIN_DECLS
-int     getpriority(int, id_t);
+int getpriority(int, id_t);
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
-int     getiopolicy_np(int, int) __OSX_AVAILABLE_STARTING(__MAC_10_5, __IPHONE_2_0);
+int getiopolicy_np(int, int) __OSX_AVAILABLE_STARTING(__MAC_10_5, __IPHONE_2_0);
 #endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
-int     getrlimit(int, struct rlimit *) __DARWIN_ALIAS(getrlimit);
-int     getrusage(int, struct rusage *);
-int     setpriority(int, id_t, int);
+int getrlimit(int, struct rlimit *) __DARWIN_ALIAS(getrlimit);
+int getrusage(int, struct rusage *);
+int setpriority(int, id_t, int);
 #if __DARWIN_C_LEVEL >= __DARWIN_C_FULL
-int     setiopolicy_np(int, int, int) __OSX_AVAILABLE_STARTING(__MAC_10_5, __IPHONE_2_0);
+int setiopolicy_np(int, int, int)
+    __OSX_AVAILABLE_STARTING(__MAC_10_5, __IPHONE_2_0);
 #endif /* __DARWIN_C_LEVEL >= __DARWIN_C_FULL */
-int     setrlimit(int, const struct rlimit *) __DARWIN_ALIAS(setrlimit);
+int setrlimit(int, const struct rlimit *) __DARWIN_ALIAS(setrlimit);
 __END_DECLS
 
-#endif  /* !KERNEL */
+#endif /* !KERNEL */
 
 #ifdef PRIVATE
 #include <sys/resource_private.h>
 #endif
 
-#endif  /* !_SYS_RESOURCE_H_ */
+#endif /* !_SYS_RESOURCE_H_ */

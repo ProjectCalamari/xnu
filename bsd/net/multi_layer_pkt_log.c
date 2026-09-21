@@ -26,69 +26,66 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-
-#include <sys/sysctl.h>
-#include <sys/proc.h>
 #include <net/multi_layer_pkt_log.h>
+#include <sys/proc.h>
+#include <sys/sysctl.h>
 
-SYSCTL_NODE(_net, OID_AUTO, mpklog,
-    CTLFLAG_RW | CTLFLAG_LOCKED, 0, "Multi-layer packet logging");
+SYSCTL_NODE(_net, OID_AUTO, mpklog, CTLFLAG_RW | CTLFLAG_LOCKED, 0,
+            "Multi-layer packet logging");
 
 /*
  * Note:  net_mpklog_enabled allows to override the interface flags IFXF_MPK_LOG
  */
 int net_mpklog_enabled = 1;
 static int sysctl_net_mpklog_enabled SYSCTL_HANDLER_ARGS;
-SYSCTL_PROC(_net_mpklog, OID_AUTO, enabled, CTLTYPE_INT | CTLFLAG_LOCKED | CTLFLAG_RW,
-    0, 0, &sysctl_net_mpklog_enabled, "I", "Multi-layer packet logging enabled");
+SYSCTL_PROC(_net_mpklog, OID_AUTO, enabled,
+            CTLTYPE_INT | CTLFLAG_LOCKED | CTLFLAG_RW, 0, 0,
+            &sysctl_net_mpklog_enabled, "I",
+            "Multi-layer packet logging enabled");
 
 static int sysctl_net_mpklog_type SYSCTL_HANDLER_ARGS;
-uint8_t net_mpklog_type =  OS_LOG_TYPE_DEFAULT;
-SYSCTL_PROC(_net_mpklog, OID_AUTO, type, CTLTYPE_INT | CTLFLAG_LOCKED | CTLFLAG_RW,
-    0, 0, &sysctl_net_mpklog_type, "I", "Multi-layer packet logging type");
+uint8_t net_mpklog_type = OS_LOG_TYPE_DEFAULT;
+SYSCTL_PROC(_net_mpklog, OID_AUTO, type,
+            CTLTYPE_INT | CTLFLAG_LOCKED | CTLFLAG_RW, 0, 0,
+            &sysctl_net_mpklog_type, "I", "Multi-layer packet logging type");
 
 SYSCTL_INT(_net_mpklog, OID_AUTO, version, CTLFLAG_RD | CTLFLAG_LOCKED,
-    (int *)NULL, MPKL_VERSION, "Multi-layer packet logging version");
+           (int *)NULL, MPKL_VERSION, "Multi-layer packet logging version");
 
-static int
-sysctl_net_mpklog_enabled SYSCTL_HANDLER_ARGS
-{
+static int sysctl_net_mpklog_enabled SYSCTL_HANDLER_ARGS {
 #pragma unused(arg1, arg2)
-	int value = net_mpklog_enabled;
+  int value = net_mpklog_enabled;
 
-	int error = sysctl_handle_int(oidp, &value, 0, req);
-	if (error || !req->newptr) {
-		return error;
-	}
+  int error = sysctl_handle_int(oidp, &value, 0, req);
+  if (error || !req->newptr) {
+    return error;
+  }
 
-	net_mpklog_enabled = (value == 0) ? 0 : 1;
+  net_mpklog_enabled = (value == 0) ? 0 : 1;
 
-	os_log(OS_LOG_DEFAULT, "%s:%d set net_mpklog_enabled to %d",
-	    proc_best_name(current_proc()), proc_selfpid(), net_mpklog_enabled);
+  os_log(OS_LOG_DEFAULT, "%s:%d set net_mpklog_enabled to %d",
+         proc_best_name(current_proc()), proc_selfpid(), net_mpklog_enabled);
 
-	return 0;
+  return 0;
 }
 
-static int
-sysctl_net_mpklog_type SYSCTL_HANDLER_ARGS
-{
+static int sysctl_net_mpklog_type SYSCTL_HANDLER_ARGS {
 #pragma unused(arg1, arg2)
-	int value = net_mpklog_type;
+  int value = net_mpklog_type;
 
-	int error = sysctl_handle_int(oidp, &value, 0, req);
-	if (error || !req->newptr) {
-		return error;
-	}
+  int error = sysctl_handle_int(oidp, &value, 0, req);
+  if (error || !req->newptr) {
+    return error;
+  }
 
-	if (value != OS_LOG_TYPE_DEFAULT &&
-	    value != OS_LOG_TYPE_INFO) {
-		return EINVAL;
-	}
-	net_mpklog_type = (uint8_t)value;
+  if (value != OS_LOG_TYPE_DEFAULT && value != OS_LOG_TYPE_INFO) {
+    return EINVAL;
+  }
+  net_mpklog_type = (uint8_t)value;
 
-	os_log(OS_LOG_DEFAULT, "%s:%d set net_mpklog_type to %u (%s)",
-	    proc_best_name(current_proc()), proc_selfpid(), net_mpklog_type,
-	    net_mpklog_type == OS_LOG_TYPE_DEFAULT ? "default" : "info");
+  os_log(OS_LOG_DEFAULT, "%s:%d set net_mpklog_type to %u (%s)",
+         proc_best_name(current_proc()), proc_selfpid(), net_mpklog_type,
+         net_mpklog_type == OS_LOG_TYPE_DEFAULT ? "default" : "info");
 
-	return 0;
+  return 0;
 }

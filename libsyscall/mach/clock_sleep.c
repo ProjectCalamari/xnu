@@ -25,16 +25,14 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <mach/mach.h>
-#include <mach/message.h>
-#include <mach/mach_syscalls.h>
 #include <mach/clock_types.h>
+#include <mach/mach.h>
+#include <mach/mach_syscalls.h>
+#include <mach/message.h>
 
-kern_return_t
-clock_sleep(mach_port_t clock_name,
-    sleep_type_t clock_type,
-    mach_timespec_t sleep_time,
-    mach_timespec_t *wake_time)
-{
-	return clock_sleep_trap(clock_name, clock_type, sleep_time.tv_sec, sleep_time.tv_nsec, wake_time);
+kern_return_t clock_sleep(mach_port_t clock_name, sleep_type_t clock_type,
+                          mach_timespec_t sleep_time,
+                          mach_timespec_t *wake_time) {
+  return clock_sleep_trap(clock_name, clock_type, sleep_time.tv_sec,
+                          sleep_time.tv_nsec, wake_time);
 }

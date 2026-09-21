@@ -25,8 +25,8 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <arm64/sptm/pmap/pmap_internal.h>
 #include <arm/preemption_disable_internal.h>
+#include <arm64/sptm/pmap/pmap_internal.h>
 
 /**
  * Placeholder for random pmap functionality that doesn't fit into any of the
@@ -38,16 +38,14 @@
  * own file.
  */
 
-
-void
-pmap_abandon_measurement(void)
-{
+void pmap_abandon_measurement(void) {
 #if SCHED_HYGIENE_DEBUG
-	struct _preemption_disable_pcpu *pcpu = PERCPU_GET(_preemption_disable_pcpu_data);
-	const bool istate = ml_set_interrupts_enabled_with_debug(false, false);
+  struct _preemption_disable_pcpu *pcpu =
+      PERCPU_GET(_preemption_disable_pcpu_data);
+  const bool istate = ml_set_interrupts_enabled_with_debug(false, false);
 
-	kern_timeout_override(&pcpu->pdp_timeout);
+  kern_timeout_override(&pcpu->pdp_timeout);
 
-	ml_set_interrupts_enabled_with_debug(istate, false);
+  ml_set_interrupts_enabled_with_debug(istate, false);
 #endif /* SCHED_HYGIENE_DEBUG */
 }

@@ -65,29 +65,32 @@
 
 #if OS_ATOMIC_USES_CXX
 #include <atomic>
-#define OS_ATOMIC_STD                    std::
-#define os_atomic_std(op)                std::op
-#define os_atomic(type)                  std::atomic<type> volatile
-#define os_cast_to_atomic_pointer(p)     os::cast_to_atomic_pointer(p)
-#define os_atomic_basetypeof(p)          decltype(os_cast_to_atomic_pointer(p)->load())
-#define os_cast_to_nonatomic_pointer(p)  os::cast_to_nonatomic_pointer(p)
+#define OS_ATOMIC_STD std::
+#define os_atomic_std(op) std::op
+#define os_atomic(type) std::atomic<type> volatile
+#define os_cast_to_atomic_pointer(p) os::cast_to_atomic_pointer(p)
+#define os_atomic_basetypeof(p) decltype(os_cast_to_atomic_pointer(p)->load())
+#define os_cast_to_nonatomic_pointer(p) os::cast_to_nonatomic_pointer(p)
 #else /* !OS_ATOMIC_USES_CXX */
 #include <stdatomic.h>
 #define OS_ATOMIC_STD
-#define os_atomic_std(op)                op
-#define os_atomic(type)                  type volatile _Atomic
+#define os_atomic_std(op) op
+#define os_atomic(type) type volatile _Atomic
 #if __has_ptrcheck
-#define os_cast_to_atomic_pointer(p)     (__typeof__(*(p)) volatile _Atomic * __single)(p)
-#define os_cast_to_nonatomic_pointer(p)                             \
-	_Pragma("clang diagnostic push")                        \
-	_Pragma("clang diagnostic ignored \"-Wcast-qual\"")     \
-	(os_atomic_basetypeof(p) * __single)(p)                 \
-	_Pragma("clang diagnostic pop")
+#define os_cast_to_atomic_pointer(p)                                           \
+  (__typeof__(*(p)) volatile _Atomic *__single)(p)
+#define os_cast_to_nonatomic_pointer(p)                                        \
+  _Pragma("clang diagnostic push") _Pragma(                                    \
+      "clang diagnostic ignored \"-Wcast-qual\"")(                             \
+      os_atomic_basetypeof(p) * __single)(p)_Pragma("clang diagnostic pop")
 #else /* !__has_ptrcheck */
-#define os_cast_to_atomic_pointer(p)     (__typeof__(*(p)) volatile _Atomic *)(uintptr_t)(p)
-#define os_cast_to_nonatomic_pointer(p)  (os_atomic_basetypeof(p) *)(uintptr_t)(p)
+#define os_cast_to_atomic_pointer(p)                                           \
+  (__typeof__(*(p)) volatile _Atomic *)(uintptr_t)(p)
+#define os_cast_to_nonatomic_pointer(p)                                        \
+  (os_atomic_basetypeof(p) *)(uintptr_t)(p)
 #endif /* !__has_ptrcheck */
-#define os_atomic_basetypeof(p)          __typeof__(atomic_load(os_cast_to_atomic_pointer(p)))
+#define os_atomic_basetypeof(p)                                                \
+  __typeof__(atomic_load(os_cast_to_atomic_pointer(p)))
 
 #endif /* !OS_ATOMIC_USES_CXX */
 
@@ -101,51 +104,44 @@
 #include <type_traits>
 
 namespace os {
-template <class T> using remove_volatile_t = typename std::remove_volatile<T>::type;
+template <class T>
+using remove_volatile_t = typename std::remove_volatile<T>::type;
 
 template <class T>
-inline volatile std::atomic<remove_volatile_t<T> > *
-cast_to_atomic_pointer(T *v)
-{
-	return reinterpret_cast<volatile std::atomic<remove_volatile_t<T> > *>(v);
+inline volatile std::atomic<remove_volatile_t<T>> *
+cast_to_atomic_pointer(T *v) {
+  return reinterpret_cast<volatile std::atomic<remove_volatile_t<T>> *>(v);
 }
 
 template <class T>
-inline volatile std::atomic<remove_volatile_t<T> > *
-cast_to_atomic_pointer(std::atomic<T> *v)
-{
-	return reinterpret_cast<volatile std::atomic<remove_volatile_t<T> > *>(v);
+inline volatile std::atomic<remove_volatile_t<T>> *
+cast_to_atomic_pointer(std::atomic<T> *v) {
+  return reinterpret_cast<volatile std::atomic<remove_volatile_t<T>> *>(v);
 }
 
 template <class T>
-inline volatile std::atomic<remove_volatile_t<T> > *
-cast_to_atomic_pointer(volatile std::atomic<T> *v)
-{
-	return reinterpret_cast<volatile std::atomic<remove_volatile_t<T> > *>(v);
+inline volatile std::atomic<remove_volatile_t<T>> *
+cast_to_atomic_pointer(volatile std::atomic<T> *v) {
+  return reinterpret_cast<volatile std::atomic<remove_volatile_t<T>> *>(v);
 }
 
 template <class T>
-inline remove_volatile_t<T> *
-cast_to_nonatomic_pointer(T *v)
-{
-	return const_cast<remove_volatile_t<T> *>(v);
+inline remove_volatile_t<T> *cast_to_nonatomic_pointer(T *v) {
+  return const_cast<remove_volatile_t<T> *>(v);
 }
 
 template <class T>
-inline remove_volatile_t<T> *
-cast_to_nonatomic_pointer(std::atomic<T> *v)
-{
-	return reinterpret_cast<remove_volatile_t<T> *>(v);
+inline remove_volatile_t<T> *cast_to_nonatomic_pointer(std::atomic<T> *v) {
+  return reinterpret_cast<remove_volatile_t<T> *>(v);
 }
 
 template <class T>
 inline remove_volatile_t<T> *
-cast_to_nonatomic_pointer(volatile std::atomic<T> *v)
-{
-	auto _v = const_cast<std::atomic<T> *>(v);
-	return reinterpret_cast<remove_volatile_t<T> *>(_v);
+cast_to_nonatomic_pointer(volatile std::atomic<T> *v) {
+  auto _v = const_cast<std::atomic<T> *>(v);
+  return reinterpret_cast<remove_volatile_t<T> *>(_v);
 }
-};
+}; // namespace os
 #endif /* OS_ATOMIC_USES_CXX */
 
 #endif /* __OS_ATOMIC_H__ */

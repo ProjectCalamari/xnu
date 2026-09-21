@@ -26,16 +26,16 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <sys/types.h>
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <sys/code_signing.h>
+#include <sys/codesign.h>
 #include <sys/kernel.h>
+#include <sys/param.h>
 #include <sys/proc_internal.h>
-#include <sys/sysctl.h>
 #include <sys/signal.h>
 #include <sys/signalvar.h>
-#include <sys/codesign.h>
-#include <sys/code_signing.h>
+#include <sys/sysctl.h>
+#include <sys/systm.h>
+#include <sys/types.h>
 
 #include <sys/fcntl.h>
 #include <sys/file.h>
@@ -52,21 +52,20 @@
 #include <sys/ubc_internal.h>
 
 #include <security/mac.h>
-#include <security/mac_policy.h>
 #include <security/mac_framework.h>
+#include <security/mac_policy.h>
 
 #include <mach/mach_types.h>
-#include <mach/vm_map.h>
 #include <mach/mach_vm.h>
+#include <mach/vm_map.h>
 
 #include <kern/kern_types.h>
 #include <kern/startup.h>
 #include <kern/task.h>
 
-#include <vm/vm_map_xnu.h>
 #include <vm/pmap.h>
 #include <vm/vm_kern.h>
-
+#include <vm/vm_map_xnu.h>
 
 #include <kern/assert.h>
 #include <kern/cs_blobs.h>
@@ -75,9 +74,8 @@
 
 #include <mach/shared_region.h>
 
-#include <libkern/section_keywords.h>
 #include <libkern/amfi/amfi.h>
-
+#include <libkern/section_keywords.h>
 
 unsigned long cs_procs_killed = 0;
 unsigned long cs_procs_invalidated = 0;
@@ -85,7 +83,8 @@ unsigned long cs_procs_invalidated = 0;
 int cs_force_kill = 0;
 int cs_force_hard = 0;
 int cs_debug = 0;
-// If set, AMFI will error out early on unsigned code, before evaluation the normal policy.
+// If set, AMFI will error out early on unsigned code, before evaluation the
+// normal policy.
 int cs_debug_fail_on_unsigned_code = 0;
 // If the previous mode is enabled, we count the resulting failures here.
 unsigned int cs_debug_unsigned_exec_failures = 0;
@@ -108,213 +107,227 @@ unsigned int cs_debug_unsigned_mmap_failures = 0;
 #if SECURE_KERNEL
 
 /*
- *  Here we split cs_enforcement_enable into cs_system_enforcement_enable and cs_process_enforcement_enable
+ *  Here we split cs_enforcement_enable into cs_system_enforcement_enable and
+ * cs_process_enforcement_enable
  *
- *  cs_system_enforcement_enable governs whether or not system level code signing enforcement mechanisms
- *  are applied on the system. Today, the only such mechanism is code signing enforcement of the dyld shared
- *  cache.
+ *  cs_system_enforcement_enable governs whether or not system level code
+ * signing enforcement mechanisms are applied on the system. Today, the only
+ * such mechanism is code signing enforcement of the dyld shared cache.
  *
- *  cs_process_enforcement_enable governs whether code signing enforcement mechanisms are applied to all
- *  processes or only those that opt into such enforcement.
+ *  cs_process_enforcement_enable governs whether code signing enforcement
+ * mechanisms are applied to all processes or only those that opt into such
+ * enforcement.
  *
- *  (On iOS and related, both of these are set by default. On macOS, only cs_system_enforcement_enable
- *  is set by default. Processes can then be opted into code signing enforcement on a case by case basis.)
+ *  (On iOS and related, both of these are set by default. On macOS, only
+ * cs_system_enforcement_enable is set by default. Processes can then be opted
+ * into code signing enforcement on a case by case basis.)
  */
-SECURITY_READ_ONLY_EARLY(int) cs_system_enforcement_enable = DEFAULT_CS_SYSTEM_ENFORCEMENT_ENABLE;
-SECURITY_READ_ONLY_EARLY(int) cs_process_enforcement_enable = DEFAULT_CS_PROCESS_ENFORCEMENT_ENABLE;
-SECURITY_READ_ONLY_EARLY(int) cs_library_val_enable = DEFAULT_CS_LIBRARY_VA_ENABLE;
+SECURITY_READ_ONLY_EARLY(int)
+cs_system_enforcement_enable = DEFAULT_CS_SYSTEM_ENFORCEMENT_ENABLE;
+SECURITY_READ_ONLY_EARLY(int)
+cs_process_enforcement_enable = DEFAULT_CS_PROCESS_ENFORCEMENT_ENABLE;
+SECURITY_READ_ONLY_EARLY(int)
+cs_library_val_enable = DEFAULT_CS_LIBRARY_VA_ENABLE;
 
 #else /* !SECURE_KERNEL */
 int cs_enforcement_panic = 0;
 int cs_relax_platform_task_ports = 0;
 
-SECURITY_READ_ONLY_LATE(int) cs_system_enforcement_enable = DEFAULT_CS_SYSTEM_ENFORCEMENT_ENABLE;
-SECURITY_READ_ONLY_LATE(int) cs_process_enforcement_enable = DEFAULT_CS_PROCESS_ENFORCEMENT_ENABLE;
+SECURITY_READ_ONLY_LATE(int)
+cs_system_enforcement_enable = DEFAULT_CS_SYSTEM_ENFORCEMENT_ENABLE;
+SECURITY_READ_ONLY_LATE(int)
+cs_process_enforcement_enable = DEFAULT_CS_PROCESS_ENFORCEMENT_ENABLE;
 
-SECURITY_READ_ONLY_LATE(int) cs_library_val_enable = DEFAULT_CS_LIBRARY_VA_ENABLE;
+SECURITY_READ_ONLY_LATE(int)
+cs_library_val_enable = DEFAULT_CS_LIBRARY_VA_ENABLE;
 
 #endif /* !SECURE_KERNEL */
 int cs_all_vnodes = 0;
 
-SYSCTL_INT(_vm, OID_AUTO, cs_force_kill, CTLFLAG_RW | CTLFLAG_LOCKED, &cs_force_kill, 0, "");
-SYSCTL_INT(_vm, OID_AUTO, cs_force_hard, CTLFLAG_RW | CTLFLAG_LOCKED, &cs_force_hard, 0, "");
-SYSCTL_INT(_vm, OID_AUTO, cs_debug, CTLFLAG_RW | CTLFLAG_LOCKED, &cs_debug, 0, "");
-SYSCTL_INT(_vm, OID_AUTO, cs_debug_fail_on_unsigned_code, CTLFLAG_RW | CTLFLAG_LOCKED,
-    &cs_debug_fail_on_unsigned_code, 0, "");
-SYSCTL_UINT(_vm, OID_AUTO, cs_debug_unsigned_exec_failures, CTLFLAG_RD | CTLFLAG_LOCKED,
-    &cs_debug_unsigned_exec_failures, 0, "");
-SYSCTL_UINT(_vm, OID_AUTO, cs_debug_unsigned_mmap_failures, CTLFLAG_RD | CTLFLAG_LOCKED,
-    &cs_debug_unsigned_mmap_failures, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_force_kill, CTLFLAG_RW | CTLFLAG_LOCKED,
+           &cs_force_kill, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_force_hard, CTLFLAG_RW | CTLFLAG_LOCKED,
+           &cs_force_hard, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_debug, CTLFLAG_RW | CTLFLAG_LOCKED, &cs_debug, 0,
+           "");
+SYSCTL_INT(_vm, OID_AUTO, cs_debug_fail_on_unsigned_code,
+           CTLFLAG_RW | CTLFLAG_LOCKED, &cs_debug_fail_on_unsigned_code, 0, "");
+SYSCTL_UINT(_vm, OID_AUTO, cs_debug_unsigned_exec_failures,
+            CTLFLAG_RD | CTLFLAG_LOCKED, &cs_debug_unsigned_exec_failures, 0,
+            "");
+SYSCTL_UINT(_vm, OID_AUTO, cs_debug_unsigned_mmap_failures,
+            CTLFLAG_RD | CTLFLAG_LOCKED, &cs_debug_unsigned_mmap_failures, 0,
+            "");
 
-SYSCTL_INT(_vm, OID_AUTO, cs_all_vnodes, CTLFLAG_RW | CTLFLAG_LOCKED, &cs_all_vnodes, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_all_vnodes, CTLFLAG_RW | CTLFLAG_LOCKED,
+           &cs_all_vnodes, 0, "");
 
 #if !SECURE_KERNEL
-SYSCTL_INT(_vm, OID_AUTO, cs_system_enforcement, CTLFLAG_RD | CTLFLAG_LOCKED, &cs_system_enforcement_enable, 0, "");
-SYSCTL_INT(_vm, OID_AUTO, cs_process_enforcement, CTLFLAG_RD | CTLFLAG_LOCKED, &cs_process_enforcement_enable, 0, "");
-SYSCTL_INT(_vm, OID_AUTO, cs_enforcement_panic, CTLFLAG_RW | CTLFLAG_LOCKED, &cs_enforcement_panic, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_system_enforcement, CTLFLAG_RD | CTLFLAG_LOCKED,
+           &cs_system_enforcement_enable, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_process_enforcement, CTLFLAG_RD | CTLFLAG_LOCKED,
+           &cs_process_enforcement_enable, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_enforcement_panic, CTLFLAG_RW | CTLFLAG_LOCKED,
+           &cs_enforcement_panic, 0, "");
 
 #if !CONFIG_ENFORCE_LIBRARY_VALIDATION
-SYSCTL_INT(_vm, OID_AUTO, cs_library_validation, CTLFLAG_RD | CTLFLAG_LOCKED, &cs_library_val_enable, 0, "");
+SYSCTL_INT(_vm, OID_AUTO, cs_library_validation, CTLFLAG_RD | CTLFLAG_LOCKED,
+           &cs_library_val_enable, 0, "");
 #endif
 #endif /* !SECURE_KERNEL */
 
-__startup_func
-static void
-cs_init(void)
-{
+__startup_func static void cs_init(void) {
 #if !SECURE_KERNEL
-	int disable_cs_enforcement = 0;
-	PE_parse_boot_argn("cs_enforcement_disable", &disable_cs_enforcement,
-	    sizeof(disable_cs_enforcement));
-	if (disable_cs_enforcement && PE_i_can_has_debugger(NULL) != 0) {
-		cs_system_enforcement_enable = 0;
-		cs_process_enforcement_enable = 0;
-	} else {
-		int panic = 0;
-		PE_parse_boot_argn("cs_enforcement_panic", &panic, sizeof(panic));
-		cs_enforcement_panic = (panic != 0);
-	}
+  int disable_cs_enforcement = 0;
+  PE_parse_boot_argn("cs_enforcement_disable", &disable_cs_enforcement,
+                     sizeof(disable_cs_enforcement));
+  if (disable_cs_enforcement && PE_i_can_has_debugger(NULL) != 0) {
+    cs_system_enforcement_enable = 0;
+    cs_process_enforcement_enable = 0;
+  } else {
+    int panic = 0;
+    PE_parse_boot_argn("cs_enforcement_panic", &panic, sizeof(panic));
+    cs_enforcement_panic = (panic != 0);
+  }
 
-	PE_parse_boot_argn("cs_relax_platform_task_ports",
-	    &cs_relax_platform_task_ports,
-	    sizeof(cs_relax_platform_task_ports));
+  PE_parse_boot_argn("cs_relax_platform_task_ports",
+                     &cs_relax_platform_task_ports,
+                     sizeof(cs_relax_platform_task_ports));
 
-	PE_parse_boot_argn("cs_debug", &cs_debug, sizeof(cs_debug));
+  PE_parse_boot_argn("cs_debug", &cs_debug, sizeof(cs_debug));
 
 #if !CONFIG_ENFORCE_LIBRARY_VALIDATION
-	PE_parse_boot_argn("cs_library_val_enable", &cs_library_val_enable,
-	    sizeof(cs_library_val_enable));
+  PE_parse_boot_argn("cs_library_val_enable", &cs_library_val_enable,
+                     sizeof(cs_library_val_enable));
 #endif
 #endif /* !SECURE_KERNEL */
 }
 STARTUP(CODESIGNING, STARTUP_RANK_FIRST, cs_init);
 
-int
-cs_allow_invalid(struct proc *p)
-{
-	uint64_t flags;
+int cs_allow_invalid(struct proc *p) {
+  uint64_t flags;
 
 #if MACH_ASSERT
-	lck_mtx_assert(&p->p_mlock, LCK_MTX_ASSERT_NOTOWNED);
+  lck_mtx_assert(&p->p_mlock, LCK_MTX_ASSERT_NOTOWNED);
 #endif
 #if CONFIG_MACF
-	/* There needs to be a MAC policy to implement this hook, or else the
-	 * kill bits will be cleared here every time. If we have
-	 * CONFIG_ENFORCE_SIGNED_CODE, we can assume there is a policy
-	 * implementing the hook.
-	 */
-	if (0 != mac_proc_check_run_cs_invalid(p)) {
-		if (cs_debug) {
-			printf("CODE SIGNING: cs_allow_invalid() "
-			    "not allowed: pid %d\n",
-			    proc_getpid(p));
-		}
-		return 0;
-	}
-	if (cs_debug) {
-		printf("CODE SIGNING: cs_allow_invalid() "
-		    "allowed: pid %d\n",
-		    proc_getpid(p));
-	}
-	proc_lock(p);
-	flags = proc_getcsflags(p) & ~(CS_KILL | CS_HARD);
-	if (flags & CS_VALID) {
-		flags |= CS_DEBUGGED;
-	}
-	proc_csflags_update(p, flags);
+  /* There needs to be a MAC policy to implement this hook, or else the
+   * kill bits will be cleared here every time. If we have
+   * CONFIG_ENFORCE_SIGNED_CODE, we can assume there is a policy
+   * implementing the hook.
+   */
+  if (0 != mac_proc_check_run_cs_invalid(p)) {
+    if (cs_debug) {
+      printf("CODE SIGNING: cs_allow_invalid() "
+             "not allowed: pid %d\n",
+             proc_getpid(p));
+    }
+    return 0;
+  }
+  if (cs_debug) {
+    printf("CODE SIGNING: cs_allow_invalid() "
+           "allowed: pid %d\n",
+           proc_getpid(p));
+  }
+  proc_lock(p);
+  flags = proc_getcsflags(p) & ~(CS_KILL | CS_HARD);
+  if (flags & CS_VALID) {
+    flags |= CS_DEBUGGED;
+  }
+  proc_csflags_update(p, flags);
 
-	task_t procTask = proc_task(p);
-	if (procTask) {
-		vm_map_t proc_map = get_task_map_reference(procTask);
-		if (proc_map) {
-			if (vm_map_cs_wx_enable(proc_map) != KERN_SUCCESS) {
-				printf("CODE SIGNING: cs_allow_invalid() not allowed by pmap: pid %d\n", proc_getpid(p));
-			}
-			vm_map_deallocate(proc_map);
-		}
-	}
+  task_t procTask = proc_task(p);
+  if (procTask) {
+    vm_map_t proc_map = get_task_map_reference(procTask);
+    if (proc_map) {
+      if (vm_map_cs_wx_enable(proc_map) != KERN_SUCCESS) {
+        printf("CODE SIGNING: cs_allow_invalid() not allowed by pmap: pid %d\n",
+               proc_getpid(p));
+      }
+      vm_map_deallocate(proc_map);
+    }
+  }
 
-	proc_unlock(p);
+  proc_unlock(p);
 
-	/* allow a debugged process to hide some (debug-only!) memory */
-	task_set_memory_ownership_transfer(proc_task(p), TRUE);
+  /* allow a debugged process to hide some (debug-only!) memory */
+  task_set_memory_ownership_transfer(proc_task(p), TRUE);
 
-	vm_map_switch_protect(get_task_map(proc_task(p)), FALSE);
-	vm_map_cs_debugged_set(get_task_map(proc_task(p)), TRUE);
+  vm_map_switch_protect(get_task_map(proc_task(p)), FALSE);
+  vm_map_cs_debugged_set(get_task_map(proc_task(p)), TRUE);
 #endif
-	return (proc_getcsflags(p) & (CS_KILL | CS_HARD)) == 0;
+  return (proc_getcsflags(p) & (CS_KILL | CS_HARD)) == 0;
 }
 
-int
-cs_invalid_page(addr64_t vaddr, boolean_t *cs_killed)
-{
-	struct proc     *p;
-	int             send_kill = 0, retval = 0, verbose = cs_debug;
-	uint64_t flags;
+int cs_invalid_page(addr64_t vaddr, boolean_t *cs_killed) {
+  struct proc *p;
+  int send_kill = 0, retval = 0, verbose = cs_debug;
+  uint64_t flags;
 
-	p = current_proc();
+  p = current_proc();
 
-	if (verbose) {
-		printf("CODE SIGNING: cs_invalid_page(0x%llx): p=%d[%s]\n",
-		    vaddr, proc_getpid(p), p->p_comm);
-	}
+  if (verbose) {
+    printf("CODE SIGNING: cs_invalid_page(0x%llx): p=%d[%s]\n", vaddr,
+           proc_getpid(p), p->p_comm);
+  }
 
-	proc_lock(p);
+  proc_lock(p);
 
-	flags = proc_getcsflags(p);
+  flags = proc_getcsflags(p);
 
-	/* XXX for testing */
-	if (cs_force_kill) {
-		flags |= CS_KILL;
-	}
-	if (cs_force_hard) {
-		flags |= CS_HARD;
-	}
+  /* XXX for testing */
+  if (cs_force_kill) {
+    flags |= CS_KILL;
+  }
+  if (cs_force_hard) {
+    flags |= CS_HARD;
+  }
 
-	/* CS_KILL triggers a kill signal, and no you can't have the page. Nothing else. */
-	if (flags & CS_KILL) {
-		flags |= CS_KILLED;
-		cs_procs_killed++;
-		send_kill = 1;
-		retval = 1;
-	}
+  /* CS_KILL triggers a kill signal, and no you can't have the page. Nothing
+   * else. */
+  if (flags & CS_KILL) {
+    flags |= CS_KILLED;
+    cs_procs_killed++;
+    send_kill = 1;
+    retval = 1;
+  }
 
-	/* CS_HARD means fail the mapping operation so the process stays valid. */
-	if (flags & CS_HARD) {
-		retval = 1;
-		proc_csflags_update(p, flags);
-	} else {
-		if (flags & CS_VALID) {
-			flags &= ~CS_VALID;
-			cs_procs_invalidated++;
-			verbose = 1;
-			proc_csflags_update(p, flags);
-			cs_process_invalidated(NULL);
-		} else {
-			proc_csflags_update(p, flags);
-		}
-	}
-	proc_unlock(p);
+  /* CS_HARD means fail the mapping operation so the process stays valid. */
+  if (flags & CS_HARD) {
+    retval = 1;
+    proc_csflags_update(p, flags);
+  } else {
+    if (flags & CS_VALID) {
+      flags &= ~CS_VALID;
+      cs_procs_invalidated++;
+      verbose = 1;
+      proc_csflags_update(p, flags);
+      cs_process_invalidated(NULL);
+    } else {
+      proc_csflags_update(p, flags);
+    }
+  }
+  proc_unlock(p);
 
-	if (verbose) {
-		printf("CODE SIGNING: cs_invalid_page(0x%llx): "
-		    "p=%d[%s] final status 0x%x, %s page%s\n",
-		    vaddr, proc_getpid(p), p->p_comm, (unsigned int)proc_getcsflags(p),
-		    retval ? "denying" : "allowing (remove VALID)",
-		    send_kill ? " sending SIGKILL" : "");
-	}
+  if (verbose) {
+    printf("CODE SIGNING: cs_invalid_page(0x%llx): "
+           "p=%d[%s] final status 0x%x, %s page%s\n",
+           vaddr, proc_getpid(p), p->p_comm, (unsigned int)proc_getcsflags(p),
+           retval ? "denying" : "allowing (remove VALID)",
+           send_kill ? " sending SIGKILL" : "");
+  }
 
-	if (send_kill) {
-		/* We will set the exit reason for the thread later */
-		threadsignal(current_thread(), SIGKILL, EXC_BAD_ACCESS, FALSE);
-		if (cs_killed) {
-			*cs_killed = TRUE;
-		}
-	} else if (cs_killed) {
-		*cs_killed = FALSE;
-	}
+  if (send_kill) {
+    /* We will set the exit reason for the thread later */
+    threadsignal(current_thread(), SIGKILL, EXC_BAD_ACCESS, FALSE);
+    if (cs_killed) {
+      *cs_killed = TRUE;
+    }
+  } else if (cs_killed) {
+    *cs_killed = FALSE;
+  }
 
-	return retval;
+  return retval;
 }
 
 /*
@@ -326,14 +339,12 @@ cs_invalid_page(addr64_t vaddr, boolean_t *cs_killed)
  * can access the memory that is paged in after cs_invalid_page
  * returns 0 due to missing CS_HARD|CS_KILL.
  */
-void
-cs_process_invalidated(struct proc * __unused p)
-{
+void cs_process_invalidated(struct proc *__unused p) {
 #if CONFIG_MACF
-	if (p == NULL) {
-		p = current_proc();
-	}
-	mac_proc_notify_cs_invalidated(p);
+  if (p == NULL) {
+    p = current_proc();
+  }
+  mac_proc_notify_cs_invalidated(p);
 #endif
 }
 
@@ -341,114 +352,89 @@ cs_process_invalidated(struct proc * __unused p)
  * Assumes p (if passed in) is locked with proc_lock().
  */
 
-int
-cs_process_enforcement(struct proc *p)
-{
-	if (cs_process_enforcement_enable) {
-		return 1;
-	}
+int cs_process_enforcement(struct proc *p) {
+  if (cs_process_enforcement_enable) {
+    return 1;
+  }
 
-	if (p == NULL) {
-		p = current_proc();
-	}
+  if (p == NULL) {
+    p = current_proc();
+  }
 
-	if (p != NULL && (proc_getcsflags(p) & CS_ENFORCEMENT)) {
-		return 1;
-	}
+  if (p != NULL && (proc_getcsflags(p) & CS_ENFORCEMENT)) {
+    return 1;
+  }
 
-	return 0;
+  return 0;
 }
 
-int
-cs_process_global_enforcement(void)
-{
-	return cs_process_enforcement_enable ? 1 : 0;
+int cs_process_global_enforcement(void) {
+  return cs_process_enforcement_enable ? 1 : 0;
 }
 
-int
-cs_system_enforcement(void)
-{
-	return cs_system_enforcement_enable ? 1 : 0;
-}
+int cs_system_enforcement(void) { return cs_system_enforcement_enable ? 1 : 0; }
 
-int
-cs_vm_supports_4k_translations(void)
-{
-	return 0;
-}
-
+int cs_vm_supports_4k_translations(void) { return 0; }
 
 /*
  * Returns whether a given process is still valid.
  */
-int
-cs_valid(struct proc *p)
-{
-	if (p == NULL) {
-		p = current_proc();
-	}
+int cs_valid(struct proc *p) {
+  if (p == NULL) {
+    p = current_proc();
+  }
 
-	if (p != NULL && (proc_getcsflags(p) & CS_VALID)) {
-		return 1;
-	}
+  if (p != NULL && (proc_getcsflags(p) & CS_VALID)) {
+    return 1;
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
  * Library validation functions
  */
-int
-cs_require_lv(struct proc *p)
-{
-	if (cs_library_val_enable) {
-		return 1;
-	}
+int cs_require_lv(struct proc *p) {
+  if (cs_library_val_enable) {
+    return 1;
+  }
 
-	if (p == NULL) {
-		p = current_proc();
-	}
+  if (p == NULL) {
+    p = current_proc();
+  }
 
-	if (p != NULL && (proc_getcsflags(p) & CS_REQUIRE_LV)) {
-		return 1;
-	}
+  if (p != NULL && (proc_getcsflags(p) & CS_REQUIRE_LV)) {
+    return 1;
+  }
 
-	return 0;
+  return 0;
 }
 
-int
-csproc_forced_lv(struct proc* p)
-{
-	if (p == NULL) {
-		p = current_proc();
-	}
-	if (p != NULL && (proc_getcsflags(p) & CS_FORCED_LV)) {
-		return 1;
-	}
-	return 0;
+int csproc_forced_lv(struct proc *p) {
+  if (p == NULL) {
+    p = current_proc();
+  }
+  if (p != NULL && (proc_getcsflags(p) & CS_FORCED_LV)) {
+    return 1;
+  }
+  return 0;
 }
 
 /*
  * <rdar://problem/24634089> added to allow system level library
  *  validation check at mac_cred_label_update_execve time
  */
-int
-cs_system_require_lv(void)
-{
-	return cs_library_val_enable ? 1 : 0;
-}
+int cs_system_require_lv(void) { return cs_library_val_enable ? 1 : 0; }
 
 /*
  * Function: csblob_get_base_offset
  *
- * Description: This function returns the base offset into the (possibly universal) binary
- *		for a given blob.
+ * Description: This function returns the base offset into the (possibly
+ * universal) binary for a given blob.
  */
 
-off_t
-csblob_get_base_offset(struct cs_blob *blob)
-{
-	return blob->csb_base_offset;
+off_t csblob_get_base_offset(struct cs_blob *blob) {
+  return blob->csb_base_offset;
 }
 
 /*
@@ -457,11 +443,7 @@ csblob_get_base_offset(struct cs_blob *blob)
  * Description: This function returns the size of a given blob.
  */
 
-vm_size_t
-csblob_get_size(struct cs_blob *blob)
-{
-	return blob->csb_mem_size;
-}
+vm_size_t csblob_get_size(struct cs_blob *blob) { return blob->csb_mem_size; }
 
 /*
  * Function: csblob_get_addr
@@ -469,10 +451,8 @@ csblob_get_size(struct cs_blob *blob)
  * Description: This function returns the address of a given blob.
  */
 
-vm_address_t
-csblob_get_addr(struct cs_blob *blob)
-{
-	return (vm_address_t)blob->csb_mem_kaddr;
+vm_address_t csblob_get_addr(struct cs_blob *blob) {
+  return (vm_address_t)blob->csb_mem_kaddr;
 }
 
 /*
@@ -482,13 +462,11 @@ csblob_get_addr(struct cs_blob *blob)
  *		in the trust cache.
  */
 
-int
-csblob_get_platform_binary(struct cs_blob *blob)
-{
-	if (blob && blob->csb_platform_binary) {
-		return 1;
-	}
-	return 0;
+int csblob_get_platform_binary(struct cs_blob *blob) {
+  if (blob && blob->csb_platform_binary) {
+    return 1;
+  }
+  return 0;
 }
 
 /*
@@ -498,23 +476,22 @@ csblob_get_platform_binary(struct cs_blob *blob)
  *              when a vnode may have been modified.
  *
  */
-void
-csblob_invalidate_flags(struct cs_blob *csblob)
-{
-	bool ro_blob = csblob == csblob->csb_ro_addr;
-	unsigned int current_flags = csblob->csb_flags;
-	unsigned int updated_flags = current_flags & (~CS_VALID);
-	if (ro_blob == true) {
-		zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_flags, &updated_flags);
-	} else {
-		csblob->csb_flags = updated_flags;
-	}
+void csblob_invalidate_flags(struct cs_blob *csblob) {
+  bool ro_blob = csblob == csblob->csb_ro_addr;
+  unsigned int current_flags = csblob->csb_flags;
+  unsigned int updated_flags = current_flags & (~CS_VALID);
+  if (ro_blob == true) {
+    zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_flags, &updated_flags);
+  } else {
+    csblob->csb_flags = updated_flags;
+  }
 
-	if (csblob->csb_entitlements != NULL) {
-		amfi->OSEntitlements_invalidate(csblob->csb_entitlements);
-	}
+  if (csblob->csb_entitlements != NULL) {
+    amfi->OSEntitlements_invalidate(csblob->csb_entitlements);
+  }
 
-	printf("Invalidated flags, old %x new %x\n", current_flags, csblob->csb_flags);
+  printf("Invalidated flags, old %x new %x\n", current_flags,
+         csblob->csb_flags);
 }
 
 /*
@@ -524,25 +501,21 @@ csblob_invalidate_flags(struct cs_blob *csblob)
  *              attached to a vnode.
  *
  */
-void
-csvnode_invalidate_flags(struct vnode *vp)
-{
-	struct cs_blob* oblob;
-	bool mark_ubcinfo = false;
+void csvnode_invalidate_flags(struct vnode *vp) {
+  struct cs_blob *oblob;
+  bool mark_ubcinfo = false;
 
-	for (oblob = ubc_get_cs_blobs(vp);
-	    oblob != NULL;
-	    oblob = oblob->csb_next) {
-		if (!mark_ubcinfo) {
-			mark_ubcinfo = true;
-			vnode_lock(vp);
-			if (vp->v_ubcinfo) {
-				vp->v_ubcinfo->ui_flags |= UI_CSBLOBINVALID;
-			}
-			vnode_unlock(vp);
-		}
-		csblob_invalidate_flags(oblob);
-	}
+  for (oblob = ubc_get_cs_blobs(vp); oblob != NULL; oblob = oblob->csb_next) {
+    if (!mark_ubcinfo) {
+      mark_ubcinfo = true;
+      vnode_lock(vp);
+      if (vp->v_ubcinfo) {
+        vp->v_ubcinfo->ui_flags |= UI_CSBLOBINVALID;
+      }
+      vnode_unlock(vp);
+    }
+    csblob_invalidate_flags(oblob);
+  }
 }
 
 /*
@@ -551,11 +524,7 @@ csvnode_invalidate_flags(struct vnode *vp)
  * Description: This function returns the flags for a given blob
  */
 
-unsigned int
-csblob_get_flags(struct cs_blob *blob)
-{
-	return blob->csb_flags;
-}
+unsigned int csblob_get_flags(struct cs_blob *blob) { return blob->csb_flags; }
 
 /*
  * Function: csblob_get_hashtype
@@ -563,10 +532,8 @@ csblob_get_flags(struct cs_blob *blob)
  * Description: This function returns the hash type for a given blob
  */
 
-uint8_t
-csblob_get_hashtype(struct cs_blob const * const blob)
-{
-	return blob->csb_hashtype != NULL ? cs_hash_type(blob->csb_hashtype) : 0;
+uint8_t csblob_get_hashtype(struct cs_blob const *const blob) {
+  return blob->csb_hashtype != NULL ? cs_hash_type(blob->csb_hashtype) : 0;
 }
 
 /*
@@ -575,22 +542,20 @@ csblob_get_hashtype(struct cs_blob const * const blob)
  * Description: This function returns the cs_blob
  *		for the process p
  */
-struct cs_blob *
-csproc_get_blob(struct proc *p)
-{
-	if (NULL == p) {
-		return NULL;
-	}
+struct cs_blob *csproc_get_blob(struct proc *p) {
+  if (NULL == p) {
+    return NULL;
+  }
 
-	if (NULL == p->p_textvp) {
-		return NULL;
-	}
+  if (NULL == p->p_textvp) {
+    return NULL;
+  }
 
-	if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
-		return NULL;
-	}
+  if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
+    return NULL;
+  }
 
-	return ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff);
+  return ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff);
 }
 
 /*
@@ -599,10 +564,8 @@ csproc_get_blob(struct proc *p)
  * Description: This function returns the cs_blob
  *		for the vnode vp
  */
-struct cs_blob *
-csvnode_get_blob(struct vnode *vp, off_t offset)
-{
-	return ubc_cs_blob_get(vp, -1, -1, offset);
+struct cs_blob *csvnode_get_blob(struct vnode *vp, off_t offset) {
+  return ubc_cs_blob_get(vp, -1, -1, offset);
 }
 
 /*
@@ -611,10 +574,8 @@ csvnode_get_blob(struct vnode *vp, off_t offset)
  * Description: This function returns a pointer to the
  *		team id of csblob
  */
-const char *
-csblob_get_teamid(struct cs_blob *csblob)
-{
-	return csblob->csb_teamid;
+const char *csblob_get_teamid(struct cs_blob *csblob) {
+  return csblob->csb_teamid;
 }
 
 /*
@@ -623,21 +584,20 @@ csblob_get_teamid(struct cs_blob *csblob)
  * Description: This function returns a pointer to the
  *		identity string
  */
-const char *
-csblob_get_identity(struct cs_blob *csblob)
-{
-	const CS_CodeDirectory *cd;
+const char *csblob_get_identity(struct cs_blob *csblob) {
+  const CS_CodeDirectory *cd;
 
-	cd = (const CS_CodeDirectory *)csblob_find_blob(csblob, CSSLOT_CODEDIRECTORY, CSMAGIC_CODEDIRECTORY);
-	if (cd == NULL) {
-		return NULL;
-	}
+  cd = (const CS_CodeDirectory *)csblob_find_blob(csblob, CSSLOT_CODEDIRECTORY,
+                                                  CSMAGIC_CODEDIRECTORY);
+  if (cd == NULL) {
+    return NULL;
+  }
 
-	if (cd->identOffset == 0) {
-		return NULL;
-	}
+  if (cd->identOffset == 0) {
+    return NULL;
+  }
 
-	return ((const char *)cd) + ntohl(cd->identOffset);
+  return ((const char *)cd) + ntohl(cd->identOffset);
 }
 
 /*
@@ -646,10 +606,8 @@ csblob_get_identity(struct cs_blob *csblob)
  * Description: This function returns a pointer to the
  *		cdhash of csblob (20 byte array)
  */
-const uint8_t *
-csblob_get_cdhash(struct cs_blob *csblob)
-{
-	return csblob->csb_cdhash;
+const uint8_t *csblob_get_cdhash(struct cs_blob *csblob) {
+  return csblob->csb_cdhash;
 }
 
 /*
@@ -658,10 +616,8 @@ csblob_get_cdhash(struct cs_blob *csblob)
  * Description: This function returns the signer type
  *		as an integer
  */
-unsigned int
-csblob_get_signer_type(struct cs_blob *csblob)
-{
-	return csblob->csb_signer_type;
+unsigned int csblob_get_signer_type(struct cs_blob *csblob) {
+  return csblob->csb_signer_type;
 }
 
 /*
@@ -673,37 +629,38 @@ csblob_get_signer_type(struct cs_blob *csblob)
  *
  * Return: 0 on success, otherwise -1.
  */
-int
-csblob_set_validation_category(struct cs_blob *csblob, unsigned int category)
-{
-	bool ro_blob = csblob == csblob->csb_ro_addr;
+int csblob_set_validation_category(struct cs_blob *csblob,
+                                   unsigned int category) {
+  bool ro_blob = csblob == csblob->csb_ro_addr;
 
-	if ((csblob->csb_validation_category == CS_VALIDATION_CATEGORY_INVALID) ||
-	    (csblob->csb_validation_category == CS_VALIDATION_CATEGORY_NONE)) {
-		if (ro_blob == true) {
-			zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_validation_category, &category);
-		} else {
-			csblob->csb_validation_category = category;
-		}
-		return 0;
-	}
+  if ((csblob->csb_validation_category == CS_VALIDATION_CATEGORY_INVALID) ||
+      (csblob->csb_validation_category == CS_VALIDATION_CATEGORY_NONE)) {
+    if (ro_blob == true) {
+      zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_validation_category,
+                             &category);
+    } else {
+      csblob->csb_validation_category = category;
+    }
+    return 0;
+  }
 
-	/* Always allow when setting to none */
-	if (category == CS_VALIDATION_CATEGORY_NONE) {
-		if (ro_blob == true) {
-			zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_validation_category, &category);
-		} else {
-			csblob->csb_validation_category = category;
-		}
-		return 0;
-	}
+  /* Always allow when setting to none */
+  if (category == CS_VALIDATION_CATEGORY_NONE) {
+    if (ro_blob == true) {
+      zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_validation_category,
+                             &category);
+    } else {
+      csblob->csb_validation_category = category;
+    }
+    return 0;
+  }
 
-	/* Allow setting to the same category */
-	if (category == csblob->csb_validation_category) {
-		return 0;
-	}
+  /* Allow setting to the same category */
+  if (category == csblob->csb_validation_category) {
+    return 0;
+  }
 
-	return -1;
+  return -1;
 }
 
 /*
@@ -712,10 +669,8 @@ csblob_set_validation_category(struct cs_blob *csblob, unsigned int category)
  * Description: This function is used to get the validation
  *              category on a cs_blob.
  */
-unsigned int
-csblob_get_validation_category(struct cs_blob *csblob)
-{
-	return csblob->csb_validation_category;
+unsigned int csblob_get_validation_category(struct cs_blob *csblob) {
+  return csblob->csb_validation_category;
 }
 
 /*
@@ -726,18 +681,16 @@ csblob_get_validation_category(struct cs_blob *csblob)
  *
  * Return: 0 on success, otherwise -1.
  */
-int
-csblob_set_auxiliary_info(struct cs_blob *csblob, uint64_t info)
-{
-	bool ro_blob = csblob == csblob->csb_ro_addr;
+int csblob_set_auxiliary_info(struct cs_blob *csblob, uint64_t info) {
+  bool ro_blob = csblob == csblob->csb_ro_addr;
 
-	if (ro_blob == true) {
-		zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_auxiliary_info, &info);
-	} else {
-		csblob->csb_auxiliary_info = info;
-	}
+  if (ro_blob == true) {
+    zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_auxiliary_info, &info);
+  } else {
+    csblob->csb_auxiliary_info = info;
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -746,10 +699,8 @@ csblob_set_auxiliary_info(struct cs_blob *csblob, uint64_t info)
  * Description: This function is used to get the auxiliary info
  *              bits on a cs_blob.
  */
-uint64_t
-csblob_get_auxiliary_info(struct cs_blob *csblob)
-{
-	return csblob->csb_auxiliary_info;
+uint64_t csblob_get_auxiliary_info(struct cs_blob *csblob) {
+  return csblob->csb_auxiliary_info;
 }
 
 /*
@@ -760,15 +711,13 @@ csblob_get_auxiliary_info(struct cs_blob *csblob)
  *              is a code-signing-monitor, and it is enabled. Otherwise,
  *              this function returns a UINT32_MAX.
  */
-uint32_t
-csblob_get_trust_level(__unused struct cs_blob *csblob)
-{
+uint32_t csblob_get_trust_level(__unused struct cs_blob *csblob) {
 #if CODE_SIGNING_MONITOR
-	if (csblob->csb_csm_obj != NULL) {
-		return csblob->csb_csm_trust_level;
-	}
+  if (csblob->csb_csm_obj != NULL) {
+    return csblob->csb_csm_trust_level;
+  }
 #endif
-	return UINT32_MAX;
+  return UINT32_MAX;
 }
 
 /*
@@ -777,66 +726,53 @@ csblob_get_trust_level(__unused struct cs_blob *csblob)
  * Description: This function returns the best code directory
  *              as chosen by the system
  */
-const CS_CodeDirectory*
-csblob_get_code_directory(struct cs_blob *csblob)
-{
-	return csblob->csb_cd;
+const CS_CodeDirectory *csblob_get_code_directory(struct cs_blob *csblob) {
+  return csblob->csb_cd;
 }
 
-void *
-csblob_entitlements_dictionary_copy(struct cs_blob *csblob)
-{
-	if (!csblob->csb_entitlements) {
-		return NULL;
-	}
-	if (!amfi) {
-		panic("CoreEntitlements: missing AMFI bridge\n");
-	}
-	return amfi->OSEntitlements_asdict(csblob->csb_entitlements);
+void *csblob_entitlements_dictionary_copy(struct cs_blob *csblob) {
+  if (!csblob->csb_entitlements) {
+    return NULL;
+  }
+  if (!amfi) {
+    panic("CoreEntitlements: missing AMFI bridge\n");
+  }
+  return amfi->OSEntitlements_asdict(csblob->csb_entitlements);
 }
 
 OS_NORETURN
-void
-csblob_entitlements_dictionary_set(struct cs_blob __unused *csblob, void  __unused *entitlements)
-{
-	panic("CoreEntitlements: This API is no longer supported\n");
+void csblob_entitlements_dictionary_set(struct cs_blob __unused *csblob,
+                                        void __unused *entitlements) {
+  panic("CoreEntitlements: This API is no longer supported\n");
 }
 
-void
-csblob_os_entitlements_set(struct cs_blob *csblob, void * entitlements)
-{
-	assert(csblob->csb_entitlements == NULL);
-	if (entitlements) {
-		osobject_retain(entitlements);
-	}
-	csblob->csb_entitlements = entitlements;
+void csblob_os_entitlements_set(struct cs_blob *csblob, void *entitlements) {
+  assert(csblob->csb_entitlements == NULL);
+  if (entitlements) {
+    osobject_retain(entitlements);
+  }
+  csblob->csb_entitlements = entitlements;
 }
 
-void *
-csblob_os_entitlements_copy(struct cs_blob *csblob)
-{
-	if (!csblob->csb_entitlements) {
-		return NULL;
-	}
-	osobject_retain(csblob->csb_entitlements);
-	return csblob->csb_entitlements;
+void *csblob_os_entitlements_copy(struct cs_blob *csblob) {
+  if (!csblob->csb_entitlements) {
+    return NULL;
+  }
+  osobject_retain(csblob->csb_entitlements);
+  return csblob->csb_entitlements;
 }
 
-void *
-csblob_os_entitlements_get(struct cs_blob *csblob)
-{
-	if (!csblob->csb_entitlements) {
-		return NULL;
-	}
-	return csblob->csb_entitlements;
+void *csblob_os_entitlements_get(struct cs_blob *csblob) {
+  if (!csblob->csb_entitlements) {
+    return NULL;
+  }
+  return csblob->csb_entitlements;
 }
 
-void *
-csblob_get_storage_addr(struct cs_blob *csblob)
-{
-	void *addr = csblob->csb_ro_addr;
-	cs_blob_require((struct cs_blob *)addr, NULL);
-	return addr;
+void *csblob_get_storage_addr(struct cs_blob *csblob) {
+  void *addr = csblob->csb_ro_addr;
+  cs_blob_require((struct cs_blob *)addr, NULL);
+  return addr;
 }
 
 /*
@@ -845,30 +781,26 @@ csblob_get_storage_addr(struct cs_blob *csblob)
  * Description: This function returns a pointer to the
  *		team id of the process p
  */
-const char *
-csproc_get_teamid(struct proc *p)
-{
-	struct cs_blob *csblob;
+const char *csproc_get_teamid(struct proc *p) {
+  struct cs_blob *csblob;
 
-	csblob = csproc_get_blob(p);
-	if (csblob == NULL) {
-		return NULL;
-	}
+  csblob = csproc_get_blob(p);
+  if (csblob == NULL) {
+    return NULL;
+  }
 
-	return csblob_get_teamid(csblob);
+  return csblob_get_teamid(csblob);
 }
 
-const char *
-csproc_get_identity(struct proc *p)
-{
-	struct cs_blob *csblob = NULL;
+const char *csproc_get_identity(struct proc *p) {
+  struct cs_blob *csblob = NULL;
 
-	csblob = csproc_get_blob(p);
-	if (csblob == NULL) {
-		return NULL;
-	}
+  csblob = csproc_get_blob(p);
+  if (csblob == NULL) {
+    return NULL;
+  }
 
-	return csblob_get_identity(csblob);
+  return csblob_get_identity(csblob);
 }
 
 /*
@@ -877,17 +809,15 @@ csproc_get_identity(struct proc *p)
  * Description: This function returns the signer type
  *		of the process p
  */
-unsigned int
-csproc_get_signer_type(struct proc *p)
-{
-	struct cs_blob *csblob;
+unsigned int csproc_get_signer_type(struct proc *p) {
+  struct cs_blob *csblob;
 
-	csblob = csproc_get_blob(p);
-	if (csblob == NULL) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  csblob = csproc_get_blob(p);
+  if (csblob == NULL) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	return csblob_get_signer_type(csblob);
+  return csblob_get_signer_type(csblob);
 }
 
 /*
@@ -896,21 +826,19 @@ csproc_get_signer_type(struct proc *p)
  * Description: This function returns a pointer to the
  *		team id of the binary at the given offset in vnode vp
  */
-const char *
-csvnode_get_teamid(struct vnode *vp, off_t offset)
-{
-	struct cs_blob *csblob;
+const char *csvnode_get_teamid(struct vnode *vp, off_t offset) {
+  struct cs_blob *csblob;
 
-	if (vp == NULL) {
-		return NULL;
-	}
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	csblob = ubc_cs_blob_get(vp, -1, -1, offset);
-	if (csblob == NULL) {
-		return NULL;
-	}
+  csblob = ubc_cs_blob_get(vp, -1, -1, offset);
+  if (csblob == NULL) {
+    return NULL;
+  }
 
-	return csblob_get_teamid(csblob);
+  return csblob_get_teamid(csblob);
 }
 
 /*
@@ -919,149 +847,133 @@ csvnode_get_teamid(struct vnode *vp, off_t offset)
  * Description: This function returns the value
  *		of the platform_binary field for proc p
  */
-int
-csproc_get_platform_binary(struct proc *p)
-{
-	struct cs_blob *csblob;
+int csproc_get_platform_binary(struct proc *p) {
+  struct cs_blob *csblob;
 
-	csblob = csproc_get_blob(p);
+  csblob = csproc_get_blob(p);
 
-	/* If there is no csblob this returns 0 because
-	 *  it is true that it is not a platform binary */
-	return (csblob == NULL) ? 0 : csblob->csb_platform_binary;
+  /* If there is no csblob this returns 0 because
+   *  it is true that it is not a platform binary */
+  return (csblob == NULL) ? 0 : csblob->csb_platform_binary;
 }
 
-int
-csproc_get_platform_path(struct proc *p)
-{
-	struct cs_blob *csblob;
+int csproc_get_platform_path(struct proc *p) {
+  struct cs_blob *csblob;
 
-	csblob = csproc_get_blob(p);
+  csblob = csproc_get_blob(p);
 
-	return (csblob == NULL) ? 0 : csblob->csb_platform_path;
+  return (csblob == NULL) ? 0 : csblob->csb_platform_path;
 }
 
 #if DEVELOPMENT || DEBUG
-void
-csproc_clear_platform_binary(struct proc *p)
-{
-	struct cs_blob *csblob = csproc_get_blob(p);
-	struct cs_blob_platform_flags platform_flags;
+void csproc_clear_platform_binary(struct proc *p) {
+  struct cs_blob *csblob = csproc_get_blob(p);
+  struct cs_blob_platform_flags platform_flags;
 
-	if (csblob == NULL) {
-		return;
-	}
+  if (csblob == NULL) {
+    return;
+  }
 
-	if (cs_debug) {
-		printf("clearing platform binary on proc/task: pid = %d\n", proc_getpid(p));
-	}
+  if (cs_debug) {
+    printf("clearing platform binary on proc/task: pid = %d\n", proc_getpid(p));
+  }
 
-	platform_flags = csblob->csb_platform_flags;
-	platform_flags.csb_platform_binary = 0;
-	platform_flags.csb_platform_path = 0;
+  platform_flags = csblob->csb_platform_flags;
+  platform_flags.csb_platform_binary = 0;
+  platform_flags.csb_platform_path = 0;
 
-	zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_platform_flags,
-	    &platform_flags);
+  zalloc_ro_update_field(ZONE_ID_CS_BLOB, csblob, csb_platform_flags,
+                         &platform_flags);
 
-	task_set_platform_binary(proc_task(p), FALSE);
+  task_set_platform_binary(proc_task(p), FALSE);
 }
 #endif
 
-void
-csproc_disable_enforcement(struct proc* __unused p)
-{
+void csproc_disable_enforcement(struct proc *__unused p) {
 #if !CONFIG_ENFORCE_SIGNED_CODE
-	if (p != NULL) {
-		proc_lock(p);
-		proc_csflags_clear(p, CS_ENFORCEMENT);
-		vm_map_cs_enforcement_set(get_task_map(proc_task(p)), FALSE);
-		proc_unlock(p);
-	}
+  if (p != NULL) {
+    proc_lock(p);
+    proc_csflags_clear(p, CS_ENFORCEMENT);
+    vm_map_cs_enforcement_set(get_task_map(proc_task(p)), FALSE);
+    proc_unlock(p);
+  }
 #endif
 }
 
 /* Function: csproc_mark_invalid_allowed
  *
- * Description: Mark the process as being allowed to go invalid. Called as part of
- *		task_for_pid and ptrace policy. Note CS_INVALID_ALLOWED only matters for
+ * Description: Mark the process as being allowed to go invalid. Called as part
+ * of task_for_pid and ptrace policy. Note CS_INVALID_ALLOWED only matters for
  *		processes that have been opted into CS_ENFORCEMENT.
  */
-void
-csproc_mark_invalid_allowed(struct proc* __unused p)
-{
+void csproc_mark_invalid_allowed(struct proc *__unused p) {
 #if !CONFIG_ENFORCE_SIGNED_CODE
-	if (p != NULL) {
-		proc_lock(p);
-		proc_csflags_set(p, CS_INVALID_ALLOWED);
-		proc_unlock(p);
-	}
+  if (p != NULL) {
+    proc_lock(p);
+    proc_csflags_set(p, CS_INVALID_ALLOWED);
+    proc_unlock(p);
+  }
 #endif
 }
 
 /*
  * Function: csproc_check_invalid_allowed
  *
- * Description: Returns 1 if the process has been marked as allowed to go invalid
- *		because it gave its task port to an allowed process.
+ * Description: Returns 1 if the process has been marked as allowed to go
+ * invalid because it gave its task port to an allowed process.
  */
-int
-csproc_check_invalid_allowed(struct proc* __unused p)
-{
+int csproc_check_invalid_allowed(struct proc *__unused p) {
 #if !CONFIG_ENFORCE_SIGNED_CODE
-	if (p == NULL) {
-		p = current_proc();
-	}
+  if (p == NULL) {
+    p = current_proc();
+  }
 
-	if (p != NULL && (proc_getcsflags(p) & CS_INVALID_ALLOWED)) {
-		return 1;
-	}
+  if (p != NULL && (proc_getcsflags(p) & CS_INVALID_ALLOWED)) {
+    return 1;
+  }
 #endif
-	return 0;
+  return 0;
 }
 
 /*
  * Function: csproc_get_prod_signed
  *
  * Description: Returns 1 if process is not signed with a developer identity.
- *		Note the inverted meaning from the cs_flag to make the error case safer.
- *		Will go away with rdar://problem/28322552.
+ *		Note the inverted meaning from the cs_flag to make the error
+ * case safer. Will go away with rdar://problem/28322552.
  */
-int
-csproc_get_prod_signed(struct proc *p)
-{
-	return (proc_getcsflags(p) & CS_DEV_CODE) == 0;
+int csproc_get_prod_signed(struct proc *p) {
+  return (proc_getcsflags(p) & CS_DEV_CODE) == 0;
 }
 
-int
-csproc_get_validation_category(struct proc *pt, unsigned int *out_validation_category)
-{
-	struct cs_blob* blob = NULL;
-	unsigned int validation_category = CS_VALIDATION_CATEGORY_INVALID;
-	int error;
+int csproc_get_validation_category(struct proc *pt,
+                                   unsigned int *out_validation_category) {
+  struct cs_blob *blob = NULL;
+  unsigned int validation_category = CS_VALIDATION_CATEGORY_INVALID;
+  int error;
 
-	proc_lock(pt);
-	if ((proc_getcsflags(pt) & (CS_VALID | CS_DEBUGGED)) == 0) {
-		proc_unlock(pt);
-		error = EINVAL;
-		goto out;
-	}
-	blob = csproc_get_blob(pt);
-	proc_unlock(pt);
+  proc_lock(pt);
+  if ((proc_getcsflags(pt) & (CS_VALID | CS_DEBUGGED)) == 0) {
+    proc_unlock(pt);
+    error = EINVAL;
+    goto out;
+  }
+  blob = csproc_get_blob(pt);
+  proc_unlock(pt);
 
-	if (!blob) {
-		error = EBADEXEC;
-		goto out;
-	}
+  if (!blob) {
+    error = EBADEXEC;
+    goto out;
+  }
 
-	validation_category = csblob_get_validation_category(blob);
-	if (out_validation_category) {
-		*out_validation_category = validation_category;
-	}
-	error = KERN_SUCCESS;
+  validation_category = csblob_get_validation_category(blob);
+  if (out_validation_category) {
+    *out_validation_category = validation_category;
+  }
+  error = KERN_SUCCESS;
 out:
-	return error;
+  return error;
 }
-
 
 /*
  * Function: csfg_get_platform_binary
@@ -1070,173 +982,169 @@ out:
  *		platform binary field for the
  *              fileglob fg
  */
-int
-csfg_get_platform_binary(struct fileglob *fg)
-{
-	int platform_binary = 0;
-	struct ubc_info *uip;
-	vnode_t vp;
+int csfg_get_platform_binary(struct fileglob *fg) {
+  int platform_binary = 0;
+  struct ubc_info *uip;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return 0;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return 0;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return 0;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return 0;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blobs == NULL) {
-		goto out;
-	}
+  if (uip->cs_blobs == NULL) {
+    goto out;
+  }
 
-	/* It is OK to extract the teamid from the first blob
-	 *  because all blobs of a vnode must have the same teamid */
-	platform_binary = uip->cs_blobs->csb_platform_binary;
+  /* It is OK to extract the teamid from the first blob
+   *  because all blobs of a vnode must have the same teamid */
+  platform_binary = uip->cs_blobs->csb_platform_binary;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return platform_binary;
+  return platform_binary;
 }
 
-int
-csfg_get_supplement_platform_binary(struct fileglob *fg __unused)
-{
+int csfg_get_supplement_platform_binary(struct fileglob *fg __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	int platform_binary = 0;
-	struct ubc_info *uip;
-	vnode_t vp;
+  int platform_binary = 0;
+  struct ubc_info *uip;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return 0;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return 0;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return 0;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return 0;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blob_supplement == NULL) {
-		goto out;
-	}
+  if (uip->cs_blob_supplement == NULL) {
+    goto out;
+  }
 
-	platform_binary = uip->cs_blob_supplement->csb_platform_binary;
+  platform_binary = uip->cs_blob_supplement->csb_platform_binary;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return platform_binary;
+  return platform_binary;
 #else
-	// Supplemental signatures are only allowed in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// Return false if anyone asks about them
-	return 0;
+  // Supplemental signatures are only allowed in CONFIG_SUPPLEMENTAL_SIGNATURES
+  // Return false if anyone asks about them
+  return 0;
 #endif
 }
 
-uint8_t *
-csfg_get_cdhash(struct fileglob *fg, uint64_t offset, size_t *cdhash_size)
-{
-	vnode_t vp;
+uint8_t *csfg_get_cdhash(struct fileglob *fg, uint64_t offset,
+                         size_t *cdhash_size) {
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get(vp, -1, -1, offset)) == NULL) {
-		return NULL;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get(vp, -1, -1, offset)) == NULL) {
+    return NULL;
+  }
 
-	if (cdhash_size) {
-		*cdhash_size = CS_CDHASH_LEN;
-	}
-	return csblob->csb_cdhash;
+  if (cdhash_size) {
+    *cdhash_size = CS_CDHASH_LEN;
+  }
+  return csblob->csb_cdhash;
 }
 
-uint8_t *
-csfg_get_supplement_cdhash(struct fileglob *fg __unused, uint64_t offset __unused, size_t *cdhash_size __unused)
-{
+uint8_t *csfg_get_supplement_cdhash(struct fileglob *fg __unused,
+                                    uint64_t offset __unused,
+                                    size_t *cdhash_size __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	vnode_t vp;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
-		return NULL;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
+    return NULL;
+  }
 
-	if (cdhash_size) {
-		*cdhash_size = CS_CDHASH_LEN;
-	}
-	return csblob->csb_cdhash;
+  if (cdhash_size) {
+    *cdhash_size = CS_CDHASH_LEN;
+  }
+  return csblob->csb_cdhash;
 #else
-	// Supplemental signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// return NULL if anyone asks about them
-	return NULL;
+  // Supplemental signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES return NULL if anyone asks about them
+  return NULL;
 #endif
 }
 
 const uint8_t *
-csfg_get_supplement_linkage_cdhash(struct fileglob *fg __unused, uint64_t offset __unused, size_t *cdhash_size __unused)
-{
+csfg_get_supplement_linkage_cdhash(struct fileglob *fg __unused,
+                                   uint64_t offset __unused,
+                                   size_t *cdhash_size __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	vnode_t vp;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
-		return NULL;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
+    return NULL;
+  }
 
-	if (cdhash_size) {
-		*cdhash_size = CS_CDHASH_LEN;
-	}
+  if (cdhash_size) {
+    *cdhash_size = CS_CDHASH_LEN;
+  }
 
-	return csblob->csb_linkage;
+  return csblob->csb_linkage;
 #else
-	// Supplemental signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// return NULL if anyone asks about them
-	return NULL;
+  // Supplemental signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES return NULL if anyone asks about them
+  return NULL;
 #endif
 }
 
@@ -1246,85 +1154,81 @@ csfg_get_supplement_linkage_cdhash(struct fileglob *fg __unused, uint64_t offset
  * Description: This returns the signer type
  *              for the fileglob fg
  */
-unsigned int
-csfg_get_signer_type(struct fileglob *fg)
-{
-	struct ubc_info *uip;
-	unsigned int signer_type = CS_SIGNER_TYPE_UNKNOWN;
-	vnode_t vp;
+unsigned int csfg_get_signer_type(struct fileglob *fg) {
+  struct ubc_info *uip;
+  unsigned int signer_type = CS_SIGNER_TYPE_UNKNOWN;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blobs == NULL) {
-		goto out;
-	}
+  if (uip->cs_blobs == NULL) {
+    goto out;
+  }
 
-	/* It is OK to extract the signer type from the first blob,
-	 *  because all blobs of a vnode must have the same signer type. */
-	signer_type = uip->cs_blobs->csb_signer_type;
+  /* It is OK to extract the signer type from the first blob,
+   *  because all blobs of a vnode must have the same signer type. */
+  signer_type = uip->cs_blobs->csb_signer_type;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return signer_type;
+  return signer_type;
 }
 
-unsigned int
-csfg_get_supplement_signer_type(struct fileglob *fg __unused)
-{
+unsigned int csfg_get_supplement_signer_type(struct fileglob *fg __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	struct ubc_info *uip;
-	unsigned int signer_type = CS_SIGNER_TYPE_UNKNOWN;
-	vnode_t vp;
+  struct ubc_info *uip;
+  unsigned int signer_type = CS_SIGNER_TYPE_UNKNOWN;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blob_supplement == NULL) {
-		goto out;
-	}
+  if (uip->cs_blob_supplement == NULL) {
+    goto out;
+  }
 
-	signer_type = uip->cs_blob_supplement->csb_signer_type;
+  signer_type = uip->cs_blob_supplement->csb_signer_type;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return signer_type;
+  return signer_type;
 #else
-	// Supplemental signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// Return unknown if anyone asks
-	return CS_SIGNER_TYPE_UNKNOWN;
+  // Supplemental signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES Return unknown if anyone asks
+  return CS_SIGNER_TYPE_UNKNOWN;
 #endif
 }
 
@@ -1334,67 +1238,66 @@ out:
  * Description: This returns the validation category
  *              for the fileglob fg
  */
-unsigned int
-csfg_get_validation_category(struct fileglob *fg, uint64_t offset)
-{
-	unsigned int validation_category = CS_VALIDATION_CATEGORY_INVALID;
-	vnode_t vp;
+unsigned int csfg_get_validation_category(struct fileglob *fg,
+                                          uint64_t offset) {
+  unsigned int validation_category = CS_VALIDATION_CATEGORY_INVALID;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return CS_VALIDATION_CATEGORY_INVALID;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return CS_VALIDATION_CATEGORY_INVALID;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return CS_VALIDATION_CATEGORY_INVALID;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return CS_VALIDATION_CATEGORY_INVALID;
+  }
 
-	vnode_lock(vp);
+  vnode_lock(vp);
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get(vp, -1, -1, offset)) == NULL) {
-		goto out;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get(vp, -1, -1, offset)) == NULL) {
+    goto out;
+  }
 
-	validation_category = csblob->csb_validation_category;
+  validation_category = csblob->csb_validation_category;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return validation_category;
+  return validation_category;
 }
 
 unsigned int
-csfg_get_supplement_validation_category(struct fileglob *fg __unused, uint64_t offset __unused)
-{
+csfg_get_supplement_validation_category(struct fileglob *fg __unused,
+                                        uint64_t offset __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	unsigned int validation_category = CS_VALIDATION_CATEGORY_INVALID;
-	vnode_t vp;
+  unsigned int validation_category = CS_VALIDATION_CATEGORY_INVALID;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return CS_SIGNER_TYPE_UNKNOWN;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return CS_SIGNER_TYPE_UNKNOWN;
+  }
 
-	vnode_lock(vp);
+  vnode_lock(vp);
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
-		goto out;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
+    goto out;
+  }
 
-	validation_category = csblob->csb_validation_category;
+  validation_category = csblob->csb_validation_category;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return validation_category;
+  return validation_category;
 #else
-	// Supplemental signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// Return invalid if anyone asks
-	return CS_VALIDATION_CATEGORY_INVALID;
+  // Supplemental signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES Return invalid if anyone asks
+  return CS_VALIDATION_CATEGORY_INVALID;
 #endif
 }
 
@@ -1404,85 +1307,81 @@ out:
  * Description: This returns a pointer to
  *              the teamid for the fileglob fg
  */
-const char *
-csfg_get_teamid(struct fileglob *fg)
-{
-	struct ubc_info *uip;
-	const char *str = NULL;
-	vnode_t vp;
+const char *csfg_get_teamid(struct fileglob *fg) {
+  struct ubc_info *uip;
+  const char *str = NULL;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blobs == NULL) {
-		goto out;
-	}
+  if (uip->cs_blobs == NULL) {
+    goto out;
+  }
 
-	/* It is OK to extract the teamid from the first blob
-	 *  because all blobs of a vnode must have the same teamid */
-	str = uip->cs_blobs->csb_teamid;
+  /* It is OK to extract the teamid from the first blob
+   *  because all blobs of a vnode must have the same teamid */
+  str = uip->cs_blobs->csb_teamid;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return str;
+  return str;
 }
 
-const char *
-csfg_get_supplement_teamid(struct fileglob *fg __unused)
-{
+const char *csfg_get_supplement_teamid(struct fileglob *fg __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	struct ubc_info *uip;
-	const char *str = NULL;
-	vnode_t vp;
+  struct ubc_info *uip;
+  const char *str = NULL;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blob_supplement == NULL) {
-		goto out;
-	}
+  if (uip->cs_blob_supplement == NULL) {
+    goto out;
+  }
 
-	str = uip->cs_blob_supplement->csb_supplement_teamid;
+  str = uip->cs_blob_supplement->csb_supplement_teamid;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return str;
+  return str;
 #else
-	// Supplemental Signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// Return NULL if anyone asks
-	return NULL;
+  // Supplemental Signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES Return NULL if anyone asks
+  return NULL;
 #endif
 }
 
@@ -1492,53 +1391,50 @@ out:
  * Description: This returns a pointer to
  *              the csblob for the fileglob fg
  */
-struct cs_blob*
-csfg_get_csblob(struct fileglob *fg, uint64_t offset)
-{
-	vnode_t vp;
+struct cs_blob *csfg_get_csblob(struct fileglob *fg, uint64_t offset) {
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get(vp, -1, -1, offset)) == NULL) {
-		return NULL;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get(vp, -1, -1, offset)) == NULL) {
+    return NULL;
+  }
 
-	return csblob;
+  return csblob;
 }
 
-struct cs_blob*
-csfg_get_supplement_csblob(__unused struct fileglob *fg, __unused uint64_t offset)
-{
+struct cs_blob *csfg_get_supplement_csblob(__unused struct fileglob *fg,
+                                           __unused uint64_t offset) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	vnode_t vp;
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	struct cs_blob *csblob = NULL;
-	if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
-		return NULL;
-	}
+  struct cs_blob *csblob = NULL;
+  if ((csblob = ubc_cs_blob_get_supplement(vp, offset)) == NULL) {
+    return NULL;
+  }
 
-	return csblob;
+  return csblob;
 #else
-	// Supplemental signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// return NULL if anyone asks about them
-	return NULL;
+  // Supplemental signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES return NULL if anyone asks about them
+  return NULL;
 #endif
 }
 
@@ -1546,90 +1442,87 @@ csfg_get_supplement_csblob(__unused struct fileglob *fg, __unused uint64_t offse
  * Function: csfg_get_prod_signed
  *
  * Description: Returns 1 if code is not signed with a developer identity.
- *		Note the inverted meaning from the cs_flag to make the error case safer.
- *		Will go away with rdar://problem/28322552.
+ *		Note the inverted meaning from the cs_flag to make the error
+ * case safer. Will go away with rdar://problem/28322552.
  */
-int
-csfg_get_prod_signed(struct fileglob *fg)
-{
-	struct ubc_info *uip;
-	vnode_t vp;
-	int prod_signed = 0;
+int csfg_get_prod_signed(struct fileglob *fg) {
+  struct ubc_info *uip;
+  vnode_t vp;
+  int prod_signed = 0;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return 0;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return 0;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return 0;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return 0;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blobs == NULL) {
-		goto out;
-	}
+  if (uip->cs_blobs == NULL) {
+    goto out;
+  }
 
-	/* It is OK to extract the flag from the first blob
-	 *  because all blobs of a vnode must have the same cs_flags */
-	prod_signed = (uip->cs_blobs->csb_flags & CS_DEV_CODE) == 0;
+  /* It is OK to extract the flag from the first blob
+   *  because all blobs of a vnode must have the same cs_flags */
+  prod_signed = (uip->cs_blobs->csb_flags & CS_DEV_CODE) == 0;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return prod_signed;
+  return prod_signed;
 }
 
-int
-csfg_get_supplement_prod_signed(struct fileglob *fg __unused)
-{
+int csfg_get_supplement_prod_signed(struct fileglob *fg __unused) {
 #if CONFIG_SUPPLEMENTAL_SIGNATURES
-	struct ubc_info *uip;
-	vnode_t vp;
-	int prod_signed = 0;
+  struct ubc_info *uip;
+  vnode_t vp;
+  int prod_signed = 0;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return 0;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return 0;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return 0;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return 0;
+  }
 
-	vnode_lock(vp);
-	if (!UBCINFOEXISTS(vp)) {
-		goto out;
-	}
+  vnode_lock(vp);
+  if (!UBCINFOEXISTS(vp)) {
+    goto out;
+  }
 
-	uip = vp->v_ubcinfo;
-	if (uip == NULL) {
-		goto out;
-	}
+  uip = vp->v_ubcinfo;
+  if (uip == NULL) {
+    goto out;
+  }
 
-	if (uip->cs_blob_supplement == NULL) {
-		goto out;
-	}
+  if (uip->cs_blob_supplement == NULL) {
+    goto out;
+  }
 
-	/* It is OK to extract the flag from the first blob
-	 *  because all blobs of a vnode must have the same cs_flags */
-	prod_signed = (uip->cs_blob_supplement->csb_flags & CS_DEV_CODE) == 0;
+  /* It is OK to extract the flag from the first blob
+   *  because all blobs of a vnode must have the same cs_flags */
+  prod_signed = (uip->cs_blob_supplement->csb_flags & CS_DEV_CODE) == 0;
 out:
-	vnode_unlock(vp);
+  vnode_unlock(vp);
 
-	return prod_signed;
+  return prod_signed;
 #else
-	// Supplemental signatures are only available in CONFIG_SUPPLEMENTAL_SIGNATURES
-	// Indicate development signed if anyone tries to ask about one.
-	return 0;
+  // Supplemental signatures are only available in
+  // CONFIG_SUPPLEMENTAL_SIGNATURES Indicate development signed if anyone tries
+  // to ask about one.
+  return 0;
 #endif
 }
 
@@ -1639,27 +1532,25 @@ out:
  * Description: This function returns the codesign identity
  *		for the fileglob
  */
-const char *
-csfg_get_identity(struct fileglob *fg, off_t offset)
-{
-	vnode_t vp;
-	struct cs_blob *csblob = NULL;
+const char *csfg_get_identity(struct fileglob *fg, off_t offset) {
+  vnode_t vp;
+  struct cs_blob *csblob = NULL;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return NULL;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return NULL;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return NULL;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return NULL;
+  }
 
-	csblob = ubc_cs_blob_get(vp, -1, -1, offset);
-	if (csblob == NULL) {
-		return NULL;
-	}
+  csblob = ubc_cs_blob_get(vp, -1, -1, offset);
+  if (csblob == NULL) {
+    return NULL;
+  }
 
-	return csblob_get_identity(csblob);
+  return csblob_get_identity(csblob);
 }
 
 /*
@@ -1669,21 +1560,19 @@ csfg_get_identity(struct fileglob *fg, off_t offset)
  *		identifier for the fileglob.  Assumes the fileproc
  *		is being held busy to keep the fileglob consistent.
  */
-uint8_t
-csfg_get_platform_identifier(struct fileglob *fg, off_t offset)
-{
-	vnode_t vp;
+uint8_t csfg_get_platform_identifier(struct fileglob *fg, off_t offset) {
+  vnode_t vp;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return 0;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return 0;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
-	if (vp == NULL) {
-		return 0;
-	}
+  vp = (struct vnode *)fg_get_data(fg);
+  if (vp == NULL) {
+    return 0;
+  }
 
-	return csvnode_get_platform_identifier(vp, offset);
+  return csvnode_get_platform_identifier(vp, offset);
 }
 
 /*
@@ -1693,23 +1582,21 @@ csfg_get_platform_identifier(struct fileglob *fg, off_t offset)
  *		identifier for the vnode.  Assumes a vnode reference
  *		is held.
  */
-uint8_t
-csvnode_get_platform_identifier(struct vnode *vp, off_t offset)
-{
-	struct cs_blob *csblob;
-	const CS_CodeDirectory *code_dir;
+uint8_t csvnode_get_platform_identifier(struct vnode *vp, off_t offset) {
+  struct cs_blob *csblob;
+  const CS_CodeDirectory *code_dir;
 
-	csblob = ubc_cs_blob_get(vp, -1, -1, offset);
-	if (csblob == NULL) {
-		return 0;
-	}
+  csblob = ubc_cs_blob_get(vp, -1, -1, offset);
+  if (csblob == NULL) {
+    return 0;
+  }
 
-	code_dir = csblob->csb_cd;
-	if (code_dir == NULL || ntohl(code_dir->length) < 8) {
-		return 0;
-	}
+  code_dir = csblob->csb_cd;
+  if (code_dir == NULL || ntohl(code_dir->length) < 8) {
+    return 0;
+  }
 
-	return code_dir->platform;
+  return code_dir->platform;
 }
 
 /*
@@ -1719,32 +1606,24 @@ csvnode_get_platform_identifier(struct vnode *vp, off_t offset)
  *		identifier for the proc.  Assumes proc will remain
  *		valid through call.
  */
-uint8_t
-csproc_get_platform_identifier(struct proc *p)
-{
-	if (NULL == p->p_textvp) {
-		return 0;
-	}
+uint8_t csproc_get_platform_identifier(struct proc *p) {
+  if (NULL == p->p_textvp) {
+    return 0;
+  }
 
-	return csvnode_get_platform_identifier(p->p_textvp, p->p_textoff);
+  return csvnode_get_platform_identifier(p->p_textvp, p->p_textoff);
 }
 
-uint32_t
-cs_entitlement_flags(struct proc *p)
-{
-	return proc_getcsflags(p) & CS_ENTITLEMENT_FLAGS;
+uint32_t cs_entitlement_flags(struct proc *p) {
+  return proc_getcsflags(p) & CS_ENTITLEMENT_FLAGS;
 }
 
-int
-cs_restricted(struct proc *p)
-{
-	return (proc_getcsflags(p) & CS_RESTRICT) ? 1 : 0;
+int cs_restricted(struct proc *p) {
+  return (proc_getcsflags(p) & CS_RESTRICT) ? 1 : 0;
 }
 
-int
-csproc_hardened_runtime(struct proc* p)
-{
-	return (proc_getcsflags(p) & CS_RUNTIME) ? 1 : 0;
+int csproc_hardened_runtime(struct proc *p) {
+  return (proc_getcsflags(p) & CS_RUNTIME) ? 1 : 0;
 }
 
 /*
@@ -1756,20 +1635,18 @@ csproc_hardened_runtime(struct proc* p)
  *		cannot go away. The caller must have a
  *		a reference on the fileglob or fileproc
  */
-int
-csfg_get_path(struct fileglob *fg, char *path, int *len)
-{
-	vnode_t vp = NULL;
+int csfg_get_path(struct fileglob *fg, char *path, int *len) {
+  vnode_t vp = NULL;
 
-	if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
-		return -1;
-	}
+  if (FILEGLOB_DTYPE(fg) != DTYPE_VNODE) {
+    return -1;
+  }
 
-	vp = (struct vnode *)fg_get_data(fg);
+  vp = (struct vnode *)fg_get_data(fg);
 
-	/* vn_getpath returns 0 for success,
-	 *  or an error code */
-	return vn_getpath(vp, path, len);
+  /* vn_getpath returns 0 for success,
+   *  or an error code */
+  return vn_getpath(vp, path, len);
 }
 
 /*
@@ -1783,25 +1660,23 @@ csfg_get_path(struct fileglob *fg, char *path, int *len)
  * entitlements blob if found; or will be set to NULL/zero
  * if there were no entitlements.
  */
-int
-cs_entitlements_blob_get_vnode(vnode_t vnode, off_t offset, void **out_start, size_t *out_length)
-{
-	struct cs_blob *csblob;
+int cs_entitlements_blob_get_vnode(vnode_t vnode, off_t offset,
+                                   void **out_start, size_t *out_length) {
+  struct cs_blob *csblob;
 
-	*out_start = NULL;
-	*out_length = 0;
+  *out_start = NULL;
+  *out_length = 0;
 
-	if (vnode == NULL) {
-		return EINVAL;
-	}
+  if (vnode == NULL) {
+    return EINVAL;
+  }
 
-	if ((csblob = ubc_cs_blob_get(vnode, -1, -1, offset)) == NULL) {
-		return 0;
-	}
+  if ((csblob = ubc_cs_blob_get(vnode, -1, -1, offset)) == NULL) {
+    return 0;
+  }
 
-	return csblob_get_entitlements(csblob, out_start, out_length);
+  return csblob_get_entitlements(csblob, out_start, out_length);
 }
-
 
 /* Retrieve the cached entitlements for a vnode
  * Returns:
@@ -1812,23 +1687,22 @@ cs_entitlements_blob_get_vnode(vnode_t vnode, off_t offset, void **out_start, si
  * Note: the entitlements may be NULL if there is nothing cached.
  */
 
-int
-cs_entitlements_dictionary_copy_vnode(vnode_t vnode, off_t offset, void **entitlements)
-{
-	struct cs_blob *csblob;
+int cs_entitlements_dictionary_copy_vnode(vnode_t vnode, off_t offset,
+                                          void **entitlements) {
+  struct cs_blob *csblob;
 
-	*entitlements = NULL;
+  *entitlements = NULL;
 
-	if (vnode == NULL) {
-		return EINVAL;
-	}
+  if (vnode == NULL) {
+    return EINVAL;
+  }
 
-	if ((csblob = ubc_cs_blob_get(vnode, -1, -1, offset)) == NULL) {
-		return 0;
-	}
+  if ((csblob = ubc_cs_blob_get(vnode, -1, -1, offset)) == NULL) {
+    return 0;
+  }
 
-	*entitlements = csblob_entitlements_dictionary_copy(csblob);
-	return 0;
+  *entitlements = csblob_entitlements_dictionary_copy(csblob);
+  return 0;
 }
 
 /*
@@ -1842,16 +1716,14 @@ cs_entitlements_dictionary_copy_vnode(vnode_t vnode, off_t offset, void **entitl
  * entitlements blob if found; or will be set to NULL/zero
  * if there were no entitlements.
  */
-int
-cs_entitlements_blob_get(proc_t p, void **out_start, size_t *out_length)
-{
-	if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
-		return 0;
-	}
+int cs_entitlements_blob_get(proc_t p, void **out_start, size_t *out_length) {
+  if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
+    return 0;
+  }
 
-	return cs_entitlements_blob_get_vnode(p->p_textvp, p->p_textoff, out_start, out_length);
+  return cs_entitlements_blob_get_vnode(p->p_textvp, p->p_textoff, out_start,
+                                        out_length);
 }
-
 
 /* Retrieve the cached entitlements for a process
  * Returns:
@@ -1862,27 +1734,25 @@ cs_entitlements_blob_get(proc_t p, void **out_start, size_t *out_length)
  * Note: the entitlements may be NULL if there is nothing cached.
  */
 
-int
-cs_entitlements_dictionary_copy(proc_t p, void **entitlements)
-{
-	struct cs_blob *csblob;
+int cs_entitlements_dictionary_copy(proc_t p, void **entitlements) {
+  struct cs_blob *csblob;
 
-	*entitlements = NULL;
+  *entitlements = NULL;
 
-	if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
-		return 0;
-	}
+  if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
+    return 0;
+  }
 
-	if (NULL == p->p_textvp) {
-		return EINVAL;
-	}
+  if (NULL == p->p_textvp) {
+    return EINVAL;
+  }
 
-	if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
-		return 0;
-	}
+  if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
+    return 0;
+  }
 
-	*entitlements = csblob_entitlements_dictionary_copy(csblob);
-	return 0;
+  *entitlements = csblob_entitlements_dictionary_copy(csblob);
+  return 0;
 }
 
 /* Retrieve the codesign identity for a process.
@@ -1891,24 +1761,22 @@ cs_entitlements_dictionary_copy(proc_t p, void **entitlements)
  *   string	the cs_identity
  */
 
-const char *
-cs_identity_get(proc_t p)
-{
-	struct cs_blob *csblob;
+const char *cs_identity_get(proc_t p) {
+  struct cs_blob *csblob;
 
-	if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
-		return NULL;
-	}
+  if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
+    return NULL;
+  }
 
-	if (NULL == p->p_textvp) {
-		return NULL;
-	}
+  if (NULL == p->p_textvp) {
+    return NULL;
+  }
 
-	if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
-		return NULL;
-	}
+  if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
+    return NULL;
+  }
 
-	return csblob_get_identity(csblob);
+  return csblob_get_identity(csblob);
 }
 
 /*
@@ -1920,57 +1788,52 @@ cs_identity_get(proc_t p)
  * for CS_VALID.
  */
 
-int
-cs_blob_get(proc_t p, void **out_start, size_t *out_length)
-{
-	struct cs_blob *csblob;
+int cs_blob_get(proc_t p, void **out_start, size_t *out_length) {
+  struct cs_blob *csblob;
 
-	*out_start = NULL;
-	*out_length = 0;
+  *out_start = NULL;
+  *out_length = 0;
 
-	if (NULL == p->p_textvp) {
-		return EINVAL;
-	}
+  if (NULL == p->p_textvp) {
+    return EINVAL;
+  }
 
-	if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
-		return 0;
-	}
+  if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
+    return 0;
+  }
 
-	*out_start = csblob->csb_mem_kaddr;
-	*out_length = csblob->csb_mem_size;
+  *out_start = csblob->csb_mem_kaddr;
+  *out_length = csblob->csb_mem_size;
 
-	return 0;
+  return 0;
 }
 
 /*
  * return cshash of a process, cdhash is of size CS_CDHASH_LEN
  */
 
-uint8_t *
-cs_get_cdhash(struct proc *p)
-{
-	struct cs_blob *csblob;
+uint8_t *cs_get_cdhash(struct proc *p) {
+  struct cs_blob *csblob;
 
-	if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
-		return NULL;
-	}
+  if ((proc_getcsflags(p) & CS_SIGNED) == 0) {
+    return NULL;
+  }
 
-	if (NULL == p->p_textvp) {
-		return NULL;
-	}
+  if (NULL == p->p_textvp) {
+    return NULL;
+  }
 
-	if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
-		return NULL;
-	}
+  if ((csblob = ubc_cs_blob_get(p->p_textvp, -1, -1, p->p_textoff)) == NULL) {
+    return NULL;
+  }
 
-	return csblob->csb_cdhash;
+  return csblob->csb_cdhash;
 }
 
 /*
  * return launch type of a process being created.
  */
 cs_launch_type_t
-launch_constraint_data_get_launch_type(launch_constraint_data_t lcd)
-{
-	return lcd->launch_type;
+launch_constraint_data_get_launch_type(launch_constraint_data_t lcd) {
+  return lcd->launch_type;
 }

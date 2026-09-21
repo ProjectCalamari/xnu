@@ -31,20 +31,21 @@
 #if !defined(__LP64__)
 
 #include <IOKit/IOCommandQueue.h>
-#include <IOKit/IOWorkLoop.h>
-#include <IOKit/IOTimeStamp.h>
 #include <IOKit/IOKitDebug.h>
+#include <IOKit/IOTimeStamp.h>
+#include <IOKit/IOWorkLoop.h>
 #include <libkern/c++/OSSharedPtr.h>
 
 #include <mach/sync_policy.h>
 
 #if IOKITSTATS
 
-#define IOStatisticsInitializeCounter() \
-	IOStatistics::setCounterType(reserved->counter, kIOStatisticsCommandQueueCounter)
+#define IOStatisticsInitializeCounter()                                        \
+  IOStatistics::setCounterType(reserved->counter,                              \
+                               kIOStatisticsCommandQueueCounter)
 
-#define IOStatisticsActionCall() \
-	IOStatistics::countCommandQueueActionCall(reserved->counter)
+#define IOStatisticsActionCall()                                               \
+  IOStatistics::countCommandQueueActionCall(reserved->counter)
 
 #else
 
@@ -53,80 +54,75 @@
 
 #endif /* IOKITSTATS */
 
-#define NUM_FIELDS_IN_COMMAND   4
+#define NUM_FIELDS_IN_COMMAND 4
 typedef struct commandEntryTag {
-	void *f[NUM_FIELDS_IN_COMMAND];
+  void *f[NUM_FIELDS_IN_COMMAND];
 } commandEntryT;
 
 #define super IOEventSource
 
 OSDefineMetaClassAndStructors(IOCommandQueue, IOEventSource)
 
-/*[
- *  Instance Methods
- *
- *  initWithNext:owner:action:size:
- *   - initWithNext: (IOEventSource *) inNext
- *           owner: (id) inOwner
- *           action: (SEL) inAction
- *             size: (int) inSize;
- *
- *  Primary initialiser for the IOCommandQueue class.  Returns an
- *  IOCommandQueue object that is initialised with the next object in
- *  the chain and the owner and action. On return the signalWorkAvailableIMP
- *  has been cached for this function.
- *
- *  If the object fails to initialise for some reason then [self free] will
- *  be called and nil will be returned.
- *
- *  See also: initWithNext:owner:action:(IOEventSource)
- *  ]*/
-bool
-IOCommandQueue::init(OSObject *inOwner,
-    IOCommandQueueAction inAction,
-    int inSize)
-{
-	if (!super::init(inOwner, (IOEventSourceAction) inAction)) {
-		return false;
-	}
+    /*[
+     *  Instance Methods
+     *
+     *  initWithNext:owner:action:size:
+     *   - initWithNext: (IOEventSource *) inNext
+     *           owner: (id) inOwner
+     *           action: (SEL) inAction
+     *             size: (int) inSize;
+     *
+     *  Primary initialiser for the IOCommandQueue class.  Returns an
+     *  IOCommandQueue object that is initialised with the next object in
+     *  the chain and the owner and action. On return the signalWorkAvailableIMP
+     *  has been cached for this function.
+     *
+     *  If the object fails to initialise for some reason then [self free] will
+     *  be called and nil will be returned.
+     *
+     *  See also: initWithNext:owner:action:(IOEventSource)
+     *  ]*/
+    bool IOCommandQueue::init(OSObject *inOwner, IOCommandQueueAction inAction,
+                              int inSize) {
+  if (!super::init(inOwner, (IOEventSourceAction)inAction)) {
+    return false;
+  }
 
-	if (KERN_SUCCESS
-	    != semaphore_create(kernel_task, &producerSema, SYNC_POLICY_FIFO, inSize)) {
-		return false;
-	}
+  if (KERN_SUCCESS !=
+      semaphore_create(kernel_task, &producerSema, SYNC_POLICY_FIFO, inSize)) {
+    return false;
+  }
 
-	size = inSize + 1; /* Allocate one more entry than needed */
+  size = inSize + 1; /* Allocate one more entry than needed */
 
-	queue = (void *)kalloc_type(commandEntryT, size, Z_WAITOK_ZERO);
-	if (!queue) {
-		return false;
-	}
+  queue = (void *)kalloc_type(commandEntryT, size, Z_WAITOK_ZERO);
+  if (!queue) {
+    return false;
+  }
 
-	producerLock = IOLockAlloc();
-	if (!producerLock) {
-		return false;
-	}
+  producerLock = IOLockAlloc();
+  if (!producerLock) {
+    return false;
+  }
 
-	producerIndex = consumerIndex = 0;
+  producerIndex = consumerIndex = 0;
 
-	IOStatisticsInitializeCounter();
+  IOStatisticsInitializeCounter();
 
-	return true;
+  return true;
 }
 
 OSSharedPtr<IOCommandQueue>
-IOCommandQueue::commandQueue(OSObject *inOwner,
-    IOCommandQueueAction inAction,
-    int inSize)
-{
-	OSSharedPtr<IOCommandQueue> me = OSMakeShared<IOCommandQueue>();
+IOCommandQueue::commandQueue(OSObject *inOwner, IOCommandQueueAction inAction,
+                             int inSize) {
+  OSSharedPtr<IOCommandQueue> me = OSMakeShared<IOCommandQueue>();
 
-	if (me && !me->init(inOwner, inAction, inSize)) {
-		me.reset();
-		return nullptr;
-	}
+  if (me && !me->init(inOwner, inAction, inSize)) {
+    me.reset();
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
 /*[
@@ -136,63 +132,63 @@ IOCommandQueue::commandQueue(OSObject *inOwner,
  *  Mandatory free of the object independent of the current retain count.
  *  Returns nil.
  *  ]*/
-void
-IOCommandQueue::free()
-{
-	if (queue) {
-		kfree_type(commandEntryT, size, queue);
-	}
-	if (producerSema) {
-		semaphore_destroy(kernel_task, producerSema);
-	}
-	if (producerLock) {
-		IOLockFree(producerLock);
-	}
+void IOCommandQueue::free() {
+  if (queue) {
+    kfree_type(commandEntryT, size, queue);
+  }
+  if (producerSema) {
+    semaphore_destroy(kernel_task, producerSema);
+  }
+  if (producerLock) {
+    IOLockFree(producerLock);
+  }
 
-	super::free();
+  super::free();
 }
 
 #if NUM_FIELDS_IN_COMMAND != 4
 #error IOCommandQueue::checkForWork needs to be updated for new command size
 #endif
 
-bool
-IOCommandQueue::checkForWork()
-{
-	void        *field0, *field1, *field2, *field3;
-	bool    trace = (gIOKitTrace & kIOTraceCommandGates) ? true : false;
+bool IOCommandQueue::checkForWork() {
+  void *field0, *field1, *field2, *field3;
+  bool trace = (gIOKitTrace & kIOTraceCommandGates) ? true : false;
 
-	if (!enabled || consumerIndex == producerIndex) {
-		return false;
-	}
+  if (!enabled || consumerIndex == producerIndex) {
+    return false;
+  }
 
-	{
-		commandEntryT *q = (commandEntryT *) queue;
-		int localIndex = consumerIndex;
+  {
+    commandEntryT *q = (commandEntryT *)queue;
+    int localIndex = consumerIndex;
 
-		field0 = q[localIndex].f[0]; field1 = q[localIndex].f[1];
-		field2 = q[localIndex].f[2]; field3 = q[localIndex].f[3];
-		semaphore_signal(producerSema);
-	}
+    field0 = q[localIndex].f[0];
+    field1 = q[localIndex].f[1];
+    field2 = q[localIndex].f[2];
+    field3 = q[localIndex].f[3];
+    semaphore_signal(producerSema);
+  }
 
-	if (++consumerIndex >= size) {
-		consumerIndex = 0;
-	}
+  if (++consumerIndex >= size) {
+    consumerIndex = 0;
+  }
 
-	if (trace) {
-		IOTimeStampStartConstant(IODBG_CMDQ(IOCMDQ_ACTION),
-		    VM_KERNEL_ADDRHIDE(action), VM_KERNEL_ADDRHIDE(owner));
-	}
+  if (trace) {
+    IOTimeStampStartConstant(IODBG_CMDQ(IOCMDQ_ACTION),
+                             VM_KERNEL_ADDRHIDE(action),
+                             VM_KERNEL_ADDRHIDE(owner));
+  }
 
-	IOStatisticsActionCall();
-	(*(IOCommandQueueAction) action)(owner, field0, field1, field2, field3);
+  IOStatisticsActionCall();
+  (*(IOCommandQueueAction)action)(owner, field0, field1, field2, field3);
 
-	if (trace) {
-		IOTimeStampEndConstant(IODBG_CMDQ(IOCMDQ_ACTION),
-		    VM_KERNEL_ADDRHIDE(action), VM_KERNEL_ADDRHIDE(owner));
-	}
+  if (trace) {
+    IOTimeStampEndConstant(IODBG_CMDQ(IOCMDQ_ACTION),
+                           VM_KERNEL_ADDRHIDE(action),
+                           VM_KERNEL_ADDRHIDE(owner));
+  }
 
-	return consumerIndex != producerIndex;
+  return consumerIndex != producerIndex;
 }
 
 /*[
@@ -215,108 +211,106 @@ IOCommandQueue::checkForWork()
 #error IOCommandQueue::enqueueCommand needs to be updated
 #endif
 
-kern_return_t
-IOCommandQueue::enqueueCommand(bool gotoSleep,
-    void *field0, void *field1,
-    void *field2, void *field3)
-{
-	kern_return_t rtn = KERN_SUCCESS;
-	int retry;
+kern_return_t IOCommandQueue::enqueueCommand(bool gotoSleep, void *field0,
+                                             void *field1, void *field2,
+                                             void *field3) {
+  kern_return_t rtn = KERN_SUCCESS;
+  int retry;
 
-	/* Make sure there is room in the queue before doing anything else */
+  /* Make sure there is room in the queue before doing anything else */
 
-	if (gotoSleep) {
-		retry = 0;
-		do{
-			rtn = semaphore_wait(producerSema);
-		} while ((KERN_SUCCESS != rtn)
-		    && (KERN_OPERATION_TIMED_OUT != rtn)
-		    && (KERN_SEMAPHORE_DESTROYED != rtn)
-		    && (KERN_TERMINATED != rtn)
-		    && ((retry++) < 4));
-	} else {
-		rtn = semaphore_timedwait(producerSema, MACH_TIMESPEC_ZERO);
-	}
+  if (gotoSleep) {
+    retry = 0;
+    do {
+      rtn = semaphore_wait(producerSema);
+    } while ((KERN_SUCCESS != rtn) && (KERN_OPERATION_TIMED_OUT != rtn) &&
+             (KERN_SEMAPHORE_DESTROYED != rtn) && (KERN_TERMINATED != rtn) &&
+             ((retry++) < 4));
+  } else {
+    rtn = semaphore_timedwait(producerSema, MACH_TIMESPEC_ZERO);
+  }
 
-	if (KERN_SUCCESS != rtn) {
-		return rtn;
-	}
+  if (KERN_SUCCESS != rtn) {
+    return rtn;
+  }
 
-	/* Block other producers */
-	IOTakeLock(producerLock);
+  /* Block other producers */
+  IOTakeLock(producerLock);
 
-	/*
-	 * Make sure that we update the current producer entry before we
-	 * increment the producer pointer.  This avoids a nasty race as the
-	 * test for work is producerIndex != consumerIndex and a signal.
-	 */
-	{
-		commandEntryT *q = (commandEntryT *) queue;
-		int localIndex = producerIndex;
+  /*
+   * Make sure that we update the current producer entry before we
+   * increment the producer pointer.  This avoids a nasty race as the
+   * test for work is producerIndex != consumerIndex and a signal.
+   */
+  {
+    commandEntryT *q = (commandEntryT *)queue;
+    int localIndex = producerIndex;
 
-		q[localIndex].f[0] = field0; q[localIndex].f[1] = field1;
-		q[localIndex].f[2] = field2; q[localIndex].f[3] = field3;
-	}
-	if (++producerIndex >= size) {
-		producerIndex = 0;
-	}
+    q[localIndex].f[0] = field0;
+    q[localIndex].f[1] = field1;
+    q[localIndex].f[2] = field2;
+    q[localIndex].f[3] = field3;
+  }
+  if (++producerIndex >= size) {
+    producerIndex = 0;
+  }
 
-	/* Clear to allow other producers to go now */
-	IOUnlock(producerLock);
+  /* Clear to allow other producers to go now */
+  IOUnlock(producerLock);
 
-	/*
-	 * Right we have created some new work, we had better make sure that
-	 * we notify the work loop that it has to test producerIndex.
-	 */
-	signalWorkAvailable();
-	return rtn;
+  /*
+   * Right we have created some new work, we had better make sure that
+   * we notify the work loop that it has to test producerIndex.
+   */
+  signalWorkAvailable();
+  return rtn;
 }
 
-int
-IOCommandQueue::performAndFlush(OSObject *target,
-    IOCommandQueueAction inAction)
-{
-	int numEntries;
-	kern_return_t rtn;
+int IOCommandQueue::performAndFlush(OSObject *target,
+                                    IOCommandQueueAction inAction) {
+  int numEntries;
+  kern_return_t rtn;
 
-	// Set the defaults if necessary
-	if (!target) {
-		target = owner;
-	}
-	if (!inAction) {
-		inAction = (IOCommandQueueAction) action;
-	}
+  // Set the defaults if necessary
+  if (!target) {
+    target = owner;
+  }
+  if (!inAction) {
+    inAction = (IOCommandQueueAction)action;
+  }
 
-	// Lock out the producers first
-	do {
-		rtn = semaphore_timedwait(producerSema, MACH_TIMESPEC_ZERO);
-	} while (rtn == KERN_SUCCESS);
+  // Lock out the producers first
+  do {
+    rtn = semaphore_timedwait(producerSema, MACH_TIMESPEC_ZERO);
+  } while (rtn == KERN_SUCCESS);
 
-	// now step over all remaining entries in the command queue
-	for (numEntries = 0; consumerIndex != producerIndex;) {
-		void *field0, *field1, *field2, *field3;
+  // now step over all remaining entries in the command queue
+  for (numEntries = 0; consumerIndex != producerIndex;) {
+    void *field0, *field1, *field2, *field3;
 
-		{
-			commandEntryT *q = (commandEntryT *) queue;
-			int localIndex = consumerIndex;
+    {
+      commandEntryT *q = (commandEntryT *)queue;
+      int localIndex = consumerIndex;
 
-			field0 = q[localIndex].f[0]; field1 = q[localIndex].f[1];
-			field2 = q[localIndex].f[2]; field3 = q[localIndex].f[3];
-		}
+      field0 = q[localIndex].f[0];
+      field1 = q[localIndex].f[1];
+      field2 = q[localIndex].f[2];
+      field3 = q[localIndex].f[3];
+    }
 
-		if (++consumerIndex >= size) {
-			consumerIndex = 0;
-		}
+    if (++consumerIndex >= size) {
+      consumerIndex = 0;
+    }
 
-		(*inAction)(target, field0, field1, field2, field3);
-	}
+    (*inAction)(target, field0, field1, field2, field3);
+  }
 
-	// finally refill the producer semaphore to size - 1
-	for (int i = 1; i < size; i++) {
-		semaphore_signal(producerSema);
-	}
+  // finally refill the producer semaphore to size - 1
+  for (int i = 1; i < size; i++) {
+    semaphore_signal(producerSema);
+  }
 
-	return numEntries;
+  return numEntries;
 }
 
 #endif /* !defined(__LP64__) */

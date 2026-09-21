@@ -27,9 +27,8 @@
  */
 
 #pragma once
-#include "std_safe.h"
 #include "mock_dynamic.h"
-
+#include "std_safe.h"
 
 T_MOCK_DYNAMIC_DECLARE(size_t, kernel_func1, (int a, char b));
 T_MOCK_DYNAMIC_DECLARE(size_t, kernel_func2, (int a, char b));

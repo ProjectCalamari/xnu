@@ -28,10 +28,10 @@
 
 #include <mach/mach_types.h>
 
-#include <kern/host.h>
-#include <kern/thread.h>
-#include <kern/task.h>
 #include <kern/extmod_statistics.h>
+#include <kern/host.h>
+#include <kern/task.h>
+#include <kern/thread.h>
 #include <libkern/OSAtomic.h>
 
 #include <uuid/uuid.h>
@@ -66,75 +66,66 @@
 extern void fslog_extmod_msgtracer(void *, void *);
 
 /* local routines */
-static void
-extmod_statistics_log(task_t current_task, task_t target);
+static void extmod_statistics_log(task_t current_task, task_t target);
 
-void
-extmod_statistics_incr_task_for_pid(task_t target)
-{
-	task_t ctask = current_task();
+void extmod_statistics_incr_task_for_pid(task_t target) {
+  task_t ctask = current_task();
 
-	if ((ctask == kernel_task) || (target == TASK_NULL)) {
-		return;
-	}
+  if ((ctask == kernel_task) || (target == TASK_NULL)) {
+    return;
+  }
 
-	if (target != ctask) {
-		ctask->extmod_statistics.task_for_pid_caller_count++;
-		target->extmod_statistics.task_for_pid_count++;
-		OSIncrementAtomic64(&host_extmod_statistics.task_for_pid_count);
-	}
+  if (target != ctask) {
+    ctask->extmod_statistics.task_for_pid_caller_count++;
+    target->extmod_statistics.task_for_pid_count++;
+    OSIncrementAtomic64(&host_extmod_statistics.task_for_pid_count);
+  }
 }
 
-void
-extmod_statistics_incr_thread_set_state(thread_t target)
-{
-	task_t ctask = current_task();
-	task_t ttask;
+void extmod_statistics_incr_thread_set_state(thread_t target) {
+  task_t ctask = current_task();
+  task_t ttask;
 
-	if ((ctask == kernel_task) || (target == THREAD_NULL)) {
-		return;
-	}
+  if ((ctask == kernel_task) || (target == THREAD_NULL)) {
+    return;
+  }
 
-	ttask = get_threadtask(target);
+  ttask = get_threadtask(target);
 
-	if (ttask == TASK_NULL) {
-		return;
-	}
+  if (ttask == TASK_NULL) {
+    return;
+  }
 
-	if (ttask != ctask) {
-		ctask->extmod_statistics.thread_set_state_caller_count++;
-		ttask->extmod_statistics.thread_set_state_count++;
-		OSIncrementAtomic64(&host_extmod_statistics.thread_set_state_count);
-	}
+  if (ttask != ctask) {
+    ctask->extmod_statistics.thread_set_state_caller_count++;
+    ttask->extmod_statistics.thread_set_state_count++;
+    OSIncrementAtomic64(&host_extmod_statistics.thread_set_state_count);
+  }
 }
 
-void
-extmod_statistics_incr_thread_create(task_t target)
-{
-	task_t ctask = current_task();
+void extmod_statistics_incr_thread_create(task_t target) {
+  task_t ctask = current_task();
 
-	if ((ctask == kernel_task) || (target == TASK_NULL)) {
-		return;
-	}
+  if ((ctask == kernel_task) || (target == TASK_NULL)) {
+    return;
+  }
 
-	if (target != ctask) {
-		ctask->extmod_statistics.thread_creation_caller_count++;
-		target->extmod_statistics.thread_creation_count++;
-		OSIncrementAtomic64(&host_extmod_statistics.thread_creation_count);
+  if (target != ctask) {
+    ctask->extmod_statistics.thread_creation_caller_count++;
+    target->extmod_statistics.thread_creation_count++;
+    OSIncrementAtomic64(&host_extmod_statistics.thread_creation_count);
 
-		extmod_statistics_log(ctask, target);
-	}
+    extmod_statistics_log(ctask, target);
+  }
 }
 
-static void
-extmod_statistics_log(task_t current_task, task_t target)
-{
-	void *c_proc;
-	void *t_proc;
+static void extmod_statistics_log(task_t current_task, task_t target) {
+  void *c_proc;
+  void *t_proc;
 
-	c_proc = get_bsdtask_info(current_task);
-	t_proc = get_bsdtask_info(target);
-	if (c_proc && t_proc) {
-		fslog_extmod_msgtracer(c_proc, t_proc);
-	}
+  c_proc = get_bsdtask_info(current_task);
+  t_proc = get_bsdtask_info(target);
+  if (c_proc && t_proc) {
+    fslog_extmod_msgtracer(c_proc, t_proc);
+  }
 }

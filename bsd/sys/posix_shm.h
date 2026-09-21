@@ -45,23 +45,23 @@
 #define _SYS_POSIX_SHM_H_
 
 #include <sys/appleapiopts.h>
-#include <sys/types.h>
 #include <sys/proc.h>
+#include <sys/types.h>
 
 struct label;
 
-#define PSHMNAMLEN      31      /* maximum name segment length we bother with */
+#define PSHMNAMLEN 31 /* maximum name segment length we bother with */
 
 struct pshminfo {
-	unsigned int pshm_flags;
-	unsigned int pshm_usecount;
-	off_t        pshm_length;
-	mode_t       pshm_mode;
-	uid_t        pshm_uid;
-	gid_t        pshm_gid;
-	char         pshm_name[PSHMNAMLEN + 1];
-	void         *pshm_memobject;
-	struct label *pshm_label;
+  unsigned int pshm_flags;
+  unsigned int pshm_usecount;
+  off_t pshm_length;
+  mode_t pshm_mode;
+  uid_t pshm_uid;
+  gid_t pshm_gid;
+  char pshm_name[PSHMNAMLEN + 1];
+  void *pshm_memobject;
+  struct label *pshm_label;
 };
 
 #endif

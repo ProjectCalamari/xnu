@@ -54,8 +54,8 @@ __BEGIN_DECLS
  * @return
  * KERN_SUCCESS or error code on failure.
  */
-extern kern_return_t
-exclaves_aoe_setup(uint8_t *num_message, uint8_t *num_worker);
+extern kern_return_t exclaves_aoe_setup(uint8_t *num_message,
+                                        uint8_t *num_worker);
 
 /*!
  * @function exclaves_aoe_teardown
@@ -63,8 +63,7 @@ exclaves_aoe_setup(uint8_t *num_message, uint8_t *num_worker);
  * @abstract
  * Cleans up state (if any) initialised by exclaves_aoe_setup().
  */
-extern void
-exclaves_aoe_teardown(void);
+extern void exclaves_aoe_teardown(void);
 
 /*!
  * @function exclaves_aoe_message_loop
@@ -75,8 +74,7 @@ exclaves_aoe_teardown(void);
  * the thread was aborted.
  * Used to handle message delivery.
  */
-extern kern_return_t
-exclaves_aoe_message_loop(void);
+extern kern_return_t exclaves_aoe_message_loop(void);
 
 /*!
  * @function exclaves_aoe_work_loop
@@ -87,14 +85,14 @@ exclaves_aoe_message_loop(void);
  * the thread was aborted.
  * Worker threads for message processing.
  */
-extern kern_return_t
-exclaves_aoe_work_loop(void);
+extern kern_return_t exclaves_aoe_work_loop(void);
 
 /*!
  * @function exclaves_aoe_upcall_work_available
  *
  * @abstract
- * Upcall invoked when AOE proxy has recieved new work that needs to be processed.
+ * Upcall invoked when AOE proxy has recieved new work that needs to be
+ * processed.
  *
  * @param work_info
  * Information on the type of work available.
@@ -106,8 +104,8 @@ exclaves_aoe_work_loop(void);
  * TB_ERROR_SUCCESS or error code on failure.
  */
 extern tb_error_t
-    exclaves_aoe_upcall_work_available(const xnuupcallsv2_aoeworkinfo_s * work_info,
-    tb_error_t (^completion)(void));
+exclaves_aoe_upcall_work_available(const xnuupcallsv2_aoeworkinfo_s *work_info,
+                                   tb_error_t (^completion)(void));
 
 __END_DECLS
 

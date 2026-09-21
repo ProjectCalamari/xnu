@@ -58,12 +58,12 @@
 /* POSIX <sys/timers.h>.  For now, we define just enough to be able to build
  *  the pthread library, with its pthread_cond_timedwait() interface.  */
 struct timespec {
-	unsigned long tv_sec;
-	long tv_nsec;
+  unsigned long tv_sec;
+  long tv_nsec;
 };
 
 #define TIMEOFDAY 1
 
 extern int getclock(int, struct timespec *);
 
-#endif  /* _SYS_TIMERS_H_ */
+#endif /* _SYS_TIMERS_H_ */

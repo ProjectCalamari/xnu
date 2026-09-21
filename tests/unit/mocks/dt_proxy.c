@@ -26,64 +26,40 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include "std_safe.h"
 #include "dt_proxy.h"
+#include "std_safe.h"
 #include <darwintest.h>
 
-static void
-pt_assert_true(bool cond, const char *msg)
-{
-	T_ASSERT_TRUE(cond, "%s", msg);
+static void pt_assert_true(bool cond, const char *msg) {
+  T_ASSERT_TRUE(cond, "%s", msg);
 }
-static void
-pt_assert_notnull(void *ptr, const char *msg)
-{
-	T_ASSERT_NOTNULL(ptr, "%s", msg);
+static void pt_assert_notnull(void *ptr, const char *msg) {
+  T_ASSERT_NOTNULL(ptr, "%s", msg);
 }
-static void
-pt_assert_posix_zero(int v, const char *msg)
-{
-	T_ASSERT_POSIX_ZERO(v, "%s", msg);
+static void pt_assert_posix_zero(int v, const char *msg) {
+  T_ASSERT_POSIX_ZERO(v, "%s", msg);
 }
-static void
-pt_log(const char *msg)
-{
-	T_LOG("%s", msg);
-}
-static void
-pt_log_fmtstr(const char* fmt, const char *msg)
-{
-	T_LOG(fmt, msg);
-}
-static void
-pt_fail(const char *msg)
-{
-	T_FAIL("%s", msg);
-}
-static void
-pt_quiet(void)
-{
-	T_QUIET;
-}
+static void pt_log(const char *msg) { T_LOG("%s", msg); }
+static void pt_log_fmtstr(const char *fmt, const char *msg) { T_LOG(fmt, msg); }
+static void pt_fail(const char *msg) { T_FAIL("%s", msg); }
+static void pt_quiet(void) { T_QUIET; }
 
 static struct dt_proxy_callbacks dt_callbacks = {
-	.t_assert_true = &pt_assert_true,
-	.t_assert_notnull = &pt_assert_notnull,
-	.t_assert_posix_zero = &pt_assert_posix_zero,
-	.t_log = &pt_log,
-	.t_log_fmtstr = &pt_log_fmtstr,
-	.t_fail = &pt_fail,
-	.t_quiet = &pt_quiet
-};
+    .t_assert_true = &pt_assert_true,
+    .t_assert_notnull = &pt_assert_notnull,
+    .t_assert_posix_zero = &pt_assert_posix_zero,
+    .t_log = &pt_log,
+    .t_log_fmtstr = &pt_log_fmtstr,
+    .t_fail = &pt_fail,
+    .t_quiet = &pt_quiet};
 
-// This code is linked into every test executable to allow the XNU and mocks .dylibs access to some
-// darwintest functionality.  libdarwintest.a is only linked to the executable so code in the XNU and
-// mocks .dylibs can't call into it directly
-// due to how dyld works, this constructor is going to be called after the fake_kinit() constructor
-// so during fake_kinit() dt_proxy is going to stay NULL and any output to darwintest asserts is lost.
-__attribute__((constructor)) void
-dt_init(void)
-{
-	set_dt_proxy_attached(&dt_callbacks);
-	set_dt_proxy_mock(&dt_callbacks);
+// This code is linked into every test executable to allow the XNU and mocks
+// .dylibs access to some darwintest functionality.  libdarwintest.a is only
+// linked to the executable so code in the XNU and mocks .dylibs can't call into
+// it directly due to how dyld works, this constructor is going to be called
+// after the fake_kinit() constructor so during fake_kinit() dt_proxy is going
+// to stay NULL and any output to darwintest asserts is lost.
+__attribute__((constructor)) void dt_init(void) {
+  set_dt_proxy_attached(&dt_callbacks);
+  set_dt_proxy_mock(&dt_callbacks);
 }

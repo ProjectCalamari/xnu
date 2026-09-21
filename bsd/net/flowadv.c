@@ -79,21 +79,21 @@
  * can now be generated for those previously flow-controlled flows.
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
 #include <sys/kernel.h>
-#include <sys/mcache.h> /* for VERIFY() */
 #include <sys/mbuf.h>
+#include <sys/mcache.h> /* for VERIFY() */
+#include <sys/param.h>
 #include <sys/proc_internal.h>
 #include <sys/socketvar.h>
+#include <sys/systm.h>
 
 #include <kern/assert.h>
-#include <kern/thread.h>
 #include <kern/locks.h>
+#include <kern/thread.h>
 #include <kern/zalloc.h>
 
-#include <netinet/in_pcb.h>
 #include <net/flowadv.h>
+#include <netinet/in_pcb.h>
 #if SKYWALK
 #include <skywalk/os_channel.h>
 #endif /* SKYWALK */
@@ -108,168 +108,151 @@ static STAILQ_HEAD(fadv_head, flowadv_fcentry) fadv_list =
 static thread_t fadv_thread = THREAD_NULL;
 static uint32_t fadv_active;
 
-#define FADV_CACHE_NAME  "flowadv"              /* cache name */
+#define FADV_CACHE_NAME "flowadv" /* cache name */
 
 static int flowadv_thread_cont(int);
 static void flowadv_thread_func(void *, wait_result_t);
 
-void
-flowadv_init(void)
-{
-	if (kernel_thread_start(flowadv_thread_func, NULL, &fadv_thread) !=
-	    KERN_SUCCESS) {
-		panic("%s: couldn't create flow event advisory thread",
-		    __func__);
-		/* NOTREACHED */
-	}
-	thread_deallocate(fadv_thread);
+void flowadv_init(void) {
+  if (kernel_thread_start(flowadv_thread_func, NULL, &fadv_thread) !=
+      KERN_SUCCESS) {
+    panic("%s: couldn't create flow event advisory thread", __func__);
+    /* NOTREACHED */
+  }
+  thread_deallocate(fadv_thread);
 }
 
-struct flowadv_fcentry *
-flowadv_alloc_entry(int how)
-{
-	return kalloc_type(struct flowadv_fcentry, how | Z_ZERO);
+struct flowadv_fcentry *flowadv_alloc_entry(int how) {
+  return kalloc_type(struct flowadv_fcentry, how | Z_ZERO);
 }
 
-void
-flowadv_free_entry(struct flowadv_fcentry *fce)
-{
-	kfree_type(struct flowadv_fcentry, fce);
+void flowadv_free_entry(struct flowadv_fcentry *fce) {
+  kfree_type(struct flowadv_fcentry, fce);
 }
 
-void
-flowadv_add(struct flowadv_fclist *fcl)
-{
-	if (STAILQ_EMPTY(fcl)) {
-		return;
-	}
+void flowadv_add(struct flowadv_fclist *fcl) {
+  if (STAILQ_EMPTY(fcl)) {
+    return;
+  }
 
-	lck_mtx_lock_spin(&fadv_lock);
+  lck_mtx_lock_spin(&fadv_lock);
 
-	STAILQ_CONCAT(&fadv_list, fcl);
-	VERIFY(!STAILQ_EMPTY(&fadv_list));
+  STAILQ_CONCAT(&fadv_list, fcl);
+  VERIFY(!STAILQ_EMPTY(&fadv_list));
 
-	if (!fadv_active && fadv_thread != THREAD_NULL) {
-		wakeup_one((caddr_t)&fadv_list);
-	}
+  if (!fadv_active && fadv_thread != THREAD_NULL) {
+    wakeup_one((caddr_t)&fadv_list);
+  }
 
-	lck_mtx_unlock(&fadv_lock);
+  lck_mtx_unlock(&fadv_lock);
 }
 
-void
-flowadv_add_entry(struct flowadv_fcentry *fce)
-{
-	lck_mtx_lock_spin(&fadv_lock);
-	STAILQ_INSERT_HEAD(&fadv_list, fce, fce_link);
-	VERIFY(!STAILQ_EMPTY(&fadv_list));
+void flowadv_add_entry(struct flowadv_fcentry *fce) {
+  lck_mtx_lock_spin(&fadv_lock);
+  STAILQ_INSERT_HEAD(&fadv_list, fce, fce_link);
+  VERIFY(!STAILQ_EMPTY(&fadv_list));
 
-	if (!fadv_active && fadv_thread != THREAD_NULL) {
-		wakeup_one((caddr_t)&fadv_list);
-	}
+  if (!fadv_active && fadv_thread != THREAD_NULL) {
+    wakeup_one((caddr_t)&fadv_list);
+  }
 
-	lck_mtx_unlock(&fadv_lock);
+  lck_mtx_unlock(&fadv_lock);
 }
 
-static int
-flowadv_thread_cont(int err)
-{
+static int flowadv_thread_cont(int err) {
 #pragma unused(err)
-	for (;;) {
-		LCK_MTX_ASSERT(&fadv_lock, LCK_MTX_ASSERT_OWNED);
-		while (STAILQ_EMPTY(&fadv_list)) {
-			VERIFY(!fadv_active);
-			(void) msleep0(&fadv_list, &fadv_lock, (PSOCK | PSPIN),
-			    "flowadv_cont", 0, flowadv_thread_cont);
-			/* NOTREACHED */
-		}
+  for (;;) {
+    LCK_MTX_ASSERT(&fadv_lock, LCK_MTX_ASSERT_OWNED);
+    while (STAILQ_EMPTY(&fadv_list)) {
+      VERIFY(!fadv_active);
+      (void)msleep0(&fadv_list, &fadv_lock, (PSOCK | PSPIN), "flowadv_cont", 0,
+                    flowadv_thread_cont);
+      /* NOTREACHED */
+    }
 
-		fadv_active = 1;
-		for (;;) {
-			struct flowadv_fcentry *fce;
+    fadv_active = 1;
+    for (;;) {
+      struct flowadv_fcentry *fce;
 
-			VERIFY(!STAILQ_EMPTY(&fadv_list));
-			fce = STAILQ_FIRST(&fadv_list);
-			STAILQ_REMOVE(&fadv_list, fce,
-			    flowadv_fcentry, fce_link);
-			STAILQ_NEXT(fce, fce_link) = NULL;
+      VERIFY(!STAILQ_EMPTY(&fadv_list));
+      fce = STAILQ_FIRST(&fadv_list);
+      STAILQ_REMOVE(&fadv_list, fce, flowadv_fcentry, fce_link);
+      STAILQ_NEXT(fce, fce_link) = NULL;
 
-			lck_mtx_unlock(&fadv_lock);
+      lck_mtx_unlock(&fadv_lock);
 
-			if (fce->fce_event_type == FCE_EVENT_TYPE_CONGESTION_EXPERIENCED) {
-				switch (fce->fce_flowsrc_type) {
-				case FLOWSRC_CHANNEL:
-					kern_channel_flowadv_report_congestion_event(fce,
-					    fce->fce_congestion_cnt, fce->l4s_ce_cnt,
-					    fce->fce_pkts_since_last_report);
-					break;
-				case FLOWSRC_INPCB:
-				case FLOWSRC_IFNET:
-				case FLOWSRC_PF:
-				default:
-					break;
-				}
+      if (fce->fce_event_type == FCE_EVENT_TYPE_CONGESTION_EXPERIENCED) {
+        switch (fce->fce_flowsrc_type) {
+        case FLOWSRC_CHANNEL:
+          kern_channel_flowadv_report_congestion_event(
+              fce, fce->fce_congestion_cnt, fce->l4s_ce_cnt,
+              fce->fce_pkts_since_last_report);
+          break;
+        case FLOWSRC_INPCB:
+        case FLOWSRC_IFNET:
+        case FLOWSRC_PF:
+        default:
+          break;
+        }
 
-				goto next;
-			}
+        goto next;
+      }
 
-			switch (fce->fce_flowsrc_type) {
-			case FLOWSRC_INPCB:
-				inp_flowadv(fce->fce_flowid);
-				break;
+      switch (fce->fce_flowsrc_type) {
+      case FLOWSRC_INPCB:
+        inp_flowadv(fce->fce_flowid);
+        break;
 
-			case FLOWSRC_IFNET:
+      case FLOWSRC_IFNET:
 #if SKYWALK
-				/*
-				 * when using the flowID allocator, IPSec
-				 * driver uses the "pkt_flowid" field in mbuf
-				 * packet header for the globally unique flowID
-				 * and the "pkt_mpriv_srcid" field carries the
-				 * interface flow control id (if_flowhash).
-				 * For IPSec flows, it is the IPSec driver
-				 * network interface which is flow controlled,
-				 * instead of the IPSec SA flow.
-				 */
-				ifnet_flowadv(fce->fce_flowsrc_token);
-#else /* !SKYWALK */
-				ifnet_flowadv(fce->fce_flowid);
+        /*
+         * when using the flowID allocator, IPSec
+         * driver uses the "pkt_flowid" field in mbuf
+         * packet header for the globally unique flowID
+         * and the "pkt_mpriv_srcid" field carries the
+         * interface flow control id (if_flowhash).
+         * For IPSec flows, it is the IPSec driver
+         * network interface which is flow controlled,
+         * instead of the IPSec SA flow.
+         */
+        ifnet_flowadv(fce->fce_flowsrc_token);
+#else  /* !SKYWALK */
+        ifnet_flowadv(fce->fce_flowid);
 #endif /* !SKYWALK */
-				break;
+        break;
 
 #if SKYWALK
-			case FLOWSRC_CHANNEL:
-				kern_channel_flowadv_clear(fce);
-				break;
+      case FLOWSRC_CHANNEL:
+        kern_channel_flowadv_clear(fce);
+        break;
 #endif /* SKYWALK */
 
-			case FLOWSRC_PF:
-			default:
-				break;
-			}
-next:
-			flowadv_free_entry(fce);
-			lck_mtx_lock_spin(&fadv_lock);
+      case FLOWSRC_PF:
+      default:
+        break;
+      }
+    next:
+      flowadv_free_entry(fce);
+      lck_mtx_lock_spin(&fadv_lock);
 
-			/* if there's no pending request, we're done */
-			if (STAILQ_EMPTY(&fadv_list)) {
-				break;
-			}
-		}
-		fadv_active = 0;
-	}
+      /* if there's no pending request, we're done */
+      if (STAILQ_EMPTY(&fadv_list)) {
+        break;
+      }
+    }
+    fadv_active = 0;
+  }
 }
 
-__dead2
-static void
-flowadv_thread_func(void *v, wait_result_t w)
-{
+__dead2 static void flowadv_thread_func(void *v, wait_result_t w) {
 #pragma unused(v, w)
-	lck_mtx_lock(&fadv_lock);
-	(void) msleep0(&fadv_list, &fadv_lock, (PSOCK | PSPIN),
-	    "flowadv", 0, flowadv_thread_cont);
-	/*
-	 * msleep0() shouldn't have returned as PCATCH was not set;
-	 * therefore assert in this case.
-	 */
-	lck_mtx_unlock(&fadv_lock);
-	VERIFY(0);
+  lck_mtx_lock(&fadv_lock);
+  (void)msleep0(&fadv_list, &fadv_lock, (PSOCK | PSPIN), "flowadv", 0,
+                flowadv_thread_cont);
+  /*
+   * msleep0() shouldn't have returned as PCATCH was not set;
+   * therefore assert in this case.
+   */
+  lck_mtx_unlock(&fadv_lock);
+  VERIFY(0);
 }

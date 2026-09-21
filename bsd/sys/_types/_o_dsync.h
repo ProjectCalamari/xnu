@@ -26,5 +26,5 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #ifndef O_DSYNC
-#define O_DSYNC                 0x400000        /* synch I/O data integrity */
-#endif /* O_DSYNC */
+#define O_DSYNC 0x400000 /* synch I/O data integrity */
+#endif                   /* O_DSYNC */

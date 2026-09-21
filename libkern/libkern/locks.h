@@ -29,7 +29,7 @@
 #ifndef LIBKERN_LOCKS_H
 #define LIBKERN_LOCKS_H
 
-#include <sys/cdefs.h>
 #include <kern/locks.h>
+#include <sys/cdefs.h>
 
-#endif  /* LIBKERN_LOCKS_H */
+#endif /* LIBKERN_LOCKS_H */

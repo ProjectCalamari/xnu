@@ -25,29 +25,30 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#include <libkern/c++/OSObject.h>
 #include <IOKit/IOReturn.h>
+#include <libkern/c++/OSObject.h>
 
 class IOPMPowerSource;
 
-class IOPMPowerSourceList : public OSObject
-{
-	OSDeclareDefaultStructors(IOPMPowerSourceList);
-private:
-// pointer to first power source in list
-	IOPMPowerSource         *firstItem;
+class IOPMPowerSourceList : public OSObject {
+  OSDeclareDefaultStructors(IOPMPowerSourceList);
 
-// how many power sources are in the list
-	unsigned long           length;
+private:
+  // pointer to first power source in list
+  IOPMPowerSource *firstItem;
+
+  // how many power sources are in the list
+  unsigned long length;
 
 public:
-	void initialize(void);
-	void free(void) APPLE_KEXT_OVERRIDE;
+  void initialize(void);
+  void free(void) APPLE_KEXT_OVERRIDE;
 
-	unsigned long numberOfItems(void);
-	IOReturn addToList(IOPMPowerSource *newPowerSource);
-	IOReturn removeFromList(IOPMPowerSource *theItem);
+  unsigned long numberOfItems(void);
+  IOReturn addToList(IOPMPowerSource *newPowerSource);
+  IOReturn removeFromList(IOPMPowerSource *theItem);
 
-	LIBKERN_RETURNS_NOT_RETAINED IOPMPowerSource *firstInList(void);
-	LIBKERN_RETURNS_NOT_RETAINED IOPMPowerSource *nextInList(IOPMPowerSource *currentItem);
+  LIBKERN_RETURNS_NOT_RETAINED IOPMPowerSource *firstInList(void);
+  LIBKERN_RETURNS_NOT_RETAINED IOPMPowerSource *
+  nextInList(IOPMPowerSource *currentItem);
 };

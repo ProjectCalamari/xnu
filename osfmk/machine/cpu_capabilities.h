@@ -25,24 +25,24 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-#ifdef  PRIVATE
+#ifdef PRIVATE
 
 #ifndef _MACHINE_CPU_CAPABILITIES_H
 #define _MACHINE_CPU_CAPABILITIES_H
 
 #ifdef KERNEL_PRIVATE
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/cpu_capabilities.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/cpu_capabilities.h"
 #else
 #error architecture not supported
 #endif
 
 #else /* !KERNEL_PRIVATE -- System Framework header */
-#if defined (__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include <i386/cpu_capabilities.h>
-#elif defined (__arm__) || defined(__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include <arm/cpu_capabilities.h>
 #else
 #error architecture not supported

@@ -27,9 +27,9 @@
  */
 /*!
  *       @header init.h
- *       This header defines an API to register a function that will be called when
- *       the network stack is being initialized. This gives a kernel extensions an
- *       opportunity to install filters before sockets are created and network
+ *       This header defines an API to register a function that will be called
+ * when the network stack is being initialized. This gives a kernel extensions
+ * an opportunity to install filters before sockets are created and network
  *       operations occur.
  */
 #ifndef _NET_INIT_H_
@@ -41,21 +41,21 @@
  *       @discussion net_init_func_ptr will be called once the networking stack
  *               initialized and before network operations occur.
  */
-typedef void    (*net_init_func_ptr)(void);
+typedef void (*net_init_func_ptr)(void);
 
 /*!
  *       @function net_init_add
- *       @discussion Add a function to be called during network initialization. Your
- *               kext must not unload until the function you  register is called if
+ *       @discussion Add a function to be called during network initialization.
+ * Your kext must not unload until the function you  register is called if
  *               net_init_add returns success.
  *       @param init_func A pointer to a function to be called when the stack is
  *               initialized.
  *       @result	EINVAL - the init_func value was NULL.
  *                       EALREADY - the network has already been initialized
- *                       ENOMEM - there was not enough memory to perform this operation
- *                       0 - success
+ *                       ENOMEM - there was not enough memory to perform this
+ * operation 0 - success
  */
-errno_t net_init_add(net_init_func_ptr  init_func);
+errno_t net_init_add(net_init_func_ptr init_func);
 
 #ifdef BSD_KERNEL_PRIVATE
 /* net_init_run is called from bsd_init */

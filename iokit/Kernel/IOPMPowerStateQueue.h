@@ -33,31 +33,32 @@
 #include <IOKit/IOLocks.h>
 #include <kern/queue.h>
 
-typedef void (*IOPMPowerStateQueueAction)(OSObject *, uint32_t event, void *, uint64_t);
+typedef void (*IOPMPowerStateQueueAction)(OSObject *, uint32_t event, void *,
+                                          uint64_t);
 
-class IOPMPowerStateQueue : public IOEventSource
-{
-	OSDeclareDefaultStructors(IOPMPowerStateQueue);
+class IOPMPowerStateQueue : public IOEventSource {
+  OSDeclareDefaultStructors(IOPMPowerStateQueue);
 
 private:
-	struct PowerEventEntry {
-		queue_chain_t   chain;
-		uint32_t        eventType;
-		void *          arg0;
-		uint64_t        arg1;
-	};
+  struct PowerEventEntry {
+    queue_chain_t chain;
+    uint32_t eventType;
+    void *arg0;
+    uint64_t arg1;
+  };
 
-	queue_head_t    queueHead;
-	IOLock *        queueLock;
+  queue_head_t queueHead;
+  IOLock *queueLock;
 
 protected:
-	virtual bool checkForWork( void ) APPLE_KEXT_OVERRIDE;
-	virtual bool init( OSObject * owner, Action action ) APPLE_KEXT_OVERRIDE;
+  virtual bool checkForWork(void) APPLE_KEXT_OVERRIDE;
+  virtual bool init(OSObject *owner, Action action) APPLE_KEXT_OVERRIDE;
 
 public:
-	static IOPMPowerStateQueue * PMPowerStateQueue( OSObject * owner, Action action );
+  static IOPMPowerStateQueue *PMPowerStateQueue(OSObject *owner, Action action);
 
-	bool submitPowerEvent( uint32_t eventType, void * arg0 = NULL, uint64_t arg1 = 0 );
+  bool submitPowerEvent(uint32_t eventType, void *arg0 = NULL,
+                        uint64_t arg1 = 0);
 };
 
 #endif /* _IOPMPOWERSTATEQUEUE_H_ */

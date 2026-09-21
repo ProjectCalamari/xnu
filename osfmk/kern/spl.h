@@ -32,10 +32,10 @@
 
 typedef unsigned spl_t;
 
-#define splhigh()       (spl_t) ml_set_interrupts_enabled(FALSE)
-#define splsched()      (spl_t) ml_set_interrupts_enabled(FALSE)
-#define splclock()      (spl_t) ml_set_interrupts_enabled(FALSE)
-#define splx(x)         (void) ml_set_interrupts_enabled(x)
-#define spllo()         (void) ml_set_interrupts_enabled(TRUE)
+#define splhigh() (spl_t) ml_set_interrupts_enabled(FALSE)
+#define splsched() (spl_t) ml_set_interrupts_enabled(FALSE)
+#define splclock() (spl_t) ml_set_interrupts_enabled(FALSE)
+#define splx(x) (void)ml_set_interrupts_enabled(x)
+#define spllo() (void)ml_set_interrupts_enabled(TRUE)
 
-#endif  /* _KERN_SPL_H_ */
+#endif /* _KERN_SPL_H_ */

@@ -28,22 +28,22 @@
 /* IOArray.m created by rsulack on Fri 12-Sep-1997 */
 /* IOArray.cpp converted to C++ by gvdl on Fri 1998-10-30 */
 
-
 #define IOKIT_ENABLE_SHARED_PTR
 
+#include <libkern/OSDebug.h>
 #include <libkern/c++/OSArray.h>
 #include <libkern/c++/OSDictionary.h>
 #include <libkern/c++/OSLib.h>
 #include <libkern/c++/OSSerialize.h>
 #include <libkern/c++/OSSharedPtr.h>
-#include <libkern/OSDebug.h>
 #include <os/cpp_util.h>
 
 #define super OSCollection
 
 OSDefineMetaClassAndStructorsWithZone(OSArray, OSCollection,
-    (zone_create_flags_t) (ZC_CACHING | ZC_ZFREE_CLEARMEM))
-OSMetaClassDefineReservedUnused(OSArray, 0);
+                                      (zone_create_flags_t)(ZC_CACHING |
+                                                            ZC_ZFREE_CLEARMEM))
+    OSMetaClassDefineReservedUnused(OSArray, 0);
 OSMetaClassDefineReservedUnused(OSArray, 1);
 OSMetaClassDefineReservedUnused(OSArray, 2);
 OSMetaClassDefineReservedUnused(OSArray, 3);
@@ -52,492 +52,421 @@ OSMetaClassDefineReservedUnused(OSArray, 5);
 OSMetaClassDefineReservedUnused(OSArray, 6);
 OSMetaClassDefineReservedUnused(OSArray, 7);
 
-bool
-OSArray::initWithCapacity(unsigned int inCapacity)
-{
-	if (!super::init()) {
-		return false;
-	}
+bool OSArray::initWithCapacity(unsigned int inCapacity) {
+  if (!super::init()) {
+    return false;
+  }
 
-	// integer overflow check
-	if (inCapacity > (UINT_MAX / sizeof(*array))) {
-		return false;
-	}
+  // integer overflow check
+  if (inCapacity > (UINT_MAX / sizeof(*array))) {
+    return false;
+  }
 
-	array = kallocp_type_container(ArrayPtrType, &inCapacity, Z_WAITOK_ZERO);
-	if (!array) {
-		return false;
-	}
+  array = kallocp_type_container(ArrayPtrType, &inCapacity, Z_WAITOK_ZERO);
+  if (!array) {
+    return false;
+  }
 
-	count = 0;
-	capacity = inCapacity;
-	capacityIncrement = (inCapacity)? inCapacity : 16;
-	OSCONTAINER_ACCUMSIZE(sizeof(*array) * inCapacity);
+  count = 0;
+  capacity = inCapacity;
+  capacityIncrement = (inCapacity) ? inCapacity : 16;
+  OSCONTAINER_ACCUMSIZE(sizeof(*array) * inCapacity);
 
-	return true;
+  return true;
 }
 
-bool
-OSArray::initWithObjects(const OSObject *objects[],
-    unsigned int theCount,
-    unsigned int theCapacity)
-{
-	unsigned int initCapacity;
+bool OSArray::initWithObjects(const OSObject *objects[], unsigned int theCount,
+                              unsigned int theCapacity) {
+  unsigned int initCapacity;
 
-	if (!theCapacity) {
-		initCapacity = theCount;
-	} else if (theCount > theCapacity) {
-		return false;
-	} else {
-		initCapacity = theCapacity;
-	}
+  if (!theCapacity) {
+    initCapacity = theCount;
+  } else if (theCount > theCapacity) {
+    return false;
+  } else {
+    initCapacity = theCapacity;
+  }
 
-	if (!objects || !initWithCapacity(initCapacity)) {
-		return false;
-	}
+  if (!objects || !initWithCapacity(initCapacity)) {
+    return false;
+  }
 
-	for (unsigned int i = 0; i < theCount; i++) {
-		const OSMetaClassBase *newObject = *objects++;
+  for (unsigned int i = 0; i < theCount; i++) {
+    const OSMetaClassBase *newObject = *objects++;
 
-		if (!newObject) {
-			return false;
-		}
+    if (!newObject) {
+      return false;
+    }
 
-		array[count++].reset(newObject, OSRetain);
-	}
+    array[count++].reset(newObject, OSRetain);
+  }
 
-	return true;
+  return true;
 }
 
-bool
-OSArray::initWithArray(const OSArray *anArray,
-    unsigned int theCapacity)
-{
-	if (!anArray) {
-		return false;
-	}
+bool OSArray::initWithArray(const OSArray *anArray, unsigned int theCapacity) {
+  if (!anArray) {
+    return false;
+  }
 
-	return initWithObjects((const OSObject **) anArray->array,
-	           anArray->count, theCapacity);
+  return initWithObjects((const OSObject **)anArray->array, anArray->count,
+                         theCapacity);
 }
 
-OSSharedPtr<OSArray>
-OSArray::withCapacity(unsigned int capacity)
-{
-	OSSharedPtr<OSArray> me = OSMakeShared<OSArray>();
+OSSharedPtr<OSArray> OSArray::withCapacity(unsigned int capacity) {
+  OSSharedPtr<OSArray> me = OSMakeShared<OSArray>();
 
-	if (me && !me->initWithCapacity(capacity)) {
-		return nullptr;
-	}
+  if (me && !me->initWithCapacity(capacity)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSArray>
-OSArray::withObjects(const OSObject *objects[],
-    unsigned int count,
-    unsigned int capacity)
-{
-	OSSharedPtr<OSArray> me = OSMakeShared<OSArray>();
+OSSharedPtr<OSArray> OSArray::withObjects(const OSObject *objects[],
+                                          unsigned int count,
+                                          unsigned int capacity) {
+  OSSharedPtr<OSArray> me = OSMakeShared<OSArray>();
 
-	if (me && !me->initWithObjects(objects, count, capacity)) {
-		return nullptr;
-	}
+  if (me && !me->initWithObjects(objects, count, capacity)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-OSSharedPtr<OSArray>
-OSArray::withArray(const OSArray *array,
-    unsigned int capacity)
-{
-	OSSharedPtr<OSArray> me = OSMakeShared<OSArray>();
+OSSharedPtr<OSArray> OSArray::withArray(const OSArray *array,
+                                        unsigned int capacity) {
+  OSSharedPtr<OSArray> me = OSMakeShared<OSArray>();
 
-	if (me && !me->initWithArray(array, capacity)) {
-		return nullptr;
-	}
+  if (me && !me->initWithArray(array, capacity)) {
+    return nullptr;
+  }
 
-	return me;
+  return me;
 }
 
-void
-OSArray::free()
-{
-	// Clear immutability - assumes the container is doing the right thing
-	(void) super::setOptions(0, kImmutable);
+void OSArray::free() {
+  // Clear immutability - assumes the container is doing the right thing
+  (void)super::setOptions(0, kImmutable);
 
-	flushCollection();
+  flushCollection();
 
-	if (array) {
-		os::destroy(array, array + capacity);
-		kfree_type(ArrayPtrType, capacity, array);
-		OSCONTAINER_ACCUMSIZE( -(sizeof(*array) * capacity));
-	}
+  if (array) {
+    os::destroy(array, array + capacity);
+    kfree_type(ArrayPtrType, capacity, array);
+    OSCONTAINER_ACCUMSIZE(-(sizeof(*array) * capacity));
+  }
 
-	super::free();
+  super::free();
 }
 
+unsigned int OSArray::getCount() const { return count; }
+unsigned int OSArray::getCapacity() const { return capacity; }
+unsigned int OSArray::getCapacityIncrement() const { return capacityIncrement; }
+unsigned int OSArray::setCapacityIncrement(unsigned int increment) {
+  capacityIncrement = (increment) ? increment : 16;
 
-unsigned int
-OSArray::getCount() const
-{
-	return count;
-}
-unsigned int
-OSArray::getCapacity() const
-{
-	return capacity;
-}
-unsigned int
-OSArray::getCapacityIncrement() const
-{
-	return capacityIncrement;
-}
-unsigned int
-OSArray::setCapacityIncrement(unsigned int increment)
-{
-	capacityIncrement = (increment)? increment : 16;
-
-	return capacityIncrement;
+  return capacityIncrement;
 }
 
-unsigned int
-OSArray::ensureCapacity(unsigned int newCapacity)
-{
-	ArraySharedPtrType *newArray;
-	unsigned int        finalCapacity;
+unsigned int OSArray::ensureCapacity(unsigned int newCapacity) {
+  ArraySharedPtrType *newArray;
+  unsigned int finalCapacity;
 
-	if (newCapacity <= capacity) {
-		return capacity;
-	}
+  if (newCapacity <= capacity) {
+    return capacity;
+  }
 
-	// round up
-	finalCapacity = (((newCapacity - 1) / capacityIncrement) + 1)
-	    * capacityIncrement;
+  // round up
+  finalCapacity =
+      (((newCapacity - 1) / capacityIncrement) + 1) * capacityIncrement;
 
-	// integer overflow check
-	if (finalCapacity < newCapacity) {
-		return capacity;
-	}
+  // integer overflow check
+  if (finalCapacity < newCapacity) {
+    return capacity;
+  }
 
-	newArray = kreallocp_type_container(ArrayPtrType, array,
-	    capacity, &finalCapacity, Z_WAITOK_ZERO);
-	if (newArray) {
-		OSCONTAINER_ACCUMSIZE(sizeof(*array) * (finalCapacity - capacity));
-		array = newArray;
-		capacity = finalCapacity;
-	}
+  newArray = kreallocp_type_container(ArrayPtrType, array, capacity,
+                                      &finalCapacity, Z_WAITOK_ZERO);
+  if (newArray) {
+    OSCONTAINER_ACCUMSIZE(sizeof(*array) * (finalCapacity - capacity));
+    array = newArray;
+    capacity = finalCapacity;
+  }
 
-	return capacity;
+  return capacity;
 }
 
-void
-OSArray::flushCollection()
-{
-	unsigned int i;
+void OSArray::flushCollection() {
+  unsigned int i;
 
-	haveUpdated();
-	for (i = 0; i < count; i++) {
-		array[i].reset();
-	}
-	count = 0;
+  haveUpdated();
+  for (i = 0; i < count; i++) {
+    array[i].reset();
+  }
+  count = 0;
 }
 
-bool
-OSArray::setObject(const OSMetaClassBase *anObject)
-{
-	return setObject(count, anObject);
+bool OSArray::setObject(const OSMetaClassBase *anObject) {
+  return setObject(count, anObject);
 }
 
-bool
-OSArray::setObject(OSSharedPtr<const OSMetaClassBase> const& anObject)
-{
-	return setObject(count, anObject);
+bool OSArray::setObject(OSSharedPtr<const OSMetaClassBase> const &anObject) {
+  return setObject(count, anObject);
 }
 
-bool
-OSArray::setObject(unsigned int index, const OSMetaClassBase *anObject)
-{
-	unsigned int i;
-	unsigned int newCount = count + 1;
+bool OSArray::setObject(unsigned int index, const OSMetaClassBase *anObject) {
+  unsigned int i;
+  unsigned int newCount = count + 1;
 
-	if ((index > count) || !anObject) {
-		return false;
-	}
+  if ((index > count) || !anObject) {
+    return false;
+  }
 
-	// do we need more space?
-	if (newCount > capacity && newCount > ensureCapacity(newCount)) {
-		return false;
-	}
+  // do we need more space?
+  if (newCount > capacity && newCount > ensureCapacity(newCount)) {
+    return false;
+  }
 
-	haveUpdated();
-	if (index != count) {
-		for (i = count; i > index; i--) {
-			array[i] = os::move(array[i - 1]);
-		}
-	}
-	array[index].reset(anObject, OSRetain);
-	count++;
+  haveUpdated();
+  if (index != count) {
+    for (i = count; i > index; i--) {
+      array[i] = os::move(array[i - 1]);
+    }
+  }
+  array[index].reset(anObject, OSRetain);
+  count++;
 
-	return true;
+  return true;
 }
 
-bool
-OSArray::setObject(unsigned int index, OSSharedPtr<const OSMetaClassBase> const& anObject)
-{
-	return setObject(index, anObject.get());
+bool OSArray::setObject(unsigned int index,
+                        OSSharedPtr<const OSMetaClassBase> const &anObject) {
+  return setObject(index, anObject.get());
 }
 
-bool
-OSArray::merge(const OSArray * otherArray)
-{
-	unsigned int otherCount = otherArray->getCount();
-	unsigned int newCount = count + otherCount;
+bool OSArray::merge(const OSArray *otherArray) {
+  unsigned int otherCount = otherArray->getCount();
+  unsigned int newCount = count + otherCount;
 
-	if (!otherCount) {
-		return true;
-	}
+  if (!otherCount) {
+    return true;
+  }
 
-	if (newCount < count) {
-		return false;
-	}
+  if (newCount < count) {
+    return false;
+  }
 
-	// do we need more space?
-	if (newCount > capacity && newCount > ensureCapacity(newCount)) {
-		return false;
-	}
+  // do we need more space?
+  if (newCount > capacity && newCount > ensureCapacity(newCount)) {
+    return false;
+  }
 
-	haveUpdated();
-	for (unsigned int i = 0; i < otherCount; i++) {
-		const OSMetaClassBase *newObject = otherArray->getObject(i);
+  haveUpdated();
+  for (unsigned int i = 0; i < otherCount; i++) {
+    const OSMetaClassBase *newObject = otherArray->getObject(i);
 
-		array[count++].reset(newObject, OSRetain);
-	}
+    array[count++].reset(newObject, OSRetain);
+  }
 
-	return true;
+  return true;
 }
 
-void
-OSArray::
-replaceObject(unsigned int index, const OSMetaClassBase *anObject)
-{
-	if ((index >= count) || !anObject) {
-		return;
-	}
+void OSArray::replaceObject(unsigned int index,
+                            const OSMetaClassBase *anObject) {
+  if ((index >= count) || !anObject) {
+    return;
+  }
 
-	haveUpdated();
+  haveUpdated();
 
-	array[index].reset(anObject, OSRetain);
+  array[index].reset(anObject, OSRetain);
 }
 
-void
-OSArray::replaceObject(unsigned int index, OSSharedPtr<const OSMetaClassBase> const& anObject)
-{
-	return replaceObject(index, anObject.get());
+void OSArray::replaceObject(
+    unsigned int index, OSSharedPtr<const OSMetaClassBase> const &anObject) {
+  return replaceObject(index, anObject.get());
 }
 
-void
-OSArray::removeObject(unsigned int index)
-{
-	unsigned int i;
-	ArraySharedPtrType oldObject;
+void OSArray::removeObject(unsigned int index) {
+  unsigned int i;
+  ArraySharedPtrType oldObject;
 
-	if (index >= count) {
-		return;
-	}
+  if (index >= count) {
+    return;
+  }
 
-	haveUpdated();
-	oldObject = os::move(array[index]);
+  haveUpdated();
+  oldObject = os::move(array[index]);
 
-	count--;
-	for (i = index; i < count; i++) {
-		array[i] = os::move(array[i + 1]);
-	}
+  count--;
+  for (i = index; i < count; i++) {
+    array[i] = os::move(array[i + 1]);
+  }
 }
 
-bool
-OSArray::isEqualTo(const OSArray *anArray) const
-{
-	unsigned int i;
+bool OSArray::isEqualTo(const OSArray *anArray) const {
+  unsigned int i;
 
-	if (this == anArray) {
-		return true;
-	}
+  if (this == anArray) {
+    return true;
+  }
 
-	if (count != anArray->getCount()) {
-		return false;
-	}
+  if (count != anArray->getCount()) {
+    return false;
+  }
 
-	for (i = 0; i < count; i++) {
-		if (!array[i]->isEqualTo(anArray->getObject(i))) {
-			return false;
-		}
-	}
+  for (i = 0; i < count; i++) {
+    if (!array[i]->isEqualTo(anArray->getObject(i))) {
+      return false;
+    }
+  }
 
-	return true;
+  return true;
 }
 
-bool
-OSArray::isEqualTo(const OSMetaClassBase *anObject) const
-{
-	OSArray *otherArray;
+bool OSArray::isEqualTo(const OSMetaClassBase *anObject) const {
+  OSArray *otherArray;
 
-	otherArray = OSDynamicCast(OSArray, anObject);
-	if (otherArray) {
-		return isEqualTo(otherArray);
-	} else {
-		return false;
-	}
+  otherArray = OSDynamicCast(OSArray, anObject);
+  if (otherArray) {
+    return isEqualTo(otherArray);
+  } else {
+    return false;
+  }
 }
 
-OSObject *
-OSArray::getObject(unsigned int index) const
-{
-	if (index >= count) {
-		return NULL;
-	} else {
-		return static_cast<OSObject *>(const_cast<OSMetaClassBase *>(array[index].get()));
-	}
+OSObject *OSArray::getObject(unsigned int index) const {
+  if (index >= count) {
+    return NULL;
+  } else {
+    return static_cast<OSObject *>(
+        const_cast<OSMetaClassBase *>(array[index].get()));
+  }
 }
 
-OSObject *
-OSArray::getLastObject() const
-{
-	if (count == 0) {
-		return NULL;
-	} else {
-		return static_cast<OSObject *>(const_cast<OSMetaClassBase *>(array[count - 1].get()));
-	}
+OSObject *OSArray::getLastObject() const {
+  if (count == 0) {
+    return NULL;
+  } else {
+    return static_cast<OSObject *>(
+        const_cast<OSMetaClassBase *>(array[count - 1].get()));
+  }
 }
 
-unsigned int
-OSArray::getNextIndexOfObject(const OSMetaClassBase * anObject,
-    unsigned int index) const
-{
-	while ((index < count) && (array[index] != anObject)) {
-		index++;
-	}
-	if (index >= count) {
-		index = (unsigned int)-1;
-	}
-	return index;
+unsigned int OSArray::getNextIndexOfObject(const OSMetaClassBase *anObject,
+                                           unsigned int index) const {
+  while ((index < count) && (array[index] != anObject)) {
+    index++;
+  }
+  if (index >= count) {
+    index = (unsigned int)-1;
+  }
+  return index;
 }
 
-unsigned int
-OSArray::iteratorSize() const
-{
-	return sizeof(unsigned int);
+unsigned int OSArray::iteratorSize() const { return sizeof(unsigned int); }
+
+bool OSArray::initIterator(void *inIterator) const {
+  unsigned int *iteratorP = (unsigned int *)inIterator;
+
+  *iteratorP = 0;
+  return true;
 }
 
-bool
-OSArray::initIterator(void *inIterator) const
-{
-	unsigned int *iteratorP = (unsigned int *) inIterator;
+bool OSArray::getNextObjectForIterator(void *inIterator, OSObject **ret) const {
+  unsigned int *iteratorP = (unsigned int *)inIterator;
+  unsigned int index = (*iteratorP)++;
 
-	*iteratorP = 0;
-	return true;
+  if (index < count) {
+    *ret = static_cast<OSObject *>(
+        const_cast<OSMetaClassBase *>(array[index].get()));
+    return true;
+  } else {
+    *ret = NULL;
+    return false;
+  }
 }
 
-bool
-OSArray::getNextObjectForIterator(void *inIterator, OSObject **ret) const
-{
-	unsigned int *iteratorP = (unsigned int *) inIterator;
-	unsigned int index = (*iteratorP)++;
+bool OSArray::serialize(OSSerialize *s) const {
+  if (s->previouslySerialized(this)) {
+    return true;
+  }
 
-	if (index < count) {
-		*ret = static_cast<OSObject *>(const_cast<OSMetaClassBase *>(array[index].get()));
-		return true;
-	} else {
-		*ret = NULL;
-		return false;
-	}
+  if (!s->addXMLStartTag(this, "array")) {
+    return false;
+  }
+
+  for (unsigned i = 0; i < count; i++) {
+    if (array[i] == NULL || !array[i]->serialize(s)) {
+      return false;
+    }
+  }
+
+  return s->addXMLEndTag("array");
 }
 
-bool
-OSArray::serialize(OSSerialize *s) const
-{
-	if (s->previouslySerialized(this)) {
-		return true;
-	}
+unsigned OSArray::setOptions(unsigned options, unsigned mask, void *) {
+  unsigned old = super::setOptions(options, mask);
+  if ((old ^ options) & mask) {
+    // Value changed need to recurse over all of the child collections
+    for (unsigned i = 0; i < count; i++) {
+      OSCollection *coll = OSDynamicCast(OSCollection, array[i].get());
+      if (coll) {
+        coll->setOptions(options, mask);
+      }
+    }
+  }
 
-	if (!s->addXMLStartTag(this, "array")) {
-		return false;
-	}
-
-	for (unsigned i = 0; i < count; i++) {
-		if (array[i] == NULL || !array[i]->serialize(s)) {
-			return false;
-		}
-	}
-
-	return s->addXMLEndTag("array");
+  return old;
 }
 
-unsigned
-OSArray::setOptions(unsigned options, unsigned mask, void *)
-{
-	unsigned old = super::setOptions(options, mask);
-	if ((old ^ options) & mask) {
-		// Value changed need to recurse over all of the child collections
-		for (unsigned i = 0; i < count; i++) {
-			OSCollection *coll = OSDynamicCast(OSCollection, array[i].get());
-			if (coll) {
-				coll->setOptions(options, mask);
-			}
-		}
-	}
+OSSharedPtr<OSCollection> OSArray::copyCollection(OSDictionary *cycleDict) {
+  OSSharedPtr<OSDictionary> ourCycleDict;
+  OSSharedPtr<OSCollection> ret;
+  OSSharedPtr<OSArray> newArray;
 
-	return old;
-}
+  if (!cycleDict) {
+    ourCycleDict = OSDictionary::withCapacity(16);
+    if (!ourCycleDict) {
+      return nullptr;
+    }
+    cycleDict = ourCycleDict.get();
+  }
 
-OSSharedPtr<OSCollection>
-OSArray::copyCollection(OSDictionary *cycleDict)
-{
-	OSSharedPtr<OSDictionary> ourCycleDict;
-	OSSharedPtr<OSCollection> ret;
-	OSSharedPtr<OSArray> newArray;
+  do {
+    // Check for a cycle
+    ret = super::copyCollection(cycleDict);
+    if (ret) {
+      continue;
+    }
 
-	if (!cycleDict) {
-		ourCycleDict = OSDictionary::withCapacity(16);
-		if (!ourCycleDict) {
-			return nullptr;
-		}
-		cycleDict = ourCycleDict.get();
-	}
+    newArray = OSArray::withArray(this);
+    if (!newArray) {
+      continue;
+    }
 
-	do {
-		// Check for a cycle
-		ret = super::copyCollection(cycleDict);
-		if (ret) {
-			continue;
-		}
+    // Insert object into cycle Dictionary
+    cycleDict->setObject((const OSSymbol *)this, newArray.get());
 
-		newArray = OSArray::withArray(this);
-		if (!newArray) {
-			continue;
-		}
+    for (unsigned int i = 0; i < count; i++) {
+      OSCollection *coll = OSDynamicCast(
+          OSCollection, static_cast<OSObject *>(const_cast<OSMetaClassBase *>(
+                            newArray->array[i].get())));
 
-		// Insert object into cycle Dictionary
-		cycleDict->setObject((const OSSymbol *) this, newArray.get());
+      if (coll) {
+        OSSharedPtr<OSCollection> newColl = coll->copyCollection(cycleDict);
+        if (!newColl) {
+          return ret;
+        }
 
-		for (unsigned int i = 0; i < count; i++) {
-			OSCollection *coll =
-			    OSDynamicCast(OSCollection, static_cast<OSObject *>(
-				    const_cast<OSMetaClassBase *>(
-					    newArray->array[i].get())));
+        newArray->replaceObject(i, newColl.get());
+      }
+    }
 
-			if (coll) {
-				OSSharedPtr<OSCollection> newColl = coll->copyCollection(cycleDict);
-				if (!newColl) {
-					return ret;
-				}
+    ret = os::move(newArray);
+  } while (false);
 
-				newArray->replaceObject(i, newColl.get());
-			}
-		}
-
-		ret = os::move(newArray);
-	} while (false);
-
-	return ret;
+  return ret;
 }

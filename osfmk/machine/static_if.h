@@ -29,28 +29,28 @@
 #ifndef _MACHINE_STATIC_IF_H
 #define _MACHINE_STATIC_IF_H
 
-#include <sys/cdefs.h>
+#include <libkern/section_keywords.h>
+#include <mach/kern_return.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <mach/kern_return.h>
-#include <libkern/section_keywords.h>
+#include <sys/cdefs.h>
 
 typedef const struct static_if_entry *static_if_entry_t;
 
 typedef struct static_if_key {
-	int16_t                 sik_enable_count;
-	bool                    sik_init_value;
-	bool                    sik_modified;
-	uint32_t                sik_entries_count;
-	static_if_entry_t       sik_entries_head;
-	struct static_if_key   *sik_modified_next;
+  int16_t sik_enable_count;
+  bool sik_init_value;
+  bool sik_modified;
+  uint32_t sik_entries_count;
+  static_if_entry_t sik_entries_head;
+  struct static_if_key *sik_modified_next;
 } *static_if_key_t;
 
-#if defined (__x86_64__)
+#if defined(__x86_64__)
 #include "x86_64/static_if.h"
-#elif defined (__arm__)
+#elif defined(__arm__)
 #include "arm/static_if.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm64/static_if.h"
 #else
 #error architecture not supported
@@ -72,25 +72,23 @@ __BEGIN_DECLS
  *
  * Enablement counts can be manipulated with @c static_if_key_{enable,disable}.
  */
-#define STATIC_IF_KEY_DECLARE_TRUE(name) \
-	extern struct static_if_key_true name##_jump_key
+#define STATIC_IF_KEY_DECLARE_TRUE(name)                                       \
+  extern struct static_if_key_true name##_jump_key
 
-#define STATIC_IF_KEY_DEFINE_TRUE(name) \
-	__security_const_late \
-	__used struct static_if_key_true name##_jump_key = { \
-	        .key.sik_init_value = true, \
-	        .key.sik_enable_count = 0, \
-	}
+#define STATIC_IF_KEY_DEFINE_TRUE(name)                                        \
+  __security_const_late __used struct static_if_key_true name##_jump_key = {   \
+      .key.sik_init_value = true,                                              \
+      .key.sik_enable_count = 0,                                               \
+  }
 
-#define STATIC_IF_KEY_DECLARE_FALSE(name) \
-	extern struct static_if_key_false name##_jump_key
+#define STATIC_IF_KEY_DECLARE_FALSE(name)                                      \
+  extern struct static_if_key_false name##_jump_key
 
-#define STATIC_IF_KEY_DEFINE_FALSE(name) \
-	__security_const_late \
-	__used struct static_if_key_false name##_jump_key = { \
-	        .key.sik_init_value = false, \
-	        .key.sik_enable_count = -1, \
-	}
+#define STATIC_IF_KEY_DEFINE_FALSE(name)                                       \
+  __security_const_late __used struct static_if_key_false name##_jump_key = {  \
+      .key.sik_init_value = false,                                             \
+      .key.sik_enable_count = -1,                                              \
+  }
 
 /*!
  * @macro probable_static_if() / improbable_static_if()
@@ -123,41 +121,43 @@ __BEGIN_DECLS
  * static if domains that will toggle enablement based
  * on boot-args or various configurations.
  */
-#define static_if(n)  ({                                        \
-	__label__ __l;                                          \
-	int __result = !__static_if_key_init_value(n);          \
-	STATIC_IF_NOP(n, __l);                                  \
-	__result = __static_if_key_init_value(n);               \
-__l:                                                            \
-	__result;                                               \
-})
+#define static_if(n)                                                           \
+  ({                                                                           \
+    __label__ __l;                                                             \
+    int __result = !__static_if_key_init_value(n);                             \
+    STATIC_IF_NOP(n, __l);                                                     \
+    __result = __static_if_key_init_value(n);                                  \
+  __l:                                                                         \
+    __result;                                                                  \
+  })
 
-#define probable_static_if(n)  __probable(({                    \
-	__label__ __l;                                          \
-	int __result = 0;                                       \
-	if (__static_if_key_init_value(n)) {                    \
-	        STATIC_IF_NOP(n, __l);                          \
-	} else {                                                \
-	        STATIC_IF_BRANCH(n, __l);                       \
-	}                                                       \
-	__result = 1;                                           \
-__l:                                                            \
-	__result;                                               \
-}))
+#define probable_static_if(n)                                                  \
+  __probable(({                                                                \
+    __label__ __l;                                                             \
+    int __result = 0;                                                          \
+    if (__static_if_key_init_value(n)) {                                       \
+      STATIC_IF_NOP(n, __l);                                                   \
+    } else {                                                                   \
+      STATIC_IF_BRANCH(n, __l);                                                \
+    }                                                                          \
+    __result = 1;                                                              \
+  __l:                                                                         \
+    __result;                                                                  \
+  }))
 
-#define improbable_static_if(n)  __improbable(({                \
-	__label__ __l;                                          \
-	int __result = 1;                                       \
-	if (__static_if_key_init_value(n)) {                    \
-	        STATIC_IF_BRANCH(n, __l);                       \
-	} else {                                                \
-	        STATIC_IF_NOP(n, __l);                          \
-	}                                                       \
-	__result = 0;                                           \
-__l:                                                            \
-	__result;                                               \
-}))
-
+#define improbable_static_if(n)                                                \
+  __improbable(({                                                              \
+    __label__ __l;                                                             \
+    int __result = 1;                                                          \
+    if (__static_if_key_init_value(n)) {                                       \
+      STATIC_IF_BRANCH(n, __l);                                                \
+    } else {                                                                   \
+      STATIC_IF_NOP(n, __l);                                                   \
+    }                                                                          \
+    __result = 0;                                                              \
+  __l:                                                                         \
+    __result;                                                                  \
+  }))
 
 /*!
  * @function static_if_key_enable()
@@ -170,8 +170,7 @@ __l:                                                            \
  * This function can only be called from the context of a STATIC_IF_INIT()
  * callout.
  */
-#define static_if_key_enable(n) \
-	__static_if_key_delta(&n##_jump_key.key, 1)
+#define static_if_key_enable(n) __static_if_key_delta(&n##_jump_key.key, 1)
 
 /*!
  * @function static_if_key_disable()
@@ -184,8 +183,7 @@ __l:                                                            \
  * This function can only be called from the context of a STATIC_IF_INIT()
  * callout.
  */
-#define static_if_key_disable(n) \
-	__static_if_key_delta(&n##_jump_key.key, -1)
+#define static_if_key_disable(n) __static_if_key_delta(&n##_jump_key.key, -1)
 
 /*!
  * @brief
@@ -205,9 +203,9 @@ __l:                                                            \
  *
  * Code running during this call must be marked with __static_if_init_func.
  */
-#define STATIC_IF_INIT(func) \
-	__PLACE_IN_SECTION(STATIC_IF_SEGMENT "," STATIC_IFINIT_SECTION) \
-	static static_if_initializer __static_if__ ## func = func
+#define STATIC_IF_INIT(func)                                                   \
+  __PLACE_IN_SECTION(STATIC_IF_SEGMENT "," STATIC_IFINIT_SECTION)              \
+  static static_if_initializer __static_if__##func = func
 
 /*!
  * @function static_if_boot_arg_uint64()
@@ -219,11 +217,8 @@ __l:                                                            \
  * PE_parse_boot_argn() can't be used that early on SPTM devices,
  * and TUNABLES() aren't parsed yet.
  */
-extern uint64_t static_if_boot_arg_uint64(
-	const char             *args,
-	const char             *name,
-	uint64_t                defval);
-
+extern uint64_t static_if_boot_arg_uint64(const char *args, const char *name,
+                                          uint64_t defval);
 
 #pragma mark implementation details
 
@@ -232,69 +227,64 @@ extern uint64_t static_if_boot_arg_uint64(
  * The use of weird sections that get unmapped confuse the hell out of kasan,
  * so for KASAN leave things in regular __TEXT/__DATA segments
  */
-#define STATIC_IF_SEGMENT       "__DATA_CONST"
+#define STATIC_IF_SEGMENT "__DATA_CONST"
 #elif defined(__x86_64__)
 /* Intel doesn't have a __BOOTDATA but doesn't protect __KLD */
-#define STATIC_IF_SEGMENT       "__KLDDATA"
+#define STATIC_IF_SEGMENT "__KLDDATA"
 #else
 /* arm protects __KLD early, so use __BOOTDATA for data */
-#define STATIC_IF_SEGMENT       "__BOOTDATA"
+#define STATIC_IF_SEGMENT "__BOOTDATA"
 #endif
-#define STATIC_IF_SECTION       "__static_if"
-#define STATIC_IFINIT_SECTION   "__static_ifinit"
-#define STATIC_IF_SEGSECT       STATIC_IF_SEGMENT "," STATIC_IF_SECTION
+#define STATIC_IF_SECTION "__static_if"
+#define STATIC_IFINIT_SECTION "__static_ifinit"
+#define STATIC_IF_SEGSECT STATIC_IF_SEGMENT "," STATIC_IF_SECTION
 
 typedef void (*static_if_initializer)(const char *boot_args);
 
 struct static_if_key_true {
-	struct static_if_key    key;
+  struct static_if_key key;
 #if __cplusplus
-	static const bool       init_value = true;
+  static const bool init_value = true;
 #endif
 };
 
 struct static_if_key_false {
-	struct static_if_key    key;
+  struct static_if_key key;
 #if __cplusplus
-	static const bool       init_value = false;
+  static const bool init_value = false;
 #endif
 };
 
 #if __cplusplus
-#define __static_if_key_init_value(n)  decltype(n##_jump_key)::init_value
+#define __static_if_key_init_value(n) decltype(n##_jump_key)::init_value
 #else
-#define __static_if_key_init_value(n)  _Generic(n##_jump_key, \
-	struct static_if_key_true: 1, \
-	struct static_if_key_false: 0)
+#define __static_if_key_init_value(n)                                          \
+  _Generic(n##_jump_key,                                                       \
+      struct static_if_key_true: 1,                                            \
+      struct static_if_key_false: 0)
 #endif
 
-extern void __static_if_key_delta(
-	static_if_key_t         key,
-	int                     delta);
+extern void __static_if_key_delta(static_if_key_t key, int delta);
 
 extern static_if_key_t static_if_modified_keys;
 
-#define STATIC_IF_ABI_V1       1
-#define STATIC_IF_ABI_CURRENT  STATIC_IF_ABI_V1
+#define STATIC_IF_ABI_V1 1
+#define STATIC_IF_ABI_CURRENT STATIC_IF_ABI_V1
 
 extern uint32_t static_if_abi;
 
 #if MACH_KERNEL_PRIVATE
 
-__attribute__((always_inline))
-static inline unsigned long
-__static_if_entry_patch_point(static_if_entry_t sie)
-{
+__attribute__((always_inline)) static inline unsigned long
+__static_if_entry_patch_point(static_if_entry_t sie) {
 #if STATIC_IF_RELATIVE
-	return (unsigned long)&sie->sie_base + (unsigned long)(long)sie->sie_base;
+  return (unsigned long)&sie->sie_base + (unsigned long)(long)sie->sie_base;
 #else
-	return (unsigned long)sie->sie_base;
+  return (unsigned long)sie->sie_base;
 #endif
 }
 
-extern void ml_static_if_entry_patch(
-	static_if_entry_t     ent,
-	int                     branch);
+extern void ml_static_if_entry_patch(static_if_entry_t ent, int branch);
 
 extern void ml_static_if_flush_icache(void);
 

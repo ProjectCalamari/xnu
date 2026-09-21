@@ -55,89 +55,89 @@ char copyright[] =
 #endif /* not lint */
 
 #ifndef lint
-static char sccsid[] __attribute__((used)) = "@(#)main.c	5.9 (Berkeley) 6/18/88";
+static char sccsid[] __attribute__((used)) =
+    "@(#)main.c	5.9 (Berkeley) 6/18/88";
 #endif /* not lint */
 
-#include <stdio.h>
-#include <ctype.h>
-#include "parser.h"
 #include "config.h"
+#include "parser.h"
+#include <ctype.h>
+#include <stdio.h>
 
 /*
  * Config builds a set of files for building a UNIX
  * system given a description of the desired system.
  */
-int
-main(int argc, char *argv[])
-{
-	source_directory = "..";        /* default */
-	object_directory = "..";
-	config_directory = (char *) 0;
-	while ((argc > 1) && (argv[1][0] == '-')) {
-		char            *c;
+int main(int argc, char *argv[]) {
+  source_directory = ".."; /* default */
+  object_directory = "..";
+  config_directory = (char *)0;
+  while ((argc > 1) && (argv[1][0] == '-')) {
+    char *c;
 
-		argv++; argc--;
-		for (c = &argv[0][1]; *c; c++) {
-			switch (*c) {
-			case 'b':
-				build_directory = argv[1];
-				goto check_arg;
+    argv++;
+    argc--;
+    for (c = &argv[0][1]; *c; c++) {
+      switch (*c) {
+      case 'b':
+        build_directory = argv[1];
+        goto check_arg;
 
-			case 'd':
-				source_directory = argv[1];
-				goto check_arg;
+      case 'd':
+        source_directory = argv[1];
+        goto check_arg;
 
-			case 'o':
-				object_directory = argv[1];
-				goto check_arg;
+      case 'o':
+        object_directory = argv[1];
+        goto check_arg;
 
-			case 'c':
-				config_directory = argv[1];
+      case 'c':
+        config_directory = argv[1];
 
-check_arg:
-				if (argv[1] == (char *) 0) {
-					goto usage_error;
-				}
-				argv++; argc--;
-				break;
+      check_arg:
+        if (argv[1] == (char *)0) {
+          goto usage_error;
+        }
+        argv++;
+        argc--;
+        break;
 
-			case 'p':
-				profiling++;
-				break;
-			default:
-				goto usage_error;
-			}
-		}
-	}
-	if (config_directory == (char *) 0) {
-		config_directory =
-		    malloc((unsigned) strlen(source_directory) + 6);
-		(void) sprintf(config_directory, "%s/conf", source_directory);
-	}
-	if (argc != 2) {
-usage_error:    ;
-		fprintf(stderr, "usage: config [ -bcdo dir ] [ -p ] sysname\n");
-		exit(1);
-	}
-	if (!build_directory) {
-		build_directory = argv[1];
-	}
-	if (freopen(argv[1], "r", stdin) == NULL) {
-		perror(argv[1]);
-		exit(2);
-	}
-	dtab = NULL;
-	confp = &conf_list;
-	opt = 0;
-	if (yyparse()) {
-		exit(3);
-	}
+      case 'p':
+        profiling++;
+        break;
+      default:
+        goto usage_error;
+      }
+    }
+  }
+  if (config_directory == (char *)0) {
+    config_directory = malloc((unsigned)strlen(source_directory) + 6);
+    (void)sprintf(config_directory, "%s/conf", source_directory);
+  }
+  if (argc != 2) {
+  usage_error:;
+    fprintf(stderr, "usage: config [ -bcdo dir ] [ -p ] sysname\n");
+    exit(1);
+  }
+  if (!build_directory) {
+    build_directory = argv[1];
+  }
+  if (freopen(argv[1], "r", stdin) == NULL) {
+    perror(argv[1]);
+    exit(2);
+  }
+  dtab = NULL;
+  confp = &conf_list;
+  opt = 0;
+  if (yyparse()) {
+    exit(3);
+  }
 
-	mkioconf();                     /* ioconf.c */
-	makefile();                     /* build Makefile */
-	headers();                      /* make a lot of .h files */
+  mkioconf(); /* ioconf.c */
+  makefile(); /* build Makefile */
+  headers();  /* make a lot of .h files */
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -146,41 +146,39 @@ usage_error:    ;
  *	NULL on end of line
  *	pointer to the word otherwise
  */
-const char *
-get_word(FILE *fp)
-{
-	static char line[80];
-	int ch;
-	char *cp;
+const char *get_word(FILE *fp) {
+  static char line[80];
+  int ch;
+  char *cp;
 
-	while ((ch = getc(fp)) != EOF) {
-		if (ch != ' ' && ch != '\t') {
-			break;
-		}
-	}
-	if (ch == EOF) {
-		return (char *)EOF;
-	}
-	if (ch == '\n') {
-		return NULL;
-	}
-	if (ch == '|') {
-		return "|";
-	}
-	cp = line;
-	*cp++ = ch;
-	while ((ch = getc(fp)) != EOF) {
-		if (isspace(ch)) {
-			break;
-		}
-		*cp++ = ch;
-	}
-	*cp = 0;
-	if (ch == EOF) {
-		return (char *)EOF;
-	}
-	(void) ungetc(ch, fp);
-	return line;
+  while ((ch = getc(fp)) != EOF) {
+    if (ch != ' ' && ch != '\t') {
+      break;
+    }
+  }
+  if (ch == EOF) {
+    return (char *)EOF;
+  }
+  if (ch == '\n') {
+    return NULL;
+  }
+  if (ch == '|') {
+    return "|";
+  }
+  cp = line;
+  *cp++ = ch;
+  while ((ch = getc(fp)) != EOF) {
+    if (isspace(ch)) {
+      break;
+    }
+    *cp++ = ch;
+  }
+  *cp = 0;
+  if (ch == EOF) {
+    return (char *)EOF;
+  }
+  (void)ungetc(ch, fp);
+  return line;
 }
 
 /*
@@ -189,39 +187,33 @@ get_word(FILE *fp)
  *	NULL on end of line
  *	pointer to the word otherwise
  */
-char *
-get_rest(FILE *fp)
-{
-	static char line[80];
-	int ch;
-	char *cp;
+char *get_rest(FILE *fp) {
+  static char line[80];
+  int ch;
+  char *cp;
 
-	cp = line;
-	while ((ch = getc(fp)) != EOF) {
-		if (ch == '\n') {
-			break;
-		}
-		*cp++ = ch;
-	}
-	*cp = 0;
-	if (ch == EOF) {
-		return (char *)EOF;
-	}
-	return line;
+  cp = line;
+  while ((ch = getc(fp)) != EOF) {
+    if (ch == '\n') {
+      break;
+    }
+    *cp++ = ch;
+  }
+  *cp = 0;
+  if (ch == EOF) {
+    return (char *)EOF;
+  }
+  return line;
 }
 
 /*
  * prepend the path to a filename
  */
-char *
-path(const char *file)
-{
-	char *cp;
+char *path(const char *file) {
+  char *cp;
 
-	cp = malloc((unsigned)(strlen(build_directory) +
-	    strlen(file) +
-	    strlen(object_directory) +
-	    3));
-	(void) sprintf(cp, "%s/%s/%s", object_directory, build_directory, file);
-	return cp;
+  cp = malloc((unsigned)(strlen(build_directory) + strlen(file) +
+                         strlen(object_directory) + 3));
+  (void)sprintf(cp, "%s/%s/%s", object_directory, build_directory, file);
+  return cp;
 }

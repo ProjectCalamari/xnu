@@ -25,9 +25,9 @@
 
 #if __DARWIN_UNIX03
 
-#include <sys/types.h>
-#include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/time.h>
+#include <sys/types.h>
 
 extern int __setrlimit(int resource, const struct rlimit *rlp);
 
@@ -36,11 +36,9 @@ extern int __setrlimit(int resource, const struct rlimit *rlp);
  *
  * This is for UNIX03 only.
  */
-int
-setrlimit(int resource, const struct rlimit *rlp)
-{
-	resource |= _RLIMIT_POSIX_FLAG;
-	return __setrlimit(resource, rlp);
+int setrlimit(int resource, const struct rlimit *rlp) {
+  resource |= _RLIMIT_POSIX_FLAG;
+  return __setrlimit(resource, rlp);
 }
 
 #endif /* __DARWIN_UNIX03 */

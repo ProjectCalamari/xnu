@@ -30,13 +30,12 @@
 
 #pragma once
 
-#include <stdint.h>
 #include <mach/kern_return.h>
+#include <stdint.h>
 
 #include "kern/exclaves.tightbeam.h"
 
 __BEGIN_DECLS
-
 
 /*!
  * @function exclaves_shared_memory_init
@@ -55,7 +54,7 @@ __BEGIN_DECLS
  */
 extern kern_return_t
 exclaves_shared_memory_init(const uint64_t endpoint,
-    sharedmemorybase_segxnuaccess_s *sm_client);
+                            sharedmemorybase_segxnuaccess_s *sm_client);
 
 /*!
  * @function exclaves_shared_memory_setup
@@ -83,8 +82,9 @@ exclaves_shared_memory_init(const uint64_t endpoint,
  */
 extern kern_return_t
 exclaves_shared_memory_setup(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_perms_s perm, uint64_t startpage, uint64_t endpage,
-    sharedmemorybase_mapping_s *mapping);
+                             const sharedmemorybase_perms_s perm,
+                             uint64_t startpage, uint64_t endpage,
+                             sharedmemorybase_mapping_s *mapping);
 
 /*!
  * @function exclaves_shared_memory_teardown
@@ -101,8 +101,8 @@ exclaves_shared_memory_setup(const sharedmemorybase_segxnuaccess_s *sm_client,
  * @return
  * The KERN_SUCCESS or error code on failure.
  */
-extern kern_return_t
-exclaves_shared_memory_teardown(const sharedmemorybase_segxnuaccess_s *sm_client,
+extern kern_return_t exclaves_shared_memory_teardown(
+    const sharedmemorybase_segxnuaccess_s *sm_client,
     const sharedmemorybase_mapping_s *mapping);
 
 /*!
@@ -128,8 +128,8 @@ exclaves_shared_memory_teardown(const sharedmemorybase_segxnuaccess_s *sm_client
  */
 extern kern_return_t
 exclaves_shared_memory_map(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_mapping_s *mapping, const uint64_t startpage,
-    const uint64_t endpage);
+                           const sharedmemorybase_mapping_s *mapping,
+                           const uint64_t startpage, const uint64_t endpage);
 
 /*!
  * @function exclaves_shared_memory_unmap
@@ -154,8 +154,8 @@ exclaves_shared_memory_map(const sharedmemorybase_segxnuaccess_s *sm_client,
  */
 extern kern_return_t
 exclaves_shared_memory_unmap(const sharedmemorybase_segxnuaccess_s *sm_client,
-    const sharedmemorybase_mapping_s *mapping, const uint64_t startpage,
-    const uint64_t endpage);
+                             const sharedmemorybase_mapping_s *mapping,
+                             const uint64_t startpage, const uint64_t endpage);
 
 /*!
  * @function exclaves_shared_memory_iterate
@@ -183,9 +183,10 @@ exclaves_shared_memory_unmap(const sharedmemorybase_segxnuaccess_s *sm_client,
  */
 /* BEGIN IGNORE CODESTYLE */
 extern kern_return_t
-exclaves_shared_memory_iterate(const sharedmemorybase_segxnuaccess_s * sm_client,
-    const sharedmemorybase_mapping_s *mapping, uint64_t startpage, uint64_t endpage,
-    void (^cb)(uint64_t physical_address));
+exclaves_shared_memory_iterate(const sharedmemorybase_segxnuaccess_s *sm_client,
+                               const sharedmemorybase_mapping_s *mapping,
+                               uint64_t startpage, uint64_t endpage,
+                               void (^cb)(uint64_t physical_address));
 /* END IGNORE CODESTYLE*/
 
 __END_DECLS

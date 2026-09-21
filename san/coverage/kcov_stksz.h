@@ -41,7 +41,8 @@
 __BEGIN_DECLS
 
 void kcov_stksz_init_thread(kcov_stksz_thread_t *);
-void kcov_stksz_update_stack_size(thread_t, kcov_thread_data_t *, void *, uintptr_t);
+void kcov_stksz_update_stack_size(thread_t, kcov_thread_data_t *, void *,
+                                  uintptr_t);
 
 /* Sets ksancov stack for given thread. */
 void kcov_stksz_set_thread_stack(thread_t, vm_offset_t);

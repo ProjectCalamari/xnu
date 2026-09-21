@@ -62,24 +62,22 @@
  *      Initialize device service as part of kernel task.
  */
 
-#include <kern/host.h>
 #include <device/device_port.h>
+#include <kern/host.h>
 
 static SECURITY_READ_ONLY_LATE(void *) main_device_kobject;
 SECURITY_READ_ONLY_LATE(ipc_port_t) main_device_port;
 
-IPC_KOBJECT_DEFINE(IKOT_MAIN_DEVICE,
-    .iko_op_stable    = true,
-    .iko_op_permanent = true);
+IPC_KOBJECT_DEFINE(IKOT_MAIN_DEVICE, .iko_op_stable = true,
+                   .iko_op_permanent = true);
 
-void
-device_service_create(void)
-{
-	main_device_port = ipc_kobject_alloc_port(
-		(ipc_kobject_t)&main_device_kobject, IKOT_MAIN_DEVICE,
-		IPC_KOBJECT_ALLOC_NONE);
+void device_service_create(void) {
+  main_device_port =
+      ipc_kobject_alloc_port((ipc_kobject_t)&main_device_kobject,
+                             IKOT_MAIN_DEVICE, IPC_KOBJECT_ALLOC_NONE);
 
-	kernel_set_special_port(host_priv_self(), HOST_IO_MAIN_PORT,
-	    ipc_kobject_make_send(main_device_port, &main_device_kobject,
-	    IKOT_MAIN_DEVICE));
+  kernel_set_special_port(host_priv_self(), HOST_IO_MAIN_PORT,
+                          ipc_kobject_make_send(main_device_port,
+                                                &main_device_kobject,
+                                                IKOT_MAIN_DEVICE));
 }

@@ -55,36 +55,32 @@
 
 #include "mac_internal.h"
 
-int
-mac_find_policy_data(const mac_policy_handle_t handle, const char *key,
-    void **valp, size_t *sizep)
-{
-	struct mac_policy_conf *mpc;
-	int error = ENOENT;
+int mac_find_policy_data(const mac_policy_handle_t handle, const char *key,
+                         void **valp, size_t *sizep) {
+  struct mac_policy_conf *mpc;
+  int error = ENOENT;
 
-	if ((mpc = mac_get_mpc(handle)) != NULL) {
-		error = mac_find_module_data(mpc->mpc_data, key, valp, sizep);
-	}
-	return error;
+  if ((mpc = mac_get_mpc(handle)) != NULL) {
+    error = mac_find_module_data(mpc->mpc_data, key, valp, sizep);
+  }
+  return error;
 }
 
-int
-mac_find_module_data(struct mac_module_data *mmd, const char *key,
-    void **valp, size_t *sizep)
-{
-	int error = ENOENT;
-	unsigned int i;
+int mac_find_module_data(struct mac_module_data *mmd, const char *key,
+                         void **valp, size_t *sizep) {
+  int error = ENOENT;
+  unsigned int i;
 
-	if (mmd != NULL) {
-		for (i = 0; i < mmd->count; i++) {
-			if (strcmp(key, mmd->data[i].key) == 0) {
-				*valp = mmd->data[i].value;
-				*sizep = (size_t)mmd->data[i].value_size;
-				error = 0;
-				break;
-			}
-		}
-	}
+  if (mmd != NULL) {
+    for (i = 0; i < mmd->count; i++) {
+      if (strcmp(key, mmd->data[i].key) == 0) {
+        *valp = mmd->data[i].value;
+        *sizep = (size_t)mmd->data[i].value_size;
+        error = 0;
+        break;
+      }
+    }
+  }
 
-	return error;
+  return error;
 }

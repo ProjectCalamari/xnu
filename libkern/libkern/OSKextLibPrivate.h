@@ -29,7 +29,6 @@
 #ifndef _LIBKERN_OSKEXTLIBPRIVATE_H
 #define _LIBKERN_OSKEXTLIBPRIVATE_H
 
-
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -55,13 +54,16 @@ __BEGIN_DECLS
 #endif
 
 typedef uint8_t OSKextExcludeLevel;
-#define kOSKextExcludeNone  (0)
-#define kOSKextExcludeKext  (1)
-#define kOSKextExcludeAll   (2)
+#define kOSKextExcludeNone (0)
+#define kOSKextExcludeKext (1)
+#define kOSKextExcludeAll (2)
 
-#define kIOCatalogManagementEntitlement "com.apple.private.security.iocatalog-management"
-#define kOSKextCollectionManagementEntitlement "com.apple.private.security.kext-collection-management"
-#define kOSKextOnlyBootKCManagementEntitlement "com.apple.private.security.only-bootkc-management"
+#define kIOCatalogManagementEntitlement                                        \
+  "com.apple.private.security.iocatalog-management"
+#define kOSKextCollectionManagementEntitlement                                 \
+  "com.apple.private.security.kext-collection-management"
+#define kOSKextOnlyBootKCManagementEntitlement                                 \
+  "com.apple.private.security.only-bootkc-management"
 
 #define kOSKextCodelessKextLoadAddr (0x7FFFFFFFFFFFFFFFULL)
 
@@ -82,42 +84,41 @@ typedef uint8_t OSKextExcludeLevel;
  * @define   kOSBundleHelperKey
  * @abstract Used by loginwindow.
  */
-#define kOSBundleHelperKey      "OSBundleHelper"
+#define kOSBundleHelperKey "OSBundleHelper"
 
 /*!
  * @define   kOSBundleDeveloperOnlyKey
  * @abstract A boolean value indicating whether the kext should only load on
  *           Developer devices.
  */
-#define kOSBundleDeveloperOnlyKey               "OSBundleDeveloperOnly"
+#define kOSBundleDeveloperOnlyKey "OSBundleDeveloperOnly"
 
 /*!
  * @define   kOSBundleRamDiskOnlyKey
  * @abstract A boolean value indicating whether the kext should only load when
  *           booted from a ram disk.
  */
-#define kOSBundleRamDiskOnlyKey         "OSBundleRamDiskOnly"
-
+#define kOSBundleRamDiskOnlyKey "OSBundleRamDiskOnly"
 
 /*!
  * @define   kAppleSecurityExtensionKey
  * @abstract A boolean value indicating whether the kext registers
  *           MACF hooks.
  */
-#define kAppleSecurityExtensionKey      "AppleSecurityExtension"
+#define kAppleSecurityExtensionKey "AppleSecurityExtension"
 
 /*!
  * @define   kAppleKernelExternalComponentKey
  * @abstract A boolean value indicating whether the kext is vending kernel
  *           KPI, and needs special loading behavior.
  */
-#define kAppleKernelExternalComponentKey        "AppleKernelExternalComponent"
+#define kAppleKernelExternalComponentKey "AppleKernelExternalComponent"
 
 /*!
  * @define kOSKextInfoPlistDigestKey
  * @abstract SHA-256 data of the kext's Info.plist
  */
-#define kOSKextInfoPlistDigestKey       "_InfoPlistDigest"
+#define kOSKextInfoPlistDigestKey "_InfoPlistDigest"
 
 /*!
  * @define kOSKextBundleCollectionTypeKey
@@ -125,22 +126,23 @@ typedef uint8_t OSKextExcludeLevel;
  *           values: kKCTypePrimary, kKCTypeSystem, kKCTypeAuxiliary,
  *                   kKCTypeCodeless
  */
-#define kOSKextBundleCollectionTypeKey  "_BundleCollectionType"
+#define kOSKextBundleCollectionTypeKey "_BundleCollectionType"
 
 /*!
  * @define kOSKextAuxKCAvailabilityKey
  * @abstract boolean value: false if the kext is in the AuxKC and
  *           is not loadable; true otherwise.
  */
-#define kOSKextAuxKCAvailabilityKey     "_AuxKCAvailability"
-
+#define kOSKextAuxKCAvailabilityKey "_AuxKCAvailability"
 
 // properties found in the registry root
-#define kOSKernelCPUTypeKey             "OSKernelCPUType"
-#define kOSKernelCPUSubtypeKey          "OSKernelCPUSubtype"
-#define kOSStartupMkextCRC              "OSStartupMkextCRC"             /* value is 32-bit OSData */
-#define kOSPrelinkKextCountKey          "OSPrelinkKextCount"            /* value is 32-bit OSNumber */
-#define kOSPrelinkPersonalityCountKey   "OSPrelinkPersonalityCount"     /* value is 32-bit OSNumber */
+#define kOSKernelCPUTypeKey "OSKernelCPUType"
+#define kOSKernelCPUSubtypeKey "OSKernelCPUSubtype"
+#define kOSStartupMkextCRC "OSStartupMkextCRC" /* value is 32-bit OSData */
+#define kOSPrelinkKextCountKey                                                 \
+  "OSPrelinkKextCount" /* value is 32-bit OSNumber */
+#define kOSPrelinkPersonalityCountKey                                          \
+  "OSPrelinkPersonalityCount" /* value is 32-bit OSNumber */
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -149,55 +151,54 @@ typedef uint8_t OSKextExcludeLevel;
 /********************************************************************/
 #endif
 /*********************************************************************
-* In addition to the keys defined here, you will find:
-*   kCFBundleIdentifierKey
-*   kCFBundleVersionKey
-*   kOSBundleCompatibleVersionKey
-*   kOSBundleIsInterfaceKey
-*   kOSKernelResourceKey
-*********************************************************************/
-#define kOSBundleMachOHeadersKey                "OSBundleMachOHeaders"
-#define kOSBundleLogStringsKey                  "OSBundleLogStrings"
-#define kOSBundleCPUTypeKey                     "OSBundleCPUType"
-#define kOSBundleCPUSubtypeKey                  "OSBundleCPUSubtype"
-#define kOSBundlePathKey                        "OSBundlePath"
-#define kOSBundleExecutablePathKey              "OSBundleExecutablePath"
-#define kOSBundleUUIDKey                        "OSBundleUUID"
-#define kOSBundleTextUUIDKey                    "OSBundleTextUUID"
-#define kOSBundleStartedKey                     "OSBundleStarted"
-#define kOSBundlePrelinkedKey                   "OSBundlePrelinked"
-#define kOSBundleLoadTagKey                     "OSBundleLoadTag"
-#define kOSBundleLoadAddressKey                 "OSBundleLoadAddress"
-#define kOSBundleLoadSizeKey                    "OSBundleLoadSize"
-#define kOSBundleExecLoadAddressKey             "OSBundleExecLoadAddress"
-#define kOSBundleExecLoadSizeKey                "OSBundleExecLoadSize"
-#define kOSBundleWiredSizeKey                   "OSBundleWiredSize"
-#define kOSBundleDependenciesKey                "OSBundleDependencies"
-#define kOSBundleRetainCountKey                 "OSBundleRetainCount"
-#define kOSBundleCacheLoadAddressKey            "OSBundleCacheLoadAddress"
+ * In addition to the keys defined here, you will find:
+ *   kCFBundleIdentifierKey
+ *   kCFBundleVersionKey
+ *   kOSBundleCompatibleVersionKey
+ *   kOSBundleIsInterfaceKey
+ *   kOSKernelResourceKey
+ *********************************************************************/
+#define kOSBundleMachOHeadersKey "OSBundleMachOHeaders"
+#define kOSBundleLogStringsKey "OSBundleLogStrings"
+#define kOSBundleCPUTypeKey "OSBundleCPUType"
+#define kOSBundleCPUSubtypeKey "OSBundleCPUSubtype"
+#define kOSBundlePathKey "OSBundlePath"
+#define kOSBundleExecutablePathKey "OSBundleExecutablePath"
+#define kOSBundleUUIDKey "OSBundleUUID"
+#define kOSBundleTextUUIDKey "OSBundleTextUUID"
+#define kOSBundleStartedKey "OSBundleStarted"
+#define kOSBundlePrelinkedKey "OSBundlePrelinked"
+#define kOSBundleLoadTagKey "OSBundleLoadTag"
+#define kOSBundleLoadAddressKey "OSBundleLoadAddress"
+#define kOSBundleLoadSizeKey "OSBundleLoadSize"
+#define kOSBundleExecLoadAddressKey "OSBundleExecLoadAddress"
+#define kOSBundleExecLoadSizeKey "OSBundleExecLoadSize"
+#define kOSBundleWiredSizeKey "OSBundleWiredSize"
+#define kOSBundleDependenciesKey "OSBundleDependencies"
+#define kOSBundleRetainCountKey "OSBundleRetainCount"
+#define kOSBundleCacheLoadAddressKey "OSBundleCacheLoadAddress"
 // Kernel TEXT encompasses kexts
-#define kOSBundleKextsInKernelTextKey           "OSBundleKextsInKernelText"
+#define kOSBundleKextsInKernelTextKey "OSBundleKextsInKernelText"
 // OSKextCopyLoadedKextInfo includes non-started kexts when present:
-#define kOSBundleAllPrelinkedKey                "OSBundleAllPrelinked"
+#define kOSBundleAllPrelinkedKey "OSBundleAllPrelinked"
 // OSKextCopyDextsInfo states:
-#define kOSBundleDextStateKey                   "OSBundleDextState"
-#define kOSBundleDextStateActiveKey             "OSBundleDextStateActive"
-#define kOSBundleDextStateActiveLoadedKey       "OSBundleDextStateActiveLoaded"
-#define kOSBundleDextStateActiveUnloadedKey     "OSBundleDextStateActiveUnloaded"
-#define kOSBundleDextStatePendingUpgradeKey     "OSBundleDextStatePendingUpgrade"
-
+#define kOSBundleDextStateKey "OSBundleDextState"
+#define kOSBundleDextStateActiveKey "OSBundleDextStateActive"
+#define kOSBundleDextStateActiveLoadedKey "OSBundleDextStateActiveLoaded"
+#define kOSBundleDextStateActiveUnloadedKey "OSBundleDextStateActiveUnloaded"
+#define kOSBundleDextStatePendingUpgradeKey "OSBundleDextStatePendingUpgrade"
 
 /* Dictionary of metaclass info keyed by classname.
  */
-#define kOSBundleClassesKey                     "OSBundleClasses"
+#define kOSBundleClassesKey "OSBundleClasses"
 
-#define kOSBundleDextUniqueIdentifierKey        "kOSBundleDextUniqueIdentifier"
+#define kOSBundleDextUniqueIdentifierKey "kOSBundleDextUniqueIdentifier"
 /* These are contained in kOSBundleClassesKey. kOSMetaClassSuperclassNameKey
  * may be absent (for the root class).
  */
-#define kOSMetaClassNameKey                     "OSMetaClassName"
-#define kOSMetaClassSuperclassNameKey           "OSMetaClassSuperclassName"
-#define kOSMetaClassTrackingCountKey            "OSMetaClassTrackingCount"
+#define kOSMetaClassNameKey "OSMetaClassName"
+#define kOSMetaClassSuperclassNameKey "OSMetaClassSuperclassName"
+#define kOSMetaClassTrackingCountKey "OSMetaClassTrackingCount"
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -205,11 +206,11 @@ typedef uint8_t OSKextExcludeLevel;
 #pragma mark Kext Collection Type Keys
 /********************************************************************/
 #endif
-#define kKCTypePrimary   "Primary"
-#define kKCTypeSystem    "System"
+#define kKCTypePrimary "Primary"
+#define kKCTypeSystem "System"
 #define kKCTypeAuxiliary "Auxiliary"
-#define kKCTypeCodeless  "Codeless"
-#define kKCTypeAny       "Any"
+#define kKCTypeCodeless "Codeless"
+#define kKCTypeAny "Any"
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -256,16 +257,15 @@ typedef uint8_t OSKextExcludeLevel;
  * to debuging information:
  *
  * <ol start="0">
- * <li>Silent - Not applicable to messages; as a filter, do not print any log messages.</li>
- * <li>Errors - Log message is an error.
- * <li>Warnings - Log message is a warning.
- * <li>Basic information - Log message is basic success/failure.</li>
- * <li>Progress - Provides high-level information about stages in processing.</li>
- * <li>Step - Provides low-level information about complex operations,
- *          typically about individual kexts.</li>
- * <li>Detail - Provides very low-level information about parts of kexts,
- *          including individual Libkern classes and operations on bundle files.</li>
- * <li>Debug - Very verbose logging about internal activities.</li>
+ * <li>Silent - Not applicable to messages; as a filter, do not print any log
+ * messages.</li> <li>Errors - Log message is an error. <li>Warnings - Log
+ * message is a warning. <li>Basic information - Log message is basic
+ * success/failure.</li> <li>Progress - Provides high-level information about
+ * stages in processing.</li> <li>Step - Provides low-level information about
+ * complex operations, typically about individual kexts.</li> <li>Detail -
+ * Provides very low-level information about parts of kexts, including
+ * individual Libkern classes and operations on bundle files.</li> <li>Debug -
+ * Very verbose logging about internal activities.</li>
  * </ol>
  *
  * Log messages at
@@ -303,13 +303,15 @@ typedef uint8_t OSKextExcludeLevel;
  *
  * <b>Byte 4:</b> <code>0xF000</code> - Kext diagnostics
  * (<code>@link kOSKextLogValidationFlag kOSKextLogValidationFlag@/link</code>,
- * <code>@link kOSKextLogAuthenticationFlag kOSKextLogAuthenticationFlag@/link</code>, and
- * <code>@link kOSKextLogDependenciesFlag kOSKextLogDependenciesFlag@/link</code>).
+ * <code>@link kOSKextLogAuthenticationFlag
+ * kOSKextLogAuthenticationFlag@/link</code>, and <code>@link
+ * kOSKextLogDependenciesFlag kOSKextLogDependenciesFlag@/link</code>).
  *
  * <b>Byte 5:</b> <code>0xF00000</code> - Kext access & bookkeeping
- * (<code>@link kOSKextLogDirectoryScanFlag kOSKextLogDirectoryScanFlag@/link</code>,
- * <code>@link kOSKextLogFileAccessFlag kOSKextLogFileAccessFlag@/link</code>,
- * <code>@link kOSKextLogKextBookkeepingFlag kOSKextLogKextBookkeepingFlag@/link </code>).
+ * (<code>@link kOSKextLogDirectoryScanFlag
+ * kOSKextLogDirectoryScanFlag@/link</code>, <code>@link
+ * kOSKextLogFileAccessFlag kOSKextLogFileAccessFlag@/link</code>, <code>@link
+ * kOSKextLogKextBookkeepingFlag kOSKextLogKextBookkeepingFlag@/link </code>).
  *
  * <b>Byte 6:</b> <code>0xF000000</code> - Linking & patching
  * (<code>@link kOSKextLogLinkFlag kOSKextLogLinkFlag@/link</code> and
@@ -330,7 +332,7 @@ typedef uint32_t OSKextLogSpec;
  *           <code>@link OSKextLogSpec OSKextLogSpec@/link</code> to extract
  *           the raw level.
  */
-#define kOSKextLogLevelMask              ((OSKextLogSpec) 0x00000007)
+#define kOSKextLogLevelMask ((OSKextLogSpec)0x00000007)
 
 /*!
  * @define   kOSKextLogKextOrGlobalMask
@@ -352,15 +354,14 @@ typedef uint32_t OSKextLogSpec;
  * OSBundleEnableKextLogging@/link
  * property set to <code>true</code>.
  */
-#define kOSKextLogKextOrGlobalMask       ((OSKextLogSpec) 0x00000008)
-
+#define kOSKextLogKextOrGlobalMask ((OSKextLogSpec)0x00000008)
 
 /*!
  * @define   kOSKextLogFlagsMask
  * @abstract Masks the flag bits of an
  *           <code>@link OSKextLogSpec OSKextLogSpec@/link</code>.
  */
-#define kOSKextLogFlagsMask              ((OSKextLogSpec) 0x0ffffff0)
+#define kOSKextLogFlagsMask ((OSKextLogSpec)0x0ffffff0)
 
 /*!
  * @define   kOSKextLogFlagsMask
@@ -368,14 +369,14 @@ typedef uint32_t OSKextLogSpec;
  *           <code>@link OSKextLogSpec OSKextLogSpec@/link</code>
  *           to which command-line <code>-v</code> levels apply.
  */
-#define kOSKextLogVerboseFlagsMask       ((OSKextLogSpec) 0x00000ff0)
+#define kOSKextLogVerboseFlagsMask ((OSKextLogSpec)0x00000ff0)
 
 /*!
  * @define   kOSKextLogConfigMask
  * @abstract Masks the config bits of an
  *           <code>@link OSKextLogSpec OSKextLogSpec@/link</code>.
  */
-#define kOSKextLogConfigMask             ((OSKextLogSpec) 0xf0000000)
+#define kOSKextLogConfigMask ((OSKextLogSpec)0xf0000000)
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -391,14 +392,13 @@ typedef uint32_t OSKextLogSpec;
  *           unconditional print messages to go
  *           through the logging engine.
  */
-#define kOSKextLogExplicitLevel          ((OSKextLogSpec)        0x0)
+#define kOSKextLogExplicitLevel ((OSKextLogSpec)0x0)
 
 /*!
  * @define   kOSKextLogErrorLevel
  * @abstract Log messages concerning error conditions in any category.
  */
-#define kOSKextLogErrorLevel            ((OSKextLogSpec)        0x1)
-
+#define kOSKextLogErrorLevel ((OSKextLogSpec)0x1)
 
 /*!
  * @define   kOSKextLogWarningLevel
@@ -406,16 +406,14 @@ typedef uint32_t OSKextLogSpec;
  *           which indicate potential error conditions,
  *           and notices, which may explain unexpected but correct behavior.
  */
-#define kOSKextLogWarningLevel          ((OSKextLogSpec)        0x2)
-
+#define kOSKextLogWarningLevel ((OSKextLogSpec)0x2)
 
 /*!
  * @define   kOSKextLogBasicLevel
  * @abstract Log messages concerning top-level outcome in any category
  *           (kext load/unload, kext cache creation/extration w/# kexts).
  */
-#define kOSKextLogBasicLevel           ((OSKextLogSpec)        0x3)
-
+#define kOSKextLogBasicLevel ((OSKextLogSpec)0x3)
 
 /*!
  * @define   kOSKextLogProgressLevel
@@ -424,8 +422,7 @@ typedef uint32_t OSKextLogSpec;
  *           allocation/link/map/start (load operation),
  *           stop/unmap (unload operation), kext added/extracted (archive).
  */
-#define kOSKextLogProgressLevel          ((OSKextLogSpec)        0x4)
-
+#define kOSKextLogProgressLevel ((OSKextLogSpec)0x4)
 
 /*!
  * @define   kOSKextLogStepLevel
@@ -433,8 +430,7 @@ typedef uint32_t OSKextLogSpec;
  *           such as sending personalities to the IOCatalogue when loading,
  *           detailed IPC with the kernel, or filtering of kexts for an archive.
  */
-#define kOSKextLogStepLevel             ((OSKextLogSpec)        0x5)
-
+#define kOSKextLogStepLevel ((OSKextLogSpec)0x5)
 
 /*!
  * @define   kOSKextLogDetailLevel
@@ -442,16 +438,14 @@ typedef uint32_t OSKextLogSpec;
  *           such as classes being registered/unregistered or
  *           operations on indivdual files in a kext.
  */
-#define kOSKextLogDetailLevel           ((OSKextLogSpec)        0x6)
-
+#define kOSKextLogDetailLevel ((OSKextLogSpec)0x6)
 
 /*!
  * @define   kOSKextLogDebugLevel
  * @abstract Log messages concerning very low-level actions that are
  *           useful mainly for debugging the kext system itself.
  */
-#define kOSKextLogDebugLevel             ((OSKextLogSpec)        0x7)
-
+#define kOSKextLogDebugLevel ((OSKextLogSpec)0x7)
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -463,29 +457,28 @@ typedef uint32_t OSKextLogSpec;
  * @define   kOSKextLogGeneralFlag
  * @abstract Log messages about general activity in the kext system.
  */
-#define kOSKextLogGeneralFlag            ((OSKextLogSpec)       0x10)
+#define kOSKextLogGeneralFlag ((OSKextLogSpec)0x10)
 
 /*!
  * @define   kOSKextLogLoadFlag
- * @abstract Log messages regarding kernel extension load, start/stop, or unload activity
- *           in the kernel.
+ * @abstract Log messages regarding kernel extension load, start/stop, or unload
+ * activity in the kernel.
  */
-#define kOSKextLogLoadFlag               ((OSKextLogSpec)       0x20)
+#define kOSKextLogLoadFlag ((OSKextLogSpec)0x20)
 
 /*!
  * @define   kOSKextLogIPCFlag
  * @abstract Log messages about any interaction between kernel and user space
  *           regarding kernel extensions.
  */
-#define kOSKextLogIPCFlag                ((OSKextLogSpec)       0x40)
+#define kOSKextLogIPCFlag ((OSKextLogSpec)0x40)
 
 /*!
  * @define   kOSKextLogArchiveFlag
  * @abstract Log messages about creating or processing a kext startup cache file
  *           (mkext or prelinked kernel).
  */
-#define kOSKextLogArchiveFlag           ((OSKextLogSpec)       0x80)
-
+#define kOSKextLogArchiveFlag ((OSKextLogSpec)0x80)
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -507,20 +500,20 @@ typedef uint32_t OSKextLogSpec;
  * @define   kOSKextLogValidationFlag
  * @abstract Log messages when validating kernel extensions.
  */
-#define kOSKextLogValidationFlag         ((OSKextLogSpec)     0x1000)
+#define kOSKextLogValidationFlag ((OSKextLogSpec)0x1000)
 
 /*!
  * @define   kOSKextLogAuthenticationFlag
  * @abstract Log messages when autnenticating kernel extension files.
  *           Irrelevant in the kernel.
  */
-#define kOSKextLogAuthenticationFlag     ((OSKextLogSpec)     0x2000)
+#define kOSKextLogAuthenticationFlag ((OSKextLogSpec)0x2000)
 
 /*!
  * @define   kOSKextLogDependenciesFlag
  * @abstract Log messages when resolving dependencies for a kernel extension.
  */
-#define kOSKextLogDependenciesFlag       ((OSKextLogSpec)     0x4000)
+#define kOSKextLogDependenciesFlag ((OSKextLogSpec)0x4000)
 
 // reserved slot for group               ((OSKextLogSpec)     0x8000)
 
@@ -535,20 +528,20 @@ typedef uint32_t OSKextLogSpec;
  * @abstract Log messages when scanning directories for kernel extensions.
  *           In the kernel logs every booter kext entry processed.
  */
-#define kOSKextLogDirectoryScanFlag      ((OSKextLogSpec)    0x10000)
+#define kOSKextLogDirectoryScanFlag ((OSKextLogSpec)0x10000)
 
 /*!
  * @define   kOSKextLogFileAccessFlag
  * @abstract Log messages when performing any filesystem access (very verbose).
  *           Irrelevant in the kernel.
  */
-#define kOSKextLogFileAccessFlag         ((OSKextLogSpec)    0x20000)
+#define kOSKextLogFileAccessFlag ((OSKextLogSpec)0x20000)
 
 /*!
  * @define   kOSKextLogKextBookkeepingFlag
  * @abstract Log messages about internal tracking of kexts. Can be very verbose.
  */
-#define kOSKextLogKextBookkeepingFlag    ((OSKextLogSpec)    0x40000)
+#define kOSKextLogKextBookkeepingFlag ((OSKextLogSpec)0x40000)
 
 // reserved slot for group               ((OSKextLogSpec)    0x80000)
 
@@ -562,13 +555,13 @@ typedef uint32_t OSKextLogSpec;
  * @define   kOSKextLogLinkFlag
  * @abstract Log messages about linking.
  */
-#define kOSKextLogLinkFlag               ((OSKextLogSpec)   0x100000)
+#define kOSKextLogLinkFlag ((OSKextLogSpec)0x100000)
 
 /*!
  * @define   kOSKextLogPatchFlag
  * @abstract Log messages about patching.
  */
-#define kOSKextLogPatchFlag              ((OSKextLogSpec)   0x200000)
+#define kOSKextLogPatchFlag ((OSKextLogSpec)0x200000)
 
 // reserved slot for group               ((OSKextLogSpec)   0x400000)
 // reserved slot for group               ((OSKextLogSpec)   0x800000)
@@ -583,7 +576,6 @@ typedef uint32_t OSKextLogSpec;
 // reserved slot for grouping            ((OSKextLogSpec)  0x2000000)
 // reserved slot for grouping            ((OSKextLogSpec)  0x4000000)
 // reserved slot for grouping            ((OSKextLogSpec)  0x8000000)
-
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -605,9 +597,10 @@ typedef uint32_t OSKextLogSpec;
  * @define   kOSKextLogSilentFilter
  * @abstract For use in filter specs:
  *           Ignore all log messages with a log level greater than
- *           <code>@link kOSKextLogExplicitLevel kOSKextLogExplicitLevel@/link</code>.
+ *           <code>@link kOSKextLogExplicitLevel
+ * kOSKextLogExplicitLevel@/link</code>.
  */
-#define kOSKextLogSilentFilter           ((OSKextLogSpec)        0x0)
+#define kOSKextLogSilentFilter ((OSKextLogSpec)0x0)
 
 /*!
  * @define   kOSKextLogShowAllFilter
@@ -618,7 +611,7 @@ typedef uint32_t OSKextLogSpec;
  *           OSBundleEnableKextLogging@/link
  *           set to <code>true</code>.
  */
-#define kOSKextLogShowAllFilter          ((OSKextLogSpec) 0x0ffffff7)
+#define kOSKextLogShowAllFilter ((OSKextLogSpec)0x0ffffff7)
 
 /*!
  * @define   kOSKextLogShowAllKextsFilter
@@ -628,9 +621,8 @@ typedef uint32_t OSKextLogSpec;
  *           OSBundleEnableKextLogging@/link
  *           set to <code>true</code>.
  */
-#define kOSKextLogShowAllKextsFilter     ((OSKextLogSpec) \
-	                                   (kOSKextLogShowAllFilter | \
-	                                    kOSKextLogKextOrGlobalMask))
+#define kOSKextLogShowAllKextsFilter                                           \
+  ((OSKextLogSpec)(kOSKextLogShowAllFilter | kOSKextLogKextOrGlobalMask))
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -648,11 +640,11 @@ typedef uint32_t OSKextLogSpec;
  * @abstract  An encoded kext version that can be compared arithmetically.
  *
  * @discussion
- * A value of zero (<code>@link kOSKextVersionUndefined kOSKextVersionUndefined@/link</code>)
- * is <i>not</i> equivalent to a version string of "0.0",
- * and typically means there is no version specified
- * (for example, that there is no CFBundleVersion property at all).
- * Values below zero are invalid.
+ * A value of zero (<code>@link kOSKextVersionUndefined
+ * kOSKextVersionUndefined@/link</code>) is <i>not</i> equivalent to a version
+ * string of "0.0", and typically means there is no version specified (for
+ * example, that there is no CFBundleVersion property at all). Values below zero
+ * are invalid.
  *
  * The encoding used is subject to change,
  * and should never be saved to permanent storage.
@@ -672,24 +664,26 @@ typedef int64_t OSKextVersion;
  */
 #define kOSKextVersionMaxLength (20)
 // with a few bytes to spare including a nul byte
-// xx-review: Should we make this much bigger in case we ever need longer strings?
+// xx-review: Should we make this much bigger in case we ever need longer
+// strings?
 
 /*!
  * @define    kOSKextVersionUndefined
  * @abstract  The undefined version.
  *
  * @discussion
- * This value of <code>@link OSKextVersion OSKextVersion@/link</code> represents the
- * lack of a version
- * (for example, that there is no CFBundleVersion property at all).
+ * This value of <code>@link OSKextVersion OSKextVersion@/link</code> represents
+ * the lack of a version (for example, that there is no CFBundleVersion property
+ * at all).
  */
-#define kOSKextVersionUndefined  (0)
+#define kOSKextVersionUndefined (0)
 
 /*!
  * @function OSKextParseVersionString
  *
  * @abstract
- * Parses a kext version string into an <code>@link OSKextVersion OSKextVersion@/link</code>.
+ * Parses a kext version string into an <code>@link OSKextVersion
+ * OSKextVersion@/link</code>.
  *
  * @param  versionString  The kext version string to parse.
  *
@@ -704,21 +698,21 @@ typedef int64_t OSKextVersion;
  * of digits before the build stage: ####.##.##s{1-255} where 's'
  * is a build stage 'd', 'a', 'b', 'f' or 'fc'.
  */
-OSKextVersion OSKextParseVersionString(const char * versionString);
-
+OSKextVersion OSKextParseVersionString(const char *versionString);
 
 /*!
  * @function OSKextVersionGetString
  *
  * @abstract
- * Formats an encoded <code>@link OSKextVersion OSKextVersion@/link</code> into a string
- * representation.
+ * Formats an encoded <code>@link OSKextVersion OSKextVersion@/link</code> into
+ * a string representation.
  *
  * @param  aVersion
  *         The encoded version to format.
  * @param  buffer
  *         A C string buffer of at least
- *         <code>@link kOSKextVersionMaxLength kOSKextVersionMaxLength@/link</code> bytes.
+ *         <code>@link kOSKextVersionMaxLength
+ * kOSKextVersionMaxLength@/link</code> bytes.
  * @param  bufferSize  The size in bytes of <code>buffer</code>.
  *
  * @result
@@ -735,16 +729,12 @@ OSKextVersion OSKextParseVersionString(const char * versionString);
  * or is not a valid kext version encoding,
  * the resulting string is "(invalid)".
  */
-Boolean OSKextVersionGetString(
-	OSKextVersion   aVersion,
-	char          * buffer,
-	uint32_t        bufferSize);
-
+Boolean OSKextVersionGetString(OSKextVersion aVersion, char *buffer,
+                               uint32_t bufferSize);
 
 #define KOSBundleDextUniqueIdentifierMaxLength (1024)
 
 #ifdef KERNEL
-
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -771,7 +761,7 @@ void kext_weak_symbol_referenced(void) __abortlike;
  * @result The vm_map from which the kext was allocated.  This function
  * cannot return <code>NULL</code>.
  */
-vm_map_t kext_get_vm_map(kmod_info_t * info);
+vm_map_t kext_get_vm_map(kmod_info_t *info);
 
 #ifdef XNU_KERNEL_PRIVATE
 
@@ -803,7 +793,7 @@ void kext_dump_panic_lists(int (*printf_func)(const char *fmt, ...));
  * @define kOSKextReceiptQueried
  * @abstract Whether or not the kext receipt has been successfully loaded.
  */
-#define kOSKextReceiptQueried  "OSKextReceiptQueried"
+#define kOSKextReceiptQueried "OSKextReceiptQueried"
 
 #if PRAGMA_MARK
 #pragma mark -
@@ -818,8 +808,8 @@ void kext_dump_panic_lists(int (*printf_func)(const char *fmt, ...));
  * @param  kextIdentifier  The bundle identifier of the kext to look up.
  * @result
  * The load tag of the requested kext, or
- * <code>@link //apple_ref/c/macro/kOSKextInvalidLoadTag kOSKextInvalidLoadTag@/link</code>
- * if the kext was not found.
+ * <code>@link //apple_ref/c/macro/kOSKextInvalidLoadTag
+ * kOSKextInvalidLoadTag@/link</code> if the kext was not found.
  *
  * @discussion
  * A load tag uniquely identifies a loaded kext.
@@ -839,7 +829,8 @@ void kext_dump_panic_lists(int (*printf_func)(const char *fmt, ...));
  * OSKextReleaseKextWithLoadTag@/link</code>,
  * so that the kext is automatically unloaded when no references remain,
  * or to unload the kext immediately
- * with <code>@link //apple_ref/c/func/OSKextUnloadKextWithLoadTag OSKextUnloadKextWithLoadTag@/link</code>.
+ * with <code>@link //apple_ref/c/func/OSKextUnloadKextWithLoadTag
+ * OSKextUnloadKextWithLoadTag@/link</code>.
  *
  * Those functions are intended for use with non-IOKit kexts
  * (specifically, kexts that define no subclasses of
@@ -852,9 +843,7 @@ void kext_dump_panic_lists(int (*printf_func)(const char *fmt, ...));
  * that way the kext will only unload automaticaly
  * when there are no C++ objects and the kext reference count is zero.
  */
-uint32_t OSKextGetLoadTagForBundleIdentifier(
-	const char * kextIdentifier);
-
+uint32_t OSKextGetLoadTagForBundleIdentifier(const char *kextIdentifier);
 
 /*!
  * @function OSKextUnloadKextWithLoadTag
@@ -862,10 +851,9 @@ uint32_t OSKextGetLoadTagForBundleIdentifier(
  *
  * @param  loadTag   The load tag of the kext to unload.
  * @result
- * <code>@link //apple_ref/c/macro/kOSReturnSuccess kOSReturnSuccess@/link</code>
- * if the kext was found and unloaded.
- * <code>@link //apple_ref/c/macro/kOSKextReturnNotFound
- * kOSKextReturnNotFound@/link</code>
+ * <code>@link //apple_ref/c/macro/kOSReturnSuccess
+ * kOSReturnSuccess@/link</code> if the kext was found and unloaded. <code>@link
+ * //apple_ref/c/macro/kOSKextReturnNotFound kOSKextReturnNotFound@/link</code>
  * if the kext was not found.
  * <code>@link //apple_ref/c/macro/kOSKextReturnInUse
  * kOSKextReturnInUse@/link</code>
@@ -923,7 +911,8 @@ OSReturn OSKextUnloadKextWithLoadTag(uint32_t loadTag);
  * @field loadTag The kext's load tag.
  * @field flags Internal tracking flags.
  * @field reference_list who this refs (links on).
- * @field text_exec_address The address of the __TEXT_EXEC segment (if it exists), otherwise __TEXT
+ * @field text_exec_address The address of the __TEXT_EXEC segment (if it
+ * exists), otherwise __TEXT
  * @field text_exec_size The size of the segment pointed to by text_address
  *
  * @discussion
@@ -931,16 +920,16 @@ OSReturn OSKextUnloadKextWithLoadTag(uint32_t loadTag);
  * about the kext to facilitate kext debugging and panic debug log output.
  */
 typedef struct _loaded_kext_summary {
-	char        name[KMOD_MAX_NAME];
-	uuid_t      uuid;
-	uint64_t    address;
-	uint64_t    size;
-	uint64_t    version;
-	uint32_t    loadTag;
-	uint32_t    flags;
-	uint64_t    reference_list;
-	uint64_t    text_exec_address;
-	size_t      text_exec_size;
+  char name[KMOD_MAX_NAME];
+  uuid_t uuid;
+  uint64_t address;
+  uint64_t size;
+  uint64_t version;
+  uint32_t loadTag;
+  uint32_t flags;
+  uint64_t reference_list;
+  uint64_t text_exec_address;
+  size_t text_exec_size;
 } OSKextLoadedKextSummary;
 
 /*!
@@ -961,18 +950,18 @@ typedef struct _loaded_kext_summary {
  * that declares an executable and is not an interface to the kernel.
  */
 typedef struct _loaded_kext_summary_header {
-	uint32_t version;
-	uint32_t entry_size;
-	uint32_t numSummaries;
-	uint32_t reserved; /* explicit alignment for gdb  */
-	OSKextLoadedKextSummary summaries[0];
+  uint32_t version;
+  uint32_t entry_size;
+  uint32_t numSummaries;
+  uint32_t reserved; /* explicit alignment for gdb  */
+  OSKextLoadedKextSummary summaries[0];
 } OSKextLoadedKextSummaryHeader;
 
 /*!
  * @var gLoadedKextSummaries
  * @abstract The global pointer to the current set of loaded kext summaries.
  */
-extern OSKextLoadedKextSummaryHeader * gLoadedKextSummaries;
+extern OSKextLoadedKextSummaryHeader *gLoadedKextSummaries;
 
 /*!
  * @var gLoadedKextSummariesTimestamp
@@ -996,16 +985,17 @@ void OSKextLoadedKextSummariesUpdated(void);
 
 #ifdef XNU_KERNEL_PRIVATE
 
-extern const vm_allocation_site_t * OSKextGetAllocationSiteForCaller(uintptr_t address);
-extern uint32_t                     OSKextGetKmodIDForSite(const vm_allocation_site_t * site,
-    char * name, vm_size_t namelen);
-extern void                         OSKextFreeSite(vm_allocation_site_t * site);
+extern const vm_allocation_site_t *
+OSKextGetAllocationSiteForCaller(uintptr_t address);
+extern uint32_t OSKextGetKmodIDForSite(const vm_allocation_site_t *site,
+                                       char *name, vm_size_t namelen);
+extern void OSKextFreeSite(vm_allocation_site_t *site);
 
-extern kern_return_t                OSKextSetReceiptQueried(void);
+extern kern_return_t OSKextSetReceiptQueried(void);
 
 #if DEVELOPMENT || DEBUG
-extern void                         OSKextGetRefGrpForCaller(uintptr_t address,
-    void (^)(struct os_refgrp *));
+extern void OSKextGetRefGrpForCaller(uintptr_t address,
+                                     void (^)(struct os_refgrp *));
 #endif
 
 #if CONFIG_IMAGEBOOT
@@ -1018,18 +1008,19 @@ extern void *OSKextKextForAddress(const void *addr);
 
 /*!
  * @function OSKextGetLoadedKextSummaryForAddress
- * @abstract Given an address, retrieve the summary of the kext which contains it.
+ * @abstract Given an address, retrieve the summary of the kext which contains
+ * it.
  *
  * @discussion
  * This function invokes OSKext::summaryForAddressExt, which will copy into the
  * caller-provided pointer the summary of the kext containing the given address.
- * This is done while holding the sKextSummariesLock lock, thus making it possible
- * to use the content of the summary even if gLoadedKextSummaries is reallocated
- * in the meantime.
+ * This is done while holding the sKextSummariesLock lock, thus making it
+ * possible to use the content of the summary even if gLoadedKextSummaries is
+ * reallocated in the meantime.
  */
-extern kern_return_t OSKextGetLoadedKextSummaryForAddress(
-	const void              * addr,
-	OSKextLoadedKextSummary * summary);
+extern kern_return_t
+OSKextGetLoadedKextSummaryForAddress(const void *addr,
+                                     OSKextLoadedKextSummary *summary);
 
 #endif /* XNU_KERNEL_PRIVATE */
 

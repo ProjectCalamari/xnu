@@ -28,15 +28,11 @@
 
 #pragma once
 
-#include <arm/cpu_internal.h>
 #include "mock_dynamic.h"
+#include <arm/cpu_internal.h>
 
-
-T_MOCK_DYNAMIC_DECLARE(
-	kern_return_t,
-	cpu_signal,
-	(cpu_data_t * target, cpu_signal_t signal,
-	void *p0, void *p1));
-
+T_MOCK_DYNAMIC_DECLARE(kern_return_t, cpu_signal,
+                       (cpu_data_t * target, cpu_signal_t signal, void *p0,
+                        void *p1));
 
 T_MOCK_DYNAMIC_DECLARE(int, ml_get_max_cpu_number, (void));

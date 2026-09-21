@@ -26,10 +26,13 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 /*
- *   Subtle combination of files and libraries make up the C++ runtime system for kernel modules.  We are dependant on the KernelModule kmod.make and CreateKModInfo.perl scripts to be exactly instep with both this library module and the libkmod module as well.
+ *   Subtle combination of files and libraries make up the C++ runtime system
+ * for kernel modules.  We are dependant on the KernelModule kmod.make and
+ * CreateKModInfo.perl scripts to be exactly instep with both this library
+ * module and the libkmod module as well.
  *
- *   If you do any maintenance on any of the following files make sure great care is taken to keep them in Sync.
- *   KernelModule.bproj/kmod.make
+ *   If you do any maintenance on any of the following files make sure great
+ * care is taken to keep them in Sync. KernelModule.bproj/kmod.make
  *   KernelModule.bproj/CreateKModInfo.perl
  *   KernelModule.bproj/kmodc++/pure.c
  *   KernelModule.bproj/kmodc++/cplus_start.c
@@ -37,13 +40,20 @@
  *   KernelModule.bproj/kmodc/c_start.c
  *   KernelModule.bproj/kmodc/c_stop.c
  *
- *   The trick is that the linkline links all of the developers modules.  If any static constructors are used .constructors_used will be left as an undefined symbol.  This symbol is exported by the cplus_start.c routine which automatically brings in the appropriate C++ _start routine.  However the actual _start symbol is only required by the kmod_info structure that is created and initialized by the CreateKModInfo.perl script.  If no C++ was used the _start will be an undefined symbol that is finally satisfied by the c_start module in the kmod library.
+ *   The trick is that the linkline links all of the developers modules.  If any
+ * static constructors are used .constructors_used will be left as an undefined
+ * symbol.  This symbol is exported by the cplus_start.c routine which
+ * automatically brings in the appropriate C++ _start routine.  However the
+ * actual _start symbol is only required by the kmod_info structure that is
+ * created and initialized by the CreateKModInfo.perl script.  If no C++ was
+ * used the _start will be an undefined symbol that is finally satisfied by the
+ * c_start module in the kmod library.
  *
  *   The linkline must look like this.
  *.o -lkmodc++ kmod_info.o -lkmod
  */
-#include <mach/mach_types.h>
 #include <libkern/OSKextLib.h>
+#include <mach/mach_types.h>
 
 // These global symbols will be defined by CreateInfo script's info.c file.
 extern kmod_start_func_t *_realmain;
@@ -51,36 +61,28 @@ extern kmod_info_t KMOD_INFO_NAME;
 
 /*********************************************************************
 *********************************************************************/
-__private_extern__ kern_return_t
-_start(kmod_info_t *ki, void *data)
-{
-	if (_realmain) {
-		return (*_realmain)(ki, data);
-	} else {
-		return KERN_SUCCESS;
-	}
+__private_extern__ kern_return_t _start(kmod_info_t *ki, void *data) {
+  if (_realmain) {
+    return (*_realmain)(ki, data);
+  } else {
+    return KERN_SUCCESS;
+  }
 }
 
 /*********************************************************************
 *********************************************************************/
-__private_extern__ const char *
-OSKextGetCurrentIdentifier(void)
-{
-	return KMOD_INFO_NAME.name;
+__private_extern__ const char *OSKextGetCurrentIdentifier(void) {
+  return KMOD_INFO_NAME.name;
 }
 
 /*********************************************************************
 *********************************************************************/
-__private_extern__ const char *
-OSKextGetCurrentVersionString(void)
-{
-	return KMOD_INFO_NAME.version;
+__private_extern__ const char *OSKextGetCurrentVersionString(void) {
+  return KMOD_INFO_NAME.version;
 }
 
 /*********************************************************************
 *********************************************************************/
-__private_extern__ OSKextLoadTag
-OSKextGetCurrentLoadTag(void)
-{
-	return (OSKextLoadTag)KMOD_INFO_NAME.id;
+__private_extern__ OSKextLoadTag OSKextGetCurrentLoadTag(void) {
+  return (OSKextLoadTag)KMOD_INFO_NAME.id;
 }

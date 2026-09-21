@@ -84,19 +84,19 @@
  * many VM syscall tests, and some details on how to run them.
  */
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
-#include <mach/vm_prot.h>
-#include <mach/vm_param.h>
-#include <mach/vm_region.h>
-#include <mach/vm_inherit.h>
 #include <mach/vm_behavior.h>
+#include <mach/vm_inherit.h>
+#include <mach/vm_param.h>
+#include <mach/vm_prot.h>
+#include <mach/vm_region.h>
 #include <mach/vm_statistics.h>
 
 #include <darwintest.h>
@@ -117,46 +117,44 @@ extern bool Verbose;
  * TODO: docs
  */
 typedef enum {
-	TestSucceeded = 1,
-	TestFailed,
+  TestSucceeded = 1,
+  TestFailed,
 } test_result_t;
 
-static inline test_result_t
-worst_result(test_result_t *list, unsigned count)
-{
-	test_result_t worst = TestSucceeded;
-	for (unsigned i = 0; i < count; i++) {
-		if (list[i] > worst) {
-			worst = list[i];
-		}
-	}
-	return worst;
+static inline test_result_t worst_result(test_result_t *list, unsigned count) {
+  test_result_t worst = TestSucceeded;
+  for (unsigned i = 0; i < count; i++) {
+    if (list[i] > worst) {
+      worst = list[i];
+    }
+  }
+  return worst;
 }
 
 typedef enum {
-	DontFill = 0, /* must be zero */
-	Fill = 1
+  DontFill = 0, /* must be zero */
+  Fill = 1
 } fill_pattern_mode_t;
 
 typedef struct {
-	fill_pattern_mode_t mode;
-	uint64_t pattern;
+  fill_pattern_mode_t mode;
+  uint64_t pattern;
 } fill_pattern_t;
 
 /*
  * EndObjects: for END_OBJECTS array terminator
  * Deinited: an object that is no longer referenced and whose checker is now
- *   depopulated but is still allocated because some checker list may point to it
- * Anonymous: anonymous memory such as vm_allocate()
- * SubmapObject: an "object" that is really a submap
+ *   depopulated but is still allocated because some checker list may point to
+ * it Anonymous: anonymous memory such as vm_allocate() SubmapObject: an
+ * "object" that is really a submap
  * TODO: support named/pageable objects
  */
 typedef enum {
-	FreedObject = 0,  /* use after free, shouldn't happen */
-	EndObjects,
-	Deinited,
-	Anonymous,
-	SubmapObject,
+  FreedObject = 0, /* use after free, shouldn't happen */
+  EndObjects,
+  Deinited,
+  Anonymous,
+  SubmapObject,
 } vm_object_template_kind_t;
 
 /*
@@ -164,17 +162,17 @@ typedef enum {
  * Declaratively specify VM objects to be created.
  */
 typedef struct vm_object_template_s {
-	vm_object_template_kind_t kind;
+  vm_object_template_kind_t kind;
 
-	mach_vm_size_t size;  /* size 0 means auto-compute from entry sizes */
+  mach_vm_size_t size; /* size 0 means auto-compute from entry sizes */
 
-	fill_pattern_t fill_pattern;
-	struct {
-		struct vm_entry_template_s *entries;
-		struct vm_object_template_s *objects;
-		unsigned entry_count;
-		unsigned object_count;
-	} submap;
+  fill_pattern_t fill_pattern;
+  struct {
+    struct vm_entry_template_s *entries;
+    struct vm_object_template_s *objects;
+    unsigned entry_count;
+    unsigned object_count;
+  } submap;
 } vm_object_template_t;
 
 /*
@@ -192,21 +190,18 @@ typedef struct vm_object_template_s {
  *             .fill_pattern = 0x1234567890abcdef)
  */
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-#define vm_object_template(...)                                         \
-	_Pragma("clang diagnostic push")                                \
-	_Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") \
-	_Pragma("clang diagnostic ignored \"-Wmissing-field-initializers\"") \
-	(vm_object_template_t){                                         \
-	        .size = 0, /* auto-computed */                          \
-	            .kind = Anonymous,                                  \
-	            .fill_pattern = {.mode = DontFill},                 \
-	            __VA_ARGS__                                         \
-	            }                                                   \
-	_Pragma("clang diagnostic pop")
+#define vm_object_template(...)                                                \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") _Pragma( \
+          "clang diagnostic ignored \"-Wmissing-field-initializers\"")(        \
+          vm_object_template_t){.size = 0, /* auto-computed */                 \
+                                .kind = Anonymous,                             \
+                                .fill_pattern = {.mode = DontFill},            \
+                                __VA_ARGS__} _Pragma("clang diagnostic pop")
 
 /* Convenience for submap objects */
-#define submap_object_template(...) \
-	vm_object_template(.kind = SubmapObject, __VA_ARGS__)
+#define submap_object_template(...)                                            \
+  vm_object_template(.kind = SubmapObject, __VA_ARGS__)
 
 /*
  * EndEntries: for END_ENTRIES array terminator
@@ -215,10 +210,10 @@ typedef struct vm_object_template_s {
  * Submap: a mapping of a submap
  */
 typedef enum {
-	EndEntries = 0,
-	Allocation,
-	Hole,
-	Submap,
+  EndEntries = 0,
+  Allocation,
+  Hole,
+  Submap,
 } vm_entry_template_kind_t;
 
 /*
@@ -226,50 +221,49 @@ typedef enum {
  * Declaratively specify VM entries to be created.
  */
 typedef struct vm_entry_template_s {
-	mach_vm_size_t size;
-	vm_entry_template_kind_t kind;
+  mach_vm_size_t size;
+  vm_entry_template_kind_t kind;
 
-	/*
-	 * NULL object means either null vm_object_t or anonymous zerofilled
-	 * memory, depending on the requirements of the other settings.
-	 * (For example, non-zero wire count faults in the pages
-	 * so it is no longer a null vm_object_t.)
-	 * Used when .kind == Allocation.
-	 */
-	vm_object_template_t *object;
+  /*
+   * NULL object means either null vm_object_t or anonymous zerofilled
+   * memory, depending on the requirements of the other settings.
+   * (For example, non-zero wire count faults in the pages
+   * so it is no longer a null vm_object_t.)
+   * Used when .kind == Allocation.
+   */
+  vm_object_template_t *object;
 
-	mach_vm_offset_t offset;
+  mach_vm_offset_t offset;
 
-	vm_prot_t protection;
-	vm_prot_t max_protection;
-	vm_inherit_t inheritance;
-	vm_behavior_t behavior;
-	bool permanent;
+  vm_prot_t protection;
+  vm_prot_t max_protection;
+  vm_inherit_t inheritance;
+  vm_behavior_t behavior;
+  bool permanent;
 
-	/* New entry gets vm_wire'd this many times. */
-	uint16_t user_wired_count;
+  /* New entry gets vm_wire'd this many times. */
+  uint16_t user_wired_count;
 
-	/*
-	 * User tag may be a specific value, or autoincrementing.
-	 *
-	 * An autoincrementing tag is assigned by create_vm_state()
-	 * in the VM_MEMORY_APPLICATION_SPECIFIC_1-16 range. Adjacent
-	 * autoincrementing entries get distinct tags. This can be
-	 * used to stop the VM from simplifying/coalescing vm entries
-	 * that you want to remain separate.
-	 */
-	uint16_t user_tag;
+  /*
+   * User tag may be a specific value, or autoincrementing.
+   *
+   * An autoincrementing tag is assigned by create_vm_state()
+   * in the VM_MEMORY_APPLICATION_SPECIFIC_1-16 range. Adjacent
+   * autoincrementing entries get distinct tags. This can be
+   * used to stop the VM from simplifying/coalescing vm entries
+   * that you want to remain separate.
+   */
+  uint16_t user_tag;
 #define VM_MEMORY_TAG_AUTOINCREMENTING 256
 
-	uint8_t share_mode;
+  uint8_t share_mode;
 
-	/*
-	 * Code to update when adding new fields:
-	 *     vm_entry_template() macro
-	 *     create_vm_state() function
-	 */
+  /*
+   * Code to update when adding new fields:
+   *     vm_entry_template() macro
+   *     create_vm_state() function
+   */
 } vm_entry_template_t;
-
 
 /*
  * Default size for vm_entries created by this generator
@@ -309,30 +303,28 @@ typedef struct vm_entry_template_s {
  *             .protection = VM_PROT_READ,
  *             .max_protection = VM_PROT_READ | VM_PROT_WRITE)
  */
-#define vm_entry_template(...)                                          \
-	_Pragma("clang diagnostic push")                                \
-	_Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") \
-	_Pragma("clang diagnostic ignored \"-Wmissing-field-initializers\"") \
-	(vm_entry_template_t){                                          \
-	        .size = DEFAULT_ENTRY_SIZE,                             \
-	            .kind = Allocation,                                 \
-	            .object = NULL,                                     \
-	            .offset = 0,                                        \
-	            .protection = VM_PROT_READ | VM_PROT_WRITE,         \
-	            .max_protection = VM_PROT_READ | VM_PROT_WRITE,     \
-	            .inheritance = VM_INHERIT_DEFAULT, /* inherit_copy */ \
-	            .behavior = VM_BEHAVIOR_DEFAULT,                    \
-	            .permanent = false,                                 \
-	            .user_wired_count = 0,                              \
-	            .user_tag = VM_MEMORY_TAG_AUTOINCREMENTING,         \
-	            .share_mode = SM_EMPTY,                             \
-	            __VA_ARGS__                                         \
-	            }                                                   \
-	_Pragma("clang diagnostic pop")
+#define vm_entry_template(...)                                                 \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") _Pragma( \
+          "clang diagnostic ignored \"-Wmissing-field-initializers\"")(        \
+          vm_entry_template_t){.size = DEFAULT_ENTRY_SIZE,                     \
+                               .kind = Allocation,                             \
+                               .object = NULL,                                 \
+                               .offset = 0,                                    \
+                               .protection = VM_PROT_READ | VM_PROT_WRITE,     \
+                               .max_protection = VM_PROT_READ | VM_PROT_WRITE, \
+                               .inheritance =                                  \
+                                   VM_INHERIT_DEFAULT, /* inherit_copy */      \
+                               .behavior = VM_BEHAVIOR_DEFAULT,                \
+                               .permanent = false,                             \
+                               .user_wired_count = 0,                          \
+                               .user_tag = VM_MEMORY_TAG_AUTOINCREMENTING,     \
+                               .share_mode = SM_EMPTY,                         \
+                               __VA_ARGS__} _Pragma("clang diagnostic pop")
 
 /* Convenience for submap entries */
-#define submap_entry_template(...)              \
-	vm_entry_template(.kind = Submap, __VA_ARGS__)
+#define submap_entry_template(...)                                             \
+  vm_entry_template(.kind = Submap, __VA_ARGS__)
 
 /*
  * Convenience templates.
@@ -351,9 +343,7 @@ extern vm_entry_template_t hole_template;
 /*
  * Count the number of templates in an END_TEMPLATE-terminated array.
  */
-extern unsigned
-count_templates(const vm_entry_template_t *templates);
-
+extern unsigned count_templates(const vm_entry_template_t *templates);
 
 /*
  * struct vm_entry_attribute_list_t
@@ -362,33 +352,33 @@ count_templates(const vm_entry_template_t *templates);
  * or which attributes failed to match during verification.
  */
 typedef struct {
-	union {
-		uint64_t bits;
-		struct {
-			uint64_t address_attr:1;
-			uint64_t size_attr:1;
-			uint64_t object_attr:1;
-			uint64_t protection_attr:1;
-			uint64_t max_protection_attr:1;
-			uint64_t inheritance_attr:1;
-			uint64_t behavior_attr:1;
-			uint64_t permanent_attr:1;
-			uint64_t user_wired_count_attr:1;
-			uint64_t user_tag_attr:1;
-			uint64_t is_submap_attr:1;
-			uint64_t submap_depth_attr:1;
-			uint64_t object_offset_attr:1;
-			uint64_t pages_resident_attr:1;
-			uint64_t share_mode_attr:1;
-		};
-	};
+  union {
+    uint64_t bits;
+    struct {
+      uint64_t address_attr : 1;
+      uint64_t size_attr : 1;
+      uint64_t object_attr : 1;
+      uint64_t protection_attr : 1;
+      uint64_t max_protection_attr : 1;
+      uint64_t inheritance_attr : 1;
+      uint64_t behavior_attr : 1;
+      uint64_t permanent_attr : 1;
+      uint64_t user_wired_count_attr : 1;
+      uint64_t user_tag_attr : 1;
+      uint64_t is_submap_attr : 1;
+      uint64_t submap_depth_attr : 1;
+      uint64_t object_offset_attr : 1;
+      uint64_t pages_resident_attr : 1;
+      uint64_t share_mode_attr : 1;
+    };
+  };
 
-	/*
-	 * Code to update when adding new fields:
-	 * dump_checker_info()
-	 * vm_entry_attributes_with_default macro
-	 * verify_allocation()
-	 */
+  /*
+   * Code to update when adding new fields:
+   * dump_checker_info()
+   * vm_entry_attributes_with_default macro
+   * verify_allocation()
+   */
 } vm_entry_attribute_list_t;
 
 /*
@@ -398,23 +388,23 @@ typedef struct {
  * or which attributes failed to match during verification.
  */
 typedef struct {
-	union {
-		uint64_t bits;
-		struct {
-			uint64_t object_id_attr:1;
-			uint64_t size_attr:1;
-			uint64_t ref_count_attr:1;
-			uint64_t shadow_depth_attr:1;
-			uint64_t fill_pattern_attr:1;
-		};
-	};
+  union {
+    uint64_t bits;
+    struct {
+      uint64_t object_id_attr : 1;
+      uint64_t size_attr : 1;
+      uint64_t ref_count_attr : 1;
+      uint64_t shadow_depth_attr : 1;
+      uint64_t fill_pattern_attr : 1;
+    };
+  };
 
-	/*
-	 * Code to update when adding new fields:
-	 * dump_checker_info()
-	 * vm_object_attributes_with_default macro
-	 * verify_allocation()
-	 */
+  /*
+   * Code to update when adding new fields:
+   * dump_checker_info()
+   * vm_object_attributes_with_default macro
+   * verify_allocation()
+   */
 } vm_object_attribute_list_t;
 
 /*
@@ -422,48 +412,44 @@ typedef struct {
  * with all attributes set to `default_value`, and the caller can set individual
  * attributes to other values using designated initializer syntax.
  */
-#define vm_entry_attributes_with_default(default_value, ...)            \
-	_Pragma("clang diagnostic push")                                \
-	_Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") \
-	_Pragma("clang diagnostic ignored \"-Wmissing-field-initializers\"") \
-	(vm_entry_attribute_list_t){                                    \
-	        .address_attr           = (default_value),              \
-	        .size_attr              = (default_value),              \
-	        .object_attr            = (default_value),              \
-	        .protection_attr        = (default_value),              \
-	        .max_protection_attr    = (default_value),              \
-	        .inheritance_attr       = (default_value),              \
-	        .behavior_attr          = (default_value),              \
-	        .permanent_attr         = (default_value),              \
-	        .user_wired_count_attr  = (default_value),              \
-	        .user_tag_attr          = (default_value),              \
-	        .is_submap_attr         = (default_value),              \
-	        .submap_depth_attr      = (default_value),              \
-	        .object_offset_attr     = (default_value),              \
-	        .pages_resident_attr    = (default_value),              \
-	        .share_mode_attr        = (default_value),              \
-	        __VA_ARGS__                                             \
-	    }                                                           \
-	_Pragma("clang diagnostic pop")
+#define vm_entry_attributes_with_default(default_value, ...)                   \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") _Pragma( \
+          "clang diagnostic ignored \"-Wmissing-field-initializers\"")(        \
+          vm_entry_attribute_list_t){                                          \
+          .address_attr = (default_value),                                     \
+          .size_attr = (default_value),                                        \
+          .object_attr = (default_value),                                      \
+          .protection_attr = (default_value),                                  \
+          .max_protection_attr = (default_value),                              \
+          .inheritance_attr = (default_value),                                 \
+          .behavior_attr = (default_value),                                    \
+          .permanent_attr = (default_value),                                   \
+          .user_wired_count_attr = (default_value),                            \
+          .user_tag_attr = (default_value),                                    \
+          .is_submap_attr = (default_value),                                   \
+          .submap_depth_attr = (default_value),                                \
+          .object_offset_attr = (default_value),                               \
+          .pages_resident_attr = (default_value),                              \
+          .share_mode_attr = (default_value),                                  \
+          __VA_ARGS__} _Pragma("clang diagnostic pop")
 
 /*
  * vm_object_attributes_with_default() returns a vm_object_attribute_list_t,
  * with all attributes set to `default_value`, and the caller can set individual
  * attributes to other values using designated initializer syntax.
  */
-#define vm_object_attributes_with_default(default_value, ...)           \
-	_Pragma("clang diagnostic push")                                \
-	_Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") \
-	_Pragma("clang diagnostic ignored \"-Wmissing-field-initializers\"") \
-	(vm_object_attribute_list_t){                                   \
-	        .object_id_attr    = (default_value),                   \
-	        .size_attr         = (default_value),                   \
-	        .ref_count_attr    = (default_value),                   \
-	        .shadow_depth_attr = (default_value),                   \
-	        .fill_pattern_attr = (default_value),                   \
-	        __VA_ARGS__                                             \
-	    }                                                           \
-	_Pragma("clang diagnostic pop")
+#define vm_object_attributes_with_default(default_value, ...)                  \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Winitializer-overrides\"") _Pragma( \
+          "clang diagnostic ignored \"-Wmissing-field-initializers\"")(        \
+          vm_object_attribute_list_t){                                         \
+          .object_id_attr = (default_value),                                   \
+          .size_attr = (default_value),                                        \
+          .ref_count_attr = (default_value),                                   \
+          .shadow_depth_attr = (default_value),                                \
+          .fill_pattern_attr = (default_value),                                \
+          __VA_ARGS__} _Pragma("clang diagnostic pop")
 
 /*
  * Description of a checker's current knowledge of an object's ID.
@@ -477,9 +463,9 @@ typedef struct {
  * to subsequent uses of the same object in the same verification.
  */
 typedef enum {
-	object_is_unknown = 0,
-	object_has_unknown_nonnull_id,
-	object_has_known_id
+  object_is_unknown = 0,
+  object_has_unknown_nonnull_id,
+  object_has_known_id
 } object_id_mode_t;
 
 /*
@@ -487,51 +473,51 @@ typedef enum {
  * Maintain and verify expected state of a VM object.
  */
 typedef struct vm_object_checker_s {
-	struct vm_object_checker_s *prev;
-	struct vm_object_checker_s *next;
+  struct vm_object_checker_s *prev;
+  struct vm_object_checker_s *next;
 
-	vm_object_template_kind_t kind;
-	vm_object_attribute_list_t verify;
-	bool deinited;
+  vm_object_template_kind_t kind;
+  vm_object_attribute_list_t verify;
+  bool deinited;
 
-	uint64_t object_id;
-	object_id_mode_t object_id_mode;
+  uint64_t object_id;
+  object_id_mode_t object_id_mode;
 
-	/*
-	 * This is the count of references to this object specifically.
-	 * vm_region's reported ref_count also includes references to
-	 * the shadow chain's objects, minus the shadow chain's references
-	 * to each other.
-	 */
-	unsigned self_ref_count;
-	mach_vm_size_t size;
-	fill_pattern_t fill_pattern;
+  /*
+   * This is the count of references to this object specifically.
+   * vm_region's reported ref_count also includes references to
+   * the shadow chain's objects, minus the shadow chain's references
+   * to each other.
+   */
+  unsigned self_ref_count;
+  mach_vm_size_t size;
+  fill_pattern_t fill_pattern;
 
-	/*
-	 * Shadow chain.
-	 * object->shadow moves away from entry.
-	 * object->shadow is refcounted.
-	 */
-	struct vm_object_checker_s *shadow;
+  /*
+   * Shadow chain.
+   * object->shadow moves away from entry.
+   * object->shadow is refcounted.
+   */
+  struct vm_object_checker_s *shadow;
 
-	/*
-	 * Checkers for submap contents.
-	 * These checkers are configured for a mapping of the whole
-	 * submap at address 0. Verification of actual remappings will
-	 * need to compensate for address offsets and bounds clipping.
-	 */
-	struct checker_list_s *submap_checkers;
+  /*
+   * Checkers for submap contents.
+   * These checkers are configured for a mapping of the whole
+   * submap at address 0. Verification of actual remappings will
+   * need to compensate for address offsets and bounds clipping.
+   */
+  struct checker_list_s *submap_checkers;
 
-	/*
-	 * Code to update when adding new fields:
-	 *     struct vm_object_attribute_list_t
-	 *     make_null_object_checker()
-	 *     make_anonymous_object_checker()
-	 *     make_submap_object_checker()
-	 *     dump_checker_info()
-	 *     verify_allocation()
-	 *     object_checker_clone()
-	 */
+  /*
+   * Code to update when adding new fields:
+   *     struct vm_object_attribute_list_t
+   *     make_null_object_checker()
+   *     make_anonymous_object_checker()
+   *     make_submap_object_checker()
+   *     dump_checker_info()
+   *     verify_allocation()
+   *     object_checker_clone()
+   */
 } vm_object_checker_t;
 
 /*
@@ -558,63 +544,63 @@ object_checker_clone(vm_object_checker_t *obj_checker);
  *   and the Submap checker has its own list of contained checkers.
  */
 typedef struct vm_entry_checker_s {
-	struct vm_entry_checker_s *prev;
-	struct vm_entry_checker_s *next;
+  struct vm_entry_checker_s *prev;
+  struct vm_entry_checker_s *next;
 
-	vm_entry_template_kind_t kind;
-	vm_entry_attribute_list_t verify;
+  vm_entry_template_kind_t kind;
+  vm_entry_attribute_list_t verify;
 
-	mach_vm_address_t address;
-	mach_vm_size_t size;
+  mach_vm_address_t address;
+  mach_vm_size_t size;
 
-	vm_object_checker_t *object;
+  vm_object_checker_t *object;
 
-	vm_prot_t protection;
-	vm_prot_t max_protection;
-	vm_inherit_t inheritance;
-	vm_behavior_t behavior;
-	bool permanent;
+  vm_prot_t protection;
+  vm_prot_t max_protection;
+  vm_inherit_t inheritance;
+  vm_behavior_t behavior;
+  bool permanent;
 
-	uint16_t user_wired_count;
-	uint8_t user_tag;
+  uint16_t user_wired_count;
+  uint8_t user_tag;
 
-	bool is_submap;         /* true when entry is a parent map's submap entry */
-	uint32_t submap_depth;  /* non-zero when entry is a submap's content */
+  bool is_submap;        /* true when entry is a parent map's submap entry */
+  uint32_t submap_depth; /* non-zero when entry is a submap's content */
 
-	uint64_t object_offset;
-	uint32_t pages_resident;  /* TODO: track this in the object checker instead */
+  uint64_t object_offset;
+  uint32_t pages_resident; /* TODO: track this in the object checker instead */
 
-	bool needs_copy;
+  bool needs_copy;
 
-	/* share_mode is computed from other entry and object attributes */
+  /* share_mode is computed from other entry and object attributes */
 
-	/*
-	 * Code to update when adding new fields:
-	 *     struct vm_entry_attribute_list_t
-	 *     make_checker_for_anonymous_private()
-	 *     make_checker_for_vm_allocate()
-	 *     make_checker_for_shared()
-	 *     make_checker_for_submap()
-	 *     dump_checker_info()
-	 *     verify_allocation()
-	 *     checker_simplify_left()
-	 */
+  /*
+   * Code to update when adding new fields:
+   *     struct vm_entry_attribute_list_t
+   *     make_checker_for_anonymous_private()
+   *     make_checker_for_vm_allocate()
+   *     make_checker_for_shared()
+   *     make_checker_for_submap()
+   *     dump_checker_info()
+   *     verify_allocation()
+   *     checker_simplify_left()
+   */
 } vm_entry_checker_t;
 
 /*
- * A list of consecutive entry checkers. May be a subset of the entire doubly-linked list.
+ * A list of consecutive entry checkers. May be a subset of the entire
+ * doubly-linked list.
  */
 typedef struct {
-	vm_entry_checker_t *head;
-	vm_entry_checker_t *tail;
+  vm_entry_checker_t *head;
+  vm_entry_checker_t *tail;
 } entry_checker_range_t;
 
 /*
  * Count the number of entries between
  * checker_range->head and checker_range->tail, inclusive.
  */
-extern unsigned
-checker_range_count(entry_checker_range_t checker_range);
+extern unsigned checker_range_count(entry_checker_range_t checker_range);
 
 /*
  * Return the start address of the first entry in a range.
@@ -631,8 +617,7 @@ checker_range_end_address(entry_checker_range_t checker_range);
 /*
  * Return size of all entries in a range.
  */
-extern mach_vm_size_t
-checker_range_size(entry_checker_range_t checker_range);
+extern mach_vm_size_t checker_range_size(entry_checker_range_t checker_range);
 
 /*
  * Loop over all checkers between
@@ -642,12 +627,12 @@ checker_range_size(entry_checker_range_t checker_range);
  *
  * You may clip_left the current checker. The new left entry is not visited.
  * You may clip_right the current checker. The new right entry is visited next.
- * You may not delete the current checker, unless you also immediately break the loop.
+ * You may not delete the current checker, unless you also immediately break the
+ * loop.
  */
-#define FOREACH_CHECKER(checker, entry_range)                   \
-	for (vm_entry_checker_t *checker = (entry_range).head;  \
-	     checker != (entry_range).tail->next;               \
-	     checker = checker->next)
+#define FOREACH_CHECKER(checker, entry_range)                                  \
+  for (vm_entry_checker_t *checker = (entry_range).head;                       \
+       checker != (entry_range).tail->next; checker = checker->next)
 
 /*
  * The list of all entry and object checkers.
@@ -663,23 +648,21 @@ checker_range_size(entry_checker_range_t checker_range);
  * to the contained checkers. This is used for submap contents.
  */
 typedef struct checker_list_s {
-	struct checker_list_s *parent;
-	entry_checker_range_t entries;
-	vm_object_checker_t *objects; /* must be NULL in submaps */
-	uint64_t submap_slide;
-	bool is_slid;
+  struct checker_list_s *parent;
+  entry_checker_range_t entries;
+  vm_object_checker_t *objects; /* must be NULL in submaps */
+  uint64_t submap_slide;
+  bool is_slid;
 } checker_list_t;
 
-#define FOREACH_OBJECT_CHECKER(obj_checker, list) \
-	for (vm_object_checker_t *obj_checker = (list)->objects; \
-	     obj_checker != NULL; \
-	     obj_checker = obj_checker->next)
+#define FOREACH_OBJECT_CHECKER(obj_checker, list)                              \
+  for (vm_object_checker_t *obj_checker = (list)->objects;                     \
+       obj_checker != NULL; obj_checker = obj_checker->next)
 
 /*
  * Return the nth checker in the list. Aborts if n is out of range.
  */
-extern vm_entry_checker_t *
-checker_list_nth(checker_list_t *list, unsigned n);
+extern vm_entry_checker_t *checker_list_nth(checker_list_t *list, unsigned n);
 
 /*
  * Search a list of checkers for an allocation that contains the given address.
@@ -687,8 +670,8 @@ checker_list_nth(checker_list_t *list, unsigned n);
  * Returns NULL if a non-Allocation checker contains the address.
  * Does not descend into submaps.
  */
-extern vm_entry_checker_t *
-checker_list_find_allocation(checker_list_t *list, mach_vm_address_t addr);
+extern vm_entry_checker_t *checker_list_find_allocation(checker_list_t *list,
+                                                        mach_vm_address_t addr);
 
 /*
  * Search a list of checkers for a checker that contains the given address.
@@ -696,67 +679,52 @@ checker_list_find_allocation(checker_list_t *list, mach_vm_address_t addr);
  * Returns NULL if no checker contains the address.
  * Does not descend into submaps.
  */
-extern vm_entry_checker_t *
-checker_list_find_checker(checker_list_t *list, mach_vm_address_t addr);
+extern vm_entry_checker_t *checker_list_find_checker(checker_list_t *list,
+                                                     mach_vm_address_t addr);
 
 /*
  * Add a new vm object checker to the list.
  * Aborts if the new object is null and the list already has its null object.
  * Aborts if the object's ID is the same as some other object.
  */
-extern void
-checker_list_append_object(
-	checker_list_t *list,
-	vm_object_checker_t *obj_checker);
+extern void checker_list_append_object(checker_list_t *list,
+                                       vm_object_checker_t *obj_checker);
 
 /*
  * Return the list of entry checkers covering an address range.
  * Aborts if the range includes any hole checkers.
  */
-extern entry_checker_range_t
-checker_list_find_range(
-	checker_list_t *list,
-	mach_vm_address_t start,
-	mach_vm_size_t size);
+extern entry_checker_range_t checker_list_find_range(checker_list_t *list,
+                                                     mach_vm_address_t start,
+                                                     mach_vm_size_t size);
 
 /*
  * Return the list of entry checkers covering an address range.
  * Hole checkers are allowed.
  */
-extern entry_checker_range_t
-checker_list_find_range_including_holes(
-	checker_list_t *list,
-	mach_vm_address_t start,
-	mach_vm_size_t size);
+extern entry_checker_range_t checker_list_find_range_including_holes(
+    checker_list_t *list, mach_vm_address_t start, mach_vm_size_t size);
 
 /*
  * Like checker_list_find_range(),
  * but the first and last entries are clipped to the address range.
  */
-extern entry_checker_range_t
-checker_list_find_and_clip(
-	checker_list_t *list,
-	mach_vm_address_t start,
-	mach_vm_size_t size);
+extern entry_checker_range_t checker_list_find_and_clip(checker_list_t *list,
+                                                        mach_vm_address_t start,
+                                                        mach_vm_size_t size);
 
 /*
  * Like checker_list_find_range_including_holes(),
  * but the first and last entries (if any) are clipped to the address range.
  */
-extern entry_checker_range_t
-checker_list_find_and_clip_including_holes(
-	checker_list_t *list,
-	mach_vm_address_t start,
-	mach_vm_size_t size);
+extern entry_checker_range_t checker_list_find_and_clip_including_holes(
+    checker_list_t *list, mach_vm_address_t start, mach_vm_size_t size);
 
 /*
  * Attempts to simplify all entries in an address range.
  */
-extern void
-checker_list_simplify(
-	checker_list_t *list,
-	mach_vm_address_t start,
-	mach_vm_size_t size);
+extern void checker_list_simplify(checker_list_t *list, mach_vm_address_t start,
+                                  mach_vm_size_t size);
 
 /*
  * Replace and delete checkers in old_range
@@ -764,25 +732,21 @@ checker_list_simplify(
  * The two ranges must have the same start address and size.
  * Updates list->head and/or list->tail if necessary.
  */
-extern void
-checker_list_replace_range(
-	checker_list_t *list,
-	entry_checker_range_t old_range,
-	entry_checker_range_t new_range);
+extern void checker_list_replace_range(checker_list_t *list,
+                                       entry_checker_range_t old_range,
+                                       entry_checker_range_t new_range);
 
 /*
  * Convenience function to replace one checker with another.
  * The two checkers must have the same start address and size.
  */
 static inline void
-checker_list_replace_checker(
-	checker_list_t *list,
-	vm_entry_checker_t *old_checker,
-	vm_entry_checker_t *new_checker)
-{
-	checker_list_replace_range(list,
-	    (entry_checker_range_t){ old_checker, old_checker },
-	    (entry_checker_range_t){ new_checker, new_checker });
+checker_list_replace_checker(checker_list_t *list,
+                             vm_entry_checker_t *old_checker,
+                             vm_entry_checker_t *new_checker) {
+  checker_list_replace_range(list,
+                             (entry_checker_range_t){old_checker, old_checker},
+                             (entry_checker_range_t){new_checker, new_checker});
 }
 
 /*
@@ -790,14 +754,11 @@ checker_list_replace_checker(
  * The old and the new must have the same start address and size.
  */
 static inline void
-checker_list_replace_checker_with_range(
-	checker_list_t *list,
-	vm_entry_checker_t *old_checker,
-	entry_checker_range_t new_checkers)
-{
-	checker_list_replace_range(list,
-	    (entry_checker_range_t){ old_checker, old_checker },
-	    new_checkers);
+checker_list_replace_checker_with_range(checker_list_t *list,
+                                        vm_entry_checker_t *old_checker,
+                                        entry_checker_range_t new_checkers) {
+  checker_list_replace_range(
+      list, (entry_checker_range_t){old_checker, old_checker}, new_checkers);
 }
 
 /*
@@ -806,18 +767,13 @@ checker_list_replace_checker_with_range(
  * The checkers are replaced by a new hole checker.
  * VM allocations are unaffected.
  */
-extern void
-checker_list_free_range(
-	checker_list_t *list,
-	entry_checker_range_t range);
+extern void checker_list_free_range(checker_list_t *list,
+                                    entry_checker_range_t range);
 
 /* Convenience function for checker_list_remove_range() of a single checker. */
-static inline void
-checker_list_free_checker(
-	checker_list_t *list,
-	vm_entry_checker_t *checker)
-{
-	checker_list_free_range(list, (entry_checker_range_t){ checker, checker });
+static inline void checker_list_free_checker(checker_list_t *list,
+                                             vm_entry_checker_t *checker) {
+  checker_list_free_range(list, (entry_checker_range_t){checker, checker});
 }
 
 /*
@@ -825,38 +781,33 @@ checker_list_free_checker(
  * `checker->address + checker->size`, with integer overflow protection.
  */
 static inline mach_vm_address_t
-checker_end_address(vm_entry_checker_t *checker)
-{
-	mach_vm_address_t end;
-	bool overflowed = __builtin_add_overflow(checker->address, checker->size, &end);
-	assert(!overflowed);
-	return end;
+checker_end_address(vm_entry_checker_t *checker) {
+  mach_vm_address_t end;
+  bool overflowed =
+      __builtin_add_overflow(checker->address, checker->size, &end);
+  assert(!overflowed);
+  return end;
 }
 
 /*
  * Return true if address is within checker's [start, end)
  */
-static inline bool
-checker_contains_address(vm_entry_checker_t *checker, mach_vm_address_t address)
-{
-	return address >= checker->address && address < checker_end_address(checker);
+static inline bool checker_contains_address(vm_entry_checker_t *checker,
+                                            mach_vm_address_t address) {
+  return address >= checker->address && address < checker_end_address(checker);
 }
 
 /*
  * Compute the share_mode value of an entry.
  * This value is computed from other values in the checker and its object.
  */
-extern uint8_t
-checker_share_mode(
-	vm_entry_checker_t *checker);
+extern uint8_t checker_share_mode(vm_entry_checker_t *checker);
 
 /*
  * Compute the is_submap value of a map entry.
  */
-static inline bool
-checker_is_submap(vm_entry_checker_t *checker)
-{
-	return checker->kind == Submap;
+static inline bool checker_is_submap(vm_entry_checker_t *checker) {
+  return checker->kind == Submap;
 }
 
 /*
@@ -891,8 +842,7 @@ checker_get_and_slide_submap_checkers(vm_entry_checker_t *checker);
 /*
  * Undo the effects of get_and_slide_submap_checkers().
  */
-extern void
-unslide_submap_checkers(checker_list_t *submap_checkers);
+extern void unslide_submap_checkers(checker_list_t *submap_checkers);
 
 /*
  * Convenience macro to call unslide_submap_checkers() at end of scope.
@@ -900,97 +850,84 @@ unslide_submap_checkers(checker_list_t *submap_checkers);
  * to cancel the automatic unslide.
  */
 static inline void
-cleanup_unslide_submap_checkers(checker_list_t **inout_submap_checkers)
-{
-	if (*inout_submap_checkers) {
-		unslide_submap_checkers(*inout_submap_checkers);
-		*inout_submap_checkers = NULL;
-	}
+cleanup_unslide_submap_checkers(checker_list_t **inout_submap_checkers) {
+  if (*inout_submap_checkers) {
+    unslide_submap_checkers(*inout_submap_checkers);
+    *inout_submap_checkers = NULL;
+  }
 }
-#define DEFER_UNSLIDE \
-	__attribute__((cleanup(cleanup_unslide_submap_checkers)))
-
+#define DEFER_UNSLIDE __attribute__((cleanup(cleanup_unslide_submap_checkers)))
 
 /*
  * Adjust a start/end so that it does not extend beyond a limit.
  * If start/end falls outside the limit, the output's size will
  * be zero and its start will be indeterminate.
  */
-extern void
-clamp_start_end_to_start_end(
-	mach_vm_address_t   * const inout_start,
-	mach_vm_address_t   * const inout_end,
-	mach_vm_address_t           limit_start,
-	mach_vm_address_t           limit_end);
-
+extern void clamp_start_end_to_start_end(mach_vm_address_t *const inout_start,
+                                         mach_vm_address_t *const inout_end,
+                                         mach_vm_address_t limit_start,
+                                         mach_vm_address_t limit_end);
 
 /*
  * Adjust a address/size so that it does not extend beyond a limit.
  * If address/size falls outside the limit, the output size will
  * be zero and the start will be indeterminate
  */
-extern void
-clamp_address_size_to_address_size(
-	mach_vm_address_t   * const inout_address,
-	mach_vm_size_t      * const inout_size,
-	mach_vm_address_t           limit_address,
-	mach_vm_size_t              limit_size);
-
+extern void clamp_address_size_to_address_size(
+    mach_vm_address_t *const inout_address, mach_vm_size_t *const inout_size,
+    mach_vm_address_t limit_address, mach_vm_size_t limit_size);
 
 /*
  * Adjust an address range so it does not extend beyond an entry's bounds.
  * When clamping to a submap entry:
  *   checker is a submap entry in the parent map.
- *   address and size are in the parent map's address space on entry and on exit.
+ *   address and size are in the parent map's address space on entry and on
+ * exit.
  */
 extern void
-clamp_address_size_to_checker(
-	mach_vm_address_t   * const inout_address,
-	mach_vm_size_t      * const inout_size,
-	vm_entry_checker_t         *checker);
+clamp_address_size_to_checker(mach_vm_address_t *const inout_address,
+                              mach_vm_size_t *const inout_size,
+                              vm_entry_checker_t *checker);
 
 /*
  * Adjust an address range so it does not extend beyond an entry's bounds.
  * When clamping to a submap entry:
  *   checker is a submap entry in the parent map.
- *   address and size are in the parent map's address space on entry and on exit.
+ *   address and size are in the parent map's address space on entry and on
+ * exit.
  */
-extern void
-clamp_start_end_to_checker(
-	mach_vm_address_t   * const inout_start,
-	mach_vm_address_t   * const inout_end,
-	vm_entry_checker_t         *checker);
-
+extern void clamp_start_end_to_checker(mach_vm_address_t *const inout_start,
+                                       mach_vm_address_t *const inout_end,
+                                       vm_entry_checker_t *checker);
 
 /*
  * Set the VM object that an entry points to.
  * Replaces any existing object. Updates self_ref_count of any objects.
  */
-extern void
-checker_set_object(vm_entry_checker_t *checker, vm_object_checker_t *obj_checker);
+extern void checker_set_object(vm_entry_checker_t *checker,
+                               vm_object_checker_t *obj_checker);
 
 /*
  * Set an entry's object to the null object.
- * Identical to `checker_set_object(checker, find_object_checker_for_object_id(list, 0))`
+ * Identical to `checker_set_object(checker,
+ * find_object_checker_for_object_id(list, 0))`
  */
-extern void
-checker_set_null_object(checker_list_t *list, vm_entry_checker_t *checker);
+extern void checker_set_null_object(checker_list_t *list,
+                                    vm_entry_checker_t *checker);
 
 /*
  * Set an entry's object to a copy of its current object,
  * with the new_object->shadow = old_object.
  * The entry's current object must not be null.
  */
-extern void
-checker_make_shadow_object(checker_list_t *list, vm_entry_checker_t *checker);
+extern void checker_make_shadow_object(checker_list_t *list,
+                                       vm_entry_checker_t *checker);
 
 /*
  * If checker has a null VM object, change it to a new anonymous object.
  */
-extern void
-checker_resolve_null_vm_object(
-	checker_list_t *checker_list,
-	vm_entry_checker_t *checker);
+extern void checker_resolve_null_vm_object(checker_list_t *checker_list,
+                                           vm_entry_checker_t *checker);
 
 /*
  * Update an entry's checker as if a fault occurred inside it.
@@ -1001,12 +938,9 @@ checker_resolve_null_vm_object(
  * - resolves null objects
  * - sets the resident page count
  */
-extern void
-checker_fault_for_prot_not_cow(
-	checker_list_t *checker_list,
-	vm_entry_checker_t *checker,
-	vm_prot_t fault_prot);
-
+extern void checker_fault_for_prot_not_cow(checker_list_t *checker_list,
+                                           vm_entry_checker_t *checker,
+                                           vm_prot_t fault_prot);
 
 /*
  * Conditionally unnest one checker in a submap.
@@ -1022,19 +956,18 @@ checker_fault_for_prot_not_cow(
  *     advance *inout_next_address past the unnested range,
  *     and return the unnested range's new checker
  * - a readable allocation:
- *     - (unnest_readonly == false) advance past it, same as for unallocated holes
+ *     - (unnest_readonly == false) advance past it, same as for unallocated
+ * holes
  *     - (unnest_readonly == true) unnest it, same as for writeable allocations
  *
  * Set all_overwritten = true if the newly-unnested memory will
- * be promptly written to (thus resolving null objects and collapsing COW shadow chains).
+ * be promptly written to (thus resolving null objects and collapsing COW shadow
+ * chains).
  */
-extern vm_entry_checker_t *
-checker_list_try_unnest_one_entry_in_submap(
-	checker_list_t *checker_list,
-	vm_entry_checker_t *submap_parent,
-	bool unnest_readonly,
-	bool all_overwritten,
-	mach_vm_address_t * const inout_next_address);
+extern vm_entry_checker_t *checker_list_try_unnest_one_entry_in_submap(
+    checker_list_t *checker_list, vm_entry_checker_t *submap_parent,
+    bool unnest_readonly, bool all_overwritten,
+    mach_vm_address_t *const inout_next_address);
 
 /*
  * Perform a clip-left operation on a checker, similar to vm_map_clip_left.
@@ -1043,11 +976,9 @@ checker_list_try_unnest_one_entry_in_submap(
  * Returns NULL if no split occurred.
  * Updates list->head and/or list->tail if necessary.
  */
-extern vm_entry_checker_t *
-checker_clip_left(
-	checker_list_t *list,
-	vm_entry_checker_t *right,
-	mach_vm_address_t split);
+extern vm_entry_checker_t *checker_clip_left(checker_list_t *list,
+                                             vm_entry_checker_t *right,
+                                             mach_vm_address_t split);
 
 /*
  * Perform a clip-right operation on a checker, similar to vm_map_clip_right.
@@ -1056,22 +987,17 @@ checker_clip_left(
  * Returns NULL if no split occurred.
  * Updates list->head and/or list->tail if necessary.
  */
-extern vm_entry_checker_t *
-checker_clip_right(
-	checker_list_t *list,
-	vm_entry_checker_t *left,
-	mach_vm_address_t split);
+extern vm_entry_checker_t *checker_clip_right(checker_list_t *list,
+                                              vm_entry_checker_t *left,
+                                              mach_vm_address_t split);
 
 /*
  * Perform a simplify operation on a checker and the entry to its left.
  * If coalescing occurs, `right` is preserved and
  * the entry to the left is destroyed.
  */
-extern void
-checker_simplify_left(
-	checker_list_t *list,
-	vm_entry_checker_t *right);
-
+extern void checker_simplify_left(checker_list_t *list,
+                                  vm_entry_checker_t *right);
 
 /*
  * Build a vm_checker for a newly-created memory region.
@@ -1079,11 +1005,8 @@ checker_simplify_left(
  * The new checker is not linked into the list.
  */
 extern vm_entry_checker_t *
-make_checker_for_vm_allocate(
-	checker_list_t *list,
-	mach_vm_address_t address,
-	mach_vm_size_t size,
-	int flags_and_tag);
+make_checker_for_vm_allocate(checker_list_t *list, mach_vm_address_t address,
+                             mach_vm_size_t size, int flags_and_tag);
 
 /*
  * Create VM entries and VM entry checkers
@@ -1100,48 +1023,36 @@ make_checker_for_vm_allocate(
  *     After that it is the caller's responsibility to arrange their
  *     templates in a way that yields the alignments they want.
  */
-extern __attribute__((overloadable))
-checker_list_t *
-create_vm_state(
-	const vm_entry_template_t entry_templates[],
-	unsigned entry_template_count,
-	const vm_object_template_t object_templates[],
-	unsigned object_template_count,
-	mach_vm_size_t alignment_mask,
-	const char *message);
+extern __attribute__((overloadable)) checker_list_t *
+create_vm_state(const vm_entry_template_t entry_templates[],
+                unsigned entry_template_count,
+                const vm_object_template_t object_templates[],
+                unsigned object_template_count, mach_vm_size_t alignment_mask,
+                const char *message);
 
-static inline __attribute__((overloadable))
-checker_list_t *
-create_vm_state(
-	const vm_entry_template_t templates[],
-	unsigned count,
-	mach_vm_size_t alignment_mask)
-{
-	return create_vm_state(templates, count, NULL, 0,
-	           alignment_mask, "create_vm_state");
+static inline __attribute__((overloadable)) checker_list_t *
+create_vm_state(const vm_entry_template_t templates[], unsigned count,
+                mach_vm_size_t alignment_mask) {
+  return create_vm_state(templates, count, NULL, 0, alignment_mask,
+                         "create_vm_state");
 }
 
 /*
  * Like create_vm_state, but the alignment mask defaults to PAGE_MASK
  * and the template list is terminated by END_ENTRIES
  */
-static inline __attribute__((overloadable))
-checker_list_t *
-create_vm_state(const vm_entry_template_t templates[])
-{
-	return create_vm_state(templates, count_templates(templates), PAGE_MASK);
+static inline __attribute__((overloadable)) checker_list_t *
+create_vm_state(const vm_entry_template_t templates[]) {
+  return create_vm_state(templates, count_templates(templates), PAGE_MASK);
 }
 
 /*
  * Like create_vm_state, but the alignment mask defaults to PAGE_MASK.
  */
-static inline __attribute__((overloadable))
-checker_list_t *
-create_vm_state(const vm_entry_template_t templates[], unsigned count)
-{
-	return create_vm_state(templates, count, PAGE_MASK);
+static inline __attribute__((overloadable)) checker_list_t *
+create_vm_state(const vm_entry_template_t templates[], unsigned count) {
+  return create_vm_state(templates, count, PAGE_MASK);
 }
-
 
 /*
  * Verify that the VM's state (as determined by vm_region)
@@ -1152,52 +1063,43 @@ create_vm_state(const vm_entry_template_t templates[], unsigned count)
  * Failures are also reported as darwintest failures (typically T_FAIL)
  * and failure details of expected and actual state are reported with T_LOG.
  */
-extern test_result_t
-verify_vm_state(checker_list_t *checker_list, const char *message);
+extern test_result_t verify_vm_state(checker_list_t *checker_list,
+                                     const char *message);
 
 /*
- * Perform VM read and/or write faults on every page spanned by a list of checkers,
- * and verify that exceptions are delivered (or not) as expected.
- * This is a destructive test: the faults may change VM state (for example
- * resolving COW) but the checkers are not updated.
+ * Perform VM read and/or write faults on every page spanned by a list of
+ * checkers, and verify that exceptions are delivered (or not) as expected. This
+ * is a destructive test: the faults may change VM state (for example resolving
+ * COW) but the checkers are not updated.
  *
  * Returns TestSucceeded if the state is good, TestFailed otherwise.
  *
  * Failures are also reported as darwintest failures (typically T_FAIL)
  * and failure details of expected and actual state are reported with T_LOG.
  */
-extern test_result_t
-verify_vm_faultability(
-	checker_list_t *checker_list,
-	const char *message,
-	bool verify_reads,
-	bool verify_writes);
+extern test_result_t verify_vm_faultability(checker_list_t *checker_list,
+                                            const char *message,
+                                            bool verify_reads,
+                                            bool verify_writes);
 
 /*
  * Like verify_vm_faultability, but reads and/or writes
  * from a single checker's memory.
  * Returns true if the verification succeeded.
  */
-extern bool
-verify_checker_faultability(
-	vm_entry_checker_t *checker,
-	const char *message,
-	bool verify_reads,
-	bool verify_writes);
+extern bool verify_checker_faultability(vm_entry_checker_t *checker,
+                                        const char *message, bool verify_reads,
+                                        bool verify_writes);
 
 /*
  * Like verify_checker_faultability, but reads and/or writes
  * only part of a single checker's memory.
  * Returns true if the verification succeeded.
  */
-extern bool
-verify_checker_faultability_in_address_range(
-	vm_entry_checker_t *checker,
-	const char *message,
-	bool verify_reads,
-	bool verify_writes,
-	mach_vm_address_t checked_address,
-	mach_vm_size_t checked_size);
+extern bool verify_checker_faultability_in_address_range(
+    vm_entry_checker_t *checker, const char *message, bool verify_reads,
+    bool verify_writes, mach_vm_address_t checked_address,
+    mach_vm_size_t checked_size);
 
 /*
  * Specification for a single trial:
@@ -1207,43 +1109,39 @@ verify_checker_faultability_in_address_range(
  *   layout that the tested operation should use.
  */
 typedef struct vm_config_s {
-	char *config_name;
+  char *config_name;
 
-	/*
-	 * Test's start address is the start of the first
-	 * entry plus start_adjustment. Test's end address
-	 * is the end of the last entry plus end_adjustment.
-	 * When not zero, start_adjustment is typically positive
-	 * and end_adjustment is typically negative.
-	 */
-	mach_vm_size_t start_adjustment;
-	mach_vm_size_t end_adjustment;
+  /*
+   * Test's start address is the start of the first
+   * entry plus start_adjustment. Test's end address
+   * is the end of the last entry plus end_adjustment.
+   * When not zero, start_adjustment is typically positive
+   * and end_adjustment is typically negative.
+   */
+  mach_vm_size_t start_adjustment;
+  mach_vm_size_t end_adjustment;
 
-	/* First map entry gets this alignment. */
-	mach_vm_size_t alignment_mask;
+  /* First map entry gets this alignment. */
+  mach_vm_size_t alignment_mask;
 
-	vm_entry_template_t *entry_templates;
-	unsigned entry_template_count;
-	vm_object_template_t *object_templates;
-	unsigned object_template_count;
+  vm_entry_template_t *entry_templates;
+  unsigned entry_template_count;
+  vm_object_template_t *object_templates;
+  unsigned object_template_count;
 
-	vm_entry_template_t *submap_entry_templates;
-	unsigned submap_entry_template_count;
-	vm_object_template_t *submap_object_templates;
-	unsigned submap_object_template_count;
+  vm_entry_template_t *submap_entry_templates;
+  unsigned submap_entry_template_count;
+  vm_object_template_t *submap_object_templates;
+  unsigned submap_object_template_count;
 } vm_config_t;
 
-__attribute__((overloadable))
-extern vm_config_t *
-make_vm_config(
-	const char *name,
-	vm_entry_template_t *entry_templates,
-	vm_object_template_t *object_templates,
-	vm_entry_template_t *submap_entry_templates,
-	vm_object_template_t *submap_object_templates,
-	mach_vm_size_t start_adjustment,
-	mach_vm_size_t end_adjustment,
-	mach_vm_size_t alignment_mask);
+__attribute__((overloadable)) extern vm_config_t *
+make_vm_config(const char *name, vm_entry_template_t *entry_templates,
+               vm_object_template_t *object_templates,
+               vm_entry_template_t *submap_entry_templates,
+               vm_object_template_t *submap_object_templates,
+               mach_vm_size_t start_adjustment, mach_vm_size_t end_adjustment,
+               mach_vm_size_t alignment_mask);
 
 /*
  * make_vm_config() variants with fewer parameters
@@ -1253,175 +1151,124 @@ make_vm_config(
  * Variants without submap entries use no alignment.
  */
 
-__attribute__((overloadable))
-static inline vm_config_t *
-make_vm_config(
-	const char *name,
-	vm_entry_template_t *entry_templates,
-	vm_object_template_t *object_templates,
-	vm_entry_template_t *submap_entry_templates,
-	vm_object_template_t *submap_object_templates,
-	mach_vm_size_t start_adjustment,
-	mach_vm_size_t end_adjustment)
-{
-	return make_vm_config(name, entry_templates, object_templates,
-	           submap_entry_templates, submap_object_templates,
-	           start_adjustment, end_adjustment, SUBMAP_ALIGNMENT_MASK);
+__attribute__((overloadable)) static inline vm_config_t *
+make_vm_config(const char *name, vm_entry_template_t *entry_templates,
+               vm_object_template_t *object_templates,
+               vm_entry_template_t *submap_entry_templates,
+               vm_object_template_t *submap_object_templates,
+               mach_vm_size_t start_adjustment, mach_vm_size_t end_adjustment) {
+  return make_vm_config(name, entry_templates, object_templates,
+                        submap_entry_templates, submap_object_templates,
+                        start_adjustment, end_adjustment,
+                        SUBMAP_ALIGNMENT_MASK);
 }
 
-__attribute__((overloadable))
-static inline vm_config_t *
-make_vm_config(
-	const char *name,
-	vm_entry_template_t *entry_templates,
-	vm_object_template_t *object_templates,
-	mach_vm_size_t start_adjustment,
-	mach_vm_size_t end_adjustment)
-{
-	return make_vm_config(name, entry_templates, object_templates,
-	           NULL, NULL,
-	           start_adjustment, end_adjustment, 0);
+__attribute__((overloadable)) static inline vm_config_t *
+make_vm_config(const char *name, vm_entry_template_t *entry_templates,
+               vm_object_template_t *object_templates,
+               mach_vm_size_t start_adjustment, mach_vm_size_t end_adjustment) {
+  return make_vm_config(name, entry_templates, object_templates, NULL, NULL,
+                        start_adjustment, end_adjustment, 0);
 }
 
-__attribute__((overloadable))
-static inline vm_config_t *
-make_vm_config(
-	const char *name,
-	vm_entry_template_t *entry_templates,
-	mach_vm_size_t start_adjustment,
-	mach_vm_size_t end_adjustment)
-{
-	return make_vm_config(name, entry_templates, NULL,
-	           NULL, NULL,
-	           start_adjustment, end_adjustment, 0);
+__attribute__((overloadable)) static inline vm_config_t *
+make_vm_config(const char *name, vm_entry_template_t *entry_templates,
+               mach_vm_size_t start_adjustment, mach_vm_size_t end_adjustment) {
+  return make_vm_config(name, entry_templates, NULL, NULL, NULL,
+                        start_adjustment, end_adjustment, 0);
 }
 
-__attribute__((overloadable))
-static inline vm_config_t *
-make_vm_config(
-	const char *name,
-	vm_entry_template_t *entry_templates,
-	vm_object_template_t *object_templates)
-{
-	return make_vm_config(name, entry_templates, object_templates,
-	           NULL, NULL,
-	           0, 0, 0);
+__attribute__((overloadable)) static inline vm_config_t *
+make_vm_config(const char *name, vm_entry_template_t *entry_templates,
+               vm_object_template_t *object_templates) {
+  return make_vm_config(name, entry_templates, object_templates, NULL, NULL, 0,
+                        0, 0);
 }
 
-__attribute__((overloadable))
-static inline vm_config_t *
-make_vm_config(
-	const char *name,
-	vm_entry_template_t *entry_templates)
-{
-	return make_vm_config(name, entry_templates, NULL,
-	           NULL, NULL,
-	           0, 0, 0);
+__attribute__((overloadable)) static inline vm_config_t *
+make_vm_config(const char *name, vm_entry_template_t *entry_templates) {
+  return make_vm_config(name, entry_templates, NULL, NULL, NULL, 0, 0, 0);
 }
-
 
 /*
  * Like create_vm_state, but also computes the config's desired address range.
  */
 extern void
-create_vm_state_from_config(
-	vm_config_t *config,
-	checker_list_t ** const out_checker_list,
-	mach_vm_address_t * const out_start_address,
-	mach_vm_address_t * const out_end_address);
-
+create_vm_state_from_config(vm_config_t *config,
+                            checker_list_t **const out_checker_list,
+                            mach_vm_address_t *const out_start_address,
+                            mach_vm_address_t *const out_end_address);
 
 /*
  * Logs the contents of checkers.
  * Also logs the contents of submap checkers recursively.
  */
-extern void
-dump_checker_range(entry_checker_range_t list);
+extern void dump_checker_range(entry_checker_range_t list);
 
 /*
  * Logs info from vm_region() for the address ranges spanned by the checkers.
  * Also logs the contents of submaps recursively.
  */
-extern void
-dump_region_info_for_entries(entry_checker_range_t list);
-
+extern void dump_region_info_for_entries(entry_checker_range_t list);
 
 /*
  * Convenience functions for logging.
  */
 
-extern const char *
-name_for_entry_kind(vm_entry_template_kind_t kind);
+extern const char *name_for_entry_kind(vm_entry_template_kind_t kind);
 
-extern const char *
-name_for_kr(kern_return_t kr);
+extern const char *name_for_kr(kern_return_t kr);
 
-extern const char *
-name_for_prot(vm_prot_t prot);
+extern const char *name_for_prot(vm_prot_t prot);
 
-extern const char *
-name_for_inherit(vm_inherit_t inheritance);
+extern const char *name_for_inherit(vm_inherit_t inheritance);
 
-extern const char *
-name_for_behavior(vm_behavior_t behavior);
+extern const char *name_for_behavior(vm_behavior_t behavior);
 
-extern const char *
-name_for_bool(boolean_t value);
+extern const char *name_for_bool(boolean_t value);
 
-extern const char *
-name_for_share_mode(uint8_t share_mode);
+extern const char *name_for_share_mode(uint8_t share_mode);
 
 /* Convenience macro for compile-time array size */
-#define countof(array)                                                  \
-	_Pragma("clang diagnostic push")                                \
-	_Pragma("clang diagnostic error \"-Wsizeof-pointer-div\"")      \
-	(sizeof(array)/sizeof((array)[0]))                              \
-	_Pragma("clang diagnostic pop")
+#define countof(array)                                                         \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic error \"-Wsizeof-pointer-div\"")(              \
+          sizeof(array) / sizeof((array)[0])) _Pragma("clang diagnostic pop")
 
-/* Convenience macro for a heap allocated formatted string deallocated at end of scope. */
-static inline void
-cleanup_cstring(char **ptr)
-{
-	free(*ptr);
-}
+/* Convenience macro for a heap allocated formatted string deallocated at end of
+ * scope. */
+static inline void cleanup_cstring(char **ptr) { free(*ptr); }
 #define CLEANUP_CSTRING __attribute__((cleanup(cleanup_cstring)))
-#define TEMP_CSTRING(str, format, ...)          \
-	char *str CLEANUP_CSTRING;              \
-	asprintf(&str, format, __VA_ARGS__)
+#define TEMP_CSTRING(str, format, ...)                                         \
+  char *str CLEANUP_CSTRING;                                                   \
+  asprintf(&str, format, __VA_ARGS__)
 
 /*
  * Returns true if each bit set in `values` is also set in `container`.
  */
-static inline bool
-prot_contains_all(vm_prot_t container, vm_prot_t values)
-{
-	return (container & values) == values;
+static inline bool prot_contains_all(vm_prot_t container, vm_prot_t values) {
+  return (container & values) == values;
 }
 
 /*
  * Convenience functions for address arithmetic
  */
 
-static inline mach_vm_address_t
-max(mach_vm_address_t a, mach_vm_address_t b)
-{
-	if (a > b) {
-		return a;
-	} else {
-		return b;
-	}
+static inline mach_vm_address_t max(mach_vm_address_t a, mach_vm_address_t b) {
+  if (a > b) {
+    return a;
+  } else {
+    return b;
+  }
 }
 
-static inline mach_vm_address_t
-min(mach_vm_address_t a, mach_vm_address_t b)
-{
-	if (a < b) {
-		return a;
-	} else {
-		return b;
-	}
+static inline mach_vm_address_t min(mach_vm_address_t a, mach_vm_address_t b) {
+  if (a < b) {
+    return a;
+  } else {
+    return b;
+  }
 }
-
 
 /*
  * Call vm_region on an address.
@@ -1431,49 +1278,38 @@ min(mach_vm_address_t a, mach_vm_address_t b)
  *   - Sets the info from vm_region.
  *   - Returns true.
  * If the query address is unmapped, or not mapped at that submap depth:
- *   - Sets *inout_address to the address of the next map entry, or ~0 if there is none.
+ *   - Sets *inout_address to the address of the next map entry, or ~0 if there
+ * is none.
  *   - Sets *out_size to zero.
  *   - Returns false.
  */
-__attribute__((overloadable))
-extern bool
-get_info_for_address(
-	mach_vm_address_t *inout_address,
-	mach_vm_size_t *out_size,
-	vm_region_submap_info_data_64_t *out_info,
-	uint32_t submap_depth);
+__attribute__((overloadable)) extern bool
+get_info_for_address(mach_vm_address_t *inout_address, mach_vm_size_t *out_size,
+                     vm_region_submap_info_data_64_t *out_info,
+                     uint32_t submap_depth);
 
-__attribute__((overloadable))
-static inline bool
-get_info_for_address(
-	mach_vm_address_t * const inout_address,
-	mach_vm_size_t * const out_size,
-	vm_region_submap_info_data_64_t * const out_info)
-{
-	return get_info_for_address(inout_address, out_size, out_info, 0);
+__attribute__((overloadable)) static inline bool
+get_info_for_address(mach_vm_address_t *const inout_address,
+                     mach_vm_size_t *const out_size,
+                     vm_region_submap_info_data_64_t *const out_info) {
+  return get_info_for_address(inout_address, out_size, out_info, 0);
 }
 
 /*
  * Like get_info_for_address(), but
  * (1) it's faster, and
- * (2) it does not get the right ref_count or shadow_depth values from vm_region.
+ * (2) it does not get the right ref_count or shadow_depth values from
+ * vm_region.
  */
-__attribute__((overloadable))
-extern bool
-get_info_for_address_fast(
-	mach_vm_address_t *inout_address,
-	mach_vm_size_t *out_size,
-	vm_region_submap_info_data_64_t *out_info,
-	uint32_t submap_depth);
+__attribute__((overloadable)) extern bool get_info_for_address_fast(
+    mach_vm_address_t *inout_address, mach_vm_size_t *out_size,
+    vm_region_submap_info_data_64_t *out_info, uint32_t submap_depth);
 
-__attribute__((overloadable))
-static inline bool
-get_info_for_address_fast(
-	mach_vm_address_t * const inout_address,
-	mach_vm_size_t * const out_size,
-	vm_region_submap_info_data_64_t * const out_info)
-{
-	return get_info_for_address_fast(inout_address, out_size, out_info, 0);
+__attribute__((overloadable)) static inline bool
+get_info_for_address_fast(mach_vm_address_t *const inout_address,
+                          mach_vm_size_t *const out_size,
+                          vm_region_submap_info_data_64_t *const out_info) {
+  return get_info_for_address_fast(inout_address, out_size, out_info, 0);
 }
 
 /*
@@ -1481,15 +1317,13 @@ get_info_for_address_fast(
  * Returns zero if the address is mapped but has a null object.
  * Aborts if the address is not mapped.
  */
-extern uint64_t
-get_object_id_for_address(mach_vm_address_t address);
+extern uint64_t get_object_id_for_address(mach_vm_address_t address);
 
 /*
  * Convenience function to get user_tag from vm_region at an address.
  * Returns zero if the address is not mapped.
  */
-extern uint16_t
-get_user_tag_for_address(mach_vm_address_t address);
+extern uint16_t get_user_tag_for_address(mach_vm_address_t address);
 
 /*
  * Convenience function to get user_tag from vm_region at an address,
@@ -1513,10 +1347,8 @@ get_app_specific_user_tag_for_address(mach_vm_address_t address);
  * host_priv_allowed() returns true or false.
  * The host_priv port requires root on macOS.
  */
-extern host_priv_t
-host_priv(void);
+extern host_priv_t host_priv(void);
 
-extern bool
-host_priv_allowed(void);
+extern bool host_priv_allowed(void);
 
-#endif  /* VM_CONFIGURATOR_H */
+#endif /* VM_CONFIGURATOR_H */

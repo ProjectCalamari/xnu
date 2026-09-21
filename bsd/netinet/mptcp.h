@@ -36,11 +36,11 @@
 #include <libkern/crypto/sha1.h>
 
 #if BYTE_ORDER == BIG_ENDIAN
-#define mptcp_hton64(x)  (x)
-#define mptcp_ntoh64(x)  (x)
+#define mptcp_hton64(x) (x)
+#define mptcp_ntoh64(x) (x)
 #else /* LITTLE_ENDIAN */
-#define mptcp_hton64(x)  __DARWIN_OSSwapInt64(x)
-#define mptcp_ntoh64(x)  __DARWIN_OSSwapInt64(x)
+#define mptcp_hton64(x) __DARWIN_OSSwapInt64(x)
+#define mptcp_ntoh64(x) __DARWIN_OSSwapInt64(x)
 #endif
 #include <netinet/mptcp_var.h>
 
@@ -50,18 +50,18 @@ extern int mptcp_preferred_version;
 /*
  * MPTCP Option Subtype Field values
  */
-#define MPO_CAPABLE     0x0
-#define MPO_JOIN        0x1
-#define MPO_DSS         0x2
-#define MPO_ADD_ADDR    0x3
+#define MPO_CAPABLE 0x0
+#define MPO_JOIN 0x1
+#define MPO_DSS 0x2
+#define MPO_ADD_ADDR 0x3
 #define MPO_REMOVE_ADDR 0x4
-#define MPO_PRIO        0x5
-#define MPO_FAIL        0x6
-#define MPO_FASTCLOSE   0x7
+#define MPO_PRIO 0x5
+#define MPO_FAIL 0x6
+#define MPO_FASTCLOSE 0x7
 
 /* MPTCP Protocol version */
-#define MPTCP_VERSION_0     0x0
-#define MPTCP_VERSION_1     0x1
+#define MPTCP_VERSION_0 0x0
+#define MPTCP_VERSION_1 0x1
 
 /*
  * MPTCP MP_CAPABLE TCP Option definitions
@@ -69,41 +69,40 @@ extern int mptcp_preferred_version;
  * Used to establish an MPTCP connection and first subflow.
  */
 struct mptcp_mpcapable_opt_common {
-	uint8_t        mmco_kind;
-	uint8_t        mmco_len;
+  uint8_t mmco_kind;
+  uint8_t mmco_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mmco_version:4,
-	    mmco_subtype:4;
+  uint8_t mmco_version : 4, mmco_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mmco_subtype:4,
-	    mmco_version:4;
+  uint8_t mmco_subtype : 4, mmco_version : 4;
 #endif
-#define MPCAP_PROPOSAL_SBIT     0x01    /* SHA1 (v0) or SHA256 (v1) Algorithm */
-#define MPCAP_GBIT              0x02    /* must be 0 */
-#define MPCAP_FBIT              0x04    /* must be 0 */
-#define MPCAP_EBIT              0x08    /* must be 0 */
-#define MPCAP_DBIT              0x10    /* must be 0 */
-#define MPCAP_UNICAST_IPBIT     0x20    /* Should MPTCP only use ADD_ADDR IPs for new subflows */
-#define MPCAP_BBIT              0x40    /* Extensibility bit, must be 0 */
-#define MPCAP_CHECKSUM_CBIT     0x80    /* DSS Checksum bit */
-	uint8_t        mmco_flags;
+#define MPCAP_PROPOSAL_SBIT 0x01 /* SHA1 (v0) or SHA256 (v1) Algorithm */
+#define MPCAP_GBIT 0x02          /* must be 0 */
+#define MPCAP_FBIT 0x04          /* must be 0 */
+#define MPCAP_EBIT 0x08          /* must be 0 */
+#define MPCAP_DBIT 0x10          /* must be 0 */
+#define MPCAP_UNICAST_IPBIT                                                    \
+  0x20 /* Should MPTCP only use ADD_ADDR IPs for new subflows */
+#define MPCAP_BBIT 0x40          /* Extensibility bit, must be 0 */
+#define MPCAP_CHECKSUM_CBIT 0x80 /* DSS Checksum bit */
+  uint8_t mmco_flags;
 } __attribute__((__packed__));
 
 struct mptcp_mpcapable_opt_rsp {
-	struct mptcp_mpcapable_opt_common mmc_common;
-	mptcp_key_t mmc_localkey;
+  struct mptcp_mpcapable_opt_common mmc_common;
+  mptcp_key_t mmc_localkey;
 } __attribute__((__packed__));
 
 struct mptcp_mpcapable_opt_rsp1 {
-	struct mptcp_mpcapable_opt_common mmc_common;
-	mptcp_key_t mmc_localkey;
-	mptcp_key_t mmc_remotekey;
+  struct mptcp_mpcapable_opt_common mmc_common;
+  mptcp_key_t mmc_localkey;
+  mptcp_key_t mmc_remotekey;
 } __attribute__((__packed__));
 
 struct mptcp_mpcapable_opt_rsp2 {
-	struct mptcp_mpcapable_opt_rsp1 mmc_rsp1;
-	uint16_t data_len;
-	uint16_t csum;
+  struct mptcp_mpcapable_opt_rsp1 mmc_rsp1;
+  uint16_t data_len;
+  uint16_t csum;
 } __attribute__((__packed__));
 
 /*
@@ -114,53 +113,49 @@ struct mptcp_mpcapable_opt_rsp2 {
 
 /* MP_JOIN Option for SYN */
 struct mptcp_mpjoin_opt_req {
-	uint8_t        mmjo_kind;
-	uint8_t        mmjo_len;
-#define MPTCP_BACKUP    0x1
-	uint8_t        mmjo_subtype_bkp;
-	uint8_t        mmjo_addr_id;
-	uint32_t       mmjo_peer_token;
-	uint32_t       mmjo_rand;
+  uint8_t mmjo_kind;
+  uint8_t mmjo_len;
+#define MPTCP_BACKUP 0x1
+  uint8_t mmjo_subtype_bkp;
+  uint8_t mmjo_addr_id;
+  uint32_t mmjo_peer_token;
+  uint32_t mmjo_rand;
 } __attribute__((__packed__));
 
 /* MP_JOIN Option for SYN/ACK */
 struct mptcp_mpjoin_opt_rsp {
-	uint8_t        mmjo_kind;
-	uint8_t        mmjo_len;
-#define MPTCP_BACKUP    0x1
-	uint8_t        mmjo_subtype_bkp;
-	uint8_t        mmjo_addr_id;
-	uint64_t       mmjo_mac; /* Truncated message auth code */
-	uint32_t       mmjo_rand;
+  uint8_t mmjo_kind;
+  uint8_t mmjo_len;
+#define MPTCP_BACKUP 0x1
+  uint8_t mmjo_subtype_bkp;
+  uint8_t mmjo_addr_id;
+  uint64_t mmjo_mac; /* Truncated message auth code */
+  uint32_t mmjo_rand;
 } __attribute__((__packed__));
 
 /* MP_Join Option for ACK */
 struct mptcp_mpjoin_opt_rsp2 {
-	uint8_t        mmjo_kind;
-	uint8_t        mmjo_len;
+  uint8_t mmjo_kind;
+  uint8_t mmjo_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mmjo_reserved1:4,
-	    mmjo_subtype:4;
+  uint8_t mmjo_reserved1 : 4, mmjo_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mmjo_subtype:4,
-	    mmjo_reserved1:4;
+  uint8_t mmjo_subtype : 4, mmjo_reserved1 : 4;
 #endif
-	uint8_t        mmjo_reserved2;
-	uint8_t        mmjo_mac[HMAC_TRUNCATED_ACK]; /* This is 160 bits HMAC per RFC */
+  uint8_t mmjo_reserved2;
+  uint8_t mmjo_mac[HMAC_TRUNCATED_ACK]; /* This is 160 bits HMAC per RFC */
 } __attribute__((__packed__));
 
 /* Remove Address Option */
 struct mptcp_remaddr_opt {
-	uint8_t        mr_kind;
-	uint8_t        mr_len;
+  uint8_t mr_kind;
+  uint8_t mr_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mr_rest:4,
-	    mr_subtype:4;
+  uint8_t mr_rest : 4, mr_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mr_subtype:4,
-	    mr_rest:4;
+  uint8_t mr_subtype : 4, mr_rest : 4;
 #endif
-	uint8_t        mr_addr_id;
+  uint8_t mr_addr_id;
 } __attribute__((__packed__));
 
 /*
@@ -173,95 +168,92 @@ struct mptcp_remaddr_opt {
 /*
  * DSS Option variants coded as flags in the DSS option flags field
  */
-#define MDSS_A 0x01     /* Data ACK present if set */
-#define MDSS_a 0x02     /* 64-bit Data ACK present if set */
-#define MDSS_M 0x04     /* Data Sequence Number present if set */
-#define MDSS_m 0x08     /* 64-bit Data Sequence Number present if set */
-#define MDSS_F 0x10     /* Data FIN present */
+#define MDSS_A 0x01 /* Data ACK present if set */
+#define MDSS_a 0x02 /* 64-bit Data ACK present if set */
+#define MDSS_M 0x04 /* Data Sequence Number present if set */
+#define MDSS_m 0x08 /* 64-bit Data Sequence Number present if set */
+#define MDSS_F 0x10 /* Data FIN present */
 
 /* DSS fields common to all DSS option variants */
 struct mptcp_dss_copt {
-	uint8_t        mdss_kind;
-	uint8_t        mdss_len;
+  uint8_t mdss_kind;
+  uint8_t mdss_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mdss_reserved1:4,
-	    mdss_subtype:4;
+  uint8_t mdss_reserved1 : 4, mdss_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mdss_subtype:4,
-	    mdss_reserved1:4;
+  uint8_t mdss_subtype : 4, mdss_reserved1 : 4;
 #endif
-	uint8_t        mdss_flags;
-}__attribute__((__packed__));
+  uint8_t mdss_flags;
+} __attribute__((__packed__));
 
 /* 32-bit DSS option */
 struct mptcp_dsn_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint32_t       mdss_dsn;               /* Data Sequence Number */
-	uint32_t       mdss_subflow_seqn;      /* Relative Subflow Seq Num */
-	uint16_t       mdss_data_len;          /* Data Length */
-	/* uint16_t	mdss_xsum; */		/* Data checksum - optional */
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint32_t mdss_dsn;          /* Data Sequence Number */
+  uint32_t mdss_subflow_seqn; /* Relative Subflow Seq Num */
+  uint16_t mdss_data_len;     /* Data Length */
+  /* uint16_t	mdss_xsum; */ /* Data checksum - optional */
+} __attribute__((__packed__));
 
 /* 64-bit DSS option */
 struct mptcp_dsn64_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint64_t       mdss_dsn;               /* Data Sequence Number */
-	uint32_t       mdss_subflow_seqn;      /* Relative Subflow Seq Num */
-	uint16_t       mdss_data_len;          /* Data Length */
-	/* uint16_t	mdss_xsum; */		/* Data checksum - optional */
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint64_t mdss_dsn;          /* Data Sequence Number */
+  uint32_t mdss_subflow_seqn; /* Relative Subflow Seq Num */
+  uint16_t mdss_data_len;     /* Data Length */
+  /* uint16_t	mdss_xsum; */ /* Data checksum - optional */
+} __attribute__((__packed__));
 
 /* 32-bit DSS Data ACK option */
 struct mptcp_data_ack_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint32_t               mdss_ack;
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint32_t mdss_ack;
+} __attribute__((__packed__));
 
 /* 64-bit DSS Data ACK option */
 struct mptcp_data_ack64_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint64_t               mdss_ack;
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint64_t mdss_ack;
+} __attribute__((__packed__));
 
 /* 32-bit DSS+Data ACK option */
 struct mptcp_dss_ack_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint32_t       mdss_ack;               /* Data ACK */
-	uint32_t       mdss_dsn;               /* Data Sequence Number */
-	uint32_t       mdss_subflow_seqn;      /* Relative Subflow Seq Num */
-	uint16_t       mdss_data_len;          /* Data Length */
-	/* uint16_t mdss_xsum; */		/* Data checksum - optional */
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint32_t mdss_ack;          /* Data ACK */
+  uint32_t mdss_dsn;          /* Data Sequence Number */
+  uint32_t mdss_subflow_seqn; /* Relative Subflow Seq Num */
+  uint16_t mdss_data_len;     /* Data Length */
+  /* uint16_t mdss_xsum; */   /* Data checksum - optional */
+} __attribute__((__packed__));
 
 /* 64-bit DSS+Data ACK option */
 struct mptcp_dss64_ack64_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint64_t       mdss_ack;               /* Data ACK */
-	uint64_t       mdss_dsn;               /* Data Sequence Number */
-	uint32_t       mdss_subflow_seqn;      /* Relative Subflow Seq Num */
-	uint16_t       mdss_data_len;          /* Data Length */
-	/* uint16_t mdss_xsum; */		/* Data checksum - optional */
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint64_t mdss_ack;          /* Data ACK */
+  uint64_t mdss_dsn;          /* Data Sequence Number */
+  uint32_t mdss_subflow_seqn; /* Relative Subflow Seq Num */
+  uint16_t mdss_data_len;     /* Data Length */
+  /* uint16_t mdss_xsum; */   /* Data checksum - optional */
+} __attribute__((__packed__));
 
 /* DSS+Data ACK mixed option variants */
 struct mptcp_dss32_ack64_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint64_t       mdss_ack;               /* Data ACK */
-	uint32_t       mdss_dsn;               /* Data Sequence Number */
-	uint32_t       mdss_subflow_seqn;      /* Relative Subflow Seq Num */
-	uint16_t       mdss_data_len;          /* Data Length */
-	/* uint16_t mdss_xsum; */		/* Data checksum - optional */
-}__attribute__((__packed__));
+  struct mptcp_dss_copt mdss_copt;
+  uint64_t mdss_ack;          /* Data ACK */
+  uint32_t mdss_dsn;          /* Data Sequence Number */
+  uint32_t mdss_subflow_seqn; /* Relative Subflow Seq Num */
+  uint16_t mdss_data_len;     /* Data Length */
+  /* uint16_t mdss_xsum; */   /* Data checksum - optional */
+} __attribute__((__packed__));
 
 struct mptcp_dss64_ack32_opt {
-	struct mptcp_dss_copt   mdss_copt;
-	uint32_t       mdss_ack;               /* Data ACK */
-	uint64_t       mdss_dsn;               /* Data Sequence Number */
-	uint32_t       mdss_subflow_seqn;      /* Relative Subflow Seq Num */
-	uint16_t       mdss_data_len;          /* Data Length */
-	/* uint16_t mdss_xsum; */		/* Data checksum - optional */
-}__attribute__((__packed__));
-
+  struct mptcp_dss_copt mdss_copt;
+  uint32_t mdss_ack;          /* Data ACK */
+  uint64_t mdss_dsn;          /* Data Sequence Number */
+  uint32_t mdss_subflow_seqn; /* Relative Subflow Seq Num */
+  uint16_t mdss_data_len;     /* Data Length */
+  /* uint16_t mdss_xsum; */   /* Data checksum - optional */
+} __attribute__((__packed__));
 
 /*
  * MPTCP Fast Close Option
@@ -271,18 +263,16 @@ struct mptcp_dss64_ack32_opt {
  * API is supported.
  */
 struct mptcp_fastclose_opt {
-	uint8_t        mfast_kind;
-	uint8_t        mfast_len;
+  uint8_t mfast_kind;
+  uint8_t mfast_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mfast_reserved:4,
-	    mfast_subtype:4;
+  uint8_t mfast_reserved : 4, mfast_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mfast_subtype:4,
-	    mfast_reserved:4;
+  uint8_t mfast_subtype : 4, mfast_reserved : 4;
 #endif
-	uint8_t        mfast_reserved1;
-	uint64_t       mfast_key;              /* Option receiver's key */
-}__attribute__((__packed__));
+  uint8_t mfast_reserved1;
+  uint64_t mfast_key; /* Option receiver's key */
+} __attribute__((__packed__));
 
 /*
  * MPTCP MP_FAIL Option
@@ -292,55 +282,50 @@ struct mptcp_fastclose_opt {
  * option.
  */
 struct mptcp_mpfail_opt {
-	uint8_t        mfail_kind;
-	uint8_t        mfail_len;
+  uint8_t mfail_kind;
+  uint8_t mfail_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mfail_reserved:4,
-	    mfail_subtype:4;
+  uint8_t mfail_reserved : 4, mfail_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mfail_subtype:4,
-	    mfail_reserved:4;
+  uint8_t mfail_subtype : 4, mfail_reserved : 4;
 #endif
-	uint8_t        mfail_reserved1:8;
-	uint64_t       mfail_dsn;
-}__attribute__((__packed__));
+  uint8_t mfail_reserved1 : 8;
+  uint64_t mfail_dsn;
+} __attribute__((__packed__));
 
 struct mptcp_add_addr_opt {
-	uint8_t         maddr_kind;
-	uint8_t         maddr_len;
+  uint8_t maddr_kind;
+  uint8_t maddr_len;
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t         maddr_flags:4,
-	    maddr_subtype:4;
+  uint8_t maddr_flags : 4, maddr_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t         maddr_subtype:4,
-	    maddr_flags:4;
+  uint8_t maddr_subtype : 4, maddr_flags : 4;
 #endif
-	uint8_t         maddr_addrid;
-}__attribute__((__packed__));
+  uint8_t maddr_addrid;
+} __attribute__((__packed__));
 
 struct mptcp_add_addr_hmac_msg_v4 {
-	uint8_t         maddr_addrid;
-	struct in_addr maddr_addr;
-	uint16_t maddr_port;
-}__attribute__((__packed__));
+  uint8_t maddr_addrid;
+  struct in_addr maddr_addr;
+  uint16_t maddr_port;
+} __attribute__((__packed__));
 
 struct mptcp_add_addr_hmac_msg_v6 {
-	uint8_t         maddr_addrid;
-	struct in6_addr maddr_addr;
-	uint16_t maddr_port;
-}__attribute__((__packed__));
+  uint8_t maddr_addrid;
+  struct in6_addr maddr_addr;
+  uint16_t maddr_port;
+} __attribute__((__packed__));
 
+#define MPTCP_V0_ADD_ADDR_IPV4 4
+#define MPTCP_V0_ADD_ADDR_IPV6 6
+#define MPTCP_V1_ADD_ADDR_ECHO 0x1
 
-#define MPTCP_V0_ADD_ADDR_IPV4          4
-#define MPTCP_V0_ADD_ADDR_IPV6          6
-#define MPTCP_V1_ADD_ADDR_ECHO          0x1
-
-#define MPTCP_V0_ADD_ADDR_OPT_LEN_V4       8
-#define MPTCP_V0_ADD_ADDR_OPT_LEN_V6       20
-#define MPTCP_V1_ADD_ADDR_OPT_LEN_V4       16
-#define MPTCP_V1_ADD_ADDR_OPT_LEN_V6       28
-#define MPTCP_V1_ADD_ADDR_ECHO_OPT_LEN_V4       8
-#define MPTCP_V1_ADD_ADDR_ECHO_OPT_LEN_V6       20
+#define MPTCP_V0_ADD_ADDR_OPT_LEN_V4 8
+#define MPTCP_V0_ADD_ADDR_OPT_LEN_V6 20
+#define MPTCP_V1_ADD_ADDR_OPT_LEN_V4 16
+#define MPTCP_V1_ADD_ADDR_OPT_LEN_V6 28
+#define MPTCP_V1_ADD_ADDR_ECHO_OPT_LEN_V4 8
+#define MPTCP_V1_ADD_ADDR_ECHO_OPT_LEN_V6 20
 /*
  * MPTCP MP_PRIO Option
  *
@@ -351,18 +336,16 @@ struct mptcp_add_addr_hmac_msg_v6 {
 
 /* Option to change priority of some other subflow(s) using addr_id */
 struct mptcp_mpprio_addr_opt {
-	uint8_t        mpprio_kind;
-	uint8_t        mpprio_len;
-#define MPTCP_MPPRIO_BKP        0x1
+  uint8_t mpprio_kind;
+  uint8_t mpprio_len;
+#define MPTCP_MPPRIO_BKP 0x1
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t        mpprio_flags:4,
-	    mpprio_subtype:4;
+  uint8_t mpprio_flags : 4, mpprio_subtype : 4;
 #else /* BIG_ENDIAN */
-	uint8_t        mpprio_subtype:4,
-	    mpprio_flags:4;
+  uint8_t mpprio_subtype : 4, mpprio_flags : 4;
 #endif
-	uint8_t        mpprio_addrid;
-}__attribute__((__packed__));
+  uint8_t mpprio_addrid;
+} __attribute__((__packed__));
 
 #endif /* BSD_KERNEL_PRIVATE */
 

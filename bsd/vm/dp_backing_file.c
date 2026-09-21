@@ -32,50 +32,49 @@
  * Version 2.0.
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/lock.h>
-#include <sys/proc_internal.h>
-#include <sys/kauth.h>
 #include <sys/buf.h>
-#include <sys/uio.h>
-#include <sys/vnode_internal.h>
-#include <sys/namei.h>
-#include <sys/ubc_internal.h>
+#include <sys/kauth.h>
+#include <sys/lock.h>
 #include <sys/malloc.h>
+#include <sys/namei.h>
+#include <sys/param.h>
+#include <sys/proc_internal.h>
+#include <sys/systm.h>
+#include <sys/ubc_internal.h>
+#include <sys/uio.h>
 #include <sys/user.h>
+#include <sys/vnode_internal.h>
 
 #include <default_pager/default_pager_types.h>
 
-#include <security/audit/audit.h>
 #include <bsm/audit_kevents.h>
+#include <security/audit/audit.h>
 
-#include <mach/mach_types.h>
+#include <mach/boolean.h>
 #include <mach/host_priv.h>
 #include <mach/mach_traps.h>
-#include <mach/boolean.h>
+#include <mach/mach_types.h>
 
+#include <kern/host.h>
 #include <kern/kern_types.h>
 #include <kern/locks.h>
-#include <kern/host.h>
+#include <kern/policy_internal.h>
 #include <kern/task.h>
 #include <kern/zalloc.h>
-#include <kern/policy_internal.h>
 
 #include <libkern/libkern.h>
 
-#include <vm/vm_pageout.h>
-#include <vm/vm_map.h>
-#include <vm/vm_kern.h>
-#include <vm/vnode_pager.h>
-#include <vm/vm_protos_internal.h>
 #include <vm/vm_compressor_backing_store_xnu.h>
+#include <vm/vm_kern.h>
+#include <vm/vm_map.h>
+#include <vm/vm_pageout.h>
+#include <vm/vm_protos_internal.h>
+#include <vm/vnode_pager.h>
 #if CONFIG_MACF
 #include <security/mac_framework.h>
 #endif
 
 #include <pexpert/pexpert.h>
-
 
 /*
  *	Routine:	macx_backing_store_recovery
@@ -84,11 +83,9 @@
  *		level so that it is not subject to
  *		macx_backing_store_suspend
  */
-int
-macx_backing_store_recovery(
-	__unused struct macx_backing_store_recovery_args *args)
-{
-	return ENOTSUP;
+int macx_backing_store_recovery(
+    __unused struct macx_backing_store_recovery_args *args) {
+  return ENOTSUP;
 }
 
 /*
@@ -98,13 +95,10 @@ macx_backing_store_recovery(
  *		backing store when backing store is low
  */
 
-int
-macx_backing_store_suspend(
-	__unused struct macx_backing_store_suspend_args *args)
-{
-	return ENOTSUP;
+int macx_backing_store_suspend(
+    __unused struct macx_backing_store_suspend_args *args) {
+  return ENOTSUP;
 }
-
 
 extern boolean_t compressor_store_stop_compaction;
 
@@ -123,39 +117,37 @@ extern boolean_t compressor_store_stop_compaction;
  *      mach_macx_triggers -> macx_backing_store_compaction
  */
 extern int vm_swap_enabled;
-int
-macx_backing_store_compaction(int flags)
-{
-	int error;
+int macx_backing_store_compaction(int flags) {
+  int error;
 
-	if ((error = suser(kauth_cred_get(), 0))) {
-		return error;
-	}
+  if ((error = suser(kauth_cred_get(), 0))) {
+    return error;
+  }
 
-	if (flags & SWAP_COMPACT_DISABLE) {
+  if (flags & SWAP_COMPACT_DISABLE) {
 #if (XNU_TARGET_OS_OSX && __arm64__)
-		/*
-		 * There's no synch. between the swap being turned
-		 * OFF from user-space and all processes having exited.
-		 * On fast SSD AS macs we can accumulate a lot of
-		 * compressed memory between those 2 operations.
-		 * So we allow swap till we are ready to shutdown the
-		 * system. Even with a bunch of processes
-		 * still running and creating a lot of compressed
-		 * memory the system can shutdown normally.
-		 */
-#else /* (XNU_TARGET_OS_OSX && __arm64__) */
-		compressor_store_stop_compaction = TRUE;
-		vm_swap_enabled = 0;
-		kprintf("compressor_store_stop_compaction = TRUE\n");
+    /*
+     * There's no synch. between the swap being turned
+     * OFF from user-space and all processes having exited.
+     * On fast SSD AS macs we can accumulate a lot of
+     * compressed memory between those 2 operations.
+     * So we allow swap till we are ready to shutdown the
+     * system. Even with a bunch of processes
+     * still running and creating a lot of compressed
+     * memory the system can shutdown normally.
+     */
+#else  /* (XNU_TARGET_OS_OSX && __arm64__) */
+    compressor_store_stop_compaction = TRUE;
+    vm_swap_enabled = 0;
+    kprintf("compressor_store_stop_compaction = TRUE\n");
 #endif /* (XNU_TARGET_OS_OSX && __arm64__) */
-	} else if (flags & SWAP_COMPACT_ENABLE) {
-		compressor_store_stop_compaction = FALSE;
-		vm_swap_enabled = 1;
-		kprintf("compressor_store_stop_compaction = FALSE\n");
-	}
+  } else if (flags & SWAP_COMPACT_ENABLE) {
+    compressor_store_stop_compaction = FALSE;
+    vm_swap_enabled = 1;
+    kprintf("compressor_store_stop_compaction = FALSE\n");
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -164,39 +156,24 @@ macx_backing_store_compaction(int flags)
  *		Syscall interface to set the call backs for low and
  *		high water marks.
  */
-int
-macx_triggers(
-	struct macx_triggers_args *args)
-{
-	int     flags = args->flags;
+int macx_triggers(struct macx_triggers_args *args) {
+  int flags = args->flags;
 
-	if (flags & (SWAP_COMPACT_DISABLE | SWAP_COMPACT_ENABLE)) {
-		return macx_backing_store_compaction(flags);
-	}
+  if (flags & (SWAP_COMPACT_DISABLE | SWAP_COMPACT_ENABLE)) {
+    return macx_backing_store_compaction(flags);
+  }
 
-	return ENOTSUP;
+  return ENOTSUP;
 }
 
-
-int
-macx_swapon(
-	__unused struct macx_swapon_args *args)
-{
-	return ENOTSUP;
-}
-
+int macx_swapon(__unused struct macx_swapon_args *args) { return ENOTSUP; }
 
 /*
  *	Routine:	macx_swapoff
  *	Function:
  *		Syscall interface to remove a file from backing store
  */
-int
-macx_swapoff(
-	__unused struct macx_swapoff_args *args)
-{
-	return ENOTSUP;
-}
+int macx_swapoff(__unused struct macx_swapoff_args *args) { return ENOTSUP; }
 
 /*
  *	Routine:	macx_swapinfo
@@ -205,23 +182,18 @@ macx_swapoff(
  */
 extern boolean_t vm_swap_up;
 
-int
-macx_swapinfo(
-	memory_object_size_t    *total_p,
-	memory_object_size_t    *avail_p,
-	vm_size_t               *pagesize_p,
-	boolean_t               *encrypted_p)
-{
-	if (VM_CONFIG_SWAP_IS_PRESENT) {
-		*total_p = vm_swap_get_total_space();
-		*avail_p = vm_swap_get_free_space();
-		*pagesize_p = (vm_size_t)PAGE_SIZE_64;
-		*encrypted_p = TRUE;
-	} else {
-		*total_p = 0;
-		*avail_p = 0;
-		*pagesize_p = 0;
-		*encrypted_p = FALSE;
-	}
-	return 0;
+int macx_swapinfo(memory_object_size_t *total_p, memory_object_size_t *avail_p,
+                  vm_size_t *pagesize_p, boolean_t *encrypted_p) {
+  if (VM_CONFIG_SWAP_IS_PRESENT) {
+    *total_p = vm_swap_get_total_space();
+    *avail_p = vm_swap_get_free_space();
+    *pagesize_p = (vm_size_t)PAGE_SIZE_64;
+    *encrypted_p = TRUE;
+  } else {
+    *total_p = 0;
+    *avail_p = 0;
+    *pagesize_p = 0;
+    *encrypted_p = FALSE;
+  }
+  return 0;
 }

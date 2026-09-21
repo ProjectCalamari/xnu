@@ -30,13 +30,12 @@
 
 #if !NETWORKING
 
-#define STUB(name)                                                      \
-	int name(void);                                                 \
-	int name(void)                                                  \
-	{                                                               \
-	        panic("stub called in a config with no networking");    \
-	        return (0);                                             \
-	}
+#define STUB(name)                                                             \
+  int name(void);                                                              \
+  int name(void) {                                                             \
+    panic("stub called in a config with no networking");                       \
+    return (0);                                                                \
+  }
 
 STUB(bpf_attach);
 STUB(bpf_tap_in);
@@ -493,10 +492,6 @@ STUB(vsock_put_message);
  * Called from vm_pageout.c. Nothing to be done when there's no networking.
  */
 void mbuf_drain(boolean_t);
-void
-mbuf_drain(boolean_t)
-{
-	return;
-}
+void mbuf_drain(boolean_t) { return; }
 
 #endif /* !NETWORKING */

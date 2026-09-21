@@ -26,15 +26,15 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 #ifndef _VM_UPL_
 #define _VM_UPL_
 
-#include <mach/vm_types.h>
-#include <mach/vm_prot.h>
 #include <mach/kern_return.h>
 #include <mach/memory_object_types.h>
+#include <mach/vm_prot.h>
+#include <mach/vm_types.h>
 
 __BEGIN_DECLS
 /*
@@ -45,48 +45,24 @@ __BEGIN_DECLS
  * to be replaced with standard vm_map() and
  * vm_deallocate() calls.
  */
-extern kern_return_t vm_upl_map
-(
-	vm_map_t target_task,
-	upl_t upl,
-	vm_address_t *address
-);
+extern kern_return_t vm_upl_map(vm_map_t target_task, upl_t upl,
+                                vm_address_t *address);
 
-extern kern_return_t vm_upl_unmap
-(
-	vm_map_t target_task,
-	upl_t upl
-);
+extern kern_return_t vm_upl_unmap(vm_map_t target_task, upl_t upl);
 
-extern kern_return_t vm_upl_map_range
-(
-	vm_map_t target_task,
-	upl_t upl,
-	vm_offset_t offset,
-	vm_size_t size,
-	vm_prot_t prot,
-	vm_address_t *address
-);
+extern kern_return_t vm_upl_map_range(vm_map_t target_task, upl_t upl,
+                                      vm_offset_t offset, vm_size_t size,
+                                      vm_prot_t prot, vm_address_t *address);
 
-extern kern_return_t vm_upl_unmap_range
-(
-	vm_map_t target_task,
-	upl_t upl,
-	vm_offset_t offset,
-	vm_size_t size
-);
+extern kern_return_t vm_upl_unmap_range(vm_map_t target_task, upl_t upl,
+                                        vm_offset_t offset, vm_size_t size);
 
 /* Support for UPLs from vm_maps */
-extern kern_return_t vm_map_get_upl(
-	vm_map_t                target_map,
-	vm_map_offset_t         map_offset,
-	upl_size_t              *size,
-	upl_t                   *upl,
-	upl_page_info_array_t   page_info,
-	unsigned int            *page_infoCnt,
-	upl_control_flags_t     *flags,
-	vm_tag_t                tag,
-	int                     force_data_sync);
+extern kern_return_t
+vm_map_get_upl(vm_map_t target_map, vm_map_offset_t map_offset,
+               upl_size_t *size, upl_t *upl, upl_page_info_array_t page_info,
+               unsigned int *page_infoCnt, upl_control_flags_t *flags,
+               vm_tag_t tag, int force_data_sync);
 
 __END_DECLS
 

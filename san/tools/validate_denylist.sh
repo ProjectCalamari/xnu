@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Ensure all denylisted files exist. Paths with wildcards are ignored.
 # Run against a denylist with fully-qualified paths.

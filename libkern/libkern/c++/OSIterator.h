@@ -44,7 +44,6 @@
  * This header declares the OSIterator collection class.
  */
 
-
 /*!
  * @class OSIterator
  * @abstract
@@ -65,72 +64,69 @@
  *
  * OSIterator provides no concurrency protection.
  */
-class OSIterator : public OSObject
-{
-	OSDeclareAbstractStructors(OSIterator);
+class OSIterator : public OSObject {
+  OSDeclareAbstractStructors(OSIterator);
 
 public:
-/*!
- * @function reset
- *
- * @abstract
- * Resets the iterator to the beginning of the collection,
- * as if it had just been created.
- *
- * @discussion
- * Subclasses must implement this pure virtual member function.
- */
-	virtual void reset() = 0;
+  /*!
+   * @function reset
+   *
+   * @abstract
+   * Resets the iterator to the beginning of the collection,
+   * as if it had just been created.
+   *
+   * @discussion
+   * Subclasses must implement this pure virtual member function.
+   */
+  virtual void reset() = 0;
 
+  /*!
+   * @function isValid
+   *
+   * @abstract
+   * Check that the collection hasn't been modified during iteration.
+   *
+   * @result
+   * <code>true</code> if the iterator is valid for continued use,
+   * <code>false</code> otherwise
+   * (typically because the collection being iterated has been modified).
+   *
+   * @discussion
+   * Subclasses must implement this pure virtual member function.
+   */
+  virtual bool isValid() = 0;
 
-/*!
- * @function isValid
- *
- * @abstract
- * Check that the collection hasn't been modified during iteration.
- *
- * @result
- * <code>true</code> if the iterator is valid for continued use,
- * <code>false</code> otherwise
- * (typically because the collection being iterated has been modified).
- *
- * @discussion
- * Subclasses must implement this pure virtual member function.
- */
-	virtual bool isValid() = 0;
+  /*!
+   * @function getNextObject
+   *
+   * @abstract
+   * Advances to and returns the next object in the iteration.
+   *
+   * @return
+   * The next object in the iteration context,
+   * <code>NULL</code> if there is no next object
+   * or if the iterator is no longer valid.
+   *
+   * @discussion
+   * The returned object will be released if removed from the collection;
+   * if you plan to store the reference, you should call
+   * <code>@link
+   * //apple_ref/cpp/instm/OSObject/retain/virtualvoid/()
+   * retain@/link</code>
+   * on that object.
+   *
+   * Subclasses must implement this pure virtual function
+   * to check for validity with
+   * <code>@link isValid isValid@/link</code>,
+   * and then to advance the iteration context to the next object (if any)
+   * and return that next object, or <code>NULL</code> if there is none.
+   */
+  virtual OSObject *getNextObject() = 0;
 
-
-/*!
- * @function getNextObject
- *
- * @abstract
- * Advances to and returns the next object in the iteration.
- *
- * @return
- * The next object in the iteration context,
- * <code>NULL</code> if there is no next object
- * or if the iterator is no longer valid.
- *
- * @discussion
- * The returned object will be released if removed from the collection;
- * if you plan to store the reference, you should call
- * <code>@link
- * //apple_ref/cpp/instm/OSObject/retain/virtualvoid/()
- * retain@/link</code>
- * on that object.
- *
- * Subclasses must implement this pure virtual function
- * to check for validity with
- * <code>@link isValid isValid@/link</code>,
- * and then to advance the iteration context to the next object (if any)
- * and return that next object, or <code>NULL</code> if there is none.
- */
-	virtual OSObject *getNextObject() = 0;
-
-	OSMetaClassDeclareReservedUnused(OSIterator, 0);
-	OSMetaClassDeclareReservedUnused(OSIterator, 1);
-	OSMetaClassDeclareReservedUnused(OSIterator, 2);
-	OSMetaClassDeclareReservedUnused(OSIterator, 3);
+  OSMetaClassDeclareReservedUnused(OSIterator, 0);
+  OSMetaClassDeclareReservedUnused(OSIterator, 1);
+  OSMetaClassDeclareReservedUnused(OSIterator, 2);
+  OSMetaClassDeclareReservedUnused(OSIterator, 3);
 };
 
 #endif /* ! _OS_OSITERATOR_H */

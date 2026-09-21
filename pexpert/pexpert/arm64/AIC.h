@@ -9,16 +9,12 @@
 
 #include <stdint.h>
 
-static inline uint32_t
-_aic_read32(uintptr_t addr)
-{
-	return *(volatile uint32_t *)addr;
+static inline uint32_t _aic_read32(uintptr_t addr) {
+  return *(volatile uint32_t *)addr;
 }
 
-static inline void
-_aic_write32(uintptr_t addr, uint32_t data)
-{
-	*(volatile uint32_t *)(addr) = data;
+static inline void _aic_write32(uintptr_t addr, uint32_t data) {
+  *(volatile uint32_t *)(addr) = data;
 }
 
 #define aic_read32(offset, data) (_aic_read32(pic_base + (offset)))
@@ -26,8 +22,9 @@ _aic_write32(uintptr_t addr, uint32_t data)
 
 #endif
 
-// AIC timebase registers (timer base address in DT node is setup as AIC_BASE + 0x1000)
-#define kAICMainTimLo                           (0x20)
-#define kAICMainTimHi                           (0x28)
+// AIC timebase registers (timer base address in DT node is setup as AIC_BASE +
+// 0x1000)
+#define kAICMainTimLo (0x20)
+#define kAICMainTimHi (0x28)
 
 #endif /* ! _PEXPERT_ARM_AIC_H */

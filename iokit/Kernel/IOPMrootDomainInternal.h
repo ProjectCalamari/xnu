@@ -35,35 +35,35 @@
 #ifndef _IOPMROOTDOMAINIOCTLS_H_
 #define _IOPMROOTDOMAINIOCTLS_H_
 
-#include <sys/ioccom.h>
 #include <i386/pmCPU.h>
+#include <sys/ioccom.h>
 
-#define PMIOCGETVARIDINFO       _IOW('P', 25, uint64_t)
-#define PMIOCGETVARNAMEINFO     _IOW('P', 26, uint64_t)
-#define PMIOCSETVARINFO         _IOW('P', 27, uint64_t)
+#define PMIOCGETVARIDINFO _IOW('P', 25, uint64_t)
+#define PMIOCGETVARNAMEINFO _IOW('P', 26, uint64_t)
+#define PMIOCSETVARINFO _IOW('P', 27, uint64_t)
 
 /*
  * Data structures used by IOCTLs
  */
 #pragma pack(4)
 
-#define PMVARNAMELEN    16
+#define PMVARNAMELEN 16
 
-typedef enum{
-	vUnknown            = 0,        /* Unknown type */
-	vBool               = 1,        /* Boolean value */
-	vInt                = 2,        /* signed integer value */
-	vUInt               = 3,        /* Unsigned integer value */
-	vChars              = 4,        /* 8 characters */
-	vInvalid            = -1        /* invalid type */
+typedef enum {
+  vUnknown = 0, /* Unknown type */
+  vBool = 1,    /* Boolean value */
+  vInt = 2,     /* signed integer value */
+  vUInt = 3,    /* Unsigned integer value */
+  vChars = 4,   /* 8 characters */
+  vInvalid = -1 /* invalid type */
 } pmioctlVarType_t;
 
 typedef struct pmioctlVaribleInfo {
-	uint32_t            varID;      /* ID of variable */
-	uint8_t             varName[PMVARNAMELEN + 1];
-	pmioctlVarType_t    varType;    /* type of variable's value */
-	uint64_t            varInitValue;/* variable's initial value */
-	uint64_t            varCurValue;/* variable's current value */
+  uint32_t varID; /* ID of variable */
+  uint8_t varName[PMVARNAMELEN + 1];
+  pmioctlVarType_t varType; /* type of variable's value */
+  uint64_t varInitValue;    /* variable's initial value */
+  uint64_t varCurValue;     /* variable's current value */
 } pmioctlVariableInfo_t;
 
 #pragma pack()

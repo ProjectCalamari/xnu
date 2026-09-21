@@ -20,38 +20,39 @@
  * @APPLE_LICENSE_HEADER_END@
  */
 
-#include <os/system_event_log.h>
-#include <sys/systm.h>
-#include <sys/sysproto.h>
 #include <IOKit/IOBSD.h>
+#include <os/system_event_log.h>
+#include <sys/sysproto.h>
+#include <sys/systm.h>
 
-int
-sys_record_system_event(__unused struct proc *p, struct record_system_event_args *uap, __unused int *retval)
-{
-	int error = 0;
+int sys_record_system_event(__unused struct proc *p,
+                            struct record_system_event_args *uap,
+                            __unused int *retval) {
+  int error = 0;
 
-	boolean_t entitled = FALSE;
-	entitled = IOCurrentTaskHasEntitlement(SYSTEM_EVENT_ENTITLEMENT);
-	if (!entitled) {
-		error = EPERM;
-		goto done;
-	}
+  boolean_t entitled = FALSE;
+  entitled = IOCurrentTaskHasEntitlement(SYSTEM_EVENT_ENTITLEMENT);
+  if (!entitled) {
+    error = EPERM;
+    goto done;
+  }
 
-	char event[SYSTEM_EVENT_EVENT_MAX] = {0};
-	char payload[SYSTEM_EVENT_PAYLOAD_MAX] = {0};
-	size_t bytes_copied;
+  char event[SYSTEM_EVENT_EVENT_MAX] = {0};
+  char payload[SYSTEM_EVENT_PAYLOAD_MAX] = {0};
+  size_t bytes_copied;
 
-	error = copyinstr(uap->event, event, sizeof(event), &bytes_copied);
-	if (error) {
-		goto done;
-	}
-	error = copyinstr(uap->payload, payload, sizeof(payload), &bytes_copied);
-	if (error) {
-		goto done;
-	}
+  error = copyinstr(uap->event, event, sizeof(event), &bytes_copied);
+  if (error) {
+    goto done;
+  }
+  error = copyinstr(uap->payload, payload, sizeof(payload), &bytes_copied);
+  if (error) {
+    goto done;
+  }
 
-	record_system_event_no_varargs((uint8_t)(uap->type), (uint8_t)(uap->subsystem), event, payload);
+  record_system_event_no_varargs((uint8_t)(uap->type),
+                                 (uint8_t)(uap->subsystem), event, payload);
 
 done:
-	return error;
+  return error;
 }

@@ -25,12 +25,12 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
+#include <ipc/ipc_port.h>
+#include <kern/audit_sessionport.h>
+#include <kern/ipc_kobject.h>
+#include <libkern/OSAtomic.h>
 #include <mach/mach_types.h>
 #include <mach/notify.h>
-#include <ipc/ipc_port.h>
-#include <kern/ipc_kobject.h>
-#include <kern/audit_sessionport.h>
-#include <libkern/OSAtomic.h>
 
 #if CONFIG_AUDIT
 /*
@@ -54,18 +54,16 @@
  *		Otherwise, by creating an additional send right, we share
  *		the port's reference until all send rights go away.
  */
-ipc_port_t
-audit_session_mksend(struct auditinfo_addr *aia_p, ipc_port_t *sessionport)
-{
-	audit_session_aiaref(aia_p);
-	if (!ipc_kobject_make_send_lazy_alloc_port(sessionport,
-	    aia_p, IKOT_AU_SESSIONPORT)) {
-		audit_session_aiaunref(aia_p);
-	}
+ipc_port_t audit_session_mksend(struct auditinfo_addr *aia_p,
+                                ipc_port_t *sessionport) {
+  audit_session_aiaref(aia_p);
+  if (!ipc_kobject_make_send_lazy_alloc_port(sessionport, aia_p,
+                                             IKOT_AU_SESSIONPORT)) {
+    audit_session_aiaunref(aia_p);
+  }
 
-	return *sessionport;
+  return *sessionport;
 }
-
 
 /*
  * audit_session_porttoaia
@@ -81,18 +79,15 @@ audit_session_mksend(struct auditinfo_addr *aia_p, ipc_port_t *sessionport)
  *
  * Notes: The caller must hold an outstanding send-right on the sessionport.
  */
-struct auditinfo_addr *
-audit_session_porttoaia(ipc_port_t port)
-{
-	struct auditinfo_addr *aia_p = NULL;
+struct auditinfo_addr *audit_session_porttoaia(ipc_port_t port) {
+  struct auditinfo_addr *aia_p = NULL;
 
-	if (IP_VALID(port)) {
-		aia_p = ipc_kobject_get_stable(port, IKOT_AU_SESSIONPORT);
-	}
+  if (IP_VALID(port)) {
+    aia_p = ipc_kobject_get_stable(port, IKOT_AU_SESSIONPORT);
+  }
 
-	return aia_p;
+  return aia_p;
 }
-
 
 /*
  * audit_session_no_senders
@@ -103,15 +98,14 @@ audit_session_porttoaia(ipc_port_t port)
  *	  no-senders notification has been sent, but they will be protected
  *	  by another aia reference.
  */
-static void
-audit_session_no_senders(ipc_port_t port, __unused mach_port_mscount_t mscount)
-{
-	struct auditinfo_addr *aia_p = NULL;
+static void audit_session_no_senders(ipc_port_t port,
+                                     __unused mach_port_mscount_t mscount) {
+  struct auditinfo_addr *aia_p = NULL;
 
-	aia_p = ipc_kobject_get_stable(port, IKOT_AU_SESSIONPORT);
-	assert(NULL != aia_p);
+  aia_p = ipc_kobject_get_stable(port, IKOT_AU_SESSIONPORT);
+  assert(NULL != aia_p);
 
-	audit_session_aiaunref(aia_p);
+  audit_session_aiaunref(aia_p);
 }
 
 /*
@@ -122,21 +116,17 @@ audit_session_no_senders(ipc_port_t port, __unused mach_port_mscount_t mscount)
  * Notes: It is called when there is no outstanding references on the aia
  *        anymore (it also won't have any outstanding send rights)
  */
-void
-audit_session_portdestroy(ipc_port_t *sessionport)
-{
-	ipc_port_t port = *sessionport;
+void audit_session_portdestroy(ipc_port_t *sessionport) {
+  ipc_port_t port = *sessionport;
 
-	*sessionport = IP_NULL;
-	if (IP_VALID(port)) {
-		ipc_kobject_dealloc_port(port, IPC_KOBJECT_NO_MSCOUNT,
-		    IKOT_AU_SESSIONPORT);
-	}
+  *sessionport = IP_NULL;
+  if (IP_VALID(port)) {
+    ipc_kobject_dealloc_port(port, IPC_KOBJECT_NO_MSCOUNT, IKOT_AU_SESSIONPORT);
+  }
 }
 
-IPC_KOBJECT_DEFINE(IKOT_AU_SESSIONPORT,
-    .iko_op_movable_send = true,
-    .iko_op_stable     = true,
-    .iko_op_no_senders = audit_session_no_senders);
+IPC_KOBJECT_DEFINE(IKOT_AU_SESSIONPORT, .iko_op_movable_send = true,
+                   .iko_op_stable = true,
+                   .iko_op_no_senders = audit_session_no_senders);
 
 #endif /* CONFIG_AUDIT */

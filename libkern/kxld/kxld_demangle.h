@@ -46,7 +46,7 @@
  *                      demangled string.  Otherwise, returns the input string.
  *
  */
-const char * kxld_demangle(const char *str, char **buffer, size_t *length)
-__attribute__((nonnull(1), visibility("hidden")));
+const char *kxld_demangle(const char *str, char **buffer, size_t *length)
+    __attribute__((nonnull(1), visibility("hidden")));
 
 #endif /* !_KXLD_DEMANGLE_H_ */

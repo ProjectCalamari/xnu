@@ -14,9 +14,9 @@
    language expecting constant expressions) to test if bounds attributes
    exist. */
 #if defined(__has_feature) && __has_feature(bounds_attributes)
-  #define __has_ptrcheck 1
+#define __has_ptrcheck 1
 #else
-  #define __has_ptrcheck 0
+#define __has_ptrcheck 0
 #endif
 
 #if __has_ptrcheck
@@ -126,26 +126,25 @@
 /* In project files, the ABI is assumed to be single by default. In headers
    included from libraries or the SDK, the ABI is assumed to be unsafe_indexable
    by default. */
-#define __ptrcheck_abi_assume_single() \
-  _Pragma("clang abi_ptr_attr set(single)")
+#define __ptrcheck_abi_assume_single() _Pragma("clang abi_ptr_attr set(single)")
 
-#define __ptrcheck_abi_assume_indexable() \
+#define __ptrcheck_abi_assume_indexable()                                      \
   _Pragma("clang abi_ptr_attr set(indexable)")
 
-#define __ptrcheck_abi_assume_bidi_indexable() \
+#define __ptrcheck_abi_assume_bidi_indexable()                                 \
   _Pragma("clang abi_ptr_attr set(bidi_indexable)")
 
-#define __ptrcheck_abi_assume_unsafe_indexable() \
+#define __ptrcheck_abi_assume_unsafe_indexable()                               \
   _Pragma("clang abi_ptr_attr set(unsafe_indexable)")
 
 /* Create a __bidi_indexable pointer of a given pointer type (T), starting at
    address P, pointing to S bytes of valid memory. T must be a pointer type. */
-#define __unsafe_forge_bidi_indexable(T, P, S) \
+#define __unsafe_forge_bidi_indexable(T, P, S)                                 \
   ((T __bidi_indexable)__builtin_unsafe_forge_bidi_indexable((P), (S)))
 
 /* Create a __single pointer of a given type (T), starting at address P. T must
    be a pointer type. */
-#define __unsafe_forge_single(T, P) \
+#define __unsafe_forge_single(T, P)                                            \
   ((T __single)__builtin_unsafe_forge_single((P)))
 
 /* Create a __terminated_by pointer of a given pointer type (T), starting at
@@ -155,7 +154,8 @@
 
 /* Create a __terminated_by pointer of a given pointer type (T), starting at
    address P, terminated by 0. T must be a pointer type. */
-#define __unsafe_forge_null_terminated(T, P) __unsafe_forge_terminated_by(T, P, 0)
+#define __unsafe_forge_null_terminated(T, P)                                   \
+  __unsafe_forge_terminated_by(T, P, 0)
 
 /* Create a wide pointer with the same lower bound and upper bounds as X, but
    with a pointer component also equal to the lower bound. */
@@ -179,21 +179,20 @@
    the bounds of the __indexable pointer. This makes the operation unsafe, since
    the terminator can be erased, and thus using P might result in out-of-bounds
    access. */
-#define __terminated_by_to_indexable(P) \
-  __builtin_terminated_by_to_indexable(P)
-#define __unsafe_terminated_by_to_indexable(P) \
+#define __terminated_by_to_indexable(P) __builtin_terminated_by_to_indexable(P)
+#define __unsafe_terminated_by_to_indexable(P)                                 \
   __builtin_unsafe_terminated_by_to_indexable(P)
 
-#define __null_terminated_to_indexable(P)            \
-  ({                                                 \
-    __typeof__(*(P)) *__null_terminated __ptr = (P); \
-    __terminated_by_to_indexable(__ptr);             \
+#define __null_terminated_to_indexable(P)                                      \
+  ({                                                                           \
+    __typeof__(*(P)) *__null_terminated __ptr = (P);                           \
+    __terminated_by_to_indexable(__ptr);                                       \
   })
 
-#define __unsafe_null_terminated_to_indexable(P)     \
-  ({                                                 \
-    __typeof__(*(P)) *__null_terminated __ptr = (P); \
-    __unsafe_terminated_by_to_indexable(__ptr);      \
+#define __unsafe_null_terminated_to_indexable(P)                               \
+  ({                                                                           \
+    __typeof__(*(P)) *__null_terminated __ptr = (P);                           \
+    __unsafe_terminated_by_to_indexable(__ptr);                                \
   })
 
 /* __unsafe_terminated_by_from_indexable(T, PTR [, PTR_TO_TERM]) converts an
@@ -217,27 +216,26 @@
    For convenience, the
    __unsafe_null_terminated_from_indexable(PTR [, PTR_TO_TERM]) macro is
    provided, which assumes that the terminator is 0. */
-#define __unsafe_terminated_by_from_indexable(T, ...) \
+#define __unsafe_terminated_by_from_indexable(T, ...)                          \
   __builtin_unsafe_terminated_by_from_indexable((T), __VA_ARGS__)
-#define __unsafe_null_terminated_from_indexable(...) \
+#define __unsafe_null_terminated_from_indexable(...)                           \
   __builtin_unsafe_terminated_by_from_indexable(0, __VA_ARGS__)
 
 /* Instruct the compiler to disregard the bounds of an array used in a function
    prototype and allow the decayed pointer to use __counted_by. This is a niche
    capability that is only useful in limited patterns (the way that `mig` uses
    arrays being one of them). */
-#define __array_decay_dicards_count_in_parameters \
+#define __array_decay_dicards_count_in_parameters                              \
   __attribute__((__decay_discards_count_in_parameters__))
 
-/* An attribute to indicate a variable to be effectively constant (or data const)
-   that it is allocated in a const section so cannot be modified after an early
-   stage of bootup, for example. Adding this attribute allows a global variable
-   to be used in __counted_by attribute of struct fields, function parameter, or
-   local variable just like actual constants.
-   Note that ensuring the value never changes once it is used is the user's
-   responsibility. One way to achieve this is the xnu model, in which certain
-   variables are placed in a segment that is remapped as read-only after
-   initialization. */
+/* An attribute to indicate a variable to be effectively constant (or data
+   const) that it is allocated in a const section so cannot be modified after an
+   early stage of bootup, for example. Adding this attribute allows a global
+   variable to be used in __counted_by attribute of struct fields, function
+   parameter, or local variable just like actual constants. Note that ensuring
+   the value never changes once it is used is the user's responsibility. One way
+   to achieve this is the xnu model, in which certain variables are placed in a
+   segment that is remapped as read-only after initialization. */
 #define __unsafe_late_const __attribute__((__unsafe_late_const__))
 
 /* An attribute to indicate that a function is unavailable when -fbounds-safety
@@ -263,7 +261,7 @@
    void* __ptrcheck_unavailable_r(safe_api) some_unsafe_api(void*);
  */
 #define __ptrcheck_unavailable_r(REPLACEMENT)                                  \
-  __attribute__((__unavailable__(                                                  \
+  __attribute__((__unavailable__(                                              \
       "unavailable with -fbounds-safety. Use " #REPLACEMENT " instead.")))
 
 #else

@@ -60,21 +60,21 @@
 #if CONFIG_NEXUS_KERNEL_PIPE
 
 struct nexus_kpipe_adapter {
-	/*
-	 * This is an overlay structure on nexus_adapter;
-	 * make sure it contains 'up' as the first member.
-	 */
-	struct nexus_adapter kna_up;
+  /*
+   * This is an overlay structure on nexus_adapter;
+   * make sure it contains 'up' as the first member.
+   */
+  struct nexus_adapter kna_up;
 };
 
-#define NEXUS_PROVIDER_KERNEL_PIPE      "com.apple.nexus.kpipe"
+#define NEXUS_PROVIDER_KERNEL_PIPE "com.apple.nexus.kpipe"
 
 extern struct nxdom nx_kpipe_dom_s;
 
 __BEGIN_DECLS
 extern int nx_kpipe_na_find(struct kern_nexus *, struct kern_channel *,
-    struct chreq *, struct nxbind *, struct proc *, struct nexus_adapter **,
-    boolean_t);
+                            struct chreq *, struct nxbind *, struct proc *,
+                            struct nexus_adapter **, boolean_t);
 __END_DECLS
 
 #if (DEVELOPMENT || DEBUG)

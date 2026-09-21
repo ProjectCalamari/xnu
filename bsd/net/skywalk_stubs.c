@@ -30,16 +30,13 @@
 
 #if !SKYWALK
 
-#define STUB(_name)                                             \
-__attribute__((noreturn))                                       \
-int _name(void);                                                \
-int                                                             \
-_name(void)                                                     \
-{                                                               \
-	panic("stub called in a config with no SKYWALK");       \
-	/* NOTREACHED */                                        \
-	__builtin_unreachable();                                \
-}
+#define STUB(_name)                                                            \
+  __attribute__((noreturn)) int _name(void);                                   \
+  int _name(void) {                                                            \
+    panic("stub called in a config with no SKYWALK");                          \
+    /* NOTREACHED */                                                           \
+    __builtin_unreachable();                                                   \
+  }
 
 STUB(kern_buflet_get_data_address);
 STUB(kern_buflet_get_data_offset);

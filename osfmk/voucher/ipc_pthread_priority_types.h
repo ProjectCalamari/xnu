@@ -29,14 +29,17 @@
 #ifndef _VOUCHER_IPC_PTHREAD_PRIORITY_TYPES_H_
 #define _VOUCHER_IPC_PTHREAD_PRIORITY_TYPES_H_
 
-#include <stdint.h>
 #include <mach/mach_types.h>
+#include <stdint.h>
 
-#define MACH_VOUCHER_ATTR_PTHPRIORITY_NULL              ((mach_voucher_attr_recipe_command_t)701)
-#define MACH_VOUCHER_ATTR_PTHPRIORITY_CREATE            ((mach_voucher_attr_recipe_command_t)710)
+#define MACH_VOUCHER_ATTR_PTHPRIORITY_NULL                                     \
+  ((mach_voucher_attr_recipe_command_t)701)
+#define MACH_VOUCHER_ATTR_PTHPRIORITY_CREATE                                   \
+  ((mach_voucher_attr_recipe_command_t)710)
 
 typedef uint32_t ipc_pthread_priority_value_t;
 
-#define MACH_VOUCHER_PTHPRIORITY_CONTENT_SIZE (sizeof(ipc_pthread_priority_value_t))
+#define MACH_VOUCHER_PTHPRIORITY_CONTENT_SIZE                                  \
+  (sizeof(ipc_pthread_priority_value_t))
 
 #endif /* _VOUCHER_IPC_PTHREAD_PRIORITY_TYPES_H_ */

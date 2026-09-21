@@ -44,19 +44,19 @@ uint32_t machine_read_ccsidr(void);
 
 // CSSELR_EL1.Level bits position 0b1110.
 typedef enum {
-	CSSELR_L1 = 0,
-	CSSELR_L2 = 1 << 1,
-	CSSELR_L3 = 2 << 1,
-	CSSELR_L4 = 3 << 1,
-	CSSELR_L5 = 4 << 1,
-	CSSELR_L6 = 5 << 1,
-	CSSELR_L7 = 6 << 1,
+  CSSELR_L1 = 0,
+  CSSELR_L2 = 1 << 1,
+  CSSELR_L3 = 2 << 1,
+  CSSELR_L4 = 3 << 1,
+  CSSELR_L5 = 4 << 1,
+  CSSELR_L6 = 5 << 1,
+  CSSELR_L7 = 6 << 1,
 } csselr_cache_level;
 
 // CSSELR_EL1.InD bit position 0b1.
 typedef enum {
-	CSSELR_DATA_UNIFIED = 0x0,
-	CSSELR_INSTR = 0x1
+  CSSELR_DATA_UNIFIED = 0x0,
+  CSSELR_INSTR = 0x1
 } csselr_cache_type;
 
 void machine_write_csselr(csselr_cache_level level, csselr_cache_type type);

@@ -26,7 +26,6 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-
 #ifndef _SYSTEM_DOMAIN_PRIVATE_H_
 #define _SYSTEM_DOMAIN_PRIVATE_H_
 
@@ -36,11 +35,11 @@
 #include <sys/sysctl.h>
 #endif /* KERNEL_PRIVATE */
 
-struct  xsystmgen {
-	u_int32_t       xg_len; /* length of this structure */
-	u_int64_t       xg_count;       /* number of PCBs at this time */
-	u_int64_t       xg_gen; /* generation count at this time */
-	u_int64_t       xg_sogen;       /* current socket generation count */
+struct xsystmgen {
+  u_int32_t xg_len;   /* length of this structure */
+  u_int64_t xg_count; /* number of PCBs at this time */
+  u_int64_t xg_gen;   /* generation count at this time */
+  u_int64_t xg_sogen; /* current socket generation count */
 };
 
 #ifdef KERNEL_PRIVATE

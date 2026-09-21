@@ -50,10 +50,9 @@
  *
  */
 
-#include <stdio.h>
-#include <fcntl.h>      /* open */
 #include "config.h"
-
+#include <fcntl.h> /* open */
+#include <stdio.h>
 
 int openp(const char *fpath, char *file, char *complete, int flags, int mode);
 
@@ -61,37 +60,29 @@ static int flgs, mod, value;
 static const char *ftyp;
 static FILE *fvalue;
 
-static int
-func(char *fnam)
-{
-	value = open(fnam, flgs, mod);
-	return value < 0;
+static int func(char *fnam) {
+  value = open(fnam, flgs, mod);
+  return value < 0;
 }
 
-static int
-ffunc(char *fnam)
-{
-	fvalue = fopen(fnam, ftyp);
-	return fvalue == 0;
+static int ffunc(char *fnam) {
+  fvalue = fopen(fnam, ftyp);
+  return fvalue == 0;
 }
 
-int
-openp(const char *fpath, char *file, char *complete, int flags, int mode)
-{
-	flgs = flags;
-	mod = mode;
-	if (searchp(fpath, file, complete, func) < 0) {
-		return -1;
-	}
-	return value;
+int openp(const char *fpath, char *file, char *complete, int flags, int mode) {
+  flgs = flags;
+  mod = mode;
+  if (searchp(fpath, file, complete, func) < 0) {
+    return -1;
+  }
+  return value;
 }
 
-FILE *
-fopenp(const char *fpath, char *file, char *complete, const char *ftype)
-{
-	ftyp = ftype;
-	if (searchp(fpath, file, complete, ffunc) < 0) {
-		return 0;
-	}
-	return fvalue;
+FILE *fopenp(const char *fpath, char *file, char *complete, const char *ftype) {
+  ftyp = ftype;
+  if (searchp(fpath, file, complete, ffunc) < 0) {
+    return 0;
+  }
+  return fvalue;
 }

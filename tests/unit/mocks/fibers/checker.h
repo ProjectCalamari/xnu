@@ -31,19 +31,24 @@
 #include "fibers.h"
 
 /*
- * The fibers data racer checker is a watchpoint-based checker inspired by DataCollider: https://www.usenix.org/legacy/event/osdi10/tech/full_papers/Erickson.pdf
- * Unlike the original paper, here everything is implemented in software and called from the load/store instrumentation in mock_thread.c
- * Check to SANCOV_LOAD_STORE_DATA_CHECKER macro to see how the checker API is used.
+ * The fibers data racer checker is a watchpoint-based checker inspired by
+ * DataCollider:
+ * https://www.usenix.org/legacy/event/osdi10/tech/full_papers/Erickson.pdf
+ * Unlike the original paper, here everything is implemented in software and
+ * called from the load/store instrumentation in mock_thread.c Check to
+ * SANCOV_LOAD_STORE_DATA_CHECKER macro to see how the checker API is used.
  */
 
-enum access_type {
-	ACCESS_TYPE_LOAD = 0,
-	ACCESS_TYPE_STORE = 1
-};
+enum access_type { ACCESS_TYPE_LOAD = 0, ACCESS_TYPE_STORE = 1 };
 
-// check for concurrent accesses on the same region and, if no data race is detected, install a watchpoint so that other fibers can perform the same check
-extern bool check_and_set_watchpoint(void *pc, uintptr_t address, size_t size, enum access_type access_type);
+// check for concurrent accesses on the same region and, if no data race is
+// detected, install a watchpoint so that other fibers can perform the same
+// check
+extern bool check_and_set_watchpoint(void *pc, uintptr_t address, size_t size,
+                                     enum access_type access_type);
 // remove the watchpoint after the memory access is completed
-extern void post_check_and_remove_watchpoint(uintptr_t address, size_t size, enum access_type access_type);
+extern void post_check_and_remove_watchpoint(uintptr_t address, size_t size,
+                                             enum access_type access_type);
 // report a data race
-extern void report_value_race(uintptr_t current_addr, size_t current_size, enum access_type current_type);
+extern void report_value_race(uintptr_t current_addr, size_t current_size,
+                              enum access_type current_type);

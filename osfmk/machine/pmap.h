@@ -28,9 +28,9 @@
 #ifndef _MACHINE_PMAP_H
 #define _MACHINE_PMAP_H
 
-#if defined (__x86_64__) || defined (__i386__)
+#if defined(__x86_64__) || defined(__i386__)
 #include "i386/pmap.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/pmap.h"
 #else
 #error architecture not supported

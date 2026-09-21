@@ -37,99 +37,98 @@
 #include "kern/kern_types.h"
 #include <sys/kernel_types.h>
 
-
-#include <stddef.h>
 #include <ptrauth.h>
+#include <stddef.h>
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <net/dlil.h>
+#include <net/droptap.h>
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <net/if_dl.h>
+#include <net/if_var.h>
+#include <net/iptap.h>
+#include <net/nwk_wq.h>
+#include <net/pktap.h>
+#include <net/route.h>
+#include <sys/domain.h>
+#include <sys/kdebug.h>
+#include <sys/kern_event.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
-#include <sys/socket.h>
-#include <sys/domain.h>
-#include <sys/user.h>
-#include <sys/random.h>
-#include <sys/socketvar.h>
-#include <net/if_dl.h>
-#include <net/if.h>
-#include <net/route.h>
-#include <net/if_var.h>
-#include <net/dlil.h>
-#include <net/if_arp.h>
-#include <net/iptap.h>
-#include <net/pktap.h>
-#include <net/droptap.h>
-#include <net/nwk_wq.h>
-#include <sys/kern_event.h>
-#include <sys/kdebug.h>
 #include <sys/mcache.h>
-#include <sys/syslog.h>
-#include <sys/protosw.h>
+#include <sys/param.h>
 #include <sys/priv.h>
+#include <sys/protosw.h>
+#include <sys/random.h>
+#include <sys/socket.h>
+#include <sys/socketvar.h>
+#include <sys/syslog.h>
+#include <sys/systm.h>
+#include <sys/user.h>
 
 #include <kern/assert.h>
+#include <kern/kalloc.h>
+#include <kern/locks.h>
+#include <kern/sched_prim.h>
 #include <kern/task.h>
 #include <kern/thread.h>
-#include <kern/sched_prim.h>
-#include <kern/locks.h>
-#include <kern/kalloc.h>
 #include <kern/zalloc.h>
 
-#include <net/kpi_protocol.h>
-#include <net/kpi_interface.h>
-#include <net/if_types.h>
-#include <net/if_ipsec.h>
-#include <net/if_llreach.h>
-#include <net/if_utun.h>
-#include <net/kpi_interfacefilter.h>
 #include <net/classq/classq.h>
 #include <net/classq/classq_sfb.h>
 #include <net/flowhash.h>
+#include <net/if_ipsec.h>
+#include <net/if_llreach.h>
+#include <net/if_types.h>
+#include <net/if_utun.h>
+#include <net/kpi_interface.h>
+#include <net/kpi_interfacefilter.h>
+#include <net/kpi_protocol.h>
 #include <net/ntstat.h>
 
-#include <net/net_api_stats.h>
 #include <net/if_ports_used.h>
 #include <net/if_vlan_var.h>
+#include <net/net_api_stats.h>
 #include <netinet/in.h>
 #if INET
-#include <netinet/in_var.h>
+#include <netinet/icmp_var.h>
+#include <netinet/if_ether.h>
 #include <netinet/igmp_var.h>
+#include <netinet/in_pcb.h>
+#include <netinet/in_tclass.h>
+#include <netinet/in_var.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
 #include <netinet/ip_var.h>
 #include <netinet/tcp.h>
 #include <netinet/tcp_var.h>
 #include <netinet/udp.h>
 #include <netinet/udp_var.h>
-#include <netinet/if_ether.h>
-#include <netinet/in_pcb.h>
-#include <netinet/in_tclass.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
-#include <netinet/icmp_var.h>
 #endif /* INET */
 
-#include <net/nat464_utils.h>
-#include <netinet6/in6_var.h>
-#include <netinet6/nd6.h>
-#include <netinet6/mld6_var.h>
-#include <netinet6/scope6_var.h>
-#include <netinet/ip6.h>
-#include <netinet/icmp6.h>
-#include <net/pf_pbuf.h>
 #include <libkern/OSAtomic.h>
 #include <libkern/tree.h>
+#include <net/nat464_utils.h>
+#include <net/pf_pbuf.h>
+#include <netinet/icmp6.h>
+#include <netinet/ip6.h>
+#include <netinet6/in6_var.h>
+#include <netinet6/mld6_var.h>
+#include <netinet6/nd6.h>
+#include <netinet6/scope6_var.h>
 
 #include <dev/random/randomdev.h>
 #include <machine/machine_routines.h>
 
-#include <mach/thread_act.h>
 #include <mach/sdt.h>
+#include <mach/thread_act.h>
 
 #if CONFIG_MACF
-#include <sys/kauth.h>
-#include <security/mac_framework.h>
 #include <net/ethernet.h>
 #include <net/firewire.h>
+#include <security/mac_framework.h>
+#include <sys/kauth.h>
 #endif
 
 #if PF
@@ -143,9 +142,9 @@
 #endif /* NECP */
 
 #if SKYWALK
-#include <skywalk/packet/packet_queue.h>
-#include <skywalk/nexus/netif/nx_netif.h>
 #include <skywalk/nexus/flowswitch/nx_flowswitch.h>
+#include <skywalk/nexus/netif/nx_netif.h>
+#include <skywalk/packet/packet_queue.h>
 #endif /* SKYWALK */
 
 #include <net/sockaddr_utils.h>
@@ -156,34 +155,29 @@
 #error __FILE__ ## " can only be privately included"
 #endif /* BSD_KERNEL_PRIVATE */
 
+#define DBG_LAYER_BEG DLILDBG_CODE(DBG_DLIL_STATIC, 0)
+#define DBG_LAYER_END DLILDBG_CODE(DBG_DLIL_STATIC, 2)
+#define DBG_FNC_DLIL_INPUT DLILDBG_CODE(DBG_DLIL_STATIC, (1 << 8))
+#define DBG_FNC_DLIL_OUTPUT DLILDBG_CODE(DBG_DLIL_STATIC, (2 << 8))
+#define DBG_FNC_DLIL_IFOUT DLILDBG_CODE(DBG_DLIL_STATIC, (3 << 8))
 
-#define DBG_LAYER_BEG           DLILDBG_CODE(DBG_DLIL_STATIC, 0)
-#define DBG_LAYER_END           DLILDBG_CODE(DBG_DLIL_STATIC, 2)
-#define DBG_FNC_DLIL_INPUT      DLILDBG_CODE(DBG_DLIL_STATIC, (1 << 8))
-#define DBG_FNC_DLIL_OUTPUT     DLILDBG_CODE(DBG_DLIL_STATIC, (2 << 8))
-#define DBG_FNC_DLIL_IFOUT      DLILDBG_CODE(DBG_DLIL_STATIC, (3 << 8))
+#define IF_DATA_REQUIRE_ALIGNED_64(f)                                          \
+  static_assert(!(offsetof(struct if_data_internal, f) % sizeof(u_int64_t)))
 
-#define IF_DATA_REQUIRE_ALIGNED_64(f)   \
-	static_assert(!(offsetof(struct if_data_internal, f) % sizeof(u_int64_t)))
+#define IFNET_IF_DATA_REQUIRE_ALIGNED_64(f)                                    \
+  static_assert(!(offsetof(struct ifnet, if_data.f) % sizeof(u_int64_t)))
 
-#define IFNET_IF_DATA_REQUIRE_ALIGNED_64(f)     \
-	static_assert(!(offsetof(struct ifnet, if_data.f) % sizeof(u_int64_t)))
-
-enum {
-	kProtoKPI_v1    = 1,
-	kProtoKPI_v2    = 2
-};
+enum { kProtoKPI_v1 = 1, kProtoKPI_v2 = 2 };
 
 #if 1
-#define DLIL_PRINTF     printf
+#define DLIL_PRINTF printf
 #else
-#define DLIL_PRINTF     kprintf
+#define DLIL_PRINTF kprintf
 #endif
-
 
 extern unsigned int net_rxpoll;
 extern unsigned int net_affinity;
-extern unsigned int net_async;     /* 0: synchronous, 1: asynchronous */
+extern unsigned int net_async; /* 0: synchronous, 1: asynchronous */
 
 #if SKYWALK
 /*
@@ -195,9 +189,8 @@ extern uint32_t if_enable_fsw_transport_netagent;
 extern uint32_t if_netif_all;
 #endif /* SKYWALK */
 
-#define DLIL_SDLDATALEN \
-	(DLIL_SDLMAXLEN - offsetof(struct sockaddr_dl, sdl_data[0]))
-
+#define DLIL_SDLDATALEN                                                        \
+  (DLIL_SDLMAXLEN - offsetof(struct sockaddr_dl, sdl_data[0]))
 
 /*
  * In the common case, the LL address is stored in the
@@ -205,9 +198,9 @@ extern uint32_t if_netif_all;
  * for LL addresses that do not exceed the `DLIL_SDLMAXLEN' constant.
  */
 struct dl_if_lladdr_std {
-	struct ifaddr   ifa;
-	u_int8_t        addr_sdl_bytes[DLIL_SDLMAXLEN];
-	u_int8_t        mask_sdl_bytes[DLIL_SDLMAXLEN];
+  struct ifaddr ifa;
+  u_int8_t addr_sdl_bytes[DLIL_SDLMAXLEN];
+  u_int8_t mask_sdl_bytes[DLIL_SDLMAXLEN];
 };
 
 /*
@@ -216,58 +209,56 @@ struct dl_if_lladdr_std {
  * we allocate the storage in the permanent arena, using this memory layout.
  */
 struct dl_if_lladdr_xtra_space {
-	struct ifaddr   ifa;
-	u_int8_t        addr_sdl_bytes[SOCK_MAXADDRLEN];
-	u_int8_t        mask_sdl_bytes[SOCK_MAXADDRLEN];
+  struct ifaddr ifa;
+  u_int8_t addr_sdl_bytes[SOCK_MAXADDRLEN];
+  u_int8_t mask_sdl_bytes[SOCK_MAXADDRLEN];
 };
 
 struct dlil_ifnet {
-	struct ifnet    dl_if;                  /* public ifnet */
-	/*
-	 * DLIL private fields, protected by dl_if_lock
-	 */
-	decl_lck_mtx_data(, dl_if_lock);
-	TAILQ_ENTRY(dlil_ifnet) dl_if_link;     /* dlil_ifnet link */
-	u_int32_t dl_if_flags;                  /* flags (below) */
-	u_int32_t dl_if_refcnt;                 /* refcnt */
-	void    *dl_if_uniqueid __sized_by_or_null(dl_if_uniqueid_len);                /* unique interface id */
-	size_t  dl_if_uniqueid_len;             /* length of the unique id */
-	char    dl_if_namestorage[IFNAMSIZ];    /* interface name storage */
-	char    dl_if_xnamestorage[IFXNAMSIZ];  /* external name storage */
-	struct dl_if_lladdr_std dl_if_lladdr;   /* link-level address storage*/
-	u_int8_t dl_if_descstorage[IF_DESCSIZE]; /* desc storage */
-	u_int8_t dl_if_permanent_ether[ETHER_ADDR_LEN]; /* permanent address */
-	u_int8_t dl_if_permanent_ether_is_set;
-	u_int8_t dl_if_unused;
-	struct dlil_threading_info dl_if_inpstorage; /* input thread storage */
-	ctrace_t        dl_if_attach;           /* attach PC stacktrace */
-	ctrace_t        dl_if_detach;           /* detach PC stacktrace */
+  struct ifnet dl_if; /* public ifnet */
+  /*
+   * DLIL private fields, protected by dl_if_lock
+   */
+  decl_lck_mtx_data(, dl_if_lock);
+  TAILQ_ENTRY(dlil_ifnet) dl_if_link; /* dlil_ifnet link */
+  u_int32_t dl_if_flags;              /* flags (below) */
+  u_int32_t dl_if_refcnt;             /* refcnt */
+  void *dl_if_uniqueid
+      __sized_by_or_null(dl_if_uniqueid_len); /* unique interface id */
+  size_t dl_if_uniqueid_len;                  /* length of the unique id */
+  char dl_if_namestorage[IFNAMSIZ];           /* interface name storage */
+  char dl_if_xnamestorage[IFXNAMSIZ];         /* external name storage */
+  struct dl_if_lladdr_std dl_if_lladdr;       /* link-level address storage*/
+  u_int8_t dl_if_descstorage[IF_DESCSIZE];    /* desc storage */
+  u_int8_t dl_if_permanent_ether[ETHER_ADDR_LEN]; /* permanent address */
+  u_int8_t dl_if_permanent_ether_is_set;
+  u_int8_t dl_if_unused;
+  struct dlil_threading_info dl_if_inpstorage; /* input thread storage */
+  ctrace_t dl_if_attach;                       /* attach PC stacktrace */
+  ctrace_t dl_if_detach;                       /* detach PC stacktrace */
 };
-
 
 /* Values for dl_if_flags (private to DLIL) */
-#define DLIF_INUSE      0x1     /* DLIL ifnet recycler, ifnet in use */
-#define DLIF_REUSE      0x2     /* DLIL ifnet recycles, ifnet is not new */
+#define DLIF_INUSE 0x1 /* DLIL ifnet recycler, ifnet in use */
+#define DLIF_REUSE 0x2 /* DLIL ifnet recycles, ifnet is not new */
 
-
-#define DLIL_TO_IFP(s)  (&s->dl_if)
-#define IFP_TO_DLIL(s)  ((struct dlil_ifnet *)s)
+#define DLIL_TO_IFP(s) (&s->dl_if)
+#define IFP_TO_DLIL(s) ((struct dlil_ifnet *)s)
 
 struct ifnet_filter {
-	TAILQ_ENTRY(ifnet_filter)       filt_next;
-	u_int32_t                       filt_skip;
-	u_int32_t                       filt_flags;
-	ifnet_t                         filt_ifp;
-	const char                      *filt_name;
-	void                            *filt_cookie;
-	protocol_family_t               filt_protocol;
-	iff_input_func                  filt_input;
-	iff_output_func                 filt_output;
-	iff_event_func                  filt_event;
-	iff_ioctl_func                  filt_ioctl;
-	iff_detached_func               filt_detached;
+  TAILQ_ENTRY(ifnet_filter) filt_next;
+  u_int32_t filt_skip;
+  u_int32_t filt_flags;
+  ifnet_t filt_ifp;
+  const char *filt_name;
+  void *filt_cookie;
+  protocol_family_t filt_protocol;
+  iff_input_func filt_input;
+  iff_output_func filt_output;
+  iff_event_func filt_event;
+  iff_ioctl_func filt_ioctl;
+  iff_detached_func filt_detached;
 };
-
 
 /* Mbuf queue used for freeing the excessive mbufs */
 typedef MBUFQ_HEAD(dlil_freeq) dlil_freeq_t;
@@ -282,7 +273,7 @@ struct proto_input_entry;
  * Utility routines
  */
 extern kern_return_t dlil_affinity_set(struct thread *, u_int32_t);
-extern boolean_t packet_has_vlan_tag(struct mbuf * m);
+extern boolean_t packet_has_vlan_tag(struct mbuf *m);
 
 /*
  * Monitor routines.
@@ -297,19 +288,19 @@ extern void if_flt_monitor_leave(struct ifnet *);
  */
 extern void dlil_allocation_zones_init(void);
 
-extern struct dlil_ifnet * dlif_ifnet_alloc(void);
+extern struct dlil_ifnet *dlif_ifnet_alloc(void);
 extern void dlif_ifnet_free(struct dlil_ifnet *);
 
-extern struct ifnet_filter * dlif_filt_alloc(void);
+extern struct ifnet_filter *dlif_filt_alloc(void);
 extern void dlif_filt_free(struct ifnet_filter *);
 
-extern struct if_proto * dlif_proto_alloc(void);
-extern void dlif_proto_free(struct if_proto * );
+extern struct if_proto *dlif_proto_alloc(void);
+extern void dlif_proto_free(struct if_proto *);
 
-extern struct tcpstat_local * dlif_tcpstat_alloc(void);
+extern struct tcpstat_local *dlif_tcpstat_alloc(void);
 extern void dlif_tcpstat_free(struct tcpstat_local *);
 
-extern struct udpstat_local * dlif_udpstat_alloc(void);
+extern struct udpstat_local *dlif_udpstat_alloc(void);
 extern void dlif_udpstat_free(struct udpstat_local *);
 
 extern void if_proto_ref(struct if_proto *);
@@ -325,8 +316,8 @@ extern void if_proto_free(struct if_proto *);
  *
  * Caller must hold ifnet lock as writer.
  */
-extern struct ifaddr * dlil_alloc_lladdr(struct ifnet *ifp, const struct sockaddr_dl *ll_addr);
-
+extern struct ifaddr *dlil_alloc_lladdr(struct ifnet *ifp,
+                                        const struct sockaddr_dl *ll_addr);
 
 /*
  * dlil_ifp_protolist
@@ -337,11 +328,12 @@ extern struct ifaddr * dlil_alloc_lladdr(struct ifnet *ifp, const struct sockadd
  * Note:
  * - caller must already be holding ifnet lock.
  */
-extern u_int32_t dlil_ifp_protolist(struct ifnet *ifp, protocol_family_t *list __counted_by(list_count),
-    u_int32_t list_count);
+extern u_int32_t
+dlil_ifp_protolist(struct ifnet *ifp,
+                   protocol_family_t *list __counted_by(list_count),
+                   u_int32_t list_count);
 
 extern uint64_t if_creation_generation_count;
-
 
 /*
  * Interface management functions
@@ -354,16 +346,15 @@ extern void _dlil_if_release(ifnet_t ifp, bool clear_in_use);
  * Stats management
  */
 void dlil_input_stats_add(const struct ifnet_stat_increment_param *,
-    struct dlil_threading_info *, struct ifnet *, boolean_t);
+                          struct dlil_threading_info *, struct ifnet *,
+                          boolean_t);
 
-boolean_t dlil_input_stats_sync(struct ifnet *,
-    struct dlil_threading_info *);
+boolean_t dlil_input_stats_sync(struct ifnet *, struct dlil_threading_info *);
 
 /*
  * Thread management
  */
 extern uint32_t dlil_pending_thread_cnt;
-
 
 /* DLIL data threshold thread call */
 extern void dlil_dt_tcall_fn(thread_call_param_t, thread_call_param_t);
@@ -371,7 +362,7 @@ extern void dlil_dt_tcall_fn(thread_call_param_t, thread_call_param_t);
 extern void dlil_clean_threading_info(struct dlil_threading_info *inp);
 
 int dlil_create_input_thread(ifnet_t, struct dlil_threading_info *,
-    thread_continue_t *);
+                             thread_continue_t *);
 
 void dlil_terminate_input_thread(struct dlil_threading_info *);
 
@@ -381,7 +372,8 @@ boolean_t dlil_is_native_netif_nexus(ifnet_t ifp);
 void dlil_incr_pending_thread_count(void);
 void dlil_decr_pending_thread_count(void);
 
-struct if_proto * find_attached_proto(struct ifnet *ifp, u_int32_t protocol_family);
+struct if_proto *find_attached_proto(struct ifnet *ifp,
+                                     u_int32_t protocol_family);
 
 int dlil_is_clat_needed(protocol_family_t proto_family, mbuf_t m);
 errno_t dlil_clat46(ifnet_t ifp, protocol_family_t *proto_family, mbuf_t *m);
@@ -442,6 +434,5 @@ extern void ifnet_head_assert_exclusive(void);
  * mcasts
  */
 errno_t if_mcasts_update_async(struct ifnet *);
-
 
 #endif /* DLIL_VAR_PRIVATE_H */

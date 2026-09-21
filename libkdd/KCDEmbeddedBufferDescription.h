@@ -27,8 +27,8 @@
  */
 
 #include "kdd.h"
-#include <kcdata.h>
 #import <Foundation/Foundation.h>
+#include <kcdata.h>
 
 @interface KCDEmbeddedBufferDescription : KCDataType
 @end

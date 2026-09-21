@@ -1,12 +1,13 @@
 /* Copyright (c) (2021-2023) Apple Inc. All rights reserved.
  *
- * corecrypto is licensed under Apple Inc.’s Internal Use License Agreement (which
- * is contained in the License.txt file distributed with corecrypto) and only to
- * people who accept that license. IMPORTANT:  Any license rights granted to you by
- * Apple Inc. (if any) are limited to internal use within your organization only on
- * devices and computers you own or control, for the sole purpose of verifying the
- * security characteristics and correct functioning of the Apple Software.  You may
- * not, directly or indirectly, redistribute the Apple Software or any portions thereof.
+ * corecrypto is licensed under Apple Inc.’s Internal Use License Agreement
+ * (which is contained in the License.txt file distributed with corecrypto) and
+ * only to people who accept that license. IMPORTANT:  Any license rights
+ * granted to you by Apple Inc. (if any) are limited to internal use within your
+ * organization only on devices and computers you own or control, for the sole
+ * purpose of verifying the security characteristics and correct functioning of
+ * the Apple Software.  You may not, directly or indirectly, redistribute the
+ * Apple Software or any portions thereof.
  */
 
 #ifndef _CORECRYPTO_CC_LOCK_H_
@@ -38,8 +39,10 @@ int cc_lock_init(cc_lock_ctx_t *ctx, const char *group_name);
 #define CC_LOCK_IMPL_WIN 0
 #define CC_LOCK_IMPL_KERNEL 0
 #define CC_LOCK_IMPL_SGX 0
-#elif CC_LINUX && CC_KERNEL && CC_DARWIN && CORECRYPTO_SIMULATE_POSIX_ENVIRONMENT
-// this is only to allow linux development on macOS. It is not useful in practice.
+#elif CC_LINUX && CC_KERNEL && CC_DARWIN &&                                    \
+    CORECRYPTO_SIMULATE_POSIX_ENVIRONMENT
+// this is only to allow linux development on macOS. It is not useful in
+// practice.
 #define CC_LOCK_IMPL_NULL 0
 #define CC_LOCK_IMPL_POSIX 0
 #define CC_LOCK_IMPL_USER 0
@@ -75,7 +78,8 @@ int cc_lock_init(cc_lock_ctx_t *ctx, const char *group_name);
 #define CC_LOCK_IMPL_WIN 0
 #define CC_LOCK_IMPL_KERNEL 0
 #define CC_LOCK_IMPL_SGX 1
-#elif CC_LINUX || !CC_INTERNAL_SDK // for systems that support pthread, such as Linux
+#elif CC_LINUX ||                                                              \
+    !CC_INTERNAL_SDK // for systems that support pthread, such as Linux
 #define CC_LOCK_IMPL_NULL 0
 #define CC_LOCK_IMPL_POSIX 1
 #define CC_LOCK_IMPL_USER 0
@@ -89,19 +93,19 @@ int cc_lock_init(cc_lock_ctx_t *ctx, const char *group_name);
 #if CC_LOCK_IMPL_NULL
 
 #define CC_LOCK_LOCK(lock_ctx) cc_try_abort("CC_LOCK_LOCK not implemented")
-#define CC_LOCK_TRYLOCK(lock_ctx) cc_try_abort("CC_LOCK_TRYLOCK not implemented")
+#define CC_LOCK_TRYLOCK(lock_ctx)                                              \
+  cc_try_abort("CC_LOCK_TRYLOCK not implemented")
 #define CC_LOCK_UNLOCK(lock_ctx) cc_try_abort("CC_LOCK_UNLOCK not implemented")
 #define CC_LOCK_ASSERT(lock_ctx) cc_try_abort("CC_LOCK_ASSERT not implemented")
 
-struct cc_lock_ctx {
-};
+struct cc_lock_ctx {};
 
 //------------------------------------------------------------------------------
 // os/lock library, Apple userland
 //------------------------------------------------------------------------------
 #elif CC_LOCK_IMPL_USER
-#include <pthread.h>
 #include <os/lock.h>
+#include <pthread.h>
 
 #define CC_LOCK_LOCK(lock_ctx) os_unfair_lock_lock(&(lock_ctx)->lock)
 #define CC_LOCK_TRYLOCK(lock_ctx) os_unfair_lock_trylock(&(lock_ctx)->lock)
@@ -109,7 +113,7 @@ struct cc_lock_ctx {
 #define CC_LOCK_ASSERT(lock_ctx) os_unfair_lock_assert_owner(&(lock_ctx)->lock)
 
 struct cc_lock_ctx {
-    os_unfair_lock lock;
+  os_unfair_lock lock;
 };
 
 //------------------------------------------------------------------------------
@@ -119,12 +123,15 @@ struct cc_lock_ctx {
 #include <pthread.h>
 
 #define CC_LOCK_LOCK(lock_ctx) (pthread_mutex_lock(&(lock_ctx)->mutex) == 0)
-#define CC_LOCK_TRYLOCK(lock_ctx) (pthread_mutex_trylock(&(lock_ctx)->mutex) == 0)
+#define CC_LOCK_TRYLOCK(lock_ctx)                                              \
+  (pthread_mutex_trylock(&(lock_ctx)->mutex) == 0)
 #define CC_LOCK_UNLOCK(lock_ctx) (pthread_mutex_unlock(&(lock_ctx)->mutex) == 0)
-#define CC_LOCK_ASSERT(lock_ctx) do { } while (0)
+#define CC_LOCK_ASSERT(lock_ctx)                                               \
+  do {                                                                         \
+  } while (0)
 
 struct cc_lock_ctx {
-    pthread_mutex_t mutex;
+  pthread_mutex_t mutex;
 };
 
 //------------------------------------------------------------------------------
@@ -136,11 +143,12 @@ struct cc_lock_ctx {
 #define CC_LOCK_LOCK(lock_ctx) lck_mtx_lock((lock_ctx)->mutex)
 #define CC_LOCK_TRYLOCK(lock_ctx) lck_mtx_try_lock((lock_ctx)->mutex)
 #define CC_LOCK_UNLOCK(lock_ctx) lck_mtx_unlock((lock_ctx)->mutex)
-#define CC_LOCK_ASSERT(lock_ctx) lck_mtx_assert((lock_ctx)->mutex, LCK_MTX_ASSERT_OWNED);
+#define CC_LOCK_ASSERT(lock_ctx)                                               \
+  lck_mtx_assert((lock_ctx)->mutex, LCK_MTX_ASSERT_OWNED);
 
 struct cc_lock_ctx {
-    lck_mtx_t *mutex;
-    lck_grp_t *group;
+  lck_mtx_t *mutex;
+  lck_grp_t *group;
 };
 
 //------------------------------------------------------------------------------
@@ -148,29 +156,34 @@ struct cc_lock_ctx {
 //------------------------------------------------------------------------------
 #elif CC_LOCK_IMPL_WIN
 
-#define CC_LOCK_LOCK(lock_ctx)                                          \
-    if (WaitForSingleObject((lock_ctx)->hMutex, INFINITE) != WAIT_OBJECT_0) \
-        return CCERR_INTERNAL;
+#define CC_LOCK_LOCK(lock_ctx)                                                 \
+  if (WaitForSingleObject((lock_ctx)->hMutex, INFINITE) != WAIT_OBJECT_0)      \
+    return CCERR_INTERNAL;
 #define CC_LOCK_UNLOCK(lock_ctx) ReleaseMutex((lock_ctx)->hMutex)
-#define CC_LOCK_ASSERT(lock_ctx) do { } while (0)
+#define CC_LOCK_ASSERT(lock_ctx)                                               \
+  do {                                                                         \
+  } while (0)
 
 struct cc_lock_ctx {
-    HANDLE hMutex;
+  HANDLE hMutex;
 };
 
 //------------------------------------------------------------------------------
 //          SGX
 //------------------------------------------------------------------------------
 #elif CC_LOCK_IMPL_SGX
-// Avoid an OCALL in the middle of RNG routines: use spinlocks instead of mutexes.
+// Avoid an OCALL in the middle of RNG routines: use spinlocks instead of
+// mutexes.
 #include <pthread.h>
 
-#define CC_LOCK_LOCK(lock_ctx)   pthread_spin_lock(&(lock_ctx)->lock)
+#define CC_LOCK_LOCK(lock_ctx) pthread_spin_lock(&(lock_ctx)->lock)
 #define CC_LOCK_UNLOCK(lock_ctx) pthread_spin_unlock(&(lock_ctx)->lock)
-#define CC_LOCK_ASSERT(lock_ctx) do { } while (0)
+#define CC_LOCK_ASSERT(lock_ctx)                                               \
+  do {                                                                         \
+  } while (0)
 
 struct cc_lock_ctx {
-    pthread_spinlock_t lock;
+  pthread_spinlock_t lock;
 };
 
 //------------------------------------------------------------------------------

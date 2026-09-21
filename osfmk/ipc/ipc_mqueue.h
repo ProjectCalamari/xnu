@@ -71,8 +71,8 @@
 #include <mach/message.h>
 
 #include <kern/assert.h>
-#include <kern/macro_help.h>
 #include <kern/kern_types.h>
+#include <kern/macro_help.h>
 
 #include <ipc/ipc_kmsg.h>
 #include <ipc/ipc_object.h>
@@ -81,133 +81,115 @@
 #include <sys/event.h>
 
 typedef struct ipc_mqueue {
-	circle_queue_head_t     imq_messages;
-	mach_port_seqno_t       imq_seqno;
-	mach_port_name_t        imq_receiver_name;
-	uint16_t                imq_msgcount;
-	uint16_t                imq_qlimit;
-	/*
-	 * The imq_context structure member fills in a 32-bit padding gap
-	 * in ipc_mqueue.
-	 */
-	uint32_t                imq_context;
+  circle_queue_head_t imq_messages;
+  mach_port_seqno_t imq_seqno;
+  mach_port_name_t imq_receiver_name;
+  uint16_t imq_msgcount;
+  uint16_t imq_qlimit;
+  /*
+   * The imq_context structure member fills in a 32-bit padding gap
+   * in ipc_mqueue.
+   */
+  uint32_t imq_context;
 
-	union {
-		/*
-		 * Special Reply Ports (ip_type() == IOT_SPECIAL_REPLY_PORT):
-		 *   only use imq_srp_owner_thread
-		 *
-		 * Ports, based on ip_sync_link_state, use:
-		 * - PORT_SYNC_LINK_ANY:            imq_klist
-		 * - PORT_SYNC_LINK_WORKLOOP_KNOTE: imq_inheritor_knote
-		 * - PORT_SYNC_LINK_WORKLOOP_STASH: imq_inheritor_turnstile (has a +1)
-		 * - PORT_SYNC_LINK_RCV_THREAD: imq_inheritor_thread_ref
-		 */
-		struct klist            imq_klist;
-		struct knote            *XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.knote") imq_inheritor_knote;
-		struct turnstile        *XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.turnstile") imq_inheritor_turnstile;
-		thread_t                XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.thread_ref") imq_inheritor_thread_ref;
-		thread_t                XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.srp_owner_thread") imq_srp_owner_thread;
-	};
+  union {
+    /*
+     * Special Reply Ports (ip_type() == IOT_SPECIAL_REPLY_PORT):
+     *   only use imq_srp_owner_thread
+     *
+     * Ports, based on ip_sync_link_state, use:
+     * - PORT_SYNC_LINK_ANY:            imq_klist
+     * - PORT_SYNC_LINK_WORKLOOP_KNOTE: imq_inheritor_knote
+     * - PORT_SYNC_LINK_WORKLOOP_STASH: imq_inheritor_turnstile (has a +1)
+     * - PORT_SYNC_LINK_RCV_THREAD: imq_inheritor_thread_ref
+     */
+    struct klist imq_klist;
+    struct knote *
+        XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.knote") imq_inheritor_knote;
+    struct turnstile *
+        XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.turnstile") imq_inheritor_turnstile;
+    thread_t XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.thread_ref")
+        imq_inheritor_thread_ref;
+    thread_t XNU_PTRAUTH_SIGNED_PTR("ipc_mqueue.srp_owner_thread")
+        imq_srp_owner_thread;
+  };
 } *ipc_mqueue_t;
 
-#define IMQ_NULL                ((ipc_mqueue_t) 0)
+#define IMQ_NULL ((ipc_mqueue_t)0)
 
-#define imq_full(mq)            ((mq)->imq_msgcount >= (mq)->imq_qlimit)
-#define imq_full_kernel(mq)     ((mq)->imq_msgcount >= MACH_PORT_QLIMIT_KERNEL)
+#define imq_full(mq) ((mq)->imq_msgcount >= (mq)->imq_qlimit)
+#define imq_full_kernel(mq) ((mq)->imq_msgcount >= MACH_PORT_QLIMIT_KERNEL)
 
 extern const bool ipc_mqueue_full;
 
-#define IPC_MQUEUE_FULL         CAST_EVENT64_T(&ipc_mqueue_full)
-#define IPC_MQUEUE_RECEIVE      NO_EVENT64
+#define IPC_MQUEUE_FULL CAST_EVENT64_T(&ipc_mqueue_full)
+#define IPC_MQUEUE_RECEIVE NO_EVENT64
 
 /*
  * Exported interfaces
  */
 
 /* Initialize a newly-allocated message queue */
-extern void ipc_mqueue_init(
-	ipc_mqueue_t            mqueue);
+extern void ipc_mqueue_init(ipc_mqueue_t mqueue);
 
 /* destroy an mqueue */
-extern boolean_t ipc_mqueue_destroy_locked(
-	ipc_mqueue_t            mqueue,
-	waitq_link_list_t      *free_l);
+extern boolean_t ipc_mqueue_destroy_locked(ipc_mqueue_t mqueue,
+                                           waitq_link_list_t *free_l);
 
 /* Wake up receivers waiting in a message queue */
-extern void ipc_mqueue_changed(
-	ipc_space_t             space,
-	waitq_t                 waitq);
+extern void ipc_mqueue_changed(ipc_space_t space, waitq_t waitq);
 
 /* Add the specific mqueue as a member of the set */
-extern kern_return_t ipc_mqueue_add_locked(
-	ipc_mqueue_t            mqueue,
-	ipc_pset_t              pset,
-	waitq_link_t           *linkp);
+extern kern_return_t ipc_mqueue_add_locked(ipc_mqueue_t mqueue, ipc_pset_t pset,
+                                           waitq_link_t *linkp);
 
 /* Send a message to a port */
-extern mach_msg_return_t ipc_mqueue_send_locked(
-	ipc_mqueue_t            mqueue,
-	ipc_kmsg_t              kmsg,
-	mach_msg_option64_t     option,
-	mach_msg_timeout_t      timeout_val);
+extern mach_msg_return_t ipc_mqueue_send_locked(ipc_mqueue_t mqueue,
+                                                ipc_kmsg_t kmsg,
+                                                mach_msg_option64_t option,
+                                                mach_msg_timeout_t timeout_val);
 
 /* Set a [send-possible] override on the mqueue */
-extern void ipc_mqueue_override_send_locked(
-	ipc_mqueue_t            mqueue,
-	mach_msg_qos_t          qos_ovr);
+extern void ipc_mqueue_override_send_locked(ipc_mqueue_t mqueue,
+                                            mach_msg_qos_t qos_ovr);
 
 /* Receive a message from a message queue */
-extern void ipc_mqueue_receive(
-	waitq_t                 waitq,
-	mach_msg_timeout_t      timeout_val,
-	int                     interruptible,
-	thread_t                thread,
-	bool                    has_continuation);
+extern void ipc_mqueue_receive(waitq_t waitq, mach_msg_timeout_t timeout_val,
+                               int interruptible, thread_t thread,
+                               bool has_continuation);
 
 /* Receive a message from a message queue using a specified thread */
-extern wait_result_t ipc_mqueue_receive_on_thread_and_unlock(
-	waitq_t                 waitq,
-	mach_msg_timeout_t      rcv_timeout,
-	int                     interruptible,
-	thread_t                thread);
+extern wait_result_t
+ipc_mqueue_receive_on_thread_and_unlock(waitq_t waitq,
+                                        mach_msg_timeout_t rcv_timeout,
+                                        int interruptible, thread_t thread);
 
 /* Peek into a messaqe queue to see if there are messages */
-extern unsigned ipc_mqueue_peek(
-	ipc_mqueue_t            mqueue,
-	mach_port_seqno_t       *msg_seqnop,
-	mach_msg_size_t         *msg_sizep,
-	mach_msg_id_t           *msg_idp,
-	mach_msg_max_trailer_t  *msg_trailerp,
-	ipc_kmsg_t              *kmsgp);
+extern unsigned
+ipc_mqueue_peek(ipc_mqueue_t mqueue, mach_port_seqno_t *msg_seqnop,
+                mach_msg_size_t *msg_sizep, mach_msg_id_t *msg_idp,
+                mach_msg_max_trailer_t *msg_trailerp, ipc_kmsg_t *kmsgp);
 
 /* Peek into a locked messaqe queue to see if there are messages */
-extern unsigned ipc_mqueue_peek_locked(
-	ipc_mqueue_t            mqueue,
-	mach_port_seqno_t       *msg_seqnop,
-	mach_msg_size_t         *msg_sizep,
-	mach_msg_id_t           *msg_idp,
-	mach_msg_max_trailer_t  *msg_trailerp,
-	ipc_kmsg_t              *kmsgp);
+extern unsigned
+ipc_mqueue_peek_locked(ipc_mqueue_t mqueue, mach_port_seqno_t *msg_seqnop,
+                       mach_msg_size_t *msg_sizep, mach_msg_id_t *msg_idp,
+                       mach_msg_max_trailer_t *msg_trailerp, ipc_kmsg_t *kmsgp);
 
 /* Change a queue limit */
-extern void ipc_mqueue_set_qlimit_locked(
-	ipc_mqueue_t            mqueue,
-	mach_port_msgcount_t    qlimit);
+extern void ipc_mqueue_set_qlimit_locked(ipc_mqueue_t mqueue,
+                                         mach_port_msgcount_t qlimit);
 
 /* Change a queue's sequence number */
-extern void ipc_mqueue_set_seqno_locked(
-	ipc_mqueue_t            mqueue,
-	mach_port_seqno_t       seqno);
+extern void ipc_mqueue_set_seqno_locked(ipc_mqueue_t mqueue,
+                                        mach_port_seqno_t seqno);
 
 /* Convert a name in a space to a message queue */
-extern mach_msg_return_t ipc_mqueue_copyin(
-	ipc_space_t             space,
-	mach_port_name_t        name,
-	ipc_object_t            *objectp);
+extern mach_msg_return_t ipc_mqueue_copyin(ipc_space_t space,
+                                           mach_port_name_t name,
+                                           ipc_object_t *objectp);
 
 /* Safe to use the klist ptr */
-extern bool ipc_port_has_klist(
-	ipc_port_t              port);
+extern bool ipc_port_has_klist(ipc_port_t port);
 
-#endif  /* _IPC_IPC_MQUEUE_H_ */
+#endif /* _IPC_IPC_MQUEUE_H_ */

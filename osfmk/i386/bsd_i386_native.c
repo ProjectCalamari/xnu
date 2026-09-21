@@ -32,90 +32,84 @@
 #include <mach/thread_status.h>
 #include <mach/vm_param.h>
 
-#include <kern/cpu_data.h>
-#include <kern/mach_param.h>
-#include <kern/task.h>
-#include <kern/thread.h>
-#include <kern/sched_prim.h>
-#include <kern/misc_protos.h>
+#include <ipc/ipc_port.h>
 #include <kern/assert.h>
+#include <kern/cpu_data.h>
 #include <kern/debug.h>
+#include <kern/mach_param.h>
+#include <kern/misc_protos.h>
+#include <kern/sched_prim.h>
 #include <kern/spl.h>
 #include <kern/syscall_sw.h>
-#include <ipc/ipc_port.h>
-#include <vm/vm_kern.h>
+#include <kern/task.h>
+#include <kern/thread.h>
 #include <vm/pmap.h>
+#include <vm/vm_kern.h>
 
+#include <../bsd/sys/sysent.h>
 #include <i386/cpu_number.h>
 #include <i386/eflags.h>
-#include <i386/proc_reg.h>
-#include <i386/tss.h>
-#include <i386/user_ldt.h>
 #include <i386/fpu.h>
 #include <i386/machdep_call.h>
-#include <i386/vmparam.h>
-#include <i386/mp_desc.h>
 #include <i386/misc_protos.h>
+#include <i386/mp_desc.h>
+#include <i386/proc_reg.h>
+#include <i386/seg.h>
 #include <i386/thread.h>
 #include <i386/trap_internal.h>
-#include <i386/seg.h>
+#include <i386/tss.h>
+#include <i386/user_ldt.h>
+#include <i386/vmparam.h>
 #include <mach/i386/syscall_sw.h>
-#include <sys/syscall.h>
-#include <sys/kdebug.h>
 #include <sys/errno.h>
-#include <../bsd/sys/sysent.h>
-
+#include <sys/kdebug.h>
+#include <sys/syscall.h>
 
 /*
  * Duplicate parent state in child
  * for U**X fork.
  */
-kern_return_t
-machine_thread_dup(
-	thread_t            parent,
-	thread_t            child,
-	__unused boolean_t  is_corpse
-	)
-{
-	pcb_t           parent_pcb = THREAD_TO_PCB(parent);
-	pcb_t           child_pcb = THREAD_TO_PCB(child);
+kern_return_t machine_thread_dup(thread_t parent, thread_t child,
+                                 __unused boolean_t is_corpse) {
+  pcb_t parent_pcb = THREAD_TO_PCB(parent);
+  pcb_t child_pcb = THREAD_TO_PCB(child);
 
-	/*
-	 * Copy over the x86_saved_state registers
-	 */
-	if (thread_is_64bit_addr(parent)) {
-		bcopy(USER_REGS64(parent), USER_REGS64(child), sizeof(x86_saved_state64_t));
-	} else {
-		bcopy(USER_REGS32(parent), USER_REGS32(child), sizeof(x86_saved_state32_t));
-	}
+  /*
+   * Copy over the x86_saved_state registers
+   */
+  if (thread_is_64bit_addr(parent)) {
+    bcopy(USER_REGS64(parent), USER_REGS64(child), sizeof(x86_saved_state64_t));
+  } else {
+    bcopy(USER_REGS32(parent), USER_REGS32(child), sizeof(x86_saved_state32_t));
+  }
 
-	/*
-	 * Check to see if parent is using floating point
-	 * and if so, copy the registers to the child
-	 */
-	fpu_dup_fxstate(parent, child);
+  /*
+   * Check to see if parent is using floating point
+   * and if so, copy the registers to the child
+   */
+  fpu_dup_fxstate(parent, child);
 
-#ifdef  MACH_BSD
-	/*
-	 * Copy the parent's cthread id and USER_CTHREAD descriptor, if 32-bit.
-	 */
-	child_pcb->cthread_self = parent_pcb->cthread_self;
-	if (!thread_is_64bit_addr(parent)) {
-		child_pcb->cthread_desc = parent_pcb->cthread_desc;
-	}
+#ifdef MACH_BSD
+  /*
+   * Copy the parent's cthread id and USER_CTHREAD descriptor, if 32-bit.
+   */
+  child_pcb->cthread_self = parent_pcb->cthread_self;
+  if (!thread_is_64bit_addr(parent)) {
+    child_pcb->cthread_desc = parent_pcb->cthread_desc;
+  }
 
-	/*
-	 * FIXME - should a user specified LDT, TSS and V86 info
-	 * be duplicated as well?? - probably not.
-	 */
-	// duplicate any use LDT entry that was set I think this is appropriate.
-	if (parent_pcb->uldt_selector != 0) {
-		child_pcb->uldt_selector = parent_pcb->uldt_selector;
-		child_pcb->uldt_desc = parent_pcb->uldt_desc;
-	}
+  /*
+   * FIXME - should a user specified LDT, TSS and V86 info
+   * be duplicated as well?? - probably not.
+   */
+  // duplicate any use LDT entry that was set I think this is appropriate.
+  if (parent_pcb->uldt_selector != 0) {
+    child_pcb->uldt_selector = parent_pcb->uldt_selector;
+    child_pcb->uldt_desc = parent_pcb->uldt_desc;
+  }
 #endif
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
 /*
@@ -127,11 +121,9 @@ machine_thread_dup(
  * Returns:        0                      Success
  *                !0                      Not success
  */
-kern_return_t
-thread_fast_set_cthread_self(uint32_t self)
-{
-	machine_thread_set_tsd_base(current_thread(), self);
-	return USER_CTHREAD; /* N.B.: not a kern_return_t! */
+kern_return_t thread_fast_set_cthread_self(uint32_t self) {
+  machine_thread_set_tsd_base(current_thread(), self);
+  return USER_CTHREAD; /* N.B.: not a kern_return_t! */
 }
 
 /*
@@ -143,11 +135,9 @@ thread_fast_set_cthread_self(uint32_t self)
  * Returns:        0                      Success
  *                !0                      Not success
  */
-kern_return_t
-thread_fast_set_cthread_self64(uint64_t self)
-{
-	machine_thread_set_tsd_base(current_thread(), self);
-	return USER_CTHREAD; /* N.B.: not a kern_return_t! */
+kern_return_t thread_fast_set_cthread_self64(uint64_t self) {
+  machine_thread_set_tsd_base(current_thread(), self);
+  return USER_CTHREAD; /* N.B.: not a kern_return_t! */
 }
 
 /*
@@ -178,41 +168,40 @@ thread_fast_set_cthread_self64(uint64_t self)
  *
  * this call returns the segment selector or -1 if any error occurs
  */
-kern_return_t
-thread_set_user_ldt(uint32_t address, uint32_t size, uint32_t flags)
-{
-	pcb_t pcb;
-	struct fake_descriptor temp;
+kern_return_t thread_set_user_ldt(uint32_t address, uint32_t size,
+                                  uint32_t flags) {
+  pcb_t pcb;
+  struct fake_descriptor temp;
 
-	if (flags != 0) {
-		return -1;              // flags not supported
-	}
-	if (size > 0xFFFFF) {
-		return -1;              // size too big, 1 meg is the limit
-	}
-	mp_disable_preemption();
+  if (flags != 0) {
+    return -1; // flags not supported
+  }
+  if (size > 0xFFFFF) {
+    return -1; // size too big, 1 meg is the limit
+  }
+  mp_disable_preemption();
 
-	// create a "fake" descriptor so we can use fix_desc()
-	// to build a real one...
-	//   32 bit default operation size
-	//   standard read/write perms for a data segment
-	pcb = THREAD_TO_PCB(current_thread());
-	temp.offset = address;
-	temp.lim_or_seg = size;
-	temp.size_or_wdct = SZ_32;
-	temp.access = ACC_P | ACC_PL_U | ACC_DATA_W;
+  // create a "fake" descriptor so we can use fix_desc()
+  // to build a real one...
+  //   32 bit default operation size
+  //   standard read/write perms for a data segment
+  pcb = THREAD_TO_PCB(current_thread());
+  temp.offset = address;
+  temp.lim_or_seg = size;
+  temp.size_or_wdct = SZ_32;
+  temp.access = ACC_P | ACC_PL_U | ACC_DATA_W;
 
-	// turn this into a real descriptor
-	fix_desc(&temp, 1);
+  // turn this into a real descriptor
+  fix_desc(&temp, 1);
 
-	// set up our data in the pcb
-	pcb->uldt_desc = *(struct real_descriptor*)&temp;
-	pcb->uldt_selector = USER_SETTABLE;             // set the selector value
+  // set up our data in the pcb
+  pcb->uldt_desc = *(struct real_descriptor *)&temp;
+  pcb->uldt_selector = USER_SETTABLE; // set the selector value
 
-	// now set it up in the current table...
-	*ldt_desc_p(USER_SETTABLE) = *(struct real_descriptor*)&temp;
+  // now set it up in the current table...
+  *ldt_desc_p(USER_SETTABLE) = *(struct real_descriptor *)&temp;
 
-	mp_enable_preemption();
+  mp_enable_preemption();
 
-	return USER_SETTABLE;
+  return USER_SETTABLE;
 }

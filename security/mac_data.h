@@ -55,7 +55,8 @@
 #define _SECURITY_MAC_DATA_H_
 
 #ifndef PRIVATE
-#warning "MAC policy is not KPI, see Technical Q&A QA1574, this header will be removed in next version"
+#warning                                                                       \
+    "MAC policy is not KPI, see Technical Q&A QA1574, this header will be removed in next version"
 #endif
 
 /**
@@ -98,50 +99,49 @@
  *
  */
 struct mac_module_data_element {
-	unsigned int key_size;
-	unsigned int value_size;
-	unsigned int value_type;
-	char *key;
-	char *value;
+  unsigned int key_size;
+  unsigned int value_size;
+  unsigned int value_type;
+  char *key;
+  char *value;
 };
 struct mac_module_data_list {
-	unsigned int count;
-	unsigned int type;
-	struct mac_module_data_element list[1];
+  unsigned int count;
+  unsigned int type;
+  struct mac_module_data_element list[1];
 };
 struct mac_module_data {
-	void *base_addr;                /* Orig base address, for ptr fixup.  */
-	unsigned int size;
-	unsigned int count;
-	struct mac_module_data_element data[1]; /* actually bigger */
+  void *base_addr; /* Orig base address, for ptr fixup.  */
+  unsigned int size;
+  unsigned int count;
+  struct mac_module_data_element data[1]; /* actually bigger */
 };
 
-#define MAC_DATA_TYPE_PRIMITIVE 0       /* Primitive type (int, string, etc.) */
-#define MAC_DATA_TYPE_ARRAY     1       /* Array type.                        */
-#define MAC_DATA_TYPE_DICT      2       /* Dictionary type.                   */
+#define MAC_DATA_TYPE_PRIMITIVE 0 /* Primitive type (int, string, etc.) */
+#define MAC_DATA_TYPE_ARRAY 1     /* Array type.                        */
+#define MAC_DATA_TYPE_DICT 2      /* Dictionary type.                   */
 
 #ifdef _SECURITY_MAC_POLICY_H_
 /* XXX mac_policy_handle_t is defined in mac_policy.h, move prototype there? */
 int mac_find_policy_data(const mac_policy_handle_t, const char *key,
-    void **valp, size_t *sizep);
+                         void **valp, size_t *sizep);
 int mac_find_module_data(struct mac_module_data *mmd, const char *key,
-    void **valp, size_t *sizep);
+                         void **valp, size_t *sizep);
 
 /*
  * This is a routine to fix up pointers in a mac_module_data_element when the
  * mac_module_data has been copied to a new area.  It depends on the pointers
  * all being offset from base_addr.
  */
-static __inline void
-mmd_fixup_ele(struct mac_module_data *oldbase,
-    struct mac_module_data *newbase, struct mac_module_data_element *ele)
-{
-	if (ele->key != NULL) {         /* Array elements have no keys.       */
-		ele->key -= (uintptr_t)oldbase;
-		ele->key += (uintptr_t)newbase;
-	}
-	ele->value -= (uintptr_t)oldbase;
-	ele->value += (uintptr_t)newbase;
+static __inline void mmd_fixup_ele(struct mac_module_data *oldbase,
+                                   struct mac_module_data *newbase,
+                                   struct mac_module_data_element *ele) {
+  if (ele->key != NULL) { /* Array elements have no keys.       */
+    ele->key -= (uintptr_t)oldbase;
+    ele->key += (uintptr_t)newbase;
+  }
+  ele->value -= (uintptr_t)oldbase;
+  ele->value += (uintptr_t)newbase;
 }
 
 #endif

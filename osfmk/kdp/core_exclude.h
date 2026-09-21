@@ -48,16 +48,14 @@ __BEGIN_DECLS
  * Note that you may need to call this function multiple times if the
  * underlying memory is shared.
  */
-void
-kdp_core_exclude_region(vm_offset_t addr, vm_size_t size);
+void kdp_core_exclude_region(vm_offset_t addr, vm_size_t size);
 
 /*
  * Unexcludes a given memory region from the kernel coredump.
  *
  * The address and size of the region must match a currently excluded region.
  */
-void
-kdp_core_unexclude_region(vm_offset_t addr, vm_size_t size);
+void kdp_core_unexclude_region(vm_offset_t addr, vm_size_t size);
 
 #endif /* KERNEL_PRIVATE */
 

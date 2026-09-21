@@ -46,24 +46,25 @@ static bool disable_atm;
  * Purpose: Initialize the atm subsystem.
  * Returns: None.
  */
-void
-atm_init(void)
-{
-	char temp_buf[20];
+void atm_init(void) {
+  char temp_buf[20];
 
-	/* Disable atm if disable_atm present in device-tree properties or in boot-args */
-	if ((PE_get_default("kern.disable_atm", temp_buf, sizeof(temp_buf))) ||
-	    (PE_parse_boot_argn("-disable_atm", temp_buf, sizeof(temp_buf)))) {
-		disable_atm = true;
-	}
+  /* Disable atm if disable_atm present in device-tree properties or in
+   * boot-args */
+  if ((PE_get_default("kern.disable_atm", temp_buf, sizeof(temp_buf))) ||
+      (PE_parse_boot_argn("-disable_atm", temp_buf, sizeof(temp_buf)))) {
+    disable_atm = true;
+  }
 
-	if (!PE_parse_boot_argn("atm_diagnostic_config", &atm_diagnostic_config, sizeof(atm_diagnostic_config))) {
-		if (!PE_get_default("kern.atm_diagnostic_config", &atm_diagnostic_config, sizeof(atm_diagnostic_config))) {
-			atm_diagnostic_config = 0;
-		}
-	}
+  if (!PE_parse_boot_argn("atm_diagnostic_config", &atm_diagnostic_config,
+                          sizeof(atm_diagnostic_config))) {
+    if (!PE_get_default("kern.atm_diagnostic_config", &atm_diagnostic_config,
+                        sizeof(atm_diagnostic_config))) {
+      atm_diagnostic_config = 0;
+    }
+  }
 
-	kprintf("ATM subsystem is initialized\n");
+  kprintf("ATM subsystem is initialized\n");
 }
 
 /*
@@ -71,13 +72,11 @@ atm_init(void)
  * Purpose: re-initialize the atm subsystem (e.g. for userspace reboot)
  * Returns: None.
  */
-void
-atm_reset(void)
-{
-	atm_init();
-	commpage_update_atm_diagnostic_config(atm_diagnostic_config);
+void atm_reset(void) {
+  atm_init();
+  commpage_update_atm_diagnostic_config(atm_diagnostic_config);
 #if CONFIG_EXCLAVES
-	exclaves_oslog_set_trace_mode(atm_diagnostic_config);
+  exclaves_oslog_set_trace_mode(atm_diagnostic_config);
 #endif // CONFIG_EXCLAVES
 }
 
@@ -87,19 +86,17 @@ atm_reset(void)
  *          the new value.
  * Returns: Error if ATM is disabled.
  */
-kern_return_t
-atm_set_diagnostic_config(uint32_t diagnostic_config)
-{
-	if (disable_atm) {
-		return KERN_NOT_SUPPORTED;
-	}
+kern_return_t atm_set_diagnostic_config(uint32_t diagnostic_config) {
+  if (disable_atm) {
+    return KERN_NOT_SUPPORTED;
+  }
 
-	atm_diagnostic_config = diagnostic_config;
-	commpage_update_atm_diagnostic_config(atm_diagnostic_config);
+  atm_diagnostic_config = diagnostic_config;
+  commpage_update_atm_diagnostic_config(atm_diagnostic_config);
 #if CONFIG_EXCLAVES
-	return exclaves_oslog_set_trace_mode(diagnostic_config);
+  return exclaves_oslog_set_trace_mode(diagnostic_config);
 #else
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 #endif // CONFIG_EXCLAVES
 }
 
@@ -108,8 +105,4 @@ atm_set_diagnostic_config(uint32_t diagnostic_config)
  * Purpose: Get global atm_diagnostic_config.
  * Returns: Diagnostic value
  */
-uint32_t
-atm_get_diagnostic_config(void)
-{
-	return atm_diagnostic_config;
-}
+uint32_t atm_get_diagnostic_config(void) { return atm_diagnostic_config; }

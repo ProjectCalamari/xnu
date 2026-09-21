@@ -35,12 +35,16 @@
 typedef struct fibers_condition fibers_condition_t;
 
 struct fibers_condition {
-	struct fibers_queue wait_queue;
+  struct fibers_queue wait_queue;
 };
 
 extern void fibers_condition_wakeup_one(fibers_condition_t *cond);
-extern int fibers_condition_wakeup_some(fibers_condition_t *cond, int num_fibers, void (*callback)(void*, fiber_t), void *arg);
+extern int fibers_condition_wakeup_some(fibers_condition_t *cond,
+                                        int num_fibers,
+                                        void (*callback)(void *, fiber_t),
+                                        void *arg);
 extern void fibers_condition_wait(fibers_condition_t *cond);
 extern void fibers_condition_destroy(fibers_condition_t *cond);
 extern fiber_t fibers_condition_identify(fibers_condition_t *cond);
-extern bool fibers_condition_wakeup_identified(fibers_condition_t *cond, fiber_t target);
+extern bool fibers_condition_wakeup_identified(fibers_condition_t *cond,
+                                               fiber_t target);

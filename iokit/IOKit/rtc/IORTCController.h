@@ -33,53 +33,48 @@
 
 #include <IOKit/IOService.h>
 
-typedef void (*RTC_tick_handler)( IOService * );
+typedef void (*RTC_tick_handler)(IOService *);
 
-
-class IORTCController : public IOService
-{
-	OSDeclareAbstractStructors(IORTCController);
+class IORTCController : public IOService {
+  OSDeclareAbstractStructors(IORTCController);
 
 public:
-
-	virtual IOReturn getRealTimeClock( UInt8 * currentTime, IOByteCount * length ) = 0;
-	virtual IOReturn setRealTimeClock( UInt8 * newTime ) = 0;
+  virtual IOReturn getRealTimeClock(UInt8 *currentTime,
+                                    IOByteCount *length) = 0;
+  virtual IOReturn setRealTimeClock(UInt8 *newTime) = 0;
 };
 
-class IORTC : public IOService
-{
-	OSDeclareAbstractStructors(IORTC);
+class IORTC : public IOService {
+  OSDeclareAbstractStructors(IORTC);
 
 protected:
-
-/*! @var reserved
- *   Reserved for future use.  (Internal use only)  */
-	struct ExpansionData { };
-	ExpansionData *iortc_reserved __unused;
+  /*! @var reserved
+   *   Reserved for future use.  (Internal use only)  */
+  struct ExpansionData {};
+  ExpansionData *iortc_reserved __unused;
 
 public:
+  virtual long getGMTTimeOfDay(void) = 0;
+  virtual void setGMTTimeOfDay(long secs) = 0;
 
-	virtual long            getGMTTimeOfDay( void ) = 0;
-	virtual void            setGMTTimeOfDay( long secs ) = 0;
+  virtual void getUTCTimeOfDay(clock_sec_t *secs, clock_nsec_t *nsecs);
+  virtual void setUTCTimeOfDay(clock_sec_t secs, clock_nsec_t nsecs);
 
-	virtual void                    getUTCTimeOfDay( clock_sec_t * secs, clock_nsec_t * nsecs );
-	virtual void                    setUTCTimeOfDay( clock_sec_t secs, clock_nsec_t nsecs );
+  virtual void setAlarmEnable(IOOptionBits message) = 0;
 
-	virtual void            setAlarmEnable( IOOptionBits message ) = 0;
+  virtual IOReturn getMonotonicClockOffset(int64_t *usecs);
+  virtual IOReturn setMonotonicClockOffset(int64_t usecs);
+  virtual IOReturn getMonotonicClockAndTimestamp(uint64_t *usecs,
+                                                 uint64_t *mach_absolute_time);
 
-	virtual IOReturn        getMonotonicClockOffset( int64_t * usecs );
-	virtual IOReturn        setMonotonicClockOffset( int64_t usecs );
-	virtual IOReturn        getMonotonicClockAndTimestamp( uint64_t * usecs, uint64_t *mach_absolute_time );
-
-
-	OSMetaClassDeclareReservedUnused(IORTC, 0);
-	OSMetaClassDeclareReservedUnused(IORTC, 1);
-	OSMetaClassDeclareReservedUnused(IORTC, 2);
-	OSMetaClassDeclareReservedUnused(IORTC, 3);
-	OSMetaClassDeclareReservedUnused(IORTC, 4);
-	OSMetaClassDeclareReservedUnused(IORTC, 5);
-	OSMetaClassDeclareReservedUnused(IORTC, 6);
-	OSMetaClassDeclareReservedUnused(IORTC, 7);
+  OSMetaClassDeclareReservedUnused(IORTC, 0);
+  OSMetaClassDeclareReservedUnused(IORTC, 1);
+  OSMetaClassDeclareReservedUnused(IORTC, 2);
+  OSMetaClassDeclareReservedUnused(IORTC, 3);
+  OSMetaClassDeclareReservedUnused(IORTC, 4);
+  OSMetaClassDeclareReservedUnused(IORTC, 5);
+  OSMetaClassDeclareReservedUnused(IORTC, 6);
+  OSMetaClassDeclareReservedUnused(IORTC, 7);
 };
 
 #endif /* !_IORTCCONTROLLER_H */

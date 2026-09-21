@@ -33,15 +33,13 @@
 #include <sys/proc_ro.h>
 #include <sys/vm.h>
 
-static int
-readonly_proc_test_run(__unused int64_t in, int64_t *out)
-{
-	struct proc_ro *pro = proc_get_ro(current_proc());
+static int readonly_proc_test_run(__unused int64_t in, int64_t *out) {
+  struct proc_ro *pro = proc_get_ro(current_proc());
 
-	zone_require_ro(ZONE_ID_PROC_RO, sizeof(struct proc_ro), pro);
+  zone_require_ro(ZONE_ID_PROC_RO, sizeof(struct proc_ro), pro);
 
-	*out = 1;
-	return 0;
+  *out = 1;
+  return 0;
 }
 
 SYSCTL_TEST_REGISTER(readonly_proc_test, readonly_proc_test_run);

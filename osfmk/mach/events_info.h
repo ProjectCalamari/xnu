@@ -45,17 +45,17 @@
 #include <mach/message.h>
 
 struct events_info {
-	integer_t       faults;         /* number of page faults */
-	integer_t       zero_fills;     /* number of zero fill pages */
-	integer_t       reactivations;  /* number of reactivated pages */
-	integer_t       pageins;        /* number of actual pageins */
-	integer_t       cow_faults;     /* number of copy-on-write faults */
-	integer_t       messages_sent;  /* number of messages sent */
-	integer_t       messages_received; /* number of messages received */
+  integer_t faults;            /* number of page faults */
+  integer_t zero_fills;        /* number of zero fill pages */
+  integer_t reactivations;     /* number of reactivated pages */
+  integer_t pageins;           /* number of actual pageins */
+  integer_t cow_faults;        /* number of copy-on-write faults */
+  integer_t messages_sent;     /* number of messages sent */
+  integer_t messages_received; /* number of messages received */
 };
-typedef struct events_info              events_info_data_t;
-typedef struct events_info              *events_info_t;
-#define EVENTS_INFO_COUNT       ((mach_msg_type_number_t) \
-	        (sizeof(events_info_data_t) / sizeof(integer_t)))
+typedef struct events_info events_info_data_t;
+typedef struct events_info *events_info_t;
+#define EVENTS_INFO_COUNT                                                      \
+  ((mach_msg_type_number_t)(sizeof(events_info_data_t) / sizeof(integer_t)))
 
-#endif  /*_MACH_EVENTS_INFO_H_*/
+#endif /*_MACH_EVENTS_INFO_H_*/

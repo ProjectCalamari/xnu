@@ -33,10 +33,10 @@
 #ifndef __IMAGE4_CS_PMAP_H
 #define __IMAGE4_CS_PMAP_H
 
+#include <image4/image4.h>
 #include <os/base.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <image4/image4.h>
 
 __BEGIN_DECLS
 OS_ASSUME_NONNULL_BEGIN

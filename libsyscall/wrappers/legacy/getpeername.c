@@ -33,25 +33,24 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/socket.h>
 #include "_errno.h"
+#include <sys/socket.h>
 
-extern int __getpeername(int, struct sockaddr * __restrict, socklen_t * __restrict);
+extern int __getpeername(int, struct sockaddr *__restrict,
+                         socklen_t *__restrict);
 
 /*
  * getpeername stub, legacy version
  */
-int
-getpeername(int socket, struct sockaddr * __restrict address,
-    socklen_t * __restrict address_len)
-{
-	int ret = __getpeername(socket, address, address_len);
+int getpeername(int socket, struct sockaddr *__restrict address,
+                socklen_t *__restrict address_len) {
+  int ret = __getpeername(socket, address, address_len);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif /* __DARWIN_ONLY_UNIX_CONFORMANCE */

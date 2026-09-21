@@ -39,9 +39,9 @@
 #include <mach/kern_return.h>
 
 #include <sys/proc.h>
-#include <sys/user.h>
 #include <sys/systm.h>
-#include <sys/vmparam.h>        /* MAXSSIZ */
+#include <sys/user.h>
+#include <sys/vmparam.h> /* MAXSSIZ */
 
 #include <sys/ux_exception.h>
 
@@ -52,135 +52,127 @@
  * a signal.  Calls machine_exception (machine dependent)
  * to attempt translation first.
  */
-static int
-ux_exception(int                        exception,
-    mach_exception_code_t      code,
-    mach_exception_subcode_t   subcode)
-{
-	int machine_signal = 0;
+static int ux_exception(int exception, mach_exception_code_t code,
+                        mach_exception_subcode_t subcode) {
+  int machine_signal = 0;
 
-	/* Try machine-dependent translation first. */
-	if ((machine_signal = machine_exception(exception, code, subcode)) != 0) {
-		return machine_signal;
-	}
+  /* Try machine-dependent translation first. */
+  if ((machine_signal = machine_exception(exception, code, subcode)) != 0) {
+    return machine_signal;
+  }
 
-	switch (exception) {
-	case EXC_BAD_ACCESS:
-		if (code == KERN_INVALID_ADDRESS) {
-			return SIGSEGV;
-		} else {
-			return SIGBUS;
-		}
+  switch (exception) {
+  case EXC_BAD_ACCESS:
+    if (code == KERN_INVALID_ADDRESS) {
+      return SIGSEGV;
+    } else {
+      return SIGBUS;
+    }
 
-	case EXC_SYSCALL:
-		if (send_sigsys) {
-			return SIGSYS;
-		}
-		break;
+  case EXC_SYSCALL:
+    if (send_sigsys) {
+      return SIGSYS;
+    }
+    break;
 
-	case EXC_BAD_INSTRUCTION:
-		return SIGILL;
+  case EXC_BAD_INSTRUCTION:
+    return SIGILL;
 
-	case EXC_ARITHMETIC:
-		return SIGFPE;
+  case EXC_ARITHMETIC:
+    return SIGFPE;
 
-	case EXC_EMULATION:
-		return SIGEMT;
+  case EXC_EMULATION:
+    return SIGEMT;
 
-	case EXC_SOFTWARE:
-		switch (code) {
-		case EXC_UNIX_BAD_SYSCALL:
-			return SIGSYS;
-		case EXC_UNIX_BAD_PIPE:
-			return SIGPIPE;
-		case EXC_UNIX_ABORT:
-			return SIGABRT;
-		case EXC_SOFT_SIGNAL:
-			return SIGKILL;
-		}
-		break;
+  case EXC_SOFTWARE:
+    switch (code) {
+    case EXC_UNIX_BAD_SYSCALL:
+      return SIGSYS;
+    case EXC_UNIX_BAD_PIPE:
+      return SIGPIPE;
+    case EXC_UNIX_ABORT:
+      return SIGABRT;
+    case EXC_SOFT_SIGNAL:
+      return SIGKILL;
+    }
+    break;
 
-	case EXC_BREAKPOINT:
-		return SIGTRAP;
-	}
+  case EXC_BREAKPOINT:
+    return SIGTRAP;
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
- * Sends the corresponding UNIX signal to a thread that has triggered a Mach exception.
+ * Sends the corresponding UNIX signal to a thread that has triggered a Mach
+ * exception.
  */
-kern_return_t
-handle_ux_exception(thread_t                    thread,
-    int                         exception,
-    mach_exception_code_t       code,
-    mach_exception_subcode_t    subcode)
-{
-	/* Returns +1 proc reference */
-	proc_t p = proc_findthread(thread);
+kern_return_t handle_ux_exception(thread_t thread, int exception,
+                                  mach_exception_code_t code,
+                                  mach_exception_subcode_t subcode) {
+  /* Returns +1 proc reference */
+  proc_t p = proc_findthread(thread);
 
-	/* Can't deliver a signal without a bsd process reference */
-	if (p == NULL) {
-		return KERN_FAILURE;
-	}
+  /* Can't deliver a signal without a bsd process reference */
+  if (p == NULL) {
+    return KERN_FAILURE;
+  }
 
-	/* Translate exception and code to signal type */
-	int ux_signal = ux_exception(exception, code, subcode);
+  /* Translate exception and code to signal type */
+  int ux_signal = ux_exception(exception, code, subcode);
 
-	uthread_t ut = get_bsdthread_info(thread);
+  uthread_t ut = get_bsdthread_info(thread);
 
-	/*
-	 * Stack overflow should result in a SIGSEGV signal
-	 * on the alternate stack.
-	 * but we have one or more guard pages after the
-	 * stack top, so we would get a KERN_PROTECTION_FAILURE
-	 * exception instead of KERN_INVALID_ADDRESS, resulting in
-	 * a SIGBUS signal.
-	 * Detect that situation and select the correct signal.
-	 */
-	if (code == KERN_PROTECTION_FAILURE &&
-	    ux_signal == SIGBUS) {
-		user_addr_t sp = subcode;
+  /*
+   * Stack overflow should result in a SIGSEGV signal
+   * on the alternate stack.
+   * but we have one or more guard pages after the
+   * stack top, so we would get a KERN_PROTECTION_FAILURE
+   * exception instead of KERN_INVALID_ADDRESS, resulting in
+   * a SIGBUS signal.
+   * Detect that situation and select the correct signal.
+   */
+  if (code == KERN_PROTECTION_FAILURE && ux_signal == SIGBUS) {
+    user_addr_t sp = subcode;
 
-		user_addr_t stack_max = p->user_stack;
-		user_addr_t stack_min = p->user_stack - MAXSSIZ;
-		if (sp >= stack_min && sp < stack_max) {
-			/*
-			 * This is indeed a stack overflow.  Deliver a
-			 * SIGSEGV signal.
-			 */
-			ux_signal = SIGSEGV;
+    user_addr_t stack_max = p->user_stack;
+    user_addr_t stack_min = p->user_stack - MAXSSIZ;
+    if (sp >= stack_min && sp < stack_max) {
+      /*
+       * This is indeed a stack overflow.  Deliver a
+       * SIGSEGV signal.
+       */
+      ux_signal = SIGSEGV;
 
-			/*
-			 * If the thread/process is not ready to handle
-			 * SIGSEGV on an alternate stack, force-deliver
-			 * SIGSEGV with a SIG_DFL handler.
-			 */
-			int mask = sigmask(ux_signal);
-			struct sigacts *ps = &p->p_sigacts;
-			if ((p->p_sigignore & mask) ||
-			    (ut->uu_sigwait & mask) ||
-			    (ut->uu_sigmask & mask) ||
-			    (SIGACTION(p, SIGSEGV) == SIG_IGN) ||
-			    (!(ps->ps_sigonstack & mask))) {
-				p->p_sigignore &= ~mask;
-				p->p_sigcatch &= ~mask;
-				proc_set_sigact(p, SIGSEGV, SIG_DFL);
-				ut->uu_sigwait &= ~mask;
-				ut->uu_sigmask &= ~mask;
-			}
-		}
-	}
+      /*
+       * If the thread/process is not ready to handle
+       * SIGSEGV on an alternate stack, force-deliver
+       * SIGSEGV with a SIG_DFL handler.
+       */
+      int mask = sigmask(ux_signal);
+      struct sigacts *ps = &p->p_sigacts;
+      if ((p->p_sigignore & mask) || (ut->uu_sigwait & mask) ||
+          (ut->uu_sigmask & mask) || (SIGACTION(p, SIGSEGV) == SIG_IGN) ||
+          (!(ps->ps_sigonstack & mask))) {
+        p->p_sigignore &= ~mask;
+        p->p_sigcatch &= ~mask;
+        proc_set_sigact(p, SIGSEGV, SIG_DFL);
+        ut->uu_sigwait &= ~mask;
+        ut->uu_sigmask &= ~mask;
+      }
+    }
+  }
 
-	/* Send signal to thread */
-	if (ux_signal != 0) {
-		ut->uu_exception = exception;
-		//ut->uu_code = code; // filled in by threadsignal
-		ut->uu_subcode = subcode;
-		threadsignal(thread, ux_signal, code, TRUE);
-	}
+  /* Send signal to thread */
+  if (ux_signal != 0) {
+    ut->uu_exception = exception;
+    // ut->uu_code = code; // filled in by threadsignal
+    ut->uu_subcode = subcode;
+    threadsignal(thread, ux_signal, code, TRUE);
+  }
 
-	proc_rele(p);
+  proc_rele(p);
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }

@@ -28,34 +28,30 @@
 #define ATOMIC_PRIVATE 1
 #define LOCK_PRIVATE 1
 
-#include <stdint.h>
+#include <i386/x86_hypercall.h>
+#include <kern/lock_stat.h>
+#include <kern/locks.h>
 #include <kern/thread.h>
 #include <machine/atomic.h>
-#include <kern/locks.h>
-#include <kern/lock_stat.h>
 #include <machine/machine_cpu.h>
 #include <os/atomic_private.h>
-#include <i386/x86_hypercall.h>
+#include <stdint.h>
 
 #include <i386/lapic.h>
 #include <i386/mp.h>
 
-static inline void
-kvm_hc_kick_cpu(int cpu_number)
-{
-	const unsigned long KVM_HC_KICK_CPU = 5;
-	const unsigned long apicid = ml_get_apicid(cpu_number);
-	kvmcompat_hypercall2(KVM_HC_KICK_CPU, 0, apicid);
+static inline void kvm_hc_kick_cpu(int cpu_number) {
+  const unsigned long KVM_HC_KICK_CPU = 5;
+  const unsigned long apicid = ml_get_apicid(cpu_number);
+  kvmcompat_hypercall2(KVM_HC_KICK_CPU, 0, apicid);
 }
 
-static inline void
-kvm_hc_wait(boolean_t ien)
-{
-	if (ien) {
-		__asm__ volatile ("sti; hlt");
-	} else {
-		__asm__ volatile ("hlt");
-	}
+static inline void kvm_hc_wait(boolean_t ien) {
+  if (ien) {
+    __asm__ volatile("sti; hlt");
+  } else {
+    __asm__ volatile("hlt");
+  }
 }
 
 static cpumask_t ticket_waitmask_pv;
@@ -65,39 +61,35 @@ static cpumask_t ticket_waitmask_pv;
  * ready for acquisition by an acquirer that has nticket == cticket.
  * Find the waiting vcpu and kick it out of its passive state.
  */
-__attribute__((noinline))
-void
-hw_lck_ticket_unlock_kick_pv(hw_lck_ticket_t *lck, uint8_t ticket)
-{
-	const cpumask_t wmask = os_atomic_load(&ticket_waitmask_pv, acquire);
+__attribute__((noinline)) void
+hw_lck_ticket_unlock_kick_pv(hw_lck_ticket_t *lck, uint8_t ticket) {
+  const cpumask_t wmask = os_atomic_load(&ticket_waitmask_pv, acquire);
 
-	percpu_foreach_base(base) {
-		const processor_t ps = PERCPU_GET_WITH_BASE(base, processor);
-		const uint32_t tcpunum = ps->cpu_id;
+  percpu_foreach_base(base) {
+    const processor_t ps = PERCPU_GET_WITH_BASE(base, processor);
+    const uint32_t tcpunum = ps->cpu_id;
 
-		if ((wmask & cpu_to_cpumask(tcpunum)) == 0) {
-			continue; // vcpu not currently waiting for a kick
-		}
-		const lck_tktlock_pv_info_t ltpi = PERCPU_GET_WITH_BASE(base,
-		    lck_tktlock_pv_info);
+    if ((wmask & cpu_to_cpumask(tcpunum)) == 0) {
+      continue; // vcpu not currently waiting for a kick
+    }
+    const lck_tktlock_pv_info_t ltpi =
+        PERCPU_GET_WITH_BASE(base, lck_tktlock_pv_info);
 
-		const hw_lck_ticket_t *wlck = os_atomic_load(&ltpi->ltpi_lck,
-		    acquire);
-		if (wlck != lck) {
-			continue; // vcpu waiting on a different lock
-		}
+    const hw_lck_ticket_t *wlck = os_atomic_load(&ltpi->ltpi_lck, acquire);
+    if (wlck != lck) {
+      continue; // vcpu waiting on a different lock
+    }
 
-		const uint8_t wt = os_atomic_load(&ltpi->ltpi_wt, acquire);
-		if (wt != ticket) {
-			continue; // vcpu doesn't have the right ticket
-		}
+    const uint8_t wt = os_atomic_load(&ltpi->ltpi_wt, acquire);
+    if (wt != ticket) {
+      continue; // vcpu doesn't have the right ticket
+    }
 
-		kvm_hc_kick_cpu(tcpunum);
-		PVTICKET_STATS_INC(kick_count);
-		break;
-	}
+    kvm_hc_kick_cpu(tcpunum);
+    PVTICKET_STATS_INC(kick_count);
+    break;
+  }
 }
-
 
 /*
  * The current vcpu wants 'lck' but the vcpu holding it may not be running.
@@ -111,58 +103,56 @@ hw_lck_ticket_unlock_kick_pv(hw_lck_ticket_t *lck, uint8_t ticket)
  *
  * All we really know is that when we get here, spinning has been unsuccessful.
  */
-__attribute__((noinline))
-void
-hw_lck_ticket_lock_wait_pv(hw_lck_ticket_t *lck, uint8_t mt)
-{
-	/*
-	 * Disable interrupts so we don't lose the kick.
-	 * (Also prevents collisions with ticket lock
-	 * acquisition in an interrupt handler)
-	 */
+__attribute__((noinline)) void hw_lck_ticket_lock_wait_pv(hw_lck_ticket_t *lck,
+                                                          uint8_t mt) {
+  /*
+   * Disable interrupts so we don't lose the kick.
+   * (Also prevents collisions with ticket lock
+   * acquisition in an interrupt handler)
+   */
 
-	const boolean_t istate = ml_set_interrupts_enabled(FALSE);
+  const boolean_t istate = ml_set_interrupts_enabled(FALSE);
 
-	/* Record the ticket + the lock this cpu is waiting for */
+  /* Record the ticket + the lock this cpu is waiting for */
 
-	assert(!preemption_enabled());
-	lck_tktlock_pv_info_t ltpi = PERCPU_GET(lck_tktlock_pv_info);
+  assert(!preemption_enabled());
+  lck_tktlock_pv_info_t ltpi = PERCPU_GET(lck_tktlock_pv_info);
 
-	os_atomic_store(&ltpi->ltpi_lck, NULL, release);
-	os_atomic_store(&ltpi->ltpi_wt, mt, release);
-	os_atomic_store(&ltpi->ltpi_lck, lck, release);
+  os_atomic_store(&ltpi->ltpi_lck, NULL, release);
+  os_atomic_store(&ltpi->ltpi_wt, mt, release);
+  os_atomic_store(&ltpi->ltpi_lck, lck, release);
 
-	/* Mark this cpu as eligible for kicking */
+  /* Mark this cpu as eligible for kicking */
 
-	const cpumask_t kickmask = cpu_to_cpumask(cpu_number());
-	os_atomic_or(&ticket_waitmask_pv, kickmask, acq_rel);
+  const cpumask_t kickmask = cpu_to_cpumask(cpu_number());
+  os_atomic_or(&ticket_waitmask_pv, kickmask, acq_rel);
 
-	assert((mt & HW_LCK_TICKET_LOCK_PVWAITFLAG) == 0);
+  assert((mt & HW_LCK_TICKET_LOCK_PVWAITFLAG) == 0);
 
-	/* Check the "now serving" field one last time */
+  /* Check the "now serving" field one last time */
 
-	const uint8_t cticket = os_atomic_load(&lck->cticket, acquire);
-	const uint8_t ccount = cticket & ~HW_LCK_TICKET_LOCK_PVWAITFLAG;
+  const uint8_t cticket = os_atomic_load(&lck->cticket, acquire);
+  const uint8_t ccount = cticket & ~HW_LCK_TICKET_LOCK_PVWAITFLAG;
 
-	if (__probable(ccount != mt)) {
-		PVTICKET_STATS_INC(wait_count);
-		assert(cticket & HW_LCK_TICKET_LOCK_PVWAITFLAG);
+  if (__probable(ccount != mt)) {
+    PVTICKET_STATS_INC(wait_count);
+    assert(cticket & HW_LCK_TICKET_LOCK_PVWAITFLAG);
 
-		/* wait for a kick (or other interrupt) */
-		kvm_hc_wait(istate);
-		/*
-		 * Note: if interrupts were enabled at entry to the routine,
-		 * even though we disabled them above, they'll be enabled here.
-		 */
-	} else {
-		/* just return to the caller to claim the ticket */
-		PVTICKET_STATS_INC(already_count);
-	}
+    /* wait for a kick (or other interrupt) */
+    kvm_hc_wait(istate);
+    /*
+     * Note: if interrupts were enabled at entry to the routine,
+     * even though we disabled them above, they'll be enabled here.
+     */
+  } else {
+    /* just return to the caller to claim the ticket */
+    PVTICKET_STATS_INC(already_count);
+  }
 
-	os_atomic_andnot(&ticket_waitmask_pv, kickmask, acq_rel);
-	os_atomic_store(&ltpi->ltpi_lck, NULL, release);
+  os_atomic_andnot(&ticket_waitmask_pv, kickmask, acq_rel);
+  os_atomic_store(&ltpi->ltpi_lck, NULL, release);
 
-	(void) ml_set_interrupts_enabled(istate);
+  (void)ml_set_interrupts_enabled(istate);
 
-	assert(!preemption_enabled());
+  assert(!preemption_enabled());
 }

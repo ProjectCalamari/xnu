@@ -36,8 +36,8 @@
 #else
 #include <libkern/c++/bounded_ptr.h>
 #endif /* DRIVERKIT_FRAMEWORK_INCLUDE */
-#include <stddef.h>
 #include <os/base.h>
+#include <stddef.h>
 
 namespace libkern {
 // `bounded_array` is a simple abstraction for a C-style array.
@@ -49,65 +49,30 @@ namespace libkern {
 // TODO:
 // - Should we provide deep comparison operators?
 // - Document individual methods
-template <typename T, size_t N, typename TrappingPolicy>
-struct bounded_array {
-	// DO NOT USE THIS MEMBER DIRECTLY OR WE WILL BREAK YOUR CODE IN THE FUTURE.
-	// THIS HAS TO BE PUBLIC FOR THIS TYPE TO SUPPORT AGGREGATE-INITIALIZATION.
-	T data_[N];
+template <typename T, size_t N, typename TrappingPolicy> struct bounded_array {
+  // DO NOT USE THIS MEMBER DIRECTLY OR WE WILL BREAK YOUR CODE IN THE FUTURE.
+  // THIS HAS TO BE PUBLIC FOR THIS TYPE TO SUPPORT AGGREGATE-INITIALIZATION.
+  T data_[N];
 
-	using iterator = bounded_ptr<T, TrappingPolicy>;
-	using const_iterator = bounded_ptr<T const, TrappingPolicy>;
+  using iterator = bounded_ptr<T, TrappingPolicy>;
+  using const_iterator = bounded_ptr<T const, TrappingPolicy>;
 
-	OS_ALWAYS_INLINE iterator
-	begin() noexcept
-	{
-		return iterator(data_, data_, data_ + N);
-	}
-	OS_ALWAYS_INLINE const_iterator
-	begin() const noexcept
-	{
-		return const_iterator(data_, data_, data_ + N);
-	}
-	iterator
-	end() noexcept
-	{
-		return iterator(data_ + N, data_, data_ + N);
-	}
-	const_iterator
-	end() const noexcept
-	{
-		return const_iterator(data_ + N, data_, data_ + N);
-	}
-	constexpr size_t
-	size() const noexcept
-	{
-		return N;
-	}
-	constexpr size_t
-	length() const noexcept
-	{
-		return N;
-	}
-	constexpr T*
-	data() noexcept
-	{
-		return data_;
-	}
-	constexpr T const*
-	data() const noexcept
-	{
-		return data_;
-	}
-	OS_ALWAYS_INLINE T&
-	operator[](ptrdiff_t n)
-	{
-		return begin()[n];
-	}
-	OS_ALWAYS_INLINE T const&
-	operator[](ptrdiff_t n) const
-	{
-		return begin()[n];
-	}
+  OS_ALWAYS_INLINE iterator begin() noexcept {
+    return iterator(data_, data_, data_ + N);
+  }
+  OS_ALWAYS_INLINE const_iterator begin() const noexcept {
+    return const_iterator(data_, data_, data_ + N);
+  }
+  iterator end() noexcept { return iterator(data_ + N, data_, data_ + N); }
+  const_iterator end() const noexcept {
+    return const_iterator(data_ + N, data_, data_ + N);
+  }
+  constexpr size_t size() const noexcept { return N; }
+  constexpr size_t length() const noexcept { return N; }
+  constexpr T *data() noexcept { return data_; }
+  constexpr T const *data() const noexcept { return data_; }
+  OS_ALWAYS_INLINE T &operator[](ptrdiff_t n) { return begin()[n]; }
+  OS_ALWAYS_INLINE T const &operator[](ptrdiff_t n) const { return begin()[n]; }
 };
 } // end namespace libkern
 

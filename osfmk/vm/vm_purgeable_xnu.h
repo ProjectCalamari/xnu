@@ -59,7 +59,6 @@ kern_return_t vm_purgeable_account(task_t task, pvm_account_info_t acnt_info);
 
 uint64_t vm_purgeable_purge_task_owned(task_t task);
 
-
 #endif /* XNU_KERNEL_PRIVATE */
 
-#endif  /* __VM_PURGEABLE_XNU__ */
+#endif /* __VM_PURGEABLE_XNU__ */

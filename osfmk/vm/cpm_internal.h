@@ -51,7 +51,8 @@
  *	These pages are all in "gobbled" state when
  *	wired is FALSE.
  */
-extern kern_return_t
-cpm_allocate(vm_size_t size, vm_page_t *list, ppnum_t max_pnum, ppnum_t pnum_mask, boolean_t wire, int flags);
+extern kern_return_t cpm_allocate(vm_size_t size, vm_page_t *list,
+                                  ppnum_t max_pnum, ppnum_t pnum_mask,
+                                  boolean_t wire, int flags);
 
-#endif  /* _VM_CPM_H_ */
+#endif /* _VM_CPM_H_ */

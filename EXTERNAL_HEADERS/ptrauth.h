@@ -133,8 +133,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
    The value must be an expression of pointer type.
    The key must be a constant expression of type ptrauth_key.
    The result will have the same type as the original value. */
-#define ptrauth_strip(__value, __key) \
-  __builtin_ptrauth_strip(__value, __key)
+#define ptrauth_strip(__value, __key) __builtin_ptrauth_strip(__value, __key)
 
 /* Blend a pointer and a small integer to form a new extra-data
    discriminator.  Not all bits of the inputs are guaranteed to
@@ -149,7 +148,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
    The first argument must be an expression of pointer type.
    The second argument must be an expression of integer type.
    The result will have type uintptr_t. */
-#define ptrauth_blend_discriminator(__pointer, __integer) \
+#define ptrauth_blend_discriminator(__pointer, __integer)                      \
   __builtin_ptrauth_blend_discriminator(__pointer, __integer)
 
 /* Compute the 16-bit integer discriminator of the given type.
@@ -157,7 +156,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
    The argument must be a type.
 */
 #if __has_builtin(__builtin_ptrauth_type_discriminator)
-#define ptrauth_type_discriminator(__type) \
+#define ptrauth_type_discriminator(__type)                                     \
   __builtin_ptrauth_type_discriminator(__type)
 #else
 #define ptrauth_type_discriminator(__type) ((uintptr_t)0)
@@ -168,7 +167,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
 
    A call to this function is an integer constant expression*/
 #if __has_feature(ptrauth_function_pointer_type_discrimination)
-#define ptrauth_function_pointer_type_discriminator(__type) \
+#define ptrauth_function_pointer_type_discriminator(__type)                    \
   __builtin_ptrauth_type_discriminator(__type)
 #else
 #define ptrauth_function_pointer_type_discriminator(__type) ((uintptr_t)0)
@@ -185,7 +184,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
 
    This is a constant expression if the extra data is an integer or
    null pointer constant. */
-#define ptrauth_sign_constant(__value, __key, __data) \
+#define ptrauth_sign_constant(__value, __key, __data)                          \
   __builtin_ptrauth_sign_constant(__value, __key, __data)
 
 /* Add a signature to the given pointer value using a specific key,
@@ -200,7 +199,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
    The extra data must be an expression of pointer or integer type;
    if an integer, it will be coerced to ptrauth_extra_data_t.
    The result will have the same type as the original value. */
-#define ptrauth_sign_unauthenticated(__value, __key, __data) \
+#define ptrauth_sign_unauthenticated(__value, __key, __data)                   \
   __builtin_ptrauth_sign_unauthenticated(__value, __key, __data)
 
 /* Authenticate a pointer using one scheme and resign it using another.
@@ -220,8 +219,10 @@ typedef uintptr_t ptrauth_generic_signature_t;
 
    Do not pass a null pointer to this function. A null pointer
    will not successfully authenticate. */
-#define ptrauth_auth_and_resign(__value, __old_key, __old_data, __new_key, __new_data) \
-  __builtin_ptrauth_auth_and_resign(__value, __old_key, __old_data, __new_key, __new_data)
+#define ptrauth_auth_and_resign(__value, __old_key, __old_data, __new_key,     \
+                                __new_data)                                    \
+  __builtin_ptrauth_auth_and_resign(__value, __old_key, __old_data, __new_key, \
+                                    __new_data)
 
 /* Authenticate a pointer using one scheme and resign it as a C
    function pointer.
@@ -240,8 +241,9 @@ typedef uintptr_t ptrauth_generic_signature_t;
    available for attack before it is re-signed. Additionally, if this
    expression is used syntactically as the function expression in a
    call, only a single authentication will be performed. */
-#define ptrauth_auth_function(__value, __old_key, __old_data) \
-  ptrauth_auth_and_resign(__value, __old_key, __old_data, ptrauth_key_function_pointer, 0)
+#define ptrauth_auth_function(__value, __old_key, __old_data)                  \
+  ptrauth_auth_and_resign(__value, __old_key, __old_data,                      \
+                          ptrauth_key_function_pointer, 0)
 
 /* Cast a pointer to the given type without changing any signature.
 
@@ -251,13 +253,15 @@ typedef uintptr_t ptrauth_generic_signature_t;
    The result has type given by the first argument.
 
    The result has an identical bit-pattern to the input pointer. */
-#define ptrauth_nop_cast(__type, __value)        \
-  ({ union {                                     \
-      typeof(__value) __fptr;                    \
-      typeof(__type) __opaque;                   \
-  } __storage;                                   \
-  __storage.__fptr = (__value);                  \
-  __storage.__opaque; })
+#define ptrauth_nop_cast(__type, __value)                                      \
+  ({                                                                           \
+    union {                                                                    \
+      typeof(__value) __fptr;                                                  \
+      typeof(__type) __opaque;                                                 \
+    } __storage;                                                               \
+    __storage.__fptr = (__value);                                              \
+    __storage.__opaque;                                                        \
+  })
 
 /* Authenticate a data pointer.
 
@@ -269,7 +273,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
 
    If the authentication fails, dereferencing the resulting pointer
    will fail. */
-#define ptrauth_auth_data(__value, __old_key, __old_data) \
+#define ptrauth_auth_data(__value, __old_key, __old_data)                      \
   __builtin_ptrauth_auth(__value, __old_key, __old_data)
 
 /* Return an extra-discriminator value which can validly be used
@@ -278,7 +282,7 @@ typedef uintptr_t ptrauth_generic_signature_t;
 
    The argument must be a string literal.
    A call to this function is an integer constant expression. */
-#define ptrauth_string_discriminator(__string) \
+#define ptrauth_string_discriminator(__string)                                 \
   __builtin_ptrauth_string_discriminator(__string)
 
 /* Compute a full pointer-width generic signature for the given
@@ -301,66 +305,100 @@ typedef uintptr_t ptrauth_generic_signature_t;
 
    This operation will compute a meaningful signature even in processes
    which disable ABI pointer authentication. */
-#define ptrauth_sign_generic_data(__value, __data) \
+#define ptrauth_sign_generic_data(__value, __data)                             \
   __builtin_ptrauth_sign_generic_data(__value, __data)
 
-
 /* Define some standard __ptrauth qualifiers used in the ABI. */
-#define __ptrauth_function_pointer            \
-  __ptrauth(ptrauth_key_function_pointer,0,0)
-#define __ptrauth_return_address              \
-  __ptrauth(ptrauth_key_return_address,1,0)
-#define __ptrauth_block_invocation_pointer    \
-  __ptrauth(ptrauth_key_function_pointer,1,0)
-#define __ptrauth_block_copy_helper           \
-  __ptrauth(ptrauth_key_function_pointer,1,0)
-#define __ptrauth_block_destroy_helper        \
-  __ptrauth(ptrauth_key_function_pointer,1,0)
-#define __ptrauth_block_byref_copy_helper     \
-  __ptrauth(ptrauth_key_function_pointer,1,0)
-#define __ptrauth_block_byref_destroy_helper  \
-  __ptrauth(ptrauth_key_function_pointer,1,0)
-#define __ptrauth_objc_method_list_imp        \
-  __ptrauth(ptrauth_key_function_pointer,1,0)
-#define __ptrauth_cxx_vtable_pointer          \
-  __ptrauth(ptrauth_key_cxx_vtable_pointer,0,0)
-#define __ptrauth_cxx_vtt_vtable_pointer      \
-  __ptrauth(ptrauth_key_cxx_vtable_pointer,0,0)
-#define __ptrauth_swift_heap_object_destructor \
-  __ptrauth(ptrauth_key_function_pointer,1,0xbbbf)
+#define __ptrauth_function_pointer __ptrauth(ptrauth_key_function_pointer, 0, 0)
+#define __ptrauth_return_address __ptrauth(ptrauth_key_return_address, 1, 0)
+#define __ptrauth_block_invocation_pointer                                     \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0)
+#define __ptrauth_block_copy_helper                                            \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0)
+#define __ptrauth_block_destroy_helper                                         \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0)
+#define __ptrauth_block_byref_copy_helper                                      \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0)
+#define __ptrauth_block_byref_destroy_helper                                   \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0)
+#define __ptrauth_objc_method_list_imp                                         \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0)
+#define __ptrauth_cxx_vtable_pointer                                           \
+  __ptrauth(ptrauth_key_cxx_vtable_pointer, 0, 0)
+#define __ptrauth_cxx_vtt_vtable_pointer                                       \
+  __ptrauth(ptrauth_key_cxx_vtable_pointer, 0, 0)
+#define __ptrauth_swift_heap_object_destructor                                 \
+  __ptrauth(ptrauth_key_function_pointer, 1, 0xbbbf)
 
 /* Some situations in the C++ and Swift ABIs use declaration-specific
    or type-specific extra discriminators. */
-#define __ptrauth_cxx_virtual_function_pointer(__declkey) \
-  __ptrauth(ptrauth_key_function_pointer,1,__declkey)
-#define __ptrauth_swift_function_pointer(__typekey) \
-  __ptrauth(ptrauth_key_function_pointer,0,__typekey)
-#define __ptrauth_swift_class_method_pointer(__declkey) \
-  __ptrauth(ptrauth_key_function_pointer,1,__declkey)
-#define __ptrauth_swift_protocol_witness_function_pointer(__declkey) \
-  __ptrauth(ptrauth_key_function_pointer,1,__declkey)
-#define __ptrauth_swift_value_witness_function_pointer(__key) \
-  __ptrauth(ptrauth_key_function_pointer,1,__key)
+#define __ptrauth_cxx_virtual_function_pointer(__declkey)                      \
+  __ptrauth(ptrauth_key_function_pointer, 1, __declkey)
+#define __ptrauth_swift_function_pointer(__typekey)                            \
+  __ptrauth(ptrauth_key_function_pointer, 0, __typekey)
+#define __ptrauth_swift_class_method_pointer(__declkey)                        \
+  __ptrauth(ptrauth_key_function_pointer, 1, __declkey)
+#define __ptrauth_swift_protocol_witness_function_pointer(__declkey)           \
+  __ptrauth(ptrauth_key_function_pointer, 1, __declkey)
+#define __ptrauth_swift_value_witness_function_pointer(__key)                  \
+  __ptrauth(ptrauth_key_function_pointer, 1, __key)
 
 #else
 
-#define ptrauth_strip(__value, __key) ({ (void)__key; __value; })
-#define ptrauth_blend_discriminator(__pointer, __integer) ({ (void)__pointer; (void)__integer; (uintptr_t)0; })
+#define ptrauth_strip(__value, __key)                                          \
+  ({                                                                           \
+    (void)__key;                                                               \
+    __value;                                                                   \
+  })
+#define ptrauth_blend_discriminator(__pointer, __integer)                      \
+  ({                                                                           \
+    (void)__pointer;                                                           \
+    (void)__integer;                                                           \
+    (uintptr_t)0;                                                              \
+  })
 #define ptrauth_type_discriminator(__type) ((uintptr_t)0)
 #define ptrauth_function_pointer_type_discriminator(__type) ((uintptr_t)0)
-#define ptrauth_sign_constant(__value, __key, __data) ({ (void)__key; (void)__data; __value; })
-#define ptrauth_sign_unauthenticated(__value, __key, __data) ({ (void)__key; (void)__data; __value; })
-#define ptrauth_auth_and_resign(__value, __old_key, __old_data, __new_key, __new_data) ({ \
-      (void)__old_key; \
-      (void)__old_data; \
-      (void)__new_key; \
-      (void)__new_data; \
-      __value; })
-#define ptrauth_auth_function(__value, __old_key, __old_data) ({ (void)__old_key; (void)__old_data; __value; })
+#define ptrauth_sign_constant(__value, __key, __data)                          \
+  ({                                                                           \
+    (void)__key;                                                               \
+    (void)__data;                                                              \
+    __value;                                                                   \
+  })
+#define ptrauth_sign_unauthenticated(__value, __key, __data)                   \
+  ({                                                                           \
+    (void)__key;                                                               \
+    (void)__data;                                                              \
+    __value;                                                                   \
+  })
+#define ptrauth_auth_and_resign(__value, __old_key, __old_data, __new_key,     \
+                                __new_data)                                    \
+  ({                                                                           \
+    (void)__old_key;                                                           \
+    (void)__old_data;                                                          \
+    (void)__new_key;                                                           \
+    (void)__new_data;                                                          \
+    __value;                                                                   \
+  })
+#define ptrauth_auth_function(__value, __old_key, __old_data)                  \
+  ({                                                                           \
+    (void)__old_key;                                                           \
+    (void)__old_data;                                                          \
+    __value;                                                                   \
+  })
 #define ptrauth_nop_cast(__type, __value) ((__type)__value)
-#define ptrauth_auth_data(__value, __old_key, __old_data) ({ (void)__old_key; (void)__old_data; __value; })
-#define ptrauth_string_discriminator(__string) ({ (void)__string; (int)0; })
-#define ptrauth_sign_generic_data(__value, __data) ({ (void)__value; (void)__data; (ptrauth_generic_signature_t)0; })
+#define ptrauth_auth_data(__value, __old_key, __old_data)                      \
+  ({                                                                           \
+    (void)__old_key;                                                           \
+    (void)__old_data;                                                          \
+    __value;                                                                   \
+  })
+#define ptrauth_string_discriminator(__string) ((uintptr_t)0)
+#define ptrauth_sign_generic_data(__value, __data)                             \
+  ({                                                                           \
+    (void)__value;                                                             \
+    (void)__data;                                                              \
+    (ptrauth_generic_signature_t)0;                                            \
+  })
 
 #define __ptrauth_function_pointer
 #define __ptrauth_return_address

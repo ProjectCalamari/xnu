@@ -23,9 +23,9 @@
 
 #define FIREHOSE_SPI_VERSION 20180416
 
-#include "firehose_types_private.h"
-#include "tracepoint_private.h"
-#include "ioctl_private.h"
 #include "chunk_private.h"
+#include "firehose_types_private.h"
+#include "ioctl_private.h"
+#include "tracepoint_private.h"
 
 #endif // __FIREHOSE_FIREHOSE_PRIVATE__

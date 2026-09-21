@@ -13,7 +13,7 @@ extern uint32_t pe_arm_init_interrupts(void *args);
 extern void pe_arm_debug_init_early(void *args);
 extern void pe_arm_debug_init_late(void);
 
-#ifdef  PEXPERT_KERNEL_PRIVATE
+#ifdef PEXPERT_KERNEL_PRIVATE
 extern void console_write_unbuffered(char);
 #endif
 int serial_init(void);
@@ -21,8 +21,7 @@ int serial_init(void);
 /**
  * Forbid or allow transmission over each serial until they receive data.
  */
-void
-serial_set_on_demand(bool);
+void serial_set_on_demand(bool);
 
 #if HIBERNATION
 void serial_hibernation_init(void);
@@ -43,11 +42,11 @@ void pe_init_fiq(void);
  * One hot ids to distinquish between all supported serial devices
  */
 typedef enum serial_device {
-	SERIAL_UNKNOWN=0x0,
-	SERIAL_APPLE_UART=0x1,
-	SERIAL_DOCKCHANNEL=0x2,
-	SERIAL_PL011_UART=0x4,
-	SERIAL_DCC_UART=0x8
+  SERIAL_UNKNOWN = 0x0,
+  SERIAL_APPLE_UART = 0x1,
+  SERIAL_DOCKCHANNEL = 0x2,
+  SERIAL_PL011_UART = 0x4,
+  SERIAL_DCC_UART = 0x8
 } serial_device_t;
 
 kern_return_t serial_irq_enable(serial_device_t device);

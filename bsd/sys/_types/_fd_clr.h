@@ -27,5 +27,5 @@
  */
 #ifndef FD_CLR
 #include <sys/_types/_fd_def.h>
-#define FD_CLR(n, p)    __DARWIN_FD_CLR(n, p)
+#define FD_CLR(n, p) __DARWIN_FD_CLR(n, p)
 #endif /* FD_CLR */

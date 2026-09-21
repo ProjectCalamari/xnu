@@ -41,9 +41,9 @@
  * registered by this socket. May be variable in length.
  */
 struct ndrv_multiaddr {
-	struct ndrv_multiaddr      *next;
-	ifmultiaddr_t               ifma;
-	struct sockaddr            *addr;
+  struct ndrv_multiaddr *next;
+  ifmultiaddr_t ifma;
+  struct sockaddr *addr;
 };
 #endif
 
@@ -53,28 +53,28 @@ struct ndrv_multiaddr {
  * For now, it looks like a raw_cb up front...
  */
 struct ndrv_cb {
-	TAILQ_ENTRY(ndrv_cb)    nd_next;
-	struct socket *nd_socket;       /* Back to the socket */
-	u_int32_t nd_signature; /* Just double-checking */
-	struct sockaddr_ndrv *nd_faddr;
-	struct sockaddr_ndrv *nd_laddr;
-	struct sockproto nd_proto;      /* proto family, protocol */
-	int nd_descrcnt;                /* # elements in nd_dlist - Obsolete */
-	TAILQ_HEAD(dlist, dlil_demux_desc) nd_dlist; /* Descr. list */
-	u_int32_t nd_dlist_cnt; /* Descr. list count */
-	struct ifnet *nd_if; /* obsolete, maintained for binary compatibility */
-	u_int32_t nd_proto_family;
-	u_int32_t nd_family;
-	struct ndrv_multiaddr* nd_multiaddrs;
-	short nd_unit;
+  TAILQ_ENTRY(ndrv_cb) nd_next;
+  struct socket *nd_socket; /* Back to the socket */
+  u_int32_t nd_signature;   /* Just double-checking */
+  struct sockaddr_ndrv *nd_faddr;
+  struct sockaddr_ndrv *nd_laddr;
+  struct sockproto nd_proto; /* proto family, protocol */
+  int nd_descrcnt;           /* # elements in nd_dlist - Obsolete */
+  TAILQ_HEAD(dlist, dlil_demux_desc) nd_dlist; /* Descr. list */
+  u_int32_t nd_dlist_cnt;                      /* Descr. list count */
+  struct ifnet *nd_if; /* obsolete, maintained for binary compatibility */
+  u_int32_t nd_proto_family;
+  u_int32_t nd_family;
+  struct ndrv_multiaddr *nd_multiaddrs;
+  short nd_unit;
 };
 
-#define sotondrvcb(so)          ((struct ndrv_cb *)(so)->so_pcb)
-#define NDRV_SIGNATURE  0x4e445256 /* "NDRV" */
+#define sotondrvcb(so) ((struct ndrv_cb *)(so)->so_pcb)
+#define NDRV_SIGNATURE 0x4e445256 /* "NDRV" */
 
 /* Nominal allocated space for NDRV sockets */
-#define NDRVSNDQ         8192
-#define NDRVRCVQ         8192
+#define NDRVSNDQ 8192
+#define NDRVRCVQ 8192
 
 #endif /* PRIVATE */
-#endif  /* _NET_NDRV_VAR_H */
+#endif /* _NET_NDRV_VAR_H */

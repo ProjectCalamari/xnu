@@ -82,30 +82,30 @@
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 #include <sys/_types/_u_char.h>
-#include <sys/_types/_u_short.h>
 #include <sys/_types/_u_int.h>
+#include <sys/_types/_u_short.h>
 #ifndef _U_LONG
-typedef unsigned long           u_long;
+typedef unsigned long u_long;
 #define _U_LONG
 #endif
-typedef unsigned short          ushort;         /* Sys V compatibility */
+typedef unsigned short ushort; /* Sys V compatibility */
 #ifndef __DARWIN_UINT
-typedef unsigned int            uint;           /* Sys V compatibility */
+typedef unsigned int uint; /* Sys V compatibility */
 #define __DARWIN_UINT
 #endif
 #endif
 
-typedef u_int64_t               u_quad_t;       /* quads */
-typedef int64_t                 quad_t;
-typedef quad_t *                qaddr_t;
+typedef u_int64_t u_quad_t; /* quads */
+typedef int64_t quad_t;
+typedef quad_t *qaddr_t;
 
-#include <sys/_types/_caddr_t.h>        /* core address */
+#include <sys/_types/_caddr_t.h> /* core address */
 
-typedef int32_t                 daddr_t;        /* disk address */
+typedef int32_t daddr_t; /* disk address */
 
-#include <sys/_types/_dev_t.h>                  /* device number */
+#include <sys/_types/_dev_t.h> /* device number */
 
-typedef u_int32_t               fixpt_t;        /* fixed point number */
+typedef u_int32_t fixpt_t; /* fixed point number */
 
 #include <sys/_types/_blkcnt_t.h>
 #include <sys/_types/_blksize_t.h>
@@ -115,18 +115,18 @@ typedef u_int32_t               fixpt_t;        /* fixed point number */
 #include <sys/_types/_ino_t.h>
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-#include <sys/_types/_ino64_t.h>                        /* 64bit inode number */
+#include <sys/_types/_ino64_t.h> /* 64bit inode number */
 #endif /* !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE) */
 
+#include <sys/_types/_id_t.h>
 #include <sys/_types/_key_t.h>
 #include <sys/_types/_mode_t.h>
 #include <sys/_types/_nlink_t.h>
-#include <sys/_types/_id_t.h>
-#include <sys/_types/_pid_t.h>
 #include <sys/_types/_off_t.h>
+#include <sys/_types/_pid_t.h>
 
-typedef int32_t                 segsz_t;        /* segment size */
-typedef int32_t                 swblk_t;        /* swap offset */
+typedef int32_t segsz_t; /* segment size */
+typedef int32_t swblk_t; /* swap offset */
 
 #include <sys/_types/_uid_t.h>
 
@@ -138,44 +138,38 @@ typedef int32_t                 swblk_t;        /* swap offset */
  * so for C++, we must use inline functions instead.
  */
 
-static inline __int32_t
-major(__uint32_t _x)
-{
-	return (__int32_t)(((__uint32_t)_x >> 24) & 0xff);
+static inline __int32_t major(__uint32_t _x) {
+  return (__int32_t)(((__uint32_t)_x >> 24) & 0xff);
 }
 
-static inline __int32_t
-minor(__uint32_t _x)
-{
-	return (__int32_t)((_x) & 0xffffff);
+static inline __int32_t minor(__uint32_t _x) {
+  return (__int32_t)((_x) & 0xffffff);
 }
 
-static inline dev_t
-makedev(__uint32_t _major, __uint32_t _minor)
-{
-	return (dev_t)(((_major) << 24) | (_minor));
+static inline dev_t makedev(__uint32_t _major, __uint32_t _minor) {
+  return (dev_t)(((_major) << 24) | (_minor));
 }
 
-#else   /* !__cplusplus */
+#else /* !__cplusplus */
 
-#define major(x)        ((int32_t)(((u_int32_t)(x) >> 24) & 0xff))
-#define minor(x)        ((int32_t)((x) & 0xffffff))
-#define makedev(x, y)    ((dev_t)(((x) << 24) | (y)))
+#define major(x) ((int32_t)(((u_int32_t)(x) >> 24) & 0xff))
+#define minor(x) ((int32_t)((x) & 0xffffff))
+#define makedev(x, y) ((dev_t)(((x) << 24) | (y)))
 
-#endif  /* !__cplusplus */
-#endif  /* !_POSIX_C_SOURCE */
+#endif /* !__cplusplus */
+#endif /* !_POSIX_C_SOURCE */
 
 #include <sys/_types/_clock_t.h>
 #include <sys/_types/_size_t.h>
 #include <sys/_types/_ssize_t.h>
 #include <sys/_types/_time_t.h>
 
-#include <sys/_types/_useconds_t.h>
 #include <sys/_types/_suseconds_t.h>
+#include <sys/_types/_useconds_t.h>
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
-#include <sys/_types/_rsize_t.h>
 #include <sys/_types/_errno_t.h>
+#include <sys/_types/_rsize_t.h>
 #endif
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
@@ -186,10 +180,10 @@ makedev(__uint32_t _major, __uint32_t _minor)
  */
 #include <sys/_types/_fd_def.h>
 
-#define NBBY            __DARWIN_NBBY           /* bits in a byte */
-#define NFDBITS         __DARWIN_NFDBITS        /* bits per mask */
-#define howmany(x, y)   __DARWIN_howmany(x, y)  /* # y's == x bits? */
-typedef __int32_t       fd_mask;
+#define NBBY __DARWIN_NBBY                   /* bits in a byte */
+#define NFDBITS __DARWIN_NFDBITS             /* bits per mask */
+#define howmany(x, y) __DARWIN_howmany(x, y) /* # y's == x bits? */
+typedef __int32_t fd_mask;
 
 /*
  * Select uses bit masks of file descriptors in longs.  These macros
@@ -197,16 +191,15 @@ typedef __int32_t       fd_mask;
  * extra protection here is to permit application redefinition above
  * the default size.
  */
-#include <sys/_types/_fd_setsize.h>
-#include <sys/_types/_fd_set.h>
 #include <sys/_types/_fd_clr.h>
-#include <sys/_types/_fd_zero.h>
 #include <sys/_types/_fd_isset.h>
+#include <sys/_types/_fd_set.h>
+#include <sys/_types/_fd_setsize.h>
+#include <sys/_types/_fd_zero.h>
 
 #if !defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE)
 #include <sys/_types/_fd_copy.h>
-#endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-
+#endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
 #if defined(__STDC__) && defined(KERNEL)
 /*
@@ -214,14 +207,14 @@ typedef __int32_t       fd_mask;
  * common structures that cross subsystem boundaries here; others are mostly
  * used in the same place that the structure is defined.
  */
-struct  proc;
-struct  pgrp;
-struct  ucred;
-struct  rusage;
-struct  file;
-struct  buf;
-struct  tty;
-struct  uio;
+struct proc;
+struct pgrp;
+struct ucred;
+struct rusage;
+struct file;
+struct buf;
+struct tty;
+struct uio;
 #endif
 
 #endif /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */

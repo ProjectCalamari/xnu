@@ -42,8 +42,8 @@
  * declared below.
  */
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -72,33 +72,33 @@ __BEGIN_DECLS
  * A 64-bit value that holds the head and tail of the ringbuffer.
  */
 struct mpsc_ring {
-	char *mr_buffer;
-	uint32_t *mr_writer_holds;
+  char *mr_buffer;
+  uint32_t *mr_writer_holds;
 
-	/**
-	 * A view into the head, tail, and both offsets in the ringbuffer.
-	 *
-	 * @field mrht_head
-	 * The head offset into the ringbuffer data, where writers will write new
-	 * data.
-	 *
-	 * @field mrht_tail
-	 * The tail offset into the ringbuffer data, where the reader has read up
-	 * to.
-	 *
-	 * @field mrht_head_tail
-	 * A combined view of head and tail for atomic updates.
-	 */
-	union mpsc_ring_head_tail {
-		struct {
-			uint32_t mrht_head;
-			uint32_t mrht_tail;
-		};
-		uint64_t mrht_head_tail;
-	} mr_head_tail;
+  /**
+   * A view into the head, tail, and both offsets in the ringbuffer.
+   *
+   * @field mrht_head
+   * The head offset into the ringbuffer data, where writers will write new
+   * data.
+   *
+   * @field mrht_tail
+   * The tail offset into the ringbuffer data, where the reader has read up
+   * to.
+   *
+   * @field mrht_head_tail
+   * A combined view of head and tail for atomic updates.
+   */
+  union mpsc_ring_head_tail {
+    struct {
+      uint32_t mrht_head;
+      uint32_t mrht_tail;
+    };
+    uint64_t mrht_head_tail;
+  } mr_head_tail;
 
-	uint32_t mr_capacity;
-	uint8_t mr_writer_count;
+  uint32_t mr_capacity;
+  uint8_t mr_writer_count;
 };
 
 /**
@@ -117,10 +117,8 @@ struct mpsc_ring {
  * @param writers_max
  * The maximum number of writers that will be active at once.
  */
-void mpsc_ring_init(
-	struct mpsc_ring *buf,
-	uint8_t capacity_pow_2,
-	uint8_t writers_max);
+void mpsc_ring_init(struct mpsc_ring *buf, uint8_t capacity_pow_2,
+                    uint8_t writers_max);
 
 /**
  * Write data to the ringbuffer.
@@ -146,11 +144,8 @@ void mpsc_ring_init(
  * Compare this to the requested write size to determine if the data was
  * written.
  */
-uint32_t mpsc_ring_write(
-	struct mpsc_ring *buf,
-	uint8_t writer_id,
-	const void *data,
-	uint32_t size);
+uint32_t mpsc_ring_write(struct mpsc_ring *buf, uint8_t writer_id,
+                         const void *data, uint32_t size);
 
 /**
  * A cursor to read data out of a ringbuffer.
@@ -171,9 +166,9 @@ uint32_t mpsc_ring_write(
  * The maximum position that the cursor can advance.
  */
 typedef struct {
-	uint32_t mrc_commit_pos;
-	uint32_t mrc_pos;
-	uint32_t mrc_limit;
+  uint32_t mrc_commit_pos;
+  uint32_t mrc_pos;
+  uint32_t mrc_limit;
 } mpsc_ring_cursor_t;
 
 /**
@@ -211,11 +206,9 @@ mpsc_ring_cursor_t mpsc_ring_read_start(struct mpsc_ring *buf);
  * @return
  * True iff all the requested memory can be read, false otherwise.
  */
-bool mpsc_ring_cursor_advance(
-	const struct mpsc_ring *buf,
-	mpsc_ring_cursor_t *cursor,
-	void *destination,
-	uint32_t size);
+bool mpsc_ring_cursor_advance(const struct mpsc_ring *buf,
+                              mpsc_ring_cursor_t *cursor, void *destination,
+                              uint32_t size);
 
 /**
  * Commit any advancements in the cursor, ensuring that @link
@@ -228,9 +221,8 @@ bool mpsc_ring_cursor_advance(
  * @param cursor
  * The cursor to commit advancements on.
  */
-void mpsc_ring_cursor_commit(
-	const struct mpsc_ring *buf,
-	mpsc_ring_cursor_t *cursor);
+void mpsc_ring_cursor_commit(const struct mpsc_ring *buf,
+                             mpsc_ring_cursor_t *cursor);
 
 /**
  * Complete a read operation on the ringbuffer after manipulating a cursor.
@@ -246,9 +238,7 @@ void mpsc_ring_cursor_commit(
  * @param cursor
  * The cursor provided by @link mpsc_ring_read_start @/link.
  */
-void mpsc_ring_read_finish(
-	struct mpsc_ring *buf,
-	mpsc_ring_cursor_t cursor);
+void mpsc_ring_read_finish(struct mpsc_ring *buf, mpsc_ring_cursor_t cursor);
 
 /**
  * Cancel a read operation on the ringbuffer, destroying the cursor and rolling
@@ -265,10 +255,7 @@ void mpsc_ring_read_finish(
  * @param cursor
  * The cursor provided by @link mpsc_ring_read_start @/link.
  */
-void
-mpsc_ring_read_cancel(
-	struct mpsc_ring *buf,
-	mpsc_ring_cursor_t cursor);
+void mpsc_ring_read_cancel(struct mpsc_ring *buf, mpsc_ring_cursor_t cursor);
 
 __END_DECLS
 

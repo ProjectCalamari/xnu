@@ -32,29 +32,28 @@
  *
  */
 
-
 #ifndef _IOKIT_APPLEMACIODEVICE_H
 #define _IOKIT_APPLEMACIODEVICE_H
 
 #include <IOKit/IOService.h>
 
-class AppleMacIODevice : public IOService
-{
-	OSDeclareDefaultStructors(AppleMacIODevice);
+class AppleMacIODevice : public IOService {
+  OSDeclareDefaultStructors(AppleMacIODevice);
 
 private:
-	struct ExpansionData { };
-	ExpansionData *reserved;
+  struct ExpansionData {};
+  ExpansionData *reserved;
 
 public:
-	virtual bool compareName( OSString * name, OSString ** matched = 0 ) const APPLE_KEXT_OVERRIDE;
-	virtual IOService *matchLocation(IOService *client) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn getResources( void ) APPLE_KEXT_OVERRIDE;
+  virtual bool compareName(OSString *name,
+                           OSString **matched = 0) const APPLE_KEXT_OVERRIDE;
+  virtual IOService *matchLocation(IOService *client) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn getResources(void) APPLE_KEXT_OVERRIDE;
 
-	OSMetaClassDeclareReservedUnused(AppleMacIODevice, 0);
-	OSMetaClassDeclareReservedUnused(AppleMacIODevice, 1);
-	OSMetaClassDeclareReservedUnused(AppleMacIODevice, 2);
-	OSMetaClassDeclareReservedUnused(AppleMacIODevice, 3);
+  OSMetaClassDeclareReservedUnused(AppleMacIODevice, 0);
+  OSMetaClassDeclareReservedUnused(AppleMacIODevice, 1);
+  OSMetaClassDeclareReservedUnused(AppleMacIODevice, 2);
+  OSMetaClassDeclareReservedUnused(AppleMacIODevice, 3);
 };
 
 #endif /* ! _IOKIT_APPLEMACIODEVICE_H */

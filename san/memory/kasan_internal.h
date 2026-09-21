@@ -29,9 +29,9 @@
 #ifndef _KASAN_INTERNAL_H_
 #define _KASAN_INTERNAL_H_
 
-#include <stdbool.h>
-#include <mach/mach_vm.h>
 #include <kern/zalloc.h>
+#include <mach/mach_vm.h>
+#include <stdbool.h>
 #include <sys/sysctl.h>
 
 typedef uintptr_t uptr;
@@ -52,11 +52,11 @@ typedef uintptr_t uptr;
 #endif
 
 #if defined(__x86_64__)
-# define _JBLEN ((9 * 2) + 3 + 16)
+#define _JBLEN ((9 * 2) + 3 + 16)
 #elif defined(__arm64__)
-# define _JBLEN ((14 + 8 + 2) * 2)
+#define _JBLEN ((14 + 8 + 2) * 2)
 #else
-# error "Unknown arch"
+#error "Unknown arch"
 #endif
 
 #if KASAN_DEBUG
@@ -65,74 +65,78 @@ typedef uintptr_t uptr;
 #define NOINLINE
 #endif
 #define ALWAYS_INLINE inline __attribute__((always_inline))
-#define CLANG_MIN_VERSION(x) (defined(__apple_build_version__) && (__apple_build_version__ >= (x)))
+#define CLANG_MIN_VERSION(x)                                                   \
+  (defined(__apple_build_version__) && (__apple_build_version__ >= (x)))
 
 #if KASAN_CLASSIC
-#define KASAN_MODEL_STR                 "kasan-classic"
-#define KASAN_STRIP_ADDR(_x)    (_x)
+#define KASAN_MODEL_STR "kasan-classic"
+#define KASAN_STRIP_ADDR(_x) (_x)
 #elif KASAN_TBI
-#define KASAN_MODEL_STR                 "kasan-tbi"
-#define KASAN_STRIP_ADDR(_x)    (VM_KERNEL_STRIP_PTR(_x))
+#define KASAN_MODEL_STR "kasan-tbi"
+#define KASAN_STRIP_ADDR(_x) (VM_KERNEL_STRIP_PTR(_x))
 #else
 #error "No kasan model specified"
 #endif /* KASAN_CLASSIC || KASAN_TBI */
 
-extern vm_address_t     kernel_vbase;
-extern vm_address_t     kernel_vtop;
-extern unsigned                 shadow_pages_used;
+extern vm_address_t kernel_vbase;
+extern vm_address_t kernel_vtop;
+extern unsigned shadow_pages_used;
 
 /* boot-arg configurable */
-extern unsigned                 kasan_enabled;
-extern int                              fakestack_enabled;
-extern bool                             report_suppressed_checks;
+extern unsigned kasan_enabled;
+extern int fakestack_enabled;
+extern bool report_suppressed_checks;
 
-#define KASAN_GRANULE                   (1UL << KASAN_SCALE)
-#define KASAN_GRANULE_MASK              (KASAN_GRANULE - 1UL)
-#define kasan_granule_trunc(x)          (x & ~KASAN_GRANULE_MASK)
-#define kasan_granule_round(x)          ((x + KASAN_GRANULE_MASK) & ~KASAN_GRANULE_MASK)
-#define kasan_granule_partial(x)        (x & KASAN_GRANULE_MASK)
+#define KASAN_GRANULE (1UL << KASAN_SCALE)
+#define KASAN_GRANULE_MASK (KASAN_GRANULE - 1UL)
+#define kasan_granule_trunc(x) (x & ~KASAN_GRANULE_MASK)
+#define kasan_granule_round(x) ((x + KASAN_GRANULE_MASK) & ~KASAN_GRANULE_MASK)
+#define kasan_granule_partial(x) (x & KASAN_GRANULE_MASK)
 
-#define ADDRESS_FOR_SHADOW(x) (((KASAN_STRIP_ADDR(x)) - KASAN_OFFSET) << KASAN_SCALE)
-#define SHADOW_FOR_ADDRESS(x) (uint8_t *)(((KASAN_STRIP_ADDR(x)) >> KASAN_SCALE) + KASAN_OFFSET)
+#define ADDRESS_FOR_SHADOW(x)                                                  \
+  (((KASAN_STRIP_ADDR(x)) - KASAN_OFFSET) << KASAN_SCALE)
+#define SHADOW_FOR_ADDRESS(x)                                                  \
+  (uint8_t *)(((KASAN_STRIP_ADDR(x)) >> KASAN_SCALE) + KASAN_OFFSET)
 
 enum __attribute__((flag_enum)) kasan_access_types {
-	/* Common to all KASAN versions */
-	TYPE_LOAD    = BIT(0),  /* regular memory load */
-	TYPE_STORE   = BIT(1),  /* regular store */
-	TYPE_MEMR    = BIT(2),  /* memory intrinsic (read) */
-	TYPE_MEMW    = BIT(3),  /* memory intrinsic (write) */
-	TYPE_STRR    = BIT(4),  /* string intrinsic (read) */
-	TYPE_STRW    = BIT(5),  /* string intrinsic (write) */
+  /* Common to all KASAN versions */
+  TYPE_LOAD = BIT(0),  /* regular memory load */
+  TYPE_STORE = BIT(1), /* regular store */
+  TYPE_MEMR = BIT(2),  /* memory intrinsic (read) */
+  TYPE_MEMW = BIT(3),  /* memory intrinsic (write) */
+  TYPE_STRR = BIT(4),  /* string intrinsic (read) */
+  TYPE_STRW = BIT(5),  /* string intrinsic (write) */
 
-	/* KASAN-classic specific */
-	TYPE_ZFREE   = BIT(6),  /* zfree() */
-	TYPE_FSFREE  = BIT(7),  /* fakestack free */
+  /* KASAN-classic specific */
+  TYPE_ZFREE = BIT(6),  /* zfree() */
+  TYPE_FSFREE = BIT(7), /* fakestack free */
 
-	TYPE_UAF           = BIT(12),
-	TYPE_POISON_GLOBAL = BIT(13),
-	TYPE_POISON_HEAP   = BIT(14),
-	/* no TYPE_POISON_STACK, because the runtime does not control stack poisoning */
-	TYPE_TEST          = BIT(15),
+  TYPE_UAF = BIT(12),
+  TYPE_POISON_GLOBAL = BIT(13),
+  TYPE_POISON_HEAP = BIT(14),
+  /* no TYPE_POISON_STACK, because the runtime does not control stack poisoning
+   */
+  TYPE_TEST = BIT(15),
 
-	/* masks */
-	TYPE_MEM     = TYPE_MEMR | TYPE_MEMW,            /* memory intrinsics */
-	TYPE_STR     = TYPE_STRR | TYPE_STRW,            /* string intrinsics */
-	TYPE_READ    = TYPE_LOAD | TYPE_MEMR | TYPE_STRR,  /* all reads */
-	TYPE_WRITE   = TYPE_STORE | TYPE_MEMW | TYPE_STRW, /* all writes */
-	TYPE_RW      = TYPE_READ | TYPE_WRITE,           /* reads and writes */
-	TYPE_FREE    = TYPE_ZFREE | TYPE_FSFREE,
-	TYPE_NORMAL  = TYPE_RW | TYPE_FREE,
-	TYPE_DYNAMIC = TYPE_NORMAL | TYPE_UAF,
-	TYPE_POISON  = TYPE_POISON_GLOBAL | TYPE_POISON_HEAP,
-	TYPE_ALL     = ~0U,
+  /* masks */
+  TYPE_MEM = TYPE_MEMR | TYPE_MEMW,                /* memory intrinsics */
+  TYPE_STR = TYPE_STRR | TYPE_STRW,                /* string intrinsics */
+  TYPE_READ = TYPE_LOAD | TYPE_MEMR | TYPE_STRR,   /* all reads */
+  TYPE_WRITE = TYPE_STORE | TYPE_MEMW | TYPE_STRW, /* all writes */
+  TYPE_RW = TYPE_READ | TYPE_WRITE,                /* reads and writes */
+  TYPE_FREE = TYPE_ZFREE | TYPE_FSFREE,
+  TYPE_NORMAL = TYPE_RW | TYPE_FREE,
+  TYPE_DYNAMIC = TYPE_NORMAL | TYPE_UAF,
+  TYPE_POISON = TYPE_POISON_GLOBAL | TYPE_POISON_HEAP,
+  TYPE_ALL = ~0U,
 };
 
 enum kasan_violation_types {
-	REASON_POISONED =       0, /* read or write of poisoned data */
-	REASON_BAD_METADATA =   1, /* incorrect kasan metadata */
-	REASON_INVALID_SIZE =   2, /* free size did not match alloc size */
-	REASON_MOD_AFTER_FREE = 3, /* object modified after free */
-	REASON_MOD_OOB =        4, /* out of bounds modification of object */
+  REASON_POISONED = 0,       /* read or write of poisoned data */
+  REASON_BAD_METADATA = 1,   /* incorrect kasan metadata */
+  REASON_INVALID_SIZE = 2,   /* free size did not match alloc size */
+  REASON_MOD_AFTER_FREE = 3, /* object modified after free */
+  REASON_MOD_OOB = 4,        /* out of bounds modification of object */
 };
 
 typedef enum kasan_access_types access_t;
@@ -152,8 +156,9 @@ void kasan_impl_fill_valid_range(uintptr_t, size_t);
 
 /*
  * Poisoning comes from KASAN CLASSIC nomenclature. KASAN CLASSIC is based on
- * identifying valid memory vs poisoned memory (memory that shouldn't be accessed).
- * This terminology isn't great for KASAN TBI, but is kept for compatibility.
+ * identifying valid memory vs poisoned memory (memory that shouldn't be
+ * accessed). This terminology isn't great for KASAN TBI, but is kept for
+ * compatibility.
  */
 void kasan_poison(vm_offset_t, vm_size_t, vm_size_t, vm_size_t, uint8_t);
 
@@ -195,7 +200,8 @@ void kasan_init_globals(vm_offset_t, vm_size_t);
  * that is called by the instrumentation as well, see kasan-helper.c.
  */
 void kasan_violation(uintptr_t, size_t, access_t, violation_t);
-size_t kasan_impl_decode_issue(char *, size_t, uptr, uptr, access_t, violation_t);
+size_t kasan_impl_decode_issue(char *, size_t, uptr, uptr, access_t,
+                               violation_t);
 void NOINLINE OS_NORETURN kasan_crash_report(uptr, uptr, access_t, violation_t);
 
 void kasan_handle_test(void);

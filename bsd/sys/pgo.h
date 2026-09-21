@@ -29,9 +29,9 @@
 #ifndef _SYS_PGO_H_
 #define _SYS_PGO_H_
 
+#include <stdint.h>
 #include <sys/_types.h>
 #include <sys/_types/_ssize_t.h>
-#include <stdint.h>
 #include <uuid/uuid.h>
 
 /* No longer supported. */
@@ -41,7 +41,8 @@
 #define PGO_METADATA (4)
 #define PGO_RESET_ALL (8)
 
-#define PGO_ALL_FLAGS (PGO_HIB | PGO_WAIT_FOR_UNLOAD | PGO_METADATA | PGO_RESET_ALL)
+#define PGO_ALL_FLAGS                                                          \
+  (PGO_HIB | PGO_WAIT_FOR_UNLOAD | PGO_METADATA | PGO_RESET_ALL)
 
 /**
  * This is a serialization format for metadata related to a profile data buffer.
@@ -57,37 +58,34 @@
  * All members are in network byte order.
  */
 struct pgo_metadata_footer {
-	/**
-	 * number of pairs.
-	 *
-	 * This should be htonl(n), where n is the number of key-value pairs in the
-	 * metadata buffer
-	 */
-	uint32_t number_of_pairs;
+  /**
+   * number of pairs.
+   *
+   * This should be htonl(n), where n is the number of key-value pairs in the
+   * metadata buffer
+   */
+  uint32_t number_of_pairs;
 
-	/**
-	 * pointer to the metadata buffer
-	 *
-	 * This should be htonl(offset), where offset is the backwards offset from
-	 * the end of the file to the metadata buffer.
-	 */
-	uint32_t  offset_to_pairs;
+  /**
+   * pointer to the metadata buffer
+   *
+   * This should be htonl(offset), where offset is the backwards offset from
+   * the end of the file to the metadata buffer.
+   */
+  uint32_t offset_to_pairs;
 
-	/**
-	 * magic number
-	 *
-	 * This should be htonl(0x6d657461);
-	 */
-	uint32_t magic;
+  /**
+   * magic number
+   *
+   * This should be htonl(0x6d657461);
+   */
+  uint32_t magic;
 };
 
 #ifndef KERNEL
 
-ssize_t grab_pgo_data(
-	uuid_t *uuid,
-	int flags,
-	unsigned char *buffer,
-	ssize_t size);
+ssize_t grab_pgo_data(uuid_t *uuid, int flags, unsigned char *buffer,
+                      ssize_t size);
 
 #endif /* !defined(KERNEL) */
 

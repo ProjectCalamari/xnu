@@ -56,28 +56,28 @@
 
 /*
  */
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 #ifndef _I386_MP_H_
 #define _I386_MP_H_
 
-//#define	MP_DEBUG 1
+// #define	MP_DEBUG 1
 
 #include <i386/apic.h>
 #include <i386/mp_events.h>
 #include <machine/limits.h>
 
-#define MAX_CPUS        64              /* 8 * sizeof(cpumask_t) */
+#define MAX_CPUS 64 /* 8 * sizeof(cpumask_t) */
 
 #ifndef ASSEMBLER
+#include <kern/assert.h>
+#include <kern/simple_lock.h>
+#include <mach/boolean.h>
+#include <mach/i386/thread_status.h>
+#include <mach/kern_return.h>
+#include <mach/vm_types.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include <mach/boolean.h>
-#include <mach/kern_return.h>
-#include <mach/i386/thread_status.h>
-#include <mach/vm_types.h>
-#include <kern/simple_lock.h>
-#include <kern/assert.h>
 #ifdef XNU_KERNEL_PRIVATE
 #include <vm/vm_kern_xnu.h>
 #endif
@@ -93,46 +93,43 @@ extern void smp_init(void);
 extern void cpu_interrupt(int cpu);
 __END_DECLS
 
-extern  unsigned int    real_ncpus;             /* real number of cpus */
-extern  unsigned int    max_ncpus;              /* max number of cpus */
-extern  unsigned int    max_cpus_from_firmware; /* actual max cpus, from firmware (ACPI) */
+extern unsigned int real_ncpus; /* real number of cpus */
+extern unsigned int max_ncpus;  /* max number of cpus */
+extern unsigned int
+    max_cpus_from_firmware; /* actual max cpus, from firmware (ACPI) */
 decl_simple_lock_data(extern, kdb_lock); /* kdb lock		*/
 
 __BEGIN_DECLS
 
-extern  void    console_init(void);
-extern  void    *console_cpu_alloc(boolean_t boot_cpu);
-extern  void    console_cpu_free(void *console_buf);
+extern void console_init(void);
+extern void *console_cpu_alloc(boolean_t boot_cpu);
+extern void console_cpu_free(void *console_buf);
 
-extern  int     kdb_cpu;                /* current cpu running kdb	*/
-extern  int     kdb_debug;
-extern  int     kdb_active[];
+extern int kdb_cpu; /* current cpu running kdb	*/
+extern int kdb_debug;
+extern int kdb_active[];
 
-extern  volatile boolean_t mp_kdp_trap;
-extern  volatile boolean_t mp_kdp_is_NMI;
-extern  volatile boolean_t force_immediate_debugger_NMI;
-extern  volatile boolean_t pmap_tlb_flush_timeout;
+extern volatile boolean_t mp_kdp_trap;
+extern volatile boolean_t mp_kdp_is_NMI;
+extern volatile boolean_t force_immediate_debugger_NMI;
+extern volatile boolean_t pmap_tlb_flush_timeout;
 
-extern  uint64_t  LastDebuggerEntryAllowance;
+extern uint64_t LastDebuggerEntryAllowance;
 
-extern  void      mp_kdp_enter(boolean_t proceed_on_failure, bool is_stackshot);
-extern  void      mp_kdp_exit(void);
-extern  boolean_t mp_kdp_all_cpus_halted(void);
+extern void mp_kdp_enter(boolean_t proceed_on_failure, bool is_stackshot);
+extern void mp_kdp_exit(void);
+extern boolean_t mp_kdp_all_cpus_halted(void);
 
-extern  boolean_t       mp_recent_debugger_activity(void);
-extern  void    kernel_spin(uint64_t spin_ns);
+extern boolean_t mp_recent_debugger_activity(void);
+extern void kernel_spin(uint64_t spin_ns);
 
 /*
  * All cpu rendezvous:
  */
-extern void mp_rendezvous(
-	void (*setup_func)(void *),
-	void (*action_func)(void *),
-	void (*teardown_func)(void *),
-	void *arg);
-extern void mp_rendezvous_no_intrs(
-	void (*action_func)(void *),
-	void *arg);
+extern void mp_rendezvous(void (*setup_func)(void *),
+                          void (*action_func)(void *),
+                          void (*teardown_func)(void *), void *arg);
+extern void mp_rendezvous_no_intrs(void (*action_func)(void *), void *arg);
 extern void mp_rendezvous_break_lock(void);
 extern void mp_rendezvous_lock(void);
 extern void mp_rendezvous_unlock(void);
@@ -142,32 +139,28 @@ extern void mp_rendezvous_unlock(void);
  * Called from thread context, this blocks until all active cpus have
  * run action_func:
  */
-extern void mp_broadcast(
-	void (*action_func)(void *),
-	void *arg);
+extern void mp_broadcast(void (*action_func)(void *), void *arg);
 #if MACH_KDP
-typedef long (*kdp_x86_xcpu_func_t) (void *arg0, void *arg1, uint16_t lcpu);
+typedef long (*kdp_x86_xcpu_func_t)(void *arg0, void *arg1, uint16_t lcpu);
 
-extern  long kdp_x86_xcpu_invoke(const uint16_t lcpu,
-    kdp_x86_xcpu_func_t func,
-    void *arg0, void *arg1, uint64_t timeout);
-typedef enum    {KDP_XCPU_NONE = 0xffff, KDP_CURRENT_LCPU = 0xfffe} kdp_cpu_t;
+extern long kdp_x86_xcpu_invoke(const uint16_t lcpu, kdp_x86_xcpu_func_t func,
+                                void *arg0, void *arg1, uint64_t timeout);
+typedef enum { KDP_XCPU_NONE = 0xffff, KDP_CURRENT_LCPU = 0xfffe } kdp_cpu_t;
 #endif
 
 typedef uint32_t cpu_t;
 typedef volatile uint64_t cpumask_t;
 
-static_assert(sizeof(cpumask_t) * CHAR_BIT >= MAX_CPUS, "cpumask_t bitvector is too small for current MAX_CPUS value");
+static_assert(sizeof(cpumask_t) * CHAR_BIT >= MAX_CPUS,
+              "cpumask_t bitvector is too small for current MAX_CPUS value");
 
-static inline cpumask_t
-cpu_to_cpumask(cpu_t cpu)
-{
-	return (cpu < MAX_CPUS) ? (1ULL << cpu) : 0;
+static inline cpumask_t cpu_to_cpumask(cpu_t cpu) {
+  return (cpu < MAX_CPUS) ? (1ULL << cpu) : 0;
 }
-#define CPUMASK_ALL             0xffffffffffffffffULL
-#define CPUMASK_SELF            cpu_to_cpumask((cpu_t)cpu_number())
-#define CPUMASK_OTHERS          (CPUMASK_ALL & ~CPUMASK_SELF)
-#define CPUMASK_REAL_OTHERS     (((1ULL << real_ncpus) - 1) & ~CPUMASK_SELF)
+#define CPUMASK_ALL 0xffffffffffffffffULL
+#define CPUMASK_SELF cpu_to_cpumask((cpu_t)cpu_number())
+#define CPUMASK_OTHERS (CPUMASK_ALL & ~CPUMASK_SELF)
+#define CPUMASK_REAL_OTHERS (((1ULL << real_ncpus) - 1) & ~CPUMASK_SELF)
 
 /* Initialation routing called at processor registration */
 extern void mp_cpus_call_cpu_init(int cpu);
@@ -184,26 +177,19 @@ extern void mp_cpus_call_cpu_init(int cpu);
  * The return value is the number of cpus where the call was made or queued.
  * The action function is called with interrupts disabled.
  */
-extern cpu_t mp_cpus_call(
-	cpumask_t       cpus,
-	mp_sync_t       mode,
-	void            (*action_func)(void *),
-	void            *arg);
-extern cpu_t mp_cpus_call1(
-	cpumask_t       cpus,
-	mp_sync_t       mode,
-	void            (*action_func)(void *, void*),
-	void            *arg0,
-	void            *arg1,
-	cpumask_t       *cpus_calledp);
+extern cpu_t mp_cpus_call(cpumask_t cpus, mp_sync_t mode,
+                          void (*action_func)(void *), void *arg);
+extern cpu_t mp_cpus_call1(cpumask_t cpus, mp_sync_t mode,
+                           void (*action_func)(void *, void *), void *arg0,
+                           void *arg1, cpumask_t *cpus_calledp);
 
 typedef enum {
-	NONE = 0,
-	SPINLOCK_TIMEOUT,
-	TLB_FLUSH_TIMEOUT,
-	CROSSCALL_TIMEOUT,
-	INTERRUPT_WATCHDOG,
-	PTE_CORRUPTION
+  NONE = 0,
+  SPINLOCK_TIMEOUT,
+  TLB_FLUSH_TIMEOUT,
+  CROSSCALL_TIMEOUT,
+  INTERRUPT_WATCHDOG,
+  PTE_CORRUPTION
 } NMI_reason_t;
 
 extern NMI_reason_t NMI_panic_reason;
@@ -225,75 +211,75 @@ __END_DECLS
 
 #if MP_DEBUG
 typedef struct {
-	uint64_t        time;
-	int             cpu;
-	mp_event_t      event;
+  uint64_t time;
+  int cpu;
+  mp_event_t event;
 } cpu_signal_event_t;
 
-#define LOG_NENTRIES    100
+#define LOG_NENTRIES 100
 typedef struct {
-	uint64_t                count[MP_LAST];
-	int                     next_entry;
-	cpu_signal_event_t      entry[LOG_NENTRIES];
+  uint64_t count[MP_LAST];
+  int next_entry;
+  cpu_signal_event_t entry[LOG_NENTRIES];
 } cpu_signal_event_log_t;
 
-extern cpu_signal_event_log_t   *cpu_signal[];
-extern cpu_signal_event_log_t   *cpu_handle[];
+extern cpu_signal_event_log_t *cpu_signal[];
+extern cpu_signal_event_log_t *cpu_handle[];
 
-#define DBGLOG(log, _cpu, _event) {                                             \
-	boolean_t		spl = ml_set_interrupts_enabled(FALSE);         \
-	cpu_signal_event_log_t	*logp = log[cpu_number()];                      \
-	int			next = logp->next_entry;                        \
-	cpu_signal_event_t	*eventp = &logp->entry[next];                   \
-                                                                                \
-	logp->count[_event]++;                                                  \
-                                                                                \
-	eventp->time = rdtsc64();                                               \
-	eventp->cpu = _cpu;                                                     \
-	eventp->event = _event;                                                 \
-	if (next == (LOG_NENTRIES - 1))                                         \
-	        logp->next_entry = 0;                                           \
-	else                                                                    \
-	        logp->next_entry++;                                             \
-                                                                                \
-	(void) ml_set_interrupts_enabled(spl);                                  \
-}
+#define DBGLOG(log, _cpu, _event)                                              \
+  {                                                                            \
+    boolean_t spl = ml_set_interrupts_enabled(FALSE);                          \
+    cpu_signal_event_log_t *logp = log[cpu_number()];                          \
+    int next = logp->next_entry;                                               \
+    cpu_signal_event_t *eventp = &logp->entry[next];                           \
+                                                                               \
+    logp->count[_event]++;                                                     \
+                                                                               \
+    eventp->time = rdtsc64();                                                  \
+    eventp->cpu = _cpu;                                                        \
+    eventp->event = _event;                                                    \
+    if (next == (LOG_NENTRIES - 1))                                            \
+      logp->next_entry = 0;                                                    \
+    else                                                                       \
+      logp->next_entry++;                                                      \
+                                                                               \
+    (void)ml_set_interrupts_enabled(spl);                                      \
+  }
 
-#define DBGLOG_CPU_INIT(cpu)    {                                               \
-	cpu_signal_event_log_t	**sig_logpp = &cpu_signal[cpu];                 \
-	cpu_signal_event_log_t	**hdl_logpp = &cpu_handle[cpu];                 \
-	vm_size_t log_size = round_page(sizeof(cpu_signal_event_log_t));        \
-	kma_flags_t log_flags = KMA_NOFAIL | KMA_KOBJECT |                      \
-	    KMA_PERMANENT | KMA_ZERO;                                           \
-                                                                                \
-	if (*sig_logpp == NULL) {                                               \
-	        kmem_alloc(kernel_map, (vm_offset_t *)sig_logpp,                \
-	            log_size, log_flags, VM_KERN_MEMORY_DIAG);                  \
-	}                                                                       \
-	if (*sig_logpp == NULL) {                                               \
-	        kmem_alloc(kernel_map, (vm_offset_t *)hdl_logpp,                \
-	            log_size, log_flags, VM_KERN_MEMORY_DIAG);                  \
-	}                                                                       \
-}
-#else   /* MP_DEBUG */
+#define DBGLOG_CPU_INIT(cpu)                                                   \
+  {                                                                            \
+    cpu_signal_event_log_t **sig_logpp = &cpu_signal[cpu];                     \
+    cpu_signal_event_log_t **hdl_logpp = &cpu_handle[cpu];                     \
+    vm_size_t log_size = round_page(sizeof(cpu_signal_event_log_t));           \
+    kma_flags_t log_flags =                                                    \
+        KMA_NOFAIL | KMA_KOBJECT | KMA_PERMANENT | KMA_ZERO;                   \
+                                                                               \
+    if (*sig_logpp == NULL) {                                                  \
+      kmem_alloc(kernel_map, (vm_offset_t *)sig_logpp, log_size, log_flags,    \
+                 VM_KERN_MEMORY_DIAG);                                         \
+    }                                                                          \
+    if (*sig_logpp == NULL) {                                                  \
+      kmem_alloc(kernel_map, (vm_offset_t *)hdl_logpp, log_size, log_flags,    \
+                 VM_KERN_MEMORY_DIAG);                                         \
+    }                                                                          \
+  }
+#else /* MP_DEBUG */
 #define DBGLOG(log, _cpu, _event)
 #define DBGLOG_CPU_INIT(cpu)
-#endif  /* MP_DEBUG */
+#endif /* MP_DEBUG */
 
-#endif  /* ASSEMBLER */
+#endif /* ASSEMBLER */
 
 #ifdef ASSEMBLER
-#define i_bit(bit, word)        ((long)(*(word)) & (1L << (bit)))
+#define i_bit(bit, word) ((long)(*(word)) & (1L << (bit)))
 #else
-__attribute__((always_inline)) static inline long
-i_bit_impl(long word, long bit)
-{
-	long bitmask = 1L << bit;
-	return word & bitmask;
+__attribute__((always_inline)) static inline long i_bit_impl(long word,
+                                                             long bit) {
+  long bitmask = 1L << bit;
+  return word & bitmask;
 }
-#define i_bit(bit, word)        i_bit_impl((long)(*(word)), bit)
+#define i_bit(bit, word) i_bit_impl((long)(*(word)), bit)
 #endif
-
 
 #endif /* _I386_MP_H_ */
 

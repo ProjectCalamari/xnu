@@ -29,135 +29,141 @@
 #ifndef _KERN_RW_LOCK_H_
 #define _KERN_RW_LOCK_H_
 
-#include <kern/lock_types.h>
-#include <kern/lock_group.h>
 #include <kern/lock_attr.h>
+#include <kern/lock_group.h>
+#include <kern/lock_types.h>
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 #include <kern/startup.h>
 #endif /* XNU_KERNEL_PRIVATE */
 
 __BEGIN_DECLS
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
 typedef union {
-	struct {
-		uint16_t        shared_count;       /* No. of shared granted request */
-		uint16_t
-		    interlock:              1,      /* Interlock */
-		    priv_excl:              1,      /* priority for Writer */
-		    want_upgrade:           1,      /* Read-to-write upgrade waiting */
-		    want_excl:              1,      /* Writer is waiting, or locked for write */
-		    r_waiting:              1,      /* Someone is sleeping on lock */
-		    w_waiting:              1,      /* Writer is sleeping on lock */
-		    can_sleep:              1,      /* Can attempts to lock go to sleep? */
-		    _pad2:                  8,      /* padding */
-		    tag_valid:              1;      /* Field is actually a tag, not a bitfield */
-	};
-	uint32_t        data;                       /* Single word version of bitfields and shared count */
+  struct {
+    uint16_t shared_count;  /* No. of shared granted request */
+    uint16_t interlock : 1, /* Interlock */
+        priv_excl : 1,      /* priority for Writer */
+        want_upgrade : 1,   /* Read-to-write upgrade waiting */
+        want_excl : 1,      /* Writer is waiting, or locked for write */
+        r_waiting : 1,      /* Someone is sleeping on lock */
+        w_waiting : 1,      /* Writer is sleeping on lock */
+        can_sleep : 1,      /* Can attempts to lock go to sleep? */
+        _pad2 : 8,          /* padding */
+        tag_valid : 1;      /* Field is actually a tag, not a bitfield */
+  };
+  uint32_t data; /* Single word version of bitfields and shared count */
 } lck_rw_word_t;
 
 typedef struct lck_rw_s {
-	uint32_t        lck_rw_unused : 24; /* tsid one day ... */
-	uint32_t        lck_rw_type   :  8; /* LCK_TYPE_RW */
-	uint32_t        lck_rw_padding;
-	lck_rw_word_t   lck_rw;
-	uint32_t        lck_rw_owner;       /* ctid_t */
-} lck_rw_t;     /* arm: 8  arm64: 16 x86: 16 */
+  uint32_t lck_rw_unused : 24; /* tsid one day ... */
+  uint32_t lck_rw_type : 8;    /* LCK_TYPE_RW */
+  uint32_t lck_rw_padding;
+  lck_rw_word_t lck_rw;
+  uint32_t lck_rw_owner; /* ctid_t */
+} lck_rw_t;              /* arm: 8  arm64: 16 x86: 16 */
 
-#define lck_rw_shared_count     lck_rw.shared_count
-#define lck_rw_interlock        lck_rw.interlock
-#define lck_rw_priv_excl        lck_rw.priv_excl
-#define lck_rw_want_upgrade     lck_rw.want_upgrade
-#define lck_rw_want_excl        lck_rw.want_excl
-#define lck_r_waiting           lck_rw.r_waiting
-#define lck_w_waiting           lck_rw.w_waiting
-#define lck_rw_can_sleep        lck_rw.can_sleep
-#define lck_rw_data             lck_rw.data
+#define lck_rw_shared_count lck_rw.shared_count
+#define lck_rw_interlock lck_rw.interlock
+#define lck_rw_priv_excl lck_rw.priv_excl
+#define lck_rw_want_upgrade lck_rw.want_upgrade
+#define lck_rw_want_excl lck_rw.want_excl
+#define lck_r_waiting lck_rw.r_waiting
+#define lck_w_waiting lck_rw.w_waiting
+#define lck_rw_can_sleep lck_rw.can_sleep
+#define lck_rw_data lck_rw.data
 // tag and data reference the same memory. When the tag_valid bit is set,
 // the data word should be treated as a tag instead of a bitfield.
-#define lck_rw_tag_valid        lck_rw.tag_valid
-#define lck_rw_tag              lck_rw.data
+#define lck_rw_tag_valid lck_rw.tag_valid
+#define lck_rw_tag lck_rw.data
 
-#define LCK_RW_SHARED_READER_OFFSET      0
-#define LCK_RW_INTERLOCK_BIT            16
-#define LCK_RW_PRIV_EXCL_BIT            17
-#define LCK_RW_WANT_UPGRADE_BIT         18
-#define LCK_RW_WANT_EXCL_BIT            19
-#define LCK_RW_R_WAITING_BIT            20
-#define LCK_RW_W_WAITING_BIT            21
-#define LCK_RW_CAN_SLEEP_BIT            22
+#define LCK_RW_SHARED_READER_OFFSET 0
+#define LCK_RW_INTERLOCK_BIT 16
+#define LCK_RW_PRIV_EXCL_BIT 17
+#define LCK_RW_WANT_UPGRADE_BIT 18
+#define LCK_RW_WANT_EXCL_BIT 19
+#define LCK_RW_R_WAITING_BIT 20
+#define LCK_RW_W_WAITING_BIT 21
+#define LCK_RW_CAN_SLEEP_BIT 22
 //                                      23-30
-#define LCK_RW_TAG_VALID_BIT            31
+#define LCK_RW_TAG_VALID_BIT 31
 
-#define LCK_RW_INTERLOCK                (1U << LCK_RW_INTERLOCK_BIT)
-#define LCK_RW_R_WAITING                (1U << LCK_RW_R_WAITING_BIT)
-#define LCK_RW_W_WAITING                (1U << LCK_RW_W_WAITING_BIT)
-#define LCK_RW_WANT_UPGRADE             (1U << LCK_RW_WANT_UPGRADE_BIT)
-#define LCK_RW_WANT_EXCL                (1U << LCK_RW_WANT_EXCL_BIT)
-#define LCK_RW_TAG_VALID                (1U << LCK_RW_TAG_VALID_BIT)
-#define LCK_RW_PRIV_EXCL                (1U << LCK_RW_PRIV_EXCL_BIT)
-#define LCK_RW_SHARED_MASK              (0xffff << LCK_RW_SHARED_READER_OFFSET)
-#define LCK_RW_SHARED_READER            (0x1 << LCK_RW_SHARED_READER_OFFSET)
+#define LCK_RW_INTERLOCK (1U << LCK_RW_INTERLOCK_BIT)
+#define LCK_RW_R_WAITING (1U << LCK_RW_R_WAITING_BIT)
+#define LCK_RW_W_WAITING (1U << LCK_RW_W_WAITING_BIT)
+#define LCK_RW_WANT_UPGRADE (1U << LCK_RW_WANT_UPGRADE_BIT)
+#define LCK_RW_WANT_EXCL (1U << LCK_RW_WANT_EXCL_BIT)
+#define LCK_RW_TAG_VALID (1U << LCK_RW_TAG_VALID_BIT)
+#define LCK_RW_PRIV_EXCL (1U << LCK_RW_PRIV_EXCL_BIT)
+#define LCK_RW_SHARED_MASK (0xffff << LCK_RW_SHARED_READER_OFFSET)
+#define LCK_RW_SHARED_READER (0x1 << LCK_RW_SHARED_READER_OFFSET)
 
-#define LCK_RW_TAG_DESTROYED            ((LCK_RW_TAG_VALID | 0xdddddeadu))      /* lock marked as Destroyed */
+#define LCK_RW_TAG_DESTROYED                                                   \
+  ((LCK_RW_TAG_VALID | 0xdddddeadu)) /* lock marked as Destroyed */
 
 #elif KERNEL_PRIVATE
 typedef struct {
-	uintptr_t               opaque[2] __kernel_data_semantics;
+  uintptr_t opaque[2] __kernel_data_semantics;
 } lck_rw_t;
-#else /* @KERNEL_PRIVATE */
-typedef struct __lck_rw_t__     lck_rw_t;
+#else  /* @KERNEL_PRIVATE */
+typedef struct __lck_rw_t__ lck_rw_t;
 #endif /* !KERNEL_PRIVATE */
 
 #if DEVELOPMENT || DEBUG
 #ifdef XNU_KERNEL_PRIVATE
 
-#define DEBUG_RW                        1
-#define LCK_RW_EXPECTED_MAX_NUMBER      3       /* Expected number per thread of concurrently held rw_lock */
+#define DEBUG_RW 1
+#define LCK_RW_EXPECTED_MAX_NUMBER                                             \
+  3 /* Expected number per thread of concurrently held rw_lock */
 
 #if __LP64__
-#define LCK_RW_CALLER_PACKED_BITS   48
-#define LCK_RW_CALLER_PACKED_SHIFT   0
-#define LCK_RW_CALLER_PACKED_BASE    0
+#define LCK_RW_CALLER_PACKED_BITS 48
+#define LCK_RW_CALLER_PACKED_SHIFT 0
+#define LCK_RW_CALLER_PACKED_BASE 0
 #else
-#define LCK_RW_CALLER_PACKED_BITS   32
-#define LCK_RW_CALLER_PACKED_SHIFT   0
-#define LCK_RW_CALLER_PACKED_BASE    0
+#define LCK_RW_CALLER_PACKED_BITS 32
+#define LCK_RW_CALLER_PACKED_SHIFT 0
+#define LCK_RW_CALLER_PACKED_BASE 0
 #endif
 
 _Static_assert(!VM_PACKING_IS_BASE_RELATIVE(LCK_RW_CALLER_PACKED),
-    "Make sure the rwlde_caller_packed pointer packing is based on arithmetic shifts");
+               "Make sure the rwlde_caller_packed pointer packing is based on "
+               "arithmetic shifts");
 
-
-struct __attribute__ ((packed)) rw_lock_debug_entry {
-	lck_rw_t      *rwlde_lock;                                       // rw_lock held
-	int8_t        rwlde_mode_count;                                  // -1 is held in write mode, positive value is the recursive read count
+struct __attribute__((packed)) rw_lock_debug_entry {
+  lck_rw_t *rwlde_lock;    // rw_lock held
+  int8_t rwlde_mode_count; // -1 is held in write mode, positive value is the
+                           // recursive read count
 #if __LP64__
-	uintptr_t     rwlde_caller_packed: LCK_RW_CALLER_PACKED_BITS;    // caller that created the entry
+  uintptr_t rwlde_caller_packed
+      : LCK_RW_CALLER_PACKED_BITS; // caller that created the entry
 #else
-	uintptr_t     rwlde_caller_packed;                               // caller that created the entry
+  uintptr_t rwlde_caller_packed; // caller that created the entry
 #endif
 };
 typedef struct rw_lock_debug {
-	struct rw_lock_debug_entry rwld_locks[LCK_RW_EXPECTED_MAX_NUMBER]; /* rw_lock debug info of currently held locks */
-	uint8_t                    rwld_locks_saved : 7,                   /* number of locks saved in rwld_locks */
-	    rwld_overflow : 1;                                             /* lock_entry was full, so it might be inaccurate */
-	uint32_t                   rwld_locks_acquired;                    /* number of locks acquired */
+  struct rw_lock_debug_entry
+      rwld_locks[LCK_RW_EXPECTED_MAX_NUMBER]; /* rw_lock debug info of currently
+                                                 held locks */
+  uint8_t rwld_locks_saved : 7, /* number of locks saved in rwld_locks */
+      rwld_overflow : 1; /* lock_entry was full, so it might be inaccurate */
+  uint32_t rwld_locks_acquired; /* number of locks acquired */
 } rw_lock_debug_t;
 
-_Static_assert(LCK_RW_EXPECTED_MAX_NUMBER <= 127, "LCK_RW_EXPECTED_MAX_NUMBER bigger than rwld_locks_saved");
+_Static_assert(LCK_RW_EXPECTED_MAX_NUMBER <= 127,
+               "LCK_RW_EXPECTED_MAX_NUMBER bigger than rwld_locks_saved");
 
 #endif /* XNU_KERNEL_PRIVATE */
 #endif /* DEVELOPMENT || DEBUG */
 
-typedef unsigned int     lck_rw_type_t;
+typedef unsigned int lck_rw_type_t;
 
-#define LCK_RW_TYPE_SHARED              0x01
-#define LCK_RW_TYPE_EXCLUSIVE           0x02
+#define LCK_RW_TYPE_SHARED 0x01
+#define LCK_RW_TYPE_EXCLUSIVE 0x02
 
-#define decl_lck_rw_data(class, name)   class lck_rw_t name
+#define decl_lck_rw_data(class, name) class lck_rw_t name
 
 #if XNU_KERNEL_PRIVATE
 /*
@@ -176,45 +182,41 @@ typedef unsigned int     lck_rw_type_t;
  */
 
 struct lck_rw_startup_spec {
-	lck_rw_t                *lck;
-	lck_grp_t               *lck_grp;
-	lck_attr_t              *lck_attr;
+  lck_rw_t *lck;
+  lck_grp_t *lck_grp;
+  lck_attr_t *lck_attr;
 };
 
-extern void             lck_rw_startup_init(
-	struct lck_rw_startup_spec *spec);
+extern void lck_rw_startup_init(struct lck_rw_startup_spec *spec);
 
-#define LCK_RW_DECLARE_ATTR(var, grp, attr) \
-	lck_rw_t var; \
-	static __startup_data struct lck_rw_startup_spec \
-	__startup_lck_rw_spec_ ## var = { &var, grp, attr }; \
-	STARTUP_ARG(LOCKS, STARTUP_RANK_FOURTH, lck_rw_startup_init, \
-	    &__startup_lck_rw_spec_ ## var)
+#define LCK_RW_DECLARE_ATTR(var, grp, attr)                                    \
+  lck_rw_t var;                                                                \
+  static __startup_data struct lck_rw_startup_spec                             \
+      __startup_lck_rw_spec_##var = {&var, grp, attr};                         \
+  STARTUP_ARG(LOCKS, STARTUP_RANK_FOURTH, lck_rw_startup_init,                 \
+              &__startup_lck_rw_spec_##var)
 
-#define LCK_RW_DECLARE(var, grp) \
-	LCK_RW_DECLARE_ATTR(var, grp, LCK_ATTR_NULL)
+#define LCK_RW_DECLARE(var, grp) LCK_RW_DECLARE_ATTR(var, grp, LCK_ATTR_NULL)
 
 #if DEBUG_RW
 STATIC_IF_KEY_DECLARE_TRUE(lck_rw_assert);
 
-#define lck_rw_assert_enabled()    improbable_static_if(lck_rw_assert)
+#define lck_rw_assert_enabled() improbable_static_if(lck_rw_assert)
 
-extern void lck_rw_assert_init(
-	const char             *args,
-	uint64_t                kf_ovrd);
+extern void lck_rw_assert_init(const char *args, uint64_t kf_ovrd);
 
-#define LCK_RW_ASSERT(lck, type)  do { \
-	if (lck_rw_assert_enabled()) { \
-	        lck_rw_assert(lck, type); \
-	} \
-} while (0)
+#define LCK_RW_ASSERT(lck, type)                                               \
+  do {                                                                         \
+    if (lck_rw_assert_enabled()) {                                             \
+      lck_rw_assert(lck, type);                                                \
+    }                                                                          \
+  } while (0)
 #else /* DEBUG_RW */
 #define LCK_RW_ASSERT(lck, type)
-#define lck_rw_assert_enabled()    0
+#define lck_rw_assert_enabled() 0
 #endif /* DEBUG_RW */
 
 #endif /* XNU_KERNEL_PRIVATE */
-
 
 /*!
  * @function lck_rw_alloc_init
@@ -230,9 +232,7 @@ extern void lck_rw_assert_init(
  *
  * @returns             NULL or the allocated lock
  */
-extern lck_rw_t         *lck_rw_alloc_init(
-	lck_grp_t               *grp,
-	lck_attr_t              *attr);
+extern lck_rw_t *lck_rw_alloc_init(lck_grp_t *grp, lck_attr_t *attr);
 
 /*!
  * @function lck_rw_init
@@ -241,19 +241,18 @@ extern lck_rw_t         *lck_rw_alloc_init(
  * Initializes a rw_lock_t.
  *
  * @discussion
- * Usage statistics for the lock are going to be added to the lock group provided.
+ * Usage statistics for the lock are going to be added to the lock group
+ * provided.
  *
  * The lock attribute can be LCK_ATTR_NULL or an attribute can be allocated with
- * lck_attr_alloc_init. So far however none of the attribute settings are supported.
+ * lck_attr_alloc_init. So far however none of the attribute settings are
+ * supported.
  *
  * @param lck           lock to initialize.
  * @param grp           lock group to associate with the lock.
  * @param attr          lock attribute to initialize the lock.
  */
-extern void             lck_rw_init(
-	lck_rw_t                *lck,
-	lck_grp_t               *grp,
-	lck_attr_t              *attr);
+extern void lck_rw_init(lck_rw_t *lck, lck_grp_t *grp, lck_attr_t *attr);
 
 /*!
  * @function lck_rw_free
@@ -266,9 +265,7 @@ extern void             lck_rw_init(
  *
  * @param lck           rw_lock to free.
  */
-extern void             lck_rw_free(
-	lck_rw_t                *lck,
-	lck_grp_t               *grp);
+extern void lck_rw_free(lck_rw_t *lck, lck_grp_t *grp);
 
 /*!
  * @function lck_rw_destroy
@@ -281,9 +278,7 @@ extern void             lck_rw_free(
  *
  * @param lck           rw_lock to destroy.
  */
-extern void             lck_rw_destroy(
-	lck_rw_t                *lck,
-	lck_grp_t               *grp);
+extern void lck_rw_destroy(lck_rw_t *lck, lck_grp_t *grp);
 
 /*!
  * @function lck_rw_lock
@@ -297,9 +292,7 @@ extern void             lck_rw_destroy(
  * @param lck           rw_lock to lock.
  * @param lck_rw_type   LCK_RW_TYPE_SHARED or LCK_RW_TYPE_EXCLUSIVE
  */
-extern void             lck_rw_lock(
-	lck_rw_t                *lck,
-	lck_rw_type_t           lck_rw_type);
+extern void lck_rw_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 
 /*!
  * @function lck_rw_try_lock
@@ -308,17 +301,17 @@ extern void             lck_rw_lock(
  * Tries to locks a rw_lock with the specified type.
  *
  * @discussion
- * This function will return and not wait/block in case the lock is already held.
- * See lck_rw_try_lock_shared() or lck_rw_try_lock_exclusive() for more details.
+ * This function will return and not wait/block in case the lock is already
+ * held. See lck_rw_try_lock_shared() or lck_rw_try_lock_exclusive() for more
+ * details.
  *
  * @param lck           rw_lock to lock.
  * @param lck_rw_type   LCK_RW_TYPE_SHARED or LCK_RW_TYPE_EXCLUSIVE
  *
- * @returns TRUE if the lock is successfully acquired, FALSE in case it was already held.
+ * @returns TRUE if the lock is successfully acquired, FALSE in case it was
+ * already held.
  */
-extern boolean_t        lck_rw_try_lock(
-	lck_rw_t                *lck,
-	lck_rw_type_t           lck_rw_type);
+extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 
 /*!
  * @function lck_rw_unlock
@@ -328,15 +321,13 @@ extern boolean_t        lck_rw_try_lock(
  *
  * @discussion
  * The lock must be unlocked by the same thread it was locked from.
- * The type of the lock/unlock have to match, unless an upgrade/downgrade was performed while
- * holding the lock.
+ * The type of the lock/unlock have to match, unless an upgrade/downgrade was
+ * performed while holding the lock.
  *
  * @param lck           rw_lock to unlock.
  * @param lck_rw_type   LCK_RW_TYPE_SHARED or LCK_RW_TYPE_EXCLUSIVE
  */
-extern void             lck_rw_unlock(
-	lck_rw_t                *lck,
-	lck_rw_type_t           lck_rw_type);
+extern void lck_rw_unlock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 
 /*!
  * @function lck_rw_lock_shared
@@ -346,19 +337,17 @@ extern void             lck_rw_unlock(
  *
  * @discussion
  * This function can block.
- * Multiple threads can acquire the lock in shared mode at the same time, but only one thread at a time
- * can acquire it in exclusive mode.
- * If the lock is held in shared mode and there are no writers waiting, a reader will be able to acquire
- * the lock without waiting.
- * If the lock is held in shared mode and there is at least a writer waiting, a reader will wait
- * for all the writers to make progress.
- * NOTE: the thread cannot return to userspace while the lock is held. Recursive locking is not supported.
+ * Multiple threads can acquire the lock in shared mode at the same time, but
+ * only one thread at a time can acquire it in exclusive mode. If the lock is
+ * held in shared mode and there are no writers waiting, a reader will be able
+ * to acquire the lock without waiting. If the lock is held in shared mode and
+ * there is at least a writer waiting, a reader will wait for all the writers to
+ * make progress. NOTE: the thread cannot return to userspace while the lock is
+ * held. Recursive locking is not supported.
  *
  * @param lck           rw_lock to lock.
  */
-extern void             lck_rw_lock_shared(
-	lck_rw_t                *lck);
-
+extern void lck_rw_lock_shared(lck_rw_t *lck);
 
 #if MACH_KERNEL_PRIVATE
 /*!
@@ -382,21 +371,18 @@ extern void             lck_rw_lock_shared(
  *                       FALSE if the block returns true and the lock has
  *                       not been acquired.
  */
-extern boolean_t
-    lck_rw_lock_shared_b(
-	lck_rw_t        * lock,
-	bool            (^lock_pause)(void));
+extern boolean_t lck_rw_lock_shared_b(lck_rw_t *lock, bool (^lock_pause)(void));
 
 /*!
  * @function lck_rw_lock_exclusive_b
  *
  * @abstract
- * Locks a rw_lock in exclusive mode. Returns early if the lock can't be acquired
- * and the specified block returns true.
+ * Locks a rw_lock in exclusive mode. Returns early if the lock can't be
+ * acquired and the specified block returns true.
  *
  * @discussion
- * Identical to lck_rw_lock_exclusive() but can return early if the lock can't be
- * acquired and the specified block returns true. The block is called
+ * Identical to lck_rw_lock_exclusive() but can return early if the lock can't
+ * be acquired and the specified block returns true. The block is called
  * repeatedly when waiting to acquire the lock.
  * Should only be called when the lock cannot sleep (i.e. when
  * lock->lck_rw_can_sleep is false).
@@ -408,10 +394,8 @@ extern boolean_t
  *                       FALSE if the block returns true and the lock has
  *                       not been acquired.
  */
-extern boolean_t
-    lck_rw_lock_exclusive_b(
-	lck_rw_t        * lock,
-	bool            (^lock_pause)(void));
+extern boolean_t lck_rw_lock_exclusive_b(lck_rw_t *lock,
+                                         bool (^lock_pause)(void));
 #endif /* MACH_KERNEL_PRIVATE */
 
 /*!
@@ -422,18 +406,17 @@ extern boolean_t
  *
  * @discussion
  * This function can block.
- * Only one reader at a time can upgrade to exclusive mode. If the upgrades fails the function will
- * return with the lock not held.
- * The caller needs to hold the lock in shared mode to upgrade it.
+ * Only one reader at a time can upgrade to exclusive mode. If the upgrades
+ * fails the function will return with the lock not held. The caller needs to
+ * hold the lock in shared mode to upgrade it.
  *
  * @param lck           rw_lock already held in shared mode to upgrade.
  *
  * @returns TRUE if the lock was upgraded, FALSE if it was not possible.
- *          If the function was not able to upgrade the lock, the lock will be dropped
- *          by the function.
+ *          If the function was not able to upgrade the lock, the lock will be
+ * dropped by the function.
  */
-extern boolean_t        lck_rw_lock_shared_to_exclusive(
-	lck_rw_t                *lck);
+extern boolean_t lck_rw_lock_shared_to_exclusive(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_unlock_shared
@@ -446,8 +429,7 @@ extern boolean_t        lck_rw_lock_shared_to_exclusive(
  *
  * @param lck           rw_lock held in shared mode to unlock.
  */
-extern void             lck_rw_unlock_shared(
-	lck_rw_t                *lck);
+extern void lck_rw_unlock_shared(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_lock_exclusive
@@ -457,14 +439,14 @@ extern void             lck_rw_unlock_shared(
  *
  * @discussion
  * This function can block.
- * Multiple threads can acquire the lock in shared mode at the same time, but only one thread at a time
- * can acquire it in exclusive mode.
- * NOTE: the thread cannot return to userspace while the lock is held. Recursive locking is not supported.
+ * Multiple threads can acquire the lock in shared mode at the same time, but
+ * only one thread at a time can acquire it in exclusive mode. NOTE: the thread
+ * cannot return to userspace while the lock is held. Recursive locking is not
+ * supported.
  *
  * @param lck           rw_lock to lock.
  */
-extern void             lck_rw_lock_exclusive(
-	lck_rw_t                *lck);
+extern void lck_rw_lock_exclusive(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_lock_exclusive_to_shared
@@ -473,12 +455,12 @@ extern void             lck_rw_lock_exclusive(
  * Downgrades a rw_lock held in exclusive mode to shared.
  *
  * @discussion
- * The caller needs to hold the lock in exclusive mode to be able to downgrade it.
+ * The caller needs to hold the lock in exclusive mode to be able to downgrade
+ * it.
  *
  * @param lck           rw_lock already held in exclusive mode to downgrade.
  */
-extern void             lck_rw_lock_exclusive_to_shared(
-	lck_rw_t                *lck);
+extern void lck_rw_lock_exclusive_to_shared(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_unlock_exclusive
@@ -491,8 +473,7 @@ extern void             lck_rw_lock_exclusive_to_shared(
  *
  * @param lck           rw_lock held in exclusive mode to unlock.
  */
-extern void             lck_rw_unlock_exclusive(
-	lck_rw_t                *lck);
+extern void lck_rw_unlock_exclusive(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_sleep
@@ -511,11 +492,10 @@ extern void             lck_rw_unlock_exclusive(
  * @param event                 event to assert_wait on.
  * @param interruptible         wait type.
  */
-extern wait_result_t    lck_rw_sleep(
-	lck_rw_t                *lck,
-	lck_sleep_action_t      lck_sleep_action,
-	event_t                 event,
-	wait_interrupt_t        interruptible);
+extern wait_result_t lck_rw_sleep(lck_rw_t *lck,
+                                  lck_sleep_action_t lck_sleep_action,
+                                  event_t event,
+                                  wait_interrupt_t interruptible);
 
 /*!
  * @function lck_rw_sleep_deadline
@@ -535,14 +515,13 @@ extern wait_result_t    lck_rw_sleep(
  * @param interruptible         wait type.
  * @param deadline              maximum time after which being woken up
  */
-extern wait_result_t    lck_rw_sleep_deadline(
-	lck_rw_t                *lck,
-	lck_sleep_action_t      lck_sleep_action,
-	event_t                 event,
-	wait_interrupt_t        interruptible,
-	uint64_t                deadline);
+extern wait_result_t lck_rw_sleep_deadline(lck_rw_t *lck,
+                                           lck_sleep_action_t lck_sleep_action,
+                                           event_t event,
+                                           wait_interrupt_t interruptible,
+                                           uint64_t deadline);
 
-#ifdef  XNU_KERNEL_PRIVATE
+#ifdef XNU_KERNEL_PRIVATE
 
 /*!
  * @function kdp_lck_rw_lock_is_acquired_exclusive
@@ -557,8 +536,7 @@ extern wait_result_t    lck_rw_sleep_deadline(
  *
  * @returns TRUE if the lock is held exclusevely
  */
-extern boolean_t        kdp_lck_rw_lock_is_acquired_exclusive(
-	lck_rw_t                *lck);
+extern boolean_t kdp_lck_rw_lock_is_acquired_exclusive(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_lock_exclusive_check_contended
@@ -568,16 +546,16 @@ extern boolean_t        kdp_lck_rw_lock_is_acquired_exclusive(
  *
  * @discussion
  * This routine IS EXPERIMENTAL.
- * It's only used for the vm object lock, and use for other subsystems is UNSUPPORTED.
- * Note that the return value is ONLY A HEURISTIC w.r.t. the lock's contention.
+ * It's only used for the vm object lock, and use for other subsystems is
+ * UNSUPPORTED. Note that the return value is ONLY A HEURISTIC w.r.t. the lock's
+ * contention.
  *
  * @param lck           rw_lock to lock.
  *
- * @returns Returns TRUE if the thread spun or blocked while attempting to acquire the lock, FALSE
- *          otherwise.
+ * @returns Returns TRUE if the thread spun or blocked while attempting to
+ * acquire the lock, FALSE otherwise.
  */
-extern bool             lck_rw_lock_exclusive_check_contended(
-	lck_rw_t                *lck);
+extern bool lck_rw_lock_exclusive_check_contended(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_lock_yield_shared
@@ -591,13 +569,12 @@ extern bool             lck_rw_lock_exclusive_check_contended(
  * The yield will unlock, block, and re-lock the lock in shared mode.
  *
  * @param lck           rw_lock already held in shared mode to yield.
- * @param force_yield   if set to true it will always yield irrespective of the lock status
+ * @param force_yield   if set to true it will always yield irrespective of the
+ * lock status
  *
  * @returns TRUE if the lock was yield, FALSE otherwise
  */
-extern bool             lck_rw_lock_yield_shared(
-	lck_rw_t                *lck,
-	boolean_t               force_yield);
+extern bool lck_rw_lock_yield_shared(lck_rw_t *lck, boolean_t force_yield);
 
 /*!
  * @function lck_rw_lock_would_yield_shared
@@ -611,20 +588,19 @@ extern bool             lck_rw_lock_yield_shared(
  * prior to any yield or when the caller may wish to prematurely terminate
  * an operation rather than resume it after regaining the lock.
  *
- * @param lck           rw_lock already held in shared mode to test for possible yield.
+ * @param lck           rw_lock already held in shared mode to test for possible
+ * yield.
  *
  * @returns TRUE if the lock would be yielded, FALSE otherwise
  */
-extern bool             lck_rw_lock_would_yield_shared(
-	lck_rw_t                *lck);
+extern bool lck_rw_lock_would_yield_shared(lck_rw_t *lck);
 
-
-
-__enum_decl(lck_rw_yield_t, uint32_t, {
-	LCK_RW_YIELD_WRITERS_ONLY,
-	LCK_RW_YIELD_ANY_WAITER,
-	LCK_RW_YIELD_ALWAYS,
-});
+__enum_decl(lck_rw_yield_t, uint32_t,
+            {
+                LCK_RW_YIELD_WRITERS_ONLY,
+                LCK_RW_YIELD_ANY_WAITER,
+                LCK_RW_YIELD_ALWAYS,
+            });
 
 /*!
  * @function lck_rw_lock_yield_exclusive
@@ -642,9 +618,7 @@ __enum_decl(lck_rw_yield_t, uint32_t, {
  *
  * @returns TRUE if the lock was yield, FALSE otherwise
  */
-extern bool             lck_rw_lock_yield_exclusive(
-	lck_rw_t                *lck,
-	lck_rw_yield_t          mode);
+extern bool lck_rw_lock_yield_exclusive(lck_rw_t *lck, lck_rw_yield_t mode);
 
 /*!
  * @function lck_rw_lock_would_yield_exclusive
@@ -664,9 +638,8 @@ extern bool             lck_rw_lock_yield_exclusive(
  *
  * @returns TRUE if the lock would be yielded, FALSE otherwise
  */
-extern bool             lck_rw_lock_would_yield_exclusive(
-	lck_rw_t                *lck,
-	lck_rw_yield_t          mode);
+extern bool lck_rw_lock_would_yield_exclusive(lck_rw_t *lck,
+                                              lck_rw_yield_t mode);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -678,9 +651,7 @@ extern bool             lck_rw_lock_would_yield_exclusive(
  * @abstract
  * Increments the number of rwlock held by the (current) thread.
  */
-extern void lck_rw_lock_count_inc(
-	thread_t                thread,
-	const void             *lock);
+extern void lck_rw_lock_count_inc(thread_t thread, const void *lock);
 
 /*!
  * @function lck_rw_lock_count_inc
@@ -688,9 +659,7 @@ extern void lck_rw_lock_count_inc(
  * @abstract
  * Decrements the number of rwlock held by the (current) thread.
  */
-extern void lck_rw_lock_count_dec(
-	thread_t                thread,
-	const void             *lock);
+extern void lck_rw_lock_count_dec(thread_t thread, const void *lock);
 
 /*!
  * @function lck_rw_set_promotion_locked
@@ -704,12 +673,11 @@ extern void lck_rw_lock_count_dec(
  *
  * @param thread        thread to promote.
  */
-extern void             lck_rw_set_promotion_locked(
-	thread_t                thread);
+extern void lck_rw_set_promotion_locked(thread_t thread);
 
 #endif /* MACH_KERNEL_PRIVATE */
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 
 /*!
  * @function lck_rw_try_lock_shared
@@ -723,10 +691,10 @@ extern void             lck_rw_set_promotion_locked(
  *
  * @param lck           rw_lock to lock.
  *
- * @returns TRUE if the lock is successfully acquired, FALSE in case it was already held.
+ * @returns TRUE if the lock is successfully acquired, FALSE in case it was
+ * already held.
  */
-extern boolean_t        lck_rw_try_lock_shared(
-	lck_rw_t                *lck);
+extern boolean_t lck_rw_try_lock_shared(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_try_lock_exclusive
@@ -740,10 +708,10 @@ extern boolean_t        lck_rw_try_lock_shared(
  *
  * @param lck           rw_lock to lock.
  *
- * @returns TRUE if the lock is successfully acquired, FALSE in case it was already held.
+ * @returns TRUE if the lock is successfully acquired, FALSE in case it was
+ * already held.
  */
-extern boolean_t        lck_rw_try_lock_exclusive(
-	lck_rw_t                *lck);
+extern boolean_t lck_rw_try_lock_exclusive(lck_rw_t *lck);
 
 /*!
  * @function lck_rw_done
@@ -756,13 +724,12 @@ extern boolean_t        lck_rw_try_lock_exclusive(
  *
  * @param lck           rw_lock to unlock.
  */
-extern lck_rw_type_t    lck_rw_done(
-	lck_rw_t                *lck);
+extern lck_rw_type_t lck_rw_done(lck_rw_t *lck);
 
-#define LCK_RW_ASSERT_SHARED    0x01
+#define LCK_RW_ASSERT_SHARED 0x01
 #define LCK_RW_ASSERT_EXCLUSIVE 0x02
-#define LCK_RW_ASSERT_HELD      0x03
-#define LCK_RW_ASSERT_NOTHELD   0x04
+#define LCK_RW_ASSERT_HELD 0x03
+#define LCK_RW_ASSERT_NOTHELD 0x04
 
 /*!
  * @function lck_rw_assert
@@ -772,18 +739,16 @@ extern lck_rw_type_t    lck_rw_done(
  *
  * @discussion
  * read-write locks do not have a concept of ownership when held in shared mode,
- * so this function merely asserts that someone is holding the lock, not necessarily the caller.
- * However if rw_lock_debug is on, a best effort mechanism to track the owners is in place, and
- * this function can be more accurate.
- * Type can be LCK_RW_ASSERT_SHARED, LCK_RW_ASSERT_EXCLUSIVE, LCK_RW_ASSERT_HELD
- * LCK_RW_ASSERT_NOTHELD.
+ * so this function merely asserts that someone is holding the lock, not
+ * necessarily the caller. However if rw_lock_debug is on, a best effort
+ * mechanism to track the owners is in place, and this function can be more
+ * accurate. Type can be LCK_RW_ASSERT_SHARED, LCK_RW_ASSERT_EXCLUSIVE,
+ * LCK_RW_ASSERT_HELD LCK_RW_ASSERT_NOTHELD.
  *
  * @param lck   rw_lock to check.
  * @param type  assert type
  */
-extern void             lck_rw_assert(
-	lck_rw_t                *lck,
-	unsigned int            type);
+extern void lck_rw_assert(lck_rw_t *lck, unsigned int type);
 
 #endif /* KERNEL_PRIVATE */
 

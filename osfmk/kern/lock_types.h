@@ -35,7 +35,7 @@
 
 __BEGIN_DECLS
 
-#define LCK_SLEEP_MASK           0x3f     /* Valid actions */
+#define LCK_SLEEP_MASK 0x3f /* Valid actions */
 
 /*!
  * @enum lck_sleep_action_t
@@ -43,20 +43,31 @@ __BEGIN_DECLS
  * @abstract
  * An action to pass to the @c lck_*_sleep* family of functions.
  */
-__options_decl(lck_sleep_action_t, unsigned int, {
-	LCK_SLEEP_DEFAULT      = 0x00,    /**< Release the lock while waiting for the event, then reclaim */
-	LCK_SLEEP_UNLOCK       = 0x01,    /**< Release the lock and return unheld */
-	LCK_SLEEP_SHARED       = 0x02,    /**< Reclaim the lock in shared mode (RW only) */
-	LCK_SLEEP_EXCLUSIVE    = 0x04,    /**< Reclaim the lock in exclusive mode (RW only) */
-	LCK_SLEEP_SPIN         = 0x08,    /**< Reclaim the lock in spin mode (mutex only) */
-	LCK_SLEEP_PROMOTED_PRI = 0x10,    /**< Sleep at a promoted priority */
-	LCK_SLEEP_SPIN_ALWAYS  = 0x20,    /**< Reclaim the lock in spin-always mode (mutex only) */
-});
+__options_decl(
+    lck_sleep_action_t, unsigned int,
+    {
+        LCK_SLEEP_DEFAULT = 0x00, /**< Release the lock while waiting for the
+                                     event, then reclaim */
+        LCK_SLEEP_UNLOCK = 0x01,  /**< Release the lock and return unheld */
+        LCK_SLEEP_SHARED =
+            0x02, /**< Reclaim the lock in shared mode (RW only) */
+        LCK_SLEEP_EXCLUSIVE =
+            0x04, /**< Reclaim the lock in exclusive mode (RW only) */
+        LCK_SLEEP_SPIN =
+            0x08, /**< Reclaim the lock in spin mode (mutex only) */
+        LCK_SLEEP_PROMOTED_PRI = 0x10, /**< Sleep at a promoted priority */
+        LCK_SLEEP_SPIN_ALWAYS =
+            0x20, /**< Reclaim the lock in spin-always mode (mutex only) */
+    });
 
-__options_decl(lck_wake_action_t, unsigned int, {
-	LCK_WAKE_DEFAULT                = 0x00,  /* If waiters are present, transfer their push to the wokenup thread */
-	LCK_WAKE_DO_NOT_TRANSFER_PUSH   = 0x01,  /* Do not transfer waiters push when waking up */
-});
+__options_decl(
+    lck_wake_action_t, unsigned int,
+    {
+        LCK_WAKE_DEFAULT = 0x00, /* If waiters are present, transfer their push
+                                    to the wokenup thread */
+        LCK_WAKE_DO_NOT_TRANSFER_PUSH =
+            0x01, /* Do not transfer waiters push when waking up */
+    });
 
 typedef const struct hw_spin_policy *hw_spin_policy_t;
 
@@ -68,13 +79,21 @@ typedef const struct hw_spin_policy *hw_spin_policy_t;
  * @abstract
  * Lock options to pass to "lcks=" boot-arg
  */
-__options_decl(lck_option_t, unsigned int, {
-	LCK_OPTION_ENABLE_DEBUG     = 0x01, /**< Request debug in default attribute */
-	LCK_OPTION_ENABLE_STAT      = 0x02, /**< Request lock group statistics in default attribute */
-	LCK_OPTION_DISABLE_RW_PRIO  = 0x04, /**< Disable RW lock priority promotion */
-	LCK_OPTION_ENABLE_TIME_STAT = 0x08, /**< Request time lock group statistics in default attribute */
-	LCK_OPTION_DISABLE_RW_DEBUG = 0x10, /**< Disable RW lock best-effort debugging. */
-});
+__options_decl(
+    lck_option_t, unsigned int,
+    {
+        LCK_OPTION_ENABLE_DEBUG =
+            0x01, /**< Request debug in default attribute */
+        LCK_OPTION_ENABLE_STAT =
+            0x02, /**< Request lock group statistics in default attribute */
+        LCK_OPTION_DISABLE_RW_PRIO =
+            0x04, /**< Disable RW lock priority promotion */
+        LCK_OPTION_ENABLE_TIME_STAT =
+            0x08, /**< Request time lock group statistics in default attribute
+                   */
+        LCK_OPTION_DISABLE_RW_DEBUG =
+            0x10, /**< Disable RW lock best-effort debugging. */
+    });
 
 #endif // XNU_KERNEL_PRIVATE
 
@@ -108,7 +127,7 @@ __options_decl(lck_option_t, unsigned int, {
  *	later in kern/lock.h..
  */
 struct hslock {
-	uintptr_t       lock_data __kernel_data_semantics;
+  uintptr_t lock_data __kernel_data_semantics;
 };
 typedef struct hslock hw_lock_data_t, *hw_lock_t;
 
@@ -119,34 +138,36 @@ typedef struct hslock hw_lock_data_t, *hw_lock_t;
  * Used to pass information about very low level locking primitives.
  *
  */
-__enum_closed_decl(hw_lock_status_t, int, {
-	/**
-	 * The lock was not taken because it is in an invalid state,
-	 * or the memory was unmapped.
-	 *
-	 * This is only valid for @c *_allow_invalid() variants.
-	 *
-	 * Preemption is preserved to the caller level for all variants.
-	 */
-	HW_LOCK_INVALID    = -1,
+__enum_closed_decl(
+    hw_lock_status_t, int,
+    {
+        /**
+         * The lock was not taken because it is in an invalid state,
+         * or the memory was unmapped.
+         *
+         * This is only valid for @c *_allow_invalid() variants.
+         *
+         * Preemption is preserved to the caller level for all variants.
+         */
+        HW_LOCK_INVALID = -1,
 
-	/**
-	 * the lock wasn't acquired and is contended / timed out.
-	 *
-	 * - @c *_nopreempt() variants: preemption level preserved
-	 * - @c *_trylock() variants: preemption level preserved
-	 * - other variants: preemption is disabled
-	 */
-	HW_LOCK_CONTENDED  =  0,
+        /**
+         * the lock wasn't acquired and is contended / timed out.
+         *
+         * - @c *_nopreempt() variants: preemption level preserved
+         * - @c *_trylock() variants: preemption level preserved
+         * - other variants: preemption is disabled
+         */
+        HW_LOCK_CONTENDED = 0,
 
-	/**
-	 * the lock was acquired successfully
-	 *
-	 * - @c *_nopreempt() variants: preemption level preserved
-	 * - other variants: preemption is disabled
-	 */
-	HW_LOCK_ACQUIRED   =  1,
-});
+        /**
+         * the lock was acquired successfully
+         *
+         * - @c *_nopreempt() variants: preemption level preserved
+         * - other variants: preemption is disabled
+         */
+        HW_LOCK_ACQUIRED = 1,
+    });
 
 /*!
  * @enum hw_spin_timeout_status_t
@@ -161,11 +182,12 @@ __enum_closed_decl(hw_lock_status_t, int, {
  * @const HW_LOCK_TIMEOUT_CONTINUE
  * Keep spinning for another "timeout".
  */
-__enum_closed_decl(hw_spin_timeout_status_t, _Bool, {
-	HW_LOCK_TIMEOUT_RETURN,         /**< return without taking the lock */
-	HW_LOCK_TIMEOUT_CONTINUE,       /**< keep spinning                  */
-});
-
+__enum_closed_decl(
+    hw_spin_timeout_status_t, _Bool,
+    {
+        HW_LOCK_TIMEOUT_RETURN,   /**< return without taking the lock */
+        HW_LOCK_TIMEOUT_CONTINUE, /**< keep spinning                  */
+    });
 
 /*!
  * @typedef hw_spin_timeout_t
@@ -174,13 +196,12 @@ __enum_closed_decl(hw_spin_timeout_status_t, _Bool, {
  * Describes the timeout used for a given spinning session.
  */
 typedef struct {
-	uint64_t                hwst_timeout;
+  uint64_t hwst_timeout;
 #if SCHED_HYGIENE_DEBUG
-	bool                    hwst_in_ppl;
-	bool                    hwst_interruptible;
+  bool hwst_in_ppl;
+  bool hwst_interruptible;
 #endif /* SCHED_HYGIENE_DEBUG */
 } hw_spin_timeout_t;
-
 
 /*!
  * @typedef hw_spin_state_t
@@ -189,15 +210,14 @@ typedef struct {
  * Keeps track of the various timings used for spinning
  */
 typedef struct {
-	uint64_t                hwss_start;
-	uint64_t                hwss_now;
-	uint64_t                hwss_deadline;
+  uint64_t hwss_start;
+  uint64_t hwss_now;
+  uint64_t hwss_deadline;
 #if SCHED_HYGIENE_DEBUG
-	uint64_t                hwss_irq_start;
-	uint64_t                hwss_irq_end;
+  uint64_t hwss_irq_start;
+  uint64_t hwss_irq_end;
 #endif /* SCHED_HYGIENE_DEBUG */
 } hw_spin_state_t;
-
 
 /*!
  * @typedef hw_spin_timeout_fn_t
@@ -222,30 +242,28 @@ typedef struct {
  * This ensures consistent panic string style, and transparent adoption
  * for any new diagnostic/debugging features at all call-sites.
  */
-typedef hw_spin_timeout_status_t (hw_spin_timeout_fn_t)(void *lock,
-    hw_spin_timeout_t to, hw_spin_state_t st);
+typedef hw_spin_timeout_status_t(hw_spin_timeout_fn_t)(void *lock,
+                                                       hw_spin_timeout_t to,
+                                                       hw_spin_state_t st);
 
-#define HW_SPIN_TIMEOUT_FMT \
-	"timeout after %llu ticks"
-#define HW_SPIN_TIMEOUT_ARG(to, st) \
-	((st).hwss_now - (st).hwss_start)
+#define HW_SPIN_TIMEOUT_FMT "timeout after %llu ticks"
+#define HW_SPIN_TIMEOUT_ARG(to, st) ((st).hwss_now - (st).hwss_start)
 
 #if SCHED_HYGIENE_DEBUG
-#define HW_SPIN_TIMEOUT_SCHED_HYGIENE_FMT \
-	", irq time: %llu"
-#define HW_SPIN_TIMEOUT_SCHED_HYGIENE_ARG(to, st) \
-	, ((st).hwss_irq_end - (st).hwss_irq_start)
+#define HW_SPIN_TIMEOUT_SCHED_HYGIENE_FMT ", irq time: %llu"
+#define HW_SPIN_TIMEOUT_SCHED_HYGIENE_ARG(to, st)                              \
+  , ((st).hwss_irq_end - (st).hwss_irq_start)
 #else
 #define HW_SPIN_TIMEOUT_SCHED_HYGIENE_FMT
 #define HW_SPIN_TIMEOUT_SCHED_HYGIENE_ARG(to, st)
 #endif
 
-#define HW_SPIN_TIMEOUT_DETAILS_FMT \
-	"start time: %llu, now: %llu, timeout: %llu" \
-	HW_SPIN_TIMEOUT_SCHED_HYGIENE_FMT
-#define HW_SPIN_TIMEOUT_DETAILS_ARG(to, st) \
-	(st).hwss_start, (st).hwss_now, (to).hwst_timeout \
-	HW_SPIN_TIMEOUT_SCHED_HYGIENE_ARG(to, st)
+#define HW_SPIN_TIMEOUT_DETAILS_FMT                                            \
+  "start time: %llu, now: %llu, timeout: "                                     \
+  "%llu" HW_SPIN_TIMEOUT_SCHED_HYGIENE_FMT
+#define HW_SPIN_TIMEOUT_DETAILS_ARG(to, st)                                    \
+  (st).hwss_start, (st).hwss_now,                                              \
+      (to).hwst_timeout HW_SPIN_TIMEOUT_SCHED_HYGIENE_ARG(to, st)
 
 /*!
  * @struct hw_spin_policy
@@ -254,15 +272,15 @@ typedef hw_spin_timeout_status_t (hw_spin_timeout_fn_t)(void *lock,
  * Describes the spinning policy for a given lock.
  */
 struct hw_spin_policy {
-	const char             *hwsp_name;
-	union {
-		const uint64_t *hwsp_timeout;
-		const _Atomic uint64_t *hwsp_timeout_atomic;
-	};
-	uint16_t                hwsp_timeout_shift;
-	uint16_t                hwsp_lock_offset;
+  const char *hwsp_name;
+  union {
+    const uint64_t *hwsp_timeout;
+    const _Atomic uint64_t *hwsp_timeout_atomic;
+  };
+  uint16_t hwsp_timeout_shift;
+  uint16_t hwsp_lock_offset;
 
-	hw_spin_timeout_fn_t   *hwsp_op_timeout;
+  hw_spin_timeout_fn_t *hwsp_op_timeout;
 };
 
 #if __x86_64__

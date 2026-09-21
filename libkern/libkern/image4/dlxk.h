@@ -37,17 +37,17 @@
 #define __IMAGE4_DLXK_H
 
 #define __IMAGE4_XNU_INDIRECT 1
-#include <image4/image4.h>
-#include <image4/types.h>
 #include <image4/coprocessor.h>
+#include <image4/cs/traps.h>
 #include <image4/environment.h>
+#include <image4/image4.h>
 #include <image4/trust.h>
 #include <image4/trust_evaluation.h>
-#include <image4/cs/traps.h>
+#include <image4/types.h>
 
 #if XNU_KERNEL_PRIVATE
-#include <libkern/image4/interface.h>
 #include <libkern/image4/api.h>
+#include <libkern/image4/interface.h>
 #else
 #include <image4/dlxk/interface.h>
 #endif
@@ -80,8 +80,7 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  * This routine may only be called once and must be called prior to machine
  * lockdown.
  */
-OS_EXPORT OS_NONNULL1
-void
+OS_EXPORT OS_NONNULL1 void
 image4_dlxk_link(const image4_dlxk_interface_t *dlxk);
 
 /*!
@@ -97,9 +96,8 @@ image4_dlxk_link(const image4_dlxk_interface_t *dlxk);
  * registered at boot, or if the registered structure's version is less than
  * the version specified, NULL is returned.
  */
-OS_EXPORT OS_WARN_RESULT
-const image4_dlxk_interface_t *_Nullable
-image4_dlxk_get(image4_struct_version_t v);
+OS_EXPORT OS_WARN_RESULT const image4_dlxk_interface_t
+    *_Nullable image4_dlxk_get(image4_struct_version_t v);
 
 OS_ASSUME_PTR_ABI_SINGLE_END
 OS_ASSUME_NONNULL_END

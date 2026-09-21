@@ -27,13 +27,12 @@
  */
 #include "hibernate_secure_hmac.h"
 
+#include "pal_hibernate.h"
+#include <arm64/amcc_rorgn.h>
 #include <kern/processor.h>
 #include <mach/vm_param.h>
+#include <machine/machine_routines.h>
 #include <pexpert/arm64/board_config.h>
 #include <pexpert/device_tree.h>
-#include <vm/pmap.h>
-#include <arm64/amcc_rorgn.h>
-#include <machine/machine_routines.h>
-#include "pal_hibernate.h"
 #include <stdbool.h>
-
+#include <vm/pmap.h>

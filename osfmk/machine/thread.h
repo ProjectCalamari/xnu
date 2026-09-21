@@ -28,9 +28,9 @@
 #ifndef _MACHINE_THREAD_H
 #define _MACHINE_THREAD_H
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/thread.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/thread.h"
 #else
 #error architecture not supported

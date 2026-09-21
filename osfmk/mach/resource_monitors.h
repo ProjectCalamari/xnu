@@ -30,7 +30,7 @@
 #define _MACH_RESOURCE_MONITORS_H_
 
 #include <stdint.h>
-#include <sys/syslimits.h>      /* PATH_MAX */
+#include <sys/syslimits.h> /* PATH_MAX */
 #ifndef XNU_KERNEL_PRIVATE
 #include <TargetConditionals.h>
 #endif
@@ -42,26 +42,23 @@ __BEGIN_DECLS
  * The top 32 bits are common flags, the bottom for per-call flags.
  */
 typedef uint64_t resource_notify_flags_t;
-#define kRNFlagsNone                0
+#define kRNFlagsNone 0
 
 /* Flags applicable to any monitors. */
-#define kRNFatalLimitFlag           (1ULL << 32)
+#define kRNFatalLimitFlag (1ULL << 32)
 
 /* For the disk writes I/O monitor.
  *  The default is logical writes.  */
-#define kRNPhysicalWritesFlag       (1ULL < 1)
+#define kRNPhysicalWritesFlag (1ULL < 1)
 
 /* TEMPORARY compatibility, to be removed */
 #define kCPUTriggerFatalFlag kRNFatalLimitFlag
 
 /* Soft limit on the resource table size */
-#define kRNSoftLimitFlag            (1ULL < 2)
+#define kRNSoftLimitFlag (1ULL < 2)
 
 /* Hard limit on the resource table size */
-#define kRNHardLimitFlag            (1ULL < 3)
-
-
-
+#define kRNHardLimitFlag (1ULL < 3)
 
 /*
  * Process name types for proc_internal.h.
@@ -73,7 +70,7 @@ typedef uint64_t resource_notify_flags_t;
 #define MAXCOMLEN 16
 
 typedef char command_t[MAXCOMLEN + 1];
-typedef char proc_name_t[2*MAXCOMLEN + 1];
+typedef char proc_name_t[2 * MAXCOMLEN + 1];
 typedef char posix_path_t[PATH_MAX];
 
 __END_DECLS

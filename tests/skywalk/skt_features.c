@@ -26,48 +26,49 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <assert.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <darwintest.h>
-#include "skywalk_test_driver.h"
 #include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
+#include <assert.h>
+#include <darwintest.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 
 /****************************************************************/
 
-static int
-skt_features_main(int argc, char *argv[])
-{
-	size_t len;
-	uint64_t features;
-	int error;
+static int skt_features_main(int argc, char *argv[]) {
+  size_t len;
+  uint64_t features;
+  int error;
 
-	features = 0;
-	len = sizeof(features);
-	error = sysctlbyname("kern.skywalk.features", &features, &len, NULL, 0);
-	SKTC_ASSERT_ERR(error == 0);
-	assert(len == sizeof(features));
+  features = 0;
+  len = sizeof(features);
+  error = sysctlbyname("kern.skywalk.features", &features, &len, NULL, 0);
+  SKTC_ASSERT_ERR(error == 0);
+  assert(len == sizeof(features));
 
-	T_LOG("features = 0x%016"PRIx64, features);
+  T_LOG("features = 0x%016" PRIx64, features);
 
-	assert(features & SK_FEATURE_SKYWALK);
-	assert(features & SK_FEATURE_NETNS);
-	assert(features & SK_FEATURE_NEXUS_USER_PIPE);
-	assert(features & SK_FEATURE_NEXUS_KERNEL_PIPE);
-	assert(features & SK_FEATURE_NEXUS_FLOWSWITCH);
-	assert(features & SK_FEATURE_NEXUS_NETIF);
+  assert(features & SK_FEATURE_SKYWALK);
+  assert(features & SK_FEATURE_NETNS);
+  assert(features & SK_FEATURE_NEXUS_USER_PIPE);
+  assert(features & SK_FEATURE_NEXUS_KERNEL_PIPE);
+  assert(features & SK_FEATURE_NEXUS_FLOWSWITCH);
+  assert(features & SK_FEATURE_NEXUS_NETIF);
 
-	if (features & (SK_FEATURE_DEVELOPMENT | SK_FEATURE_DEBUG)) {
-		assert(features & SK_FEATURE_NEXUS_KERNEL_PIPE_LOOPBACK);
-		assert(features & SK_FEATURE_DEV_OR_DEBUG);
-	} else {
-		assert(!(features & SK_FEATURE_NEXUS_KERNEL_PIPE_LOOPBACK));
-		assert(!(features & SK_FEATURE_DEV_OR_DEBUG));
-	}
+  if (features & (SK_FEATURE_DEVELOPMENT | SK_FEATURE_DEBUG)) {
+    assert(features & SK_FEATURE_NEXUS_KERNEL_PIPE_LOOPBACK);
+    assert(features & SK_FEATURE_DEV_OR_DEBUG);
+  } else {
+    assert(!(features & SK_FEATURE_NEXUS_KERNEL_PIPE_LOOPBACK));
+    assert(!(features & SK_FEATURE_DEV_OR_DEBUG));
+  }
 
-	return 0;
+  return 0;
 }
 
 struct skywalk_test skt_features = {
-	"features", "verifies skywalk features match kernel config", 0, skt_features_main,
+    "features",
+    "verifies skywalk features match kernel config",
+    0,
+    skt_features_main,
 };

@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-typedef const struct CERuntime* CERuntime_t;
-typedef struct CEQueryContext* CEQueryContext_t;
+typedef const struct CERuntime *CERuntime_t;
+typedef struct CEQueryContext *CEQueryContext_t;
 
 #define _CE_INDIRECT 1
 
@@ -25,13 +25,13 @@ typedef struct CEQueryContext* CEQueryContext_t;
 #define CE_HEADER_INDEXABLE
 #endif
 
-#include <os/base.h>
+#include <CoreEntitlements/Entitlements.h>
 #include <CoreEntitlements/Errors.h>
+#include <CoreEntitlements/Index.h>
 #include <CoreEntitlements/Result.h>
 #include <CoreEntitlements/Runtime.h>
-#include <CoreEntitlements/Entitlements.h>
 #include <CoreEntitlements/Serialization.h>
-#include <CoreEntitlements/Index.h>
+#include <os/base.h>
 
 __ptrcheck_abi_assume_single();
 
@@ -57,35 +57,43 @@ __ptrcheck_abi_assume_single();
  * @const kCETypeBool
  * A boolean.
  */
-OS_CLOSED_ENUM(CEType, uint32_t,
-               kCETypeUnknown = 0,
-               kCETypeDictionary = 1,
-               kCETypeSequence = 2,
-               kCETypeInteger = 3,
-               kCETypeString = 4,
-               kCETypeBool = 5,
-               kCETypeData = 6);
+OS_CLOSED_ENUM(CEType, uint32_t, kCETypeUnknown = 0, kCETypeDictionary = 1,
+               kCETypeSequence = 2, kCETypeInteger = 3, kCETypeString = 4,
+               kCETypeBool = 5, kCETypeData = 6);
 
 /*!
  * @function CE_RT_LOG
  * Log a single message via the current runtime
  * Only called if the runtime supports logging.
  */
-#define CE_RT_LOG(msg) do { if (rt->log) { rt->log(rt, "[%s]: %s\n", __FUNCTION__, msg); } } while(0)
+#define CE_RT_LOG(msg)                                                         \
+  do {                                                                         \
+    if (rt->log) {                                                             \
+      rt->log(rt, "[%s]: %s\n", __FUNCTION__, msg);                            \
+    }                                                                          \
+  } while (0)
 
 /*!
  * @function CE_RT_LOGF
  * Logs using the passed in format. Printf like.
  * Only called if the runtime supports logging.
  */
-#define CE_RT_LOGF(fmt, ...) do { if (rt->log) { rt->log(rt, "[%s]: " fmt, __FUNCTION__, __VA_ARGS__); } } while(0)
+#define CE_RT_LOGF(fmt, ...)                                                   \
+  do {                                                                         \
+    if (rt->log) {                                                             \
+      rt->log(rt, "[%s]: " fmt, __FUNCTION__, __VA_ARGS__);                    \
+    }                                                                          \
+  } while (0)
 
 /*!
  * @function CE_RT_ABORT
  * Invokes the runtime abort function with a passed in message.
  * This function should not return.
  */
-#define CE_RT_ABORT(...) do { rt->abort(rt, "[%s]: %s\n", __FUNCTION__, __VA_ARGS__); } while(0)
+#define CE_RT_ABORT(...)                                                       \
+  do {                                                                         \
+    rt->abort(rt, "[%s]: %s\n", __FUNCTION__, __VA_ARGS__);                    \
+  } while (0)
 
 #ifdef __cplusplus
 }

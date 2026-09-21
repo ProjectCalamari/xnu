@@ -45,31 +45,34 @@ __BEGIN_DECLS
 ///    mapping (analagous to `madvise(MADV_FREE_REUSABLE)`)
 ///  - `VM_RECLAIM_DEALLOCATE` - Deallocate the virtual mapping and
 ///    its backing memory (analagous to `munmap()`)
-__enum_decl(mach_vm_reclaim_action_t, uint8_t, {
-	VM_RECLAIM_FREE       = 1,
-	VM_RECLAIM_DEALLOCATE = 2,
-});
+__enum_decl(mach_vm_reclaim_action_t, uint8_t,
+            {
+                VM_RECLAIM_FREE = 1,
+                VM_RECLAIM_DEALLOCATE = 2,
+            });
 
 /// Describes the state of a memory region in the ring
-__enum_decl(mach_vm_reclaim_state_t, uint32_t, {
-	VM_RECLAIM_UNRECLAIMED = 1,
-	VM_RECLAIM_FREED       = 2,
-	VM_RECLAIM_DEALLOCATED = 3,
-	VM_RECLAIM_BUSY        = 4,
-});
+__enum_decl(mach_vm_reclaim_state_t, uint32_t,
+            {
+                VM_RECLAIM_UNRECLAIMED = 1,
+                VM_RECLAIM_FREED = 2,
+                VM_RECLAIM_DEALLOCATED = 3,
+                VM_RECLAIM_BUSY = 4,
+            });
 
 #define err_vm_reclaim(e) (err_vm | err_sub(1) | e)
 
-__enum_decl(mach_vm_reclaim_error_t, mach_error_t, {
-	VM_RECLAIM_SUCCESS             = ERR_SUCCESS,
-	VM_RECLAIM_INVALID_ARGUMENT    = err_vm_reclaim(1),
-	VM_RECLAIM_NOT_SUPPORTED       = err_vm_reclaim(2),
-	VM_RECLAIM_INVALID_REGION_SIZE = err_vm_reclaim(3),
-	VM_RECLAIM_INVALID_CAPACITY    = err_vm_reclaim(4),
-	VM_RECLAIM_INVALID_ID          = err_vm_reclaim(5),
-	VM_RECLAIM_RESOURCE_SHORTAGE   = err_vm_reclaim(6),
-	VM_RECLAIM_INVALID_RING        = err_vm_reclaim(7),
-});
+__enum_decl(mach_vm_reclaim_error_t, mach_error_t,
+            {
+                VM_RECLAIM_SUCCESS = ERR_SUCCESS,
+                VM_RECLAIM_INVALID_ARGUMENT = err_vm_reclaim(1),
+                VM_RECLAIM_NOT_SUPPORTED = err_vm_reclaim(2),
+                VM_RECLAIM_INVALID_REGION_SIZE = err_vm_reclaim(3),
+                VM_RECLAIM_INVALID_CAPACITY = err_vm_reclaim(4),
+                VM_RECLAIM_INVALID_ID = err_vm_reclaim(5),
+                VM_RECLAIM_RESOURCE_SHORTAGE = err_vm_reclaim(6),
+                VM_RECLAIM_INVALID_RING = err_vm_reclaim(7),
+            });
 
 /// The handle for a deferred reclamation ring
 typedef struct mach_vm_reclaim_ring_s *mach_vm_reclaim_ring_t;
@@ -87,7 +90,8 @@ typedef uint64_t mach_vm_reclaim_id_t;
 /// yet been entered into a ring from those that have.
 #define VM_RECLAIM_ID_NULL UINT64_MAX
 
-/// The maximum virtual size supported for an individual region to be marked free.
+/// The maximum virtual size supported for an individual region to be marked
+/// free.
 #define VM_RECLAIM_REGION_SIZE_MAX ((mach_vm_size_t)UINT32_MAX)
 
 /// Allocate & initialize a deferred reclamation ring.
@@ -114,10 +118,10 @@ typedef uint64_t mach_vm_reclaim_id_t;
 ///   `VM_RECLAIM_INVALID_CAPACITY`. If a ring has already been instantiaed,
 ///   returns `VM_RECLAIM_RESOURCE_SHORTAGE`.
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
-mach_vm_reclaim_error_t mach_vm_reclaim_ring_allocate(
-	mach_vm_reclaim_ring_t *ring,
-	mach_vm_reclaim_count_t initial_capacity,
-	mach_vm_reclaim_count_t max_capacity);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_ring_allocate(mach_vm_reclaim_ring_t *ring,
+                              mach_vm_reclaim_count_t initial_capacity,
+                              mach_vm_reclaim_count_t max_capacity);
 
 /// Re-size a deferred reclamation ring.
 ///
@@ -137,9 +141,9 @@ mach_vm_reclaim_error_t mach_vm_reclaim_ring_allocate(
 /// - Returns: If the requested capacity exceeds the maximum capacity specified
 ///   when the ring was allocated, returns `VM_RECLAIM_INVALID_CAPACITY`.
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
-mach_vm_reclaim_error_t mach_vm_reclaim_ring_resize(
-	mach_vm_reclaim_ring_t ring,
-	mach_vm_reclaim_count_t capacity);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_ring_resize(mach_vm_reclaim_ring_t ring,
+                            mach_vm_reclaim_count_t capacity);
 
 /// Get the maximum number of memory regions that can be simultaneously placed
 /// (i.e. marked free) in the ring.
@@ -148,16 +152,16 @@ mach_vm_reclaim_error_t mach_vm_reclaim_ring_resize(
 ///   - ring: a reclaim ring
 ///   - capacity: the capacity of the specified ring (out)
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
-mach_vm_reclaim_error_t mach_vm_reclaim_ring_capacity(
-	mach_vm_reclaim_ring_t ring,
-	mach_vm_reclaim_count_t *capacity);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_ring_capacity(mach_vm_reclaim_ring_t ring,
+                              mach_vm_reclaim_count_t *capacity);
 
 /// Round the given ring capacity to the maximum size that could fit
 /// within the closest vm page size multiple. Will round down if the requested
 /// capacity exceeds the maximum allowable capacity.
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
-mach_vm_reclaim_count_t mach_vm_reclaim_round_capacity(
-	mach_vm_reclaim_count_t capacity);
+mach_vm_reclaim_count_t
+mach_vm_reclaim_round_capacity(mach_vm_reclaim_count_t capacity);
 
 /// Force the kernel to reclaim at least num_entries_to_reclaim entries from
 /// the ring (if present).
@@ -165,15 +169,16 @@ mach_vm_reclaim_count_t mach_vm_reclaim_round_capacity(
 /// ``mach_vm_reclaim_synchronize()`` _is_ thread-safe w.r.t. all other
 /// mach_vm_reclaim operations.
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
-mach_vm_reclaim_error_t mach_vm_reclaim_ring_flush(
-	mach_vm_reclaim_ring_t ring,
-	mach_vm_reclaim_count_t num_entries_to_reclaim);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_ring_flush(mach_vm_reclaim_ring_t ring,
+                           mach_vm_reclaim_count_t num_entries_to_reclaim);
 
 /// Attempt to enter a reclamation request into the ring.
 ///
 /// This will update the userspace reclaim ring accounting, but will not
-/// inform the kernel about the new bytes in the ring. If the kernel should be informed,
-/// should_update_kernel_accounting will be set to true and the caller should call
+/// inform the kernel about the new bytes in the ring. If the kernel should be
+/// informed, should_update_kernel_accounting will be set to true and the caller
+/// should call
 /// ``mach_vm_reclaim_update_kernel_accounting()``.
 /// ``mach_vm_reclaim_update_kernel_accounting()`` may result in synchronous
 /// reclamation operations, so this gives the caller an opportunity to first
@@ -204,7 +209,8 @@ mach_vm_reclaim_error_t mach_vm_reclaim_ring_flush(
 ///   - region_size: The size of the memory region to be freed (in bytes) --
 ///     must be <= ``MACH_VM_RECLAIM_REGION_SIZE_MAX``.
 ///   - action: How to reclaim the entry. See ``mach_vm_reclaim_action_t``.
-///   - id: (in/out) The desired ID of the reclaim entry for later re-use. If the
+///   - id: (in/out) The desired ID of the reclaim entry for later re-use. If
+///   the
 ///     requested ID is ``VM_RECLAIM_ID_NULL``, then an new ID will be
 ///     chosen and written out on success. If the specified ID is unavailable
 ///     or no ID was specified and the ring is at capacity, then
@@ -217,29 +223,27 @@ mach_vm_reclaim_error_t mach_vm_reclaim_ring_flush(
 ///   returns `VM_RECLAIM_INVALID_REGION_SIZE`.
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
 mach_vm_reclaim_error_t mach_vm_reclaim_try_enter(
-	mach_vm_reclaim_ring_t ring,
-	mach_vm_address_t region_start,
-	mach_vm_size_t region_size,
-	mach_vm_reclaim_action_t action,
-	mach_vm_reclaim_id_t *id,
-	bool *should_update_kernel_accounting);
+    mach_vm_reclaim_ring_t ring, mach_vm_address_t region_start,
+    mach_vm_size_t region_size, mach_vm_reclaim_action_t action,
+    mach_vm_reclaim_id_t *id, bool *should_update_kernel_accounting);
 
 /// Attempt to cancel a previously entered reclamation request.
 ///
 /// This operation will attempt to remove the request from the ring, ensuring
-/// the memory region will not be reclaimed. The state of the memory region after the
-/// cancellation attempt will be written out to `state` on success. Callers
-/// should check if the memory region is safe to re-use via
+/// the memory region will not be reclaimed. The state of the memory region
+/// after the cancellation attempt will be written out to `state` on success.
+/// Callers should check if the memory region is safe to re-use via
 /// ``mach_vm_reclaim_is_reusable()``.
 ///
 /// Subsequent calls to ``mach_vm_reclaim_try_cancel()`` with the same id will
 /// result in undefined behavior.
 ///
 /// This will update the userspace reclaim ring accounting, but will not
-/// inform the kernel about the new bytes in the ring. If the kernel should be informed,
-/// should_update_kernel_accounting will be set to true and the caller should call
-/// ``mach_vm_reclaim_update_kernel_accounting()``. That syscall might reclaim the ring, so
-/// this gives the caller an opportunity to first drop any locks.
+/// inform the kernel about the new bytes in the ring. If the kernel should be
+/// informed, should_update_kernel_accounting will be set to true and the caller
+/// should call
+/// ``mach_vm_reclaim_update_kernel_accounting()``. That syscall might reclaim
+/// the ring, so this gives the caller an opportunity to first drop any locks.
 ///
 /// `mach_vm_reclaim_try_cancel()` is *not* thread-safe w.r.t. itself and other
 /// reclamation operations (i.e. ``mach_vm_reclaim_resize()``,
@@ -249,12 +253,16 @@ mach_vm_reclaim_error_t mach_vm_reclaim_try_enter(
 ///  - Parameters:
 ///    - ring: The ring to re-use the entry from
 ///    - id: The unique id of the entry to re-use
-///    - region_start: The virtual address of the memory region to re-use. Used to
+///    - region_start: The virtual address of the memory region to re-use. Used
+///    to
 ///      assert that the entry is the same one originally placed in the ring
-///    - region_size: The virtual size of the region to re-use. Used to assert that
+///    - region_size: The virtual size of the region to re-use. Used to assert
+///    that
 ///      the re-used entry is the same one the caller expects
-///    - action: The reclamation action requested when the reclamation request was entered.
-///    - state: The state of the memory region after the cancellation request (out).
+///    - action: The reclamation action requested when the reclamation request
+///    was entered.
+///    - state: The state of the memory region after the cancellation request
+///    (out).
 ///    - should_update_kernel_accounting: Out-parameter indicating if kernel
 ///      accounting should be updated via
 ///      ``mach_vm_reclaim_update_kernel_accounting()``
@@ -262,13 +270,10 @@ mach_vm_reclaim_error_t mach_vm_reclaim_try_enter(
 ///  - Returns: `VM_RECLAIM_SUCCESS` on success
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
 mach_vm_reclaim_error_t mach_vm_reclaim_try_cancel(
-	mach_vm_reclaim_ring_t ring,
-	mach_vm_reclaim_id_t id,
-	mach_vm_address_t region_start,
-	mach_vm_size_t region_size,
-	mach_vm_reclaim_action_t action,
-	mach_vm_reclaim_state_t *state,
-	bool *should_update_kernel_accounting);
+    mach_vm_reclaim_ring_t ring, mach_vm_reclaim_id_t id,
+    mach_vm_address_t region_start, mach_vm_size_t region_size,
+    mach_vm_reclaim_action_t action, mach_vm_reclaim_state_t *state,
+    bool *should_update_kernel_accounting);
 
 /// Query the current state of region specified by a given reclaim ID.
 ///
@@ -286,25 +291,22 @@ mach_vm_reclaim_error_t mach_vm_reclaim_try_cancel(
 ///
 /// - Returns: `VM_RECLAIM_SUCCESS` on success.
 mach_vm_reclaim_error_t mach_vm_reclaim_query_state(
-	mach_vm_reclaim_ring_t ring,
-	mach_vm_reclaim_id_t id,
-	mach_vm_reclaim_action_t action,
-	mach_vm_reclaim_state_t *state);
+    mach_vm_reclaim_ring_t ring, mach_vm_reclaim_id_t id,
+    mach_vm_reclaim_action_t action, mach_vm_reclaim_state_t *state);
 
 /// Return whether the given memory region state is safe for re-use.
-bool mach_vm_reclaim_is_reusable(
-	mach_vm_reclaim_state_t state);
+bool mach_vm_reclaim_is_reusable(mach_vm_reclaim_state_t state);
 
 /// Let the kernel know how much VA is in the ring.
 ///
 /// The kernel may choose to reclaim from the ring on this thread.
-/// This should be called whenever `mach_vm_reclaim_mark_[free|used]()` returns true in
-/// `should_update_kernel_accounting`. It may be called at any other time
-/// if the caller wants to update the kernel's accounting and is
-/// thread safe w.r.t. all other mach_vm_reclaim calls.
+/// This should be called whenever `mach_vm_reclaim_mark_[free|used]()` returns
+/// true in `should_update_kernel_accounting`. It may be called at any other
+/// time if the caller wants to update the kernel's accounting and is thread
+/// safe w.r.t. all other mach_vm_reclaim calls.
 __SPI_AVAILABLE(macos(15.4), ios(18.4), tvos(18.4), visionos(2.4))
-mach_vm_reclaim_error_t mach_vm_reclaim_update_kernel_accounting(
-	mach_vm_reclaim_ring_t ring);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_update_kernel_accounting(mach_vm_reclaim_ring_t ring);
 
 #endif // !KERNEL
 

@@ -66,25 +66,23 @@
 #ifndef _IPC_PORT_H_
 #define _IPC_PORT_H_
 
-#include <mach/port.h>
 #include <ipc/ipc_space.h>
+#include <mach/port.h>
 
-#define MACH_PORT_NGEN(name)            MACH_PORT_MAKE(0, MACH_PORT_GEN(name))
+#define MACH_PORT_NGEN(name) MACH_PORT_MAKE(0, MACH_PORT_GEN(name))
 
 /*
  *	Typedefs for code cleanliness.  These must all have
  *	the same (unsigned) type as mach_port_name_t.
  */
 
+#define MACH_PORT_UREFS_MAX ((mach_port_urefs_t)((1 << 16) - 1))
 
-#define MACH_PORT_UREFS_MAX     ((mach_port_urefs_t) ((1 << 16) - 1))
+#define MACH_PORT_UREFS_OVERFLOW(urefs, delta)                                 \
+  (((delta) > 0) && ((((urefs) + (delta)) <= (urefs)) ||                       \
+                     (((urefs) + (delta)) >= MACH_PORT_UREFS_MAX)))
 
-#define MACH_PORT_UREFS_OVERFLOW(urefs, delta)                          \
-	        (((delta) > 0) &&                                       \
-	         ((((urefs) + (delta)) <= (urefs)) ||                   \
-	          (((urefs) + (delta)) >= MACH_PORT_UREFS_MAX)))
+#define MACH_PORT_UREFS_UNDERFLOW(urefs, delta)                                \
+  (((delta) < 0) && (((mach_port_urefs_t) - (delta)) > (urefs)))
 
-#define MACH_PORT_UREFS_UNDERFLOW(urefs, delta)                         \
-	        (((delta) < 0) && (((mach_port_urefs_t)-(delta)) > (urefs)))
-
-#endif  /* _IPC_PORT_H_ */
+#endif /* _IPC_PORT_H_ */

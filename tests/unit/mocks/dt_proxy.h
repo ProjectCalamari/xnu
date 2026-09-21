@@ -27,26 +27,27 @@
  */
 
 #pragma once
-#include <stdbool.h>
 #include "unit_test_utils.h"
+#include <stdbool.h>
 
 // -- darwin-test proxy macros and support --
-// libdarwintest.a is linked only to the main executable of the test and not to the XNU .dylib or
-// the mocks .dylib, otherwise there would create 3 instances of darwintest in the same process, each with different
-// state.
-// On some occasions some code in these .dylibs need to call darwin-test macros so that the output
-// is visible to the user. An example for this is when XNU code calls panic or assert.
-// To achieve this, the file dt_proxy.c is built into every test executable and it contains a constructor function
-// which registers a set of proxy functions that call the darwin-test macros.
+// libdarwintest.a is linked only to the main executable of the test and not to
+// the XNU .dylib or the mocks .dylib, otherwise there would create 3 instances
+// of darwintest in the same process, each with different state. On some
+// occasions some code in these .dylibs need to call darwin-test macros so that
+// the output is visible to the user. An example for this is when XNU code calls
+// panic or assert. To achieve this, the file dt_proxy.c is built into every
+// test executable and it contains a constructor function which registers a set
+// of proxy functions that call the darwin-test macros.
 
 struct dt_proxy_callbacks {
-	void (*t_assert_true)(bool cond, const char *msg);
-	void (*t_assert_notnull)(void *ptr, const char *msg);
-	void (*t_assert_posix_zero)(int v, const char *msg);
-	void (*t_log)(const char *msg);
-	void (*t_log_fmtstr)(const char *fmt, const char *msg);
-	void (*t_fail)(const char *msg);
-	void (*t_quiet)(void);
+  void (*t_assert_true)(bool cond, const char *msg);
+  void (*t_assert_notnull)(void *ptr, const char *msg);
+  void (*t_assert_posix_zero)(int v, const char *msg);
+  void (*t_log)(const char *msg);
+  void (*t_log_fmtstr)(const char *fmt, const char *msg);
+  void (*t_fail)(const char *msg);
+  void (*t_quiet)(void);
 };
 
 // register the proxies to the XNU .dylib
@@ -60,18 +61,59 @@ extern struct dt_proxy_callbacks *get_dt_proxy_mock(void);
 // A pointer of this name appears in the XNU .dylib and the mocks .dylib
 extern struct dt_proxy_callbacks *dt_proxy;
 
-#define PT_ASSERT_TRUE(cond, msg)   do { if (dt_proxy) { dt_proxy->t_assert_true((cond), #cond msg); } } while(false)
-#define PT_ASSERT_TRUE_S(cond, msg) do { if (dt_proxy) { dt_proxy->t_assert_true((cond), msg); } } while(false)
-#define PT_ASSERT_NOTNULL(ptr, msg) do { if (dt_proxy) { dt_proxy->t_assert_notnull((ptr), msg); } } while(false)
-#define PT_ASSERT_POSIX_ZERO(v, msg) do { if (dt_proxy) { dt_proxy->t_assert_posix_zero((v), msg); } } while(false)
-#define PT_LOG(msg) do { if (dt_proxy) { dt_proxy->t_log(msg); } } while(false)
-#define PT_LOG_FMTSTR(fmt, str) do { if (dt_proxy) { dt_proxy->t_log_fmtstr(fmt, str); } } while(false)
-#define PT_LOG_OR_RAW_FMTSTR(fmt, str) do { \
-	if (dt_proxy) {                         \
-	    dt_proxy->t_log_fmtstr(fmt, str);   \
-	} else {                                \
-	    raw_printf(fmt "\n", str);          \
-	}                                       \
-	} while(false)
-#define PT_FAIL(msg) do { if (dt_proxy) { dt_proxy->t_fail(msg); } } while(false)
-#define PT_QUIET do { if (dt_proxy) { dt_proxy->t_quiet(); } } while(false)
+#define PT_ASSERT_TRUE(cond, msg)                                              \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_assert_true((cond), #cond msg);                              \
+    }                                                                          \
+  } while (false)
+#define PT_ASSERT_TRUE_S(cond, msg)                                            \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_assert_true((cond), msg);                                    \
+    }                                                                          \
+  } while (false)
+#define PT_ASSERT_NOTNULL(ptr, msg)                                            \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_assert_notnull((ptr), msg);                                  \
+    }                                                                          \
+  } while (false)
+#define PT_ASSERT_POSIX_ZERO(v, msg)                                           \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_assert_posix_zero((v), msg);                                 \
+    }                                                                          \
+  } while (false)
+#define PT_LOG(msg)                                                            \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_log(msg);                                                    \
+    }                                                                          \
+  } while (false)
+#define PT_LOG_FMTSTR(fmt, str)                                                \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_log_fmtstr(fmt, str);                                        \
+    }                                                                          \
+  } while (false)
+#define PT_LOG_OR_RAW_FMTSTR(fmt, str)                                         \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_log_fmtstr(fmt, str);                                        \
+    } else {                                                                   \
+      raw_printf(fmt "\n", str);                                               \
+    }                                                                          \
+  } while (false)
+#define PT_FAIL(msg)                                                           \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_fail(msg);                                                   \
+    }                                                                          \
+  } while (false)
+#define PT_QUIET                                                               \
+  do {                                                                         \
+    if (dt_proxy) {                                                            \
+      dt_proxy->t_quiet();                                                     \
+    }                                                                          \
+  } while (false)

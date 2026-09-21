@@ -70,13 +70,13 @@
 
 #include <sys/appleapiopts.h>
 
-#ifdef  KERNEL
+#ifdef KERNEL
 
 #include <sys/param.h>
 
 #ifdef BSD_KERNEL_PRIVATE
-#include <stdbool.h>
 #include <kern/locks.h>
+#include <stdbool.h>
 
 /* Global variables for the kernel. */
 
@@ -88,19 +88,18 @@ extern char domainname[MAXHOSTNAMELEN];
 extern lck_mtx_t domainname_lock;
 
 /* 1.2 */
-extern int stathz;              /* statistics clock's frequency */
-extern int profhz;              /* profiling clock's frequency */
-#endif /* BSD_KERNEL_PRIVATE */
-
+extern int stathz; /* statistics clock's frequency */
+extern int profhz; /* profiling clock's frequency */
+#endif             /* BSD_KERNEL_PRIVATE */
 
 #ifdef KERNEL_PRIVATE
-extern struct timezone tz;                      /* XXX */
+extern struct timezone tz; /* XXX */
 
-extern int tick;                /* usec per tick (1000000 / hz) */
-extern int hz;                  /* system clock's frequency */
+extern int tick; /* usec per tick (1000000 / hz) */
+extern int hz;   /* system clock's frequency */
 
 #endif /* KERNEL_PRIVATE */
 
-#endif  /* KERNEL */
+#endif /* KERNEL */
 
-#endif  /* !_SYS_KERNEL_H_ */
+#endif /* !_SYS_KERNEL_H_ */

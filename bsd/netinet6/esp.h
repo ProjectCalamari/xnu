@@ -26,7 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-/*	$FreeBSD: src/sys/netinet6/esp.h,v 1.2.2.2 2001/07/03 11:01:49 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet6/esp.h,v 1.2.2.2 2001/07/03 11:01:49 ume Exp $
+ */
 /*	$KAME: esp.h,v 1.16 2000/10/18 21:28:00 itojun Exp $	*/
 
 /*
@@ -68,84 +69,86 @@
 #include <sys/types.h>
 
 struct esp {
-	u_int32_t       esp_spi;        /* ESP */
-	/*variable size, 32bit bound*/	/* Initialization Vector */
-	/*variable size*/		/* Payload data */
-	/*variable size*/		/* padding */
-	/*8bit*/			/* pad size */
-	/*8bit*/			/* next header */
-	/*8bit*/			/* next header */
-	/*variable size, 32bit bound*/	/* Authentication data (new IPsec) */
+  u_int32_t esp_spi;             /* ESP */
+  /*variable size, 32bit bound*/ /* Initialization Vector */
+  /*variable size*/              /* Payload data */
+  /*variable size*/              /* padding */
+  /*8bit*/                       /* pad size */
+  /*8bit*/                       /* next header */
+  /*8bit*/                       /* next header */
+  /*variable size, 32bit bound*/ /* Authentication data (new IPsec) */
 };
 
 struct newesp {
-	u_int32_t       esp_spi;        /* ESP */
-	u_int32_t       esp_seq;        /* Sequence number */
-	/*variable size*/		/* (IV and) Payload data */
-	/*variable size*/		/* padding */
-	/*8bit*/			/* pad size */
-	/*8bit*/			/* next header */
-	/*8bit*/			/* next header */
-	/*variable size, 32bit bound*/	/* Authentication data */
+  u_int32_t esp_spi;             /* ESP */
+  u_int32_t esp_seq;             /* Sequence number */
+  /*variable size*/              /* (IV and) Payload data */
+  /*variable size*/              /* padding */
+  /*8bit*/                       /* pad size */
+  /*8bit*/                       /* next header */
+  /*8bit*/                       /* next header */
+  /*variable size, 32bit bound*/ /* Authentication data */
 };
 
 struct esptail {
-	u_int8_t        esp_padlen;     /* pad length */
-	u_int8_t        esp_nxt;        /* Next header */
-	/*variable size, 32bit bound*/	/* Authentication data (new IPsec)*/
+  u_int8_t esp_padlen;           /* pad length */
+  u_int8_t esp_nxt;              /* Next header */
+  /*variable size, 32bit bound*/ /* Authentication data (new IPsec)*/
 };
 
 #ifdef BSD_KERNEL_PRIVATE
 struct secasvar;
 
-#define ESP_AUTH_MAXSUMSIZE   64
+#define ESP_AUTH_MAXSUMSIZE 64
 
-#define ESP_ASSERT(_cond, _format, ...)                                                  \
-	do {                                                                             \
-	        if (__improbable(!(_cond))) {                                            \
-	                panic("%s:%d " _format, __FUNCTION__, __LINE__, ##__VA_ARGS__);  \
-	        }                                                                        \
-	} while (0)
+#define ESP_ASSERT(_cond, _format, ...)                                        \
+  do {                                                                         \
+    if (__improbable(!(_cond))) {                                              \
+      panic("%s:%d " _format, __FUNCTION__, __LINE__, ##__VA_ARGS__);          \
+    }                                                                          \
+  } while (0)
 
 #define ESP_CHECK_ARG(_arg) ESP_ASSERT(_arg != NULL, #_arg " is NULL")
 
-#define _esp_log(_level, _format, ...)  \
-	log(_level, "%s:%d " _format, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define _esp_log(_level, _format, ...)                                         \
+  log(_level, "%s:%d " _format, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #define esp_log_err(_format, ...) _esp_log(LOG_ERR, _format, ##__VA_ARGS__)
-#define esp_log_default(_format, ...) _esp_log(LOG_NOTICE, _format, ##__VA_ARGS__)
+#define esp_log_default(_format, ...)                                          \
+  _esp_log(LOG_NOTICE, _format, ##__VA_ARGS__)
 #define esp_log_info(_format, ...) _esp_log(LOG_INFO, _format, ##__VA_ARGS__)
 
-#define _esp_packet_log(_level, _format, ...)  \
-	ipseclog((_level, "%s:%d " _format, __FUNCTION__, __LINE__, ##__VA_ARGS__))
-#define esp_packet_log_err(_format, ...) _esp_packet_log(LOG_ERR, _format, ##__VA_ARGS__)
+#define _esp_packet_log(_level, _format, ...)                                  \
+  ipseclog((_level, "%s:%d " _format, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define esp_packet_log_err(_format, ...)                                       \
+  _esp_packet_log(LOG_ERR, _format, ##__VA_ARGS__)
 
 struct esp_algorithm {
-	uint32_t padbound;        /* pad boundary, in byte */
-	int ivlenval;           /* iv length, in byte */
-	int (*mature)(struct secasvar *);
-	u_int16_t keymin;     /* in bits */
-	u_int16_t keymax;     /* in bits */
-	size_t (*schedlen)(const struct esp_algorithm *);
-	const char *name;
-	int (*ivlen)(const struct esp_algorithm *, struct secasvar *);
-	int (*decrypt)(struct mbuf *, size_t,
-	    struct secasvar *, const struct esp_algorithm *, int);
-	int (*encrypt)(struct mbuf *, size_t, size_t,
-	    struct secasvar *, const struct esp_algorithm *, int);
-	/* not supposed to be called directly */
-	int (*schedule)(const struct esp_algorithm *, struct secasvar *);
-	int (*blockdecrypt)(const struct esp_algorithm *,
-	    struct secasvar *, u_int8_t *, u_int8_t *);
-	int (*blockencrypt)(const struct esp_algorithm *,
-	    struct secasvar *, u_int8_t *, u_int8_t *);
-	/* For Authenticated Encryption Methods */
-	size_t icvlen;
-	int (*finalizedecrypt)(struct secasvar *, u_int8_t *, size_t);
-	int (*finalizeencrypt)(struct secasvar *, u_int8_t *, size_t);
-	int (*encrypt_pkt)(struct secasvar *, uint8_t *, size_t,
-	    struct newesp *, uint8_t *, size_t, uint8_t *, size_t);
-	int (*decrypt_pkt)(struct secasvar *, uint8_t *, size_t,
-	    struct newesp *, uint8_t *, size_t, uint8_t *, size_t);
+  uint32_t padbound; /* pad boundary, in byte */
+  int ivlenval;      /* iv length, in byte */
+  int (*mature)(struct secasvar *);
+  u_int16_t keymin; /* in bits */
+  u_int16_t keymax; /* in bits */
+  size_t (*schedlen)(const struct esp_algorithm *);
+  const char *name;
+  int (*ivlen)(const struct esp_algorithm *, struct secasvar *);
+  int (*decrypt)(struct mbuf *, size_t, struct secasvar *,
+                 const struct esp_algorithm *, int);
+  int (*encrypt)(struct mbuf *, size_t, size_t, struct secasvar *,
+                 const struct esp_algorithm *, int);
+  /* not supposed to be called directly */
+  int (*schedule)(const struct esp_algorithm *, struct secasvar *);
+  int (*blockdecrypt)(const struct esp_algorithm *, struct secasvar *,
+                      u_int8_t *, u_int8_t *);
+  int (*blockencrypt)(const struct esp_algorithm *, struct secasvar *,
+                      u_int8_t *, u_int8_t *);
+  /* For Authenticated Encryption Methods */
+  size_t icvlen;
+  int (*finalizedecrypt)(struct secasvar *, u_int8_t *, size_t);
+  int (*finalizeencrypt)(struct secasvar *, u_int8_t *, size_t);
+  int (*encrypt_pkt)(struct secasvar *, uint8_t *, size_t, struct newesp *,
+                     uint8_t *, size_t, uint8_t *, size_t);
+  int (*decrypt_pkt)(struct secasvar *, uint8_t *, size_t, struct newesp *,
+                     uint8_t *, size_t, uint8_t *, size_t);
 };
 
 extern os_log_t esp_mpkl_log_object;
@@ -156,15 +159,17 @@ extern int esp_max_ivlen(void);
 /* crypt routines */
 extern int esp4_output(struct mbuf *, struct secasvar *);
 extern void esp4_input(struct mbuf *, int off);
-extern struct mbuf *esp4_input_extended(struct mbuf *, int off, ifnet_t interface);
+extern struct mbuf *esp4_input_extended(struct mbuf *, int off,
+                                        ifnet_t interface);
 extern size_t esp_hdrsiz(struct ipsecrequest *);
 extern int esp_kpipe_output(struct secasvar *, kern_packet_t, kern_packet_t);
 extern int esp_kpipe_input(ifnet_t, kern_packet_t, kern_packet_t);
 
 extern int esp_schedule(const struct esp_algorithm *, struct secasvar *);
-extern int esp_auth(struct mbuf *, size_t, size_t,
-    struct secasvar *, u_char *__sized_by(ESP_AUTH_MAXSUMSIZE));
-extern int esp_auth_data(struct secasvar *, uint8_t *, size_t, uint8_t *, size_t);
+extern int esp_auth(struct mbuf *, size_t, size_t, struct secasvar *,
+                    u_char *__sized_by(ESP_AUTH_MAXSUMSIZE));
+extern int esp_auth_data(struct secasvar *, uint8_t *, size_t, uint8_t *,
+                         size_t);
 
 extern void esp_init(void);
 #endif /* BSD_KERNEL_PRIVATE */

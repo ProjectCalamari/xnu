@@ -26,11 +26,11 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <mach/mach_types.h>
-#include <mach/host_special_ports.h>
-#include <mach/host_priv.h>
 #include <ipc/ipc_port.h>
 #include <kern/host.h>
+#include <mach/host_priv.h>
+#include <mach/host_special_ports.h>
+#include <mach/mach_types.h>
 
 #include <mach/ktrace_background.h>
 
@@ -39,18 +39,16 @@ kern_return_t ktrace_background_available_notify_user(void);
 /*
  * If user space has registered for background notifications, send one.
  */
-kern_return_t
-ktrace_background_available_notify_user(void)
-{
-	mach_port_t user_port;
-	kern_return_t kr;
+kern_return_t ktrace_background_available_notify_user(void) {
+  mach_port_t user_port;
+  kern_return_t kr;
 
-	kr = host_get_ktrace_background_port(host_priv_self(), &user_port);
-	if (kr != KERN_SUCCESS || !IPC_PORT_VALID(user_port)) {
-		return KERN_FAILURE;
-	}
+  kr = host_get_ktrace_background_port(host_priv_self(), &user_port);
+  if (kr != KERN_SUCCESS || !IPC_PORT_VALID(user_port)) {
+    return KERN_FAILURE;
+  }
 
-	kr = send_ktrace_background_available(user_port);
-	ipc_port_release_send(user_port);
-	return kr;
+  kr = send_ktrace_background_available(user_port);
+  ipc_port_release_send(user_port);
+  return kr;
 }

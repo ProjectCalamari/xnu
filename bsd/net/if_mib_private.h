@@ -57,26 +57,25 @@
  */
 
 #ifndef _NET_IF_MIB_PRIVATE_H
-#define _NET_IF_MIB_PRIVATE_H   1
+#define _NET_IF_MIB_PRIVATE_H 1
 #include <net/if_var_private.h>
 
 /*
  * MIB tags for the various net.link.generic.ifdata tables
  */
-#define IFDATA_SUPPLEMENTAL     5       /* supplemental link specific stats */
+#define IFDATA_SUPPLEMENTAL 5 /* supplemental link specific stats */
 
 struct ifmibdata_supplemental {
-	struct if_traffic_class ifmd_traffic_class;
-	struct if_data_extended ifmd_data_extended;
-	struct if_packet_stats  ifmd_packet_stats;
-	struct if_rxpoll_stats  ifmd_rxpoll_stats;
-	struct if_netif_stats   ifmd_netif_stats;
+  struct if_traffic_class ifmd_traffic_class;
+  struct if_data_extended ifmd_data_extended;
+  struct if_packet_stats ifmd_packet_stats;
+  struct if_rxpoll_stats ifmd_rxpoll_stats;
+  struct if_netif_stats ifmd_netif_stats;
 };
 
 /*
  * MIB tags for link heuristics statistics
  */
-#define IFDATA_LINKHEURISTICS   6       /* struct if_linkheuristics */
-
+#define IFDATA_LINKHEURISTICS 6 /* struct if_linkheuristics */
 
 #endif /* _NET_IF_MIB_PRIVATE_H */

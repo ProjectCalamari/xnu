@@ -28,10 +28,10 @@
 
 #include <sys/log_data.h>
 
-extern int __log_data(unsigned int tag, unsigned int flags, void *buffer, unsigned int size);
+extern int __log_data(unsigned int tag, unsigned int flags, void *buffer,
+                      unsigned int size);
 
-int
-log_data_as_kernel(unsigned int tag, unsigned int flags, void *buffer, unsigned int size)
-{
-	return __log_data(tag, flags, buffer, size);
+int log_data_as_kernel(unsigned int tag, unsigned int flags, void *buffer,
+                       unsigned int size) {
+  return __log_data(tag, flags, buffer, size);
 }

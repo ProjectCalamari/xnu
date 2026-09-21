@@ -36,12 +36,14 @@
 
 #ifndef __KPI_INTERFACEFILTER__
 #define __KPI_INTERFACEFILTER__
-#include <sys/kernel_types.h>
 #include <net/kpi_interface.h>
+#include <sys/kernel_types.h>
 
 #ifndef PRIVATE
 #include <Availability.h>
-#define __NKE_API_DEPRECATED __API_DEPRECATED("Network Kernel Extension KPI is deprecated", macos(10.4, 10.15.4))
+#define __NKE_API_DEPRECATED                                                   \
+  __API_DEPRECATED("Network Kernel Extension KPI is deprecated",               \
+                   macos(10.4, 10.15.4))
 #else
 #define __NKE_API_DEPRECATED
 #endif /* PRIVATE */
@@ -64,17 +66,17 @@ __BEGIN_DECLS
  *               header.
  *
  *               The frame header usually preceeds the data in the mbuf. This
- *               ensures that the frame header will be a valid pointer as long as
- *               the mbuf is not freed. If you need to change the frame header to
- *               point somewhere else, the recommended method is to prepend a new
- *               frame header to the mbuf chain (mbuf_prepend), set the header to
- *               point to that data, then call mbuf_adj to move the mbuf data
- *               pointer back to the start of the packet payload.
+ *               ensures that the frame header will be a valid pointer as long
+ * as the mbuf is not freed. If you need to change the frame header to point
+ * somewhere else, the recommended method is to prepend a new frame header to
+ * the mbuf chain (mbuf_prepend), set the header to point to that data, then
+ * call mbuf_adj to move the mbuf data pointer back to the start of the packet
+ * payload.
  *       @param cookie The cookie specified when this filter was attached.
  *       @param interface The interface the packet was recieved on.
  *       @param protocol The protocol of this packet. If you specified a
- *               protocol when attaching your filter, the protocol will only ever
- *               be the protocol you specified.
+ *               protocol when attaching your filter, the protocol will only
+ * ever be the protocol you specified.
  *       @param data The inbound packet, after the frame header as determined
  *               by the interface.
  *       @param frame_ptr A pointer to the pointer to the frame header. The
@@ -89,7 +91,8 @@ __BEGIN_DECLS
  *                       processing.
  */
 typedef errno_t (*iff_input_func)(void *cookie, ifnet_t interface,
-    protocol_family_t protocol, mbuf_t *data, char **frame_ptr);
+                                  protocol_family_t protocol, mbuf_t *data,
+                                  char **frame_ptr);
 
 /*!
  *       @typedef iff_output_func
@@ -112,7 +115,7 @@ typedef errno_t (*iff_input_func)(void *cookie, ifnet_t interface,
  *                       processing.
  */
 typedef errno_t (*iff_output_func)(void *cookie, ifnet_t interface,
-    protocol_family_t protocol, mbuf_t *data);
+                                   protocol_family_t protocol, mbuf_t *data);
 
 /*!
  *       @typedef iff_event_func
@@ -126,7 +129,8 @@ typedef errno_t (*iff_output_func)(void *cookie, ifnet_t interface,
  *       @param event_msg The kernel event, may not be changed.
  */
 typedef void (*iff_event_func)(void *cookie, ifnet_t interface,
-    protocol_family_t protocol, const struct kev_msg *event_msg);
+                               protocol_family_t protocol,
+                               const struct kev_msg *event_msg);
 
 /*!
  *       @typedef iff_ioctl_func
@@ -153,7 +157,8 @@ typedef void (*iff_event_func)(void *cookie, ifnet_t interface,
  *                       returned.
  */
 typedef errno_t (*iff_ioctl_func)(void *cookie, ifnet_t interface,
-    protocol_family_t protocol, unsigned long ioctl_cmd, void *ioctl_arg);
+                                  protocol_family_t protocol,
+                                  unsigned long ioctl_cmd, void *ioctl_arg);
 
 /*!
  *       @typedef iff_detached_func
@@ -163,8 +168,8 @@ typedef errno_t (*iff_ioctl_func)(void *cookie, ifnet_t interface,
  *               the filter that will be made. A filter may be detached if the
  *               interface is detached or the detach filter function is called.
  *               In the case that the interface is being detached, your filter's
- *               event function will be called with the interface detaching event
- *               before the your detached function will be called.
+ *               event function will be called with the interface detaching
+ * event before the your detached function will be called.
  *       @param cookie The cookie specified when this filter was attached.
  *       @param interface The interface this filter was detached from.
  */
@@ -193,14 +198,14 @@ typedef void (*iff_detached_func)(void *cookie, ifnet_t interface);
  */
 
 struct iff_filter {
-	void                    *iff_cookie;
-	const char              *iff_name;
-	protocol_family_t       iff_protocol;
-	iff_input_func          iff_input;
-	iff_output_func         iff_output;
-	iff_event_func          iff_event;
-	iff_ioctl_func          iff_ioctl;
-	iff_detached_func       iff_detached;
+  void *iff_cookie;
+  const char *iff_name;
+  protocol_family_t iff_protocol;
+  iff_input_func iff_input;
+  iff_output_func iff_output;
+  iff_event_func iff_event;
+  iff_ioctl_func iff_ioctl;
+  iff_detached_func iff_detached;
 };
 
 /*!
@@ -212,15 +217,15 @@ struct iff_filter {
  *       @result 0 on success otherwise the errno error.
  */
 #ifdef KERNEL_PRIVATE
-extern errno_t iflt_attach_internal(ifnet_t interface, const struct iff_filter *filter,
-    interface_filter_t *filter_ref);
+extern errno_t iflt_attach_internal(ifnet_t interface,
+                                    const struct iff_filter *filter,
+                                    interface_filter_t *filter_ref);
 
-#define iflt_attach(interface, filter, filter_ref) \
-	iflt_attach_internal((interface), (filter), (filter_ref))
+#define iflt_attach(interface, filter, filter_ref)                             \
+  iflt_attach_internal((interface), (filter), (filter_ref))
 #else
 extern errno_t iflt_attach(ifnet_t interface, const struct iff_filter *filter,
-    interface_filter_t *filter_ref)
-__NKE_API_DEPRECATED;
+                           interface_filter_t *filter_ref) __NKE_API_DEPRECATED;
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -228,8 +233,7 @@ __NKE_API_DEPRECATED;
  *       @discussion Detaches an interface filter from an interface.
  *       @param filter_ref The reference to the filter from iflt_attach.
  */
-extern void iflt_detach(interface_filter_t filter_ref)
-__NKE_API_DEPRECATED;
+extern void iflt_detach(interface_filter_t filter_ref) __NKE_API_DEPRECATED;
 
 __END_DECLS
 #undef __NKE_API_DEPRECATED

@@ -67,50 +67,53 @@
 #include <mach/mach_types.h>
 #include <sys/cdefs.h>
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
-#include <kern/locks.h>
 #include <kern/exception.h>
+#include <kern/kern_types.h>
+#include <kern/locks.h>
 #include <mach/exception_types.h>
 #include <mach/host_special_ports.h>
-#include <kern/kern_types.h>
 #include <mach/vm_statistics.h>
 
-struct  host {
-	decl_lck_mtx_data(, lock);               /* lock to protect exceptions */
-	ipc_port_t XNU_PTRAUTH_SIGNED_PTR("host.special") special[HOST_MAX_SPECIAL_PORT + 1];
-	struct exception_action exc_actions[EXC_TYPES_COUNT];
+struct host {
+  decl_lck_mtx_data(, lock); /* lock to protect exceptions */
+  ipc_port_t
+      XNU_PTRAUTH_SIGNED_PTR("host.special") special[HOST_MAX_SPECIAL_PORT + 1];
+  struct exception_action exc_actions[EXC_TYPES_COUNT];
 };
 
-typedef struct host     host_data_t;
+typedef struct host host_data_t;
 
-extern host_data_t      realhost;
+extern host_data_t realhost;
 
-#define host_lock(host)         lck_mtx_lock(&(host)->lock)
-#define host_unlock(host)       lck_mtx_unlock(&(host)->lock)
+#define host_lock(host) lck_mtx_lock(&(host)->lock)
+#define host_unlock(host) lck_mtx_unlock(&(host)->lock)
 
 extern vm_extmod_statistics_data_t host_extmod_statistics;
 
 typedef struct {
-	uint64_t total_user_time;
-	uint64_t total_system_time;
-	uint64_t task_interrupt_wakeups;
-	uint64_t task_platform_idle_wakeups;
-	uint64_t task_timer_wakeups_bin_1;
-	uint64_t task_timer_wakeups_bin_2;
-	uint64_t total_ptime;
-	uint64_t total_pset_switches;
-	uint64_t task_gpu_ns;
-	uint64_t task_energy;
+  uint64_t total_user_time;
+  uint64_t total_system_time;
+  uint64_t task_interrupt_wakeups;
+  uint64_t task_platform_idle_wakeups;
+  uint64_t task_timer_wakeups_bin_1;
+  uint64_t task_timer_wakeups_bin_2;
+  uint64_t total_ptime;
+  uint64_t total_pset_switches;
+  uint64_t task_gpu_ns;
+  uint64_t task_energy;
 } expired_task_statistics_t;
 
 extern expired_task_statistics_t dead_task_statistics;
 
-extern kern_return_t host_set_special_port(host_priv_t host_priv, int id, ipc_port_t port);
+extern kern_return_t host_set_special_port(host_priv_t host_priv, int id,
+                                           ipc_port_t port);
 extern kern_return_t host_get_special_port(host_priv_t host_priv,
-    __unused int node, int id, ipc_port_t * portp);
+                                           __unused int node, int id,
+                                           ipc_port_t *portp);
 
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
 /*
  * Access routines for inside the kernel.
@@ -118,9 +121,9 @@ extern kern_return_t host_get_special_port(host_priv_t host_priv,
 
 __BEGIN_DECLS
 
-extern host_t                   host_self(void);
-extern host_priv_t              host_priv_self(void);
+extern host_t host_self(void);
+extern host_priv_t host_priv_self(void);
 
 __END_DECLS
 
-#endif  /* _KERN_HOST_H_ */
+#endif /* _KERN_HOST_H_ */

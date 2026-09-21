@@ -58,7 +58,8 @@
  * SUCH DAMAGE.
  *
  *	@(#)icmp_var.h	8.1 (Berkeley) 6/10/93
- * $FreeBSD: src/sys/netinet/icmp_var.h,v 1.15.2.1 2001/02/24 21:35:18 bmilekic Exp $
+ * $FreeBSD: src/sys/netinet/icmp_var.h,v 1.15.2.1 2001/02/24 21:35:18 bmilekic
+ * Exp $
  */
 
 #ifndef _NETINET_ICMP_VAR_H_
@@ -72,43 +73,44 @@
  * Variables related to this implementation
  * of the internet control message protocol.
  */
-struct  icmpstat {
-/* statistics related to icmp packets generated */
-	u_int32_t       icps_error;     /* # of calls to icmp_error */
-	u_int32_t       icps_oldshort;  /* no error 'cuz old ip too short */
-	u_int32_t       icps_oldicmp;   /* no error 'cuz old was icmp */
-	u_int32_t       icps_outhist[ICMP_MAXTYPE + 1];
-/* statistics related to input messages processed */
-	u_int32_t       icps_badcode;   /* icmp_code out of range */
-	u_int32_t       icps_tooshort;  /* packet < ICMP_MINLEN */
-	u_int32_t       icps_checksum;  /* bad checksum */
-	u_int32_t       icps_badlen;    /* calculated bound mismatch */
-	u_int32_t       icps_reflect;   /* number of responses */
-	u_int32_t       icps_inhist[ICMP_MAXTYPE + 1];
-	u_int32_t       icps_bmcastecho;/* b/mcast echo requests dropped */
-	u_int32_t       icps_bmcasttstamp; /* b/mcast tstamp requests dropped */
+struct icmpstat {
+  /* statistics related to icmp packets generated */
+  u_int32_t icps_error;    /* # of calls to icmp_error */
+  u_int32_t icps_oldshort; /* no error 'cuz old ip too short */
+  u_int32_t icps_oldicmp;  /* no error 'cuz old was icmp */
+  u_int32_t icps_outhist[ICMP_MAXTYPE + 1];
+  /* statistics related to input messages processed */
+  u_int32_t icps_badcode;  /* icmp_code out of range */
+  u_int32_t icps_tooshort; /* packet < ICMP_MINLEN */
+  u_int32_t icps_checksum; /* bad checksum */
+  u_int32_t icps_badlen;   /* calculated bound mismatch */
+  u_int32_t icps_reflect;  /* number of responses */
+  u_int32_t icps_inhist[ICMP_MAXTYPE + 1];
+  u_int32_t icps_bmcastecho;   /* b/mcast echo requests dropped */
+  u_int32_t icps_bmcasttstamp; /* b/mcast tstamp requests dropped */
 };
 
 /*
  * Names for ICMP sysctl objects
  */
-#define ICMPCTL_MASKREPL        1       /* allow replies to netmask requests */
-#define ICMPCTL_STATS           2       /* statistics (read-only) */
-#define ICMPCTL_ICMPLIM         3
-#define ICMPCTL_TIMESTAMP       4       /* allow replies to time stamp requests */
-#define ICMPCTL_ICMPLIM_INCR    5
-#define ICMPCTL_MAXID           6
+#define ICMPCTL_MASKREPL 1 /* allow replies to netmask requests */
+#define ICMPCTL_STATS 2    /* statistics (read-only) */
+#define ICMPCTL_ICMPLIM 3
+#define ICMPCTL_TIMESTAMP 4 /* allow replies to time stamp requests */
+#define ICMPCTL_ICMPLIM_INCR 5
+#define ICMPCTL_MAXID 6
 
 #ifdef BSD_KERNEL_PRIVATE
-#define ICMPCTL_NAMES { \
-	{ 0, 0 }, \
-	{ "maskrepl", CTLTYPE_INT }, \
-	{ "stats", CTLTYPE_STRUCT }, \
-	{ "icmplim", CTLTYPE_INT }, \
-	{ "icmptimestamp", CTLTYPE_INT }, \
-}
+#define ICMPCTL_NAMES                                                          \
+  {                                                                            \
+      {0, 0},                                                                  \
+      {"maskrepl", CTLTYPE_INT},                                               \
+      {"stats", CTLTYPE_STRUCT},                                               \
+      {"icmplim", CTLTYPE_INT},                                                \
+      {"icmptimestamp", CTLTYPE_INT},                                          \
+  }
 
 SYSCTL_DECL(_net_inet_icmp);
-extern struct   icmpstat icmpstat;
+extern struct icmpstat icmpstat;
 #endif /* BSD_KERNEL_PRIVATE */
 #endif /* _NETINET_ICMP_VAR_H_ */

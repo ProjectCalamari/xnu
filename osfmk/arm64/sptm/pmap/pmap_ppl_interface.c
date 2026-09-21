@@ -34,7 +34,8 @@
  * contains the ppl_handler_table, as well as a few PPL-only entry/exit helper
  * functions.
  *
- * See doc/arm/PPL.md for more information about how these PPL entry points work.
+ * See doc/arm/PPL.md for more information about how these PPL entry points
+ * work.
  */
 #include <kern/ledger.h>
 
@@ -50,70 +51,59 @@
  * generates the code for the _ppl() variant which is what is used to jump into
  * the PPL.
  *
- * See doc/arm/PPL.md for more information about how these PPL entry points work.
+ * See doc/arm/PPL.md for more information about how these PPL entry points
+ * work.
  */
 
-PMAP_SUPPORT_PROTOTYPES(
-	kern_return_t,
-	mapping_free_prime, (void), MAPPING_FREE_PRIME_INDEX);
+PMAP_SUPPORT_PROTOTYPES(kern_return_t, mapping_free_prime, (void),
+                        MAPPING_FREE_PRIME_INDEX);
 
 /**
  * See pmap_cpu_data_init_internal()'s function header for more info.
  */
-void
-pmap_cpu_data_init(void)
-{
-	pmap_cpu_data_init_internal(cpu_number());
-}
+void pmap_cpu_data_init(void) { pmap_cpu_data_init_internal(cpu_number()); }
 
 /**
  * Prime the pv_entry_t free lists with a healthy amount of objects first thing
  * during boot. These objects will be used to keep track of physical-to-virtual
  * mappings.
  */
-void
-mapping_free_prime(void)
-{
-	kern_return_t kr = KERN_FAILURE;
+void mapping_free_prime(void) {
+  kern_return_t kr = KERN_FAILURE;
 
-	kr = mapping_free_prime_internal();
+  kr = mapping_free_prime_internal();
 
-	if (kr != KERN_SUCCESS) {
-		panic("%s: failed, no pages available? kr=%d", __func__, kr);
-	}
+  if (kr != KERN_SUCCESS) {
+    panic("%s: failed, no pages available? kr=%d", __func__, kr);
+  }
 }
 
 /**
- * SPTM TODO: delete this function once the SPTM pmap becomes the sole pmap implementation.
- * See pmap_ledger_verify_size_internal()'s function header for more information.
+ * SPTM TODO: delete this function once the SPTM pmap becomes the sole pmap
+ * implementation. See pmap_ledger_verify_size_internal()'s function header for
+ * more information.
  */
-__attribute__((noreturn))
-void
-pmap_ledger_verify_size(size_t size)
-{
-	panic("%s: unsupported on non-PPL systems, size=%lu", __func__, size);
-	__builtin_unreachable();
+__attribute__((noreturn)) void pmap_ledger_verify_size(size_t size) {
+  panic("%s: unsupported on non-PPL systems, size=%lu", __func__, size);
+  __builtin_unreachable();
 }
 
 /**
- * SPTM TODO: delete this function once the SPTM pmap becomes the sole pmap implementation.
- * See pmap_ledger_alloc_internal()'s function header for more information.
+ * SPTM TODO: delete this function once the SPTM pmap becomes the sole pmap
+ * implementation. See pmap_ledger_alloc_internal()'s function header for more
+ * information.
  */
-ledger_t
-pmap_ledger_alloc(void)
-{
-	panic("%s: unsupported on non-PPL systems", __func__);
-	__builtin_unreachable();
+ledger_t pmap_ledger_alloc(void) {
+  panic("%s: unsupported on non-PPL systems", __func__);
+  __builtin_unreachable();
 }
 
 /**
- * SPTM TODO: delete this function once the SPTM pmap becomes the sole pmap implementation.
- * See pmap_ledger_free_internal()'s function header for more information.
+ * SPTM TODO: delete this function once the SPTM pmap becomes the sole pmap
+ * implementation. See pmap_ledger_free_internal()'s function header for more
+ * information.
  */
-__attribute__((noreturn))
-void
-pmap_ledger_free(ledger_t ledger)
-{
-	panic("%s: unsupported on non-PPL systems, ledger=%p", __func__, ledger);
-	__builtin_unreachable();
+__attribute__((noreturn)) void pmap_ledger_free(ledger_t ledger) {
+  panic("%s: unsupported on non-PPL systems, ledger=%p", __func__, ledger);
+  __builtin_unreachable();
 }

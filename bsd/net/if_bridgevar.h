@@ -107,53 +107,54 @@
 
 #include <sys/queue.h>
 
-#include <net/if.h>
 #include <net/ethernet.h>
+#include <net/if.h>
 #include <netinet/in.h>
 
 /*
  * Commands used in the SIOCSDRVSPEC ioctl.  Note the lookup of the
  * bridge interface itself is keyed off the ifdrv structure.
  */
-#define BRDGADD                 0       /* add bridge member (ifbreq) */
-#define BRDGDEL                 1       /* delete bridge member (ifbreq) */
-#define BRDGGIFFLGS             2       /* get member if flags (ifbreq) */
-#define BRDGSIFFLGS             3       /* set member if flags (ifbreq) */
-#define BRDGSCACHE              4       /* set cache size (ifbrparam) */
-#define BRDGGCACHE              5       /* get cache size (ifbrparam) */
-#define BRDGGIFS                6       /* get member list (ifbifconf) */
-#define BRDGRTS                 7       /* get address list (ifbaconf) */
-#define BRDGSADDR               8       /* set static address (ifbareq) */
-#define BRDGSTO                 9       /* set cache timeout (ifbrparam) */
-#define BRDGGTO                 10      /* get cache timeout (ifbrparam) */
-#define BRDGDADDR               11      /* delete address (ifbareq) */
-#define BRDGFLUSH               12      /* flush address cache (ifbreq) */
+#define BRDGADD 0     /* add bridge member (ifbreq) */
+#define BRDGDEL 1     /* delete bridge member (ifbreq) */
+#define BRDGGIFFLGS 2 /* get member if flags (ifbreq) */
+#define BRDGSIFFLGS 3 /* set member if flags (ifbreq) */
+#define BRDGSCACHE 4  /* set cache size (ifbrparam) */
+#define BRDGGCACHE 5  /* get cache size (ifbrparam) */
+#define BRDGGIFS 6    /* get member list (ifbifconf) */
+#define BRDGRTS 7     /* get address list (ifbaconf) */
+#define BRDGSADDR 8   /* set static address (ifbareq) */
+#define BRDGSTO 9     /* set cache timeout (ifbrparam) */
+#define BRDGGTO 10    /* get cache timeout (ifbrparam) */
+#define BRDGDADDR 11  /* delete address (ifbareq) */
+#define BRDGFLUSH 12  /* flush address cache (ifbreq) */
 
-#define BRDGGPRI                13      /* get priority (ifbrparam) */
-#define BRDGSPRI                14      /* set priority (ifbrparam) */
-#define BRDGGHT                 15      /* get hello time (ifbrparam) */
-#define BRDGSHT                 16      /* set hello time (ifbrparam) */
-#define BRDGGFD                 17      /* get forward delay (ifbrparam) */
-#define BRDGSFD                 18      /* set forward delay (ifbrparam) */
-#define BRDGGMA                 19      /* get max age (ifbrparam) */
-#define BRDGSMA                 20      /* set max age (ifbrparam) */
-#define BRDGSIFPRIO             21      /* set if priority (ifbreq) */
-#define BRDGSIFCOST             22      /* set if path cost (ifbreq) */
-#define BRDGGFILT               23      /* get filter flags (ifbrparam) */
-#define BRDGSFILT               24      /* set filter flags (ifbrparam) */
-#define BRDGPURGE               25      /* purge address cache for a particular interface (ifbreq) */
-#define BRDGADDS                26      /* add bridge span member (ifbreq) */
-#define BRDGDELS                27      /* delete bridge span member (ifbreq) */
-#define BRDGPARAM               28      /* get bridge STP params (ifbropreq) */
-#define BRDGGRTE                29      /* get cache drops (ifbrparam) */
-#define BRDGGIFSSTP             30      /* get member STP params list (ifbpstpconf) */
-#define BRDGSPROTO              31      /* set protocol (ifbrparam) */
-#define BRDGSTXHC               32      /* set tx hold count (ifbrparam) */
-#define BRDGSIFAMAX             33      /* set max interface addrs (ifbreq) */
-#define BRDGGHOSTFILTER         34      /* get host filter (ifbrhostfilter) */
-#define BRDGSHOSTFILTER         35      /* set host filter (ifbrhostfilter) */
-#define BRDGGMACNATLIST         36      /* get MAC NAT list (ifbrmnelist) */
-#define BRDGGIFSTATS            37      /* member stats (ifbrmreq+ifbrmstats) */
+#define BRDGGPRI 13    /* get priority (ifbrparam) */
+#define BRDGSPRI 14    /* set priority (ifbrparam) */
+#define BRDGGHT 15     /* get hello time (ifbrparam) */
+#define BRDGSHT 16     /* set hello time (ifbrparam) */
+#define BRDGGFD 17     /* get forward delay (ifbrparam) */
+#define BRDGSFD 18     /* set forward delay (ifbrparam) */
+#define BRDGGMA 19     /* get max age (ifbrparam) */
+#define BRDGSMA 20     /* set max age (ifbrparam) */
+#define BRDGSIFPRIO 21 /* set if priority (ifbreq) */
+#define BRDGSIFCOST 22 /* set if path cost (ifbreq) */
+#define BRDGGFILT 23   /* get filter flags (ifbrparam) */
+#define BRDGSFILT 24   /* set filter flags (ifbrparam) */
+#define BRDGPURGE                                                              \
+  25 /* purge address cache for a particular interface (ifbreq) */
+#define BRDGADDS 26        /* add bridge span member (ifbreq) */
+#define BRDGDELS 27        /* delete bridge span member (ifbreq) */
+#define BRDGPARAM 28       /* get bridge STP params (ifbropreq) */
+#define BRDGGRTE 29        /* get cache drops (ifbrparam) */
+#define BRDGGIFSSTP 30     /* get member STP params list (ifbpstpconf) */
+#define BRDGSPROTO 31      /* set protocol (ifbrparam) */
+#define BRDGSTXHC 32       /* set tx hold count (ifbrparam) */
+#define BRDGSIFAMAX 33     /* set max interface addrs (ifbreq) */
+#define BRDGGHOSTFILTER 34 /* get host filter (ifbrhostfilter) */
+#define BRDGSHOSTFILTER 35 /* set host filter (ifbrhostfilter) */
+#define BRDGGMACNATLIST 36 /* get MAC NAT list (ifbrmnelist) */
+#define BRDGGIFSTATS 37    /* member stats (ifbrmreq+ifbrmstats) */
 
 /*
  * Generic bridge control request.
@@ -161,65 +162,70 @@
 #pragma pack(4)
 
 struct ifbreq {
-	char            ifbr_ifsname[IFNAMSIZ]; /* member if name */
-	uint32_t        ifbr_ifsflags;          /* member if flags */
-	uint32_t        ifbr_stpflags;          /* member if STP flags */
-	uint32_t        ifbr_path_cost;         /* member if STP cost */
-	uint8_t         ifbr_portno;            /* member if port number */
-	uint8_t         ifbr_priority;          /* member if STP priority */
-	uint8_t         ifbr_proto;             /* member if STP protocol */
-	uint8_t         ifbr_role;              /* member if STP role */
-	uint8_t         ifbr_state;             /* member if STP state */
-	uint32_t        ifbr_addrcnt;           /* member if addr number */
-	uint32_t        ifbr_addrmax;           /* member if addr max */
-	uint32_t        ifbr_addrexceeded;      /* member if addr violations */
-	uint8_t         pad[32];
+  char ifbr_ifsname[IFNAMSIZ]; /* member if name */
+  uint32_t ifbr_ifsflags;      /* member if flags */
+  uint32_t ifbr_stpflags;      /* member if STP flags */
+  uint32_t ifbr_path_cost;     /* member if STP cost */
+  uint8_t ifbr_portno;         /* member if port number */
+  uint8_t ifbr_priority;       /* member if STP priority */
+  uint8_t ifbr_proto;          /* member if STP protocol */
+  uint8_t ifbr_role;           /* member if STP role */
+  uint8_t ifbr_state;          /* member if STP state */
+  uint32_t ifbr_addrcnt;       /* member if addr number */
+  uint32_t ifbr_addrmax;       /* member if addr max */
+  uint32_t ifbr_addrexceeded;  /* member if addr violations */
+  uint8_t pad[32];
 };
 
 #pragma pack()
 
 /* BRDGGIFFLGS, BRDGSIFFLGS */
-#define IFBIF_LEARNING          0x0001  /* if can learn */
-#define IFBIF_DISCOVER          0x0002  /* if sends packets w/ unknown dest. */
-#define IFBIF_STP               0x0004  /* if participates in spanning tree */
-#define IFBIF_SPAN              0x0008  /* if is a span port */
-#define IFBIF_STICKY            0x0010  /* if learned addresses stick */
-#define IFBIF_BSTP_EDGE         0x0020  /* member stp edge port */
-#define IFBIF_BSTP_AUTOEDGE     0x0040  /* member stp autoedge enabled */
-#define IFBIF_BSTP_PTP          0x0080  /* member stp point to point */
-#define IFBIF_BSTP_AUTOPTP      0x0100  /* member stp autoptp enabled */
-#define IFBIF_BSTP_ADMEDGE      0x0200  /* member stp admin edge enabled */
-#define IFBIF_BSTP_ADMCOST      0x0400  /* member stp admin path cost */
-#define IFBIF_PRIVATE           0x0800  /* if is a private segment */
-#define IFBIF_MAC_NAT           0x8000  /* member requires MAC NAT */
-#define IFBIF_CHECKSUM_OFFLOAD  0x10000 /* checksum inbound packets,
-	                                 * drop outbound packets with
-	                                 * bad checksum
-	                                 */
-#define IFBIF_USES_VIRTIO       0x20000 /* uses virtio */
+#define IFBIF_LEARNING 0x0001      /* if can learn */
+#define IFBIF_DISCOVER 0x0002      /* if sends packets w/ unknown dest. */
+#define IFBIF_STP 0x0004           /* if participates in spanning tree */
+#define IFBIF_SPAN 0x0008          /* if is a span port */
+#define IFBIF_STICKY 0x0010        /* if learned addresses stick */
+#define IFBIF_BSTP_EDGE 0x0020     /* member stp edge port */
+#define IFBIF_BSTP_AUTOEDGE 0x0040 /* member stp autoedge enabled */
+#define IFBIF_BSTP_PTP 0x0080      /* member stp point to point */
+#define IFBIF_BSTP_AUTOPTP 0x0100  /* member stp autoptp enabled */
+#define IFBIF_BSTP_ADMEDGE 0x0200  /* member stp admin edge enabled */
+#define IFBIF_BSTP_ADMCOST 0x0400  /* member stp admin path cost */
+#define IFBIF_PRIVATE 0x0800       /* if is a private segment */
+#define IFBIF_MAC_NAT 0x8000       /* member requires MAC NAT */
+#define IFBIF_CHECKSUM_OFFLOAD                                                 \
+  0x10000                         /* checksum inbound packets,                 \
+                                   * drop outbound packets with                \
+                                   * bad checksum                              \
+                                   */
+#define IFBIF_USES_VIRTIO 0x20000 /* uses virtio */
 
+#define IFBIFBITS                                                              \
+  "\020\001LEARNING\002DISCOVER\003STP\004SPAN"                                \
+  "\005STICKY\006EDGE\007AUTOEDGE\010PTP"                                      \
+  "\011AUTOPTP\014PRIVATE"                                                     \
+  "\020MACNAT\021CSUM\022VIRTIO"
 
-#define IFBIFBITS       "\020\001LEARNING\002DISCOVER\003STP\004SPAN" \
-	"\005STICKY\006EDGE\007AUTOEDGE\010PTP"                       \
-	"\011AUTOPTP\014PRIVATE"                                      \
-	"\020MACNAT\021CSUM\022VIRTIO"
-
-#define IFBIFMASK       ~(IFBIF_BSTP_EDGE|IFBIF_BSTP_AUTOEDGE|IFBIF_BSTP_PTP| \
-	                IFBIF_BSTP_AUTOPTP|IFBIF_BSTP_ADMEDGE| \
-	                IFBIF_BSTP_ADMCOST)     /* not saved */
+#define IFBIFMASK                                                              \
+  ~(IFBIF_BSTP_EDGE | IFBIF_BSTP_AUTOEDGE | IFBIF_BSTP_PTP |                   \
+    IFBIF_BSTP_AUTOPTP | IFBIF_BSTP_ADMEDGE |                                  \
+    IFBIF_BSTP_ADMCOST) /* not saved */
 
 /* BRDGFLUSH */
-#define IFBF_FLUSHDYN           0x00    /* flush learned addresses only */
-#define IFBF_FLUSHALL           0x01    /* flush all addresses */
+#define IFBF_FLUSHDYN 0x00 /* flush learned addresses only */
+#define IFBF_FLUSHALL 0x01 /* flush all addresses */
 
 /* BRDGSFILT */
-#define IFBF_FILT_USEIPF        0x00000001 /* run pf hooks on the bridge
-	                                    *  interface */
-#define IFBF_FILT_MEMBER        0x00000002 /* run pf hooks on the member
-	                                    *  interfaces */
-#define IFBF_FILT_ONLYIP        0x00000004 /* only pass IP[46] packets when
-	                                    *  pf is enabled */
-#define IFBF_FILT_MASK          0x00000007 /* mask of valid values */
+#define IFBF_FILT_USEIPF                                                       \
+  0x00000001 /* run pf hooks on the bridge                                     \
+              *  interface */
+#define IFBF_FILT_MEMBER                                                       \
+  0x00000002 /* run pf hooks on the member                                     \
+              *  interfaces */
+#define IFBF_FILT_ONLYIP                                                       \
+  0x00000004                      /* only pass IP[46] packets when             \
+                                   *  pf is enabled */
+#define IFBF_FILT_MASK 0x00000007 /* mask of valid values */
 
 /*
  * Interface list structure.
@@ -230,33 +236,33 @@ struct ifbreq {
 #ifndef XNU_KERNEL_PRIVATE
 
 struct ifbifconf {
-	uint32_t        ifbic_len;      /* buffer size */
-	union {
-		caddr_t ifbicu_buf;
-		struct ifbreq *ifbicu_req;
-#define ifbic_buf       ifbic_ifbicu.ifbicu_buf
-#define ifbic_req       ifbic_ifbicu.ifbicu_req
-	} ifbic_ifbicu;
+  uint32_t ifbic_len; /* buffer size */
+  union {
+    caddr_t ifbicu_buf;
+    struct ifbreq *ifbicu_req;
+#define ifbic_buf ifbic_ifbicu.ifbicu_buf
+#define ifbic_req ifbic_ifbicu.ifbicu_req
+  } ifbic_ifbicu;
 };
 
 #else /* XNU_KERNEL_PRIVATE */
 
 struct ifbifconf32 {
-	uint32_t        ifbic_len;      /* buffer size */
-	union {
-		user32_addr_t   ifbicu_buf;
-		user32_addr_t   ifbicu_req;
-#define ifbic_buf       ifbic_ifbicu.ifbicu_buf
-#define ifbic_req       ifbic_ifbicu.ifbicu_req
-	} ifbic_ifbicu;
+  uint32_t ifbic_len; /* buffer size */
+  union {
+    user32_addr_t ifbicu_buf;
+    user32_addr_t ifbicu_req;
+#define ifbic_buf ifbic_ifbicu.ifbicu_buf
+#define ifbic_req ifbic_ifbicu.ifbicu_req
+  } ifbic_ifbicu;
 };
 
 struct ifbifconf64 {
-	uint32_t        ifbic_len;      /* buffer size */
-	union {
-		user64_addr_t   ifbicu_buf;
-		user64_addr_t   ifbicu_req;
-	} ifbic_ifbicu;
+  uint32_t ifbic_len; /* buffer size */
+  union {
+    user64_addr_t ifbicu_buf;
+    user64_addr_t ifbicu_req;
+  } ifbic_ifbicu;
 };
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -271,40 +277,40 @@ struct ifbifconf64 {
 #ifndef XNU_KERNEL_PRIVATE
 
 struct ifbareq {
-	char            ifba_ifsname[IFNAMSIZ]; /* member if name */
-	unsigned long   ifba_expire;            /* address expire time */
-	uint8_t         ifba_flags;             /* address flags */
-	uint8_t         ifba_dst[ETHER_ADDR_LEN];/* destination address */
-	uint16_t        ifba_vlan;              /* vlan id */
+  char ifba_ifsname[IFNAMSIZ];      /* member if name */
+  unsigned long ifba_expire;        /* address expire time */
+  uint8_t ifba_flags;               /* address flags */
+  uint8_t ifba_dst[ETHER_ADDR_LEN]; /* destination address */
+  uint16_t ifba_vlan;               /* vlan id */
 };
 
-#else /* XNU_KERNEL_PRIVATE */
+#else  /* XNU_KERNEL_PRIVATE */
 
 struct ifbareq32 {
-	char            ifba_ifsname[IFNAMSIZ]; /* member if name */
-	uint32_t        ifba_expire;            /* address expire time */
-	uint8_t         ifba_flags;             /* address flags */
-	uint8_t         ifba_dst[ETHER_ADDR_LEN];/* destination address */
-	uint16_t        ifba_vlan;              /* vlan id */
+  char ifba_ifsname[IFNAMSIZ];      /* member if name */
+  uint32_t ifba_expire;             /* address expire time */
+  uint8_t ifba_flags;               /* address flags */
+  uint8_t ifba_dst[ETHER_ADDR_LEN]; /* destination address */
+  uint16_t ifba_vlan;               /* vlan id */
 };
 
 struct ifbareq64 {
-	char            ifba_ifsname[IFNAMSIZ]; /* member if name */
-	uint64_t        ifba_expire;            /* address expire time */
-	uint8_t         ifba_flags;             /* address flags */
-	uint8_t         ifba_dst[ETHER_ADDR_LEN];/* destination address */
-	uint16_t        ifba_vlan;              /* vlan id */
+  char ifba_ifsname[IFNAMSIZ];      /* member if name */
+  uint64_t ifba_expire;             /* address expire time */
+  uint8_t ifba_flags;               /* address flags */
+  uint8_t ifba_dst[ETHER_ADDR_LEN]; /* destination address */
+  uint16_t ifba_vlan;               /* vlan id */
 };
 #endif /* XNU_KERNEL_PRIVATE */
 
 #pragma pack()
 
-#define IFBAF_TYPEMASK  0x03    /* address type mask */
-#define IFBAF_DYNAMIC   0x00    /* dynamically learned address */
-#define IFBAF_STATIC    0x01    /* static address */
-#define IFBAF_STICKY    0x02    /* sticky address */
+#define IFBAF_TYPEMASK 0x03 /* address type mask */
+#define IFBAF_DYNAMIC 0x00  /* dynamically learned address */
+#define IFBAF_STATIC 0x01   /* static address */
+#define IFBAF_STICKY 0x02   /* sticky address */
 
-#define IFBAFBITS       "\020\1STATIC\2STICKY"
+#define IFBAFBITS "\020\1STATIC\2STICKY"
 
 /*
  * Address list structure.
@@ -315,33 +321,33 @@ struct ifbareq64 {
 #ifndef XNU_KERNEL_PRIVATE
 
 struct ifbaconf {
-	uint32_t        ifbac_len;      /* buffer size */
-	union {
-		caddr_t ifbacu_buf;
-		struct ifbareq *ifbacu_req;
-#define ifbac_buf       ifbac_ifbacu.ifbacu_buf
-#define ifbac_req       ifbac_ifbacu.ifbacu_req
-	} ifbac_ifbacu;
+  uint32_t ifbac_len; /* buffer size */
+  union {
+    caddr_t ifbacu_buf;
+    struct ifbareq *ifbacu_req;
+#define ifbac_buf ifbac_ifbacu.ifbacu_buf
+#define ifbac_req ifbac_ifbacu.ifbacu_req
+  } ifbac_ifbacu;
 };
 
 #else /* XNU_KERNEL_PRIVATE */
 
 struct ifbaconf32 {
-	uint32_t        ifbac_len;      /* buffer size */
-	union {
-		user32_addr_t   ifbacu_buf;
-		user32_addr_t   ifbacu_req;
-#define ifbac_buf       ifbac_ifbacu.ifbacu_buf
-#define ifbac_req       ifbac_ifbacu.ifbacu_req
-	} ifbac_ifbacu;
+  uint32_t ifbac_len; /* buffer size */
+  union {
+    user32_addr_t ifbacu_buf;
+    user32_addr_t ifbacu_req;
+#define ifbac_buf ifbac_ifbacu.ifbacu_buf
+#define ifbac_req ifbac_ifbacu.ifbacu_req
+  } ifbac_ifbacu;
 };
 
 struct ifbaconf64 {
-	uint32_t        ifbac_len;      /* buffer size */
-	union {
-		user64_addr_t   ifbacu_buf;
-		user64_addr_t   ifbacu_req;
-	} ifbac_ifbacu;
+  uint32_t ifbac_len; /* buffer size */
+  union {
+    user64_addr_t ifbacu_buf;
+    user64_addr_t ifbacu_req;
+  } ifbac_ifbacu;
 };
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -354,26 +360,27 @@ struct ifbaconf64 {
 #pragma pack(4)
 
 struct ifbrparam {
-	union {
-		uint32_t ifbrpu_int32;
-		uint16_t ifbrpu_int16;
-		uint8_t ifbrpu_int8;
-	} ifbrp_ifbrpu;
+  union {
+    uint32_t ifbrpu_int32;
+    uint16_t ifbrpu_int16;
+    uint8_t ifbrpu_int8;
+  } ifbrp_ifbrpu;
 };
 
 #pragma pack()
 
-#define ifbrp_csize     ifbrp_ifbrpu.ifbrpu_int32       /* cache size */
-#define ifbrp_ctime     ifbrp_ifbrpu.ifbrpu_int32       /* cache time (sec) */
-#define ifbrp_prio      ifbrp_ifbrpu.ifbrpu_int16       /* bridge priority */
-#define ifbrp_proto     ifbrp_ifbrpu.ifbrpu_int8        /* bridge protocol */
-#define ifbrp_txhc      ifbrp_ifbrpu.ifbrpu_int8        /* bpdu tx holdcount */
-#define ifbrp_hellotime ifbrp_ifbrpu.ifbrpu_int8        /* hello time (sec) */
-#define ifbrp_fwddelay  ifbrp_ifbrpu.ifbrpu_int8        /* fwd time (sec) */
-#define ifbrp_maxage    ifbrp_ifbrpu.ifbrpu_int8        /* max age (sec) */
-#define ifbrp_cexceeded ifbrp_ifbrpu.ifbrpu_int32       /* # of cache dropped
-	                                                 * adresses */
-#define ifbrp_filter    ifbrp_ifbrpu.ifbrpu_int32       /* filtering flags */
+#define ifbrp_csize ifbrp_ifbrpu.ifbrpu_int32    /* cache size */
+#define ifbrp_ctime ifbrp_ifbrpu.ifbrpu_int32    /* cache time (sec) */
+#define ifbrp_prio ifbrp_ifbrpu.ifbrpu_int16     /* bridge priority */
+#define ifbrp_proto ifbrp_ifbrpu.ifbrpu_int8     /* bridge protocol */
+#define ifbrp_txhc ifbrp_ifbrpu.ifbrpu_int8      /* bpdu tx holdcount */
+#define ifbrp_hellotime ifbrp_ifbrpu.ifbrpu_int8 /* hello time (sec) */
+#define ifbrp_fwddelay ifbrp_ifbrpu.ifbrpu_int8  /* fwd time (sec) */
+#define ifbrp_maxage ifbrp_ifbrpu.ifbrpu_int8    /* max age (sec) */
+#define ifbrp_cexceeded                                                        \
+  ifbrp_ifbrpu.ifbrpu_int32                    /* # of cache dropped           \
+                                                * adresses */
+#define ifbrp_filter ifbrp_ifbrpu.ifbrpu_int32 /* filtering flags */
 
 /*
  * Bridge current operational parameters structure.
@@ -384,18 +391,18 @@ struct ifbrparam {
 #pragma pack(4)
 
 struct ifbropreq {
-	uint8_t         ifbop_holdcount;
-	uint8_t         ifbop_maxage;
-	uint8_t         ifbop_hellotime;
-	uint8_t         ifbop_fwddelay;
-	uint8_t         ifbop_protocol;
-	uint16_t        ifbop_priority;
-	uint16_t        ifbop_root_port;
-	uint32_t        ifbop_root_path_cost;
-	uint64_t        ifbop_bridgeid;
-	uint64_t        ifbop_designated_root;
-	uint64_t        ifbop_designated_bridge;
-	struct timeval  ifbop_last_tc_time;
+  uint8_t ifbop_holdcount;
+  uint8_t ifbop_maxage;
+  uint8_t ifbop_hellotime;
+  uint8_t ifbop_fwddelay;
+  uint8_t ifbop_protocol;
+  uint16_t ifbop_priority;
+  uint16_t ifbop_root_port;
+  uint32_t ifbop_root_path_cost;
+  uint64_t ifbop_bridgeid;
+  uint64_t ifbop_designated_root;
+  uint64_t ifbop_designated_bridge;
+  struct timeval ifbop_last_tc_time;
 };
 
 #pragma pack()
@@ -408,33 +415,33 @@ struct ifbropreq {
 #pragma pack(4)
 
 struct ifbropreq32 {
-	uint8_t         ifbop_holdcount;
-	uint8_t         ifbop_maxage;
-	uint8_t         ifbop_hellotime;
-	uint8_t         ifbop_fwddelay;
-	uint8_t         ifbop_protocol;
-	uint16_t        ifbop_priority;
-	uint16_t        ifbop_root_port;
-	uint32_t        ifbop_root_path_cost;
-	uint64_t        ifbop_bridgeid;
-	uint64_t        ifbop_designated_root;
-	uint64_t        ifbop_designated_bridge;
-	struct timeval32  ifbop_last_tc_time;
+  uint8_t ifbop_holdcount;
+  uint8_t ifbop_maxage;
+  uint8_t ifbop_hellotime;
+  uint8_t ifbop_fwddelay;
+  uint8_t ifbop_protocol;
+  uint16_t ifbop_priority;
+  uint16_t ifbop_root_port;
+  uint32_t ifbop_root_path_cost;
+  uint64_t ifbop_bridgeid;
+  uint64_t ifbop_designated_root;
+  uint64_t ifbop_designated_bridge;
+  struct timeval32 ifbop_last_tc_time;
 };
 
 struct ifbropreq64 {
-	uint8_t         ifbop_holdcount;
-	uint8_t         ifbop_maxage;
-	uint8_t         ifbop_hellotime;
-	uint8_t         ifbop_fwddelay;
-	uint8_t         ifbop_protocol;
-	uint16_t        ifbop_priority;
-	uint16_t        ifbop_root_port;
-	uint32_t        ifbop_root_path_cost;
-	uint64_t        ifbop_bridgeid;
-	uint64_t        ifbop_designated_root;
-	uint64_t        ifbop_designated_bridge;
-	struct timeval64  ifbop_last_tc_time;
+  uint8_t ifbop_holdcount;
+  uint8_t ifbop_maxage;
+  uint8_t ifbop_hellotime;
+  uint8_t ifbop_fwddelay;
+  uint8_t ifbop_protocol;
+  uint16_t ifbop_priority;
+  uint16_t ifbop_root_port;
+  uint32_t ifbop_root_path_cost;
+  uint64_t ifbop_bridgeid;
+  uint64_t ifbop_designated_root;
+  uint64_t ifbop_designated_bridge;
+  struct timeval64 ifbop_last_tc_time;
 };
 
 #pragma pack()
@@ -448,12 +455,12 @@ struct ifbropreq64 {
 #pragma pack(4)
 
 struct ifbpstpreq {
-	uint8_t         ifbp_portno;            /* bp STP port number */
-	uint32_t        ifbp_fwd_trans;         /* bp STP fwd transitions */
-	uint32_t        ifbp_design_cost;       /* bp STP designated cost */
-	uint32_t        ifbp_design_port;       /* bp STP designated port */
-	uint64_t        ifbp_design_bridge;     /* bp STP designated bridge */
-	uint64_t        ifbp_design_root;       /* bp STP designated root */
+  uint8_t ifbp_portno;         /* bp STP port number */
+  uint32_t ifbp_fwd_trans;     /* bp STP fwd transitions */
+  uint32_t ifbp_design_cost;   /* bp STP designated cost */
+  uint32_t ifbp_design_port;   /* bp STP designated port */
+  uint64_t ifbp_design_bridge; /* bp STP designated bridge */
+  uint64_t ifbp_design_root;   /* bp STP designated root */
 };
 
 #pragma pack()
@@ -467,33 +474,33 @@ struct ifbpstpreq {
 #ifndef XNU_KERNEL_PRIVATE
 
 struct ifbpstpconf {
-	uint32_t        ifbpstp_len;    /* buffer size */
-	union {
-		caddr_t ifbpstpu_buf;
-		struct ifbpstpreq *ifbpstpu_req;
-	} ifbpstp_ifbpstpu;
-#define ifbpstp_buf     ifbpstp_ifbpstpu.ifbpstpu_buf
-#define ifbpstp_req     ifbpstp_ifbpstpu.ifbpstpu_req
+  uint32_t ifbpstp_len; /* buffer size */
+  union {
+    caddr_t ifbpstpu_buf;
+    struct ifbpstpreq *ifbpstpu_req;
+  } ifbpstp_ifbpstpu;
+#define ifbpstp_buf ifbpstp_ifbpstpu.ifbpstpu_buf
+#define ifbpstp_req ifbpstp_ifbpstpu.ifbpstpu_req
 };
 
 #else /* XNU_KERNEL_PRIVATE */
 
 struct ifbpstpconf32 {
-	uint32_t        ifbpstp_len;    /* buffer size */
-	union {
-		user32_addr_t   ifbpstpu_buf;
-		user32_addr_t   ifbpstpu_req;
-#define ifbpstp_buf     ifbpstp_ifbpstpu.ifbpstpu_buf
-#define ifbpstp_req     ifbpstp_ifbpstpu.ifbpstpu_req
-	} ifbpstp_ifbpstpu;
+  uint32_t ifbpstp_len; /* buffer size */
+  union {
+    user32_addr_t ifbpstpu_buf;
+    user32_addr_t ifbpstpu_req;
+#define ifbpstp_buf ifbpstp_ifbpstpu.ifbpstpu_buf
+#define ifbpstp_req ifbpstp_ifbpstpu.ifbpstpu_req
+  } ifbpstp_ifbpstpu;
 };
 
 struct ifbpstpconf64 {
-	uint32_t        ifbpstp_len;    /* buffer size */
-	union {
-		user64_addr_t   ifbpstpu_buf;
-		user64_addr_t   ifbpstpu_req;
-	} ifbpstp_ifbpstpu;
+  uint32_t ifbpstp_len; /* buffer size */
+  union {
+    user64_addr_t ifbpstpu_buf;
+    user64_addr_t ifbpstpu_req;
+  } ifbpstp_ifbpstpu;
 };
 
 #endif /* XNU_KERNEL_PRIVATE */
@@ -504,17 +511,17 @@ struct ifbpstpconf64 {
  * Bridge member host filter.
  */
 
-#define IFBRHF_ENABLED  0x01
-#define IFBRHF_HWSRC    0x02    /* Valid with enabled flags */
-#define IFBRHF_IPSRC    0x04    /* Valid with enabled flags */
+#define IFBRHF_ENABLED 0x01
+#define IFBRHF_HWSRC 0x02 /* Valid with enabled flags */
+#define IFBRHF_IPSRC 0x04 /* Valid with enabled flags */
 
 #pragma pack(4)
 
 struct ifbrhostfilter {
-	uint32_t        ifbrhf_flags;           /* flags */
-	char            ifbrhf_ifsname[IFNAMSIZ];       /* member if name */
-	uint8_t         ifbrhf_hwsrca[ETHER_ADDR_LEN];
-	uint32_t        ifbrhf_ipsrc;
+  uint32_t ifbrhf_flags;         /* flags */
+  char ifbrhf_ifsname[IFNAMSIZ]; /* member if name */
+  uint8_t ifbrhf_hwsrca[ETHER_ADDR_LEN];
+  uint32_t ifbrhf_ipsrc;
 };
 
 #pragma pack()
@@ -523,45 +530,44 @@ struct ifbrhostfilter {
  * sysctl net.link.bridge.hostfilterstats
  */
 struct bridge_hostfilter_stats {
-	uint64_t        brhf_bad_ether_type;
-	uint64_t        brhf_bad_ether_srchw_addr;
+  uint64_t brhf_bad_ether_type;
+  uint64_t brhf_bad_ether_srchw_addr;
 
-	uint64_t        brhf_ether_too_small;
-	uint64_t        brhf_ether_pullup_failed;
+  uint64_t brhf_ether_too_small;
+  uint64_t brhf_ether_pullup_failed;
 
-	uint64_t        brhf_arp_ok;
-	uint64_t        brhf_arp_too_small;
-	uint64_t        brhf_arp_pullup_failed;
-	uint64_t        brhf_arp_bad_hw_type;
-	uint64_t        brhf_arp_bad_pro_type;
-	uint64_t        brhf_arp_bad_hw_len;
-	uint64_t        brhf_arp_bad_pro_len;
-	uint64_t        brhf_arp_bad_op;
-	uint64_t        brhf_arp_bad_sha;
-	uint64_t        brhf_arp_bad_spa;
+  uint64_t brhf_arp_ok;
+  uint64_t brhf_arp_too_small;
+  uint64_t brhf_arp_pullup_failed;
+  uint64_t brhf_arp_bad_hw_type;
+  uint64_t brhf_arp_bad_pro_type;
+  uint64_t brhf_arp_bad_hw_len;
+  uint64_t brhf_arp_bad_pro_len;
+  uint64_t brhf_arp_bad_op;
+  uint64_t brhf_arp_bad_sha;
+  uint64_t brhf_arp_bad_spa;
 
-	uint64_t        brhf_ip_ok;
-	uint64_t        brhf_ip_too_small;
-	uint64_t        brhf_ip_pullup_failed;
-	uint64_t        brhf_ip_bad_srcaddr;
-	uint64_t        brhf_ip_bad_proto;
+  uint64_t brhf_ip_ok;
+  uint64_t brhf_ip_too_small;
+  uint64_t brhf_ip_pullup_failed;
+  uint64_t brhf_ip_bad_srcaddr;
+  uint64_t brhf_ip_bad_proto;
 
-	uint64_t        brhf_dhcp_too_small;
-	uint64_t        brhf_dhcp_bad_op;
-	uint64_t        brhf_dhcp_bad_htype;
-	uint64_t        brhf_dhcp_bad_hlen;
-	uint64_t        brhf_dhcp_bad_chaddr;
-	uint64_t        brhf_dhcp_bad_ciaddr;
+  uint64_t brhf_dhcp_too_small;
+  uint64_t brhf_dhcp_bad_op;
+  uint64_t brhf_dhcp_bad_htype;
+  uint64_t brhf_dhcp_bad_hlen;
+  uint64_t brhf_dhcp_bad_chaddr;
+  uint64_t brhf_dhcp_bad_ciaddr;
 };
 
 #ifdef XNU_KERNEL_PRIVATE
 
 extern u_int8_t bstp_etheraddr[ETHER_ADDR_LEN];
 
-int     bridgeattach(int);
+int bridgeattach(int);
 
 #endif /* XNU_KERNEL_PRIVATE */
-
 
 #pragma pack(4)
 
@@ -570,48 +576,47 @@ int     bridgeattach(int);
  */
 
 union ifbrip {
-	struct in_addr  ifbrip_addr;
-	struct in6_addr ifbrip_addr6;
+  struct in_addr ifbrip_addr;
+  struct in6_addr ifbrip_addr6;
 };
 
 struct ifbrmne {
-	char            ifbmne_ifname[IFNAMSIZ]; /* member if name */
-	uint64_t        ifbmne_expire;           /* expiration time */
-	uint8_t         ifbmne_mac[ETHER_ADDR_LEN];/* MAC address */
-	uint8_t         ifbmne_reserved;
-	uint8_t         ifbmne_af;              /* AF_INET or AF_INET6 */
-	union ifbrip    ifbmne_ip;
+  char ifbmne_ifname[IFNAMSIZ];       /* member if name */
+  uint64_t ifbmne_expire;             /* expiration time */
+  uint8_t ifbmne_mac[ETHER_ADDR_LEN]; /* MAC address */
+  uint8_t ifbmne_reserved;
+  uint8_t ifbmne_af; /* AF_INET or AF_INET6 */
+  union ifbrip ifbmne_ip;
 };
-#define ifbmne_ip_addr  ifbmne_ip.ifbrip_addr
+#define ifbmne_ip_addr ifbmne_ip.ifbrip_addr
 #define ifbmne_ip6_addr ifbmne_ip.ifbrip_addr6
 
 #ifndef XNU_KERNEL_PRIVATE
 
 struct ifbrmnelist {
-	uint32_t        ifbml_len;      /* buffer size (multiple of elsize) */
-	uint16_t        ifbml_elsize;   /* sizeof(ifbrmne) */
-	uint16_t        ifbml_pad;
-	caddr_t         ifbml_buf;
+  uint32_t ifbml_len;    /* buffer size (multiple of elsize) */
+  uint16_t ifbml_elsize; /* sizeof(ifbrmne) */
+  uint16_t ifbml_pad;
+  caddr_t ifbml_buf;
 };
 
 #else /* XNU_KERNEL_PRIVATE */
 
 struct ifbrmnelist32 {
-	uint32_t        ifbml_len;      /* buffer size */
-	uint16_t        ifbml_elsize;   /* sizeof(ifbrmne) */
-	uint16_t        ifbml_pad;
-	user32_addr_t   ifbml_buf;
+  uint32_t ifbml_len;    /* buffer size */
+  uint16_t ifbml_elsize; /* sizeof(ifbrmne) */
+  uint16_t ifbml_pad;
+  user32_addr_t ifbml_buf;
 };
 
 struct ifbrmnelist64 {
-	uint32_t        ifbml_len;      /* buffer size */
-	uint16_t        ifbml_elsize;   /* sizeof(ifbrmne) */
-	uint16_t        ifbml_pad;
-	user64_addr_t   ifbml_buf;
+  uint32_t ifbml_len;    /* buffer size */
+  uint16_t ifbml_elsize; /* sizeof(ifbrmne) */
+  uint16_t ifbml_pad;
+  user64_addr_t ifbml_buf;
 };
 
 #endif /* XNU_KERNEL_PRIVATE */
-
 
 /*
  * Bridge member-specific request structure
@@ -620,46 +625,46 @@ struct ifbrmnelist64 {
 #ifndef XNU_KERNEL_PRIVATE
 
 struct ifbrmreq {
-	char            brmr_ifname[IFNAMSIZ]; /* member if name */
-	uint32_t        brmr_len;      /* buffer size (in/out) */
-	uint32_t        brmr_elsize;   /* element size (out) */
-	caddr_t         brmr_buf;      /* buffer */
+  char brmr_ifname[IFNAMSIZ]; /* member if name */
+  uint32_t brmr_len;          /* buffer size (in/out) */
+  uint32_t brmr_elsize;       /* element size (out) */
+  caddr_t brmr_buf;           /* buffer */
 };
 
 #else /* XNU_KERNEL_PRIVATE */
 
 struct ifbrmreq32 {
-	char            brmr_ifname[IFNAMSIZ]; /* member if name */
-	uint32_t        brmr_len;      /* buffer size (in/out) */
-	uint32_t        brmr_elsize;   /* element size (out) */
-	user32_addr_t   brmr_buf;      /* buffer */
+  char brmr_ifname[IFNAMSIZ]; /* member if name */
+  uint32_t brmr_len;          /* buffer size (in/out) */
+  uint32_t brmr_elsize;       /* element size (out) */
+  user32_addr_t brmr_buf;     /* buffer */
 };
 
 struct ifbrmreq64 {
-	char            brmr_ifname[IFNAMSIZ]; /* member if name */
-	uint32_t        brmr_len;      /* buffer size (in/out) */
-	uint32_t        brmr_elsize;   /* element size (out) */
-	user64_addr_t   brmr_buf;      /* buffer */
+  char brmr_ifname[IFNAMSIZ]; /* member if name */
+  uint32_t brmr_len;          /* buffer size (in/out) */
+  uint32_t brmr_elsize;       /* element size (out) */
+  user64_addr_t brmr_buf;     /* buffer */
 };
 
 #endif /* XNU_KERNEL_PRIVATE */
 
 struct bripstats {
-	uint64_t        bips_ip;
-	uint64_t        bips_ip6;
-	uint64_t        bips_udp;
-	uint64_t        bips_tcp;
+  uint64_t bips_ip;
+  uint64_t bips_ip6;
+  uint64_t bips_udp;
+  uint64_t bips_tcp;
 
-	uint64_t        bips_bad_ip;
-	uint64_t        bips_bad_ip6;
-	uint64_t        bips_bad_udp;
-	uint64_t        bips_bad_tcp;
+  uint64_t bips_bad_ip;
+  uint64_t bips_bad_ip6;
+  uint64_t bips_bad_udp;
+  uint64_t bips_bad_tcp;
 };
 
 struct brcsumstats {
-	uint64_t        brcs_ip_checksum;
-	uint64_t        brcs_udp_checksum;
-	uint64_t        brcs_tcp_checksum;
+  uint64_t brcs_ip_checksum;
+  uint64_t brcs_udp_checksum;
+  uint64_t brcs_tcp_checksum;
 };
 
 /*
@@ -671,16 +676,16 @@ struct brcsumstats {
  *   interface
  */
 struct ifbrmstats {
-	struct bripstats        brms_in_ip;
-	struct bripstats        brms_out_ip;
+  struct bripstats brms_in_ip;
+  struct bripstats brms_out_ip;
 
-	struct brcsumstats      brms_in_computed_cksum;
+  struct brcsumstats brms_in_computed_cksum;
 
-	struct brcsumstats      brms_out_cksum_good;
-	struct brcsumstats      brms_out_cksum_good_hw;
+  struct brcsumstats brms_out_cksum_good;
+  struct brcsumstats brms_out_cksum_good_hw;
 
-	struct brcsumstats      brms_out_cksum_bad;
-	struct brcsumstats      brms_out_cksum_bad_hw;
+  struct brcsumstats brms_out_cksum_bad;
+  struct brcsumstats brms_out_cksum_bad_hw;
 };
 
 #pragma pack()

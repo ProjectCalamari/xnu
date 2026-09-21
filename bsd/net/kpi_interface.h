@@ -51,7 +51,9 @@ struct ifnet_interface_advisory;
 
 #ifndef PRIVATE
 #include <Availability.h>
-#define __NKE_API_DEPRECATED __API_DEPRECATED("Network Kernel Extension KPI is deprecated", macos(10.4, 10.15.4))
+#define __NKE_API_DEPRECATED                                                   \
+  __API_DEPRECATED("Network Kernel Extension KPI is deprecated",               \
+                   macos(10.4, 10.15.4))
 #else
 #define __NKE_API_DEPRECATED
 #endif /* PRIVATE */
@@ -100,25 +102,25 @@ struct ifnet_demux_desc;
  *       @constant IFNET_FAMILY_IPSEC An IPsec interface.
  */
 enum {
-	IFNET_FAMILY_ANY                = 0,
-	IFNET_FAMILY_LOOPBACK           = 1,
-	IFNET_FAMILY_ETHERNET           = 2,
-	IFNET_FAMILY_SLIP               = 3,
-	IFNET_FAMILY_TUN                = 4,
-	IFNET_FAMILY_VLAN               = 5,
-	IFNET_FAMILY_PPP                = 6,
-	IFNET_FAMILY_PVC                = 7,
-	IFNET_FAMILY_DISC               = 8,
-	IFNET_FAMILY_MDECAP             = 9,
-	IFNET_FAMILY_GIF                = 10,
-	IFNET_FAMILY_FAITH              = 11,   /* deprecated */
-	IFNET_FAMILY_STF                = 12,
-	IFNET_FAMILY_FIREWIRE           = 13,
-	IFNET_FAMILY_BOND               = 14,
-	IFNET_FAMILY_CELLULAR           = 15,
-	IFNET_FAMILY_UNUSED_16          = 16,   /* Un-used */
-	IFNET_FAMILY_UTUN               = 17,
-	IFNET_FAMILY_IPSEC              = 18
+  IFNET_FAMILY_ANY = 0,
+  IFNET_FAMILY_LOOPBACK = 1,
+  IFNET_FAMILY_ETHERNET = 2,
+  IFNET_FAMILY_SLIP = 3,
+  IFNET_FAMILY_TUN = 4,
+  IFNET_FAMILY_VLAN = 5,
+  IFNET_FAMILY_PPP = 6,
+  IFNET_FAMILY_PVC = 7,
+  IFNET_FAMILY_DISC = 8,
+  IFNET_FAMILY_MDECAP = 9,
+  IFNET_FAMILY_GIF = 10,
+  IFNET_FAMILY_FAITH = 11, /* deprecated */
+  IFNET_FAMILY_STF = 12,
+  IFNET_FAMILY_FIREWIRE = 13,
+  IFNET_FAMILY_BOND = 14,
+  IFNET_FAMILY_CELLULAR = 15,
+  IFNET_FAMILY_UNUSED_16 = 16, /* Un-used */
+  IFNET_FAMILY_UTUN = 17,
+  IFNET_FAMILY_IPSEC = 18
 };
 
 /*!
@@ -137,19 +139,19 @@ typedef u_int32_t ifnet_family_t;
  *               interface family, e.g. Ethernet over Wi-Fi/USB, etc.
  */
 enum {
-	IFNET_SUBFAMILY_ANY             = 0,
-	IFNET_SUBFAMILY_USB             = 1,
-	IFNET_SUBFAMILY_BLUETOOTH       = 2,
-	IFNET_SUBFAMILY_WIFI            = 3,
-	IFNET_SUBFAMILY_THUNDERBOLT     = 4,
-	IFNET_SUBFAMILY_RESERVED        = 5,
-	IFNET_SUBFAMILY_INTCOPROC       = 6,
-	IFNET_SUBFAMILY_QUICKRELAY      = 7,
-	IFNET_SUBFAMILY_DEFAULT         = 8,
-	IFNET_SUBFAMILY_VMNET           = 9,
-	IFNET_SUBFAMILY_SIMCELL         = 10,
-	IFNET_SUBFAMILY_REDIRECT        = 11,
-	IFNET_SUBFAMILY_MANAGEMENT      = 12,
+  IFNET_SUBFAMILY_ANY = 0,
+  IFNET_SUBFAMILY_USB = 1,
+  IFNET_SUBFAMILY_BLUETOOTH = 2,
+  IFNET_SUBFAMILY_WIFI = 3,
+  IFNET_SUBFAMILY_THUNDERBOLT = 4,
+  IFNET_SUBFAMILY_RESERVED = 5,
+  IFNET_SUBFAMILY_INTCOPROC = 6,
+  IFNET_SUBFAMILY_QUICKRELAY = 7,
+  IFNET_SUBFAMILY_DEFAULT = 8,
+  IFNET_SUBFAMILY_VMNET = 9,
+  IFNET_SUBFAMILY_SIMCELL = 10,
+  IFNET_SUBFAMILY_REDIRECT = 11,
+  IFNET_SUBFAMILY_MANAGEMENT = 12,
 };
 
 /*
@@ -171,14 +173,15 @@ typedef u_int32_t ifnet_subfamily_t;
  */
 
 enum {
-	BPF_MODE_DISABLED               = 0,
-	BPF_MODE_INPUT                  = 1,
-	BPF_MODE_OUTPUT                 = 2,
-	BPF_MODE_INPUT_OUTPUT           = 3
+  BPF_MODE_DISABLED = 0,
+  BPF_MODE_INPUT = 1,
+  BPF_MODE_OUTPUT = 2,
+  BPF_MODE_INPUT_OUTPUT = 3
 };
 /*!
  *       @typedef bpf_tap_mode
- *       @abstract Mode for tapping. BPF_MODE_DISABLED/BPF_MODE_INPUT_OUTPUT etc.
+ *       @abstract Mode for tapping. BPF_MODE_DISABLED/BPF_MODE_INPUT_OUTPUT
+ * etc.
  */
 typedef u_int32_t bpf_tap_mode;
 #endif /* !BPF_TAP_MODE_T */
@@ -197,8 +200,10 @@ typedef u_int32_t protocol_family_t;
  *       @constant IFNET_CSUM_UDP Hardware will calculate UDP checksums.
  *       @constant IFNET_CSUM_FRAGMENT Hardware will checksum IP fragments.
  *       @constant IFNET_IP_FRAGMENT Hardware will fragment IP packets.
- *       @constant IFNET_CSUM_TCPIPV6 Hardware will calculate TCP IPv6 checksums.
- *       @constant IFNET_CSUM_UDPIPV6 Hardware will calculate UDP IPv6 checksums.
+ *       @constant IFNET_CSUM_TCPIPV6 Hardware will calculate TCP IPv6
+ * checksums.
+ *       @constant IFNET_CSUM_UDPIPV6 Hardware will calculate UDP IPv6
+ * checksums.
  *       @constant IFNET_IPV6_FRAGMENT Hardware will fragment IPv6 packets.
  *       @constant IFNET_VLAN_TAGGING Hardware will generate VLAN headers.
  *       @constant IFNET_VLAN_MTU Hardware supports VLAN MTU.
@@ -215,17 +220,20 @@ typedef u_int32_t protocol_family_t;
  *               enumerate the list of vectors should set this flag for
  *               possible gain in performance during bulk data transfer.
  *       @constant IFNET_TSO_IPV4 Hardware supports IPv4 TCP Segment Offloading.
- *               If the Interface driver sets this flag, TCP will send larger frames (up to 64KB) as one
- *               frame to the adapter which will perform the final packetization. The maximum TSO segment
- *               supported by the interface can be set with "ifnet_set_tso_mtu". To retrieve the real MTU
- *               for the TCP connection the function "mbuf_get_tso_requested" is used by the driver. Note
- *               that if TSO is active, all the packets will be flagged for TSO, not just large packets.
+ *               If the Interface driver sets this flag, TCP will send larger
+ * frames (up to 64KB) as one frame to the adapter which will perform the final
+ * packetization. The maximum TSO segment supported by the interface can be set
+ * with "ifnet_set_tso_mtu". To retrieve the real MTU for the TCP connection the
+ * function "mbuf_get_tso_requested" is used by the driver. Note that if TSO is
+ * active, all the packets will be flagged for TSO, not just large packets.
  *       @constant IFNET_TSO_IPV6 Hardware supports IPv6 TCP Segment Offloading.
- *               If the Interface driver sets this flag, TCP IPv6 will send larger frames (up to 64KB) as one
- *               frame to the adapter which will perform the final packetization. The maximum TSO segment
- *               supported by the interface can be set with "ifnet_set_tso_mtu". To retrieve the real MTU
- *               for the TCP IPv6 connection the function "mbuf_get_tso_requested" is used by the driver.
- *               Note that if TSO is active, all the packets will be flagged for TSO, not just large packets.
+ *               If the Interface driver sets this flag, TCP IPv6 will send
+ * larger frames (up to 64KB) as one frame to the adapter which will perform the
+ * final packetization. The maximum TSO segment supported by the interface can
+ * be set with "ifnet_set_tso_mtu". To retrieve the real MTU for the TCP IPv6
+ * connection the function "mbuf_get_tso_requested" is used by the driver. Note
+ * that if TSO is active, all the packets will be flagged for TSO, not just
+ * large packets.
  *       @constant IFNET_TX_STATUS Driver supports returning a per packet
  *               transmission status (pass, fail or other errors) of whether
  *               the packet was successfully transmitted on the link, or the
@@ -234,35 +242,36 @@ typedef u_int32_t protocol_family_t;
  *       @constant IFNET_SW_TIMESTAMP Driver supports time stamping in software.
  *       @constant IFNET_LRO Driver supports TCP Large Receive Offload.
  *       @constant IFNET_RX_CSUM Driver supports receive checksum offload.
- *       @constant IFNET_LRO_NUM_SEG Driver is able to report number of segments in LRO packet.
+ *       @constant IFNET_LRO_NUM_SEG Driver is able to report number of segments
+ * in LRO packet.
  *
  */
 
 enum {
-	IFNET_CSUM_IP           = 0x00000001,
-	IFNET_CSUM_TCP          = 0x00000002,
-	IFNET_CSUM_UDP          = 0x00000004,
-	IFNET_CSUM_FRAGMENT     = 0x00000008,
-	IFNET_IP_FRAGMENT       = 0x00000010,
-	IFNET_CSUM_TCPIPV6      = 0x00000020,
-	IFNET_CSUM_UDPIPV6      = 0x00000040,
-	IFNET_IPV6_FRAGMENT     = 0x00000080,
+  IFNET_CSUM_IP = 0x00000001,
+  IFNET_CSUM_TCP = 0x00000002,
+  IFNET_CSUM_UDP = 0x00000004,
+  IFNET_CSUM_FRAGMENT = 0x00000008,
+  IFNET_IP_FRAGMENT = 0x00000010,
+  IFNET_CSUM_TCPIPV6 = 0x00000020,
+  IFNET_CSUM_UDPIPV6 = 0x00000040,
+  IFNET_IPV6_FRAGMENT = 0x00000080,
 #ifdef KERNEL_PRIVATE
-	IFNET_CSUM_PARTIAL      = 0x00001000,
-	IFNET_CSUM_SUM16        = IFNET_CSUM_PARTIAL,
-	IFNET_CSUM_ZERO_INVERT  = 0x00002000,
+  IFNET_CSUM_PARTIAL = 0x00001000,
+  IFNET_CSUM_SUM16 = IFNET_CSUM_PARTIAL,
+  IFNET_CSUM_ZERO_INVERT = 0x00002000,
 #endif /* KERNEL_PRIVATE */
-	IFNET_VLAN_TAGGING      = 0x00010000,
-	IFNET_VLAN_MTU          = 0x00020000,
-	IFNET_MULTIPAGES        = 0x00100000,
-	IFNET_TSO_IPV4          = 0x00200000,
-	IFNET_TSO_IPV6          = 0x00400000,
-	IFNET_TX_STATUS         = 0x00800000,
-	IFNET_HW_TIMESTAMP      = 0x01000000,
-	IFNET_SW_TIMESTAMP      = 0x02000000,
-	IFNET_LRO               = 0x10000000,
-	IFNET_RX_CSUM           = 0x20000000,
-	IFNET_LRO_NUM_SEG       = 0x40000000,
+  IFNET_VLAN_TAGGING = 0x00010000,
+  IFNET_VLAN_MTU = 0x00020000,
+  IFNET_MULTIPAGES = 0x00100000,
+  IFNET_TSO_IPV4 = 0x00200000,
+  IFNET_TSO_IPV6 = 0x00400000,
+  IFNET_TX_STATUS = 0x00800000,
+  IFNET_HW_TIMESTAMP = 0x01000000,
+  IFNET_SW_TIMESTAMP = 0x02000000,
+  IFNET_LRO = 0x10000000,
+  IFNET_RX_CSUM = 0x20000000,
+  IFNET_LRO_NUM_SEG = 0x40000000,
 };
 /*!
  *       @typedef ifnet_offload_t
@@ -272,16 +281,15 @@ typedef u_int32_t ifnet_offload_t;
 
 #ifdef KERNEL_PRIVATE
 
-#define IFNET_CHECKSUMF                                                 \
-	(IFNET_CSUM_IP | IFNET_CSUM_TCP | IFNET_CSUM_UDP |              \
-	IFNET_CSUM_FRAGMENT | IFNET_CSUM_TCPIPV6 | IFNET_CSUM_UDPIPV6 | \
-	IFNET_CSUM_PARTIAL | IFNET_CSUM_ZERO_INVERT)
+#define IFNET_CHECKSUMF                                                        \
+  (IFNET_CSUM_IP | IFNET_CSUM_TCP | IFNET_CSUM_UDP | IFNET_CSUM_FRAGMENT |     \
+   IFNET_CSUM_TCPIPV6 | IFNET_CSUM_UDPIPV6 | IFNET_CSUM_PARTIAL |              \
+   IFNET_CSUM_ZERO_INVERT)
 
-#define IFNET_UDP_TCP_TX_CHECKSUMF \
-	(IFNET_CSUM_TCP | IFNET_CSUM_UDP | IFNET_CSUM_TCPIPV6 | IFNET_CSUM_UDPIPV6)
+#define IFNET_UDP_TCP_TX_CHECKSUMF                                             \
+  (IFNET_CSUM_TCP | IFNET_CSUM_UDP | IFNET_CSUM_TCPIPV6 | IFNET_CSUM_UDPIPV6)
 
-#define IFNET_TSOF                                                      \
-	(IFNET_TSO_IPV4	| IFNET_TSO_IPV6)
+#define IFNET_TSOF (IFNET_TSO_IPV4 | IFNET_TSO_IPV6)
 #endif /* KERNEL_PRIVATE */
 
 /*
@@ -294,8 +302,8 @@ typedef u_int32_t ifnet_offload_t;
  *
  *       @discussion bpf_packet_func The bpf_packet_func is used to intercept
  *               inbound and outbound packets. The tap function will never free
- *               the mbuf. The tap function will only copy the mbuf in to various
- *               bpf file descriptors tapping this interface.
+ *               the mbuf. The tap function will only copy the mbuf in to
+ * various bpf file descriptors tapping this interface.
  *       @param interface The interface being sent or received on.
  *       @param data The packet to be transmitted or received.
  *       @result An errno value or zero upon success.
@@ -329,7 +337,7 @@ typedef errno_t (*ifnet_output_func)(ifnet_t interface, mbuf_t data);
  *       @param data A pointer to any data related to the ioctl.
  */
 typedef errno_t (*ifnet_ioctl_func)(ifnet_t interface, unsigned long cmd,
-    void *data);
+                                    void *data);
 
 /*!
  *       @typedef ifnet_set_bpf_tap
@@ -337,13 +345,13 @@ typedef errno_t (*ifnet_ioctl_func)(ifnet_t interface, unsigned long cmd,
  *               for all packets.
  */
 typedef errno_t (*ifnet_set_bpf_tap)(ifnet_t interface, bpf_tap_mode mode,
-    bpf_packet_func callback);
+                                     bpf_packet_func callback);
 
 /*!
  *       @typedef ifnet_detached_func
  *       @discussion ifnet_detached_func is called an interface is detached
- *               from the list of interfaces. When ifnet_detach is called, it may
- *               not detach the interface immediately if protocols are attached.
+ *               from the list of interfaces. When ifnet_detach is called, it
+ * may not detach the interface immediately if protocols are attached.
  *               ifnet_detached_func is used to notify the interface that it has
  *               been detached from the networking stack. This is the last
  *               function that will be called on an interface. Until this
@@ -378,7 +386,8 @@ typedef void (*ifnet_detached_func)(ifnet_t interface);
  *                       the packet will be freed.
  */
 typedef errno_t (*ifnet_demux_func)(ifnet_t interface, mbuf_t packet,
-    char *frame_header, protocol_family_t *protocol_family);
+                                    char *frame_header,
+                                    protocol_family_t *protocol_family);
 
 /*!
  *       @typedef ifnet_event_func
@@ -395,9 +404,9 @@ typedef void (*ifnet_event_func)(ifnet_t interface, const struct kev_msg *msg);
  *               headers.
  *       @param interface The interface the packet is being sent on.
  *       @param packet Pointer to the mbuf containing the packet, caller may
- *               set this to a different mbuf upon return. This can happen if the
- *               frameout function needs to prepend another mbuf to the chain to
- *               have enough space for the header.
+ *               set this to a different mbuf upon return. This can happen if
+ * the frameout function needs to prepend another mbuf to the chain to have
+ * enough space for the header.
  *       @param dest The higher layer protocol destination (i.e. IP address).
  *       @param dest_linkaddr The link layer address as determined by the
  *               protocol's pre-output function.
@@ -405,8 +414,8 @@ typedef void (*ifnet_event_func)(ifnet_t interface, const struct kev_msg *msg);
  *               pre-output function.
  *       @discussion prepend_len The length of prepended bytes to the mbuf.
  *               (ONLY used if KPI_INTERFACE_EMBEDDED is defined to 1)
- *       @discussion postpend_len The length of the postpended bytes to the mbuf.
- *               (ONLY used if KPI_INTERFACE_EMBEDDED is defined to 1)
+ *       @discussion postpend_len The length of the postpended bytes to the
+ * mbuf. (ONLY used if KPI_INTERFACE_EMBEDDED is defined to 1)
  *       @result
  *               If the result is zero, processing will continue normally.
  *               If the result is EJUSTRETURN, processing will stop but the
@@ -420,32 +429,38 @@ typedef void (*ifnet_event_func)(ifnet_t interface, const struct kev_msg *msg);
 #define IFNET_MAX_LINKADDR_BUFFER_SIZE 16
 
 #if defined(__sized_by_or_null)
-#define IFNET_LLADDR_T     const char *__sized_by_or_null (IFNET_MAX_LINKADDR_BUFFER_SIZE)
-#define IFNET_FRAME_TYPE_T const char *__sized_by_or_null (IFNET_MAX_FRAME_TYPE_BUFFER_SIZE)
-#define IFNET_LLADDR_RW_T        char *__sized_by_or_null (IFNET_MAX_LINKADDR_BUFFER_SIZE)
-#define IFNET_FRAME_TYPE_RW_T    char *__sized_by_or_null (IFNET_MAX_FRAME_TYPE_BUFFER_SIZE)
+#define IFNET_LLADDR_T                                                         \
+  const char *__sized_by_or_null(IFNET_MAX_LINKADDR_BUFFER_SIZE)
+#define IFNET_FRAME_TYPE_T                                                     \
+  const char *__sized_by_or_null(IFNET_MAX_FRAME_TYPE_BUFFER_SIZE)
+#define IFNET_LLADDR_RW_T                                                      \
+  char *__sized_by_or_null(IFNET_MAX_LINKADDR_BUFFER_SIZE)
+#define IFNET_FRAME_TYPE_RW_T                                                  \
+  char *__sized_by_or_null(IFNET_MAX_FRAME_TYPE_BUFFER_SIZE)
 #else
-#define IFNET_LLADDR_T     const char *
+#define IFNET_LLADDR_T const char *
 #define IFNET_FRAME_TYPE_T const char *
-#define IFNET_LLADDR_RW_T        char *
-#define IFNET_FRAME_TYPE_RW_T    char *
+#define IFNET_LLADDR_RW_T char *
+#define IFNET_FRAME_TYPE_RW_T char *
 #endif
 
 typedef errno_t (*ifnet_framer_func)(ifnet_t interface, mbuf_t *packet,
-    const struct sockaddr *dest,
-    IFNET_LLADDR_T dest_linkaddr,
-    IFNET_FRAME_TYPE_T frame_type
+                                     const struct sockaddr *dest,
+                                     IFNET_LLADDR_T dest_linkaddr,
+                                     IFNET_FRAME_TYPE_T frame_type
 #if KPI_INTERFACE_EMBEDDED
-    , u_int32_t *prepend_len, u_int32_t *postpend_len
+                                     ,
+                                     u_int32_t *prepend_len,
+                                     u_int32_t *postpend_len
 #endif /* KPI_INTERFACE_EMBEDDED */
-    );
+);
 #ifdef KERNEL_PRIVATE
 typedef errno_t (*ifnet_framer_extended_func)(ifnet_t interface, mbuf_t *packet,
-    const struct sockaddr *dest,
-    IFNET_LLADDR_T dest_linkaddr,
-    IFNET_FRAME_TYPE_T frame_type,
-    u_int32_t *prepend_len,
-    u_int32_t *postpend_len);
+                                              const struct sockaddr *dest,
+                                              IFNET_LLADDR_T dest_linkaddr,
+                                              IFNET_FRAME_TYPE_T frame_type,
+                                              u_int32_t *prepend_len,
+                                              u_int32_t *postpend_len);
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -453,8 +468,8 @@ typedef errno_t (*ifnet_framer_extended_func)(ifnet_t interface, mbuf_t *packet,
  *       @discussion This structure is to identify packets that belong to a
  *               specific protocol. The types supported are interface specific.
  *               Ethernet supports ETHER_DESC_ETYPE2, ETHER_DESC_SAP, and
- *               ETHER_DESC_SNAP. The type defines the offset in the packet where
- *               the data will be matched as well as context. For example, if
+ *               ETHER_DESC_SNAP. The type defines the offset in the packet
+ * where the data will be matched as well as context. For example, if
  *               ETHER_DESC_SNAP is specified, the only valid datalen is 5 and
  *               only in the 5 bytes will only be matched when the packet header
  *               indicates that the packet is a SNAP packet.
@@ -464,9 +479,9 @@ typedef errno_t (*ifnet_framer_extended_func)(ifnet_t interface, mbuf_t *packet,
  *               packet.
  */
 struct ifnet_demux_desc {
-	u_int32_t       type;
-	void            *__sized_by(datalen) data;
-	u_int32_t       datalen;
+  u_int32_t type;
+  void *__sized_by(datalen) data;
+  u_int32_t datalen;
 };
 
 /*!
@@ -486,16 +501,17 @@ struct ifnet_demux_desc {
  *               If the result is anything else, the add protocol will be
  *                       aborted.
  */
-typedef errno_t (*ifnet_add_proto_func)(ifnet_t interface,
-    protocol_family_t protocol_family,
-    const struct ifnet_demux_desc *__counted_by(demux_count) demux_array, u_int32_t demux_count);
+typedef errno_t (*ifnet_add_proto_func)(
+    ifnet_t interface, protocol_family_t protocol_family,
+    const struct ifnet_demux_desc *__counted_by(demux_count) demux_array,
+    u_int32_t demux_count);
 
 /*!
  *       @typedef if_del_proto_func
  *       @discussion if_del_proto_func is called by the stack when a protocol
- *               is being detached from an interface. This gives the interface an
- *               opportunity to free any storage related to this specific
- *               protocol being attached to this interface.
+ *               is being detached from an interface. This gives the interface
+ * an opportunity to free any storage related to this specific protocol being
+ * attached to this interface.
  *       @param interface The interface the protocol will be detached from.
  *       @param protocol_family The family of the protocol being detached.
  *       @result
@@ -504,7 +520,7 @@ typedef errno_t (*ifnet_add_proto_func)(ifnet_t interface,
  *                       and the error will be returned to the caller.
  */
 typedef errno_t (*ifnet_del_proto_func)(ifnet_t interface,
-    protocol_family_t protocol_family);
+                                        protocol_family_t protocol_family);
 
 /*!
  *       @typedef ifnet_check_multi
@@ -523,7 +539,7 @@ typedef errno_t (*ifnet_del_proto_func)(ifnet_t interface,
  *               EOPNOTSUPP for addresses the interface does not understand.
  */
 typedef errno_t (*ifnet_check_multi)(ifnet_t interface,
-    const struct sockaddr *mcast);
+                                     const struct sockaddr *mcast);
 
 /*!
  *       @typedef proto_media_input
@@ -541,7 +557,7 @@ typedef errno_t (*ifnet_check_multi)(ifnet_t interface,
  *                       free the packet.
  */
 typedef errno_t (*proto_media_input)(ifnet_t ifp, protocol_family_t protocol,
-    mbuf_t packet, char *header);
+                                     mbuf_t packet, char *header);
 
 /*!
  *       @typedef proto_media_input_v2
@@ -562,7 +578,7 @@ typedef errno_t (*proto_media_input)(ifnet_t ifp, protocol_family_t protocol,
  *                       free the packets.
  */
 typedef errno_t (*proto_media_input_v2)(ifnet_t ifp, protocol_family_t protocol,
-    mbuf_t packet);
+                                        mbuf_t packet);
 
 /*!
  *       @typedef proto_media_preout
@@ -579,15 +595,15 @@ typedef errno_t (*proto_media_input_v2)(ifnet_t ifp, protocol_family_t protocol,
  *       @param frame_type The media specific frame type.
  *       @param link_layer_dest The media specific destination.
  *       @result
- *               If the result is zero, processing will continue normally. If the
- *               result is non-zero, processing will stop. If the result is
- *               non-zero and not EJUSTRETURN, the packet will be freed by the
- *               caller.
+ *               If the result is zero, processing will continue normally. If
+ * the result is non-zero, processing will stop. If the result is non-zero and
+ * not EJUSTRETURN, the packet will be freed by the caller.
  */
 typedef errno_t (*proto_media_preout)(ifnet_t ifp, protocol_family_t protocol,
-    mbuf_t *packet, const struct sockaddr *dest, void *route,
-    IFNET_FRAME_TYPE_RW_T frame_type,
-    IFNET_LLADDR_RW_T link_layer_dest);
+                                      mbuf_t *packet,
+                                      const struct sockaddr *dest, void *route,
+                                      IFNET_FRAME_TYPE_RW_T frame_type,
+                                      IFNET_LLADDR_RW_T link_layer_dest);
 
 /*!
  *       @typedef proto_media_event
@@ -598,18 +614,18 @@ typedef errno_t (*proto_media_preout)(ifnet_t ifp, protocol_family_t protocol,
  *       @param event The event.
  */
 typedef void (*proto_media_event)(ifnet_t ifp, protocol_family_t protocol,
-    const struct kev_msg *event);
+                                  const struct kev_msg *event);
 
 /*!
  *       @typedef proto_media_ioctl
  *       @discussion proto_media_event allows this layer to handle ioctls.
- *               When an ioctl is handled, it is passed to the interface filters,
- *               protocol filters, protocol, and interface. If you do not support
+ *               When an ioctl is handled, it is passed to the interface
+ * filters, protocol filters, protocol, and interface. If you do not support
  *               this ioctl, return EOPNOTSUPP. If you successfully handle the
  *               ioctl, return zero. If you return any error other than
  *               EOPNOTSUPP, other parts of the stack may not get an opportunity
- *               to process the ioctl. If you return EJUSTRETURN, processing will
- *               stop and a result of zero will be returned to the caller.
+ *               to process the ioctl. If you return EJUSTRETURN, processing
+ * will stop and a result of zero will be returned to the caller.
  *
  *               All undefined ioctls are reserved for future use by Apple. If
  *               you need to communicate with your kext using an ioctl, please
@@ -622,7 +638,7 @@ typedef void (*proto_media_event)(ifnet_t ifp, protocol_family_t protocol,
  *               See the discussion.
  */
 typedef errno_t (*proto_media_ioctl)(ifnet_t ifp, protocol_family_t protocol,
-    unsigned long command, void *argument);
+                                     unsigned long command, void *argument);
 
 /*!
  *       @typedef proto_media_detached
@@ -633,7 +649,8 @@ typedef errno_t (*proto_media_ioctl)(ifnet_t ifp, protocol_family_t protocol,
  *       @result
  *               See the discussion.
  */
-typedef errno_t (*proto_media_detached)(ifnet_t ifp, protocol_family_t protocol);
+typedef errno_t (*proto_media_detached)(ifnet_t ifp,
+                                        protocol_family_t protocol);
 
 /*!
  *       @typedef proto_media_resolve_multi
@@ -647,8 +664,9 @@ typedef errno_t (*proto_media_detached)(ifnet_t ifp, protocol_family_t protocol)
  *       @result Return zero on success or an errno error value on failure.
  */
 typedef errno_t (*proto_media_resolve_multi)(ifnet_t ifp,
-    const struct sockaddr *proto_addr, struct sockaddr_dl *out_ll,
-    size_t ll_len);
+                                             const struct sockaddr *proto_addr,
+                                             struct sockaddr_dl *out_ll,
+                                             size_t ll_len);
 
 /*!
  *       @typedef proto_media_send_arp
@@ -667,16 +685,17 @@ typedef errno_t (*proto_media_resolve_multi)(ifnet_t ifp,
  *       @param target_hw The value to use for the target hardware address.
  *               If this is NULL, the target hardware address in the ARP packet
  *               should be NULL and the link-layer destination for the back
- *               should be a broadcast. If this is not NULL, this value should be
- *               used for both the link-layer destination and the target hardware
- *               address.
+ *               should be a broadcast. If this is not NULL, this value should
+ * be used for both the link-layer destination and the target hardware address.
  *       @param target_proto The target protocol address. This will not be
  *               NULL.
  *       @result Return zero on success or an errno error value on failure.
  */
 typedef errno_t (*proto_media_send_arp)(ifnet_t ifp, u_short arpop,
-    const struct sockaddr_dl *sender_hw, const struct sockaddr *sender_proto,
-    const struct sockaddr_dl *target_hw, const struct sockaddr *target_proto);
+                                        const struct sockaddr_dl *sender_hw,
+                                        const struct sockaddr *sender_proto,
+                                        const struct sockaddr_dl *target_hw,
+                                        const struct sockaddr *target_proto);
 
 /*!
  *       @struct ifnet_stat_increment_param
@@ -692,16 +711,16 @@ typedef errno_t (*proto_media_send_arp)(ifnet_t ifp, u_short arpop,
  *       @field dropped The number of packets dropped.
  */
 struct ifnet_stat_increment_param {
-	u_int32_t                               packets_in;
-	u_int32_t                               bytes_in;
-	u_int32_t                               errors_in;
+  u_int32_t packets_in;
+  u_int32_t bytes_in;
+  u_int32_t errors_in;
 
-	u_int32_t                               packets_out;
-	u_int32_t                               bytes_out;
-	u_int32_t                               errors_out;
+  u_int32_t packets_out;
+  u_int32_t bytes_out;
+  u_int32_t errors_out;
 
-	u_int32_t                               collisions;
-	u_int32_t                               dropped;
+  u_int32_t collisions;
+  u_int32_t dropped;
 };
 
 /*!
@@ -741,42 +760,45 @@ struct ifnet_stat_increment_param {
  *       @field broadcast_len The length of the link-layer broadcast address.
  */
 struct ifnet_init_params {
-	/* used to match recycled interface */
-	const void *__sized_by(uniqueid_len) uniqueid;  /* optional */
-	u_int32_t               uniqueid_len;           /* optional */
+  /* used to match recycled interface */
+  const void *__sized_by(uniqueid_len) uniqueid; /* optional */
+  u_int32_t uniqueid_len;                        /* optional */
 
-	/* used to fill out initial values for interface */
-	const char              *name;                  /* required */
-	u_int32_t               unit;                   /* required */
-	ifnet_family_t          family;                 /* required */
-	u_int32_t               type;                   /* required */
-	ifnet_output_func       output;                 /* required */
-	ifnet_demux_func        demux;                  /* required  */
-	ifnet_add_proto_func    add_proto;              /* required  */
-	ifnet_del_proto_func    del_proto;              /* required  */
-	ifnet_check_multi       check_multi;            /* required for non point-to-point interfaces */
-	ifnet_framer_func       framer;                 /* optional */
-	void                    *softc;                 /* optional */
-	ifnet_ioctl_func        ioctl;                  /* optional */
-	ifnet_set_bpf_tap       set_bpf_tap;            /* deprecated */
-	ifnet_detached_func     detach;                 /* optional */
-	ifnet_event_func        event;                  /* optional */
-	const void *__sized_by(broadcast_len) broadcast_addr; /* required for non point-to-point interfaces */
-	u_int32_t               broadcast_len;          /* required for non point-to-point interfaces */
+  /* used to fill out initial values for interface */
+  const char *name;               /* required */
+  u_int32_t unit;                 /* required */
+  ifnet_family_t family;          /* required */
+  u_int32_t type;                 /* required */
+  ifnet_output_func output;       /* required */
+  ifnet_demux_func demux;         /* required  */
+  ifnet_add_proto_func add_proto; /* required  */
+  ifnet_del_proto_func del_proto; /* required  */
+  ifnet_check_multi
+      check_multi;          /* required for non point-to-point interfaces */
+  ifnet_framer_func framer; /* optional */
+  void *softc;              /* optional */
+  ifnet_ioctl_func ioctl;   /* optional */
+  ifnet_set_bpf_tap set_bpf_tap; /* deprecated */
+  ifnet_detached_func detach;    /* optional */
+  ifnet_event_func event;        /* optional */
+  const void *__sized_by(broadcast_len)
+      broadcast_addr;      /* required for non point-to-point interfaces */
+  u_int32_t broadcast_len; /* required for non point-to-point interfaces */
 };
 
 #ifdef KERNEL_PRIVATE
 /* Valid values for version */
-#define IFNET_INIT_VERSION_2            2
-#define IFNET_INIT_CURRENT_VERSION      IFNET_INIT_VERSION_2
+#define IFNET_INIT_VERSION_2 2
+#define IFNET_INIT_CURRENT_VERSION IFNET_INIT_VERSION_2
 
 /* Valid values for flags */
-#define IFNET_INIT_LEGACY       0x1     /* legacy network interface model */
-#define IFNET_INIT_INPUT_POLL   0x2     /* opportunistic input polling model */
-#define IFNET_INIT_NX_NOAUTO    0x4     /* do not auto config nexus */
-#define IFNET_INIT_ALLOC_KPI    0x8     /* allocated via the ifnet_alloc() KPI */
-#define IFNET_INIT_IF_ADV               0x40000000      /* Supports Interface advisory reporting */
-#define IFNET_INIT_SKYWALK_NATIVE       0x80000000      /* native Skywalk driver */
+#define IFNET_INIT_LEGACY 0x1        /* legacy network interface model */
+#define IFNET_INIT_INPUT_POLL 0x2    /* opportunistic input polling model */
+#define IFNET_INIT_NX_NOAUTO 0x4     /* do not auto config nexus */
+#define IFNET_INIT_ALLOC_KPI 0x8     /* allocated via the ifnet_alloc() KPI */
+#define IFNET_INIT_IF_ADV 0x40000000 /* Supports Interface advisory reporting  \
+                                      */
+#define IFNET_INIT_SKYWALK_NATIVE 0x80000000 /* native Skywalk driver */
 
 /*
  *       @typedef ifnet_pre_enqueue_func
@@ -823,14 +845,15 @@ typedef void (*ifnet_start_func)(ifnet_t interface);
  *               of the dequeued packets.
  */
 typedef void (*ifnet_input_poll_func)(ifnet_t interface, u_int32_t flags,
-    u_int32_t max_count, mbuf_t *first_packet, mbuf_t *last_packet,
-    u_int32_t *cnt, u_int32_t *len);
+                                      u_int32_t max_count, mbuf_t *first_packet,
+                                      mbuf_t *last_packet, u_int32_t *cnt,
+                                      u_int32_t *len);
 
 /*!
  *       @typedef ifnet_free_func
- *       @discussion ifnet_free_func is called as an alternative to ifnet_detach_func
- *               on a specific interface. Implementors of this callback are responsible
- *               for fully tearing down the interface.
+ *       @discussion ifnet_free_func is called as an alternative to
+ * ifnet_detach_func on a specific interface. Implementors of this callback are
+ * responsible for fully tearing down the interface.
  *       @param interface The interface that should be freed
  */
 typedef void (*ifnet_free_func)(ifnet_t interface);
@@ -845,11 +868,11 @@ typedef void (*ifnet_free_func)(ifnet_t interface);
  *       @constant IFNET_CTL_GET_LOG Get logging level.
  */
 enum {
-	IFNET_CTL_SET_INPUT_MODEL       = 1,    /* input ctl */
-	IFNET_CTL_GET_INPUT_MODEL       = 2,    /* input ctl */
-	IFNET_CTL_SET_LOG               = 3,    /* output ctl */
-	IFNET_CTL_GET_LOG               = 4,    /* output ctl */
-	IFNET_CTL_NOTIFY_ADDRESS        = 5     /* output ctl */
+  IFNET_CTL_SET_INPUT_MODEL = 1, /* input ctl */
+  IFNET_CTL_GET_INPUT_MODEL = 2, /* input ctl */
+  IFNET_CTL_SET_LOG = 3,         /* output ctl */
+  IFNET_CTL_GET_LOG = 4,         /* output ctl */
+  IFNET_CTL_NOTIFY_ADDRESS = 5   /* output ctl */
 };
 
 /*
@@ -880,8 +903,8 @@ typedef u_int32_t ifnet_ctl_cmd_t;
  *               the new/pull input model.
  */
 enum {
-	IFNET_MODEL_INPUT_POLL_OFF      = 0,
-	IFNET_MODEL_INPUT_POLL_ON       = 1,
+  IFNET_MODEL_INPUT_POLL_OFF = 0,
+  IFNET_MODEL_INPUT_POLL_ON = 1,
 };
 
 /*
@@ -897,8 +920,8 @@ typedef u_int32_t ifnet_model_t;
  *       @field model The interface model.
  */
 struct ifnet_model_params {
-	ifnet_model_t           model;
-	u_int32_t               reserved[3];
+  ifnet_model_t model;
+  u_int32_t reserved[3];
 };
 
 /*
@@ -917,19 +940,19 @@ struct ifnet_model_params {
  *       @constant IFNET_LOG_DEBUG Log debug-level messages.
  */
 enum {
-	IFNET_LOG_DEFAULT       = 0,
-	IFNET_LOG_ALERT         = 1,
-	IFNET_LOG_CRITICAL      = 2,
-	IFNET_LOG_ERROR         = 3,
-	IFNET_LOG_WARNING       = 4,
-	IFNET_LOG_NOTICE        = 5,
-	IFNET_LOG_INFORMATIONAL = 6,
-	IFNET_LOG_DEBUG         = 7
+  IFNET_LOG_DEFAULT = 0,
+  IFNET_LOG_ALERT = 1,
+  IFNET_LOG_CRITICAL = 2,
+  IFNET_LOG_ERROR = 3,
+  IFNET_LOG_WARNING = 4,
+  IFNET_LOG_NOTICE = 5,
+  IFNET_LOG_INFORMATIONAL = 6,
+  IFNET_LOG_DEBUG = 7
 };
 
 #ifdef BSD_KERNEL_PRIVATE
-#define IFNET_LOG_MIN   IFNET_LOG_DEFAULT
-#define IFNET_LOG_MAX   IFNET_LOG_DEBUG
+#define IFNET_LOG_MIN IFNET_LOG_DEFAULT
+#define IFNET_LOG_MAX IFNET_LOG_DEBUG
 #endif /* BSD_KERNEL_PRIVATE */
 
 /*
@@ -949,16 +972,16 @@ typedef int32_t ifnet_log_level_t;
  *       @constant IFNET_LOGF_FIRMWARE The firmware layer.
  */
 enum {
-	IFNET_LOGF_DLIL         = 0x00000001,
-	IFNET_LOGF_FAMILY       = 0x00010000,
-	IFNET_LOGF_DRIVER       = 0x01000000,
-	IFNET_LOGF_FIRMWARE     = 0x10000000
+  IFNET_LOGF_DLIL = 0x00000001,
+  IFNET_LOGF_FAMILY = 0x00010000,
+  IFNET_LOGF_DRIVER = 0x01000000,
+  IFNET_LOGF_FIRMWARE = 0x10000000
 };
 
 #ifdef BSD_KERNEL_PRIVATE
-#define IFNET_LOGF_MASK                                                 \
-	(IFNET_LOGF_DLIL | IFNET_LOGF_FAMILY | IFNET_LOGF_DRIVER |      \
-	IFNET_LOGF_FIRMWARE)
+#define IFNET_LOGF_MASK                                                        \
+  (IFNET_LOGF_DLIL | IFNET_LOGF_FAMILY | IFNET_LOGF_DRIVER |                   \
+   IFNET_LOGF_FIRMWARE)
 
 #endif /* BSD_KERNEL_PRIVATE */
 
@@ -977,9 +1000,9 @@ typedef u_int32_t ifnet_log_flags_t;
  *       @constant IFNET_LOGCAT_PERFORMANCE Performance related issues.
  */
 enum {
-	IFNET_LOGCAT_CONNECTIVITY       = 1,
-	IFNET_LOGCAT_QUALITY            = 2,
-	IFNET_LOGCAT_PERFORMANCE        = 3
+  IFNET_LOGCAT_CONNECTIVITY = 1,
+  IFNET_LOGCAT_QUALITY = 2,
+  IFNET_LOGCAT_PERFORMANCE = 3
 };
 
 /*
@@ -1005,10 +1028,10 @@ typedef int32_t ifnet_log_subcategory_t;
  *       @field subcategory The subcategory of issue.
  */
 struct ifnet_log_params {
-	ifnet_log_level_t       level;
-	ifnet_log_flags_t       flags;
-	ifnet_log_category_t    category;
-	ifnet_log_subcategory_t subcategory;
+  ifnet_log_level_t level;
+  ifnet_log_flags_t flags;
+  ifnet_log_category_t category;
+  ifnet_log_subcategory_t subcategory;
 };
 
 /*
@@ -1018,12 +1041,13 @@ struct ifnet_log_params {
  *               to the family/driver that one or more addresses of the given
  *               address family has been added to, or removed from the list
  *               of addresses on the interface.  The driver may query for the
- *               current address list by calling ifnet_get_address_list_family().
+ *               current address list by calling
+ * ifnet_get_address_list_family().
  *       @field address_family The address family of the interface address(es).
  */
 struct ifnet_notify_address_params {
-	sa_family_t             address_family;
-	u_int32_t               reserved[3];
+  sa_family_t address_family;
+  u_int32_t reserved[3];
 };
 
 /*
@@ -1038,7 +1062,7 @@ struct ifnet_notify_address_params {
  *       @result 0 upon success, otherwise errno error.
  */
 typedef errno_t (*ifnet_ctl_func)(ifnet_t interface, ifnet_ctl_cmd_t cmd,
-    u_int32_t arglen, void *arg);
+                                  u_int32_t arglen, void *arg);
 
 /*
  *       @struct ifnet_init_eparams
@@ -1063,7 +1087,8 @@ typedef errno_t (*ifnet_ctl_func)(ifnet_t interface, ifnet_ctl_cmd_t cmd,
  *               stack attempts to send through this interface will go out
  *               through this function.
  *       @field pre_enqueue The pre_enqueue function for the interface, valid
- *               only if IFNET_INIT_LEGACY is not set, and optional if it is set.
+ *               only if IFNET_INIT_LEGACY is not set, and optional if it is
+ * set.
  *       @field start The start function for the interface, valid and required
  *               only if IFNET_INIT_LEGACY is not set.
  *       @field output_ctl The output control function for the interface, valid
@@ -1132,66 +1157,69 @@ typedef errno_t (*ifnet_ctl_func)(ifnet_t interface, ifnet_ctl_cmd_t cmd,
  *               specified in microseconds.
  */
 struct ifnet_init_eparams {
-	u_int32_t               ver;                    /* required */
-	u_int32_t               len;                    /* required */
-	u_int32_t               flags;                  /* optional */
+  u_int32_t ver;   /* required */
+  u_int32_t len;   /* required */
+  u_int32_t flags; /* optional */
 
-	/* used to match recycled interface */
-	const void *__sized_by(uniqueid_len) uniqueid;  /* optional */
-	u_int32_t               uniqueid_len;           /* optional */
+  /* used to match recycled interface */
+  const void *__sized_by(uniqueid_len) uniqueid; /* optional */
+  u_int32_t uniqueid_len;                        /* optional */
 
-	/* used to fill out initial values for interface */
-	const char              *name;                  /* required */
-	u_int32_t               unit;                   /* required */
-	ifnet_family_t          family;                 /* required */
-	u_int32_t               type;                   /* required */
-	u_int32_t               sndq_maxlen;            /* optional, only for new model */
-	ifnet_output_func       output;                 /* required only for legacy model */
-	ifnet_pre_enqueue_func  pre_enqueue;            /* optional, only for new model */
-	ifnet_start_func        start;                  /* required only for new model */
-	ifnet_ctl_func          output_ctl;             /* optional, only for new model */
-	u_int32_t               output_sched_model;     /* optional, only for new model */
-	u_int32_t               output_target_qdelay;   /* optional, only for new model, value in ms */
-	u_int64_t               output_bw;              /* optional */
-	u_int64_t               output_bw_max;          /* optional */
-	u_int64_t               output_lt;              /* optional */
-	u_int64_t               output_lt_max;          /* optional */
-	u_int16_t               start_delay_qlen;       /* optional */
-	u_int16_t               start_delay_timeout;    /* optional */
-	u_int32_t               _reserved[3];           /* for future use */
-	ifnet_input_poll_func   input_poll;             /* optional, ignored for legacy model */
-	ifnet_ctl_func          input_ctl;              /* required for opportunistic polling */
-	u_int32_t               rcvq_maxlen;            /* optional, only for opportunistic polling */
-	u_int32_t               __reserved;             /* for future use */
-	u_int64_t               input_bw;               /* optional */
-	u_int64_t               input_bw_max;           /* optional */
-	u_int64_t               input_lt;               /* optional */
-	u_int64_t               input_lt_max;           /* optional */
-	u_int64_t               ___reserved[2];         /* for future use */
-	ifnet_demux_func        demux;                  /* required  */
-	ifnet_add_proto_func    add_proto;              /* required  */
-	ifnet_del_proto_func    del_proto;              /* required  */
-	ifnet_check_multi       check_multi;            /* required for non point-to-point interfaces */
-	ifnet_framer_func       framer;                 /* optional */
-	void                    *softc;                 /* optional */
-	ifnet_ioctl_func        ioctl;                  /* optional */
-	ifnet_set_bpf_tap       set_bpf_tap;            /* deprecated */
-	ifnet_detached_func     detach;                 /* optional */
-	ifnet_event_func        event;                  /* optional */
-	const void *__sized_by(broadcast_len) broadcast_addr; /* required for non point-to-point interfaces */
-	u_int32_t               broadcast_len;          /* required for non point-to-point interfaces */
-	ifnet_framer_extended_func framer_extended;     /* optional */
-	ifnet_subfamily_t       subfamily;              /* optional */
-	u_int16_t               tx_headroom;            /* optional */
-	u_int16_t               tx_trailer;             /* optional */
-	u_int32_t               rx_mit_ival;            /* optional */
+  /* used to fill out initial values for interface */
+  const char *name;                   /* required */
+  u_int32_t unit;                     /* required */
+  ifnet_family_t family;              /* required */
+  u_int32_t type;                     /* required */
+  u_int32_t sndq_maxlen;              /* optional, only for new model */
+  ifnet_output_func output;           /* required only for legacy model */
+  ifnet_pre_enqueue_func pre_enqueue; /* optional, only for new model */
+  ifnet_start_func start;             /* required only for new model */
+  ifnet_ctl_func output_ctl;          /* optional, only for new model */
+  u_int32_t output_sched_model;       /* optional, only for new model */
+  u_int32_t
+      output_target_qdelay;      /* optional, only for new model, value in ms */
+  u_int64_t output_bw;           /* optional */
+  u_int64_t output_bw_max;       /* optional */
+  u_int64_t output_lt;           /* optional */
+  u_int64_t output_lt_max;       /* optional */
+  u_int16_t start_delay_qlen;    /* optional */
+  u_int16_t start_delay_timeout; /* optional */
+  u_int32_t _reserved[3];        /* for future use */
+  ifnet_input_poll_func input_poll; /* optional, ignored for legacy model */
+  ifnet_ctl_func input_ctl;         /* required for opportunistic polling */
+  u_int32_t rcvq_maxlen;          /* optional, only for opportunistic polling */
+  u_int32_t __reserved;           /* for future use */
+  u_int64_t input_bw;             /* optional */
+  u_int64_t input_bw_max;         /* optional */
+  u_int64_t input_lt;             /* optional */
+  u_int64_t input_lt_max;         /* optional */
+  u_int64_t ___reserved[2];       /* for future use */
+  ifnet_demux_func demux;         /* required  */
+  ifnet_add_proto_func add_proto; /* required  */
+  ifnet_del_proto_func del_proto; /* required  */
+  ifnet_check_multi
+      check_multi;          /* required for non point-to-point interfaces */
+  ifnet_framer_func framer; /* optional */
+  void *softc;              /* optional */
+  ifnet_ioctl_func ioctl;   /* optional */
+  ifnet_set_bpf_tap set_bpf_tap; /* deprecated */
+  ifnet_detached_func detach;    /* optional */
+  ifnet_event_func event;        /* optional */
+  const void *__sized_by(broadcast_len)
+      broadcast_addr;      /* required for non point-to-point interfaces */
+  u_int32_t broadcast_len; /* required for non point-to-point interfaces */
+  ifnet_framer_extended_func framer_extended; /* optional */
+  ifnet_subfamily_t subfamily;                /* optional */
+  u_int16_t tx_headroom;                      /* optional */
+  u_int16_t tx_trailer;                       /* optional */
+  u_int32_t rx_mit_ival;                      /* optional */
 #if !defined(__LP64__)
-	ifnet_free_func         free;                   /* optional */
-	u_int32_t               _____reserved;          /* for future use */
-	u_int64_t               ____reserved[1];        /* for future use */
+  ifnet_free_func free;      /* optional */
+  u_int32_t _____reserved;   /* for future use */
+  u_int64_t ____reserved[1]; /* for future use */
 #else
-	u_int32_t               ____reserved;           /* for future use */
-	ifnet_free_func         free;                   /* optional */
+  u_int32_t ____reserved; /* for future use */
+  ifnet_free_func free;   /* optional */
 #endif /* __LP64__ */
 };
 #endif /* KERNEL_PRIVATE */
@@ -1210,19 +1238,19 @@ struct ifnet_init_eparams {
  *       @field dropped The number of packets dropped.
  */
 struct ifnet_stats_param {
-	u_int64_t       packets_in;
-	u_int64_t       bytes_in;
-	u_int64_t       multicasts_in;
-	u_int64_t       errors_in;
+  u_int64_t packets_in;
+  u_int64_t bytes_in;
+  u_int64_t multicasts_in;
+  u_int64_t errors_in;
 
-	u_int64_t       packets_out;
-	u_int64_t       bytes_out;
-	u_int64_t       multicasts_out;
-	u_int64_t       errors_out;
+  u_int64_t packets_out;
+  u_int64_t bytes_out;
+  u_int64_t multicasts_out;
+  u_int64_t errors_out;
 
-	u_int64_t       collisions;
-	u_int64_t       dropped;
-	u_int64_t       no_protocol;
+  u_int64_t collisions;
+  u_int64_t dropped;
+  u_int64_t no_protocol;
 };
 
 /*!
@@ -1245,29 +1273,31 @@ struct ifnet_stats_param {
 #endif /* KERNEL_PRIVATE */
 
 struct ifnet_attach_proto_param {
-	struct ifnet_demux_desc         *__counted_by(demux_count) demux_array; /* interface may/may not require */
-	u_int32_t                       demux_count;    /* interface may/may not require */
+  struct ifnet_demux_desc *
+      __counted_by(demux_count) demux_array; /* interface may/may not require */
+  u_int32_t demux_count;                     /* interface may/may not require */
 
-	proto_media_input               input;          /* required */
-	proto_media_preout              pre_output;     /* required */
-	proto_media_event               event;          /* optional */
-	proto_media_ioctl               ioctl;          /* optional */
-	proto_media_detached            detached;       /* optional */
-	proto_media_resolve_multi       resolve;        /* optional */
-	proto_media_send_arp            send_arp;       /* optional */
+  proto_media_input input;           /* required */
+  proto_media_preout pre_output;     /* required */
+  proto_media_event event;           /* optional */
+  proto_media_ioctl ioctl;           /* optional */
+  proto_media_detached detached;     /* optional */
+  proto_media_resolve_multi resolve; /* optional */
+  proto_media_send_arp send_arp;     /* optional */
 };
 
 struct ifnet_attach_proto_param_v2 {
-	struct ifnet_demux_desc         *__counted_by(demux_count) demux_array;   /* interface may/may not require */
-	u_int32_t                       demux_count;    /* interface may/may not require */
+  struct ifnet_demux_desc *
+      __counted_by(demux_count) demux_array; /* interface may/may not require */
+  u_int32_t demux_count;                     /* interface may/may not require */
 
-	proto_media_input_v2            input;          /* required */
-	proto_media_preout              pre_output;     /* required */
-	proto_media_event               event;          /* optional */
-	proto_media_ioctl               ioctl;          /* optional */
-	proto_media_detached            detached;       /* optional */
-	proto_media_resolve_multi       resolve;        /* optional */
-	proto_media_send_arp            send_arp;       /* optional */
+  proto_media_input_v2 input;        /* required */
+  proto_media_preout pre_output;     /* required */
+  proto_media_event event;           /* optional */
+  proto_media_ioctl ioctl;           /* optional */
+  proto_media_detached detached;     /* optional */
+  proto_media_resolve_multi resolve; /* optional */
+  proto_media_send_arp send_arp;     /* optional */
 };
 
 __BEGIN_DECLS
@@ -1280,14 +1310,13 @@ __BEGIN_DECLS
  *       @function ifnet_allocate
  *       @discussion Allocate an ifnet_t with an initial refcount of 1. Many
  *               parts of the stack do not properly refcount the ifnet_t. In
- *               order to avoid freeing the ifnet_t while some parts of the stack
- *               may contain a reference to it, the ifnet_ts are only recycled,
- *               never freed. A unique id is used to try and recycle the same
- *               ifnet_t when allocating an interface. For example, for an
- *               ethernet interface, the hardware address of the ethernet card is
- *               usually used for the uniqueid. If a PC Card is removed and
- *               inserted again, if the ethernet address of the PC card is used,
- *               the same ifnet_t will be used for the card the second time it is
+ *               order to avoid freeing the ifnet_t while some parts of the
+ * stack may contain a reference to it, the ifnet_ts are only recycled, never
+ * freed. A unique id is used to try and recycle the same ifnet_t when
+ * allocating an interface. For example, for an ethernet interface, the hardware
+ * address of the ethernet card is usually used for the uniqueid. If a PC Card
+ * is removed and inserted again, if the ethernet address of the PC card is
+ * used, the same ifnet_t will be used for the card the second time it is
  *               inserted. In the future, when the ifnet_t is correctly
  *               refcounted by all of the stack, the interfaces may be freed and
  *               the unique ids ignored.
@@ -1300,30 +1329,29 @@ __BEGIN_DECLS
  */
 #ifdef KERNEL_PRIVATE
 extern errno_t ifnet_allocate_internal(const struct ifnet_init_params *init,
-    ifnet_t *interface);
+                                       ifnet_t *interface);
 
-#define ifnet_allocate(init, interface) \
-	ifnet_allocate_internal((init), (interface))
+#define ifnet_allocate(init, interface)                                        \
+  ifnet_allocate_internal((init), (interface))
 #else
 extern errno_t ifnet_allocate(const struct ifnet_init_params *init,
-    ifnet_t *interface)
-__NKE_API_DEPRECATED;
+                              ifnet_t *interface) __NKE_API_DEPRECATED;
 #endif /* KERNEL_PRIVATE */
 
 #ifdef KERNEL_PRIVATE
 /*
  *       @function ifnet_allocate_extended
- *       @discussion An extended/newer variant of ifnet_allocate, with additional
- *               support for the new output and input driver models.
+ *       @discussion An extended/newer variant of ifnet_allocate, with
+ * additional support for the new output and input driver models.
  *       @param init The initial values for the interface. These values can
  *               not be changed after the interface has been allocated.
  *       @param interface The interface allocated upon success.
  *       @result May return ENOMEM if there is insufficient memory or EBUSY
- *               if an interface with the same uniqueid/(name + unit) and family has already
- *               been allocated and is in use.
+ *               if an interface with the same uniqueid/(name + unit) and family
+ * has already been allocated and is in use.
  */
 extern errno_t ifnet_allocate_extended(const struct ifnet_init_eparams *init,
-    ifnet_t *interface);
+                                       ifnet_t *interface);
 
 /*
  *       @function ifnet_dispose
@@ -1389,14 +1417,14 @@ extern errno_t ifnet_dequeue(ifnet_t interface, mbuf_t *packet);
  *               is currently no packet available to be dequeued.
  */
 extern errno_t ifnet_dequeue_service_class(ifnet_t interface,
-    mbuf_svc_class_t sc, mbuf_t *packet);
+                                           mbuf_svc_class_t sc, mbuf_t *packet);
 
 /*
  *       @function ifnet_dequeue_multi
  *       @discussion Dequeue one or more packets from the output queue of an
- *               interface which implements the new driver output model, and that
- *               the output scheduling model is set to IFNET_SCHED_MODEL_NORMAL.
- *               The returned packet chain is traversable with mbuf_nextpkt().
+ *               interface which implements the new driver output model, and
+ * that the output scheduling model is set to IFNET_SCHED_MODEL_NORMAL. The
+ * returned packet chain is traversable with mbuf_nextpkt().
  *       @param interface The interface to dequeue the packets from.
  *       @param max The maximum number of packets in the packet chain that
  *               may be returned to the caller; this needs to be a non-zero
@@ -1416,7 +1444,8 @@ extern errno_t ifnet_dequeue_service_class(ifnet_t interface,
  *               be dequeued.
  */
 extern errno_t ifnet_dequeue_multi(ifnet_t interface, u_int32_t max,
-    mbuf_t *first_packet, mbuf_t *last_packet, u_int32_t *cnt, u_int32_t *len);
+                                   mbuf_t *first_packet, mbuf_t *last_packet,
+                                   u_int32_t *cnt, u_int32_t *len);
 
 /*
  *       @function ifnet_dequeue_multi_bytes
@@ -1444,9 +1473,10 @@ extern errno_t ifnet_dequeue_multi(ifnet_t interface, u_int32_t max,
  *               IFNET_SCHED_MODEL_NORMAL, or EAGAIN if there is currently
  *               no packet available to be dequeued
  */
-extern errno_t ifnet_dequeue_multi_bytes(ifnet_t interface,
-    u_int32_t max_bytes, mbuf_t *first_packet, mbuf_t *last_packet,
-    u_int32_t *cnt, u_int32_t *len);
+extern errno_t ifnet_dequeue_multi_bytes(ifnet_t interface, u_int32_t max_bytes,
+                                         mbuf_t *first_packet,
+                                         mbuf_t *last_packet, u_int32_t *cnt,
+                                         u_int32_t *len);
 
 /*
  *       @function ifnet_dequeue_service_class_multi
@@ -1474,8 +1504,8 @@ extern errno_t ifnet_dequeue_multi_bytes(ifnet_t interface,
  *               IFNET_SCHED_MODEL_DRIVER_MANAGED, or EAGAIN if there
  *               is currently no packet available to be dequeued.
  */
-extern errno_t ifnet_dequeue_service_class_multi(ifnet_t interface,
-    mbuf_svc_class_t sc, u_int32_t max, mbuf_t *first_packet,
+extern errno_t ifnet_dequeue_service_class_multi(
+    ifnet_t interface, mbuf_svc_class_t sc, u_int32_t max, mbuf_t *first_packet,
     mbuf_t *last_packet, u_int32_t *cnt, u_int32_t *len);
 
 /*
@@ -1487,8 +1517,7 @@ extern errno_t ifnet_dequeue_service_class_multi(ifnet_t interface,
  *       @result May return EINVAL if the parameters are invalid or ENXIO if
  *               the interface doesn't implement the new driver output model.
  */
-extern errno_t ifnet_set_output_sched_model(ifnet_t interface,
-    u_int32_t model);
+extern errno_t ifnet_set_output_sched_model(ifnet_t interface, u_int32_t model);
 
 /*
  *       @function ifnet_set_sndq_maxlen
@@ -1550,7 +1579,9 @@ extern errno_t ifnet_get_sndq_len(ifnet_t interface, u_int32_t *packets);
  *               the interface doesn't implement the new driver output model.
  */
 extern errno_t ifnet_get_service_class_sndq_len(ifnet_t interface,
-    mbuf_svc_class_t sc, u_int32_t *packets, u_int32_t *bytes);
+                                                mbuf_svc_class_t sc,
+                                                u_int32_t *packets,
+                                                u_int32_t *bytes);
 
 /*
  *       @function ifnet_set_rcvq_maxlen
@@ -1612,14 +1643,14 @@ extern errno_t ifnet_get_rcvq_maxlen(ifnet_t interface, u_int32_t *maxqlen);
  *               chosen by the system.
  */
 struct ifnet_poll_params {
-	u_int32_t       flags;
-	u_int32_t       packets_limit;
-	u_int32_t       packets_lowat;
-	u_int32_t       packets_hiwat;
-	u_int32_t       bytes_lowat;
-	u_int32_t       bytes_hiwat;
-	u_int64_t       interval_time;
-	u_int64_t       reserved[4];
+  u_int32_t flags;
+  u_int32_t packets_limit;
+  u_int32_t packets_lowat;
+  u_int32_t packets_hiwat;
+  u_int32_t bytes_lowat;
+  u_int32_t bytes_hiwat;
+  u_int64_t interval_time;
+  u_int64_t reserved[4];
 };
 
 typedef struct ifnet_poll_params ifnet_poll_params_t;
@@ -1639,7 +1670,7 @@ typedef struct ifnet_poll_params ifnet_poll_params_t;
  *               the interface doesn't implement the new driver input model.
  */
 extern errno_t ifnet_set_poll_params(ifnet_t interface,
-    ifnet_poll_params_t *poll_params);
+                                     ifnet_poll_params_t *poll_params);
 
 /*
  *       @function ifnet_poll_params
@@ -1652,7 +1683,7 @@ extern errno_t ifnet_set_poll_params(ifnet_t interface,
  *               the interface doesn't implement the new driver input model.
  */
 extern errno_t ifnet_poll_params(ifnet_t interface,
-    ifnet_poll_params_t *poll_params);
+                                 ifnet_poll_params_t *poll_params);
 
 /*
  *       @function ifnet_start
@@ -1720,8 +1751,7 @@ extern errno_t ifnet_disable_output(ifnet_t interface);
  *       @param interface The interface to increment the reference count of.
  *       @result May return EINVAL if the interface is not valid.
  */
-extern errno_t ifnet_reference(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_reference(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_release
@@ -1731,8 +1761,7 @@ __NKE_API_DEPRECATED;
  *               and possibly free.
  *       @result May return EINVAL if the interface is not valid.
  */
-extern errno_t ifnet_release(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_release(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_attach
@@ -1747,22 +1776,22 @@ __NKE_API_DEPRECATED;
  *       @param interface The interface to attach.
  *       @param ll_addr The link layer address of the interface. This is used
  *               to fill out the first ifaddr in the list of addresses for the
- *               interface. This parameter is not required for interfaces such as
- *               PPP that have no link-layer address.
+ *               interface. This parameter is not required for interfaces such
+ * as PPP that have no link-layer address.
  *       @result Will return an error if there is anything wrong with the
  *               interface.
  */
-extern errno_t ifnet_attach(ifnet_t interface,
-    const struct sockaddr_dl *ll_addr)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_attach(ifnet_t interface,
+             const struct sockaddr_dl *ll_addr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_detach
  *       @discussion Detaches the interface.
  *
- *               Call this to indicate this interface is no longer valid (i.e. PC
- *               Card was removed). This function will begin the process of
- *               removing knowledge of this interface from the stack.
+ *               Call this to indicate this interface is no longer valid (i.e.
+ * PC Card was removed). This function will begin the process of removing
+ * knowledge of this interface from the stack.
  *
  *               The function will return before the interface is detached. The
  *               functions you supplied in to the interface may continue to be
@@ -1780,28 +1809,27 @@ __NKE_API_DEPRECATED;
  *       @param interface The interface to detach.
  *       @result 0 on success, otherwise errno error.
  */
-extern errno_t ifnet_detach(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_detach(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_interface_family_find
  *       @discussion Look up the interface family identifier for a string.
- *               If there is no interface family identifier assigned for this string
- *               a new interface family identifier is created and assigned.
- *               It is recommended to use the bundle id of the KEXT as the string
- *               to avoid collisions with other KEXTs.
- *               The lookup operation is not optimized so a module should call this
- *               function once during startup and cache the interface family identifier.
- *               The interface family identifier for a string will not be re-assigned until
- *               the system reboots.
+ *               If there is no interface family identifier assigned for this
+ * string a new interface family identifier is created and assigned. It is
+ * recommended to use the bundle id of the KEXT as the string to avoid
+ * collisions with other KEXTs. The lookup operation is not optimized so a
+ * module should call this function once during startup and cache the interface
+ * family identifier. The interface family identifier for a string will not be
+ * re-assigned until the system reboots.
  *       @param module_string  A unique string identifying your interface family
- *       @param family_id Upon return, a unique interface family identifier for use with
- *               ifnet_* functions. This identifier is valid until the system
- *               is rebooted.
+ *       @param family_id Upon return, a unique interface family identifier for
+ * use with ifnet_* functions. This identifier is valid until the system is
+ * rebooted.
  *       @result 0 on success, otherwise errno error.
  */
-extern errno_t ifnet_interface_family_find(const char *module_string, ifnet_family_t *family_id)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_interface_family_find(const char *module_string,
+                            ifnet_family_t *family_id) __NKE_API_DEPRECATED;
 
 /*
  * Interface manipulation.
@@ -1813,8 +1841,7 @@ __NKE_API_DEPRECATED;
  *       @param interface Interface to retrieve the storage from.
  *       @result Driver's private storage.
  */
-extern void *ifnet_softc(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern void *ifnet_softc(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_name
@@ -1822,8 +1849,7 @@ __NKE_API_DEPRECATED;
  *       @param interface Interface to retrieve the name from.
  *       @result Pointer to the name.
  */
-extern const char *ifnet_name(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern const char *ifnet_name(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_family
@@ -1831,8 +1857,7 @@ __NKE_API_DEPRECATED;
  *       @param interface Interface to retrieve the family from.
  *       @result Interface family type.
  */
-extern ifnet_family_t ifnet_family(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern ifnet_family_t ifnet_family(ifnet_t interface) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -1850,22 +1875,19 @@ extern ifnet_subfamily_t ifnet_subfamily(ifnet_t interface);
  *       @param interface Interface to retrieve the unit number from.
  *       @result Unit number.
  */
-extern u_int32_t ifnet_unit(ifnet_t interface)
-__NKE_API_DEPRECATED;
-
+extern u_int32_t ifnet_unit(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_index
  *       @discussion Returns the index of the interface. This index value
  *               will match the index you would find in a sockaddr_dl or using
- *               if_nametoindex or if_indextoname in user space. The value of the
- *               interface index is undefined for an interface that is not
- *               currently attached.
+ *               if_nametoindex or if_indextoname in user space. The value of
+ * the interface index is undefined for an interface that is not currently
+ * attached.
  *       @param interface Interface to retrieve the index of.
  *       @result Index.
  */
-extern u_int32_t ifnet_index(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t ifnet_index(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_flags
@@ -1880,8 +1902,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_set_flags(ifnet_t interface, u_int16_t new_flags,
-    u_int16_t mask)
-__NKE_API_DEPRECATED;
+                               u_int16_t mask) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_flags
@@ -1889,8 +1910,7 @@ __NKE_API_DEPRECATED;
  *       @param interface Interface to retrieve the flags from.
  *       @result Flags. These flags are defined in net/if.h
  */
-extern u_int16_t ifnet_flags(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int16_t ifnet_flags(ifnet_t interface) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -1907,7 +1927,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_set_eflags(ifnet_t interface, u_int32_t new_flags,
-    u_int32_t mask);
+                                u_int32_t mask);
 
 /*
  *       @function ifnet_eflags
@@ -1935,7 +1955,7 @@ extern u_int32_t ifnet_eflags(ifnet_t interface);
  *               when this call is made on non-supporting platforms.
  */
 extern errno_t ifnet_set_idle_flags(ifnet_t interface, u_int32_t new_flags,
-    u_int32_t mask);
+                                    u_int32_t mask);
 
 /*
  *       @function ifnet_idle_flags
@@ -1973,8 +1993,9 @@ extern int ifnet_link_quality(ifnet_t interface);
  *       @result 0 on success otherwise the errno error.  EINVAL if quality
  *               is not a valid value.  ENXIO if the interface is not attached.
  */
-extern errno_t ifnet_set_interface_state(ifnet_t interface,
-    struct if_interface_state *if_interface_state);
+extern errno_t
+ifnet_set_interface_state(ifnet_t interface,
+                          struct if_interface_state *if_interface_state);
 
 /*
  *       @function ifnet_get_interface_state
@@ -1982,8 +2003,9 @@ extern errno_t ifnet_set_interface_state(ifnet_t interface,
  *       @param if_interface_state to ret.
  *       @result 0 on success, errno otherwise
  */
-extern int ifnet_get_interface_state(ifnet_t interface,
-    struct if_interface_state *if_interface_state);
+extern int
+ifnet_get_interface_state(ifnet_t interface,
+                          struct if_interface_state *if_interface_state);
 
 /*
  *       @struct ifnet_llreach_info
@@ -2023,19 +2045,19 @@ extern int ifnet_get_interface_state(ifnet_t interface,
  *               special value IFNET_NPM_UNKNOWN is used when the NPM is not
  *               currently known.
  */
-#define IFNET_LLREACHINFO_ADDRLEN       64      /* max ll addr len */
+#define IFNET_LLREACHINFO_ADDRLEN 64 /* max ll addr len */
 
 struct ifnet_llreach_info {
-	u_int32_t iflri_refcnt;
-	u_int32_t iflri_probes;
-	u_int64_t iflri_snd_expire;
-	u_int64_t iflri_rcv_expire;
-	u_int64_t iflri_curtime;
-	u_int32_t iflri_netproto;
-	u_int8_t  iflri_addr[IFNET_LLREACHINFO_ADDRLEN];
-	int32_t   iflri_rssi;
-	int32_t   iflri_lqm;
-	int32_t   iflri_npm;
+  u_int32_t iflri_refcnt;
+  u_int32_t iflri_probes;
+  u_int64_t iflri_snd_expire;
+  u_int64_t iflri_rcv_expire;
+  u_int64_t iflri_curtime;
+  u_int32_t iflri_netproto;
+  u_int8_t iflri_addr[IFNET_LLREACHINFO_ADDRLEN];
+  int32_t iflri_rssi;
+  int32_t iflri_lqm;
+  int32_t iflri_npm;
 };
 
 /*
@@ -2047,8 +2069,9 @@ struct ifnet_llreach_info {
  *               information will be returned to, upon success.
  *       @result	0 upon success, otherwise errno error.
  */
-extern errno_t ifnet_inet_defrouter_llreachinfo(ifnet_t interface,
-    struct ifnet_llreach_info *pinfo);
+extern errno_t
+ifnet_inet_defrouter_llreachinfo(ifnet_t interface,
+                                 struct ifnet_llreach_info *pinfo);
 
 /*
  *       @function ifnet_inet6_defrouter_llreachinfo
@@ -2059,94 +2082,99 @@ extern errno_t ifnet_inet_defrouter_llreachinfo(ifnet_t interface,
  *               information will be returned to, upon success.
  *       @result	0 upon success, otherwise errno error.
  */
-extern errno_t ifnet_inet6_defrouter_llreachinfo(ifnet_t interface,
-    struct ifnet_llreach_info *pinfo);
+extern errno_t
+ifnet_inet6_defrouter_llreachinfo(ifnet_t interface,
+                                  struct ifnet_llreach_info *pinfo);
 #endif /* KERNEL_PRIVATE */
 
 /*!
  *       @function ifnet_set_capabilities_supported
  *       @discussion Specify the capabilities supported by the interface.
- *       @discussion  This function lets you specify which capabilities are supported
- *               by the interface. Typically this function is called by the driver when
- *               the interface gets attached to the system.
- *               The mask allows to control which capability to set or unset.
- *               The kernel will effectively take the lock, then set the
- *               interface's flags to (if_capabilities & ~mask) | (new_caps & mask).
+ *       @discussion  This function lets you specify which capabilities are
+ * supported by the interface. Typically this function is called by the driver
+ * when the interface gets attached to the system. The mask allows to control
+ * which capability to set or unset. The kernel will effectively take the lock,
+ * then set the interface's flags to (if_capabilities & ~mask) | (new_caps &
+ * mask).
  *
  *               This function is intended to be called by the driver. A kext
  *               must not call this function on an interface the kext does not
  *               own.
  *       @param interface Interface to set the capabilities on.
- *       @param new_caps The value of the capabilities that should be set or unset. These
- *               flags are defined in net/if.h
+ *       @param new_caps The value of the capabilities that should be set or
+ * unset. These flags are defined in net/if.h
  *       @param mask Which capabilities that should be affected. These
  *               flags are defined in net/if.h
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_capabilities_supported(ifnet_t interface, u_int32_t new_caps,
-    u_int32_t mask)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_set_capabilities_supported(ifnet_t interface, u_int32_t new_caps,
+                                 u_int32_t mask) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_capabilities_supported
- *       @discussion Retrieve the interface capabilities supported by the interface.
+ *       @discussion Retrieve the interface capabilities supported by the
+ * interface.
  *       @param interface Interface to retrieve the capabilities from.
  *       @result Flags. Capabilities flags are defined in net/if.h
  */
-extern u_int32_t ifnet_capabilities_supported(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t
+ifnet_capabilities_supported(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_capabilities_enabled
- *       @discussion Enable and/or disable the interface capabilities to match new_caps.
+ *       @discussion Enable and/or disable the interface capabilities to match
+ * new_caps.
  *       @discussion Sets the interface capabilities to new_caps. This function
- *               lets you specify which capabilities you want to change using the mask.
- *               The kernel will effectively take the lock, then set the
- *               interface's flags to (if_capenable & ~mask) | (new_caps & mask).
+ *               lets you specify which capabilities you want to change using
+ * the mask. The kernel will effectively take the lock, then set the interface's
+ * flags to (if_capenable & ~mask) | (new_caps & mask).
  *
  *               This function is intended to be called by the driver. A kext
  *               must not call this function on an interface the kext does not
  *               own.
  *
- *               Typically this function is called by the driver when the interface is
- *               created to specify which of the supported capabilities are enabled by
- *               default. This function is also meant to be called when the driver handles
- *               the interface ioctl SIOCSIFCAP.
+ *               Typically this function is called by the driver when the
+ * interface is created to specify which of the supported capabilities are
+ * enabled by default. This function is also meant to be called when the driver
+ * handles the interface ioctl SIOCSIFCAP.
  *
- *               The driver should call ifnet_set_offlad() to indicate the corresponding
- *               hardware offload bits that will be used by the networking stack.
+ *               The driver should call ifnet_set_offlad() to indicate the
+ * corresponding hardware offload bits that will be used by the networking
+ * stack.
  *
  *               It is an error to enable a capability that is not marked as
  *               supported by the interface.
  *       @param interface Interface to set the capabilities on.
- *       @param new_caps The value of the capabilities that should be set or unset. These
- *               flags are defined in net/if.h
+ *       @param new_caps The value of the capabilities that should be set or
+ * unset. These flags are defined in net/if.h
  *       @param mask Which capabilities that should be affected. These
  *               flags are defined in net/if.h
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_capabilities_enabled(ifnet_t interface, u_int32_t new_caps,
-    u_int32_t mask)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_set_capabilities_enabled(ifnet_t interface, u_int32_t new_caps,
+                               u_int32_t mask) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_capabilities_enabled
- *       @discussion Retrieve the interface capabilities enabled on the interface.
+ *       @discussion Retrieve the interface capabilities enabled on the
+ * interface.
  *       @param interface Interface to retrieve the capabilities from.
  *       @result Flags. Capabilities flags are defined in net/if.h
  */
-extern u_int32_t ifnet_capabilities_enabled(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t
+ifnet_capabilities_enabled(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_offload
  *       @discussion Sets a bitfield to indicate special hardware offload
- *               support provided by the interface such as hardware checksums and
- *               VLAN. This replaces the if_hwassist flags field. Any flags
- *               unrecognized by the stack will not be set.
+ *               support provided by the interface such as hardware checksums
+ * and VLAN. This replaces the if_hwassist flags field. Any flags unrecognized
+ * by the stack will not be set.
  *
- *               Note the system will automatically set the interface capabilities
- *               that correspond to the offload flags modified -- i.e. the driver
+ *               Note the system will automatically set the interface
+ * capabilities that correspond to the offload flags modified -- i.e. the driver
  *               does not have to call ifnet_set_capabilities_enabled() and
  *               ifnet_set_capabilities_supported().
  *       @param interface The interface.
@@ -2154,8 +2182,8 @@ __NKE_API_DEPRECATED;
  *               the device supports.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_offload(ifnet_t interface, ifnet_offload_t offload)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_offload(ifnet_t interface,
+                                 ifnet_offload_t offload) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_offload_enabled
@@ -2167,8 +2195,9 @@ __NKE_API_DEPRECATED;
  *               options should be enabled.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_offload_enabled(ifnet_t interface, ifnet_offload_t offload)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_set_offload_enabled(ifnet_t interface,
+                          ifnet_offload_t offload) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_offload
@@ -2177,8 +2206,7 @@ __NKE_API_DEPRECATED;
  *       @param interface Interface to retrieve the offload from.
  *       @result Abilities flags, see ifnet_offload_t.
  */
-extern ifnet_offload_t ifnet_offload(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern ifnet_offload_t ifnet_offload(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_tso_mtu
@@ -2191,8 +2219,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_set_tso_mtu(ifnet_t interface, sa_family_t family,
-    u_int32_t mtuLen)
-__NKE_API_DEPRECATED;
+                                 u_int32_t mtuLen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_tso_mtu
@@ -2206,29 +2233,26 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_get_tso_mtu(ifnet_t interface, sa_family_t family,
-    u_int32_t *mtuLen)
-__NKE_API_DEPRECATED;
+                                 u_int32_t *mtuLen) __NKE_API_DEPRECATED;
 
 /*!
  *       @enum Interface wake properties
  *       @abstract Constants defining Interface wake properties.
  *       @constant IFNET_WAKE_ON_MAGIC_PACKET Wake on Magic Packet.
  */
-enum {
-	IFNET_WAKE_ON_MAGIC_PACKET = 0x01
-};
+enum { IFNET_WAKE_ON_MAGIC_PACKET = 0x01 };
 
 /*!
  *       @function ifnet_set_wake_flags
- *       @discussion Sets the wake properties of the underlying hardware. These are
- *               typically set by the driver.
+ *       @discussion Sets the wake properties of the underlying hardware. These
+ * are typically set by the driver.
  *       @param interface The interface.
  *       @param properties Properties to set or unset.
  *       @param mask Mask of the properties to set of unset.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_wake_flags(ifnet_t interface, u_int32_t properties, u_int32_t mask)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_wake_flags(ifnet_t interface, u_int32_t properties,
+                                    u_int32_t mask) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_wake_flags
@@ -2236,16 +2260,15 @@ __NKE_API_DEPRECATED;
  *       @param interface The interface.
  *       @result The wake properties
  */
-extern u_int32_t ifnet_get_wake_flags(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t ifnet_get_wake_flags(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_link_mib_data
  *       @discussion Sets the mib link data. The ifnet_t will store the
  *               pointer you supply and copy mibLen bytes from the pointer
  *               whenever the sysctl for getting interface specific MIB data is
- *               used. Since the ifnet_t stores a pointer to your data instead of
- *               a copy, you may update the data at the address at any time.
+ *               used. Since the ifnet_t stores a pointer to your data instead
+ * of a copy, you may update the data at the address at any time.
  *
  *               This function is intended to be called by the driver. A kext
  *               must not call this function on an interface the kext does not
@@ -2255,9 +2278,9 @@ __NKE_API_DEPRECATED;
  *       @param mibLen Length of data pointed to.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_link_mib_data(ifnet_t interface, void *__sized_by(mibLen) mibData,
-    u_int32_t mibLen)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_link_mib_data(ifnet_t interface,
+                                       void *__sized_by(mibLen) mibData,
+                                       u_int32_t mibLen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_link_mib_data
@@ -2273,9 +2296,9 @@ __NKE_API_DEPRECATED;
  *       @result Returns an error if the buffer size is too small or there is
  *               no data.
  */
-extern errno_t ifnet_get_link_mib_data(ifnet_t interface, void *__sized_by(*mibLen) mibData,
-    u_int32_t *mibLen)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_get_link_mib_data(ifnet_t interface,
+                                       void *__sized_by(*mibLen) mibData,
+                                       u_int32_t *mibLen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_link_mib_data_length
@@ -2284,8 +2307,8 @@ __NKE_API_DEPRECATED;
  *       @result Returns the number of bytes of mib data associated with the
  *               interface.
  */
-extern u_int32_t ifnet_get_link_mib_data_length(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t
+ifnet_get_link_mib_data_length(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_attach_protocol
@@ -2296,10 +2319,9 @@ __NKE_API_DEPRECATED;
  *       @param proto_details Details of the protocol being attached.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_attach_protocol(ifnet_t interface,
-    protocol_family_t protocol_family,
-    const struct ifnet_attach_proto_param *proto_details)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_attach_protocol(
+    ifnet_t interface, protocol_family_t protocol_family,
+    const struct ifnet_attach_proto_param *proto_details) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_attach_protocol_v2
@@ -2312,10 +2334,10 @@ __NKE_API_DEPRECATED;
  *       @param proto_details Details of the protocol being attached.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_attach_protocol_v2(ifnet_t interface,
-    protocol_family_t protocol_family,
+extern errno_t ifnet_attach_protocol_v2(
+    ifnet_t interface, protocol_family_t protocol_family,
     const struct ifnet_attach_proto_param_v2 *proto_details)
-__NKE_API_DEPRECATED;
+    __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_detach_protocol
@@ -2325,15 +2347,15 @@ __NKE_API_DEPRECATED;
  *               detach.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_detach_protocol(ifnet_t interface,
-    protocol_family_t protocol_family)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_detach_protocol(ifnet_t interface,
+                      protocol_family_t protocol_family) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_output
  *       @discussion Handles an outbound packet on the interface by calling
- *               any filters, a protocol preoutput function, the interface framer
- *               function, and finally the interface's output function. The
+ *               any filters, a protocol preoutput function, the interface
+ * framer function, and finally the interface's output function. The
  *               protocol_family will be used to apply protocol filters and
  *               determine which preoutput function to call. The route and dest
  *               parameters will be passed to the preoutput function defined for
@@ -2352,15 +2374,15 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_output(ifnet_t interface,
-    protocol_family_t protocol_family, mbuf_t packet, void *route,
-    const struct sockaddr *dest)
-__NKE_API_DEPRECATED;
+                            protocol_family_t protocol_family, mbuf_t packet,
+                            void *route,
+                            const struct sockaddr *dest) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_output_raw
  *       @discussion Handles and outbond raw packet on the interface by
- *               calling any filters followed by the interface's output function.
- *               protocol_family may be zero. If the packet is from a specific
+ *               calling any filters followed by the interface's output
+ * function. protocol_family may be zero. If the packet is from a specific
  *               protocol the protocol_family will be used to apply protocol
  *               filters. All interface filters will be applied to the outgoing
  *               packet. Processing, such as calling the protocol preoutput and
@@ -2374,8 +2396,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_output_raw(ifnet_t interface,
-    protocol_family_t protocol_family, mbuf_t packet)
-__NKE_API_DEPRECATED;
+                                protocol_family_t protocol_family,
+                                mbuf_t packet) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_input
@@ -2392,8 +2414,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_input(ifnet_t interface, mbuf_t first_packet,
-    const struct ifnet_stat_increment_param *stats)
-__NKE_API_DEPRECATED;
+                           const struct ifnet_stat_increment_param *stats)
+    __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*
@@ -2413,8 +2435,9 @@ __NKE_API_DEPRECATED;
  *               this extended variant.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_input_extended(ifnet_t interface, mbuf_t first_packet,
-    mbuf_t last_packet, const struct ifnet_stat_increment_param *stats);
+extern errno_t
+ifnet_input_extended(ifnet_t interface, mbuf_t first_packet, mbuf_t last_packet,
+                     const struct ifnet_stat_increment_param *stats);
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -2434,8 +2457,8 @@ extern errno_t ifnet_input_extended(ifnet_t interface, mbuf_t first_packet,
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_ioctl(ifnet_t interface, protocol_family_t protocol,
-    unsigned long ioctl_code, void *ioctl_arg)
-__NKE_API_DEPRECATED;
+                           unsigned long ioctl_code,
+                           void *ioctl_arg) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_event
@@ -2446,7 +2469,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_event(ifnet_t interface, struct kern_event_msg *event_ptr)
-__NKE_API_DEPRECATED;
+    __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_mtu
@@ -2461,24 +2484,22 @@ __NKE_API_DEPRECATED;
  *       @param mtu The new MTU.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_mtu(ifnet_t interface, u_int32_t mtu)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_mtu(ifnet_t interface,
+                             u_int32_t mtu) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_mtu
  *       @param interface The interface.
  *       @result The MTU.
  */
-extern u_int32_t ifnet_mtu(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t ifnet_mtu(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_type
  *       @param interface The interface.
  *       @result The type. See net/if_types.h.
  */
-extern u_int8_t ifnet_type(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int8_t ifnet_type(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_addrlen
@@ -2490,16 +2511,15 @@ __NKE_API_DEPRECATED;
  *       @param addrlen The new address length.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_addrlen(ifnet_t interface, u_int8_t addrlen)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_addrlen(ifnet_t interface,
+                                 u_int8_t addrlen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_addrlen
  *       @param interface The interface.
  *       @result The address length.
  */
-extern u_int8_t ifnet_addrlen(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int8_t ifnet_addrlen(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_hdrlen
@@ -2511,16 +2531,15 @@ __NKE_API_DEPRECATED;
  *       @param hdrlen The new header length.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_hdrlen(ifnet_t interface, u_int8_t hdrlen)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_hdrlen(ifnet_t interface,
+                                u_int8_t hdrlen) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_hdrlen
  *       @param interface The interface.
  *       @result The header length.
  */
-extern u_int8_t ifnet_hdrlen(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int8_t ifnet_hdrlen(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_metric
@@ -2532,16 +2551,15 @@ __NKE_API_DEPRECATED;
  *       @param metric The new metric.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_metric(ifnet_t interface, u_int32_t metric)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_metric(ifnet_t interface,
+                                u_int32_t metric) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_metric
  *       @param interface The interface.
  *       @result The metric.
  */
-extern u_int32_t ifnet_metric(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int32_t ifnet_metric(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_baudrate
@@ -2553,16 +2571,15 @@ __NKE_API_DEPRECATED;
  *       @param baudrate The new baudrate.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_baudrate(ifnet_t interface, u_int64_t baudrate)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_baudrate(ifnet_t interface,
+                                  u_int64_t baudrate) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_baudrate
  *       @param interface The interface.
  *       @result The baudrate.
  */
-extern u_int64_t ifnet_baudrate(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern u_int64_t ifnet_baudrate(ifnet_t interface) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 typedef struct if_bandwidths if_bandwidths_t;
@@ -2583,7 +2600,8 @@ typedef struct if_bandwidths if_bandwidths_t;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_set_bandwidths(ifnet_t interface,
-    if_bandwidths_t *output_bw, if_bandwidths_t *input_bw);
+                                    if_bandwidths_t *output_bw,
+                                    if_bandwidths_t *input_bw);
 
 /*
  *       @function ifnet_bandwidths
@@ -2597,7 +2615,7 @@ extern errno_t ifnet_set_bandwidths(ifnet_t interface,
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_bandwidths(ifnet_t interface, if_bandwidths_t *output_bw,
-    if_bandwidths_t *input_bw);
+                                if_bandwidths_t *input_bw);
 
 typedef struct if_latencies if_latencies_t;
 
@@ -2616,8 +2634,8 @@ typedef struct if_latencies if_latencies_t;
  *               existing input latency values.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_latencies(ifnet_t interface,
-    if_latencies_t *output_lt, if_latencies_t *input_lt);
+extern errno_t ifnet_set_latencies(ifnet_t interface, if_latencies_t *output_lt,
+                                   if_latencies_t *input_lt);
 
 /*
  *       @function ifnet_latencies
@@ -2631,7 +2649,7 @@ extern errno_t ifnet_set_latencies(ifnet_t interface,
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_latencies(ifnet_t interface, if_latencies_t *output_lt,
-    if_latencies_t *input_lt);
+                               if_latencies_t *input_lt);
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -2646,16 +2664,16 @@ extern errno_t ifnet_latencies(ifnet_t interface, if_latencies_t *output_lt,
  *               ifnet_counter_increment structure are handled in the stack.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_stat_increment(ifnet_t interface,
-    const struct ifnet_stat_increment_param *counts)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_stat_increment(
+    ifnet_t interface,
+    const struct ifnet_stat_increment_param *counts) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_stat_increment_in
  *       @discussion
  *               This function is intended to be called by the driver. This
- *               function allows a driver to update the inbound interface counts.
- *               The most efficient time to update these counts is when calling
+ *               function allows a driver to update the inbound interface
+ * counts. The most efficient time to update these counts is when calling
  *               ifnet_input.
  *
  *               A lock protects the counts, this makes the increment functions
@@ -2667,9 +2685,9 @@ __NKE_API_DEPRECATED;
  *       @param errors_in The number of additional receive errors.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_stat_increment_in(ifnet_t interface,
-    u_int32_t packets_in, u_int32_t bytes_in, u_int32_t errors_in)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_stat_increment_in(ifnet_t interface, u_int32_t packets_in,
+                                       u_int32_t bytes_in, u_int32_t errors_in)
+    __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_stat_increment_out
@@ -2687,9 +2705,10 @@ __NKE_API_DEPRECATED;
  *       @param errors_out The number of additional send errors.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_stat_increment_out(ifnet_t interface,
-    u_int32_t packets_out, u_int32_t bytes_out, u_int32_t errors_out)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_stat_increment_out(ifnet_t interface, u_int32_t packets_out,
+                         u_int32_t bytes_out,
+                         u_int32_t errors_out) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_stat
@@ -2704,9 +2723,9 @@ __NKE_API_DEPRECATED;
  *       @param stats The new stats values.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_stat(ifnet_t interface,
-    const struct ifnet_stats_param *stats)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_set_stat(ifnet_t interface,
+               const struct ifnet_stats_param *stats) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_stat
@@ -2714,9 +2733,9 @@ __NKE_API_DEPRECATED;
  *       @param out_stats Storage for the values.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_stat(ifnet_t interface,
-    struct ifnet_stats_param *out_stats)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_stat(ifnet_t interface,
+           struct ifnet_stats_param *out_stats) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_promiscuous
@@ -2733,8 +2752,8 @@ __NKE_API_DEPRECATED;
  *               zero, promiscuous mode will be disabled.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_set_promiscuous(ifnet_t interface, int on)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_promiscuous(ifnet_t interface,
+                                     int on) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_touch_lastchange
@@ -2742,8 +2761,7 @@ __NKE_API_DEPRECATED;
  *       @param interface The interface.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_touch_lastchange(ifnet_t interface)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_touch_lastchange(ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_lastchange
@@ -2752,7 +2770,7 @@ __NKE_API_DEPRECATED;
  *               to.
  */
 extern errno_t ifnet_lastchange(ifnet_t interface, struct timeval *last_change)
-__NKE_API_DEPRECATED;
+    __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_address_list
@@ -2767,8 +2785,9 @@ __NKE_API_DEPRECATED;
  *       @param addresses A pointer to a NULL terminated array of ifaddr_ts.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_get_address_list(ifnet_t interface, ifaddr_t *__null_terminated *addresses)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_get_address_list(ifnet_t interface,
+                                      ifaddr_t * __null_terminated *
+                                          addresses) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_address_list_with_count
@@ -2784,9 +2803,9 @@ __NKE_API_DEPRECATED;
  *       @param addresses_count Count of ifaddr_ts in addresses.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_get_address_list_with_count(ifnet_t interface,
-    ifaddr_t *__counted_by(*addresses_count) * addresses, uint16_t *addresses_count)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_get_address_list_with_count(
+    ifnet_t interface, ifaddr_t *__counted_by(*addresses_count) * addresses,
+    uint16_t *addresses_count) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_address_list_family
@@ -2798,14 +2817,16 @@ __NKE_API_DEPRECATED;
  *               reference to an ifaddr_t, be sure to bump the reference count
  *               before calling ifnet_free_address_list. Unlike
  *               ifnet_get_address_list, this function lets the caller specify
- *               the address family to get a list of only a specific address type.
+ *               the address family to get a list of only a specific address
+ * type.
  *       @param interface The interface.
  *       @param addresses A pointer to a NULL terminated array of ifaddr_ts.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_get_address_list_family(ifnet_t interface,
-    ifaddr_t *__null_terminated *addresses, sa_family_t family)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_get_address_list_family(ifnet_t interface,
+                              ifaddr_t * __null_terminated * addresses,
+                              sa_family_t family) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
@@ -2818,15 +2839,16 @@ __NKE_API_DEPRECATED;
  *               reference to an ifaddr_t, be sure to bump the reference count
  *               before calling ifnet_free_address_list. Unlike
  *               ifnet_get_address_list, this function lets the caller specify
- *               the address family to get a list of only a specific address type.
+ *               the address family to get a list of only a specific address
+ * type.
  *       @param interface The interface.
  *       @param addresses A pointer to a NULL terminated array of ifaddr_ts.
  *       @param addresses_count Count of ifaddr_ts in addresses.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_get_address_list_family_with_count(ifnet_t interface,
-    ifaddr_t *__counted_by(*addresses_count) * addresses, uint16_t *addresses_count,
-    sa_family_t family);
+extern errno_t ifnet_get_address_list_family_with_count(
+    ifnet_t interface, ifaddr_t *__counted_by(*addresses_count) * addresses,
+    uint16_t *addresses_count, sa_family_t family);
 
 /*!
  *       @function ifnet_get_inuse_address_list
@@ -2840,20 +2862,23 @@ extern errno_t ifnet_get_address_list_family_with_count(ifnet_t interface,
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_get_inuse_address_list(ifnet_t interface,
-    ifaddr_t *__null_terminated *addresses);
+                                            ifaddr_t * __null_terminated *
+                                                addresses);
 
-__private_extern__ errno_t ifnet_get_address_list_family_internal(ifnet_t,
-    ifaddr_t *__counted_by(*addresses_count) *, uint16_t *addresses_count,
-    sa_family_t, int, int, int);
+__private_extern__ errno_t ifnet_get_address_list_family_internal(
+    ifnet_t, ifaddr_t *__counted_by(*addresses_count) *,
+    uint16_t *addresses_count, sa_family_t, int, int, int);
 
-extern void ifnet_address_list_free_counted_by_internal(ifaddr_t * __counted_by(addresses_count) addresses,
+extern void ifnet_address_list_free_counted_by_internal(
+    ifaddr_t *__counted_by(addresses_count) addresses,
     uint16_t addresses_count);
 
-#define ifnet_address_list_free_counted_by(_addresses, _addresses_count) ({        \
-	ifnet_address_list_free_counted_by_internal(_addresses, _addresses_count); \
-	_addresses = NULL;                                                         \
-	_addresses_count = 0;                                                      \
-})
+#define ifnet_address_list_free_counted_by(_addresses, _addresses_count)       \
+  ({                                                                           \
+    ifnet_address_list_free_counted_by_internal(_addresses, _addresses_count); \
+    _addresses = NULL;                                                         \
+    _addresses_count = 0;                                                      \
+  })
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -2864,7 +2889,7 @@ extern void ifnet_address_list_free_counted_by_internal(ifaddr_t * __counted_by(
  *       @param addresses An array of ifaddr_ts.
  */
 extern void ifnet_free_address_list(ifaddr_t *__null_terminated addresses)
-__NKE_API_DEPRECATED;
+    __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_set_lladdr
@@ -2875,9 +2900,9 @@ __NKE_API_DEPRECATED;
  *               the 6 byte ethernet address for ethernet).
  *       @param lladdr_len The length, in bytes, of the link layer address.
  */
-extern errno_t ifnet_set_lladdr(ifnet_t interface, const void *__sized_by(lladdr_len) lladdr,
-    size_t lladdr_len)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_lladdr(ifnet_t interface,
+                                const void *__sized_by(lladdr_len) lladdr,
+                                size_t lladdr_len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_lladdr_copy_bytes
@@ -2888,9 +2913,9 @@ __NKE_API_DEPRECATED;
  *       @param length The length of the buffer. This value must match the
  *               length of the link-layer address.
  */
-extern errno_t ifnet_lladdr_copy_bytes(ifnet_t interface, void *__sized_by(length) lladdr,
-    size_t length)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_lladdr_copy_bytes(ifnet_t interface,
+                                       void *__sized_by(length) lladdr,
+                                       size_t length) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
@@ -2903,8 +2928,9 @@ __NKE_API_DEPRECATED;
  *       @param length The length of the buffer. This value must match the
  *               length of the link-layer address.
  */
-extern errno_t ifnet_guarded_lladdr_copy_bytes(ifnet_t interface, void *__sized_by(length) lladdr,
-    size_t length);
+extern errno_t ifnet_guarded_lladdr_copy_bytes(ifnet_t interface,
+                                               void *__sized_by(length) lladdr,
+                                               size_t length);
 
 /*!
  *       @function ifnet_lladdr
@@ -2924,16 +2950,17 @@ extern void *ifnet_lladdr(ifnet_t interface);
  *       @param bufferlen The length of the buffer at addr.
  *       @param out_len On return, the length of the broadcast address.
  */
-extern errno_t ifnet_llbroadcast_copy_bytes(ifnet_t interface, void *__sized_by(bufferlen) addr,
-    size_t bufferlen, size_t *out_len)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_llbroadcast_copy_bytes(ifnet_t interface,
+                             void *__sized_by(bufferlen) addr, size_t bufferlen,
+                             size_t *out_len) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
  *       @function ifnet_set_lladdr_and_type
  *       @discussion Sets the link-layer address as well as the type field in
- *               the sockaddr_dl. Support for setting the type was added for vlan
- *               and bond interfaces.
+ *               the sockaddr_dl. Support for setting the type was added for
+ * vlan and bond interfaces.
  *       @param interface The interface the link layer address is being
  *               changed on.
  *       @param lladdr A pointer to the raw link layer address (pointer to
@@ -2941,9 +2968,10 @@ __NKE_API_DEPRECATED;
  *       @param length The length, in bytes, of the link layer address.
  *       @param type The link-layer address type.
  */
-extern errno_t ifnet_set_lladdr_and_type(ifnet_t interface, const void *__sized_by(length) lladdr,
-    size_t length, u_char type)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_set_lladdr_and_type(ifnet_t interface,
+                                         const void *__sized_by(length) lladdr,
+                                         size_t length,
+                                         u_char type) __NKE_API_DEPRECATED;
 #endif /* KERNEL_PRIVATE */
 
 /*!
@@ -2961,8 +2989,9 @@ __NKE_API_DEPRECATED;
  *               indicate other failures.
  */
 extern errno_t ifnet_resolve_multicast(ifnet_t ifp,
-    const struct sockaddr *proto_addr, struct sockaddr *ll_addr, size_t ll_len)
-__NKE_API_DEPRECATED;
+                                       const struct sockaddr *proto_addr,
+                                       struct sockaddr *ll_addr,
+                                       size_t ll_len) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_add_multicast
@@ -2978,23 +3007,22 @@ __NKE_API_DEPRECATED;
  *       @param multicast The resulting ifmultiaddr_t multicast address.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_add_multicast(ifnet_t interface,
-    const struct sockaddr *maddr, ifmultiaddr_t *multicast)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_add_multicast(ifnet_t interface, const struct sockaddr *maddr,
+                    ifmultiaddr_t *multicast) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_remove_multicast
  *       @discussion Causes the interface to leave the multicast group. The
- *               stack keeps track of how many times ifnet_add_multicast has been
- *               called for a given multicast address. The multicast will only be
- *               removed when the number of times ifnet_remove_multicast has been
- *               called matches the number of times ifnet_add_multicast has been
- *               called.
+ *               stack keeps track of how many times ifnet_add_multicast has
+ * been called for a given multicast address. The multicast will only be removed
+ * when the number of times ifnet_remove_multicast has been called matches the
+ * number of times ifnet_add_multicast has been called.
  *
- *               The memory for the multicast address is not actually freed until
- *               the separate reference count has reached zero. Some parts of the
- *               stack may keep a pointer to the multicast even after that
- *               multicast has been removed from the interface.
+ *               The memory for the multicast address is not actually freed
+ * until the separate reference count has reached zero. Some parts of the stack
+ * may keep a pointer to the multicast even after that multicast has been
+ * removed from the interface.
  *
  *               When an interface is detached, all of the multicasts are
  *               removed. If the interface of the multicast passed in is no
@@ -3006,8 +3034,8 @@ __NKE_API_DEPRECATED;
  *       @param multicast The multicast to be removed.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_remove_multicast(ifmultiaddr_t multicast)
-__NKE_API_DEPRECATED;
+extern errno_t
+ifnet_remove_multicast(ifmultiaddr_t multicast) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_get_multicast_list
@@ -3023,8 +3051,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_get_multicast_list(ifnet_t interface,
-    ifmultiaddr_t *__null_terminated *addresses)
-__NKE_API_DEPRECATED;
+                                        ifmultiaddr_t * __null_terminated *
+                                            addresses) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_free_multicast_list
@@ -3033,8 +3061,8 @@ __NKE_API_DEPRECATED;
  *               multicast address and frees the array.
  *       @param multicasts An array of references to the multicast addresses.
  */
-extern void ifnet_free_multicast_list(ifmultiaddr_t *__null_terminated multicasts)
-__NKE_API_DEPRECATED;
+extern void ifnet_free_multicast_list(
+    ifmultiaddr_t *__null_terminated multicasts) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_find_by_name
@@ -3047,8 +3075,8 @@ __NKE_API_DEPRECATED;
  *               filled in if a matching interface is found.
  *       @result 0 on success otherwise the errno error.
  */
-extern errno_t ifnet_find_by_name(const char *ifname, ifnet_t *interface)
-__NKE_API_DEPRECATED;
+extern errno_t ifnet_find_by_name(const char *ifname,
+                                  ifnet_t *interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifnet_list_get
@@ -3065,9 +3093,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_list_get(ifnet_family_t family,
-    ifnet_t *__counted_by(*count) * interfaces,
-    uint32_t *count)
-__NKE_API_DEPRECATED;
+                              ifnet_t *__counted_by(*count) * interfaces,
+                              uint32_t *count) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /*!
@@ -3086,7 +3113,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success otherwise the errno error.
  */
 extern errno_t ifnet_list_get_all(ifnet_family_t family,
-    ifnet_t *__counted_by(*count) * interfaces, u_int32_t *count);
+                                  ifnet_t *__counted_by(*count) * interfaces,
+                                  u_int32_t *count);
 
 #endif /* KERNEL_PRIVATE */
 
@@ -3094,23 +3122,25 @@ extern errno_t ifnet_list_get_all(ifnet_family_t family,
  *       @function ifnet_list_free
  *       @discussion Free a list of interfaces returned by ifnet_list_get.
  *               Decrements the reference count on each interface and frees the
- *               array of references. If you keep a reference to an interface, be
- *               sure to increment the reference count before calling
- *               ifnet_list_free.
+ *               array of references. If you keep a reference to an interface,
+ * be sure to increment the reference count before calling ifnet_list_free.
  *       @param interfaces An array of interface references from ifnet_list_get.
  */
-extern void ifnet_list_free(ifnet_t *__null_terminated interfaces)
-__NKE_API_DEPRECATED;
+extern void
+ifnet_list_free(ifnet_t *__null_terminated interfaces) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 
-extern void ifnet_list_free_counted_by_internal(ifnet_t * __counted_by(count) interfaces, uint32_t count);
+extern void ifnet_list_free_counted_by_internal(ifnet_t *__counted_by(count)
+                                                    interfaces,
+                                                uint32_t count);
 
-#define ifnet_list_free_counted_by(_interfaces, _count) ({              \
-	ifnet_list_free_counted_by_internal(_interfaces, _count);       \
-	_interfaces = NULL;                                             \
-	_count = 0;                                                     \
-})
+#define ifnet_list_free_counted_by(_interfaces, _count)                        \
+  ({                                                                           \
+    ifnet_list_free_counted_by_internal(_interfaces, _count);                  \
+    _interfaces = NULL;                                                        \
+    _count = 0;                                                                \
+  })
 
 #endif /* KERNEL_PRIVATE */
 
@@ -3125,8 +3155,7 @@ extern void ifnet_list_free_counted_by_internal(ifnet_t * __counted_by(count) in
  *       @param ifaddr The interface address.
  *       @result 0 upon success
  */
-extern errno_t ifaddr_reference(ifaddr_t ifaddr)
-__NKE_API_DEPRECATED;
+extern errno_t ifaddr_reference(ifaddr_t ifaddr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_release
@@ -3135,8 +3164,7 @@ __NKE_API_DEPRECATED;
  *       @param ifaddr The interface address.
  *       @result 0 upon success
  */
-extern errno_t ifaddr_release(ifaddr_t ifaddr)
-__NKE_API_DEPRECATED;
+extern errno_t ifaddr_release(ifaddr_t ifaddr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_address
@@ -3147,8 +3175,7 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success
  */
 extern errno_t ifaddr_address(ifaddr_t ifaddr, struct sockaddr *out_addr,
-    u_int32_t addr_size)
-__NKE_API_DEPRECATED;
+                              u_int32_t addr_size) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_address
@@ -3156,20 +3183,19 @@ __NKE_API_DEPRECATED;
  *       @param ifaddr The interface address.
  *       @result 0 on failure, address family on success.
  */
-extern sa_family_t ifaddr_address_family(ifaddr_t ifaddr)
-__NKE_API_DEPRECATED;
+extern sa_family_t ifaddr_address_family(ifaddr_t ifaddr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_dstaddress
  *       @discussion Copies the destination address out of the ifaddr.
  *       @param ifaddr The interface address.
  *       @param out_dstaddr The sockaddr storage for the destination address.
- *       @param dstaddr_size The size of the storage for the destination address.
+ *       @param dstaddr_size The size of the storage for the destination
+ * address.
  *       @result 0 upon success
  */
 extern errno_t ifaddr_dstaddress(ifaddr_t ifaddr, struct sockaddr *out_dstaddr,
-    u_int32_t dstaddr_size)
-__NKE_API_DEPRECATED;
+                                 u_int32_t dstaddr_size) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_netmask
@@ -3180,55 +3206,51 @@ __NKE_API_DEPRECATED;
  *       @result 0 upon success
  */
 extern errno_t ifaddr_netmask(ifaddr_t ifaddr, struct sockaddr *out_netmask,
-    u_int32_t netmask_size)
-__NKE_API_DEPRECATED;
+                              u_int32_t netmask_size) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_ifnet
  *       @discussion Returns the interface the address is attached to. The
  *               reference is only valid until the ifaddr is released. If you
- *               need to hold a reference to the ifnet for longer than you hold a
- *               reference to the ifaddr, increment the reference using
- *               ifnet_reference.
+ *               need to hold a reference to the ifnet for longer than you hold
+ * a reference to the ifaddr, increment the reference using ifnet_reference.
  *       @param ifaddr The interface address.
  *       @result A reference to the interface the address is attached to.
  */
-extern ifnet_t ifaddr_ifnet(ifaddr_t ifaddr)
-__NKE_API_DEPRECATED;
+extern ifnet_t ifaddr_ifnet(ifaddr_t ifaddr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_withaddr
  *       @discussion Returns an interface address with the address specified.
- *               Increments the reference count on the ifaddr before returning to
- *               the caller. Caller is responsible for calling ifaddr_release.
+ *               Increments the reference count on the ifaddr before returning
+ * to the caller. Caller is responsible for calling ifaddr_release.
  *       @param address The address to search for.
  *       @result A reference to the interface address.
  */
-extern ifaddr_t ifaddr_withaddr(const struct sockaddr *address)
-__NKE_API_DEPRECATED;
+extern ifaddr_t
+ifaddr_withaddr(const struct sockaddr *address) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_withdstaddr
  *       @discussion Returns an interface address for the interface address
  *               that matches the destination when the netmask is applied.
- *               Increments the reference count on the ifaddr before returning to
- *               the caller. Caller is responsible for calling ifaddr_release.
+ *               Increments the reference count on the ifaddr before returning
+ * to the caller. Caller is responsible for calling ifaddr_release.
  *       @param destination The destination to search for.
  *       @result A reference to the interface address.
  */
-extern ifaddr_t ifaddr_withdstaddr(const struct sockaddr *destination)
-__NKE_API_DEPRECATED;
+extern ifaddr_t
+ifaddr_withdstaddr(const struct sockaddr *destination) __NKE_API_DEPRECATED;
 /*!
  *       @function ifaddr_withnet
  *       @discussion Returns an interface address for the interface with the
  *               network described by net. Increments the reference count on the
- *               ifaddr before returning to the caller. Caller is responsible for
- *               calling ifaddr_release.
+ *               ifaddr before returning to the caller. Caller is responsible
+ * for calling ifaddr_release.
  *       @param net The network to search for.
  *       @result A reference to the interface address.
  */
-extern ifaddr_t ifaddr_withnet(const struct sockaddr *net)
-__NKE_API_DEPRECATED;
+extern ifaddr_t ifaddr_withnet(const struct sockaddr *net) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_withroute
@@ -3241,23 +3263,22 @@ __NKE_API_DEPRECATED;
  *       @param gateway A gateway to search for.
  *       @result A reference to the interface address.
  */
-extern ifaddr_t ifaddr_withroute(int flags, const struct sockaddr *destination,
-    const struct sockaddr *gateway)
-__NKE_API_DEPRECATED;
+extern ifaddr_t
+ifaddr_withroute(int flags, const struct sockaddr *destination,
+                 const struct sockaddr *gateway) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_findbestforaddr
  *       @discussion Finds the best local address assigned to a specific
  *               interface to use when communicating with another address.
- *               Increments the reference count on the ifaddr before returning to
- *               the caller. Caller is responsible for calling ifaddr_release.
+ *               Increments the reference count on the ifaddr before returning
+ * to the caller. Caller is responsible for calling ifaddr_release.
  *       @param addr The remote address.
  *       @param interface The local interface.
  *       @result A reference to the interface address.
  */
 extern ifaddr_t ifaddr_findbestforaddr(const struct sockaddr *addr,
-    ifnet_t interface)
-__NKE_API_DEPRECATED;
+                                       ifnet_t interface) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifaddr_get_ia6_flags
@@ -3277,10 +3298,10 @@ extern errno_t ifaddr_get_ia6_flags(ifaddr_t ifaddr, u_int32_t *out_flags);
  *       @discussion Increment the reference count of an interface multicast
  *               address.
  *       @param ifmaddr The interface multicast address.
- *       @result 0 on success. Only error will be EINVAL if ifmaddr is not valid.
+ *       @result 0 on success. Only error will be EINVAL if ifmaddr is not
+ * valid.
  */
-extern errno_t ifmaddr_reference(ifmultiaddr_t ifmaddr)
-__NKE_API_DEPRECATED;
+extern errno_t ifmaddr_reference(ifmultiaddr_t ifmaddr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifmaddr_release
@@ -3289,10 +3310,10 @@ __NKE_API_DEPRECATED;
  *               will be removed from the interface and the ifmultiaddr will be
  *               freed.
  *       @param ifmaddr The interface multicast address.
- *       @result 0 on success. Only error will be EINVAL if ifmaddr is not valid.
+ *       @result 0 on success. Only error will be EINVAL if ifmaddr is not
+ * valid.
  */
-extern errno_t ifmaddr_release(ifmultiaddr_t ifmaddr)
-__NKE_API_DEPRECATED;
+extern errno_t ifmaddr_release(ifmultiaddr_t ifmaddr) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifmaddr_address
@@ -3302,8 +3323,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success.
  */
 extern errno_t ifmaddr_address(ifmultiaddr_t ifmaddr,
-    struct sockaddr *out_multicast, u_int32_t addr_size)
-__NKE_API_DEPRECATED;
+                               struct sockaddr *out_multicast,
+                               u_int32_t addr_size) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifmaddr_lladdress
@@ -3314,8 +3335,8 @@ __NKE_API_DEPRECATED;
  *       @result 0 on success.
  */
 extern errno_t ifmaddr_lladdress(ifmultiaddr_t ifmaddr,
-    struct sockaddr *out_link_layer_multicast, u_int32_t addr_size)
-__NKE_API_DEPRECATED;
+                                 struct sockaddr *out_link_layer_multicast,
+                                 u_int32_t addr_size) __NKE_API_DEPRECATED;
 
 /*!
  *       @function ifmaddr_ifnet
@@ -3328,8 +3349,7 @@ __NKE_API_DEPRECATED;
  *       @param ifmaddr The interface multicast address.
  *       @result A reference to the interface.
  */
-extern ifnet_t ifmaddr_ifnet(ifmultiaddr_t ifmaddr)
-__NKE_API_DEPRECATED;
+extern ifnet_t ifmaddr_ifnet(ifmultiaddr_t ifmaddr) __NKE_API_DEPRECATED;
 
 #ifdef KERNEL_PRIVATE
 /******************************************************************************/
@@ -3344,12 +3364,13 @@ __NKE_API_DEPRECATED;
  *       @param params Additional information specific to the interface cloner.
  *       @result Return zero on success or an errno error value on failure.
  */
-typedef errno_t (*ifnet_clone_create_func)(if_clone_t ifcloner, u_int32_t unit, void *params);
+typedef errno_t (*ifnet_clone_create_func)(if_clone_t ifcloner, u_int32_t unit,
+                                           void *params);
 
 /*
  *       @typedef ifnet_clone_destroy_func
- *       @discussion ifnet_clone_create_func is called to destroy an interface created
- *               by an interface cloner.
+ *       @discussion ifnet_clone_create_func is called to destroy an interface
+ * created by an interface cloner.
  *       @param interface The interface to destroy.
  *       @result Return zero on success or an errno error value on failure.
  */
@@ -3363,27 +3384,30 @@ typedef errno_t (*ifnet_clone_destroy_func)(ifnet_t interface);
  *       @field ifc_destroy The function to destroy an interface.
  */
 struct ifnet_clone_params {
-	const char                      *ifc_name;
-	ifnet_clone_create_func         ifc_create;
-	ifnet_clone_destroy_func        ifc_destroy;
+  const char *ifc_name;
+  ifnet_clone_create_func ifc_create;
+  ifnet_clone_destroy_func ifc_destroy;
 };
 
 /*
  *       @function ifnet_clone_attach
  *       @discussion Attaches a new interface cloner.
  *       @param cloner_params The structure that defines an interface cloner.
- *       @param interface A pointer to an opaque handle that represent the interface cloner
- *               that is attached upon success.
+ *       @param interface A pointer to an opaque handle that represent the
+ * interface cloner that is attached upon success.
  *       @result Returns 0 on success.
  *               May return ENOBUFS if there is insufficient memory.
- *               May return EEXIST if an interface cloner with the same name is already attached.
+ *               May return EEXIST if an interface cloner with the same name is
+ * already attached.
  */
-extern errno_t ifnet_clone_attach(struct ifnet_clone_params *cloner_params, if_clone_t *ifcloner);
+extern errno_t ifnet_clone_attach(struct ifnet_clone_params *cloner_params,
+                                  if_clone_t *ifcloner);
 
 /*
  *       @function ifnet_clone_detach
  *       @discussion Detaches a previously attached interface cloner.
- *       @param ifcloner The opaque handle returned when the interface cloner was attached.
+ *       @param ifcloner The opaque handle returned when the interface cloner
+ * was attached.
  *       @result Returns 0 on success.
  */
 extern errno_t ifnet_clone_detach(if_clone_t ifcloner);
@@ -3408,16 +3432,18 @@ extern errno_t ifnet_clone_detach(if_clone_t ifcloner);
  *       @param bitfield A pointer to 8192 bytes.
  *       @result Returns 0 on success.
  */
-extern errno_t ifnet_get_local_ports(ifnet_t ifp, u_int8_t bitfield[IP_PORTRANGE_BITFIELD_LEN]);
+extern errno_t
+ifnet_get_local_ports(ifnet_t ifp,
+                      u_int8_t bitfield[IP_PORTRANGE_BITFIELD_LEN]);
 
-#define IFNET_GET_LOCAL_PORTS_WILDCARDOK        0x01
-#define IFNET_GET_LOCAL_PORTS_NOWAKEUPOK        0x02
-#define IFNET_GET_LOCAL_PORTS_TCPONLY           0x04
-#define IFNET_GET_LOCAL_PORTS_UDPONLY           0x08
-#define IFNET_GET_LOCAL_PORTS_RECVANYIFONLY     0x10
-#define IFNET_GET_LOCAL_PORTS_EXTBGIDLEONLY     0x20
-#define IFNET_GET_LOCAL_PORTS_ACTIVEONLY        0x40
-#define IFNET_GET_LOCAL_PORTS_ANYTCPSTATEOK     0x80
+#define IFNET_GET_LOCAL_PORTS_WILDCARDOK 0x01
+#define IFNET_GET_LOCAL_PORTS_NOWAKEUPOK 0x02
+#define IFNET_GET_LOCAL_PORTS_TCPONLY 0x04
+#define IFNET_GET_LOCAL_PORTS_UDPONLY 0x08
+#define IFNET_GET_LOCAL_PORTS_RECVANYIFONLY 0x10
+#define IFNET_GET_LOCAL_PORTS_EXTBGIDLEONLY 0x20
+#define IFNET_GET_LOCAL_PORTS_ACTIVEONLY 0x40
+#define IFNET_GET_LOCAL_PORTS_ANYTCPSTATEOK 0x80
 
 /*
  *       @function ifnet_get_local_ports_extended
@@ -3462,14 +3488,16 @@ extern errno_t ifnet_get_local_ports(ifnet_t ifp, u_int8_t bitfield[IP_PORTRANGE
  *       @param bitfield A pointer to 8192 bytes.
  *       @result Returns 0 on success.
  */
-extern errno_t ifnet_get_local_ports_extended(ifnet_t ifp,
-    protocol_family_t protocol, u_int32_t flags, u_int8_t bitfield[IP_PORTRANGE_BITFIELD_LEN]);
+extern errno_t
+ifnet_get_local_ports_extended(ifnet_t ifp, protocol_family_t protocol,
+                               u_int32_t flags,
+                               u_int8_t bitfield[IP_PORTRANGE_BITFIELD_LEN]);
 
 /******************************************************************************/
 /* for reporting issues							      */
 /******************************************************************************/
 
-#define IFNET_MODIDLEN  20
+#define IFNET_MODIDLEN 20
 #define IFNET_MODARGLEN 12
 
 /*
@@ -3488,7 +3516,7 @@ extern errno_t ifnet_get_local_ports_extended(ifnet_t ifp,
  *       @result Returns 0 on success, or EINVAL if arguments are invalid.
  */
 extern errno_t ifnet_report_issues(ifnet_t ifp, u_int8_t modid[IFNET_MODIDLEN],
-    u_int8_t info[IFNET_MODARGLEN]);
+                                   u_int8_t info[IFNET_MODARGLEN]);
 
 /******************************************************************************/
 /* for interfaces that support link level transmit completion status          */
@@ -3504,13 +3532,13 @@ extern errno_t ifnet_report_issues(ifnet_t ifp, u_int8_t modid[IFNET_MODIDLEN],
  *       @constant IFNET_TX_QUEUE_FULL	  link level secondary queue full
  */
 enum {
-	IFNET_TX_COMPL_SUCCESS          = 0,    /* sent on link */
-	IFNET_TX_COMPL_FAIL             = 1,    /* failed to send on link */
-	IFNET_TX_COMPL_ABORTED          = 2,    /* aborted send, peer asleep */
-	IFNET_TX_COMPL_QFULL            = 3     /* driver level queue full */
+  IFNET_TX_COMPL_SUCCESS = 0, /* sent on link */
+  IFNET_TX_COMPL_FAIL = 1,    /* failed to send on link */
+  IFNET_TX_COMPL_ABORTED = 2, /* aborted send, peer asleep */
+  IFNET_TX_COMPL_QFULL = 3    /* driver level queue full */
 };
 
-typedef u_int32_t       tx_compl_val_t;
+typedef u_int32_t tx_compl_val_t;
 
 /*
  *       @function ifnet_tx_compl_status
@@ -3552,19 +3580,20 @@ extern errno_t ifnet_tx_compl(ifnet_t ifp, mbuf_t m);
  *               information data used by the mDNS responder subsystem.
  *       @result Returns 0 on success, or EINVAL if arguments are invalid.
  */
-extern errno_t
-ifnet_notice_node_presence(ifnet_t ifp, struct sockaddr *sa, int32_t rssi,
-    int lqm, int npm, u_int8_t srvinfo[48]);
+extern errno_t ifnet_notice_node_presence(ifnet_t ifp, struct sockaddr *sa,
+                                          int32_t rssi, int lqm, int npm,
+                                          u_int8_t srvinfo[48]);
 
 /*
  *       @function ifnet_notice_node_absence
  *       @discussion Provided for network interface drivers to notify the
- *               system that the absence of the specified node has been detected.
+ *               system that the absence of the specified node has been
+ * detected.
  *       @param ifp The interface attached to the link where the absence of the
  *               specified node has been detected.
- *       @param sa The AF_INET6 or AF_LINK family address of the node whose absence has been
- *               detected. If AF_LINK is specified, AF_INET6 address is derived from the
- *               AF_LINK address.
+ *       @param sa The AF_INET6 or AF_LINK family address of the node whose
+ * absence has been detected. If AF_LINK is specified, AF_INET6 address is
+ * derived from the AF_LINK address.
  *       @result Returns 0 on success, or EINVAL if arguments are invalid.
  */
 extern errno_t ifnet_notice_node_absence(ifnet_t ifp, struct sockaddr *sa);
@@ -3588,9 +3617,10 @@ extern errno_t ifnet_notice_node_absence(ifnet_t ifp, struct sockaddr *sa);
  *               information data used by the mDNS responder subsystem.
  *       @result Returns 0 on success, or EINVAL if arguments are invalid.
  */
-extern errno_t
-ifnet_notice_node_presence_v2(ifnet_t ifp, struct sockaddr *sa, struct sockaddr_dl *sdl, int32_t rssi,
-    int lqm, int npm, u_int8_t srvinfo[48]);
+extern errno_t ifnet_notice_node_presence_v2(ifnet_t ifp, struct sockaddr *sa,
+                                             struct sockaddr_dl *sdl,
+                                             int32_t rssi, int lqm, int npm,
+                                             u_int8_t srvinfo[48]);
 
 /*
  *       @function ifnet_notice_primary_elected
@@ -3618,8 +3648,8 @@ extern errno_t ifnet_notice_master_elected(ifnet_t ifp);
  *       @discussion Indicate that an interface is delegating another interface
  *               for accounting/restriction purposes.  This could be used by a
  *               virtual interface that is going over another interface, where
- *               the virtual interface is to be treated as if it's the underlying
- *               interface for certain operations/checks.
+ *               the virtual interface is to be treated as if it's the
+ * underlying interface for certain operations/checks.
  *       @param ifp The delegating interface.
  *       @param delegated_ifp The delegated interface.  If NULL or equal to
  *               the delegating interface itself, any previously-established
@@ -3631,8 +3661,7 @@ extern errno_t ifnet_notice_master_elected(ifnet_t ifp);
  *       @param Returns 0 on success, EINVAL if arguments are invalid, or
  *               ENXIO if the delegating interface isn't currently attached.
  */
-extern errno_t
-ifnet_set_delegate(ifnet_t ifp, ifnet_t delegated_ifp);
+extern errno_t ifnet_set_delegate(ifnet_t ifp, ifnet_t delegated_ifp);
 
 /*
  *       @function ifnet_get_delegate
@@ -3647,8 +3676,7 @@ ifnet_set_delegate(ifnet_t ifp, ifnet_t delegated_ifp);
  *       @param Returns 0 on success, EINVAL if arguments are invalid, or
  *               ENXIO if the delegating interface isn't currently attached.
  */
-extern errno_t
-ifnet_get_delegate(ifnet_t ifp, ifnet_t *pdelegated_ifp);
+extern errno_t ifnet_get_delegate(ifnet_t ifp, ifnet_t *pdelegated_ifp);
 
 /*************************************************************************/
 /* for interface keep alive offload support                              */
@@ -3678,47 +3706,60 @@ ifnet_get_delegate(ifnet_t ifp, ifnet_t *pdelegated_ifp);
  *       @field interval Keep alive interval between probes in seconds
  *       @field ether_type Tell if it's the protocol is IPv4 or IPv6
  *       @field keep_cnt Maximum number of time to retry probes (TCP only)
- *       @field keep_retry Interval before retrying if previous probe was not answered (TCP only)
- *       @field reply_length The length of the frame in the reply_data field (TCP only)
- *       @field addr_length Length in bytes of local_addr and remote_addr (TCP only)
+ *       @field keep_retry Interval before retrying if previous probe was not
+ * answered (TCP only)
+ *       @field reply_length The length of the frame in the reply_data field
+ * (TCP only)
+ *       @field addr_length Length in bytes of local_addr and remote_addr (TCP
+ * only)
  *       @field flags Flags (TCP only)
- *       @field reply_data Keep alive reply to be sent to incoming probe (TCP only)
- *       @field local_addr Local address: 4 bytes IPv4 or 16 bytes IPv6 address (TCP only)
- *       @field remote_addr Remote address: 4 bytes IPv4 or 16 bytes IPv6 address (TCP only)
+ *       @field reply_data Keep alive reply to be sent to incoming probe (TCP
+ * only)
+ *       @field local_addr Local address: 4 bytes IPv4 or 16 bytes IPv6 address
+ * (TCP only)
+ *       @field remote_addr Remote address: 4 bytes IPv4 or 16 bytes IPv6
+ * address (TCP only)
  *       @field local_port Local port (TCP only)
  *       @field remote_port Remote port (TCP only)
- *       @field local_seq Local sequence number for matching incoming replies (TCP only)
- *       @field remote_seq Remote sequence number for matching incoming probes or replies (TCP only)
+ *       @field local_seq Local sequence number for matching incoming replies
+ * (TCP only)
+ *       @field remote_seq Remote sequence number for matching incoming probes
+ * or replies (TCP only)
  */
 
 #define IFNET_KEEPALIVE_OFFLOAD_FRAME_DATA_SIZE 128
 #define IFNET_KEEPALIVE_OFFLOAD_MAX_ADDR_SIZE 16
 
 struct ifnet_keepalive_offload_frame {
-	u_int8_t data[IFNET_KEEPALIVE_OFFLOAD_FRAME_DATA_SIZE]; /* data bytes */
+  u_int8_t data[IFNET_KEEPALIVE_OFFLOAD_FRAME_DATA_SIZE]; /* data bytes */
 #define IFNET_KEEPALIVE_OFFLOAD_FRAME_IPSEC 0x0
 #define IFNET_KEEPALIVE_OFFLOAD_FRAME_AIRPLAY 0x1
 #define IFNET_KEEPALIVE_OFFLOAD_FRAME_TCP 0x2
-	u_int8_t type;  /* type of application */
-	u_int8_t length; /* Number of valid data bytes including offset */
-	u_int16_t interval; /* Keep alive interval in seconds */
-#define IFNET_KEEPALIVE_OFFLOAD_FRAME_ETHERTYPE_IPV4    0x0
-#define IFNET_KEEPALIVE_OFFLOAD_FRAME_ETHERTYPE_IPV6    0x1
-	u_int8_t ether_type; /* Ether type IPv4 or IPv6 */
-	u_int8_t keep_cnt; /* max number of time to retry probes */
-	u_int16_t keep_retry; /* interval before retrying if previous probe was not answered */
-	u_int8_t reply_length; /* Length of valid reply_data bytes including offset */
-	u_int8_t addr_length; /* Length of valid bytes in local_addr and remote_addr */
-#define  IFNET_KEEPALIVE_OFFLOAD_FLAG_NOWAKEFROMSLEEP   0x01
-	u_int8_t flags;
-	u_int8_t reserved[1];
-	u_int8_t reply_data[IFNET_KEEPALIVE_OFFLOAD_FRAME_DATA_SIZE]; /* Response packet */
-	u_int8_t local_addr[IFNET_KEEPALIVE_OFFLOAD_MAX_ADDR_SIZE]; /* in network byte order  */
-	u_int8_t remote_addr[IFNET_KEEPALIVE_OFFLOAD_MAX_ADDR_SIZE]; /* in network byte order  */
-	u_int16_t local_port; /* in host byte order */
-	u_int16_t remote_port; /* in host byte order */
-	u_int32_t local_seq; /* in host byte order */
-	u_int32_t remote_seq; /* in host byte order */
+  u_int8_t type;      /* type of application */
+  u_int8_t length;    /* Number of valid data bytes including offset */
+  u_int16_t interval; /* Keep alive interval in seconds */
+#define IFNET_KEEPALIVE_OFFLOAD_FRAME_ETHERTYPE_IPV4 0x0
+#define IFNET_KEEPALIVE_OFFLOAD_FRAME_ETHERTYPE_IPV6 0x1
+  u_int8_t ether_type;   /* Ether type IPv4 or IPv6 */
+  u_int8_t keep_cnt;     /* max number of time to retry probes */
+  u_int16_t keep_retry;  /* interval before retrying if previous probe was not
+                            answered */
+  u_int8_t reply_length; /* Length of valid reply_data bytes including offset */
+  u_int8_t
+      addr_length; /* Length of valid bytes in local_addr and remote_addr */
+#define IFNET_KEEPALIVE_OFFLOAD_FLAG_NOWAKEFROMSLEEP 0x01
+  u_int8_t flags;
+  u_int8_t reserved[1];
+  u_int8_t
+      reply_data[IFNET_KEEPALIVE_OFFLOAD_FRAME_DATA_SIZE]; /* Response packet */
+  u_int8_t local_addr[IFNET_KEEPALIVE_OFFLOAD_MAX_ADDR_SIZE]; /* in network byte
+                                                                 order  */
+  u_int8_t remote_addr[IFNET_KEEPALIVE_OFFLOAD_MAX_ADDR_SIZE]; /* in network
+                                                                  byte order  */
+  u_int16_t local_port;  /* in host byte order */
+  u_int16_t remote_port; /* in host byte order */
+  u_int32_t local_seq;   /* in host byte order */
+  u_int32_t remote_seq;  /* in host byte order */
 };
 
 /*
@@ -3728,9 +3769,9 @@ struct ifnet_keepalive_offload_frame {
  *               This can be used to offload keep alives for UDP or TCP.
  *               Note: The frames are returned in this order: first the IPsec
  *               frames, then the AirPlay frames and finally the TCP frames.
- *               If a device does not support one kind of keep alive frames_array
- *               it should provide a frames_array large enough to accomodate
- *               the other frames
+ *               If a device does not support one kind of keep alive
+ * frames_array it should provide a frames_array large enough to accomodate the
+ * other frames
  *       @param ifp The interface to send frames out on. This is used to
  *               select which sockets or IPsec SAs should generate the
  *               packets.
@@ -3745,20 +3786,21 @@ struct ifnet_keepalive_offload_frame {
  *               filled out with valid information.
  *       @result Returns 0 on success, error number otherwise.
  */
-extern errno_t ifnet_get_keepalive_offload_frames(ifnet_t ifp,
-    struct ifnet_keepalive_offload_frame *__counted_by(frames_array_count) frames_array,
+extern errno_t ifnet_get_keepalive_offload_frames(
+    ifnet_t ifp,
+    struct ifnet_keepalive_offload_frame *__counted_by(frames_array_count)
+        frames_array,
     u_int32_t frames_array_count, size_t frame_data_offset,
     u_int32_t *used_frames_count);
-
 
 /*
  *       @function ifnet_notify_tcp_keepalive_offload_timeout
  *       @discussion Used by an interface to notify a TCP connection whose
  *               keep alive was offloaded did experience a timeout.
  *       @param ifp The interface for which the TCP keep alive offload timed out
- *       @param frame The ifnet_keepalive_offload_frame structure that identifies
- *               the TCP connection that experienced the timeout.
- *               All the fields must be zeroed by the caller except for:
+ *       @param frame The ifnet_keepalive_offload_frame structure that
+ * identifies the TCP connection that experienced the timeout. All the fields
+ * must be zeroed by the caller except for:
  *               - type: must be IFNET_KEEPALIVE_OFFLOAD_FRAME_TCP
  *               and for the fields identifying the 5-tup;e of the
  *               TCP connection:
@@ -3769,8 +3811,8 @@ extern errno_t ifnet_get_keepalive_offload_frames(ifnet_t ifp,
  *               - remote_port
  *       @result Returns 0 on success, error number otherwise.
  */
-extern errno_t ifnet_notify_tcp_keepalive_offload_timeout(ifnet_t ifp,
-    struct ifnet_keepalive_offload_frame *frame);
+extern errno_t ifnet_notify_tcp_keepalive_offload_timeout(
+    ifnet_t ifp, struct ifnet_keepalive_offload_frame *frame);
 
 /*************************************************************************/
 /* Link level notifications                                              */
@@ -3789,8 +3831,10 @@ extern errno_t ifnet_notify_tcp_keepalive_offload_timeout(ifnet_t ifp,
  *       @param buffer_len Valid length of the buffer provided by the caller
  *       @result Returns 0 on success, error number otherwise.
  */
-extern errno_t ifnet_link_status_report(ifnet_t ifp, const void *__sized_by(buffer_len) buffer,
-    size_t buffer_len);
+extern errno_t ifnet_link_status_report(ifnet_t ifp,
+                                        const void *__sized_by(buffer_len)
+                                            buffer,
+                                        size_t buffer_len);
 
 /*************************************************************************/
 /* QoS Fastlane                                                          */
@@ -3811,7 +3855,8 @@ extern errno_t ifnet_set_fastlane_capable(ifnet_t interface, boolean_t capable);
  *               is attached ta network that is capable of Fastlane QoS marking.
  *       @result Returns 0 on success, error number otherwise.
  */
-extern errno_t ifnet_get_fastlane_capable(ifnet_t interface, boolean_t *capable);
+extern errno_t ifnet_get_fastlane_capable(ifnet_t interface,
+                                          boolean_t *capable);
 
 /*!
  *       @function ifnet_get_unsent_bytes
@@ -3823,8 +3868,8 @@ extern errno_t ifnet_get_fastlane_capable(ifnet_t interface, boolean_t *capable)
 extern errno_t ifnet_get_unsent_bytes(ifnet_t interface, int64_t *unsent_bytes);
 
 typedef struct {
-	int32_t buf_interface; /* data to send at interface */
-	int32_t buf_sndbuf; /* data to send at socket buffer */
+  int32_t buf_interface; /* data to send at interface */
+  int32_t buf_sndbuf;    /* data to send at socket buffer */
 } ifnet_buffer_status_t;
 
 /*!
@@ -3836,7 +3881,7 @@ typedef struct {
  *               NULL, ENXIO if the interface pointer is invalid
  */
 extern errno_t ifnet_get_buffer_status(const ifnet_t interface,
-    ifnet_buffer_status_t *buf_status);
+                                       ifnet_buffer_status_t *buf_status);
 
 /*!
  *       @function ifnet_normalise_unsent_data
@@ -3880,15 +3925,17 @@ extern errno_t ifnet_touch_lastupdown(ifnet_t interface);
  *  @function ifnet_updown_delta
  *  @discussion Retrieves the difference between lastupdown and now.
  *  @param interface The interface.
- *  @param updown_delta A timeval struct to copy the delta between lastupdown and now.
- *  to.
+ *  @param updown_delta A timeval struct to copy the delta between lastupdown
+ * and now. to.
  */
-extern errno_t ifnet_updown_delta(ifnet_t interface, struct timeval *updown_delta);
+extern errno_t ifnet_updown_delta(ifnet_t interface,
+                                  struct timeval *updown_delta);
 
 /*!
  *       @function ifnet_set_management
  *       @param interface The interface.
- *       @param on Set the truth value that the interface is management restricted.
+ *       @param on Set the truth value that the interface is management
+ * restricted.
  *       @result Returns 0 on success, error number otherwise.
  */
 extern errno_t ifnet_set_management(ifnet_t interface, boolean_t on);
@@ -3913,7 +3960,8 @@ extern errno_t ifnet_get_congested_link(ifnet_t interface, boolean_t *on);
 /*!
  *       @function ifnet_set_rx_flow_steering
  *       @param interface The interface.
- *       @param on Set the truth value that the interface supports Rx flow steering.
+ *       @param on Set the truth value that the interface supports Rx flow
+ * steering.
  *       @result Returns 0 on success, error number otherwise.
  */
 extern errno_t ifnet_set_rx_flow_steering(ifnet_t interface, boolean_t on);
@@ -3930,20 +3978,22 @@ extern errno_t ifnet_get_rx_flow_steering(ifnet_t interface, boolean_t *on);
 /*!
  *       @function ifnet_set_inband_wake_packet_tagging
  *       @param interface The interface.
- *       @param on Set the truth value that the interface supports inband tagging of
- *              the wake packet flag.
+ *       @param on Set the truth value that the interface supports inband
+ * tagging of the wake packet flag.
  *       @result Returns 0 on success, error number otherwise.
  */
-extern errno_t ifnet_set_inband_wake_packet_tagging(ifnet_t interface, boolean_t on);
+extern errno_t ifnet_set_inband_wake_packet_tagging(ifnet_t interface,
+                                                    boolean_t on);
 
 /*!
  *       @function ifnet_get_inband_wake_packet_tagging
  *       @param interface The interface.
- *       @param on On output contains the truth value whether the interface supports
- *              inband tagging of the wake packet flag.
+ *       @param on On output contains the truth value whether the interface
+ * supports inband tagging of the wake packet flag.
  *       @result Returns 0 on success, error number otherwise.
  */
-extern errno_t ifnet_get_inband_wake_packet_tagging(ifnet_t interface, boolean_t *on);
+extern errno_t ifnet_get_inband_wake_packet_tagging(ifnet_t interface,
+                                                    boolean_t *on);
 
 /*!
  *       @function ifnet_set_low_power_wake
@@ -3958,7 +4008,8 @@ extern errno_t ifnet_set_low_power_wake(ifnet_t interface, boolean_t on);
 /*!
  *       @function ifnet_get_low_power_wake
  *       @param interface The interface.
- *       @param on On output contains the truth value whether the interface supports LPW.
+ *       @param on On output contains the truth value whether the interface
+ * supports LPW.
  *       @result Returns 0 on success, error number otherwise.
  */
 extern errno_t ifnet_get_low_power_wake(ifnet_t interface, boolean_t *on);

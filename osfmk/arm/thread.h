@@ -59,9 +59,9 @@
 #ifndef _ARM_THREAD_H_
 #define _ARM_THREAD_H_
 
-#include <mach/mach_types.h>
-#include <mach/boolean.h>
 #include <mach/arm/vm_types.h>
+#include <mach/boolean.h>
+#include <mach/mach_types.h>
 #include <mach/thread_status.h>
 
 #ifdef MACH_KERNEL_PRIVATE
@@ -74,7 +74,7 @@
 #endif /* MACH_KERNEL_PRIVATE */
 
 struct perfcontrol_state {
-	uint64_t opaque[8] __attribute__((aligned(8)));
+  uint64_t opaque[8] __attribute__((aligned(8)));
 };
 
 /*
@@ -91,9 +91,8 @@ typedef arm_kernel_context_t machine_thread_kernel_state;
 #endif
 
 #if HAS_ARM_FEAT_SME
-#define HAVE_MACHINE_THREAD_MATRIX_STATE        1
+#define HAVE_MACHINE_THREAD_MATRIX_STATE 1
 #endif
-
 
 #if HAVE_MACHINE_THREAD_MATRIX_STATE
 #define UMATRIX_PTRAUTH XNU_PTRAUTH_SIGNED_PTR("machine_thread.umatrix_hdr")
@@ -104,104 +103,110 @@ typedef arm_kernel_context_t machine_thread_kernel_state;
  */
 struct machine_thread {
 #if __ARM_USER_PROTECT__
-	unsigned int              uptw_ttb;
-	unsigned int              kptw_ttb;
-	unsigned int              asid;
+  unsigned int uptw_ttb;
+  unsigned int kptw_ttb;
+  unsigned int asid;
 #else
-	unsigned int              reserved0;
-	unsigned int              reserved1;
-	unsigned int              reserved2;
+  unsigned int reserved0;
+  unsigned int reserved1;
+  unsigned int reserved2;
 #endif
 
-	uint32_t                  arm_machine_flags;       /* thread flags (arm64/machine_machdep.h) */
-	arm_context_t *           contextData;             /* allocated user context */
-	arm_saved_state_t *       XNU_PTRAUTH_SIGNED_PTR("machine_thread.upcb") upcb;   /* pointer to user GPR state */
-	arm_neon_saved_state_t *  XNU_PTRAUTH_SIGNED_PTR("machine_thread.uNeon") uNeon; /* pointer to user VFP state */
-	arm_saved_state_t *       kpcb;                    /* pointer to kernel GPR state */
+  uint32_t arm_machine_flags; /* thread flags (arm64/machine_machdep.h) */
+  arm_context_t *contextData; /* allocated user context */
+  arm_saved_state_t *XNU_PTRAUTH_SIGNED_PTR(
+      "machine_thread.upcb") upcb; /* pointer to user GPR state */
+  arm_neon_saved_state_t *XNU_PTRAUTH_SIGNED_PTR(
+      "machine_thread.uNeon") uNeon; /* pointer to user VFP state */
+  arm_saved_state_t *kpcb;           /* pointer to kernel GPR state */
 
 #if HAVE_MACHINE_THREAD_MATRIX_STATE
-	union {
-		arm_state_hdr_t *UMATRIX_PTRAUTH umatrix_hdr;
+  union {
+    arm_state_hdr_t *UMATRIX_PTRAUTH umatrix_hdr;
 #if HAS_ARM_FEAT_SME
-		arm_sme_saved_state_t *UMATRIX_PTRAUTH usme; /* pointer to user SME state */
+    arm_sme_saved_state_t *UMATRIX_PTRAUTH usme; /* pointer to user SME state */
 #endif
-	};
+  };
 #endif /* HAVE_MACHINE_THREAD_MATRIX_STATE */
 
-	long                      reserved4;
-	uint64_t                  recover_far;
+  long reserved4;
+  uint64_t recover_far;
 
-	arm_debug_state_t        *DebugData;
-	vm_address_t              cthread_self;               /* for use of cthread package */
+  arm_debug_state_t *DebugData;
+  vm_address_t cthread_self; /* for use of cthread package */
 
-	uint64_t                  recover_esr;
+  uint64_t recover_esr;
 
-	void *                    XNU_PTRAUTH_SIGNED_PTR("machine_thread.kstackptr") kstackptr; /* top of kernel stack */
-	struct perfcontrol_state  perfctrl_state;
-	uint64_t                  reserved5;
+  void *XNU_PTRAUTH_SIGNED_PTR(
+      "machine_thread.kstackptr") kstackptr; /* top of kernel stack */
+  struct perfcontrol_state perfctrl_state;
+  uint64_t reserved5;
 
 #if SCHED_HYGIENE_DEBUG
-	kern_timeout_t            int_timeout;                /* for interrupt disabled timeout mechanism */
-	unsigned int              int_type;                   /* interrupt type of the interrupt that was processed */
-	uintptr_t                 int_handler_addr;           /* slid, ptrauth-stripped virtual address of the interrupt handler */
-	uintptr_t                 int_vector;                 /* IOInterruptVector */
-	uint64_t                  int_time_mt;                /* total time spent in interrupt context */
-#endif /* SCHED_HYGIENE_DEBUG */
+  kern_timeout_t int_timeout; /* for interrupt disabled timeout mechanism */
+  unsigned int
+      int_type; /* interrupt type of the interrupt that was processed */
+  uintptr_t int_handler_addr; /* slid, ptrauth-stripped virtual address of the
+                                 interrupt handler */
+  uintptr_t int_vector;       /* IOInterruptVector */
+  uint64_t int_time_mt;       /* total time spent in interrupt context */
+#endif                        /* SCHED_HYGIENE_DEBUG */
 
 #if defined(CONFIG_XNUPOST)
-	volatile expected_fault_handler_t  expected_fault_handler;
-	volatile uintptr_t                 expected_fault_addr;  /* Address due to which an exception is expected to be thrown (FAR_ELx) */
-	volatile uintptr_t                 expected_fault_pc;    /* PC at which an exception is expected to be thrown (ELR_ELx) */
+  volatile expected_fault_handler_t expected_fault_handler;
+  volatile uintptr_t
+      expected_fault_addr; /* Address due to which an exception is expected to
+                              be thrown (FAR_ELx) */
+  volatile uintptr_t expected_fault_pc; /* PC at which an exception is expected
+                                           to be thrown (ELR_ELx) */
 #endif
 
-	uint64_t                  reserved6;
-	union {
-		long              pcpu_data_base_and_cpu_number;
-		const uint16_t    cpu_number;
-	};
-	struct cpu_data *         CpuDatap;               /* current per cpu data */
-	unsigned int              preemption_count;       /* preemption count */
-	uint16_t                  exception_trace_code;
-	bool                      reserved7;
-	bool                      reserved8;
-	bool                      reserved9;
+  uint64_t reserved6;
+  union {
+    long pcpu_data_base_and_cpu_number;
+    const uint16_t cpu_number;
+  };
+  struct cpu_data *CpuDatap;     /* current per cpu data */
+  unsigned int preemption_count; /* preemption count */
+  uint16_t exception_trace_code;
+  bool reserved7;
+  bool reserved8;
+  bool reserved9;
 #if defined(HAS_APPLE_PAC)
-	uint64_t                  rop_pid;
-	uint64_t                  jop_pid;
+  uint64_t rop_pid;
+  uint64_t jop_pid;
 #else
-	uint64_t                  reserved10;
-	uint64_t                  reserved11;
+  uint64_t reserved10;
+  uint64_t reserved11;
 #endif
 
-	uint64_t                  reserved12;
+  uint64_t reserved12;
 
 #if HAS_ARM_FEAT_SME
-	uint64_t                  tpidr2_el0;
+  uint64_t tpidr2_el0;
 #else
-	uint64_t                  reserved13;
+  uint64_t reserved13;
 #endif
 
-	uint64_t                  reserved14;
+  uint64_t reserved14;
 
-	bool                      reserved15;
+  bool reserved15;
 };
 #endif
 
-static inline long
-ml_make_pcpu_base_and_cpu_number(long base, uint16_t cpu)
-{
-	return (base << 16) | cpu;
+static inline long ml_make_pcpu_base_and_cpu_number(long base, uint16_t cpu) {
+  return (base << 16) | cpu;
 }
 
-extern struct arm_saved_state *    get_user_regs(thread_t);
-extern struct arm_saved_state *    find_user_regs(thread_t);
-extern struct arm_saved_state *    find_kern_regs(thread_t);
-extern struct arm_vfpsaved_state * find_user_vfp(thread_t);
-extern arm_debug_state32_t *       find_debug_state32(thread_t);
-extern arm_debug_state32_t *       find_or_allocate_debug_state32(thread_t);
-extern arm_debug_state64_t *       find_debug_state64(thread_t);
-extern arm_debug_state64_t *       find_or_allocate_debug_state64(thread_t);
-extern void                        set_user_neon_reg(thread_t, unsigned int, uint128_t);
+extern struct arm_saved_state *get_user_regs(thread_t);
+extern struct arm_saved_state *find_user_regs(thread_t);
+extern struct arm_saved_state *find_kern_regs(thread_t);
+extern struct arm_vfpsaved_state *find_user_vfp(thread_t);
+extern arm_debug_state32_t *find_debug_state32(thread_t);
+extern arm_debug_state32_t *find_or_allocate_debug_state32(thread_t);
+extern arm_debug_state64_t *find_debug_state64(thread_t);
+extern arm_debug_state64_t *find_or_allocate_debug_state64(thread_t);
+extern void set_user_neon_reg(thread_t, unsigned int, uint128_t);
 
 #define FIND_PERFCONTROL_STATE(th) (&th->machine.perfctrl_state)
 
@@ -236,7 +241,6 @@ extern void machine_thread_matrix_state_dup(thread_t target);
 #if HAS_APPLE_GENERIC_TIMER
 extern void agt_thread_bootstrap(void);
 #endif /* HAS_MACHINE_GENERIC_TIMER */
-
 
 /*
  * Return address of the function that called current function, given

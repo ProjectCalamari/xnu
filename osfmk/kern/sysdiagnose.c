@@ -25,37 +25,39 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
+#include <ipc/ipc_port.h>
 #include <mach/host_priv.h>
 #include <mach/host_special_ports.h>
 #include <mach/mach_types.h>
-#include <ipc/ipc_port.h>
 
 #include <mach/sysdiagnose_notification.h>
 
-#include <kern/misc_protos.h>
 #include <kern/host.h>
+#include <kern/misc_protos.h>
 
 #include <sys/kdebug.h>
 
 extern kern_return_t sysdiagnose_notify_user(uint32_t);
 
 /*
- * If userland has registered a port for sysdiagnose notifications, send one now.
+ * If userland has registered a port for sysdiagnose notifications, send one
+ * now.
  */
-kern_return_t
-sysdiagnose_notify_user(uint32_t keycode)
-{
-	mach_port_t user_port;
-	kern_return_t kr;
+kern_return_t sysdiagnose_notify_user(uint32_t keycode) {
+  mach_port_t user_port;
+  kern_return_t kr;
 
-	kr = host_get_sysdiagnose_port(host_priv_self(), &user_port);
-	if ((kr != KERN_SUCCESS) || !IPC_PORT_VALID(user_port)) {
-		return kr;
-	}
+  kr = host_get_sysdiagnose_port(host_priv_self(), &user_port);
+  if ((kr != KERN_SUCCESS) || !IPC_PORT_VALID(user_port)) {
+    return kr;
+  }
 
-	KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_SYSDIAGNOSE, SYSDIAGNOSE_NOTIFY_USER) | DBG_FUNC_START, 0, 0, 0, 0, 0);
+  KERNEL_DEBUG_CONSTANT(
+      MACHDBG_CODE(DBG_MACH_SYSDIAGNOSE, SYSDIAGNOSE_NOTIFY_USER) |
+          DBG_FUNC_START,
+      0, 0, 0, 0, 0);
 
-	kr = send_sysdiagnose_notification_with_audit_token(user_port, keycode);
-	ipc_port_release_send(user_port);
-	return kr;
+  kr = send_sysdiagnose_notification_with_audit_token(user_port, keycode);
+  ipc_port_release_send(user_port);
+  return kr;
 }

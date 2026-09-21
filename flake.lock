@@ -1,5 +1,59 @@
 {
   "nodes": {
+    "cctools": {
+      "inputs": {
+        "flakever": [
+          "flakever"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ],
+        "xnu": "xnu"
+      },
+      "locked": {
+        "lastModified": 1790002393,
+        "narHash": "sha256-1BTMNBbmjOTK9pK6nA/EfsLXaqeIfAaq4VTJXmyI/tc=",
+        "owner": "ProjectCalamari",
+        "repo": "cctools",
+        "rev": "6e92b40a71a2bfa141681281c89691e4c09de621",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ProjectCalamari",
+        "repo": "cctools",
+        "type": "github"
+      }
+    },
+    "dtrace": {
+      "inputs": {
+        "flakever": [
+          "flakever"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ],
+        "xnu": "xnu_2"
+      },
+      "locked": {
+        "lastModified": 1789963510,
+        "narHash": "sha256-JCGNZaWz5+AvY5z4OniiHkwikRopCuYIaHzA90vLfpI=",
+        "owner": "ProjectCalamari",
+        "repo": "dtrace",
+        "rev": "5c63559fe88b2bce3a263ff3cf1a8b21601d03dd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ProjectCalamari",
+        "repo": "dtrace",
+        "type": "github"
+      }
+    },
     "flakever": {
       "locked": {
         "lastModified": 1763450705,
@@ -12,6 +66,23 @@
       "original": {
         "owner": "numinit",
         "repo": "flakever",
+        "type": "github"
+      }
+    },
+    "llvm": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789969133,
+        "narHash": "sha256-zhBN8ul3nNhnnId3CjDp1kY///XJgXIt0OGLiUa+hxk=",
+        "owner": "ProjectCalamari",
+        "repo": "llvm-project",
+        "rev": "cbec4f8b03675cbee802ad994b182689d6673331",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ProjectCalamari",
+        "ref": "calamari/lld-macho-static-layout",
+        "repo": "llvm-project",
         "type": "github"
       }
     },
@@ -32,7 +103,10 @@
     },
     "root": {
       "inputs": {
+        "cctools": "cctools",
+        "dtrace": "dtrace",
         "flakever": "flakever",
+        "llvm": "llvm",
         "nixpkgs": "nixpkgs",
         "treefmt-nix": "treefmt-nix"
       }
@@ -54,6 +128,38 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
+        "type": "github"
+      }
+    },
+    "xnu": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1760654190,
+        "narHash": "sha256-Cuf7kPtsn4CPXqyZmxVsJlA5i+Ikryp8ezJyGrvT63c=",
+        "owner": "ProjectCalamari",
+        "repo": "xnu",
+        "rev": "f6217f891ac0bb64f3d375211650a4c1ff8ca1ea",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ProjectCalamari",
+        "repo": "xnu",
+        "type": "github"
+      }
+    },
+    "xnu_2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1760654190,
+        "narHash": "sha256-Cuf7kPtsn4CPXqyZmxVsJlA5i+Ikryp8ezJyGrvT63c=",
+        "owner": "ProjectCalamari",
+        "repo": "xnu",
+        "rev": "f6217f891ac0bb64f3d375211650a4c1ff8ca1ea",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ProjectCalamari",
+        "repo": "xnu",
         "type": "github"
       }
     }

@@ -40,11 +40,13 @@
 
 #ifndef _UUID_STRING_T
 #define _UUID_STRING_T
-typedef __darwin_uuid_string_t  uuid_string_t;
+typedef __darwin_uuid_string_t uuid_string_t;
 #endif /* _UUID_STRING_T */
 
-#define UUID_DEFINE(name, u0, u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15) \
-	static const uuid_t name __attribute__ ((unused)) = {u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,u10,u11,u12,u13,u14,u15}
+#define UUID_DEFINE(name, u0, u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11,    \
+                    u12, u13, u14, u15)                                        \
+  static const uuid_t name __attribute__((unused)) = {                         \
+      u0, u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11, u12, u13, u14, u15}
 
 UUID_DEFINE(UUID_NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 

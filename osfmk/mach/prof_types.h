@@ -85,7 +85,7 @@
 #ifndef _MACH_PROF_TYPES_H
 #define _MACH_PROF_TYPES_H
 
-#define SAMPLE_MAX      256     /* Max array size */
-typedef unsigned        sample_array_t[SAMPLE_MAX];
+#define SAMPLE_MAX 256 /* Max array size */
+typedef unsigned sample_array_t[SAMPLE_MAX];
 
-#endif  /* _MACH_PROF_TYPES_H */
+#endif /* _MACH_PROF_TYPES_H */

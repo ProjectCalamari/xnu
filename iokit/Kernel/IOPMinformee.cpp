@@ -31,46 +31,38 @@
 
 OSDefineMetaClassAndStructors(IOPMinformee, OSObject)
 
+    //*********************************************************************************
+    // static constructor
+    //
+    //*********************************************************************************
+    IOPMinformee *IOPMinformee::withObject(IOService *theObject) {
+  IOPMinformee *newInformee = new IOPMinformee;
 
-//*********************************************************************************
-// static constructor
-//
-//*********************************************************************************
-IOPMinformee *IOPMinformee::withObject( IOService * theObject )
-{
-	IOPMinformee        *newInformee = new IOPMinformee;
+  if (!newInformee) {
+    return NULL;
+  }
+  newInformee->init();
+  newInformee->initialize(theObject);
 
-	if (!newInformee) {
-		return NULL;
-	}
-	newInformee->init();
-	newInformee->initialize( theObject );
-
-	return newInformee;
+  return newInformee;
 }
-
 
 //*********************************************************************************
 // constructor
 //
 //*********************************************************************************
-void
-IOPMinformee::initialize( IOService * theObject )
-{
-	whatObject = theObject;
-	timer = 0;
-	active = true;
-	whatObject->retain();
+void IOPMinformee::initialize(IOService *theObject) {
+  whatObject = theObject;
+  timer = 0;
+  active = true;
+  whatObject->retain();
 }
-
 
 //*********************************************************************************
 // free
 //
 //*********************************************************************************
-void
-IOPMinformee::free(void )
-{
-	whatObject->release();
-	super::free();
+void IOPMinformee::free(void) {
+  whatObject->release();
+  super::free();
 }

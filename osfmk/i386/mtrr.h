@@ -40,28 +40,26 @@
 #ifdef __APPLE_API_PRIVATE
 
 enum {
-	MTRR_TYPE_UNCACHEABLE  = 0,
-	MTRR_TYPE_WRITECOMBINE = 1,
-	MTRR_TYPE_WRITETHROUGH = 4,
-	MTRR_TYPE_WRITEPROTECT = 5,
-	MTRR_TYPE_WRITEBACK    = 6
+  MTRR_TYPE_UNCACHEABLE = 0,
+  MTRR_TYPE_WRITECOMBINE = 1,
+  MTRR_TYPE_WRITETHROUGH = 4,
+  MTRR_TYPE_WRITEPROTECT = 5,
+  MTRR_TYPE_WRITEBACK = 6
 };
 
 __BEGIN_DECLS
 
-extern void          mtrr_init(void);
+extern void mtrr_init(void);
 extern kern_return_t mtrr_update_cpu(void);
 extern kern_return_t mtrr_update_all_cpus(void);
 
-extern kern_return_t mtrr_range_add(    addr64_t phys_addr,
-    uint64_t length,
-    uint32_t mem_type);
+extern kern_return_t mtrr_range_add(addr64_t phys_addr, uint64_t length,
+                                    uint32_t mem_type);
 
-extern kern_return_t mtrr_range_remove( addr64_t phys_addr,
-    uint64_t length,
-    uint32_t mem_type);
+extern kern_return_t mtrr_range_remove(addr64_t phys_addr, uint64_t length,
+                                       uint32_t mem_type);
 
-extern void          pat_init(void);
+extern void pat_init(void);
 
 __END_DECLS
 

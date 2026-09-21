@@ -5,7 +5,7 @@
 
 __BEGIN_DECLS
 
-int IOTestServiceFindService(const char * name, io_service_t * serviceOut);
+int IOTestServiceFindService(const char *name, io_service_t *serviceOut);
 
 __END_DECLS
 

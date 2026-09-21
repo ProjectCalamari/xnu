@@ -56,8 +56,8 @@
 
 #ifndef NULL
 #include <sys/_types.h> /* __DARWIN_NULL */
-#define NULL  __DARWIN_NULL
-#endif  /* NULL */
+#define NULL __DARWIN_NULL
+#endif /* NULL */
 
 #endif
 

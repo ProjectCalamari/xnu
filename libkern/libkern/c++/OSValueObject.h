@@ -37,7 +37,7 @@
 #include <libkern/c++/OSObject.h>
 #include <libkern/c++/OSPtr.h>
 #include <os/base.h>
-#include <os/cpp_util.h>   /* operator new */
+#include <os/cpp_util.h> /* operator new */
 #include <string.h>
 
 /*!
@@ -46,7 +46,6 @@
  * @abstract
  * This header declares the OSValueObject container class.
  */
-
 
 namespace os_detail {
 kalloc_type_view_t GetOSValueObjectKTV();
@@ -79,296 +78,278 @@ kalloc_type_view_t GetOSValueObjectKTV();
  * handle synchronization via defined member functions for setting
  * properties.
  */
-template <typename T>
-class OSValueObject final : public OSObject
-{
+template <typename T> class OSValueObject final : public OSObject {
 public:
+  /*!
+   * @function create
+   *
+   * @abstract
+   * Creates and initializes an empty instance of OSValueObject,
+   * where the contained object's memory has been zeroed and then
+   * default-constructed.
+   *
+   * @result
+   * An instance of OSValueObject with a reference count of 1;
+   * <code>nullptr</code> on failure.
+   */
+  static OSPtr<OSValueObject> create();
 
-/*!
- * @function create
- *
- * @abstract
- * Creates and initializes an empty instance of OSValueObject,
- * where the contained object's memory has been zeroed and then
- * default-constructed.
- *
- * @result
- * An instance of OSValueObject with a reference count of 1;
- * <code>nullptr</code> on failure.
- */
-	static OSPtr<OSValueObject> create();
+  /*!
+   * @function withBytes
+   *
+   * @abstract
+   * Creates and initializes an instance of OSValueObject
+   * with a copy of the provided value.
+   *
+   * @param value    A reference to the value to copy.
+   *
+   * @result
+   * An instance of OSValueObject containing a copy of the provided value,
+   * with a reference count of 1;
+   * <code>nullptr</code> on failure.
+   */
+  static OSPtr<OSValueObject> withValue(const T &value);
 
-/*!
- * @function withBytes
- *
- * @abstract
- * Creates and initializes an instance of OSValueObject
- * with a copy of the provided value.
- *
- * @param value    A reference to the value to copy.
- *
- * @result
- * An instance of OSValueObject containing a copy of the provided value,
- * with a reference count of 1;
- * <code>nullptr</code> on failure.
- */
-	static OSPtr<OSValueObject> withValue(const T& value);
+  /*!
+   * @function withValueObject
+   *
+   * @abstract
+   * Creates and initializes an instance of OSValueObject
+   * with contents copied from another OSValueObject object.
+   *
+   * @param inValueObject An OSValueObject object that provides the initial
+   * data.
+   *
+   * @result
+   * An instance of OSValueObject containing a copy of the data in
+   * <code>inValueObject</code>, with a reference count of 1;
+   * <code>nullptr</code> on failure.
+   */
+  static OSPtr<OSValueObject>
+  withValueObject(const OSValueObject *inValueObject);
 
-/*!
- * @function withValueObject
- *
- * @abstract
- * Creates and initializes an instance of OSValueObject
- * with contents copied from another OSValueObject object.
- *
- * @param inValueObject An OSValueObject object that provides the initial data.
- *
- * @result
- * An instance of OSValueObject containing a copy of the data in
- * <code>inValueObject</code>, with a reference count of 1;
- * <code>nullptr</code> on failure.
- */
-	static OSPtr<OSValueObject> withValueObject(const OSValueObject * inValueObject);
+  /*!
+   * @function free
+   *
+   * @abstract
+   * Deallocates or releases any resources
+   * used by the OSValueObject instance.
+   *
+   * @discussion
+   * This function should not be called directly;
+   * use
+   * <code>@link
+   * //apple_ref/cpp/instm/OSObject/release/virtualvoid/()
+   * release@/link</code>
+   * instead.
+   */
+  void free() APPLE_KEXT_OVERRIDE;
 
-/*!
- * @function free
- *
- * @abstract
- * Deallocates or releases any resources
- * used by the OSValueObject instance.
- *
- * @discussion
- * This function should not be called directly;
- * use
- * <code>@link
- * //apple_ref/cpp/instm/OSObject/release/virtualvoid/()
- * release@/link</code>
- * instead.
- */
-	void free() APPLE_KEXT_OVERRIDE;
+  /*!
+   * @function setValue
+   *
+   * @abstract
+   * Replaces the contents of the OSValueObject object's internal data buffer
+   * with a copy of the provided value.
+   *
+   * @param value    A reference to the value to copy.
+   */
+  void setValue(const T &value);
 
-/*!
- * @function setValue
- *
- * @abstract
- * Replaces the contents of the OSValueObject object's internal data buffer
- * with a copy of the provided value.
- *
- * @param value    A reference to the value to copy.
- */
-	void setValue(const T& value);
+  /*!
+   * @function getBytesNoCopy
+   *
+   * @abstract
+   * Returns a pointer to the OSValueObject object's internal data buffer.
+   *
+   * @result
+   * A pointer to the OSValueObject object's internal data buffer.
+   *
+   * @discussion
+   * You cannot modify the existing contents of an OSValueObject object
+   * via this function.
+   */
+  const T *getBytesNoCopy() const;
 
-/*!
- * @function getBytesNoCopy
- *
- * @abstract
- * Returns a pointer to the OSValueObject object's internal data buffer.
- *
- * @result
- * A pointer to the OSValueObject object's internal data buffer.
- *
- * @discussion
- * You cannot modify the existing contents of an OSValueObject object
- * via this function.
- */
-	const T * getBytesNoCopy() const;
+  /*!
+   * @function getMutableBytesNoCopy
+   *
+   * @abstract
+   * Returns a pointer to the OSValueObject object's internal data buffer.
+   *
+   * @result
+   * A pointer to the OSValueObject object's internal data buffer.
+   *
+   * @discussion
+   * You can modify the existing contents of an OSValueObject object
+   * via this function.
+   */
+  T *getMutableBytesNoCopy();
 
-/*!
- * @function getMutableBytesNoCopy
- *
- * @abstract
- * Returns a pointer to the OSValueObject object's internal data buffer.
- *
- * @result
- * A pointer to the OSValueObject object's internal data buffer.
- *
- * @discussion
- * You can modify the existing contents of an OSValueObject object
- * via this function.
- */
-	T * getMutableBytesNoCopy();
+  /*!
+   * @function getRef
+   *
+   * @abstract
+   * Returns a const reference to the OSValueObject object's internal value
+   * data.
+   *
+   * @result
+   * A const reference to the OSValueObject object's internal value data.
+   *
+   * @discussion
+   * You cannot modify the existing contents of an OSValueObject object
+   * via this function.
+   */
+  const T &getRef() const;
 
-/*!
- * @function getRef
- *
- * @abstract
- * Returns a const reference to the OSValueObject object's internal value data.
- *
- * @result
- * A const reference to the OSValueObject object's internal value data.
- *
- * @discussion
- * You cannot modify the existing contents of an OSValueObject object
- * via this function.
- */
-	const T & getRef() const;
+  /*!
+   * @function getMutableRef
+   *
+   * @abstract
+   * Returns a pointer to the OSValueObject object's internal value data.
+   *
+   * @result
+   * A pointer to the OSValueObject object's internal value data.
+   *
+   * @discussion
+   * You can modify the existing contents of an OSValueObject object
+   * via this function.
+   */
+  T &getMutableRef();
 
-/*!
- * @function getMutableRef
- *
- * @abstract
- * Returns a pointer to the OSValueObject object's internal value data.
- *
- * @result
- * A pointer to the OSValueObject object's internal value data.
- *
- * @discussion
- * You can modify the existing contents of an OSValueObject object
- * via this function.
- */
-	T & getMutableRef();
+  /*!
+   * @function getLength
+   *
+   * @abstract
+   * Returns the number of bytes in or referenced by the OSValueObject object.
+   *
+   * @result
+   * The number of bytes in or referenced by the OSValueObject object.
+   */
+  constexpr size_t getLength() const { return sizeof(T); }
 
-/*!
- * @function getLength
- *
- * @abstract
- * Returns the number of bytes in or referenced by the OSValueObject object.
- *
- * @result
- * The number of bytes in or referenced by the OSValueObject object.
- */
-	constexpr size_t
-	getLength() const
-	{
-		return sizeof(T);
-	}
+  /*!
+   * @function isEqualTo
+   *
+   * @abstract
+   * Tests the equality of two OSValueObject objects.
+   *
+   * @param inValueObject The OSValueObject object being compared against the
+   * receiver.
+   *
+   * @result
+   * <code>true</code> if the two OSValueObject objects are equivalent,
+   * <code>false</code> otherwise.
+   *
+   * @discussion
+   * Two OSValueObject objects are considered equal
+   * if they have same length and if their
+   * byte buffers hold the same contents.
+   */
+  virtual bool isEqualTo(const OSValueObject *inValueObject) const;
 
-/*!
- * @function isEqualTo
- *
- * @abstract
- * Tests the equality of two OSValueObject objects.
- *
- * @param inValueObject The OSValueObject object being compared against the receiver.
- *
- * @result
- * <code>true</code> if the two OSValueObject objects are equivalent,
- * <code>false</code> otherwise.
- *
- * @discussion
- * Two OSValueObject objects are considered equal
- * if they have same length and if their
- * byte buffers hold the same contents.
- */
-	virtual bool isEqualTo(const OSValueObject * inValueObject) const;
+  /*!
+   * @function isEqualTo
+   *
+   * @abstract
+   * Tests the equality of an OSValueObject object's contents
+   * to a C array of bytes.
+   *
+   * @param value    A reference to the value to compare.
+   *
+   * @result
+   * <code>true</code> if the values' data are equal,
+   * <code>false</code> otherwise.
+   */
+  virtual bool isEqualTo(const T &value) const;
 
+  /*!
+   * @function isEqualTo
+   *
+   * @abstract
+   * Tests the equality of an OSValueObject object to an arbitrary object.
+   *
+   * @param inObject The object to be compared against the receiver.
+   *
+   * @result
+   * <code>true</code> if the two objects are equivalent,
+   * <code>false</code> otherwise.
+   *
+   * @discussion
+   * An OSValueObject is considered equal to another object
+   * if that object is derived from OSValueObject<T>
+   * and contains the equivalent bytes of the same length.
+   */
+  virtual bool
+  isEqualTo(const OSMetaClassBase *inObject) const APPLE_KEXT_OVERRIDE;
 
-/*!
- * @function isEqualTo
- *
- * @abstract
- * Tests the equality of an OSValueObject object's contents
- * to a C array of bytes.
- *
- * @param value    A reference to the value to compare.
- *
- * @result
- * <code>true</code> if the values' data are equal,
- * <code>false</code> otherwise.
- */
-	virtual bool isEqualTo(const T& value) const;
-
-
-/*!
- * @function isEqualTo
- *
- * @abstract
- * Tests the equality of an OSValueObject object to an arbitrary object.
- *
- * @param inObject The object to be compared against the receiver.
- *
- * @result
- * <code>true</code> if the two objects are equivalent,
- * <code>false</code> otherwise.
- *
- * @discussion
- * An OSValueObject is considered equal to another object
- * if that object is derived from OSValueObject<T>
- * and contains the equivalent bytes of the same length.
- */
-	virtual bool isEqualTo(const OSMetaClassBase * inObject) const APPLE_KEXT_OVERRIDE;
-
-/*!
- * @function serialize
- *
- * @abstract
- * This class is not serializable.
- *
- * @param serializer The OSSerialize object.
- *
- * @result
- * <code>false</code> always
- */
-	virtual bool serialize(OSSerialize * serializer) const APPLE_KEXT_OVERRIDE;
+  /*!
+   * @function serialize
+   *
+   * @abstract
+   * This class is not serializable.
+   *
+   * @param serializer The OSSerialize object.
+   *
+   * @result
+   * <code>false</code> always
+   */
+  virtual bool serialize(OSSerialize *serializer) const APPLE_KEXT_OVERRIDE;
 
 protected:
-
-/*!
- * @function init
- *
- * @abstract
- * Initializes an instance of OSValueObject with a zeroed
- * and then default-constructed data buffer.
- *
- * @result
- * <code>true</code> on success, <code>false</code> on failure.
- *
- * @discussion
- * Not for general use. Use the static instance creation method
- * <code>@link create create@/link</code> instead.
- */
-	virtual bool init() APPLE_KEXT_OVERRIDE;
+  /*!
+   * @function init
+   *
+   * @abstract
+   * Initializes an instance of OSValueObject with a zeroed
+   * and then default-constructed data buffer.
+   *
+   * @result
+   * <code>true</code> on success, <code>false</code> on failure.
+   *
+   * @discussion
+   * Not for general use. Use the static instance creation method
+   * <code>@link create create@/link</code> instead.
+   */
+  virtual bool init() APPLE_KEXT_OVERRIDE;
 
 private:
-	T * OS_PTRAUTH_SIGNED_PTR("OSValueObject.data") data = nullptr;
+  T *OS_PTRAUTH_SIGNED_PTR("OSValueObject.data") data = nullptr;
 
-
-	// inline expansion of OSDeclareDefaultStructors and OSDefineMetaClassAndStructors macros
-	// (existing macros do not support template classes)
+  // inline expansion of OSDeclareDefaultStructors and
+  // OSDefineMetaClassAndStructors macros (existing macros do not support
+  // template classes)
 public:
-	OSValueObject() : OSObject(&gMetaClass)
-	{
-		gMetaClass.instanceConstructed();
-	}
+  OSValueObject() : OSObject(&gMetaClass) { gMetaClass.instanceConstructed(); }
 
-	static inline class MetaClass : public OSMetaClass
-	{
-public:
-		MetaClass();
-		virtual OSObject *
-		alloc() const APPLE_KEXT_OVERRIDE
-		{
-			return new OSValueObject;
-		}
-	} gMetaClass;
-	static inline const OSMetaClass * const metaClass = &OSValueObject::gMetaClass;
+  static inline class MetaClass : public OSMetaClass {
+  public:
+    MetaClass();
+    virtual OSObject *alloc() const APPLE_KEXT_OVERRIDE {
+      return new OSValueObject;
+    }
+  } gMetaClass;
+  static inline const OSMetaClass *const metaClass = &OSValueObject::gMetaClass;
 
-	friend class OSValueObject::MetaClass;
+  friend class OSValueObject::MetaClass;
 
-	virtual const OSMetaClass *
-	getMetaClass() const APPLE_KEXT_OVERRIDE
-	{
-		return &gMetaClass;
-	}
+  virtual const OSMetaClass *getMetaClass() const APPLE_KEXT_OVERRIDE {
+    return &gMetaClass;
+  }
 
-	static void *
-	operator new(size_t size)
-	{
-		// requires alternate implementation if this SPI is ever made public API
-		return OSObject_typed_operator_new(os_detail::GetOSValueObjectKTV(), size);
-	}
+  static void *operator new(size_t size) {
+    // requires alternate implementation if this SPI is ever made public API
+    return OSObject_typed_operator_new(os_detail::GetOSValueObjectKTV(), size);
+  }
 
 protected:
-	explicit OSValueObject(const OSMetaClass * meta) : OSObject(meta)
-	{
-	}
+  explicit OSValueObject(const OSMetaClass *meta) : OSObject(meta) {}
 
-	static void
-	operator delete(void * mem, size_t size)
-	{
-		// requires alternate implementation if this SPI is ever made public API
-		return OSObject_typed_operator_delete(os_detail::GetOSValueObjectKTV(), mem, size);
-	}
+  static void operator delete(void *mem, size_t size) {
+    // requires alternate implementation if this SPI is ever made public API
+    return OSObject_typed_operator_delete(os_detail::GetOSValueObjectKTV(), mem,
+                                          size);
+  }
 };
 
 /*!
@@ -386,9 +367,11 @@ protected:
  * For each individual type for which you use OSValueObject to wrap,
  * you must use this in an implementation file.
  */
-#define OSDefineValueObjectForDependentType(typeName) \
-template <> OSValueObject<typeName>::MetaClass::MetaClass() : \
-OSMetaClass("OSValueObject<" #typeName ">", &OSObject::gMetaClass, sizeof(OSValueObject)) {}
+#define OSDefineValueObjectForDependentType(typeName)                          \
+  template <>                                                                  \
+  OSValueObject<typeName>::MetaClass::MetaClass()                              \
+      : OSMetaClass("OSValueObject<" #typeName ">", &OSObject::gMetaClass,     \
+                    sizeof(OSValueObject)) {}
 
 /*!
  * @function OSValueObjectWithValue
@@ -408,173 +391,134 @@ OSMetaClass("OSValueObject<" #typeName ">", &OSObject::gMetaClass, sizeof(OSValu
  * <code>nullptr</code> on failure.
  */
 template <typename T>
-OSPtr<OSValueObject<T> > OSValueObjectWithValue(const T& value);
-
+OSPtr<OSValueObject<T>> OSValueObjectWithValue(const T &value);
 
 #pragma mark -
 
-template <typename T>
-OSPtr<OSValueObject<T> >
-OSValueObject<T>::create()
-{
+template <typename T> OSPtr<OSValueObject<T>> OSValueObject<T>::create() {
 #ifdef IOKIT_ENABLE_SHARED_PTR
-	auto me = OSMakeShared<OSValueObject<T> >();
+  auto me = OSMakeShared<OSValueObject<T>>();
 #else
-	auto * me = OSTypeAlloc(OSValueObject<T>);
+  auto *me = OSTypeAlloc(OSValueObject<T>);
 #endif
-	if (me && !me->init()) {
+  if (me && !me->init()) {
 #ifndef IOKIT_ENABLE_SHARED_PTR
-		me->release();
+    me->release();
 #endif
-		return nullptr;
-	}
-	return me;
+    return nullptr;
+  }
+  return me;
 }
 
 template <typename T>
-OSPtr<OSValueObject<T> >
-OSValueObject<T>::withValue(const T& value)
-{
+OSPtr<OSValueObject<T>> OSValueObject<T>::withValue(const T &value) {
 #ifdef IOKIT_ENABLE_SHARED_PTR
-	OSSharedPtr<OSValueObject<T> > me = create();
+  OSSharedPtr<OSValueObject<T>> me = create();
 #else
-	OSValueObject<T> * me = create();
+  OSValueObject<T> *me = create();
 #endif
-	if (me) {
-		me->setValue(value);
-	}
-	return me;
+  if (me) {
+    me->setValue(value);
+  }
+  return me;
 }
 
 template <typename T>
-OSPtr<OSValueObject<T> >
-OSValueObject<T>::withValueObject(const OSValueObject * inValueObject)
-{
-	if (!inValueObject || !inValueObject->getBytesNoCopy()) {
-		return {};
-	}
-	return withValue(inValueObject->getRef());
+OSPtr<OSValueObject<T>>
+OSValueObject<T>::withValueObject(const OSValueObject *inValueObject) {
+  if (!inValueObject || !inValueObject->getBytesNoCopy()) {
+    return {};
+  }
+  return withValue(inValueObject->getRef());
+}
+
+template <typename T> bool OSValueObject<T>::init() {
+  if (!OSObject::init()) {
+    return false;
+  }
+
+  if (data) {
+    data->~T();
+    bzero(data, getLength());
+  } else {
+    data = IOMallocType(T);
+    if (!data) {
+      return false;
+    }
+  }
+
+  ::new (static_cast<void *>(data)) T();
+
+  return true;
+}
+
+template <typename T> void OSValueObject<T>::free() {
+  IOFreeType(data, T);
+  data = nullptr;
+
+  OSObject::free();
+}
+
+template <typename T> void OSValueObject<T>::setValue(const T &value) {
+  // static_assert(__is_trivially_copyable(T) || __is_copy_assignable(T));
+  if (&value != data) {
+    if constexpr (__is_trivially_copyable(T)) {
+      memcpy(data, &value, getLength());
+    } else {
+      *data = value;
+    }
+  }
+}
+
+template <typename T> const T *OSValueObject<T>::getBytesNoCopy() const {
+  return data;
+}
+
+template <typename T> T *OSValueObject<T>::getMutableBytesNoCopy() {
+  return data;
+}
+
+template <typename T> const T &OSValueObject<T>::getRef() const {
+  assert(data);
+  return *data;
+}
+
+template <typename T> T &OSValueObject<T>::getMutableRef() {
+  assert(data);
+  return *data;
 }
 
 template <typename T>
-bool
-OSValueObject<T>::init()
-{
-	if (!OSObject::init()) {
-		return false;
-	}
+bool OSValueObject<T>::isEqualTo(const OSValueObject *inValueObject) const {
+  return inValueObject && isEqualTo(inValueObject->getRef());
+}
 
-	if (data) {
-		data->~T();
-		bzero(data, getLength());
-	} else {
-		data = IOMallocType(T);
-		if (!data) {
-			return false;
-		}
-	}
-
-	::new (static_cast<void*>(data)) T();
-
-	return true;
+template <typename T> bool OSValueObject<T>::isEqualTo(const T &value) const {
+  if constexpr (__is_scalar(T) || __is_aggregate(T)) {
+    return memcmp(data, &value, getLength()) == 0;
+  } else {
+    return *data == value;
+  }
 }
 
 template <typename T>
-void
-OSValueObject<T>::free()
-{
-	IOFreeType(data, T);
-	data = nullptr;
-
-	OSObject::free();
+bool OSValueObject<T>::isEqualTo(const OSMetaClassBase *inObject) const {
+  if (const auto *const otherValueObject =
+          OSDynamicCast(OSValueObject, inObject)) {
+    return isEqualTo(otherValueObject);
+  }
+  return false;
 }
 
 template <typename T>
-void
-OSValueObject<T>::setValue(const T& value)
-{
-	//static_assert(__is_trivially_copyable(T) || __is_copy_assignable(T));
-	if (&value != data) {
-		if constexpr (__is_trivially_copyable(T)) {
-			memcpy(data, &value, getLength());
-		} else {
-			*data = value;
-		}
-	}
+bool OSValueObject<T>::serialize(__unused OSSerialize *serializer) const {
+  return false;
 }
 
 template <typename T>
-const T *
-OSValueObject<T>::getBytesNoCopy() const
-{
-	return data;
+OSPtr<OSValueObject<T>> OSValueObjectWithValue(const T &value) {
+  return OSValueObject<T>::withValue(value);
 }
-
-template <typename T>
-T *
-OSValueObject<T>::getMutableBytesNoCopy()
-{
-	return data;
-}
-
-template <typename T>
-const T &
-OSValueObject<T>::getRef() const
-{
-	assert(data);
-	return *data;
-}
-
-template <typename T>
-T &
-OSValueObject<T>::getMutableRef()
-{
-	assert(data);
-	return *data;
-}
-
-template <typename T>
-bool
-OSValueObject<T>::isEqualTo(const OSValueObject * inValueObject) const
-{
-	return inValueObject && isEqualTo(inValueObject->getRef());
-}
-
-template <typename T>
-bool
-OSValueObject<T>::isEqualTo(const T& value) const
-{
-	if constexpr (__is_scalar(T) || __is_aggregate(T)) {
-		return memcmp(data, &value, getLength()) == 0;
-	} else {
-		return *data == value;
-	}
-}
-
-template <typename T>
-bool
-OSValueObject<T>::isEqualTo(const OSMetaClassBase * inObject) const
-{
-	if (const auto * const otherValueObject = OSDynamicCast(OSValueObject, inObject)) {
-		return isEqualTo(otherValueObject);
-	}
-	return false;
-}
-
-template <typename T>
-bool
-OSValueObject<T>::serialize(__unused OSSerialize * serializer) const
-{
-	return false;
-}
-
-template <typename T>
-OSPtr<OSValueObject<T> >
-OSValueObjectWithValue(const T& value)
-{
-	return OSValueObject<T>::withValue(value);
-}
-
 
 #endif /* __cplusplus */
 #endif /* KERNEL_PRIVATE */

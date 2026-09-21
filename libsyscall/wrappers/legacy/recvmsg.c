@@ -33,24 +33,22 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/socket.h>
 #include "_errno.h"
+#include <sys/socket.h>
 
 ssize_t __recvmsg_nocancel(int, struct msghdr *, int);
 
 /*
  * recvmsg stub, legacy version
  */
-ssize_t
-recvmsg(int s, struct msghdr *msg, int flags)
-{
-	int ret = __recvmsg_nocancel(s, msg, flags);
+ssize_t recvmsg(int s, struct msghdr *msg, int flags) {
+  int ret = __recvmsg_nocancel(s, msg, flags);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif

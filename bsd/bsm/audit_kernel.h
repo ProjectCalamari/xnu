@@ -39,7 +39,8 @@
 #ifndef _BSM_AUDIT_KERNEL_H
 #define _BSM_AUDIT_KERNEL_H
 
-#warning "<bsm/audit_kernel.h> is deprecated.  Please use <security/audit/audit.h> instead."
+#warning                                                                       \
+    "<bsm/audit_kernel.h> is deprecated.  Please use <security/audit/audit.h> instead."
 
 #include <security/audit/audit.h>
 

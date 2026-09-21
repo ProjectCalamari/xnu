@@ -133,13 +133,11 @@ IMAGE4_XNU_AVAILABLE_INDIRECT(_image4_coprocessor_host);
  * This function first became available in API version 20240216.
  */
 IMAGE4_API_AVAILABLE_FALL_2024
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const image4_coprocessor_t *_Nullable
-image4_coprocessor_resolve_from_manifest(
-	const void *__sized_by(manifest_len) manifest,
-	size_t manifest_len,
-	const image4_coprocessor_t *_Nullable coprocs[
-		_Nonnull __static_size IMAGE4_COPROCESSOR_ARRAY_CNT]);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const image4_coprocessor_t
+    *_Nullable image4_coprocessor_resolve_from_manifest(
+        const void *__sized_by(manifest_len) manifest, size_t manifest_len,
+        const image4_coprocessor_t *_Nullable coprocs
+            [_Nonnull __static_size IMAGE4_COPROCESSOR_ARRAY_CNT]);
 IMAGE4_XNU_AVAILABLE_DIRECT(image4_coprocessor_resolve_from_manifest);
 
 OS_ASSUME_PTR_ABI_SINGLE_END

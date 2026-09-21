@@ -30,26 +30,34 @@
 #define _SYS_CLONEFILE_H_
 
 /* Options for clonefile calls */
-#define CLONE_NOFOLLOW        0x0001     /* Don't follow symbolic links */
-#define CLONE_NOOWNERCOPY     0x0002     /* Don't copy ownership information from source */
-#define CLONE_ACL             0x0004     /* Copy access control lists from source */
-#define CLONE_NOFOLLOW_ANY    0x0008     /* Don't follow any symbolic links in the path */
-#define CLONE_RESOLVE_BENEATH 0x0010     /* path must reside in the hierarchy beneath the starting directory */
+#define CLONE_NOFOLLOW 0x0001 /* Don't follow symbolic links */
+#define CLONE_NOOWNERCOPY                                                      \
+  0x0002                 /* Don't copy ownership information from source */
+#define CLONE_ACL 0x0004 /* Copy access control lists from source */
+#define CLONE_NOFOLLOW_ANY                                                     \
+  0x0008 /* Don't follow any symbolic links in the path */
+#define CLONE_RESOLVE_BENEATH                                                  \
+  0x0010 /* path must reside in the hierarchy beneath the starting directory   \
+          */
 
 #ifndef KERNEL
 
-#include <sys/cdefs.h>
-#include <machine/_types.h>
-#include <_types/_uint32_t.h>
 #include <Availability.h>
+#include <_types/_uint32_t.h>
+#include <machine/_types.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
-int clonefileat(int, const char *, int, const char *, uint32_t) __OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0);
+int clonefileat(int, const char *, int, const char *, uint32_t)
+    __OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0)
+        __WATCHOS_AVAILABLE(3.0);
 
-int fclonefileat(int, int, const char *, uint32_t) __OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0);
+int fclonefileat(int, int, const char *, uint32_t) __OSX_AVAILABLE(10.12)
+    __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0);
 
-int clonefile(const char *, const char *, uint32_t) __OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0);
+int clonefile(const char *, const char *, uint32_t) __OSX_AVAILABLE(10.12)
+    __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0);
 
 __END_DECLS
 

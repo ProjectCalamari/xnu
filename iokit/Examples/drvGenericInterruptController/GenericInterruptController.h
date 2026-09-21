@@ -35,50 +35,47 @@
 #ifndef _IOKIT_GENERICINTERRUPTCONTROLLER_H
 #define _IOKIT_GENERICINTERRUPTCONTROLLER_H
 
-#include <IOKit/IOInterrupts.h>
 #include <IOKit/IOInterruptController.h>
+#include <IOKit/IOInterrupts.h>
 
-class GenericInterruptController : public IOInterruptController
-{
-	IODeclareDefaultStructors(GenericInterruptController);
+class GenericInterruptController : public IOInterruptController {
+  IODeclareDefaultStructors(GenericInterruptController);
 
 public:
-// There should be a method to start or init the controller.
-// Its nature is up to you.
-	virtual bool start(IOService *provider);
+  // There should be a method to start or init the controller.
+  // Its nature is up to you.
+  virtual bool start(IOService *provider);
 
-// Returns the type of a vector: level or edge.  This will probably get
-// replaced but a default method and a new method getVectorType.
-	virtual IOReturn getInterruptType(IOService *nub, int source,
-	    int *interruptType);
+  // Returns the type of a vector: level or edge.  This will probably get
+  // replaced but a default method and a new method getVectorType.
+  virtual IOReturn getInterruptType(IOService *nub, int source,
+                                    int *interruptType);
 
-// Returns a function pointer for the interrupt handler.
-// Sadly, egcs prevents this from being done by the base class.
-	virtual IOInterruptAction getInterruptHandlerAddress(void);
+  // Returns a function pointer for the interrupt handler.
+  // Sadly, egcs prevents this from being done by the base class.
+  virtual IOInterruptAction getInterruptHandlerAddress(void);
 
-// The actual interrupt handler.
-	virtual IOReturn handleInterrupt(void *refCon,
-	    IOService *nub, int source);
+  // The actual interrupt handler.
+  virtual IOReturn handleInterrupt(void *refCon, IOService *nub, int source);
 
+  // Should return true if this vector can be shared.
+  // The base class return false, so this method only need to be implemented
+  // if the controller needs to support shared interrupts.
+  // No other work is required to support shared interrupts.
+  virtual bool vectorCanBeShared(long vectorNumber, IOInterruptVector *vector);
 
-// Should return true if this vector can be shared.
-// The base class return false, so this method only need to be implemented
-// if the controller needs to support shared interrupts.
-// No other work is required to support shared interrupts.
-	virtual bool vectorCanBeShared(long vectorNumber, IOInterruptVector *vector);
+  // Do any hardware initalization for this vector.  Leave the vector
+  // hard disabled.
+  virtual void initVector(long vectorNumber, IOInterruptVector *vector);
 
-// Do any hardware initalization for this vector.  Leave the vector
-// hard disabled.
-	virtual void initVector(long vectorNumber, IOInterruptVector *vector);
+  // Disable this vector at the hardware.
+  virtual void disableVectorHard(long vectorNumber, IOInterruptVector *vector);
 
-// Disable this vector at the hardware.
-	virtual void disableVectorHard(long vectorNumber, IOInterruptVector *vector);
+  // Enable this vector at the hardware.
+  virtual void enableVector(long vectorNumber, IOInterruptVector *vector);
 
-// Enable this vector at the hardware.
-	virtual void enableVector(long vectorNumber, IOInterruptVector *vector);
-
-// Cause an interrupt on this vector.
-	virtual void causeVector(long vectorNumber, IOInterruptVector *vector);
+  // Cause an interrupt on this vector.
+  virtual void causeVector(long vectorNumber, IOInterruptVector *vector);
 };
 
 #endif /* ! _IOKIT_GENERICINTERRUPTCONTROLLER_H */

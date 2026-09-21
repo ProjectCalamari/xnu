@@ -29,9 +29,10 @@ SUPPORTED_ARM64_MACHINE_CONFIGS = NONE
 else ifneq ($(findstring _host,$(RC_ProjectName)),)
 SUPPORTED_ARM64_MACHINE_CONFIGS = NONE
 else
-SUPPORTED_ARM64_MACHINE_CONFIGS = T6000 T6020 T6030 T6031 T6041 T8101 T8103 T8112 T8122 T8132 VMAPPLE
+SUPPORTED_ARM64_MACHINE_CONFIGS = T6000 T6020 T6030 T6031 T6041 T8101 T8103 T8112 T8122 T8132 VMAPPLE QEMU
 
 SPTM_ENABLED_SOCS_MacOSX = t8112 t6020 t8122 t6030 t6031 t8132 t6041
+OSSHW_SOCS = qemu
 
 
 endif
@@ -84,15 +85,21 @@ MACHINE_FLAGS_ARM64_T6041 = -DARM64_BOARD_CONFIG_T6041			-mcpu=apple-m4
 MACHINE_FLAGS_ARM64_T8122 = -DARM64_BOARD_CONFIG_T8122_T8130		-mcpu=apple-m3
 MACHINE_FLAGS_ARM64_T8132 = -DARM64_BOARD_CONFIG_T8132			-mcpu=apple-m4
 
-MACHINE_FLAGS_ARM64_VMAPPLE = -DARM64_BOARD_CONFIG_VMAPPLE              -march=armv8.5a+sme2
+MACHINE_FLAGS_ARM64_VMAPPLE = -DARM64_BOARD_CONFIG_VMAPPLE -DOS_FIREHOSE_SPI=1 -march=armv8.5a+sme2
+MACHINE_FLAGS_ARM64_QEMU = -DARM64_BOARD_CONFIG_QEMU -DOS_FIREHOSE_SPI=1 -mcpu=cortex-a53
 
 
 #
 # Deployment target flag
 #
 ifeq ($(PLATFORM),MacOSX)
+ifeq ($(HOST_OS),Darwin)
     DEPLOYMENT_TARGET_FLAGS = -mmacosx-version-min=$(SDKVERSION) -DXNU_TARGET_OS_OSX
     DEPLOYMENT_LINKER_FLAGS = -Wl,-macosx_version_min,$(SDKVERSION)
+else
+    DEPLOYMENT_TARGET_FLAGS = -mmacosx-version-min=$(SDKVERSION) -DXNU_TARGET_OS_OSX
+    DEPLOYMENT_LINKER_FLAGS =
+endif
 else ifeq ($(PLATFORM),DriverKit)
     DEPLOYMENT_TARGET_FLAGS = -target apple-driverkit$(SDKVERSION) -DXNU_TARGET_OS_OSX
     DEPLOYMENT_LINKER_FLAGS = -Wl,-target,apple-driverkit$(SDKVERSION)
@@ -213,7 +220,32 @@ WARNFLAGS_STD := $(WARNFLAGS_STD) \
 	-Wno-error=null-pointer-subtraction \
 	-Wno-deprecated-volatile \
 	-Wno-error=incompatible-function-pointer-types-strict \
-	-Wno-cast-function-type-strict
+	-Wno-cast-function-type-strict \
+	-Wno-macro-redefined \
+	-Wno-ms-bitfield-padding \
+	-Wno-reserved-identifier \
+	-Wno-unnecessary-virtual-specifier \
+	-Wno-unsafe-buffer-usage \
+	-Wno-implicit-int-float-conversion \
+	-Wno-vla \
+	-Wno-unterminated-string-initialization \
+	-Wno-nrvo \
+	-Wno-reorder-init-list \
+	-Wno-unused-but-set-variable \
+	-Wno-implicit-fallthrough \
+	-Wno-implicit-int-conversion \
+	-Wno-pointer-to-int-cast \
+	-Wno-void-pointer-to-int-cast \
+	-Wno-gnu-folding-constant \
+	-Wno-uninitialized-const-pointer \
+	-Wno-tautological-unsigned-zero-compare \
+	-Wno-global-constructors \
+	-Wno-shadow-header \
+	-Wno-lifetime-safety-cross-tu-constructor-suggestions \
+	-Wno-lifetime-safety-cross-tu-suggestions \
+	-Wno-lifetime-safety-intra-tu-constructor-suggestions \
+	-Wno-lifetime-safety-intra-tu-suggestions \
+	-Wno-lifetime-safety-invalidation
 
 WARNFLAGS_STD := $(WARNFLAGS_STD) \
 	-Wno-declaration-after-statement
@@ -275,8 +307,20 @@ endef
 #
 # Default ARCH_FLAGS, for use with compiler/linker/assembler/mig drivers
 
+# Apple host tools have their own command-line interface.  In particular,
+# they accept ld-style "-arch <name>" arguments rather than clang's
+# "-target <triple>".
+CCTOOLS_ARCH_FLAGS_X86_64  = -arch x86_64
+CCTOOLS_ARCH_FLAGS_X86_64H = -arch x86_64h
+CCTOOLS_ARCH_FLAGS_ARM64   = -arch $(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG)
+
+ifeq ($(HOST_OS),Darwin)
 ARCH_FLAGS_X86_64	  = -arch x86_64
 ARCH_FLAGS_X86_64H	  = -arch x86_64h
+else
+ARCH_FLAGS_X86_64	  = -target x86_64-apple-darwin
+ARCH_FLAGS_X86_64H	  = -target x86_64h-apple-darwin
+endif
 
 ifeq ($(RC_ProjectName),xnu_libraries)
 BUILD_STATIC_LINK := 1
@@ -315,7 +359,9 @@ ifeq ($(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG),)
 # Without embdedded device map, use a default arch string
 export ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG := $(shell echo $(CURRENT_ARCH_CONFIG) | tr A-Z a-z)
 ifneq ($(filter arm64,$(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG)),)
+ifeq ($(HOST_OS),Darwin)
 export ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG := arm64e
+endif
 endif
 
 endif
@@ -323,7 +369,11 @@ endif
 
 BUILD_STATIC_LINK := 1
 
+ifeq ($(HOST_OS),Darwin)
 ARCH_FLAGS_ARM64	  = -arch $(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG)
+else
+ARCH_FLAGS_ARM64	  = -target $(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG)-apple-darwin
+endif
 
 endif
 
@@ -413,8 +463,12 @@ else
 CFLAGS_KERNEL   = -mkernel
 endif
 
+ifeq ($(HOST_OS),Darwin)
+ARM64_IMPLICIT_SME_FLAG = -mno-implicit-sme
+endif
+
 CFLAGS_ARM64	= -Darm64 -DARM64 -D__ARM64__ -DLP64 -DPAGE_SIZE_FIXED -DVM_KERNEL_LINK_ADDRESS=$(ARM64_LINK_ADDR) \
-				$(ARM64_EXTRA_BUILD_FLAGS) -mno-implicit-sme -momit-leaf-frame-pointer -fno-strict-aliasing -D__API__=v4 $(CFLAGS_KERNEL)
+				$(ARM64_EXTRA_BUILD_FLAGS) $(ARM64_IMPLICIT_SME_FLAG) -momit-leaf-frame-pointer -fno-strict-aliasing -D__API__=v4 $(CFLAGS_KERNEL)
 
 CXXFLAGS_ARM64  = $(ARM64_EXTRA_BUILD_FLAGS)
 
@@ -832,7 +886,11 @@ SFLAGS	= $(SFLAGS_GEN) \
 #
 # Linker command
 #
+ifeq ($(HOST_OS),Darwin)
 LD	= $(KC++) -nostdlib
+else
+LD	= $(KC++) -fuse-ld=lld -nostdlib
+endif
 
 #
 # Default LDFLAGS
@@ -1043,8 +1101,15 @@ LDFLAGS_KERNEL_RELEASEARM64     = \
 	$(LDFLAGS_KERNEL_SEGARM64) \
 	$(LDFLAGS_KERNEL_STRIP_LTO)
 
-LDFLAGS_KERNEL_ONLY_CONFIG_RELEASEARM64     = \
+# The OSS hardware configurations omit Apple-only implementations which still
+# appear in the public export lists.  Passing the unfiltered list makes the
+# linker synthesize undefined references to those unavailable symbols.
+ifeq ($(filter $(CURRENT_MACHINE_CONFIG_LC),$(OSSHW_SOCS)),)
+LDFLAGS_KERNEL_ONLY_CONFIG_RELEASEARM64 = \
 	-Wl,-exported_symbols_list,$(TARGET)/all-kpi.exp
+else
+LDFLAGS_KERNEL_ONLY_CONFIG_RELEASEARM64 =
+endif
 
 LDFLAGS_KERNEL_DEVELOPMENTARM64     = \
 	$(LDFLAGS_KERNEL_GENARM64) \
@@ -1065,12 +1130,16 @@ LDFLAGS_KERNEL_ONLY_CONFIG_DEBUGARM64 = $(LDFLAGS_KERNEL_ONLY_CONFIG_DEVELOPMENT
 # (and not the static kernel cache / kcgen)
 #
 LDFLAGS_KERNEL_ONLY_SUBARCH_arm64e = \
-	-Wl,-add_split_seg_info \
-	-Wl,-kernel
+	-Wl,-add_split_seg_info
+ifeq ($(HOST_OS),Darwin)
+LDFLAGS_KERNEL_ONLY_SUBARCH_arm64e += -Wl,-kernel
+endif
 
 LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64 = \
-	-Wl,-add_split_seg_info \
-	-Wl,-kernel
+	-Wl,-add_split_seg_info
+ifeq ($(HOST_OS),Darwin)
+LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64 += -Wl,-kernel
+endif
 LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64h = $(LDFLAGS_KERNEL_ONLY_SUBARCH_x86_64)
 
 LDFLAGS_KERNEL	= $(LDFLAGS_KERNEL_GEN) \
@@ -1081,19 +1150,33 @@ LDFLAGS_KERNEL	= $(LDFLAGS_KERNEL_GEN) \
 		  $($(addsuffix $(CURRENT_ARCH_CONFIG), $(addsuffix $(CURRENT_KERNEL_CONFIG),LDFLAGS_KERNEL_))) \
 		  $(DEPLOYMENT_TARGET_FLAGS)
 
+ifeq ($(HOST_OS),Darwin)
+KERNEL_ALIAS_FLAGS = -Wl,-alias_list,$(TARGET)/all-alias.exp
+else
+KERNEL_ALIAS_FLAGS = $(shell $(AWK) '{ printf "-Wl,-alias,%s,%s ", $$1, $$2 }' $(TARGET)/all-alias.exp)
+endif
+
 LDFLAGS_KERNEL_ONLY  +=   \
 		  $($(addsuffix $(CURRENT_ARCH_CONFIG), $(addsuffix $(CURRENT_KERNEL_CONFIG),LDFLAGS_KERNEL_ONLY_CONFIG_))) \
 		  $($(addsuffix $(ARCH_STRING_FOR_CURRENT_MACHINE_CONFIG),LDFLAGS_KERNEL_ONLY_SUBARCH_)) \
-		  -Wl,-alias_list,$(TARGET)/all-alias.exp \
+		  $(KERNEL_ALIAS_FLAGS) \
 		  -Wl,-sectcreate,__LINKINFO,__symbolsets,$(TARGET)/symbolsets.plist -Wl,-segprot,__LINKINFO,r--,r--
 
 LDFILES_KERNEL_ONLY = $(TARGET)/all-kpi.exp $(TARGET)/all-alias.exp $(TARGET)/symbolsets.plist
+
+ifneq ($(HOST_OS),Darwin)
+COMPILER_RT_PROFILE_ARCHIVE = $(TARGET)/libclang_rt.profile-xnu.a
+LDFILES_KERNEL_ONLY += $(COMPILER_RT_PROFILE_ARCHIVE)
+endif
 
 #
 # Default runtime libraries to be linked with the kernel
 #
 LD_KERNEL_LIBS	   = -lcc_kext
-LD_KERNEL_ARCHIVES = $(LDFLAGS_KERNEL_SDK) -lfirehose_kernel
+LD_KERNEL_ARCHIVES = $(LDFLAGS_KERNEL_SDK)
+ifneq ($(HOST_OS),Darwin)
+LD_KERNEL_ARCHIVES += $(COMPILER_RT_PROFILE_ARCHIVE)
+endif
 
 #
 # Derive SPTM/TXM and Exclaves enablement from the EDM properties.
@@ -1114,6 +1197,10 @@ endif # SPTM
 
 ifneq ($(filter $(CURRENT_MACHINE_CONFIG_LC),$(SPTM_ENABLED_SOCS_$(PLATFORM))),)
   SPTM_ENABLED = 1
+endif
+
+ifneq ($(filter $(CURRENT_MACHINE_CONFIG_LC),$(OSSHW_SOCS)),)
+  DOCONF_OSSHW := -osshw
 endif
 
 ifeq ($(SPTM_ENABLED),1)
@@ -1150,9 +1237,15 @@ INCFLAGS_IMPORT	= $(patsubst %, -I$(OBJROOT)/EXPORT_HDRS/%, $(COMPONENT_IMPORT_L
 INCFLAGS_EXTERN	= -I$(SRCROOT)/EXTERNAL_HEADERS
 INCFLAGS_GEN	= -I$(SRCROOT)/$(COMPONENT) -I$(OBJROOT)/EXPORT_HDRS/$(COMPONENT)
 INCFLAGS_LOCAL	= -I.
+ifeq ($(HOST_OS),Darwin)
 INCFLAGS_KERNEL = -I$(SDKROOT)/usr/local/include/kernel
 INCFLAGS_SDK	= -I$(SDKROOT)/usr/local/include/ -I$(SDKROOT)/$(KPINCDIR)/AppleFeatures
 INCFLAGS_PLATFORM = -I$(SDKROOT)/$(KPINCDIR)/platform
+else
+INCFLAGS_KERNEL =
+INCFLAGS_SDK =
+INCFLAGS_PLATFORM =
+endif
 ifneq ($(KDKROOT),)
 INCFLAGS_SDK   += -I$(KDKROOT)/$(KPINCDIR)
 INCFLAGS_PLATFORM += -I$(KDKROOT)/$(KINCDIR)/platform -I$(KDKROOT)/$(KPINCDIR)/platform
@@ -1225,6 +1318,14 @@ LTO_ENABLED_DEVELOPMENT = 1
 LTO_ENABLED_DEBUG = 0
 LTO_ENABLED_KASAN = 0
 LTO_ENABLED_SPTM = $(LTO_ENABLED_DEVELOPMENT)
+
+# ld64.lld does not support the relocatable Mach-O link (-r) used by XNU's
+# two-stage LTO build.  Keep LTO opt-in on non-Darwin hosts until it does.
+ifneq ($(HOST_OS),Darwin)
+LTO_ENABLED_RELEASE = 0
+LTO_ENABLED_DEVELOPMENT = 0
+LTO_ENABLED_SPTM = 0
+endif
 
 ifneq ($(BUILD_LTO),)
 USE_LTO = $(BUILD_LTO)

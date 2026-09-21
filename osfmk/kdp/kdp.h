@@ -32,20 +32,13 @@
 
 /* Raise exception in debugger. */
 
-void
-kdp_raise_exception(
-	unsigned int                exception,
-	unsigned int                code,
-	unsigned int                subcode,
-	void                        *saved_state
-	);
+void kdp_raise_exception(unsigned int exception, unsigned int code,
+                         unsigned int subcode, void *saved_state);
 
 /* Reset debugger state. */
 
-void
-kdp_reset(void);
+void kdp_reset(void);
 
-void
-kdp_init(void);
+void kdp_init(void);
 
 void kdp_machine_init(void);

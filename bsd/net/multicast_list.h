@@ -29,11 +29,11 @@
 #ifndef _NET_MULTICAST_LIST_H
 #define _NET_MULTICAST_LIST_H
 
-#include <sys/queue.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <net/if.h>
 #include <net/kpi_interface.h>
+#include <sys/queue.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 /*
  * multicast_util.h:
@@ -41,19 +41,15 @@
  *   another (VLAN, BOND)
  */
 struct multicast_entry {
-	SLIST_ENTRY(multicast_entry)    mc_entries;
-	ifmultiaddr_t                   mc_ifma;
+  SLIST_ENTRY(multicast_entry) mc_entries;
+  ifmultiaddr_t mc_ifma;
 };
 SLIST_HEAD(multicast_list, multicast_entry);
 
-void
-multicast_list_init(struct multicast_list * mc_list);
+void multicast_list_init(struct multicast_list *mc_list);
 
-int
-multicast_list_program(struct multicast_list * mc_list,
-    struct ifnet * source_ifp,
-    struct ifnet * target_ifp);
-int
-multicast_list_remove(struct multicast_list * mc_list);
+int multicast_list_program(struct multicast_list *mc_list,
+                           struct ifnet *source_ifp, struct ifnet *target_ifp);
+int multicast_list_remove(struct multicast_list *mc_list);
 
 #endif /* _NET_MULTICAST_LIST_H */

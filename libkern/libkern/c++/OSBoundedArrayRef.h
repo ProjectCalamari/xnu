@@ -32,16 +32,16 @@
 #if !TAPI
 
 #if DRIVERKIT_FRAMEWORK_INCLUDE
-#include <DriverKit/bounded_array_ref.h>
 #include <DriverKit/OSBoundedPtr.h>
+#include <DriverKit/bounded_array_ref.h>
 #else
-#include <libkern/c++/bounded_array_ref.h>
 #include <libkern/c++/OSBoundedPtr.h>
+#include <libkern/c++/bounded_array_ref.h>
 #endif /* DRIVERKIT_FRAMEWORK_INCLUDE */
 
-
 template <typename T>
-using OSBoundedArrayRef = libkern::bounded_array_ref<T, os_detail::panic_trapping_policy>;
+using OSBoundedArrayRef =
+    libkern::bounded_array_ref<T, os_detail::panic_trapping_policy>;
 
 #endif /* !TAPI */
 

@@ -77,9 +77,9 @@
 #include <ipc/ipc_port.h>
 #include <kern/startup.h>
 #endif /* MACH_KERNEL_PRIVATE */
-#include <mach/machine/vm_types.h>
-#include <mach/mach_types.h>
 #include <ipc/ipc_types.h>
+#include <mach/mach_types.h>
+#include <mach/machine/vm_types.h>
 
 __BEGIN_DECLS
 #pragma GCC visibility push(hidden)
@@ -87,9 +87,7 @@ __BEGIN_DECLS
 typedef ipc_object_type_t ipc_kobject_type_t;
 
 /* set the bitstring index for kobject */
-extern kern_return_t ipc_kobject_set_kobjidx(
-	int                         msgid,
-	int                         index);
+extern kern_return_t ipc_kobject_set_kobjidx(int msgid, int index);
 
 #ifdef MACH_KERNEL_PRIVATE
 
@@ -138,60 +136,49 @@ extern kern_return_t ipc_kobject_set_kobjidx(
  * Whether send rights created to this kobject are movable
  */
 typedef const struct ipc_kobject_ops {
-	ipc_kobject_type_t iko_op_type;
-	unsigned long
-	    iko_op_stable               : 1,
-	    iko_op_permanent            : 1,
-	    iko_op_movable_send         : 1;
-	const char        *iko_op_name;
-	void (*iko_op_no_senders)(ipc_port_t port, mach_port_mscount_t mscount);
-	void (*iko_op_label_free)(ipc_object_label_t label);
+  ipc_kobject_type_t iko_op_type;
+  unsigned long iko_op_stable : 1, iko_op_permanent : 1,
+      iko_op_movable_send : 1;
+  const char *iko_op_name;
+  void (*iko_op_no_senders)(ipc_port_t port, mach_port_mscount_t mscount);
+  void (*iko_op_label_free)(ipc_object_label_t label);
 } *ipc_kobject_ops_t;
 
-#define IPC_KOBJECT_DEFINE(type, ...) \
-	__startup_data \
-	static struct ipc_kobject_ops ipc_kobject_ops_##type = { \
-	    .iko_op_type = type, \
-	    .iko_op_name = #type, \
-	    __VA_ARGS__ \
-	}; \
-	STARTUP_ARG(MACH_IPC, STARTUP_RANK_FIRST, ipc_kobject_register_startup, \
-	    &ipc_kobject_ops_##type)
+#define IPC_KOBJECT_DEFINE(type, ...)                                          \
+  __startup_data static struct ipc_kobject_ops ipc_kobject_ops_##type = {      \
+      .iko_op_type = type, .iko_op_name = #type, __VA_ARGS__};                 \
+  STARTUP_ARG(MACH_IPC, STARTUP_RANK_FIRST, ipc_kobject_register_startup,      \
+              &ipc_kobject_ops_##type)
 
 struct ipc_kobject_label {
-	ipc_label_t   ikol_label;       /* [private] mandatory access label */
-	ipc_port_t XNU_PTRAUTH_SIGNED_PTR("ipc_kobject_label.ikol_alt_port") ikol_alt_port;
+  ipc_label_t ikol_label; /* [private] mandatory access label */
+  ipc_port_t
+      XNU_PTRAUTH_SIGNED_PTR("ipc_kobject_label.ikol_alt_port") ikol_alt_port;
 };
 
-extern ipc_object_label_t ipc_kobject_label_alloc(
-	ipc_object_type_t       otype,
-	ipc_label_t             label_tag,
-	ipc_port_t              alt_port);
+extern ipc_object_label_t ipc_kobject_label_alloc(ipc_object_type_t otype,
+                                                  ipc_label_t label_tag,
+                                                  ipc_port_t alt_port);
 
-extern void ipc_kobject_label_free(
-	ipc_object_label_t      label);
+extern void ipc_kobject_label_free(ipc_object_label_t label);
 
-__options_decl(ipc_kobject_alloc_options_t, uint32_t, {
-	/* Just make the naked port */
-	IPC_KOBJECT_ALLOC_NONE      = 0x00000000,
-	/* Make a send right */
-	IPC_KOBJECT_ALLOC_MAKE_SEND = 0x00000001,
-});
+__options_decl(ipc_kobject_alloc_options_t, uint32_t,
+               {
+                   /* Just make the naked port */
+                   IPC_KOBJECT_ALLOC_NONE = 0x00000000,
+                   /* Make a send right */
+                   IPC_KOBJECT_ALLOC_MAKE_SEND = 0x00000001,
+               });
 
 /* Allocates a kobject port, never fails */
-extern ipc_port_t ipc_kobject_alloc_port(
-	ipc_kobject_t               kobject,
-	ipc_object_label_t          label,
-	ipc_kobject_alloc_options_t options);
+extern ipc_port_t ipc_kobject_alloc_port(ipc_kobject_t kobject,
+                                         ipc_object_label_t label,
+                                         ipc_kobject_alloc_options_t options);
 
-__attribute__((always_inline, overloadable))
-static inline ipc_port_t
-ipc_kobject_alloc_port(
-	ipc_kobject_t               kobject,
-	ipc_object_type_t           otype,
-	ipc_kobject_alloc_options_t options)
-{
-	return ipc_kobject_alloc_port(kobject, IPC_OBJECT_LABEL(otype), options);
+__attribute__((always_inline, overloadable)) static inline ipc_port_t
+ipc_kobject_alloc_port(ipc_kobject_t kobject, ipc_object_type_t otype,
+                       ipc_kobject_alloc_options_t options) {
+  return ipc_kobject_alloc_port(kobject, IPC_OBJECT_LABEL(otype), options);
 }
 
 /*!
@@ -221,10 +208,9 @@ ipc_kobject_alloc_port(
  *   and an object reference must be donated to the port;
  * - false otherwise.
  */
-extern bool ipc_kobject_make_send_lazy_alloc_port(
-	ipc_port_t                 *port_store,
-	ipc_kobject_t               kobject,
-	ipc_kobject_type_t          type);
+extern bool ipc_kobject_make_send_lazy_alloc_port(ipc_port_t *port_store,
+                                                  ipc_kobject_t kobject,
+                                                  ipc_kobject_type_t type);
 
 /*!
  * @function ipc_kobject_is_mscount_current()
@@ -252,13 +238,11 @@ extern bool ipc_kobject_make_send_lazy_alloc_port(
  * @param mscount       The make-send count for which the no-senders
  *                      notification was issued.
  */
-extern bool ipc_kobject_is_mscount_current(
-	ipc_port_t                  port,
-	mach_port_mscount_t         mscount);
+extern bool ipc_kobject_is_mscount_current(ipc_port_t port,
+                                           mach_port_mscount_t mscount);
 
-extern bool ipc_kobject_is_mscount_current_locked(
-	ipc_port_t                  port,
-	mach_port_mscount_t         mscount);
+extern bool ipc_kobject_is_mscount_current_locked(ipc_port_t port,
+                                                  mach_port_mscount_t mscount);
 
 /*!
  * @function ipc_kobject_copy_send()
@@ -279,10 +263,9 @@ extern bool ipc_kobject_is_mscount_current_locked(
  * - @c port            if @c port was valid, in which case
  *                      a naked send right was made.
  */
-extern ipc_port_t ipc_kobject_copy_send(
-	ipc_port_t                  port,
-	ipc_kobject_t               kobject,
-	ipc_kobject_type_t          kotype) __result_use_check;
+extern ipc_port_t
+ipc_kobject_copy_send(ipc_port_t port, ipc_kobject_t kobject,
+                      ipc_kobject_type_t kotype) __result_use_check;
 
 /*!
  * @function ipc_kobject_make_send()
@@ -306,27 +289,21 @@ extern ipc_port_t ipc_kobject_copy_send(
  * - @c port            if @c port was valid, in which case
  *                      a naked send right was made.
  */
-extern ipc_port_t ipc_kobject_make_send(
-	ipc_port_t                  port,
-	ipc_kobject_t               kobject,
-	ipc_kobject_type_t          kotype) __result_use_check;
+extern ipc_port_t
+ipc_kobject_make_send(ipc_port_t port, ipc_kobject_t kobject,
+                      ipc_kobject_type_t kotype) __result_use_check;
 
-#define IPC_KOBJECT_NO_MSCOUNT      (~0ull)
+#define IPC_KOBJECT_NO_MSCOUNT (~0ull)
 
-extern ipc_kobject_t ipc_kobject_dealloc_port_and_unlock(
-	ipc_port_t                  port,
-	uint64_t                    mscount,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t
+ipc_kobject_dealloc_port_and_unlock(ipc_port_t port, uint64_t mscount,
+                                    ipc_kobject_type_t type);
 
-extern ipc_kobject_t ipc_kobject_dealloc_port(
-	ipc_port_t                  port,
-	uint64_t                    mscount,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t ipc_kobject_dealloc_port(ipc_port_t port, uint64_t mscount,
+                                              ipc_kobject_type_t type);
 
-extern void         ipc_kobject_enable(
-	ipc_port_t                  port,
-	ipc_kobject_t               kobject,
-	ipc_kobject_type_t          type);
+extern void ipc_kobject_enable(ipc_port_t port, ipc_kobject_t kobject,
+                               ipc_kobject_type_t type);
 
 /*!
  * @function ipc_kobject_require()
@@ -347,38 +324,28 @@ extern void         ipc_kobject_enable(
  * @param kobject       The kobject pointer this port should be associated to.
  * @param kotype        The kobject type this port should have.
  */
-extern void         ipc_kobject_require(
-	ipc_port_t                  port,
-	ipc_kobject_t               kobject,
-	ipc_kobject_type_t          kotype);
+extern void ipc_kobject_require(ipc_port_t port, ipc_kobject_t kobject,
+                                ipc_kobject_type_t kotype);
 
-extern ipc_kobject_t ipc_kobject_get_raw(
-	ipc_port_t                  port,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t ipc_kobject_get_raw(ipc_port_t port,
+                                         ipc_kobject_type_t type);
 
-extern ipc_kobject_t ipc_kobject_get_locked(
-	ipc_port_t                  port,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t ipc_kobject_get_locked(ipc_port_t port,
+                                            ipc_kobject_type_t type);
 
-extern ipc_kobject_t ipc_kobject_get_stable(
-	ipc_port_t                  port,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t ipc_kobject_get_stable(ipc_port_t port,
+                                            ipc_kobject_type_t type);
 
-extern ipc_kobject_t ipc_kobject_disable_locked(
-	ipc_port_t                  port,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t ipc_kobject_disable_locked(ipc_port_t port,
+                                                ipc_kobject_type_t type);
 
-extern ipc_kobject_t ipc_kobject_disable(
-	ipc_port_t                  port,
-	ipc_kobject_type_t          type);
+extern ipc_kobject_t ipc_kobject_disable(ipc_port_t port,
+                                         ipc_kobject_type_t type);
 
 /* Check if a kobject can be copied out to a given space */
-extern bool     ipc_kobject_label_check_or_substitute(
-	ipc_space_t                 space,
-	ipc_port_t                  port,
-	ipc_object_label_t         *label,
-	mach_msg_type_name_t        msgt_name,
-	ipc_port_t                 *subst_portp) __result_use_check;
+extern bool ipc_kobject_label_check_or_substitute(
+    ipc_space_t space, ipc_port_t port, ipc_object_label_t *label,
+    mach_msg_type_name_t msgt_name, ipc_port_t *subst_portp) __result_use_check;
 
 /*!
  * @brief
@@ -405,43 +372,31 @@ extern bool     ipc_kobject_label_check_or_substitute(
  * @param subst_portp   (out) an optional substitution port,
  *                      to replace @c port with.
  */
-__result_use_check
-static inline bool
-ip_label_check_or_substitute(
-	ipc_space_t                 space,
-	ipc_port_t                  port,
-	ipc_object_label_t         *label,
-	mach_msg_type_name_t        msgt_name,
-	ipc_port_t                 *subst_portp)
-{
-	if (!io_is_kobject_type(label->io_type) || !label->iol_kobject) {
-		*subst_portp = IP_NULL;
-		return true;
-	}
-	return ipc_kobject_label_check_or_substitute(space, port, label, msgt_name, subst_portp);
+__result_use_check static inline bool ip_label_check_or_substitute(
+    ipc_space_t space, ipc_port_t port, ipc_object_label_t *label,
+    mach_msg_type_name_t msgt_name, ipc_port_t *subst_portp) {
+  if (!io_is_kobject_type(label->io_type) || !label->iol_kobject) {
+    *subst_portp = IP_NULL;
+    return true;
+  }
+  return ipc_kobject_label_check_or_substitute(space, port, label, msgt_name,
+                                               subst_portp);
 }
 
 /* implementation details */
 
-__startup_func
-extern void ipc_kobject_register_startup(
-	ipc_kobject_ops_t           ops);
+__startup_func extern void ipc_kobject_register_startup(ipc_kobject_ops_t ops);
 
 /* Dispatch a kernel server function */
-extern ipc_kmsg_t ipc_kobject_server(
-	ipc_port_t                  receiver,
-	ipc_kmsg_t                  request,
-	mach_msg_option64_t         option);
+extern ipc_kmsg_t ipc_kobject_server(ipc_port_t receiver, ipc_kmsg_t request,
+                                     mach_msg_option64_t option);
 
-#define null_conversion(port)   (port)
+#define null_conversion(port) (port)
 
-extern void ipc_kobject_notify_send_once_and_unlock(
-	ipc_port_t                  port);
+extern void ipc_kobject_notify_send_once_and_unlock(ipc_port_t port);
 
-extern kern_return_t uext_server(
-	ipc_port_t                  receiver,
-	ipc_kmsg_t                  request,
-	ipc_kmsg_t                  *reply);
+extern kern_return_t uext_server(ipc_port_t receiver, ipc_kmsg_t request,
+                                 ipc_kmsg_t *reply);
 
 #endif /* MACH_KERNEL_PRIVATE */
 #if XNU_KERNEL_PRIVATE
@@ -470,11 +425,10 @@ extern kern_return_t uext_server(
  * - KERN_INVALID_CAPABILITY
  *                      The right isn't of the right kobject type.
  */
-extern kern_return_t ipc_typed_port_copyin_send(
-	ipc_space_t                 space,
-	mach_port_name_t            name,
-	ipc_kobject_type_t          kotype,
-	ipc_port_t                 *port);
+extern kern_return_t ipc_typed_port_copyin_send(ipc_space_t space,
+                                                mach_port_name_t name,
+                                                ipc_kobject_type_t kotype,
+                                                ipc_port_t *port);
 
 /*!
  * @function ipc_typed_port_release_send()
@@ -486,9 +440,8 @@ extern kern_return_t ipc_typed_port_copyin_send(
  * This is an alias for ipc_port_release_send() that the BSD side can use.
  * If @c kotype is IOT_ANY, any right is accepted.
  */
-extern void       ipc_typed_port_release_send(
-	ipc_port_t                  port,
-	ipc_kobject_type_t          kotype);
+extern void ipc_typed_port_release_send(ipc_port_t port,
+                                        ipc_kobject_type_t kotype);
 
 #endif /* XNU_KERNEL_PRIVATE */
 #pragma GCC visibility pop

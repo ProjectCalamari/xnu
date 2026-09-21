@@ -53,8 +53,8 @@ typedef uintptr_t uptr;
  *
  * Consumed by: kasan_map_shadow()
  */
-#define KASAN_CANNOT_POISON             true
-#define KASAN_MAY_POISON                false
+#define KASAN_CANNOT_POISON true
+#define KASAN_MAY_POISON false
 
 __BEGIN_DECLS
 
@@ -92,8 +92,10 @@ bool kasan_check_shadow(vm_address_t, vm_size_t, uint8_t);
 void kasan_unpoison_cxx_array_cookie(void *);
 
 /* Fakestack */
-void kasan_fakestack_drop(thread_t); /* mark all fakestack entries for thread as unused */
-void kasan_fakestack_gc(thread_t);   /* free and poison all unused fakestack objects for thread */
+void kasan_fakestack_drop(
+    thread_t); /* mark all fakestack entries for thread as unused */
+void kasan_fakestack_gc(
+    thread_t); /* free and poison all unused fakestack objects for thread */
 void kasan_fakestack_suspend(void);
 void kasan_fakestack_resume(void);
 void kasan_unpoison_fakestack(thread_t);
@@ -105,12 +107,12 @@ void kasan_kdp_disable(void);
 
 /* Tests API */
 struct kasan_test {
-	int (* func)(struct kasan_test *);
-	void (* cleanup)(struct kasan_test *);
-	const char *name;
-	int result;
-	void *data;
-	size_t datasz;
+  int (*func)(struct kasan_test *);
+  void (*cleanup)(struct kasan_test *);
+  const char *name;
+  int result;
+  void *data;
+  size_t datasz;
 };
 void __kasan_runtests(struct kasan_test *, int numtests);
 
@@ -135,7 +137,7 @@ extern vm_offset_t shadow_pnext, shadow_ptop;
 
 /* thread interface */
 struct kasan_thread_data {
-	LIST_HEAD(fakestack_header_list, fakestack_header) fakestack_head;
+  LIST_HEAD(fakestack_header_list, fakestack_header) fakestack_head;
 };
 struct kasan_thread_data *kasan_get_thread_data(thread_t);
 void kasan_init_thread(struct kasan_thread_data *);
@@ -147,12 +149,12 @@ void kasan_init_thread(struct kasan_thread_data *);
 extern int __asan_option_detect_stack_use_after_return;
 extern const uintptr_t __asan_shadow_memory_dynamic_address;
 
-#define KASAN_DECLARE_FOREACH_WIDTH(ret, func, ...) \
-	ret func ## 1(__VA_ARGS__); \
-	ret func ## 2(__VA_ARGS__); \
-	ret func ## 4(__VA_ARGS__); \
-	ret func ## 8(__VA_ARGS__); \
-	ret func ## 16(__VA_ARGS__)
+#define KASAN_DECLARE_FOREACH_WIDTH(ret, func, ...)                            \
+  ret func##1(__VA_ARGS__);                                                    \
+  ret func##2(__VA_ARGS__);                                                    \
+  ret func##4(__VA_ARGS__);                                                    \
+  ret func##8(__VA_ARGS__);                                                    \
+  ret func##16(__VA_ARGS__)
 
 KASAN_DECLARE_FOREACH_WIDTH(void, __asan_report_load, uptr);
 KASAN_DECLARE_FOREACH_WIDTH(void, __asan_report_store, uptr);
@@ -199,7 +201,7 @@ void __asan_storeN(uptr, size_t);
 void __sanitizer_ptr_sub(uptr, uptr);
 void __sanitizer_ptr_cmp(uptr, uptr);
 void __sanitizer_annotate_contiguous_container(const void *, const void *,
-    const void *, const void *n);
+                                               const void *, const void *n);
 
 void __asan_exp_loadN(uptr, size_t, int32_t);
 void __asan_exp_storeN(uptr, size_t, int32_t);
@@ -233,7 +235,7 @@ __END_DECLS
 #endif /* KASAN */
 
 #if __has_feature(address_sanitizer)
-#define NOKASAN __attribute__ ((no_sanitize_address))
+#define NOKASAN __attribute__((no_sanitize_address))
 #elif __has_feature(hwaddress_sanitizer)
 #define NOKASAN __attribute__((no_sanitize("kernel-hwaddress")))
 #else /* address_sanitizer || hwaddress_sanitizer */
@@ -248,7 +250,7 @@ __END_DECLS
  *
  * Consumed in OSKext.cpp, so must stay outside KASAN-specific defines.
  */
-#define KASAN_GLOBAL_SEGNAME  "__DATA"
+#define KASAN_GLOBAL_SEGNAME "__DATA"
 #define KASAN_GLOBAL_SECTNAME "__asan_globals"
 
 #endif /* KERNEL_PRIVATE */

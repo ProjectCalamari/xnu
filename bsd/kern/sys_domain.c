@@ -30,10 +30,10 @@
  *	@(#)sys_domain.c       1.0 (6/1/2000)
  */
 
-#include <sys/param.h>
-#include <sys/protosw.h>
 #include <sys/domain.h>
 #include <sys/mcache.h>
+#include <sys/param.h>
+#include <sys/protosw.h>
 #include <sys/sys_domain.h>
 #include <sys/sysctl.h>
 
@@ -43,24 +43,21 @@ struct domain *systemdomain = NULL;
 static void systemdomain_init(struct domain *);
 
 struct domain systemdomain_s = {
-	.dom_family =           PF_SYSTEM,
-	.dom_name =             "system",
-	.dom_init =             systemdomain_init,
+    .dom_family = PF_SYSTEM,
+    .dom_name = "system",
+    .dom_init = systemdomain_init,
 };
 
-SYSCTL_NODE(_net, PF_SYSTEM, systm,
-    CTLFLAG_RW | CTLFLAG_LOCKED, 0, "System domain");
+SYSCTL_NODE(_net, PF_SYSTEM, systm, CTLFLAG_RW | CTLFLAG_LOCKED, 0,
+            "System domain");
 
+static void systemdomain_init(struct domain *dp) {
+  VERIFY(!(dp->dom_flags & DOM_INITIALIZED));
+  VERIFY(systemdomain == NULL);
 
-static void
-systemdomain_init(struct domain *dp)
-{
-	VERIFY(!(dp->dom_flags & DOM_INITIALIZED));
-	VERIFY(systemdomain == NULL);
+  systemdomain = dp;
 
-	systemdomain = dp;
-
-	/* add system domain built in protocol initializers here */
-	kern_event_init(dp);
-	kern_control_init(dp);
+  /* add system domain built in protocol initializers here */
+  kern_event_init(dp);
+  kern_control_init(dp);
 }

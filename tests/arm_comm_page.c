@@ -27,28 +27,27 @@
  */
 
 #include <darwintest.h>
-#include <pthread.h>
 #include <machine/cpu_capabilities.h>
+#include <pthread.h>
 #include <sys/types.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.arm"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("arm"),
-	T_META_OWNER("jharmening"),
-	T_META_RUN_CONCURRENTLY(true));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.arm"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("arm"), T_META_OWNER("jharmening"),
+              T_META_RUN_CONCURRENTLY(true));
 
-T_DECL(arm_comm_page_sanity,
-    "Test that arm comm page values are sane.")
-{
+T_DECL(arm_comm_page_sanity, "Test that arm comm page values are sane.") {
 #if !defined(__arm64__)
-	T_SKIP("Running on non-arm target, skipping...");
+  T_SKIP("Running on non-arm target, skipping...");
 #else
-	uint8_t page_shift = COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT_LEGACY);
-	T_QUIET; T_ASSERT_NE(page_shift, 0, "check that legacy kernel page shift is non-zero");
-	T_QUIET; T_ASSERT_EQ(COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT), page_shift,
-	    "check that 'new' and 'legacy' page shifts are identical");
-	T_QUIET; T_ASSERT_EQ(COMM_PAGE_READ(uint32_t, DEV_FIRM_LEGACY), COMM_PAGE_READ(uint32_t, DEV_FIRM),
-	    "check that 'new' and 'legacy' DEV_FIRM fields are identical");
+  uint8_t page_shift = COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT_LEGACY);
+  T_QUIET;
+  T_ASSERT_NE(page_shift, 0, "check that legacy kernel page shift is non-zero");
+  T_QUIET;
+  T_ASSERT_EQ(COMM_PAGE_READ(uint8_t, KERNEL_PAGE_SHIFT), page_shift,
+              "check that 'new' and 'legacy' page shifts are identical");
+  T_QUIET;
+  T_ASSERT_EQ(COMM_PAGE_READ(uint32_t, DEV_FIRM_LEGACY),
+              COMM_PAGE_READ(uint32_t, DEV_FIRM),
+              "check that 'new' and 'legacy' DEV_FIRM fields are identical");
 #endif
 }

@@ -26,53 +26,49 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <skywalk/os_skywalk_private.h>
-#include <skywalk/nexus/flowswitch/nx_flowswitch.h>
 #include <skywalk/nexus/flowswitch/fsw_var.h>
+#include <skywalk/nexus/flowswitch/nx_flowswitch.h>
+#include <skywalk/os_skywalk_private.h>
 
 static sa_family_t fsw_cellular_demux(struct nx_flowswitch *,
-    struct __kern_packet *);
+                                      struct __kern_packet *);
 
-int
-fsw_cellular_setup(struct nx_flowswitch *fsw, struct ifnet *ifp)
-{
+int fsw_cellular_setup(struct nx_flowswitch *fsw, struct ifnet *ifp) {
 #pragma unused(ifp)
-	fsw->fsw_resolve = fsw_generic_resolve;
-	fsw->fsw_demux = fsw_cellular_demux;
-	fsw->fsw_frame = NULL;
-	fsw->fsw_frame_headroom = 0;
-	return 0;
+  fsw->fsw_resolve = fsw_generic_resolve;
+  fsw->fsw_demux = fsw_cellular_demux;
+  fsw->fsw_frame = NULL;
+  fsw->fsw_frame_headroom = 0;
+  return 0;
 }
 
-static sa_family_t
-fsw_cellular_demux(struct nx_flowswitch *fsw, struct __kern_packet *pkt)
-{
+static sa_family_t fsw_cellular_demux(struct nx_flowswitch *fsw,
+                                      struct __kern_packet *pkt) {
 #pragma unused(fsw)
-	const struct ip *iph;
-	const struct ip6_hdr *ip6h;
-	sa_family_t af = AF_UNSPEC;
-	uint32_t bdlen, bdlim, bdoff;
-	uint8_t *baddr;
+  const struct ip *iph;
+  const struct ip6_hdr *ip6h;
+  sa_family_t af = AF_UNSPEC;
+  uint32_t bdlen, bdlim, bdoff;
+  uint8_t *baddr;
 
-	MD_BUFLET_ADDR_ABS_DLEN(pkt, baddr, bdlen, bdlim, bdoff);
-	baddr += pkt->pkt_headroom;
-	iph = (struct ip *)(void *)baddr;
-	ip6h = (struct ip6_hdr *)(void *)baddr;
+  MD_BUFLET_ADDR_ABS_DLEN(pkt, baddr, bdlen, bdlim, bdoff);
+  baddr += pkt->pkt_headroom;
+  iph = (struct ip *)(void *)baddr;
+  ip6h = (struct ip6_hdr *)(void *)baddr;
 
-	if ((pkt->pkt_length >= sizeof(*iph)) &&
-	    (pkt->pkt_headroom + sizeof(*iph)) <= bdlim &&
-	    (iph->ip_v == IPVERSION)) {
-		af = AF_INET;
-	} else if ((pkt->pkt_length >= sizeof(*ip6h)) &&
-	    (pkt->pkt_headroom + sizeof(*ip6h) <= bdlim) &&
-	    ((ip6h->ip6_vfc & IPV6_VERSION_MASK) == IPV6_VERSION)) {
-		af = AF_INET6;
-	} else {
-		SK_ERR("unrecognized pkt, hr %u len %u", pkt->pkt_headroom,
-		    pkt->pkt_length);
-	}
+  if ((pkt->pkt_length >= sizeof(*iph)) &&
+      (pkt->pkt_headroom + sizeof(*iph)) <= bdlim && (iph->ip_v == IPVERSION)) {
+    af = AF_INET;
+  } else if ((pkt->pkt_length >= sizeof(*ip6h)) &&
+             (pkt->pkt_headroom + sizeof(*ip6h) <= bdlim) &&
+             ((ip6h->ip6_vfc & IPV6_VERSION_MASK) == IPV6_VERSION)) {
+    af = AF_INET6;
+  } else {
+    SK_ERR("unrecognized pkt, hr %u len %u", pkt->pkt_headroom,
+           pkt->pkt_length);
+  }
 
-	pkt->pkt_l2_len = 0;
+  pkt->pkt_l2_len = 0;
 
-	return af;
+  return af;
 }

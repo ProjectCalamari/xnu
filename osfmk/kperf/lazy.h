@@ -29,9 +29,9 @@
 #ifndef KPERF_LAZY_H
 #define KPERF_LAZY_H
 
+#include <kern/thread.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <kern/thread.h>
 
 extern unsigned int kperf_lazy_wait_action;
 extern unsigned int kperf_lazy_cpu_action;
@@ -39,8 +39,8 @@ extern unsigned int kperf_lazy_cpu_action;
 void kperf_lazy_reset(void);
 void kperf_lazy_off_cpu(thread_t thread);
 void kperf_lazy_make_runnable(thread_t thread, bool in_interrupt);
-void kperf_lazy_wait_sample(thread_t thread,
-    thread_continue_t continuation, uintptr_t *starting_fp);
+void kperf_lazy_wait_sample(thread_t thread, thread_continue_t continuation,
+                            uintptr_t *starting_fp);
 void kperf_lazy_cpu_sample(thread_t thread, unsigned int flags, bool interrupt);
 
 /* accessors for configuration */

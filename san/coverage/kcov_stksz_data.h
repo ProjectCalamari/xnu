@@ -27,8 +27,8 @@
 #ifndef _KCOV_STKSZ_DATA_H_
 #define _KCOV_STKSZ_DATA_H_
 
-#include <stdbool.h>
 #include <mach/vm_types.h>
+#include <stdbool.h>
 
 #if KERNEL_PRIVATE
 
@@ -38,11 +38,11 @@
  * Stack size monitor per-cpu data.
  */
 typedef struct kcov_stksz_thread {
-	vm_offset_t    kst_stack;       /* thread stack override */
-	uintptr_t      kst_pc;          /* last seen program counter */
-	uint32_t       kst_stksz;       /* last seen stack size */
-	uint32_t       kst_stksz_prev;  /* previous known stack size */
-	bool           kst_th_above;    /* threshold */
+  vm_offset_t kst_stack;   /* thread stack override */
+  uintptr_t kst_pc;        /* last seen program counter */
+  uint32_t kst_stksz;      /* last seen stack size */
+  uint32_t kst_stksz_prev; /* previous known stack size */
+  bool kst_th_above;       /* threshold */
 } kcov_stksz_thread_t;
 
 #endif /* CONFIG_STKSZ */

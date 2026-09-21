@@ -10,16 +10,14 @@
 
 #define ARRAY_COUNT(_a) (sizeof((_a)) / sizeof((_a[0])))
 
-#define REQUIRE_RECOUNT_PMCS \
-    T_META_REQUIRES_SYSCTL_EQ("kern.monotonic.supported", 1)
-#define REQUIRE_RECOUNT_ENERGY \
-    T_META_REQUIRES_SYSTCL_EQ("kern.pervasive_energy", 1)
-#define REQUIRE_MULTIPLE_PERF_LEVELS \
-    T_META_REQUIRES_SYSCTL_NE("hw.nperflevels", 1)
-#define REQUIRE_EXCLAVES \
-    T_META_REQUIRES_SYSCTL_EQ("kern.exclaves_status", 1)
-#define SET_THREAD_BIND_BOOTARG \
-    T_META_BOOTARGS_SET("enable_skstb=1")
+#define REQUIRE_RECOUNT_PMCS                                                   \
+  T_META_REQUIRES_SYSCTL_EQ("kern.monotonic.supported", 1)
+#define REQUIRE_RECOUNT_ENERGY                                                 \
+  T_META_REQUIRES_SYSTCL_EQ("kern.pervasive_energy", 1)
+#define REQUIRE_MULTIPLE_PERF_LEVELS                                           \
+  T_META_REQUIRES_SYSCTL_NE("hw.nperflevels", 1)
+#define REQUIRE_EXCLAVES T_META_REQUIRES_SYSCTL_EQ("kern.exclaves_status", 1)
+#define SET_THREAD_BIND_BOOTARG T_META_BOOTARGS_SET("enable_skstb=1")
 
 // Enable/disable `T_MAYFAIL` for any expects annotated with
 // `T_MAYFAIL_IF_ENABLED`. Defaults to disabled.
@@ -29,7 +27,12 @@ void set_expects_may_fail(bool may_fail);
 // annotated with `T_MAYFAIL_IF_ENABLED`).
 bool expects_may_fail(void);
 
-#define T_MAYFAIL_IF_ENABLED(reason) { if (expects_may_fail()) { T_MAYFAIL_WITH_REASON(reason); } }
+#define T_MAYFAIL_IF_ENABLED(reason)                                           \
+  {                                                                            \
+    if (expects_may_fail()) {                                                  \
+      T_MAYFAIL_WITH_REASON(reason);                                           \
+    }                                                                          \
+  }
 
 // Returns true if the system implicitly tracks CPI.
 bool has_cpi(void);
@@ -79,24 +82,25 @@ uint64_t ns_from_time_value(struct time_value tv);
 struct time_value time_value_from_ns(uint64_t ns);
 
 // What an actor should do when it's running.
-__enum_decl(role_t, uint32_t, {
-	ROLE_NONE,
-	ROLE_SPIN,
-	ROLE_WAIT,
-});
+__enum_decl(role_t, uint32_t,
+            {
+                ROLE_NONE,
+                ROLE_SPIN,
+                ROLE_WAIT,
+            });
 
 // A thread doing work according to a script.
 struct actor {
-	pthread_t act_thread;
-	role_t act_role;
-	void *act_context;
+  pthread_t act_thread;
+  role_t act_role;
+  void *act_context;
 };
 
 struct scene {
-	unsigned int scn_actor_count;
-	uintptr_t scn_spin_sync;
-	void *scn_wait_sync;
-	struct actor scn_actors[];
+  unsigned int scn_actor_count;
+  uintptr_t scn_spin_sync;
+  void *scn_wait_sync;
+  struct actor scn_actors[];
 };
 
 // Start `n` threads that follow a given pattern of scripts.

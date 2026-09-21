@@ -37,42 +37,47 @@ void pe_identify_machine(boot_args *args);
  *   Sets up platform parameters.
  *   Returns:    nothing
  */
-void
-pe_identify_machine(__unused boot_args *args)
-{
-	// Clear the gPEClockFrequencyInfo struct
-	bzero((void *)&gPEClockFrequencyInfo, sizeof(clock_frequency_info_t));
+void pe_identify_machine(__unused boot_args *args) {
+  // Clear the gPEClockFrequencyInfo struct
+  bzero((void *)&gPEClockFrequencyInfo, sizeof(clock_frequency_info_t));
 
-	// Start with default values.
-	gPEClockFrequencyInfo.timebase_frequency_hz = 1000000000;
-	gPEClockFrequencyInfo.bus_frequency_hz      =  100000000;
-	gPEClockFrequencyInfo.cpu_frequency_hz      =  300000000;
+  // Start with default values.
+  gPEClockFrequencyInfo.timebase_frequency_hz = 1000000000;
+  gPEClockFrequencyInfo.bus_frequency_hz = 100000000;
+  gPEClockFrequencyInfo.cpu_frequency_hz = 300000000;
 
-	gPEClockFrequencyInfo.bus_frequency_min_hz = gPEClockFrequencyInfo.bus_frequency_hz;
-	gPEClockFrequencyInfo.bus_frequency_max_hz = gPEClockFrequencyInfo.bus_frequency_hz;
-	gPEClockFrequencyInfo.cpu_frequency_min_hz = gPEClockFrequencyInfo.cpu_frequency_hz;
-	gPEClockFrequencyInfo.cpu_frequency_max_hz = gPEClockFrequencyInfo.cpu_frequency_hz;
+  gPEClockFrequencyInfo.bus_frequency_min_hz =
+      gPEClockFrequencyInfo.bus_frequency_hz;
+  gPEClockFrequencyInfo.bus_frequency_max_hz =
+      gPEClockFrequencyInfo.bus_frequency_hz;
+  gPEClockFrequencyInfo.cpu_frequency_min_hz =
+      gPEClockFrequencyInfo.cpu_frequency_hz;
+  gPEClockFrequencyInfo.cpu_frequency_max_hz =
+      gPEClockFrequencyInfo.cpu_frequency_hz;
 
-	gPEClockFrequencyInfo.dec_clock_rate_hz = gPEClockFrequencyInfo.timebase_frequency_hz;
-	gPEClockFrequencyInfo.bus_clock_rate_hz = gPEClockFrequencyInfo.bus_frequency_hz;
-	gPEClockFrequencyInfo.cpu_clock_rate_hz = gPEClockFrequencyInfo.cpu_frequency_hz;
+  gPEClockFrequencyInfo.dec_clock_rate_hz =
+      gPEClockFrequencyInfo.timebase_frequency_hz;
+  gPEClockFrequencyInfo.bus_clock_rate_hz =
+      gPEClockFrequencyInfo.bus_frequency_hz;
+  gPEClockFrequencyInfo.cpu_clock_rate_hz =
+      gPEClockFrequencyInfo.cpu_frequency_hz;
 
-	// Get real number from some where.
+  // Get real number from some where.
 
-	// Set the num / den pairs form the hz values.
-	gPEClockFrequencyInfo.bus_clock_rate_num = gPEClockFrequencyInfo.bus_clock_rate_hz;
-	gPEClockFrequencyInfo.bus_clock_rate_den = 1;
+  // Set the num / den pairs form the hz values.
+  gPEClockFrequencyInfo.bus_clock_rate_num =
+      gPEClockFrequencyInfo.bus_clock_rate_hz;
+  gPEClockFrequencyInfo.bus_clock_rate_den = 1;
 
-	gPEClockFrequencyInfo.bus_to_cpu_rate_num =
-	    (2 * gPEClockFrequencyInfo.cpu_clock_rate_hz) / gPEClockFrequencyInfo.bus_clock_rate_hz;
-	gPEClockFrequencyInfo.bus_to_cpu_rate_den = 2;
+  gPEClockFrequencyInfo.bus_to_cpu_rate_num =
+      (2 * gPEClockFrequencyInfo.cpu_clock_rate_hz) /
+      gPEClockFrequencyInfo.bus_clock_rate_hz;
+  gPEClockFrequencyInfo.bus_to_cpu_rate_den = 2;
 
-	gPEClockFrequencyInfo.bus_to_dec_rate_num = 1;
-	gPEClockFrequencyInfo.bus_to_dec_rate_den =
-	    gPEClockFrequencyInfo.bus_clock_rate_hz / gPEClockFrequencyInfo.dec_clock_rate_hz;
+  gPEClockFrequencyInfo.bus_to_dec_rate_num = 1;
+  gPEClockFrequencyInfo.bus_to_dec_rate_den =
+      gPEClockFrequencyInfo.bus_clock_rate_hz /
+      gPEClockFrequencyInfo.dec_clock_rate_hz;
 }
 
-void
-PE_panic_hook(const char *str __unused)
-{
-}
+void PE_panic_hook(const char *str __unused) {}

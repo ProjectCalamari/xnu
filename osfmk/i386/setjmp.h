@@ -63,7 +63,7 @@
 #define _I386_SETJMP_H_
 
 typedef struct jmp_buf {
-	int     jmp_buf[6];     /* ebx, esi, edi, ebp, esp, eip */
+  int jmp_buf[6]; /* ebx, esi, edi, ebp, esp, eip */
 } jmp_buf_t;
 
-#endif  /* _I386_SETJMP_H_ */
+#endif /* _I386_SETJMP_H_ */

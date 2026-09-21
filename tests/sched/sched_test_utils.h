@@ -2,9 +2,9 @@
 #ifndef XNU_SCHED_TEST_UTILS_H
 #define XNU_SCHED_TEST_UTILS_H
 
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <pthread.h>
 
 /* -- Meta-controls -- */
 
@@ -34,28 +34,30 @@ int bind_to_cluster_id(int cluster_id);
  * Functions to create pthreads, optionally configured with
  * a number of pthread attributes:
  */
-void create_thread_pri(pthread_t *thread_handle, int priority, void *(*func)(void *), void *arg);
+void create_thread_pri(pthread_t *thread_handle, int priority,
+                       void *(*func)(void *), void *arg);
 typedef enum {
-	eDetached,
-	eJoinable, // default
+  eDetached,
+  eJoinable, // default
 } detach_state_t;
 typedef enum {
-	eSchedFIFO = 4,
-	eSchedRR = 2,
-	eSchedOther = 1,
-	eSchedDefault = 0, // default
+  eSchedFIFO = 4,
+  eSchedRR = 2,
+  eSchedOther = 1,
+  eSchedDefault = 0, // default
 } sched_policy_t;
 #define DEFAULT_STACK_SIZE 0
 // Default qos_class is QOS_CLASS_UNSPECIFIED
-pthread_attr_t *
-create_pthread_attr(int priority,
-    detach_state_t detach_state, qos_class_t qos_class,
-    sched_policy_t sched_policy, size_t stack_size);
-void create_thread(pthread_t *thread_handle, pthread_attr_t *attr, void *(*func)(void *), void *arg);
+pthread_attr_t *create_pthread_attr(int priority, detach_state_t detach_state,
+                                    qos_class_t qos_class,
+                                    sched_policy_t sched_policy,
+                                    size_t stack_size);
+void create_thread(pthread_t *thread_handle, pthread_attr_t *attr,
+                   void *(*func)(void *), void *arg);
 pthread_t *create_threads(int num_threads, int priority,
-    detach_state_t detach_state, qos_class_t qos_class,
-    sched_policy_t sched_policy, size_t stack_size,
-    void *(*func)(void *), void *arg_array[]);
+                          detach_state_t detach_state, qos_class_t qos_class,
+                          sched_policy_t sched_policy, size_t stack_size,
+                          void *(*func)(void *), void *arg_array[]);
 
 /* -- 🛰️ Platform checks -- */
 bool platform_is_amp(void);
@@ -70,12 +72,13 @@ const char *platform_train_descriptor(void);
 /* -- 📈🕒 Monitor system performance state -- */
 
 /*
- * Returns true if the system successfully quiesced below the specified threshold
- * within the specified timeout, and false otherwise.
- * idle_threshold is given as a ratio between [0.0, 1.0], defaulting to 0.9.
- * Passing argument --no-quiesce disables waiting for quiescence.
+ * Returns true if the system successfully quiesced below the specified
+ * threshold within the specified timeout, and false otherwise. idle_threshold
+ * is given as a ratio between [0.0, 1.0], defaulting to 0.9. Passing argument
+ * --no-quiesce disables waiting for quiescence.
  */
-bool wait_for_quiescence(int argc, char *const argv[], double idle_threshold, int timeout_seconds);
+bool wait_for_quiescence(int argc, char *const argv[], double idle_threshold,
+                         int timeout_seconds);
 bool wait_for_quiescence_default(int argc, char *const argv[]);
 
 /* Returns true if all cores on the device are recommended */
@@ -85,7 +88,8 @@ bool check_recommended_core_mask(uint64_t *core_mask);
 
 /*
  * Spawns and waits for clpcctrl with the given arguments.
- * If read_value is true, returns the value assumed to be elicited from clpcctrl.
+ * If read_value is true, returns the value assumed to be elicited from
+ * clpcctrl.
  */
 uint64_t execute_clpcctrl(char *clpcctrl_args[], bool read_value);
 
@@ -103,11 +107,12 @@ uint64_t execute_clpcctrl(char *clpcctrl_args[], bool read_value);
 
 typedef void *trace_handle_t;
 
-__options_decl(collect_trace_flags_t, uint32_t, {
-	COLLECT_TRACE_FLAG_NONE                 = 0x00,
-	COLLECT_TRACE_FLAG_DISABLE_SYSCALLS     = 0x01,
-	COLLECT_TRACE_FLAG_DISABLE_CLUTCH       = 0x02,
-});
+__options_decl(collect_trace_flags_t, uint32_t,
+               {
+                   COLLECT_TRACE_FLAG_NONE = 0x00,
+                   COLLECT_TRACE_FLAG_DISABLE_SYSCALLS = 0x01,
+                   COLLECT_TRACE_FLAG_DISABLE_CLUTCH = 0x02,
+               });
 
 /*
  * Begins trace collection, using the specified name as a prefix for all
@@ -119,8 +124,11 @@ __options_decl(collect_trace_flags_t, uint32_t, {
  * run for long durations, take care to begin tracing close to the start of
  * the period of interest.
  */
-trace_handle_t begin_collect_trace(int argc, char *const argv[], char *filename);
-trace_handle_t begin_collect_trace_fmt(collect_trace_flags_t flags, int argc, char *const argv[], char *filename_fmt, ...);
+trace_handle_t begin_collect_trace(int argc, char *const argv[],
+                                   char *filename);
+trace_handle_t begin_collect_trace_fmt(collect_trace_flags_t flags, int argc,
+                                       char *const argv[], char *filename_fmt,
+                                       ...);
 
 /*
  * NOTE: It's possible that tests may induce CPU starvation that can
@@ -140,6 +148,7 @@ void save_collected_trace(trace_handle_t handle);
 void discard_collected_trace(trace_handle_t handle);
 
 /* Drop a tracepoint for test failure. */
-void sched_kdebug_test_fail(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3);
+void sched_kdebug_test_fail(uint64_t arg0, uint64_t arg1, uint64_t arg2,
+                            uint64_t arg3);
 
 #endif /* XNU_SCHED_TEST_UTILS_H */

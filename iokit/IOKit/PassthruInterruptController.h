@@ -36,44 +36,46 @@ extern "C" {
 
 /*!
  * @class       PassthruInterruptController
- * @abstract    Trivial IOInterruptController class that passes all IRQs through to a
- *              "child" driver.
- * @discussion  Waits for a "child" driver (typically loaded in a kext) to register itself,
- *              then passes the child driver's IOService pointer back via
+ * @abstract    Trivial IOInterruptController class that passes all IRQs through
+ * to a "child" driver.
+ * @discussion  Waits for a "child" driver (typically loaded in a kext) to
+ * register itself, then passes the child driver's IOService pointer back via
  *              waitForChildController() so that XNU can operate on it directly.
  */
-class PassthruInterruptController : public IOInterruptController
-{
-	OSDeclareDefaultStructors(PassthruInterruptController);
+class PassthruInterruptController : public IOInterruptController {
+  OSDeclareDefaultStructors(PassthruInterruptController);
 
 public:
-	virtual bool     init(void) APPLE_KEXT_OVERRIDE;
+  virtual bool init(void) APPLE_KEXT_OVERRIDE;
 
-	virtual void     *waitForChildController(void);
+  virtual void *waitForChildController(void);
 
-	virtual void     setCPUInterruptProperties(IOService *service) APPLE_KEXT_OVERRIDE;
+  virtual void
+  setCPUInterruptProperties(IOService *service) APPLE_KEXT_OVERRIDE;
 
-	virtual IOReturn registerInterrupt(IOService *nub, int source,
-	    void *target,
-	    IOInterruptHandler handler,
-	    void *refCon) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn registerInterrupt(IOService *nub, int source, void *target,
+                                     IOInterruptHandler handler,
+                                     void *refCon) APPLE_KEXT_OVERRIDE;
 
-	virtual IOReturn getInterruptType(IOService *nub, int source,
-	    int *interruptType) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn getInterruptType(IOService *nub, int source,
+                                    int *interruptType) APPLE_KEXT_OVERRIDE;
 
-	virtual IOReturn enableInterrupt(IOService *nub, int source) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn disableInterrupt(IOService *nub, int source) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn causeInterrupt(IOService *nub, int source) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn enableInterrupt(IOService *nub,
+                                   int source) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn disableInterrupt(IOService *nub,
+                                    int source) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn causeInterrupt(IOService *nub,
+                                  int source) APPLE_KEXT_OVERRIDE;
 
-	virtual IOReturn handleInterrupt(void *refCon, IOService *nub,
-	    int source) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn handleInterrupt(void *refCon, IOService *nub,
+                                   int source) APPLE_KEXT_OVERRIDE;
 
-	virtual void externalInterrupt(void);
+  virtual void externalInterrupt(void);
 
 protected:
-	IOInterruptHandler child_handler;
-	void               *child_target;
-	void               *child_refCon;
-	IOService          *child_nub;
-	semaphore_t        child_sentinel;
+  IOInterruptHandler child_handler;
+  void *child_target;
+  void *child_refCon;
+  IOService *child_nub;
+  semaphore_t child_sentinel;
 };

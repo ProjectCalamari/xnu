@@ -58,13 +58,13 @@
  * hierarchy.
  */
 struct page_table_level_info {
-	const uint64_t size;
-	const uint64_t offmask;
-	const uint64_t shift;
-	const uint64_t index_mask;
-	const uint64_t valid_mask;
-	const uint64_t type_mask;
-	const uint64_t type_block;
+  const uint64_t size;
+  const uint64_t offmask;
+  const uint64_t shift;
+  const uint64_t index_mask;
+  const uint64_t valid_mask;
+  const uint64_t type_mask;
+  const uint64_t type_block;
 };
 
 /**
@@ -72,11 +72,12 @@ struct page_table_level_info {
  * instance, when dealing with stage 1 vs stage 2 pmaps.
  */
 struct page_table_ops {
-	bool (*alloc_id)(pmap_t pmap);
-	void (*free_id)(pmap_t pmap);
-	void (*flush_tlb_region_async)(vm_offset_t va, size_t length, pmap_t pmap, bool last_level_only, bool strong);
-	void (*flush_tlb_async)(pmap_t pmap);
-	pt_entry_t (*wimg_to_pte)(unsigned int wimg, pmap_paddr_t pa);
+  bool (*alloc_id)(pmap_t pmap);
+  void (*free_id)(pmap_t pmap);
+  void (*flush_tlb_region_async)(vm_offset_t va, size_t length, pmap_t pmap,
+                                 bool last_level_only, bool strong);
+  void (*flush_tlb_async)(pmap_t pmap);
+  pt_entry_t (*wimg_to_pte)(unsigned int wimg, pmap_paddr_t pa);
 };
 
 /**
@@ -91,69 +92,70 @@ struct page_table_ops {
  * to use the page table attribute getter functions defined below.
  */
 struct page_table_attr {
-	/* Sizes and offsets for each level in the page table hierarchy. */
-	const struct page_table_level_info * const pta_level_info;
+  /* Sizes and offsets for each level in the page table hierarchy. */
+  const struct page_table_level_info *const pta_level_info;
 
-	/* Operations that are dependent on the type of page table. */
-	const struct page_table_ops * const pta_ops;
+  /* Operations that are dependent on the type of page table. */
+  const struct page_table_ops *const pta_ops;
 
-	/**
-	 * The Access Permissions bits have different layouts within a page table
-	 * entry depending on whether it's an entry for a stage 1 or stage 2 pmap.
-	 *
-	 * These fields describe the correct PTE bits to set to get the wanted
-	 * permissions for the page tables described by this attribute structure.
-	 */
-	const uintptr_t ap_ro;
-	const uintptr_t ap_rw;
-	const uintptr_t ap_rona;
-	const uintptr_t ap_rwna;
-	const uintptr_t ap_xn;
-	const uintptr_t ap_x;
+  /**
+   * The Access Permissions bits have different layouts within a page table
+   * entry depending on whether it's an entry for a stage 1 or stage 2 pmap.
+   *
+   * These fields describe the correct PTE bits to set to get the wanted
+   * permissions for the page tables described by this attribute structure.
+   */
+  const uintptr_t ap_ro;
+  const uintptr_t ap_rw;
+  const uintptr_t ap_rona;
+  const uintptr_t ap_rwna;
+  const uintptr_t ap_xn;
+  const uintptr_t ap_x;
 
-	/* The page table level at which the hierarchy begins. */
-	const unsigned int pta_root_level;
+  /* The page table level at which the hierarchy begins. */
+  const unsigned int pta_root_level;
 
-	/* The page table level at which the commpage is nested into an address space. */
-	const unsigned int pta_commpage_level;
+  /* The page table level at which the commpage is nested into an address space.
+   */
+  const unsigned int pta_commpage_level;
 
-	/* The last level in the page table hierarchy (ARM supports up to four levels). */
-	const unsigned int pta_max_level;
+  /* The last level in the page table hierarchy (ARM supports up to four
+   * levels). */
+  const unsigned int pta_max_level;
 
+  /**
+   * Value to set the Translation Control Register (TCR) to in order to inform
+   * the hardware of this page table geometry.
+   */
+  const uint64_t pta_tcr_value;
 
-	/**
-	 * Value to set the Translation Control Register (TCR) to in order to inform
-	 * the hardware of this page table geometry.
-	 */
-	const uint64_t pta_tcr_value;
+  /* Page Table/Granule Size. */
+  const uint64_t pta_page_size;
 
-	/* Page Table/Granule Size. */
-	const uint64_t pta_page_size;
+  /**
+   * Size (in bytes) of the VA region at the beginning of the address space
+   * into which mappings should not be allowed.
+   */
+  const uint64_t pta_pagezero_size;
 
-	/**
-	 * Size (in bytes) of the VA region at the beginning of the address space
-	 * into which mappings should not be allowed.
-	 */
-	const uint64_t pta_pagezero_size;
+  /**
+   * How many bits to shift "1" by to get the page table size. Alternatively,
+   * could also be thought of as how many bits make up the page offset in a
+   * virtual address.
+   */
+  const uint64_t pta_page_shift;
 
-	/**
-	 * How many bits to shift "1" by to get the page table size. Alternatively,
-	 * could also be thought of as how many bits make up the page offset in a
-	 * virtual address.
-	 */
-	const uint64_t pta_page_shift;
-
-	/**
-	 * Mask of significant address bits. This is the mask needed to address the
-	 * virtual page number portion of the VA.
-	 */
-	const uint64_t pta_va_valid_mask;
+  /**
+   * Mask of significant address bits. This is the mask needed to address the
+   * virtual page number portion of the VA.
+   */
+  const uint64_t pta_va_valid_mask;
 };
 
 typedef struct page_table_attr pt_attr_t;
 
 /* The default page table attributes for a system. */
-extern const struct page_table_attr * const native_pt_attr;
+extern const struct page_table_attr *const native_pt_attr;
 extern const struct page_table_ops native_pt_ops;
 
 /**
@@ -189,7 +191,8 @@ extern const struct page_table_ops native_pt_ops;
  * modules. In reality, many of these functions probably don't need to be inline
  * and can be moved back into a .c file.
  *
- * TODO: rdar://70538514 (PMAP Cleanup: re-evaluate whether inline functions should actually be inline)
+ * TODO: rdar://70538514 (PMAP Cleanup: re-evaluate whether inline functions
+ * should actually be inline)
  */
 
 /**
@@ -212,27 +215,22 @@ extern const struct page_table_ops native_pt_ops;
  * leaf would be L3.
  */
 /* Page size getter. */
-static inline uint64_t
-pt_attr_page_size(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_page_size;
+static inline uint64_t pt_attr_page_size(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_page_size;
 }
 
 /* Pagezero region size getter. */
-static inline uint64_t
-pt_attr_pagezero_size(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_pagezero_size;
+static inline uint64_t pt_attr_pagezero_size(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_pagezero_size;
 }
 
 /**
  * Return the size of the virtual address space covered by a single TTE at a
  * specified level in the hierarchy.
  */
-__unused static inline uint64_t
-pt_attr_ln_size(const pt_attr_t * const pt_attr, unsigned int level)
-{
-	return pt_attr->pta_level_info[level].size;
+__unused static inline uint64_t pt_attr_ln_size(const pt_attr_t *const pt_attr,
+                                                unsigned int level) {
+  return pt_attr->pta_level_info[level].size;
 }
 
 /**
@@ -240,10 +238,9 @@ pt_attr_ln_size(const pt_attr_t * const pt_attr, unsigned int level)
  * shift value can be used to get the index into a page table at this level in
  * the hierarchy from a given virtual address.
  */
-__unused static inline uint64_t
-pt_attr_ln_shift(const pt_attr_t * const pt_attr, unsigned int level)
-{
-	return pt_attr->pta_level_info[level].shift;
+__unused static inline uint64_t pt_attr_ln_shift(const pt_attr_t *const pt_attr,
+                                                 unsigned int level) {
+  return pt_attr->pta_level_info[level].shift;
 }
 
 /**
@@ -251,10 +248,9 @@ pt_attr_ln_shift(const pt_attr_t * const pt_attr, unsigned int level)
  *
  * This should be equivalent to the value returned by pt_attr_ln_size() - 1.
  */
-static inline uint64_t
-pt_attr_ln_offmask(const pt_attr_t * const pt_attr, unsigned int level)
-{
-	return pt_attr->pta_level_info[level].offmask;
+static inline uint64_t pt_attr_ln_offmask(const pt_attr_t *const pt_attr,
+                                          unsigned int level) {
+  return pt_attr->pta_level_info[level].offmask;
 }
 
 /**
@@ -263,18 +259,15 @@ pt_attr_ln_offmask(const pt_attr_t * const pt_attr, unsigned int level)
  * returned by pt_attr_ln_shift() to get the index into a page table.
  */
 __unused static inline uint64_t
-pt_attr_ln_index_mask(const pt_attr_t * const pt_attr, unsigned int level)
-{
-	return pt_attr->pta_level_info[level].index_mask;
+pt_attr_ln_index_mask(const pt_attr_t *const pt_attr, unsigned int level) {
+  return pt_attr->pta_level_info[level].index_mask;
 }
 
 /**
  * Return the second to last page table level.
  */
-static inline unsigned int
-pt_attr_twig_level(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_max_level - 1;
+static inline unsigned int pt_attr_twig_level(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_max_level - 1;
 }
 
 /**
@@ -282,10 +275,8 @@ pt_attr_twig_level(const pt_attr_t * const pt_attr)
  * Translation Table Base Register (TTBR) to inform the hardware of where to
  * begin page table walks.
  */
-static inline unsigned int
-pt_attr_root_level(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_root_level;
+static inline unsigned int pt_attr_root_level(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_root_level;
 }
 
 /**
@@ -299,9 +290,8 @@ pt_attr_root_level(const pt_attr_t * const pt_attr)
  * the L3 page table is reused in every 16KB task.
  */
 static inline unsigned int
-pt_attr_commpage_level(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_commpage_level;
+pt_attr_commpage_level(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_commpage_level;
 }
 
 /**
@@ -309,9 +299,8 @@ pt_attr_commpage_level(const pt_attr_t * const pt_attr)
  * leaf level.
  */
 static __unused inline uint64_t
-pt_attr_leaf_size(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level].size;
+pt_attr_leaf_size(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level].size;
 }
 
 /**
@@ -320,19 +309,16 @@ pt_attr_leaf_size(const pt_attr_t * const pt_attr)
  * This should be equivalent to the value returned by pt_attr_leaf_size() - 1.
  */
 static __unused inline uint64_t
-pt_attr_leaf_offmask(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level].offmask;
+pt_attr_leaf_offmask(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level].offmask;
 }
 
 /**
  * Return the page descriptor shift for a leaf table entry. This shift value can
  * be used to get the index into a leaf page table from a given virtual address.
  */
-static inline uint64_t
-pt_attr_leaf_shift(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level].shift;
+static inline uint64_t pt_attr_leaf_shift(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level].shift;
 }
 
 /**
@@ -341,19 +327,16 @@ pt_attr_leaf_shift(const pt_attr_t * const pt_attr)
  * index into a leaf table.
  */
 static __unused inline uint64_t
-pt_attr_leaf_index_mask(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level].index_mask;
+pt_attr_leaf_index_mask(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level].index_mask;
 }
 
 /**
  * Return the size of the virtual address space covered by a single TTE at the
  * twig level.
  */
-static inline uint64_t
-pt_attr_twig_size(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].size;
+static inline uint64_t pt_attr_twig_size(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].size;
 }
 
 /**
@@ -361,20 +344,16 @@ pt_attr_twig_size(const pt_attr_t * const pt_attr)
  *
  * This should be equivalent to the value returned by pt_attr_twig_size() - 1.
  */
-static inline uint64_t
-pt_attr_twig_offmask(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].offmask;
+static inline uint64_t pt_attr_twig_offmask(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].offmask;
 }
 
 /**
  * Return the page descriptor shift for a twig table entry. This shift value can
  * be used to get the index into a twig page table from a given virtual address.
  */
-static inline uint64_t
-pt_attr_twig_shift(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].shift;
+static inline uint64_t pt_attr_twig_shift(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].shift;
 }
 
 /**
@@ -383,19 +362,16 @@ pt_attr_twig_shift(const pt_attr_t * const pt_attr)
  * index into a twig table.
  */
 static __unused inline uint64_t
-pt_attr_twig_index_mask(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].index_mask;
+pt_attr_twig_index_mask(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_level_info[pt_attr->pta_max_level - 1].index_mask;
 }
 
 /**
  * Return the amount of memory that a leaf table takes up. This is equivalent
  * to the amount of virtual address space covered by a single twig TTE.
  */
-static inline uint64_t
-pt_attr_leaf_table_size(const pt_attr_t * const pt_attr)
-{
-	return pt_attr_twig_size(pt_attr);
+static inline uint64_t pt_attr_leaf_table_size(const pt_attr_t *const pt_attr) {
+  return pt_attr_twig_size(pt_attr);
 }
 
 /**
@@ -404,9 +380,8 @@ pt_attr_leaf_table_size(const pt_attr_t * const pt_attr)
  * This should be equivalent to the value returned by pt_attr_twig_size() - 1.
  */
 static inline uint64_t
-pt_attr_leaf_table_offmask(const pt_attr_t * const pt_attr)
-{
-	return pt_attr_twig_offmask(pt_attr);
+pt_attr_leaf_table_offmask(const pt_attr_t *const pt_attr) {
+  return pt_attr_twig_offmask(pt_attr);
 }
 
 /**
@@ -414,10 +389,8 @@ pt_attr_leaf_table_offmask(const pt_attr_t * const pt_attr)
  * Read/Write permissions on a PTE in this type of page table hierarchy (stage 1
  * vs stage 2).
  */
-static inline uintptr_t
-pt_attr_leaf_rw(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->ap_rw;
+static inline uintptr_t pt_attr_leaf_rw(const pt_attr_t *const pt_attr) {
+  return pt_attr->ap_rw;
 }
 
 /**
@@ -425,10 +398,8 @@ pt_attr_leaf_rw(const pt_attr_t * const pt_attr)
  * Read-Only permissions on a PTE in this type of page table hierarchy (stage 1
  * vs stage 2).
  */
-static inline uintptr_t
-pt_attr_leaf_ro(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->ap_ro;
+static inline uintptr_t pt_attr_leaf_ro(const pt_attr_t *const pt_attr) {
+  return pt_attr->ap_ro;
 }
 
 /**
@@ -436,10 +407,8 @@ pt_attr_leaf_ro(const pt_attr_t * const pt_attr)
  * permissions on a PTE in this type of page table hierarchy (stage 1 vs stage
  * 2).
  */
-static inline uintptr_t
-pt_attr_leaf_rona(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->ap_rona;
+static inline uintptr_t pt_attr_leaf_rona(const pt_attr_t *const pt_attr) {
+  return pt_attr->ap_rona;
 }
 
 /**
@@ -447,47 +416,36 @@ pt_attr_leaf_rona(const pt_attr_t * const pt_attr)
  * permissions on a PTE in this type of page table hierarchy (stage 1 vs stage
  * 2).
  */
-static inline uintptr_t
-pt_attr_leaf_rwna(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->ap_rwna;
+static inline uintptr_t pt_attr_leaf_rwna(const pt_attr_t *const pt_attr) {
+  return pt_attr->ap_rwna;
 }
 
 /**
  * Return the mask of the page table entry bits required to set both the
  * privileged and unprivileged execute never bits.
  */
-static inline uintptr_t
-pt_attr_leaf_xn(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->ap_xn;
+static inline uintptr_t pt_attr_leaf_xn(const pt_attr_t *const pt_attr) {
+  return pt_attr->ap_xn;
 }
 
 /**
  * Return the mask of the page table entry bits required to set just the
  * privileged execute never bit.
  */
-static inline uintptr_t
-pt_attr_leaf_x(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->ap_x;
+static inline uintptr_t pt_attr_leaf_x(const pt_attr_t *const pt_attr) {
+  return pt_attr->ap_x;
 }
-
 
 /**
  * Return the last level in the page table hierarchy.
  */
-static inline unsigned int
-pt_attr_leaf_level(const pt_attr_t * const pt_attr)
-{
-	return pt_attr_twig_level(pt_attr) + 1;
+static inline unsigned int pt_attr_leaf_level(const pt_attr_t *const pt_attr) {
+  return pt_attr_twig_level(pt_attr) + 1;
 }
 
 /* Significant address bits in PTE */
-static inline uint64_t
-pt_attr_va_valid_mask(const pt_attr_t * const pt_attr)
-{
-	return pt_attr->pta_va_valid_mask;
+static inline uint64_t pt_attr_va_valid_mask(const pt_attr_t *const pt_attr) {
+  return pt_attr->pta_va_valid_mask;
 }
 
 /**
@@ -498,12 +456,13 @@ pt_attr_va_valid_mask(const pt_attr_t * const pt_attr)
  * @param addr The virtual address to get the index from.
  * @param pt_level The page table whose index should be returned.
  */
-static inline unsigned int
-ttn_index(const pt_attr_t * const pt_attr, vm_map_address_t addr, unsigned int pt_level)
-{
-	const uint64_t addr_masked = addr & pt_attr_va_valid_mask(pt_attr);
-	const uint64_t index_unshifted = addr_masked & pt_attr_ln_index_mask(pt_attr, pt_level);
-	return (unsigned int)(index_unshifted >> pt_attr_ln_shift(pt_attr, pt_level));
+static inline unsigned int ttn_index(const pt_attr_t *const pt_attr,
+                                     vm_map_address_t addr,
+                                     unsigned int pt_level) {
+  const uint64_t addr_masked = addr & pt_attr_va_valid_mask(pt_attr);
+  const uint64_t index_unshifted =
+      addr_masked & pt_attr_ln_index_mask(pt_attr, pt_level);
+  return (unsigned int)(index_unshifted >> pt_attr_ln_shift(pt_attr, pt_level));
 }
 
 /**
@@ -512,10 +471,9 @@ ttn_index(const pt_attr_t * const pt_attr, vm_map_address_t addr, unsigned int p
  * @param pt_attr Page table attribute structure describing the hierarchy.
  * @param addr The virtual address to get the index from.
  */
-static inline unsigned int
-tte_index(const pt_attr_t * const pt_attr, vm_map_address_t addr)
-{
-	return ttn_index(pt_attr, addr, PMAP_TT_L2_LEVEL);
+static inline unsigned int tte_index(const pt_attr_t *const pt_attr,
+                                     vm_map_address_t addr) {
+  return ttn_index(pt_attr, addr, PMAP_TT_L2_LEVEL);
 }
 
 /**
@@ -524,10 +482,9 @@ tte_index(const pt_attr_t * const pt_attr, vm_map_address_t addr)
  * @param pt_attr Page table attribute structure describing the hierarchy.
  * @param addr The virtual address to get the index from.
  */
-static inline unsigned int
-pte_index(const pt_attr_t * const pt_attr, vm_map_address_t addr)
-{
-	return ttn_index(pt_attr, addr, PMAP_TT_L3_LEVEL);
+static inline unsigned int pte_index(const pt_attr_t *const pt_attr,
+                                     vm_map_address_t addr) {
+  return ttn_index(pt_attr, addr, PMAP_TT_L3_LEVEL);
 }
 
 /**
@@ -536,10 +493,8 @@ pte_index(const pt_attr_t * const pt_attr, vm_map_address_t addr)
  * @note This will NOT work on non-leaf-level entries. Please use tte_is_valid()
  *       instead.
  */
-static inline bool
-pte_is_valid(pt_entry_t pte)
-{
-	return (pte & ARM_PTE_TYPE_MASK) == ARM_PTE_TYPE_VALID;
+static inline bool pte_is_valid(pt_entry_t pte) {
+  return (pte & ARM_PTE_TYPE_MASK) == ARM_PTE_TYPE_VALID;
 }
 
 /**
@@ -551,12 +506,10 @@ pte_is_valid(pt_entry_t pte)
  * @note This will return false if the TTE represents a non-leaf-level block
  *       mapping (instead of a table mapping).
  */
-static inline bool
-tte_is_valid_table(tt_entry_t tte)
-{
-	return (tte & (ARM_TTE_TYPE_MASK | ARM_TTE_VALID)) == (ARM_TTE_TYPE_TABLE | ARM_TTE_VALID);
+static inline bool tte_is_valid_table(tt_entry_t tte) {
+  return (tte & (ARM_TTE_TYPE_MASK | ARM_TTE_VALID)) ==
+         (ARM_TTE_TYPE_TABLE | ARM_TTE_VALID);
 }
-
 
 /**
  * Return true if a non-leaf-level TTE is valid and typed as a block mapping.
@@ -567,10 +520,9 @@ tte_is_valid_table(tt_entry_t tte)
  * @note This will return false if the TTE represents a non-leaf-level table
  *       mapping (instead of a block mapping).
  */
-static inline bool
-tte_is_valid_block(tt_entry_t tte)
-{
-	return (tte & (ARM_TTE_TYPE_MASK | ARM_TTE_VALID)) == (ARM_TTE_TYPE_BLOCK | ARM_TTE_VALID);
+static inline bool tte_is_valid_block(tt_entry_t tte) {
+  return (tte & (ARM_TTE_TYPE_MASK | ARM_TTE_VALID)) ==
+         (ARM_TTE_TYPE_BLOCK | ARM_TTE_VALID);
 }
 
 /**
@@ -579,10 +531,8 @@ tte_is_valid_block(tt_entry_t tte)
  *
  * @note This will NOT work on leaf-level entries.
  */
-static inline bool
-tte_is_table(tt_entry_t tte)
-{
-	return (tte & (ARM_TTE_TYPE_MASK)) == (ARM_TTE_TYPE_TABLE);
+static inline bool tte_is_table(tt_entry_t tte) {
+  return (tte & (ARM_TTE_TYPE_MASK)) == (ARM_TTE_TYPE_TABLE);
 }
 
 /**
@@ -591,10 +541,8 @@ tte_is_table(tt_entry_t tte)
  *
  * @note This will NOT work on leaf-level entries.
  */
-static inline bool
-tte_is_block(tt_entry_t tte)
-{
-	return (tte & (ARM_TTE_TYPE_MASK)) == (ARM_TTE_TYPE_BLOCK);
+static inline bool tte_is_block(tt_entry_t tte) {
+  return (tte & (ARM_TTE_TYPE_MASK)) == (ARM_TTE_TYPE_BLOCK);
 }
 
 /**
@@ -607,47 +555,48 @@ tte_is_block(tt_entry_t tte)
  *                     hierarchy at.
  * @param addr The virtual address to calculate the table indices off of.
  */
-static inline tt_entry_t *
-pmap_ttne(pmap_t pmap, unsigned int target_level, vm_map_address_t addr)
-{
-	tt_entry_t *table_ttep = TT_ENTRY_NULL;
-	tt_entry_t *ttep = TT_ENTRY_NULL;
-	tt_entry_t tte = ARM_TTE_EMPTY;
-	unsigned int cur_level;
+static inline tt_entry_t *pmap_ttne(pmap_t pmap, unsigned int target_level,
+                                    vm_map_address_t addr) {
+  tt_entry_t *table_ttep = TT_ENTRY_NULL;
+  tt_entry_t *ttep = TT_ENTRY_NULL;
+  tt_entry_t tte = ARM_TTE_EMPTY;
+  unsigned int cur_level;
 
-	const pt_attr_t * const pt_attr = pmap_get_pt_attr(pmap);
+  const pt_attr_t *const pt_attr = pmap_get_pt_attr(pmap);
 
-	if (__improbable((addr < pmap->min) || (addr >= pmap->max))) {
-		return TT_ENTRY_NULL;
-	}
-	/* Start parsing at the root page table. */
-	table_ttep = pmap->tte;
+  if (__improbable((addr < pmap->min) || (addr >= pmap->max))) {
+    return TT_ENTRY_NULL;
+  }
+  /* Start parsing at the root page table. */
+  table_ttep = pmap->tte;
 
-	assert(target_level <= pt_attr->pta_max_level);
+  assert(target_level <= pt_attr->pta_max_level);
 
-	for (cur_level = pt_attr->pta_root_level; cur_level <= target_level; cur_level++) {
-		ttep = &table_ttep[ttn_index(pt_attr, addr, cur_level)];
+  for (cur_level = pt_attr->pta_root_level; cur_level <= target_level;
+       cur_level++) {
+    ttep = &table_ttep[ttn_index(pt_attr, addr, cur_level)];
 
-		if (cur_level == target_level) {
-			break;
-		}
+    if (cur_level == target_level) {
+      break;
+    }
 
-		tte = *ttep;
+    tte = *ttep;
 
 #if MACH_ASSERT
-		if (tte_is_valid_block(tte)) {
-			panic("%s: Attempt to demote L%u block, tte=0x%llx, pmap=%p, target_level=%u, addr=%p",
-			    __func__, cur_level, tte, pmap, target_level, (void*)addr);
-		}
+    if (tte_is_valid_block(tte)) {
+      panic("%s: Attempt to demote L%u block, tte=0x%llx, pmap=%p, "
+            "target_level=%u, addr=%p",
+            __func__, cur_level, tte, pmap, target_level, (void *)addr);
+    }
 #endif
-		if (!tte_is_valid_table(tte)) {
-			return TT_ENTRY_NULL;
-		}
+    if (!tte_is_valid_table(tte)) {
+      return TT_ENTRY_NULL;
+    }
 
-		table_ttep = (tt_entry_t*)phystokv(tte & ARM_TTE_TABLE_MASK);
-	}
+    table_ttep = (tt_entry_t *)phystokv(tte & ARM_TTE_TABLE_MASK);
+  }
 
-	return ttep;
+  return ttep;
 }
 
 /**
@@ -658,10 +607,8 @@ pmap_ttne(pmap_t pmap, unsigned int target_level, vm_map_address_t addr)
  * @param pmap The pmap whose page tables to parse.
  * @param addr The virtual address to calculate the table indices off of.
  */
-static inline tt_entry_t *
-pmap_tt1e(pmap_t pmap, vm_map_address_t addr)
-{
-	return pmap_ttne(pmap, PMAP_TT_L1_LEVEL, addr);
+static inline tt_entry_t *pmap_tt1e(pmap_t pmap, vm_map_address_t addr) {
+  return pmap_ttne(pmap, PMAP_TT_L1_LEVEL, addr);
 }
 
 /**
@@ -672,10 +619,8 @@ pmap_tt1e(pmap_t pmap, vm_map_address_t addr)
  * @param pmap The pmap whose page tables to parse.
  * @param addr The virtual address to calculate the table indices off of.
  */
-static inline tt_entry_t *
-pmap_tt2e(pmap_t pmap, vm_map_address_t addr)
-{
-	return pmap_ttne(pmap, PMAP_TT_L2_LEVEL, addr);
+static inline tt_entry_t *pmap_tt2e(pmap_t pmap, vm_map_address_t addr) {
+  return pmap_ttne(pmap, PMAP_TT_L2_LEVEL, addr);
 }
 
 /**
@@ -686,10 +631,8 @@ pmap_tt2e(pmap_t pmap, vm_map_address_t addr)
  * @param pmap The pmap whose page tables to parse.
  * @param addr The virtual address to calculate the table indices off of.
  */
-static inline pt_entry_t *
-pmap_tt3e(pmap_t pmap, vm_map_address_t addr)
-{
-	return (pt_entry_t*)pmap_ttne(pmap, PMAP_TT_L3_LEVEL, addr);
+static inline pt_entry_t *pmap_tt3e(pmap_t pmap, vm_map_address_t addr) {
+  return (pt_entry_t *)pmap_ttne(pmap, PMAP_TT_L3_LEVEL, addr);
 }
 
 /**
@@ -700,10 +643,8 @@ pmap_tt3e(pmap_t pmap, vm_map_address_t addr)
  * @param pmap The pmap whose page tables to parse.
  * @param addr The virtual address to calculate the table indices off of.
  */
-static inline tt_entry_t *
-pmap_tte(pmap_t pmap, vm_map_address_t addr)
-{
-	return pmap_tt2e(pmap, addr);
+static inline tt_entry_t *pmap_tte(pmap_t pmap, vm_map_address_t addr) {
+  return pmap_tt2e(pmap, addr);
 }
 
 /**
@@ -714,11 +655,8 @@ pmap_tte(pmap_t pmap, vm_map_address_t addr)
  * @param pmap The pmap whose page tables to parse.
  * @param addr The virtual address to calculate the table indices off of.
  */
-static inline pt_entry_t *
-pmap_pte(pmap_t pmap, vm_map_address_t addr)
-{
-	return pmap_tt3e(pmap, addr);
+static inline pt_entry_t *pmap_pte(pmap_t pmap, vm_map_address_t addr) {
+  return pmap_tt3e(pmap, addr);
 }
-
 
 #endif /* _ARM_PMAP_PMAP_PT_GEOMETRY_H_ */

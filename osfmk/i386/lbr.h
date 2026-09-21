@@ -63,15 +63,14 @@
 #define LBR_MAGIC 0x5352424CULL
 
 struct lbr_data {
-	uint64_t *from;
-	uint64_t *to;
+  uint64_t *from;
+  uint64_t *to;
 };
 
 /* Initializes the LBR data buffers as per the available LBR stack size */
 void lbr_for_kmode_init(uint32_t lbr_count);
 
-
 /* Saves the LBR stack of the CPU */
 extern void (*read_lbr)(void);
 
-#endif  /* _I386_LBR_H_ */
+#endif /* _I386_LBR_H_ */

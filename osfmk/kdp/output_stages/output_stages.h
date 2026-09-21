@@ -39,7 +39,8 @@
  * Note that the buffer is flushed before any operation other than KDP_DATA,
  * and is flushed when KDP_DATA is specified with an empty data buffer.
  */
-kern_return_t buffer_stage_initialize(struct kdp_output_stage *stage, size_t buffer_size);
+kern_return_t buffer_stage_initialize(struct kdp_output_stage *stage,
+                                      size_t buffer_size);
 
 /*
  * A non-terminal output stage that compresses the output data with LZ4 before
@@ -53,28 +54,31 @@ kern_return_t lz4_stage_initialize(struct kdp_output_stage *stage);
 void lz4_stage_monitor_availability(void);
 
 /*
- * A non-terminal output stage that compresses (using ZLib) the output data before
- * sending it over to the next stage.
+ * A non-terminal output stage that compresses (using ZLib) the output data
+ * before sending it over to the next stage.
  *
- * Note that compression is bypassed (until the stage is reset) if the caller performs
- * a KDP_SEEK operation.
+ * Note that compression is bypassed (until the stage is reset) if the caller
+ * performs a KDP_SEEK operation.
  */
 kern_return_t zlib_stage_initialize(struct kdp_output_stage *stage);
 
 /*
- * A non-terminal output stage that encrypts the data through AppleEncryptedArchive
- * before sending it over to the next stage.
+ * A non-terminal output stage that encrypts the data through
+ * AppleEncryptedArchive before sending it over to the next stage.
  *
  * Note that this stage requires that its subsequent stages be able to seek
  * backwards and read data
  *
- * Double Note that this stage will technically only work if the subsequent stage is
- * the disk stage.
+ * Double Note that this stage will technically only work if the subsequent
+ * stage is the disk stage.
  */
-kern_return_t aea_stage_initialize(struct kdp_output_stage *stage, const void *recipient_public_key, size_t recipient_public_key_size);
+kern_return_t aea_stage_initialize(struct kdp_output_stage *stage,
+                                   const void *recipient_public_key,
+                                   size_t recipient_public_key_size);
 
 /*
- * Instructs the AEA stage to start monitoring for the availability of the AEA functionality.
+ * Instructs the AEA stage to start monitoring for the availability of the AEA
+ * functionality.
  */
 void aea_stage_monitor_availability(void);
 
@@ -89,14 +93,18 @@ bool aea_stage_is_available(void);
 kern_return_t disk_stage_initialize(struct kdp_output_stage *stage);
 
 /*
- * Write an arbitrary amount of data to an arbitrary offset in the on-disk corefile.
+ * Write an arbitrary amount of data to an arbitrary offset in the on-disk
+ * corefile.
  */
-kern_return_t disk_stage_write(struct kdp_output_stage *stage, uint64_t offset, uint64_t length, const void *data);
+kern_return_t disk_stage_write(struct kdp_output_stage *stage, uint64_t offset,
+                               uint64_t length, const void *data);
 
 /*
- * Read an arbitrary amount of data from an arbitrary offset in the on-disk corefile.
+ * Read an arbitrary amount of data from an arbitrary offset in the on-disk
+ * corefile.
  */
-kern_return_t disk_stage_read(struct kdp_output_stage *stage, uint64_t offset, uint64_t length, void *data);
+kern_return_t disk_stage_read(struct kdp_output_stage *stage, uint64_t offset,
+                              uint64_t length, void *data);
 
 /*
  * A terminal output stage that streams the data out over the network.
@@ -104,15 +112,18 @@ kern_return_t disk_stage_read(struct kdp_output_stage *stage, uint64_t offset, u
 kern_return_t net_stage_initialize(struct kdp_output_stage *stage);
 
 /*
- * A non-terminal output stage that notifies registered panic callouts about coredump progress periodically.
+ * A non-terminal output stage that notifies registered panic callouts about
+ * coredump progress periodically.
  */
 kern_return_t progress_notify_stage_initialize(struct kdp_output_stage *stage);
 
 #if defined(__arm64__)
 /*
- * A non-terminal output stage that handles memory accesses to special device memory.
+ * A non-terminal output stage that handles memory accesses to special device
+ * memory.
  */
-kern_return_t memory_backing_aware_buffer_stage_initialize(struct kdp_output_stage *stage);
+kern_return_t
+memory_backing_aware_buffer_stage_initialize(struct kdp_output_stage *stage);
 #endif /* defined(__arm64__) */
 
 #if defined(__arm64__)

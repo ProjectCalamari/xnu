@@ -31,96 +31,68 @@
 #define super IOService
 OSDefineMetaClassAndStructors(IOPowerConnection, IOService)
 
-
-// **********************************************************************************
-// setDesiredDomainState
-//
-// Parent of the connection calls here to save the childs desire
-// **********************************************************************************
-void
-IOPowerConnection::setDesiredDomainState(unsigned long stateNumber )
-{
-	desiredDomainState = stateNumber;
+    // **********************************************************************************
+    // setDesiredDomainState
+    //
+    // Parent of the connection calls here to save the childs desire
+    // **********************************************************************************
+    void IOPowerConnection::setDesiredDomainState(unsigned long stateNumber) {
+  desiredDomainState = stateNumber;
 }
-
 
 // **********************************************************************************
 // getDesiredDomainState
 //
 // **********************************************************************************
-unsigned long
-IOPowerConnection::getDesiredDomainState( void )
-{
-	return desiredDomainState;
+unsigned long IOPowerConnection::getDesiredDomainState(void) {
+  return desiredDomainState;
 }
-
 
 // **********************************************************************************
 // setChildHasRequestedPower
 //
 // Parent of the connection calls here when the child requests power
 // **********************************************************************************
-void
-IOPowerConnection::setChildHasRequestedPower( void )
-{
-	requestFlag = true;
-}
+void IOPowerConnection::setChildHasRequestedPower(void) { requestFlag = true; }
 
 // **********************************************************************************
 // childHasRequestedPower
 //
 // Parent of the connection calls here when the child requests power
 // **********************************************************************************
-bool
-IOPowerConnection::childHasRequestedPower( void )
-{
-	return requestFlag;
-}
-
+bool IOPowerConnection::childHasRequestedPower(void) { return requestFlag; }
 
 // **********************************************************************************
 // setPreventIdleSleepFlag
 //
 // **********************************************************************************
-void
-IOPowerConnection::setPreventIdleSleepFlag( unsigned long flag )
-{
-	preventIdleSleepFlag = (flag != 0);
+void IOPowerConnection::setPreventIdleSleepFlag(unsigned long flag) {
+  preventIdleSleepFlag = (flag != 0);
 }
-
 
 // **********************************************************************************
 // getPreventIdleSleepFlag
 //
 // **********************************************************************************
-bool
-IOPowerConnection::getPreventIdleSleepFlag( void )
-{
-	return preventIdleSleepFlag;
+bool IOPowerConnection::getPreventIdleSleepFlag(void) {
+  return preventIdleSleepFlag;
 }
-
 
 // **********************************************************************************
 // setPreventSystemSleepFlag
 //
 // **********************************************************************************
-void
-IOPowerConnection::setPreventSystemSleepFlag( unsigned long flag )
-{
-	preventSystemSleepFlag = (flag != 0);
+void IOPowerConnection::setPreventSystemSleepFlag(unsigned long flag) {
+  preventSystemSleepFlag = (flag != 0);
 }
-
 
 // **********************************************************************************
 // getPreventSystemSleepFlag
 //
 // **********************************************************************************
-bool
-IOPowerConnection::getPreventSystemSleepFlag( void )
-{
-	return preventSystemSleepFlag;
+bool IOPowerConnection::getPreventSystemSleepFlag(void) {
+  return preventSystemSleepFlag;
 }
-
 
 // **********************************************************************************
 // setParentKnowsState
@@ -128,12 +100,7 @@ IOPowerConnection::getPreventSystemSleepFlag( void )
 // Child of the connection calls here to set its reminder that the parent does
 // or does not yet know the state if its domain.
 // **********************************************************************************
-void
-IOPowerConnection::setParentKnowsState(bool flag )
-{
-	stateKnown = flag;
-}
-
+void IOPowerConnection::setParentKnowsState(bool flag) { stateKnown = flag; }
 
 // **********************************************************************************
 // setParentCurrentPowerFlags
@@ -141,74 +108,44 @@ IOPowerConnection::setParentKnowsState(bool flag )
 // Child of the connection calls here to save what the parent says
 // is the state if its domain.
 // **********************************************************************************
-void
-IOPowerConnection::setParentCurrentPowerFlags(IOPMPowerFlags flags )
-{
-	currentPowerFlags = flags;
+void IOPowerConnection::setParentCurrentPowerFlags(IOPMPowerFlags flags) {
+  currentPowerFlags = flags;
 }
-
 
 // **********************************************************************************
 // parentKnowsState
 //
 // **********************************************************************************
-bool
-IOPowerConnection::parentKnowsState(void )
-{
-	return stateKnown;
-}
-
+bool IOPowerConnection::parentKnowsState(void) { return stateKnown; }
 
 // **********************************************************************************
 // parentCurrentPowerFlags
 //
 // **********************************************************************************
-IOPMPowerFlags
-IOPowerConnection::parentCurrentPowerFlags(void )
-{
-	return currentPowerFlags;
+IOPMPowerFlags IOPowerConnection::parentCurrentPowerFlags(void) {
+  return currentPowerFlags;
 }
-
 
 // **********************************************************************************
 // setAwaitingAck
 //
 // **********************************************************************************
-void
-IOPowerConnection::setAwaitingAck( bool value )
-{
-	awaitingAck = value;
-}
-
+void IOPowerConnection::setAwaitingAck(bool value) { awaitingAck = value; }
 
 // **********************************************************************************
 // getAwaitingAck
 //
 // **********************************************************************************
-bool
-IOPowerConnection::getAwaitingAck( void )
-{
-	return awaitingAck;
-}
-
+bool IOPowerConnection::getAwaitingAck(void) { return awaitingAck; }
 
 // **********************************************************************************
 // setReadyFlag
 //
 // **********************************************************************************
-void
-IOPowerConnection::setReadyFlag( bool flag )
-{
-	readyFlag = flag;
-}
-
+void IOPowerConnection::setReadyFlag(bool flag) { readyFlag = flag; }
 
 // **********************************************************************************
 // getReadyFlag
 //
 // **********************************************************************************
-bool
-IOPowerConnection::getReadyFlag( void ) const
-{
-	return readyFlag;
-}
+bool IOPowerConnection::getReadyFlag(void) const { return readyFlag; }

@@ -26,9 +26,8 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT
-const img4_buff_t *_Nullable
-img4_image_get_bytes(img4_image_t _Nullable image);
+OS_EXPORT OS_WARN_RESULT const img4_buff_t *_Nullable img4_image_get_bytes(
+    img4_image_t _Nullable image);
 #else
 #define img4_image_get_bytes(...) (img4if->i4if_v7.image_get_bytes(__VA_ARGS__))
 #endif
@@ -53,14 +52,12 @@ img4_image_get_bytes(img4_image_t _Nullable image);
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const bool *
-img4_image_get_property_bool(img4_image_t image,
-		img4_4cc_t _4cc,
-		bool *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const bool *
+img4_image_get_property_bool(img4_image_t image, img4_4cc_t _4cc,
+                             bool *storage);
 #else
-#define img4_image_get_property_bool(...) \
-		(img4if->i4if_v7.image_get_property_bool(__VA_ARGS__))
+#define img4_image_get_property_bool(...)                                      \
+  (img4if->i4if_v7.image_get_property_bool(__VA_ARGS__))
 #endif
 
 /*!
@@ -83,14 +80,12 @@ img4_image_get_property_bool(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const uint32_t *
-img4_image_get_property_uint32(img4_image_t image,
-		img4_4cc_t _4cc,
-		uint32_t *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const uint32_t *
+img4_image_get_property_uint32(img4_image_t image, img4_4cc_t _4cc,
+                               uint32_t *storage);
 #else
-#define img4_image_get_property_uint32(...) \
-		(img4if->i4if_v7.image_get_property_uint32(__VA_ARGS__))
+#define img4_image_get_property_uint32(...)                                    \
+  (img4if->i4if_v7.image_get_property_uint32(__VA_ARGS__))
 #endif
 
 /*!
@@ -113,14 +108,12 @@ img4_image_get_property_uint32(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const uint64_t *
-img4_image_get_property_uint64(img4_image_t image,
-		img4_4cc_t _4cc,
-		uint64_t *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const uint64_t *
+img4_image_get_property_uint64(img4_image_t image, img4_4cc_t _4cc,
+                               uint64_t *storage);
 #else
-#define img4_image_get_property_uint64(...) \
-		(img4if->i4if_v7.image_get_property_uint64(__VA_ARGS__))
+#define img4_image_get_property_uint64(...)                                    \
+  (img4if->i4if_v7.image_get_property_uint64(__VA_ARGS__))
 #endif
 
 /*!
@@ -143,14 +136,12 @@ img4_image_get_property_uint64(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const img4_buff_t *
-img4_image_get_property_data(img4_image_t image,
-		img4_4cc_t _4cc,
-		img4_buff_t *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const img4_buff_t *
+img4_image_get_property_data(img4_image_t image, img4_4cc_t _4cc,
+                             img4_buff_t *storage);
 #else
-#define img4_image_get_property_data(...) \
-		(img4if->i4if_v7.image_get_property_data(__VA_ARGS__))
+#define img4_image_get_property_data(...)                                      \
+  (img4if->i4if_v7.image_get_property_data(__VA_ARGS__))
 #endif
 
 /*!
@@ -173,14 +164,12 @@ img4_image_get_property_data(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20220513
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const bool *
-img4_image_get_entitlement_bool(img4_image_t image,
-		img4_4cc_t _4cc,
-		bool *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const bool *
+img4_image_get_entitlement_bool(img4_image_t image, img4_4cc_t _4cc,
+                                bool *storage);
 #else
-#define img4_image_get_entitlement_bool(...) \
-		(img4if->i4if_v18.image_get_entitlement_bool(__VA_ARGS__))
+#define img4_image_get_entitlement_bool(...)                                   \
+  (img4if->i4if_v18.image_get_entitlement_bool(__VA_ARGS__))
 #endif
 
 /*!
@@ -204,14 +193,12 @@ img4_image_get_entitlement_bool(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20220513
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const uint32_t *
-img4_image_get_entitlement_uint32(img4_image_t image,
-		img4_4cc_t _4cc,
-		uint32_t *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const uint32_t *
+img4_image_get_entitlement_uint32(img4_image_t image, img4_4cc_t _4cc,
+                                  uint32_t *storage);
 #else
-#define img4_image_get_entitlement_uint32(...) \
-		(img4if->i4if_v18.image_get_entitlement_uint32(__VA_ARGS__))
+#define img4_image_get_entitlement_uint32(...)                                 \
+  (img4if->i4if_v18.image_get_entitlement_uint32(__VA_ARGS__))
 #endif
 
 /*!
@@ -235,14 +222,12 @@ img4_image_get_entitlement_uint32(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20220513
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const uint64_t *
-img4_image_get_entitlement_uint64(img4_image_t image,
-		img4_4cc_t _4cc,
-		uint64_t *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const uint64_t *
+img4_image_get_entitlement_uint64(img4_image_t image, img4_4cc_t _4cc,
+                                  uint64_t *storage);
 #else
-#define img4_image_get_entitlement_uint64(...) \
-		(img4if->i4if_v18.image_get_entitlement_uint64(__VA_ARGS__))
+#define img4_image_get_entitlement_uint64(...)                                 \
+  (img4if->i4if_v18.image_get_entitlement_uint64(__VA_ARGS__))
 #endif
 
 /*!
@@ -265,14 +250,12 @@ img4_image_get_entitlement_uint64(img4_image_t image,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20220513
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3
-const img4_buff_t *
-img4_image_get_entitlement_data(img4_image_t image,
-		img4_4cc_t _4cc,
-		img4_buff_t *storage);
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL3 const img4_buff_t *
+img4_image_get_entitlement_data(img4_image_t image, img4_4cc_t _4cc,
+                                img4_buff_t *storage);
 #else
-#define img4_image_get_entitlement_data(...) \
-		(img4if->i4if_v18.image_get_entitlement_data(__VA_ARGS__))
+#define img4_image_get_entitlement_data(...)                                   \
+  (img4if->i4if_v18.image_get_entitlement_data(__VA_ARGS__))
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

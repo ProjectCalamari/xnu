@@ -54,10 +54,10 @@
  * the rights to redistribute these changes.
  */
 
+#include <i386/fpu.h>
+#include <i386/misc_protos.h>
 #include <kern/task.h>
 #include <kern/thread.h>
-#include <i386/misc_protos.h>
-#include <i386/fpu.h>
 
 #if HYPERVISOR
 #include <kern/hv_support.h>
@@ -65,243 +65,227 @@
 
 extern zone_t ids_zone;
 
-kern_return_t
-machine_task_set_state(
-	task_t task,
-	int flavor,
-	thread_state_t state,
-	mach_msg_type_number_t state_count)
-{
-	switch (flavor) {
-	case x86_DEBUG_STATE32:
-	{
-		x86_debug_state32_t *tstate = (x86_debug_state32_t*) state;
-		if ((task_has_64Bit_addr(task)) ||
-		    (state_count != x86_DEBUG_STATE32_COUNT) ||
-		    (!debug_state_is_valid32(tstate))) {
-			return KERN_INVALID_ARGUMENT;
-		}
+kern_return_t machine_task_set_state(task_t task, int flavor,
+                                     thread_state_t state,
+                                     mach_msg_type_number_t state_count) {
+  switch (flavor) {
+  case x86_DEBUG_STATE32: {
+    x86_debug_state32_t *tstate = (x86_debug_state32_t *)state;
+    if ((task_has_64Bit_addr(task)) ||
+        (state_count != x86_DEBUG_STATE32_COUNT) ||
+        (!debug_state_is_valid32(tstate))) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			task->task_debug = zalloc(ids_zone);
-		}
+    if (task->task_debug == NULL) {
+      task->task_debug = zalloc(ids_zone);
+    }
 
-		copy_debug_state32(tstate, (x86_debug_state32_t*) task->task_debug, FALSE);
+    copy_debug_state32(tstate, (x86_debug_state32_t *)task->task_debug, FALSE);
 
-		return KERN_SUCCESS;
-	}
-	case x86_DEBUG_STATE64:
-	{
-		x86_debug_state64_t *tstate = (x86_debug_state64_t*) state;
+    return KERN_SUCCESS;
+  }
+  case x86_DEBUG_STATE64: {
+    x86_debug_state64_t *tstate = (x86_debug_state64_t *)state;
 
-		if ((!task_has_64Bit_addr(task)) ||
-		    (state_count != x86_DEBUG_STATE64_COUNT) ||
-		    (!debug_state_is_valid64(tstate))) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if ((!task_has_64Bit_addr(task)) ||
+        (state_count != x86_DEBUG_STATE64_COUNT) ||
+        (!debug_state_is_valid64(tstate))) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			task->task_debug = zalloc(ids_zone);
-		}
+    if (task->task_debug == NULL) {
+      task->task_debug = zalloc(ids_zone);
+    }
 
-		copy_debug_state64(tstate, (x86_debug_state64_t*) task->task_debug, FALSE);
+    copy_debug_state64(tstate, (x86_debug_state64_t *)task->task_debug, FALSE);
 
-		return KERN_SUCCESS;
-	}
-	case x86_DEBUG_STATE:
-	{
-		x86_debug_state_t *tstate = (x86_debug_state_t*) state;
+    return KERN_SUCCESS;
+  }
+  case x86_DEBUG_STATE: {
+    x86_debug_state_t *tstate = (x86_debug_state_t *)state;
 
-		if (state_count != x86_DEBUG_STATE_COUNT) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if (state_count != x86_DEBUG_STATE_COUNT) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if ((tstate->dsh.flavor == x86_DEBUG_STATE32) &&
-		    (tstate->dsh.count == x86_DEBUG_STATE32_COUNT) &&
-		    (!task_has_64Bit_addr(task)) &&
-		    debug_state_is_valid32(&tstate->uds.ds32)) {
-			if (task->task_debug == NULL) {
-				task->task_debug = zalloc(ids_zone);
-			}
+    if ((tstate->dsh.flavor == x86_DEBUG_STATE32) &&
+        (tstate->dsh.count == x86_DEBUG_STATE32_COUNT) &&
+        (!task_has_64Bit_addr(task)) &&
+        debug_state_is_valid32(&tstate->uds.ds32)) {
+      if (task->task_debug == NULL) {
+        task->task_debug = zalloc(ids_zone);
+      }
 
-			copy_debug_state32(&tstate->uds.ds32, (x86_debug_state32_t*) task->task_debug, FALSE);
-			return KERN_SUCCESS;
-		} else if ((tstate->dsh.flavor == x86_DEBUG_STATE64) &&
-		    (tstate->dsh.count == x86_DEBUG_STATE64_COUNT) &&
-		    task_has_64Bit_addr(task) &&
-		    debug_state_is_valid64(&tstate->uds.ds64)) {
-			if (task->task_debug == NULL) {
-				task->task_debug = zalloc(ids_zone);
-			}
+      copy_debug_state32(&tstate->uds.ds32,
+                         (x86_debug_state32_t *)task->task_debug, FALSE);
+      return KERN_SUCCESS;
+    } else if ((tstate->dsh.flavor == x86_DEBUG_STATE64) &&
+               (tstate->dsh.count == x86_DEBUG_STATE64_COUNT) &&
+               task_has_64Bit_addr(task) &&
+               debug_state_is_valid64(&tstate->uds.ds64)) {
+      if (task->task_debug == NULL) {
+        task->task_debug = zalloc(ids_zone);
+      }
 
-			copy_debug_state64(&tstate->uds.ds64, (x86_debug_state64_t*) task->task_debug, FALSE);
-			return KERN_SUCCESS;
-		} else {
-			return KERN_INVALID_ARGUMENT;
-		}
-	}
-	default:
-	{
-		return KERN_INVALID_ARGUMENT;
-	}
-	}
+      copy_debug_state64(&tstate->uds.ds64,
+                         (x86_debug_state64_t *)task->task_debug, FALSE);
+      return KERN_SUCCESS;
+    } else {
+      return KERN_INVALID_ARGUMENT;
+    }
+  }
+  default: {
+    return KERN_INVALID_ARGUMENT;
+  }
+  }
 }
 
-kern_return_t
-machine_task_get_state(task_t task,
-    int flavor,
-    thread_state_t state,
-    mach_msg_type_number_t *state_count)
-{
-	switch (flavor) {
-	case x86_DEBUG_STATE32:
-	{
-		x86_debug_state32_t *tstate = (x86_debug_state32_t*) state;
+kern_return_t machine_task_get_state(task_t task, int flavor,
+                                     thread_state_t state,
+                                     mach_msg_type_number_t *state_count) {
+  switch (flavor) {
+  case x86_DEBUG_STATE32: {
+    x86_debug_state32_t *tstate = (x86_debug_state32_t *)state;
 
-		if ((task_has_64Bit_addr(task)) || (*state_count != x86_DEBUG_STATE32_COUNT)) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if ((task_has_64Bit_addr(task)) ||
+        (*state_count != x86_DEBUG_STATE32_COUNT)) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			bzero(state, sizeof(*tstate));
-		} else {
-			copy_debug_state32((x86_debug_state32_t*) task->task_debug, tstate, TRUE);
-		}
+    if (task->task_debug == NULL) {
+      bzero(state, sizeof(*tstate));
+    } else {
+      copy_debug_state32((x86_debug_state32_t *)task->task_debug, tstate, TRUE);
+    }
 
-		return KERN_SUCCESS;
-	}
-	case x86_DEBUG_STATE64:
-	{
-		x86_debug_state64_t *tstate = (x86_debug_state64_t*) state;
+    return KERN_SUCCESS;
+  }
+  case x86_DEBUG_STATE64: {
+    x86_debug_state64_t *tstate = (x86_debug_state64_t *)state;
 
-		if ((!task_has_64Bit_addr(task)) || (*state_count != x86_DEBUG_STATE64_COUNT)) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if ((!task_has_64Bit_addr(task)) ||
+        (*state_count != x86_DEBUG_STATE64_COUNT)) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task->task_debug == NULL) {
-			bzero(state, sizeof(*tstate));
-		} else {
-			copy_debug_state64((x86_debug_state64_t*) task->task_debug, tstate, TRUE);
-		}
+    if (task->task_debug == NULL) {
+      bzero(state, sizeof(*tstate));
+    } else {
+      copy_debug_state64((x86_debug_state64_t *)task->task_debug, tstate, TRUE);
+    }
 
-		return KERN_SUCCESS;
-	}
-	case x86_DEBUG_STATE:
-	{
-		x86_debug_state_t   *tstate = (x86_debug_state_t*)state;
+    return KERN_SUCCESS;
+  }
+  case x86_DEBUG_STATE: {
+    x86_debug_state_t *tstate = (x86_debug_state_t *)state;
 
-		if (*state_count != x86_DEBUG_STATE_COUNT) {
-			return KERN_INVALID_ARGUMENT;
-		}
+    if (*state_count != x86_DEBUG_STATE_COUNT) {
+      return KERN_INVALID_ARGUMENT;
+    }
 
-		if (task_has_64Bit_addr(task)) {
-			tstate->dsh.flavor = x86_DEBUG_STATE64;
-			tstate->dsh.count  = x86_DEBUG_STATE64_COUNT;
+    if (task_has_64Bit_addr(task)) {
+      tstate->dsh.flavor = x86_DEBUG_STATE64;
+      tstate->dsh.count = x86_DEBUG_STATE64_COUNT;
 
-			if (task->task_debug == NULL) {
-				bzero(&tstate->uds.ds64, sizeof(tstate->uds.ds64));
-			} else {
-				copy_debug_state64((x86_debug_state64_t*)task->task_debug, &tstate->uds.ds64, TRUE);
-			}
-		} else {
-			tstate->dsh.flavor = x86_DEBUG_STATE32;
-			tstate->dsh.count  = x86_DEBUG_STATE32_COUNT;
+      if (task->task_debug == NULL) {
+        bzero(&tstate->uds.ds64, sizeof(tstate->uds.ds64));
+      } else {
+        copy_debug_state64((x86_debug_state64_t *)task->task_debug,
+                           &tstate->uds.ds64, TRUE);
+      }
+    } else {
+      tstate->dsh.flavor = x86_DEBUG_STATE32;
+      tstate->dsh.count = x86_DEBUG_STATE32_COUNT;
 
-			if (task->task_debug == NULL) {
-				bzero(&tstate->uds.ds32, sizeof(tstate->uds.ds32));
-			} else {
-				copy_debug_state32((x86_debug_state32_t*)task->task_debug, &tstate->uds.ds32, TRUE);
-			}
-		}
+      if (task->task_debug == NULL) {
+        bzero(&tstate->uds.ds32, sizeof(tstate->uds.ds32));
+      } else {
+        copy_debug_state32((x86_debug_state32_t *)task->task_debug,
+                           &tstate->uds.ds32, TRUE);
+      }
+    }
 
-		return KERN_SUCCESS;
-	}
-	default:
-	{
-		return KERN_INVALID_ARGUMENT;
-	}
-	}
+    return KERN_SUCCESS;
+  }
+  default: {
+    return KERN_INVALID_ARGUMENT;
+  }
+  }
 }
 
 /*
  * This is called when a task is terminated, and also on exec().
  * Clear machine-dependent state that is stored on the task.
  */
-void
-machine_task_terminate(task_t task)
-{
-	if (task) {
-		user_ldt_t user_ldt;
-		void *task_debug;
+void machine_task_terminate(task_t task) {
+  if (task) {
+    user_ldt_t user_ldt;
+    void *task_debug;
 
 #if HYPERVISOR
-		if (task->hv_task_target) {
-			hv_callbacks.task_destroy(task->hv_task_target);
-			task->hv_task_target = NULL;
-		}
+    if (task->hv_task_target) {
+      hv_callbacks.task_destroy(task->hv_task_target);
+      task->hv_task_target = NULL;
+    }
 #endif
 
-		user_ldt = task->i386_ldt;
-		if (user_ldt != 0) {
-			task->i386_ldt = 0;
-			user_ldt_free(user_ldt);
-		}
+    user_ldt = task->i386_ldt;
+    if (user_ldt != 0) {
+      task->i386_ldt = 0;
+      user_ldt_free(user_ldt);
+    }
 
-		task_debug = task->task_debug;
-		if (task_debug != NULL) {
-			task->task_debug = NULL;
-			zfree(ids_zone, task_debug);
-		}
-	}
+    task_debug = task->task_debug;
+    if (task_debug != NULL) {
+      task->task_debug = NULL;
+      zfree(ids_zone, task_debug);
+    }
+  }
 }
 
 /*
  * Set initial default state on a thread as stored in the MACHINE_TASK data.
  * Note: currently only debug state is supported.
  */
-kern_return_t
-machine_thread_inherit_taskwide(
-	thread_t thread,
-	task_t parent_task)
-{
-	if (parent_task->task_debug) {
-		int flavor;
-		mach_msg_type_number_t count;
+kern_return_t machine_thread_inherit_taskwide(thread_t thread,
+                                              task_t parent_task) {
+  if (parent_task->task_debug) {
+    int flavor;
+    mach_msg_type_number_t count;
 
-		if (task_has_64Bit_addr(parent_task)) {
-			flavor = x86_DEBUG_STATE64;
-			count = x86_DEBUG_STATE64_COUNT;
-		} else {
-			flavor = x86_DEBUG_STATE32;
-			count = x86_DEBUG_STATE32_COUNT;
-		}
+    if (task_has_64Bit_addr(parent_task)) {
+      flavor = x86_DEBUG_STATE64;
+      count = x86_DEBUG_STATE64_COUNT;
+    } else {
+      flavor = x86_DEBUG_STATE32;
+      count = x86_DEBUG_STATE32_COUNT;
+    }
 
-		return machine_thread_set_state(thread, flavor, parent_task->task_debug, count);
-	}
+    return machine_thread_set_state(thread, flavor, parent_task->task_debug,
+                                    count);
+  }
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }
 
-void
-machine_task_init(task_t new_task,
-    task_t parent_task,
-    boolean_t inherit_memory)
-{
-	new_task->uexc_range_start = 0;
-	new_task->uexc_range_size = 0;
-	new_task->uexc_handler = 0;
+void machine_task_init(task_t new_task, task_t parent_task,
+                       boolean_t inherit_memory) {
+  new_task->uexc_range_start = 0;
+  new_task->uexc_range_size = 0;
+  new_task->uexc_handler = 0;
 
-	new_task->i386_ldt = 0;
+  new_task->i386_ldt = 0;
 
-	if (parent_task != TASK_NULL) {
-		if (inherit_memory && parent_task->i386_ldt) {
-			new_task->i386_ldt = user_ldt_copy(parent_task->i386_ldt);
-		}
-		new_task->xstate = parent_task->xstate;
-	} else {
-		assert(fpu_default != UNDEFINED);
-		new_task->xstate = fpu_default;
-	}
+  if (parent_task != TASK_NULL) {
+    if (inherit_memory && parent_task->i386_ldt) {
+      new_task->i386_ldt = user_ldt_copy(parent_task->i386_ldt);
+    }
+    new_task->xstate = parent_task->xstate;
+  } else {
+    assert(fpu_default != UNDEFINED);
+    new_task->xstate = fpu_default;
+  }
 }
 
 /*
@@ -314,14 +298,11 @@ machine_task_init(task_t new_task,
  * On error, this function should point error_msg to a static error
  * string (the caller will not free it).
  */
-kern_return_t
-machine_task_process_signature(
-	task_t __unused task,
-	uint32_t const __unused platform,
-	uint32_t const __unused sdk,
-	char const ** __unused error_msg)
-{
-	assert(error_msg != NULL);
+kern_return_t machine_task_process_signature(task_t __unused task,
+                                             uint32_t const __unused platform,
+                                             uint32_t const __unused sdk,
+                                             char const **__unused error_msg) {
+  assert(error_msg != NULL);
 
-	return KERN_SUCCESS;
+  return KERN_SUCCESS;
 }

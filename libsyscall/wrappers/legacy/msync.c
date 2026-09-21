@@ -25,29 +25,27 @@
 #define _NONSTD_SOURCE
 #include <sys/cdefs.h>
 
-#include <sys/types.h>
-#include <sys/mman.h>
 #include <mach/vm_param.h>
+#include <sys/mman.h>
+#include <sys/types.h>
 
 int __msync_nocancel(void *, size_t, int);
 
 /*
  * Stub function for legacy version
  */
-int
-msync(void *addr, size_t len, int flags)
-{
-	size_t  offset;
+int msync(void *addr, size_t len, int flags) {
+  size_t offset;
 
-	/*
-	 * Page-align "addr" since the system now requires it
-	 * for standards compliance.
-	 * Update "len" to reflect the alignment.
-	 */
-	offset = ((uintptr_t) addr) & PAGE_MASK;
-	addr = (void *) (((uintptr_t) addr) & ~PAGE_MASK);
-	len += offset;
-	return __msync_nocancel(addr, len, flags);
+  /*
+   * Page-align "addr" since the system now requires it
+   * for standards compliance.
+   * Update "len" to reflect the alignment.
+   */
+  offset = ((uintptr_t)addr) & PAGE_MASK;
+  addr = (void *)(((uintptr_t)addr) & ~PAGE_MASK);
+  len += offset;
+  return __msync_nocancel(addr, len, flags);
 }
 
 #endif /* NO_SYSCALL_LEGACY */

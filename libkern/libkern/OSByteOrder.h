@@ -29,29 +29,29 @@
 #ifndef _OS_OSBYTEORDER_H
 #define _OS_OSBYTEORDER_H
 
-#include <stdint.h>
 #include <libkern/_OSByteOrder.h>
+#include <stdint.h>
 
 /* Macros for swapping constant values in the preprocessing stage. */
-#define OSSwapConstInt16(x)     __DARWIN_OSSwapConstInt16(x)
-#define OSSwapConstInt32(x)     __DARWIN_OSSwapConstInt32(x)
-#define OSSwapConstInt64(x)     __DARWIN_OSSwapConstInt64(x)
+#define OSSwapConstInt16(x) __DARWIN_OSSwapConstInt16(x)
+#define OSSwapConstInt32(x) __DARWIN_OSSwapConstInt32(x)
+#define OSSwapConstInt64(x) __DARWIN_OSSwapConstInt64(x)
 
 #if !defined(__DARWIN_OS_INLINE)
-# if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#        define __DARWIN_OS_INLINE static inline
-# elif defined(__MWERKS__) || defined(__cplusplus)
-#        define __DARWIN_OS_INLINE static inline
-# else
-#        define __DARWIN_OS_INLINE static __inline__
-# endif
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define __DARWIN_OS_INLINE static inline
+#elif defined(__MWERKS__) || defined(__cplusplus)
+#define __DARWIN_OS_INLINE static inline
+#else
+#define __DARWIN_OS_INLINE static __inline__
+#endif
 #endif
 
 #if defined(__GNUC__)
 
 #if (defined(__i386__) || defined(__x86_64__))
 #include <libkern/i386/OSByteOrder.h>
-#elif defined (__arm__) || defined(__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include <libkern/arm/OSByteOrder.h>
 #else
 #include <libkern/machine/OSByteOrder.h>
@@ -63,106 +63,67 @@
 
 #endif /* __GNUC__ */
 
-#define OSSwapInt16(x)  __DARWIN_OSSwapInt16(x)
-#define OSSwapInt32(x)  __DARWIN_OSSwapInt32(x)
-#define OSSwapInt64(x)  __DARWIN_OSSwapInt64(x)
+#define OSSwapInt16(x) __DARWIN_OSSwapInt16(x)
+#define OSSwapInt32(x) __DARWIN_OSSwapInt32(x)
+#define OSSwapInt64(x) __DARWIN_OSSwapInt64(x)
 
-enum {
-	OSUnknownByteOrder,
-	OSLittleEndian,
-	OSBigEndian
-};
+enum { OSUnknownByteOrder, OSLittleEndian, OSBigEndian };
 
 __DARWIN_OS_INLINE
-int32_t
-OSHostByteOrder(void)
-{
+int32_t OSHostByteOrder(void) {
 #if defined(__LITTLE_ENDIAN__)
-	return OSLittleEndian;
+  return OSLittleEndian;
 #elif defined(__BIG_ENDIAN__)
-	return OSBigEndian;
+  return OSBigEndian;
 #else
-	return OSUnknownByteOrder;
+  return OSUnknownByteOrder;
 #endif
 }
 
-#define OSReadBigInt(x, y)              OSReadBigInt32(x, y)
-#define OSWriteBigInt(x, y, z)          OSWriteBigInt32(x, y, z)
-#define OSSwapBigToHostInt(x)           OSSwapBigToHostInt32(x)
-#define OSSwapHostToBigInt(x)           OSSwapHostToBigInt32(x)
-#define OSReadLittleInt(x, y)           OSReadLittleInt32(x, y)
-#define OSWriteLittleInt(x, y, z)       OSWriteLittleInt32(x, y, z)
-#define OSSwapHostToLittleInt(x)        OSSwapHostToLittleInt32(x)
-#define OSSwapLittleToHostInt(x)        OSSwapLittleToHostInt32(x)
+#define OSReadBigInt(x, y) OSReadBigInt32(x, y)
+#define OSWriteBigInt(x, y, z) OSWriteBigInt32(x, y, z)
+#define OSSwapBigToHostInt(x) OSSwapBigToHostInt32(x)
+#define OSSwapHostToBigInt(x) OSSwapHostToBigInt32(x)
+#define OSReadLittleInt(x, y) OSReadLittleInt32(x, y)
+#define OSWriteLittleInt(x, y, z) OSWriteLittleInt32(x, y, z)
+#define OSSwapHostToLittleInt(x) OSSwapHostToLittleInt32(x)
+#define OSSwapLittleToHostInt(x) OSSwapLittleToHostInt32(x)
 
 /* Functions for loading native endian values. */
 
 __DARWIN_OS_INLINE
-uint16_t
-_OSReadInt16(
-	const volatile void               * base,
-	uintptr_t                     byteOffset
-	)
-{
-	return *(volatile uint16_t *)((uintptr_t)base + byteOffset);
+uint16_t _OSReadInt16(const volatile void *base, uintptr_t byteOffset) {
+  return *(volatile uint16_t *)((uintptr_t)base + byteOffset);
 }
 
 __DARWIN_OS_INLINE
-uint32_t
-_OSReadInt32(
-	const volatile void               * base,
-	uintptr_t                     byteOffset
-	)
-{
-	return *(volatile uint32_t *)((uintptr_t)base + byteOffset);
+uint32_t _OSReadInt32(const volatile void *base, uintptr_t byteOffset) {
+  return *(volatile uint32_t *)((uintptr_t)base + byteOffset);
 }
 
 __DARWIN_OS_INLINE
-uint64_t
-_OSReadInt64(
-	const volatile void               * base,
-	uintptr_t                     byteOffset
-	)
-{
-	return *(volatile uint64_t *)((uintptr_t)base + byteOffset);
+uint64_t _OSReadInt64(const volatile void *base, uintptr_t byteOffset) {
+  return *(volatile uint64_t *)((uintptr_t)base + byteOffset);
 }
 
 /* Functions for storing native endian values. */
 
 __DARWIN_OS_INLINE
-void
-_OSWriteInt16(
-	volatile void               * base,
-	uintptr_t                     byteOffset,
-	uint16_t                      data
-	)
-{
-	*(volatile uint16_t *)((uintptr_t)base + byteOffset) = data;
+void _OSWriteInt16(volatile void *base, uintptr_t byteOffset, uint16_t data) {
+  *(volatile uint16_t *)((uintptr_t)base + byteOffset) = data;
 }
 
 __DARWIN_OS_INLINE
-void
-_OSWriteInt32(
-	volatile void               * base,
-	uintptr_t                     byteOffset,
-	uint32_t                      data
-	)
-{
-	*(volatile uint32_t *)((uintptr_t)base + byteOffset) = data;
+void _OSWriteInt32(volatile void *base, uintptr_t byteOffset, uint32_t data) {
+  *(volatile uint32_t *)((uintptr_t)base + byteOffset) = data;
 }
 
 __DARWIN_OS_INLINE
-void
-_OSWriteInt64(
-	volatile void               * base,
-	uintptr_t                     byteOffset,
-	uint64_t                      data
-	)
-{
-	*(volatile uint64_t *)((uintptr_t)base + byteOffset) = data;
+void _OSWriteInt64(volatile void *base, uintptr_t byteOffset, uint64_t data) {
+  *(volatile uint64_t *)((uintptr_t)base + byteOffset) = data;
 }
 
-#if             defined(__BIG_ENDIAN__)
+#if defined(__BIG_ENDIAN__)
 
 /* Functions for loading big endian to host endianess. */
 
@@ -172,9 +133,12 @@ _OSWriteInt64(
 
 /* Functions for storing host endianess to big endian. */
 
-#define OSWriteBigInt16(base, byteOffset, data) _OSWriteInt16(base, byteOffset, data)
-#define OSWriteBigInt32(base, byteOffset, data) _OSWriteInt32(base, byteOffset, data)
-#define OSWriteBigInt64(base, byteOffset, data) _OSWriteInt64(base, byteOffset, data)
+#define OSWriteBigInt16(base, byteOffset, data)                                \
+  _OSWriteInt16(base, byteOffset, data)
+#define OSWriteBigInt32(base, byteOffset, data)                                \
+  _OSWriteInt32(base, byteOffset, data)
+#define OSWriteBigInt64(base, byteOffset, data)                                \
+  _OSWriteInt64(base, byteOffset, data)
 
 /* Functions for loading little endian to host endianess. */
 
@@ -184,9 +148,12 @@ _OSWriteInt64(
 
 /* Functions for storing host endianess to little endian. */
 
-#define OSWriteLittleInt16(base, byteOffset, data) OSWriteSwapInt16(base, byteOffset, data)
-#define OSWriteLittleInt32(base, byteOffset, data) OSWriteSwapInt32(base, byteOffset, data)
-#define OSWriteLittleInt64(base, byteOffset, data) OSWriteSwapInt64(base, byteOffset, data)
+#define OSWriteLittleInt16(base, byteOffset, data)                             \
+  OSWriteSwapInt16(base, byteOffset, data)
+#define OSWriteLittleInt32(base, byteOffset, data)                             \
+  OSWriteSwapInt32(base, byteOffset, data)
+#define OSWriteLittleInt64(base, byteOffset, data)                             \
+  OSWriteSwapInt64(base, byteOffset, data)
 
 /* Host endianess to big endian byte swapping macros for constants. */
 
@@ -236,7 +203,7 @@ _OSWriteInt64(
 #define OSSwapLittleToHostInt32(x) OSSwapInt32(x)
 #define OSSwapLittleToHostInt64(x) OSSwapInt64(x)
 
-#elif           defined(__LITTLE_ENDIAN__)
+#elif defined(__LITTLE_ENDIAN__)
 
 /* Functions for loading big endian to host endianess. */
 
@@ -246,9 +213,12 @@ _OSWriteInt64(
 
 /* Functions for storing host endianess to big endian. */
 
-#define OSWriteBigInt16(base, byteOffset, data) OSWriteSwapInt16(base, byteOffset, data)
-#define OSWriteBigInt32(base, byteOffset, data) OSWriteSwapInt32(base, byteOffset, data)
-#define OSWriteBigInt64(base, byteOffset, data) OSWriteSwapInt64(base, byteOffset, data)
+#define OSWriteBigInt16(base, byteOffset, data)                                \
+  OSWriteSwapInt16(base, byteOffset, data)
+#define OSWriteBigInt32(base, byteOffset, data)                                \
+  OSWriteSwapInt32(base, byteOffset, data)
+#define OSWriteBigInt64(base, byteOffset, data)                                \
+  OSWriteSwapInt64(base, byteOffset, data)
 
 /* Functions for loading little endian to host endianess. */
 
@@ -258,9 +228,12 @@ _OSWriteInt64(
 
 /* Functions for storing host endianess to little endian. */
 
-#define OSWriteLittleInt16(base, byteOffset, data) _OSWriteInt16(base, byteOffset, data)
-#define OSWriteLittleInt32(base, byteOffset, data) _OSWriteInt32(base, byteOffset, data)
-#define OSWriteLittleInt64(base, byteOffset, data) _OSWriteInt64(base, byteOffset, data)
+#define OSWriteLittleInt16(base, byteOffset, data)                             \
+  _OSWriteInt16(base, byteOffset, data)
+#define OSWriteLittleInt32(base, byteOffset, data)                             \
+  _OSWriteInt32(base, byteOffset, data)
+#define OSWriteLittleInt64(base, byteOffset, data)                             \
+  _OSWriteInt64(base, byteOffset, data)
 
 /* Host endianess to big endian byte swapping macros for constants. */
 

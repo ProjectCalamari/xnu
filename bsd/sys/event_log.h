@@ -30,46 +30,41 @@
 #define _SYSTEM_EVENT_LOG_H_
 
 #include <Availability.h>
-#include <sys/cdefs.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
 #define SYSTEM_EVENT_ENTITLEMENT "com.apple.private.record_system_event"
 
-// These arbitrary numbers are used to limit the size of the system event message.
-// We don't want the messages to be too long, as they're going over serial.
+// These arbitrary numbers are used to limit the size of the system event
+// message. We don't want the messages to be too long, as they're going over
+// serial.
 #define SYSTEM_EVENT_EVENT_MAX 64
 #define SYSTEM_EVENT_PAYLOAD_MAX 96
 
-__enum_decl(system_event_type, uint8_t, {
-	SYSTEM_EVENT_TYPE_FIRST = 0,
-	SYSTEM_EVENT_TYPE_INFO,
-	SYSTEM_EVENT_TYPE_ERROR,
-	SYSTEM_EVENT_TYPE_LAST
-});
+__enum_decl(system_event_type, uint8_t,
+            {SYSTEM_EVENT_TYPE_FIRST = 0, SYSTEM_EVENT_TYPE_INFO,
+             SYSTEM_EVENT_TYPE_ERROR, SYSTEM_EVENT_TYPE_LAST});
 
-__enum_decl(system_event_subsystem, uint8_t, {
-	SYSTEM_EVENT_SUBSYSTEM_FIRST = 0,
-	SYSTEM_EVENT_SUBSYSTEM_LAUNCHD,
-	SYSTEM_EVENT_SUBSYSTEM_TEST,
-	SYSTEM_EVENT_SUBSYSTEM_NVRAM,
-	SYSTEM_EVENT_SUBSYSTEM_PROCESS,
-	SYSTEM_EVENT_SUBSYSTEM_PMRD,
-	SYSTEM_EVENT_SUBSYSTEM_LAST
-});
+__enum_decl(system_event_subsystem, uint8_t,
+            {SYSTEM_EVENT_SUBSYSTEM_FIRST = 0, SYSTEM_EVENT_SUBSYSTEM_LAUNCHD,
+             SYSTEM_EVENT_SUBSYSTEM_TEST, SYSTEM_EVENT_SUBSYSTEM_NVRAM,
+             SYSTEM_EVENT_SUBSYSTEM_PROCESS, SYSTEM_EVENT_SUBSYSTEM_PMRD,
+             SYSTEM_EVENT_SUBSYSTEM_LAST});
 
 #ifndef KERNEL
 
 /*
- * Known subsystems can use this to emit system event transition logging messages in
- * a structured and understandable way.
+ * Known subsystems can use this to emit system event transition logging
+ * messages in a structured and understandable way.
  */
 
-__WATCHOS_AVAILABLE(9.0) __OSX_AVAILABLE(13.0) __IOS_AVAILABLE(16.0) __TVOS_AVAILABLE(16.0)
-int
-record_system_event_as_kernel(system_event_type type, system_event_subsystem subsystem, const char *event,
-    const char *payload);
+__WATCHOS_AVAILABLE(9.0)
+__OSX_AVAILABLE(13.0) __IOS_AVAILABLE(16.0)
+    __TVOS_AVAILABLE(16.0) int record_system_event_as_kernel(
+        system_event_type type, system_event_subsystem subsystem,
+        const char *event, const char *payload);
 
 #endif /* !KERNEL */
 

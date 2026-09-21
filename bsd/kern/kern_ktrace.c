@@ -50,23 +50,23 @@
 #include <sys/ktrace.h>
 
 #include <mach/host_priv.h>
-#include <mach/mach_types.h>
 #include <mach/ktrace_background.h>
+#include <mach/mach_types.h>
 
 #include <sys/kauth.h>
 #include <sys/priv.h>
 #include <sys/proc.h>
 char *proc_name_address(void *p);
+#include <IOKit/IOBSD.h>
+#include <os/log.h>
 #include <sys/sysctl.h>
 #include <sys/vm.h>
-#include <os/log.h>
-#include <IOKit/IOBSD.h>
 
-#include <kern/locks.h>
 #include <kern/assert.h>
+#include <kern/locks.h>
 
-#include <sys/kdebug.h>
 #include <kperf/kperf.h>
+#include <sys/kdebug.h>
 
 #include <kern/host.h>
 
@@ -96,7 +96,7 @@ static uint64_t ktrace_bg_unique_id = 0;
 static pid_t ktrace_bg_pid = 0;
 
 /* The name of the last process to configure ktrace. */
-static char ktrace_last_owner_execname[MAXCOMLEN + 1] = { 0 };
+static char ktrace_last_owner_execname[MAXCOMLEN + 1] = {0};
 
 /*
  * Which subsystems of ktrace (currently kdebug and kperf) are active.
@@ -149,388 +149,339 @@ int ktrace_root_set_owner_allowed = 0;
  */
 static bool ktrace_single_threaded = false;
 
-__startup_func
-static void
-ktrace_startup(void)
-{
+__startup_func static void ktrace_startup(void) {
 #if CONFIG_CPU_COUNTERS
-	extern void kpc_init(void);
-	kpc_init();
+  extern void kpc_init(void);
+  kpc_init();
 #endif /* CONFIG_CPU_COUNTERS */
 #if KPERF
-	kperf_init();
+  kperf_init();
 #endif /* KPERF */
-	kdebug_startup();
+  kdebug_startup();
 }
 STARTUP(KTRACE, STARTUP_RANK_FIRST, ktrace_startup);
 
-void
-ktrace_lock(void)
-{
-	if (!ktrace_single_threaded) {
-		lck_mtx_lock(&ktrace_mtx);
-	}
+void ktrace_lock(void) {
+  if (!ktrace_single_threaded) {
+    lck_mtx_lock(&ktrace_mtx);
+  }
 }
 
-void
-ktrace_unlock(void)
-{
-	if (!ktrace_single_threaded) {
-		lck_mtx_unlock(&ktrace_mtx);
-	}
+void ktrace_unlock(void) {
+  if (!ktrace_single_threaded) {
+    lck_mtx_unlock(&ktrace_mtx);
+  }
 }
 
-void
-ktrace_assert_lock_held(void)
-{
-	if (!ktrace_single_threaded) {
-		lck_mtx_assert(&ktrace_mtx, LCK_MTX_ASSERT_OWNED);
-	}
+void ktrace_assert_lock_held(void) {
+  if (!ktrace_single_threaded) {
+    lck_mtx_assert(&ktrace_mtx, LCK_MTX_ASSERT_OWNED);
+  }
 }
 
-void
-ktrace_start_single_threaded(void)
-{
-	ktrace_single_threaded = true;
+void ktrace_start_single_threaded(void) { ktrace_single_threaded = true; }
+
+void ktrace_end_single_threaded(void) { ktrace_single_threaded = false; }
+
+static void ktrace_reset_internal(uint32_t reset_mask) {
+  if (!ktrace_keep_ownership_on_reset) {
+    ktrace_active_mask &= ~reset_mask;
+  }
+
+  if (reset_mask & KTRACE_KPERF) {
+    kperf_reset();
+  }
+  if (reset_mask & KTRACE_KDEBUG) {
+    kdebug_reset();
+  }
+
+  if (ktrace_active_mask == 0) {
+    if (ktrace_state == KTRACE_STATE_FG) {
+      /* transition from foreground to background */
+      ktrace_promote_background();
+    } else if (ktrace_state == KTRACE_STATE_BG) {
+      /* background tool is resetting ktrace */
+      should_notify_on_init = true;
+      ktrace_release_ownership();
+      ktrace_state = KTRACE_STATE_OFF;
+    }
+  }
 }
 
-void
-ktrace_end_single_threaded(void)
-{
-	ktrace_single_threaded = false;
+void ktrace_reset(uint32_t reset_mask) {
+  ktrace_assert_lock_held();
+
+  if (ktrace_active_mask == 0) {
+    if (!ktrace_keep_ownership_on_reset) {
+      assert(ktrace_state == KTRACE_STATE_OFF);
+    }
+    return;
+  }
+
+  ktrace_reset_internal(reset_mask);
 }
 
-static void
-ktrace_reset_internal(uint32_t reset_mask)
-{
-	if (!ktrace_keep_ownership_on_reset) {
-		ktrace_active_mask &= ~reset_mask;
-	}
+static void ktrace_promote_background(void) {
+  assert(ktrace_state != KTRACE_STATE_BG);
 
-	if (reset_mask & KTRACE_KPERF) {
-		kperf_reset();
-	}
-	if (reset_mask & KTRACE_KDEBUG) {
-		kdebug_reset();
-	}
+  os_log(OS_LOG_DEFAULT, "ktrace: promoting background tool");
 
-	if (ktrace_active_mask == 0) {
-		if (ktrace_state == KTRACE_STATE_FG) {
-			/* transition from foreground to background */
-			ktrace_promote_background();
-		} else if (ktrace_state == KTRACE_STATE_BG) {
-			/* background tool is resetting ktrace */
-			should_notify_on_init = true;
-			ktrace_release_ownership();
-			ktrace_state = KTRACE_STATE_OFF;
-		}
-	}
+  /*
+   * Remember to send a background available notification on the next init
+   * if the notification failed (meaning no task holds the receive right
+   * for the host special port).
+   */
+  if (ktrace_background_available_notify_user() == KERN_FAILURE) {
+    should_notify_on_init = true;
+  } else {
+    should_notify_on_init = false;
+  }
+
+  ktrace_release_ownership();
+  ktrace_state = KTRACE_STATE_OFF;
 }
 
-void
-ktrace_reset(uint32_t reset_mask)
-{
-	ktrace_assert_lock_held();
+bool ktrace_background_active(void) { return ktrace_state == KTRACE_STATE_BG; }
 
-	if (ktrace_active_mask == 0) {
-		if (!ktrace_keep_ownership_on_reset) {
-			assert(ktrace_state == KTRACE_STATE_OFF);
-		}
-		return;
-	}
-
-	ktrace_reset_internal(reset_mask);
-}
-
-static void
-ktrace_promote_background(void)
-{
-	assert(ktrace_state != KTRACE_STATE_BG);
-
-	os_log(OS_LOG_DEFAULT, "ktrace: promoting background tool");
-
-	/*
-	 * Remember to send a background available notification on the next init
-	 * if the notification failed (meaning no task holds the receive right
-	 * for the host special port).
-	 */
-	if (ktrace_background_available_notify_user() == KERN_FAILURE) {
-		should_notify_on_init = true;
-	} else {
-		should_notify_on_init = false;
-	}
-
-	ktrace_release_ownership();
-	ktrace_state = KTRACE_STATE_OFF;
-}
-
-bool
-ktrace_background_active(void)
-{
-	return ktrace_state == KTRACE_STATE_BG;
-}
-
-static bool
-_current_task_can_own_ktrace(void)
-{
-	bool allow_non_superuser = false;
-	bool is_superuser = kauth_cred_issuser(kauth_cred_get());
+static bool _current_task_can_own_ktrace(void) {
+  bool allow_non_superuser = false;
+  bool is_superuser = kauth_cred_issuser(kauth_cred_get());
 
 #if DEVELOPMENT || DEBUG
-	allow_non_superuser = IOTaskHasEntitlement(current_task(),
-	    KTRACE_ALLOW_ENTITLEMENT);
+  allow_non_superuser =
+      IOTaskHasEntitlement(current_task(), KTRACE_ALLOW_ENTITLEMENT);
 #endif /* DEVELOPMENT || DEBUG */
 
-	return is_superuser || allow_non_superuser;
+  return is_superuser || allow_non_superuser;
 }
 
-int
-ktrace_read_check(void)
-{
-	ktrace_assert_lock_held();
+int ktrace_read_check(void) {
+  ktrace_assert_lock_held();
 
-	if (proc_uniqueid(current_proc()) == ktrace_owning_unique_id) {
-		return 0;
-	}
+  if (proc_uniqueid(current_proc()) == ktrace_owning_unique_id) {
+    return 0;
+  }
 
-	return _current_task_can_own_ktrace() ? 0 : EPERM;
+  return _current_task_can_own_ktrace() ? 0 : EPERM;
 }
 
 /* If an owning process has exited, reset the ownership. */
-static void
-ktrace_ownership_maintenance(void)
-{
-	ktrace_assert_lock_held();
+static void ktrace_ownership_maintenance(void) {
+  ktrace_assert_lock_held();
 
-	/* do nothing if ktrace is not owned */
-	if (ktrace_owning_unique_id == 0) {
-		return;
-	}
+  /* do nothing if ktrace is not owned */
+  if (ktrace_owning_unique_id == 0) {
+    return;
+  }
 
-	/* reset ownership if process cannot be found */
+  /* reset ownership if process cannot be found */
 
-	proc_t owning_proc = proc_find(ktrace_owning_pid);
+  proc_t owning_proc = proc_find(ktrace_owning_pid);
 
-	if (owning_proc != NULL) {
-		/* make sure the pid was not recycled */
-		if (proc_uniqueid(owning_proc) != ktrace_owning_unique_id) {
-			ktrace_release_ownership();
-		}
+  if (owning_proc != NULL) {
+    /* make sure the pid was not recycled */
+    if (proc_uniqueid(owning_proc) != ktrace_owning_unique_id) {
+      ktrace_release_ownership();
+    }
 
-		proc_rele(owning_proc);
-	} else {
-		ktrace_release_ownership();
-	}
+    proc_rele(owning_proc);
+  } else {
+    ktrace_release_ownership();
+  }
 }
 
-int
-ktrace_configure(uint32_t config_mask)
-{
-	ktrace_assert_lock_held();
-	assert(config_mask != 0);
+int ktrace_configure(uint32_t config_mask) {
+  ktrace_assert_lock_held();
+  assert(config_mask != 0);
 
-	proc_t p = current_proc();
+  proc_t p = current_proc();
 
-	/* if process clearly owns ktrace, allow */
-	if (proc_uniqueid(p) == ktrace_owning_unique_id) {
-		ktrace_active_mask |= config_mask;
-		return 0;
-	}
+  /* if process clearly owns ktrace, allow */
+  if (proc_uniqueid(p) == ktrace_owning_unique_id) {
+    ktrace_active_mask |= config_mask;
+    return 0;
+  }
 
-	/* background configure while foreground is active is not allowed */
-	if (proc_uniqueid(p) == ktrace_bg_unique_id &&
-	    ktrace_state == KTRACE_STATE_FG) {
-		return EBUSY;
-	}
+  /* background configure while foreground is active is not allowed */
+  if (proc_uniqueid(p) == ktrace_bg_unique_id &&
+      ktrace_state == KTRACE_STATE_FG) {
+    return EBUSY;
+  }
 
-	ktrace_ownership_maintenance();
+  ktrace_ownership_maintenance();
 
-	/* allow process to gain control when unowned or background */
-	if (ktrace_owning_unique_id == 0 || ktrace_state == KTRACE_STATE_BG) {
-		if (!_current_task_can_own_ktrace()) {
-			return EPERM;
-		}
+  /* allow process to gain control when unowned or background */
+  if (ktrace_owning_unique_id == 0 || ktrace_state == KTRACE_STATE_BG) {
+    if (!_current_task_can_own_ktrace()) {
+      return EPERM;
+    }
 
-		ktrace_owner_kernel = false;
-		ktrace_set_owning_proc(p);
-		ktrace_active_mask |= config_mask;
-		return 0;
-	}
+    ktrace_owner_kernel = false;
+    ktrace_set_owning_proc(p);
+    ktrace_active_mask |= config_mask;
+    return 0;
+  }
 
-	/* owned by an existing, different process */
-	return EBUSY;
+  /* owned by an existing, different process */
+  return EBUSY;
 }
 
-void
-ktrace_disable(ktrace_state_t state_to_match)
-{
-	if (ktrace_state == state_to_match) {
-		kernel_debug_disable();
-		kperf_disable_sampling();
-	}
+void ktrace_disable(ktrace_state_t state_to_match) {
+  if (ktrace_state == state_to_match) {
+    kernel_debug_disable();
+    kperf_disable_sampling();
+  }
 }
 
-int
-ktrace_get_owning_pid(void)
-{
-	ktrace_assert_lock_held();
+int ktrace_get_owning_pid(void) {
+  ktrace_assert_lock_held();
 
-	ktrace_ownership_maintenance();
-	return ktrace_owning_pid;
+  ktrace_ownership_maintenance();
+  return ktrace_owning_pid;
 }
 
-void
-ktrace_kernel_configure(uint32_t config_mask)
-{
-	assert(ktrace_single_threaded == true);
+void ktrace_kernel_configure(uint32_t config_mask) {
+  assert(ktrace_single_threaded == true);
 
-	if (ktrace_owner_kernel) {
-		ktrace_active_mask |= config_mask;
-		return;
-	}
+  if (ktrace_owner_kernel) {
+    ktrace_active_mask |= config_mask;
+    return;
+  }
 
-	if (ktrace_state != KTRACE_STATE_OFF) {
-		if (ktrace_active_mask & config_mask & KTRACE_KPERF) {
-			kperf_reset();
-		}
-		if (ktrace_active_mask & config_mask & KTRACE_KDEBUG) {
-			kdebug_reset();
-		}
-	}
+  if (ktrace_state != KTRACE_STATE_OFF) {
+    if (ktrace_active_mask & config_mask & KTRACE_KPERF) {
+      kperf_reset();
+    }
+    if (ktrace_active_mask & config_mask & KTRACE_KDEBUG) {
+      kdebug_reset();
+    }
+  }
 
-	ktrace_owner_kernel = true;
-	ktrace_active_mask |= config_mask;
-	ktrace_state = KTRACE_STATE_FG;
+  ktrace_owner_kernel = true;
+  ktrace_active_mask |= config_mask;
+  ktrace_state = KTRACE_STATE_FG;
 
-	ktrace_release_ownership();
-	strlcpy(ktrace_last_owner_execname, "kernel_task",
-	    sizeof(ktrace_last_owner_execname));
+  ktrace_release_ownership();
+  strlcpy(ktrace_last_owner_execname, "kernel_task",
+          sizeof(ktrace_last_owner_execname));
 }
 
-static errno_t
-ktrace_init_background(void)
-{
-	int err = 0;
+static errno_t ktrace_init_background(void) {
+  int err = 0;
 
-	ktrace_assert_lock_held();
+  ktrace_assert_lock_held();
 
-	if ((err = priv_check_cred(kauth_cred_get(), PRIV_KTRACE_BACKGROUND, 0))) {
-		return err;
-	}
+  if ((err = priv_check_cred(kauth_cred_get(), PRIV_KTRACE_BACKGROUND, 0))) {
+    return err;
+  }
 
-	/*
-	 * When a background tool first checks in, send a notification if ktrace
-	 * is available.
-	 */
-	if (should_notify_on_init) {
-		if (ktrace_state == KTRACE_STATE_OFF) {
-			/*
-			 * This notification can only fail if a process does not
-			 * hold the receive right for the host special port.
-			 * Return an error and don't make the current process
-			 * the background tool.
-			 */
-			if (ktrace_background_available_notify_user() == KERN_FAILURE) {
-				return EINVAL;
-			}
-		}
-		should_notify_on_init = false;
-	}
+  /*
+   * When a background tool first checks in, send a notification if ktrace
+   * is available.
+   */
+  if (should_notify_on_init) {
+    if (ktrace_state == KTRACE_STATE_OFF) {
+      /*
+       * This notification can only fail if a process does not
+       * hold the receive right for the host special port.
+       * Return an error and don't make the current process
+       * the background tool.
+       */
+      if (ktrace_background_available_notify_user() == KERN_FAILURE) {
+        return EINVAL;
+      }
+    }
+    should_notify_on_init = false;
+  }
 
-	proc_t p = current_proc();
+  proc_t p = current_proc();
 
-	ktrace_bg_unique_id = proc_uniqueid(p);
-	ktrace_bg_pid = proc_pid(p);
+  ktrace_bg_unique_id = proc_uniqueid(p);
+  ktrace_bg_pid = proc_pid(p);
 
-	if (ktrace_state == KTRACE_STATE_BG) {
-		ktrace_set_owning_proc(p);
-	}
+  if (ktrace_state == KTRACE_STATE_BG) {
+    ktrace_set_owning_proc(p);
+  }
 
-	return 0;
+  return 0;
 }
 
-void
-ktrace_set_invalid_owning_pid(void)
-{
-	os_log(OS_LOG_DEFAULT, "ktrace: manually invalidating owning process");
-	if (ktrace_keep_ownership_on_reset) {
-		ktrace_keep_ownership_on_reset = false;
-		ktrace_reset_internal(ktrace_active_mask);
-	}
+void ktrace_set_invalid_owning_pid(void) {
+  os_log(OS_LOG_DEFAULT, "ktrace: manually invalidating owning process");
+  if (ktrace_keep_ownership_on_reset) {
+    ktrace_keep_ownership_on_reset = false;
+    ktrace_reset_internal(ktrace_active_mask);
+  }
 }
 
-int
-ktrace_set_owning_pid(int pid)
-{
-	ktrace_assert_lock_held();
+int ktrace_set_owning_pid(int pid) {
+  ktrace_assert_lock_held();
 
-	/* allow user space to successfully unset owning pid */
-	if (pid == -1) {
-		ktrace_set_invalid_owning_pid();
-		return 0;
-	}
+  /* allow user space to successfully unset owning pid */
+  if (pid == -1) {
+    ktrace_set_invalid_owning_pid();
+    return 0;
+  }
 
-	/* use ktrace_reset or ktrace_release_ownership, not this */
-	if (pid == 0) {
-		ktrace_set_invalid_owning_pid();
-		return EINVAL;
-	}
+  /* use ktrace_reset or ktrace_release_ownership, not this */
+  if (pid == 0) {
+    ktrace_set_invalid_owning_pid();
+    return EINVAL;
+  }
 
-	proc_t p = proc_find(pid);
-	if (!p) {
-		ktrace_set_invalid_owning_pid();
-		return ESRCH;
-	}
+  proc_t p = proc_find(pid);
+  if (!p) {
+    ktrace_set_invalid_owning_pid();
+    return ESRCH;
+  }
 
-	ktrace_keep_ownership_on_reset = true;
-	os_log(OS_LOG_DEFAULT, "ktrace: manually setting owning process");
-	ktrace_set_owning_proc(p);
+  ktrace_keep_ownership_on_reset = true;
+  os_log(OS_LOG_DEFAULT, "ktrace: manually setting owning process");
+  ktrace_set_owning_proc(p);
 
-	proc_rele(p);
-	return 0;
+  proc_rele(p);
+  return 0;
 }
 
-static void
-ktrace_set_owning_proc(proc_t p)
-{
-	ktrace_assert_lock_held();
-	assert(p != NULL);
-	ktrace_state_t old_state = ktrace_state;
+static void ktrace_set_owning_proc(proc_t p) {
+  ktrace_assert_lock_held();
+  assert(p != NULL);
+  ktrace_state_t old_state = ktrace_state;
 
-	if (ktrace_state != KTRACE_STATE_FG) {
-		if (proc_uniqueid(p) == ktrace_bg_unique_id) {
-			ktrace_state = KTRACE_STATE_BG;
-		} else {
-			if (ktrace_state == KTRACE_STATE_BG) {
-				if (ktrace_active_mask & KTRACE_KPERF) {
-					kperf_reset();
-				}
-				if (ktrace_active_mask & KTRACE_KDEBUG) {
-					kdebug_reset();
-				}
+  if (ktrace_state != KTRACE_STATE_FG) {
+    if (proc_uniqueid(p) == ktrace_bg_unique_id) {
+      ktrace_state = KTRACE_STATE_BG;
+    } else {
+      if (ktrace_state == KTRACE_STATE_BG) {
+        if (ktrace_active_mask & KTRACE_KPERF) {
+          kperf_reset();
+        }
+        if (ktrace_active_mask & KTRACE_KDEBUG) {
+          kdebug_reset();
+        }
 
-				ktrace_active_mask = 0;
-			}
-			ktrace_state = KTRACE_STATE_FG;
-			should_notify_on_init = false;
-		}
-	}
+        ktrace_active_mask = 0;
+      }
+      ktrace_state = KTRACE_STATE_FG;
+      should_notify_on_init = false;
+    }
+  }
 
-	ktrace_owner_kernel = false;
-	ktrace_owning_unique_id = proc_uniqueid(p);
-	ktrace_owning_pid = proc_pid(p);
-	strlcpy(ktrace_last_owner_execname, proc_name_address(p),
-	    sizeof(ktrace_last_owner_execname));
-	os_log(OS_LOG_DEFAULT, "ktrace: changing state from %d to %d, owned by "
-	    "%s[%d]", old_state, ktrace_state, ktrace_last_owner_execname,
-	    ktrace_owning_pid);
+  ktrace_owner_kernel = false;
+  ktrace_owning_unique_id = proc_uniqueid(p);
+  ktrace_owning_pid = proc_pid(p);
+  strlcpy(ktrace_last_owner_execname, proc_name_address(p),
+          sizeof(ktrace_last_owner_execname));
+  os_log(OS_LOG_DEFAULT,
+         "ktrace: changing state from %d to %d, owned by "
+         "%s[%d]",
+         old_state, ktrace_state, ktrace_last_owner_execname,
+         ktrace_owning_pid);
 }
 
-static void
-ktrace_release_ownership(void)
-{
-	ktrace_owning_unique_id = 0;
-	ktrace_owning_pid = 0;
+static void ktrace_release_ownership(void) {
+  ktrace_owning_unique_id = 0;
+  ktrace_owning_pid = 0;
 }
 
 #define SYSCTL_INIT_BACKGROUND (1)
@@ -540,57 +491,51 @@ static int ktrace_sysctl SYSCTL_HANDLER_ARGS;
 SYSCTL_NODE(, OID_AUTO, ktrace, CTLFLAG_RW | CTLFLAG_LOCKED, 0, "ktrace");
 
 SYSCTL_UINT(_ktrace, OID_AUTO, state, CTLFLAG_RD | CTLFLAG_LOCKED,
-    &ktrace_state, 0,
-    "");
+            &ktrace_state, 0, "");
 
 SYSCTL_UINT(_ktrace, OID_AUTO, active_mask, CTLFLAG_RD | CTLFLAG_LOCKED,
-    &ktrace_active_mask, 0,
-    "");
+            &ktrace_active_mask, 0, "");
 
 SYSCTL_INT(_ktrace, OID_AUTO, owning_pid, CTLFLAG_RD | CTLFLAG_LOCKED,
-    &ktrace_owning_pid, 0,
-    "pid of the process that owns ktrace");
+           &ktrace_owning_pid, 0, "pid of the process that owns ktrace");
 
 SYSCTL_INT(_ktrace, OID_AUTO, background_pid, CTLFLAG_RD | CTLFLAG_LOCKED,
-    &ktrace_bg_pid, 0,
-    "pid of the background ktrace tool");
+           &ktrace_bg_pid, 0, "pid of the background ktrace tool");
 
 SYSCTL_STRING(_ktrace, OID_AUTO, configured_by, CTLFLAG_RD | CTLFLAG_LOCKED,
-    ktrace_last_owner_execname, 0,
-    "execname of process that last configured ktrace");
+              ktrace_last_owner_execname, 0,
+              "execname of process that last configured ktrace");
 
 SYSCTL_PROC(_ktrace, OID_AUTO, init_background, CTLFLAG_RW | CTLFLAG_LOCKED,
-    (void *)SYSCTL_INIT_BACKGROUND, sizeof(int),
-    ktrace_sysctl, "I", "initialize calling process as background");
+            (void *)SYSCTL_INIT_BACKGROUND, sizeof(int), ktrace_sysctl, "I",
+            "initialize calling process as background");
 
-static int
-ktrace_sysctl SYSCTL_HANDLER_ARGS
-{
+static int ktrace_sysctl SYSCTL_HANDLER_ARGS {
 #pragma unused(oidp, arg2)
-	int ret = 0;
-	uintptr_t type = (uintptr_t)arg1;
+  int ret = 0;
+  uintptr_t type = (uintptr_t)arg1;
 
-	ktrace_lock();
+  ktrace_lock();
 
-	if (!kauth_cred_issuser(kauth_cred_get())) {
-		ret = EPERM;
-		goto out;
-	}
+  if (!kauth_cred_issuser(kauth_cred_get())) {
+    ret = EPERM;
+    goto out;
+  }
 
-	if (type == SYSCTL_INIT_BACKGROUND) {
-		if (req->newptr != USER_ADDR_NULL) {
-			ret = ktrace_init_background();
-			goto out;
-		} else {
-			ret = EINVAL;
-			goto out;
-		}
-	} else {
-		ret = EINVAL;
-		goto out;
-	}
+  if (type == SYSCTL_INIT_BACKGROUND) {
+    if (req->newptr != USER_ADDR_NULL) {
+      ret = ktrace_init_background();
+      goto out;
+    } else {
+      ret = EINVAL;
+      goto out;
+    }
+  } else {
+    ret = EINVAL;
+    goto out;
+  }
 
 out:
-	ktrace_unlock();
-	return ret;
+  ktrace_unlock();
+  return ret;
 }

@@ -29,62 +29,54 @@
 
 #include <darwintest.h>
 
+T_GLOBAL_META(T_META_NAMESPACE("xnu.tty"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("file descriptors"),
+              T_META_OWNER("souvik_b"), T_META_RUN_CONCURRENTLY(true));
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.tty"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("file descriptors"),
-	T_META_OWNER("souvik_b"),
-	T_META_RUN_CONCURRENTLY(true));
+static void tty_ioctl_tioccons(bool privileged) {
+  int primary;
+  const char *name;
+  int replica;
+  int on = 1;
+  int off = 0;
 
-static void
-tty_ioctl_tioccons(bool privileged)
-{
-	int primary;
-	const char *name;
-	int replica;
-	int on = 1;
-	int off = 0;
+  // open primary tty
+  T_ASSERT_POSIX_SUCCESS(primary = posix_openpt(O_RDWR | O_NOCTTY),
+                         "open primary");
 
-	// open primary tty
-	T_ASSERT_POSIX_SUCCESS(primary = posix_openpt(O_RDWR | O_NOCTTY), "open primary");
+  // allow opening a replica from the primary
+  T_ASSERT_POSIX_SUCCESS(grantpt(primary), "grantpt");
+  T_ASSERT_POSIX_SUCCESS(unlockpt(primary), "unlockpt");
 
-	// allow opening a replica from the primary
-	T_ASSERT_POSIX_SUCCESS(grantpt(primary), "grantpt");
-	T_ASSERT_POSIX_SUCCESS(unlockpt(primary), "unlockpt");
+  // get the name of the primary tty
+  T_ASSERT_NOTNULL((name = ptsname(primary)), "ptsname");
 
-	// get the name of the primary tty
-	T_ASSERT_NOTNULL((name = ptsname(primary)), "ptsname");
+  // open the replica
+  T_ASSERT_POSIX_SUCCESS(replica = open(name, O_RDWR | O_NOCTTY),
+                         "open replica");
 
-	// open the replica
-	T_ASSERT_POSIX_SUCCESS(replica = open(name, O_RDWR | O_NOCTTY), "open replica");
+  // try calling the TIOCCONS ioctl
+  if (privileged) {
+    T_ASSERT_POSIX_SUCCESS(ioctl(primary, TIOCCONS, (char *)&on),
+                           "ioctl TIOCCONS on");
+  } else {
+    T_ASSERT_POSIX_ERROR(ioctl(primary, TIOCCONS, (char *)&on), -EPERM,
+                         "ioctl TIOCCONS on");
+  }
+  T_ASSERT_POSIX_SUCCESS(ioctl(primary, TIOCCONS, (char *)&off),
+                         "ioctl TIOCCONS off");
 
-	// try calling the TIOCCONS ioctl
-	if (privileged) {
-		T_ASSERT_POSIX_SUCCESS(ioctl(primary, TIOCCONS, (char *)&on), "ioctl TIOCCONS on");
-	} else {
-		T_ASSERT_POSIX_ERROR(ioctl(primary, TIOCCONS, (char *)&on), -EPERM, "ioctl TIOCCONS on");
-	}
-	T_ASSERT_POSIX_SUCCESS(ioctl(primary, TIOCCONS, (char *)&off), "ioctl TIOCCONS off");
-
-	// close primary and replica
-	T_ASSERT_POSIX_SUCCESS(close(primary), "close primary");
-	T_ASSERT_POSIX_SUCCESS(close(replica), "close replica");
+  // close primary and replica
+  T_ASSERT_POSIX_SUCCESS(close(primary), "close primary");
+  T_ASSERT_POSIX_SUCCESS(close(replica), "close replica");
 }
 
-T_DECL(tty_ioctl_tioccons_privileged,
-    "call the TIOCCONS ioctl as root",
-    T_META_ASROOT(true),
-    T_META_TAG_VM_PREFERRED)
-{
-	tty_ioctl_tioccons(true);
+T_DECL(tty_ioctl_tioccons_privileged, "call the TIOCCONS ioctl as root",
+       T_META_ASROOT(true), T_META_TAG_VM_PREFERRED) {
+  tty_ioctl_tioccons(true);
 }
 
-
-T_DECL(tty_ioctl_tioccons_unprivileged,
-    "call the TIOCCONS ioctl without root",
-    T_META_ASROOT(false),
-    T_META_TAG_VM_PREFERRED)
-{
-	tty_ioctl_tioccons(false);
+T_DECL(tty_ioctl_tioccons_unprivileged, "call the TIOCCONS ioctl without root",
+       T_META_ASROOT(false), T_META_TAG_VM_PREFERRED) {
+  tty_ioctl_tioccons(false);
 }

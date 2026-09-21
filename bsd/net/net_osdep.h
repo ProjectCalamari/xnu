@@ -260,13 +260,13 @@ struct ifnet;
 
 #define HAVE_OLD_BPF
 
-#define ifa_list        ifa_link
-#define if_addrlist     if_addrhead
-#define if_list         if_link
+#define ifa_list ifa_link
+#define if_addrlist if_addrhead
+#define if_list if_link
 
 #define WITH_CONVERT_AND_STRIP_IP_LEN
 
-#if 1                           /* at this moment, all OSes do this */
+#if 1 /* at this moment, all OSes do this */
 #define WITH_CONVERT_IP_OFF
 #endif
 

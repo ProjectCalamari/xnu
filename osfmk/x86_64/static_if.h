@@ -30,34 +30,47 @@
 #error "do not include this file directly, use <machine/static_if.h>"
 #else
 
-#define STATIC_IF_RELATIVE      0
-#define STATIC_IF_INSN_SIZE     5
+#define STATIC_IF_RELATIVE 0
+#define STATIC_IF_INSN_SIZE 5
 
 typedef long static_if_offset_t;
 
 struct static_if_entry {
-	static_if_offset_t      sie_base;
-	static_if_offset_t      sie_target;
-	unsigned long           sie_link;
+  static_if_offset_t sie_base;
+  static_if_offset_t sie_target;
+  unsigned long sie_link;
 };
 
 /* generates a struct static_if_entry */
-#define STATIC_IF_ENTRY(n) \
-	".pushsection " STATIC_IF_SEGSECT ",regular,live_support"       "\n\t" \
-	".align 3"                                                      "\n\t" \
-	".quad 1b"                                                      "\n\t" \
-	".quad %l1"                                                     "\n\t" \
-	".quad _" #n "_jump_key + %c0"                                  "\n\t" \
-	".popsection"
+#define STATIC_IF_ENTRY(n)                                                     \
+  ".pushsection " STATIC_IF_SEGSECT ",regular,live_support"                    \
+  "\n\t"                                                                       \
+  ".align 3"                                                                   \
+  "\n\t"                                                                       \
+  ".quad 1b"                                                                   \
+  "\n\t"                                                                       \
+  ".quad %l1"                                                                  \
+  "\n\t"                                                                       \
+  ".quad _" #n "_jump_key + %c0"                                               \
+  "\n\t"                                                                       \
+  ".popsection"
 
 /* From "Recommended Multi-Byte Sequence of NOP Instruction" */
-#define STATIC_IF_NOP(n, label) \
-	asm goto("1: .byte 0x0F,0x1F,0x44,0x00,0x00"                    "\n\t" \
-	    STATIC_IF_ENTRY(n) : : "i"(0) : : label)
+#define STATIC_IF_NOP(n, label)                                                \
+  asm goto("1: .byte 0x0F,0x1F,0x44,0x00,0x00"                                 \
+           "\n\t" STATIC_IF_ENTRY(n)                                           \
+           :                                                                   \
+           : "i"(0)                                                            \
+           :                                                                   \
+           : label)
 
 /* 32-bit jump */
-#define STATIC_IF_BRANCH(n, label) \
-	asm goto("1: .byte 0xE9; .long %l1 - 2f; 2:"                    "\n\t" \
-	    STATIC_IF_ENTRY(n) : : "i"(1) : : label)
+#define STATIC_IF_BRANCH(n, label)                                             \
+  asm goto("1: .byte 0xE9; .long %l1 - 2f; 2:"                                 \
+           "\n\t" STATIC_IF_ENTRY(n)                                           \
+           :                                                                   \
+           : "i"(1)                                                            \
+           :                                                                   \
+           : label)
 
 #endif /* _MACHINE_STATIC_IF_H */

@@ -28,10 +28,10 @@
 
 #define IOKIT_ENABLE_SHARED_PTR
 
-#include <libkern/c++/OSSharedPtr.h>
+#include "IOReporterDefs.h"
 #include <IOKit/IOKernelReportStructs.h>
 #include <IOKit/IOKernelReporters.h>
-#include "IOReporterDefs.h"
+#include <libkern/c++/OSSharedPtr.h>
 
 #define super IOReporter
 OSDefineMetaClassAndStructors(IOSimpleReporter, IOReporter);
@@ -39,133 +39,118 @@ OSDefineMetaClassAndStructors(IOSimpleReporter, IOReporter);
 /* static */
 OSSharedPtr<IOSimpleReporter>
 IOSimpleReporter::with(IOService *reportingService,
-    IOReportCategories categories,
-    IOReportUnit unit)
-{
-	OSSharedPtr<IOSimpleReporter> reporter;
+                       IOReportCategories categories, IOReportUnit unit) {
+  OSSharedPtr<IOSimpleReporter> reporter;
 
-	reporter = OSMakeShared<IOSimpleReporter>();
-	if (!reporter) {
-		return nullptr;
-	}
+  reporter = OSMakeShared<IOSimpleReporter>();
+  if (!reporter) {
+    return nullptr;
+  }
 
-	if (!reporter->initWith(reportingService, categories, unit)) {
-		return nullptr;
-	}
+  if (!reporter->initWith(reportingService, categories, unit)) {
+    return nullptr;
+  }
 
-	return reporter;
+  return reporter;
 }
 
-bool
-IOSimpleReporter::initWith(IOService *reportingService,
-    IOReportCategories categories,
-    IOReportUnit unit)
-{
-	// fully specify the channel type for the superclass
-	IOReportChannelType channelType = {
-		.categories = categories,
-		.report_format = kIOReportFormatSimple,
-		.nelements = 1,
-		.element_idx = 0
-	};
+bool IOSimpleReporter::initWith(IOService *reportingService,
+                                IOReportCategories categories,
+                                IOReportUnit unit) {
+  // fully specify the channel type for the superclass
+  IOReportChannelType channelType = {.categories = categories,
+                                     .report_format = kIOReportFormatSimple,
+                                     .nelements = 1,
+                                     .element_idx = 0};
 
-	return super::init(reportingService, channelType, unit);
+  return super::init(reportingService, channelType, unit);
 }
 
+IOReturn IOSimpleReporter::setValue(uint64_t channel_id, int64_t value) {
+  IOReturn res = kIOReturnError;
+  IOSimpleReportValues simple_values;
+  int element_index = 0;
 
-IOReturn
-IOSimpleReporter::setValue(uint64_t channel_id,
-    int64_t value)
-{
-	IOReturn res = kIOReturnError;
-	IOSimpleReportValues simple_values;
-	int element_index = 0;
+  lockReporter();
 
-	lockReporter();
+  if (getFirstElementIndex(channel_id, &element_index) != kIOReturnSuccess) {
+    res = kIOReturnBadArgument;
+    goto finish;
+  }
 
-	if (getFirstElementIndex(channel_id, &element_index) != kIOReturnSuccess) {
-		res = kIOReturnBadArgument;
-		goto finish;
-	}
+  if (copyElementValues(element_index,
+                        (IOReportElementValues *)&simple_values) !=
+      kIOReturnSuccess) {
+    res = kIOReturnBadArgument;
+    goto finish;
+  }
 
-
-	if (copyElementValues(element_index, (IOReportElementValues *)&simple_values) != kIOReturnSuccess) {
-		res = kIOReturnBadArgument;
-		goto finish;
-	}
-
-	simple_values.simple_value = value;
-	res = setElementValues(element_index, (IOReportElementValues *)&simple_values);
+  simple_values.simple_value = value;
+  res =
+      setElementValues(element_index, (IOReportElementValues *)&simple_values);
 
 finish:
-	unlockReporter();
-	return res;
+  unlockReporter();
+  return res;
 }
 
+IOReturn IOSimpleReporter::incrementValue(uint64_t channel_id,
+                                          int64_t increment) {
+  IOReturn res = kIOReturnError;
+  IOSimpleReportValues simple_values;
+  int element_index = 0;
 
-IOReturn
-IOSimpleReporter::incrementValue(uint64_t channel_id,
-    int64_t increment)
-{
-	IOReturn res = kIOReturnError;
-	IOSimpleReportValues simple_values;
-	int element_index = 0;
+  lockReporter();
 
-	lockReporter();
+  if (getFirstElementIndex(channel_id, &element_index) != kIOReturnSuccess) {
+    res = kIOReturnBadArgument;
+    goto finish;
+  }
 
-	if (getFirstElementIndex(channel_id, &element_index) != kIOReturnSuccess) {
-		res = kIOReturnBadArgument;
-		goto finish;
-	}
+  if (copyElementValues(element_index,
+                        (IOReportElementValues *)&simple_values) !=
+      kIOReturnSuccess) {
+    res = kIOReturnBadArgument;
+    goto finish;
+  }
 
-	if (copyElementValues(element_index, (IOReportElementValues *)&simple_values) != kIOReturnSuccess) {
-		res = kIOReturnBadArgument;
-		goto finish;
-	}
+  simple_values.simple_value += increment;
 
-	simple_values.simple_value += increment;
-
-	res = setElementValues(element_index, (IOReportElementValues *)&simple_values);
+  res =
+      setElementValues(element_index, (IOReportElementValues *)&simple_values);
 
 finish:
-	unlockReporter();
-	return res;
+  unlockReporter();
+  return res;
 }
 
-int64_t
-IOSimpleReporter::getValue(uint64_t channel_id)
-{
-	IOSimpleReportValues *values = NULL;
-	int64_t simple_value = (int64_t)kIOReportInvalidValue;
-	int index = 0;
+int64_t IOSimpleReporter::getValue(uint64_t channel_id) {
+  IOSimpleReportValues *values = NULL;
+  int64_t simple_value = (int64_t)kIOReportInvalidValue;
+  int index = 0;
 
-	lockReporter();
+  lockReporter();
 
-	if (getFirstElementIndex(channel_id, &index) == kIOReturnSuccess) {
-		values = (IOSimpleReportValues *)getElementValues(index);
+  if (getFirstElementIndex(channel_id, &index) == kIOReturnSuccess) {
+    values = (IOSimpleReportValues *)getElementValues(index);
 
-		if (values != NULL) {
-			simple_value = values->simple_value;
-		}
-	}
+    if (values != NULL) {
+      simple_value = values->simple_value;
+    }
+  }
 
-	unlockReporter();
-	return simple_value;
+  unlockReporter();
+  return simple_value;
 }
 
-/* static */ OSPtr<IOReportLegendEntry>
-IOSimpleReporter::createLegend(const uint64_t *channelIDs,
-    const char **channelNames,
-    int channelCount,
-    IOReportCategories categories,
-    IOReportUnit unit)
-{
-	IOReportChannelType channelType = {
-		.categories = categories,
-		.report_format = kIOReportFormatSimple,
-		.nelements = 1,
-		.element_idx = 0
-	};
+/* static */ OSPtr<IOReportLegendEntry> IOSimpleReporter::createLegend(
+    const uint64_t *channelIDs, const char **channelNames, int channelCount,
+    IOReportCategories categories, IOReportUnit unit) {
+  IOReportChannelType channelType = {.categories = categories,
+                                     .report_format = kIOReportFormatSimple,
+                                     .nelements = 1,
+                                     .element_idx = 0};
 
-	return IOReporter::legendWith(channelIDs, channelNames, channelCount, channelType, unit);
+  return IOReporter::legendWith(channelIDs, channelNames, channelCount,
+                                channelType, unit);
 }

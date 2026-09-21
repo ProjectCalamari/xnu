@@ -29,6 +29,6 @@
 #define _VNODE_T
 
 struct vnode;
-typedef struct vnode * vnode_t;
+typedef struct vnode *vnode_t;
 
 #endif /* _VNODE_T */

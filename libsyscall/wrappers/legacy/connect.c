@@ -33,25 +33,23 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/types.h>
-#include <sys/socket.h>
 #include "_errno.h"
+#include <sys/socket.h>
+#include <sys/types.h>
 
 int __connect_nocancel(int, const struct sockaddr *, socklen_t);
 
 /*
  * connect stub, legacy version
  */
-int
-connect(int s, const struct sockaddr *name, socklen_t namelen)
-{
-	int ret = __connect_nocancel(s, name, namelen);
+int connect(int s, const struct sockaddr *name, socklen_t namelen) {
+  int ret = __connect_nocancel(s, name, namelen);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif /* NO_SYSCALL_LEGACY */

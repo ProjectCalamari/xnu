@@ -61,27 +61,21 @@
 #include "abort.h"
 #include "string.h"
 
-extern int write(int fd, const char* cbuf, int nbyte);
+extern int write(int fd, const char *cbuf, int nbyte);
 
 static mach_port_t master_host_port;
 
-void
-panic_init(mach_port_t port)
-{
-	master_host_port = port;
-}
+void panic_init(mach_port_t port) { master_host_port = port; }
 
 /*VARARGS1*/
-void
-panic(const char *s, ...)
-{
-	char buffer[1024];
-	int len = _mach_snprintf(buffer, sizeof(buffer), "panic: %s\n", s);
-	write(__STDERR_FILENO, buffer, len);
+void panic(const char *s, ...) {
+  char buffer[1024];
+  int len = _mach_snprintf(buffer, sizeof(buffer), "panic: %s\n", s);
+  write(__STDERR_FILENO, buffer, len);
 
-#define RB_DEBUGGER     0x1000  /* enter debugger NOW */
-	(void) host_reboot(master_host_port, RB_DEBUGGER);
+#define RB_DEBUGGER 0x1000 /* enter debugger NOW */
+  (void)host_reboot(master_host_port, RB_DEBUGGER);
 
-	/* 4279008 - don't return */
-	abort();
+  /* 4279008 - don't return */
+  abort();
 }

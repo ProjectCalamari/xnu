@@ -46,23 +46,17 @@ typedef struct aio_workq_entry aio_workq_entry;
  * Prototypes
  */
 
-__private_extern__ void
-_aio_close(struct proc *p, int fd);
+__private_extern__ void _aio_close(struct proc *p, int fd);
 
-__private_extern__ void
-_aio_exit(struct proc *p);
+__private_extern__ void _aio_exit(struct proc *p);
 
-__private_extern__ void
-_aio_exec(struct proc *p);
+__private_extern__ void _aio_exec(struct proc *p);
 
-__private_extern__ void
-_aio_create_worker_threads(int num);
+__private_extern__ void _aio_create_worker_threads(int num);
 
-__private_extern__ void
-aio_init(void);
+__private_extern__ void aio_init(void);
 
-task_t
-get_aiotask(void);
+task_t get_aiotask(void);
 
 #endif /* KERNEL_PRIVATE */
 

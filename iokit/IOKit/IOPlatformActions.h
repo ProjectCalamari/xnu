@@ -33,8 +33,10 @@
 extern "C" kern_return_t IOCPURunPlatformQuiesceActions(void);
 extern "C" kern_return_t IOCPURunPlatformActiveActions(void);
 extern "C" kern_return_t IOCPURunPlatformHaltRestartActions(uint32_t message);
-extern "C" kern_return_t IOCPURunPlatformPanicActions(uint32_t message, uint32_t details);
-extern "C" kern_return_t IOCPURunPlatformPanicSyncAction(void *addr, uint32_t offset, uint32_t len);
+extern "C" kern_return_t IOCPURunPlatformPanicActions(uint32_t message,
+                                                      uint32_t details);
+extern "C" kern_return_t
+IOCPURunPlatformPanicSyncAction(void *addr, uint32_t offset, uint32_t len);
 
 void IOPlatformActionsPreSleep(void);
 void IOPlatformActionsPostResume(void);

@@ -32,7 +32,7 @@
  * Version 2.0.
  */
 
-const char * gIOKernelConfigTables =
+const char *gIOKernelConfigTables =
     "("
     "   {"
     "     'IOClass'         = IOPanicPlatform;"

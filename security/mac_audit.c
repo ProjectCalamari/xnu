@@ -60,134 +60,120 @@
  * SUCH DAMAGE.
  *
  */
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/vnode.h>
-#include <sys/vnode_internal.h>
-#include <sys/kauth.h>
-#include <sys/queue.h>
-#include <security/mac_internal.h>
 #include <bsd/bsm/audit.h>
 #include <bsd/security/audit/audit.h>
 #include <bsd/sys/malloc.h>
-#include <vm/vm_kern.h>
 #include <kern/zalloc.h>
+#include <security/mac_internal.h>
+#include <sys/kauth.h>
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/types.h>
+#include <sys/vnode.h>
+#include <sys/vnode_internal.h>
+#include <vm/vm_kern.h>
 
 #if CONFIG_AUDIT
 
-ZONE_DEFINE(mac_audit_data_zone, "mac_audit_data_zone",
-    MAC_AUDIT_DATA_LIMIT, ZC_NONE);
+ZONE_DEFINE(mac_audit_data_zone, "mac_audit_data_zone", MAC_AUDIT_DATA_LIMIT,
+            ZC_NONE);
 
-int
-mac_system_check_audit(struct ucred *cred, void *record, int length)
-{
-	int error;
+int mac_system_check_audit(struct ucred *cred, void *record, int length) {
+  int error;
 
-	MAC_CHECK(system_check_audit, cred, record, length);
+  MAC_CHECK(system_check_audit, cred, record, length);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_auditon(struct ucred *cred, int cmd)
-{
-	int error;
+int mac_system_check_auditon(struct ucred *cred, int cmd) {
+  int error;
 
-	MAC_CHECK(system_check_auditon, cred, cmd);
+  MAC_CHECK(system_check_auditon, cred, cmd);
 
-	return error;
+  return error;
 }
 
-int
-mac_system_check_auditctl(struct ucred *cred, struct vnode *vp)
-{
-	int error;
-	struct label *vl = vp ? mac_vnode_label(vp) : NULL;
+int mac_system_check_auditctl(struct ucred *cred, struct vnode *vp) {
+  int error;
+  struct label *vl = vp ? mac_vnode_label(vp) : NULL;
 
-	MAC_CHECK(system_check_auditctl, cred, vp, vl);
+  MAC_CHECK(system_check_auditctl, cred, vp, vl);
 
-	return error;
+  return error;
 }
 
-int
-mac_proc_check_getauid(struct proc *curp)
-{
-	int error;
+int mac_proc_check_getauid(struct proc *curp) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_proc_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_proc_enforce) {
+    return 0;
+  }
 #endif
 
-	if (!mac_proc_check_enforce(curp)) {
-		return 0;
-	}
+  if (!mac_proc_check_enforce(curp)) {
+    return 0;
+  }
 
-	MAC_CHECK(proc_check_getauid, current_cached_proc_cred(curp));
+  MAC_CHECK(proc_check_getauid, current_cached_proc_cred(curp));
 
-	return error;
+  return error;
 }
 
-int
-mac_proc_check_setauid(struct proc *curp, uid_t auid)
-{
-	int error;
+int mac_proc_check_setauid(struct proc *curp, uid_t auid) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_proc_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_proc_enforce) {
+    return 0;
+  }
 #endif
-	if (!mac_proc_check_enforce(curp)) {
-		return 0;
-	}
+  if (!mac_proc_check_enforce(curp)) {
+    return 0;
+  }
 
-	MAC_CHECK(proc_check_setauid, current_cached_proc_cred(curp), auid);
+  MAC_CHECK(proc_check_setauid, current_cached_proc_cred(curp), auid);
 
-	return error;
+  return error;
 }
 
-int
-mac_proc_check_getaudit(struct proc *curp)
-{
-	int error;
+int mac_proc_check_getaudit(struct proc *curp) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_proc_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_proc_enforce) {
+    return 0;
+  }
 #endif
-	if (!mac_proc_check_enforce(curp)) {
-		return 0;
-	}
+  if (!mac_proc_check_enforce(curp)) {
+    return 0;
+  }
 
-	MAC_CHECK(proc_check_getaudit, current_cached_proc_cred(curp));
+  MAC_CHECK(proc_check_getaudit, current_cached_proc_cred(curp));
 
-	return error;
+  return error;
 }
 
-int
-mac_proc_check_setaudit(struct proc *curp, struct auditinfo_addr *ai)
-{
-	int error;
+int mac_proc_check_setaudit(struct proc *curp, struct auditinfo_addr *ai) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_proc_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_proc_enforce) {
+    return 0;
+  }
 #endif
-	if (!mac_proc_check_enforce(curp)) {
-		return 0;
-	}
+  if (!mac_proc_check_enforce(curp)) {
+    return 0;
+  }
 
-	MAC_CHECK(proc_check_setaudit, current_cached_proc_cred(curp), ai);
+  MAC_CHECK(proc_check_setaudit, current_cached_proc_cred(curp), ai);
 
-	return error;
+  return error;
 }
 
 #if 0
@@ -218,193 +204,168 @@ mac_audit_data(int len, u_char *data, mac_policy_handle_t handle)
  * This is the entry point a MAC policy will call to add NULL-
  * terminated ASCII text to the current audit record.
  */
-int
-mac_audit_text(char *text, mac_policy_handle_t handle)
-{
-	char *sanitized;
-	const char *name;
-	size_t i, size, plen, text_len;
+int mac_audit_text(char *text, mac_policy_handle_t handle) {
+  char *sanitized;
+  const char *name;
+  size_t i, size, plen, text_len;
 
-	name = mac_get_mpc(handle)->mpc_name;
-	text_len = strlen(text);
-	plen = 2 + strlen(name);
-	if (plen + text_len >= MAC_AUDIT_DATA_LIMIT) {
-		return EINVAL;
-	}
+  name = mac_get_mpc(handle)->mpc_name;
+  text_len = strlen(text);
+  plen = 2 + strlen(name);
+  if (plen + text_len >= MAC_AUDIT_DATA_LIMIT) {
+    return EINVAL;
+  }
 
-	/*
-	 * Make sure the text is only composed of only ASCII printable
-	 * characters.
-	 */
-	for (i = 0; i < text_len; i++) {
-		if (text[i] < (char) 32 || text[i] > (char) 126) {
-			return EINVAL;
-		}
-	}
+  /*
+   * Make sure the text is only composed of only ASCII printable
+   * characters.
+   */
+  for (i = 0; i < text_len; i++) {
+    if (text[i] < (char)32 || text[i] > (char)126) {
+      return EINVAL;
+    }
+  }
 
-	size = text_len + plen + 1;
-	sanitized = (char *)zalloc(mac_audit_data_zone);
+  size = text_len + plen + 1;
+  sanitized = (char *)zalloc(mac_audit_data_zone);
 
-	strlcpy(sanitized, name, MAC_AUDIT_DATA_LIMIT);
-	strlcat(sanitized, ": ", MAC_AUDIT_DATA_LIMIT);
-	strlcat(sanitized, text, MAC_AUDIT_DATA_LIMIT);
+  strlcpy(sanitized, name, MAC_AUDIT_DATA_LIMIT);
+  strlcat(sanitized, ": ", MAC_AUDIT_DATA_LIMIT);
+  strlcat(sanitized, text, MAC_AUDIT_DATA_LIMIT);
 
-	return audit_mac_data(MAC_AUDIT_TEXT_TYPE, size, (u_char *)sanitized);
+  return audit_mac_data(MAC_AUDIT_TEXT_TYPE, size, (u_char *)sanitized);
 }
 
-int
-mac_audit_check_preselect(struct ucred *cred, unsigned short syscode, void *args)
-{
-	struct mac_policy_conf *mpc;
-	int ret, error;
-	u_int i;
+int mac_audit_check_preselect(struct ucred *cred, unsigned short syscode,
+                              void *args) {
+  struct mac_policy_conf *mpc;
+  int ret, error;
+  u_int i;
 
-	ret = MAC_AUDIT_DEFAULT;
-	for (i = 0; i < mac_policy_list.staticmax; i++) {
-		mpc = mac_policy_list.entries[i].mpc;
-		if (mpc == NULL) {
-			continue;
-		}
+  ret = MAC_AUDIT_DEFAULT;
+  for (i = 0; i < mac_policy_list.staticmax; i++) {
+    mpc = mac_policy_list.entries[i].mpc;
+    if (mpc == NULL) {
+      continue;
+    }
 
-		if (mpc->mpc_ops->mpo_audit_check_preselect != NULL) {
-			error = mpc->mpc_ops->mpo_audit_check_preselect(cred,
-			    syscode, args);
-			ret = (ret > error ? ret : error);
-		}
-	}
-	if (mac_policy_list_conditional_busy() != 0) {
-		for (; i <= mac_policy_list.maxindex; i++) {
-			mpc = mac_policy_list.entries[i].mpc;
-			if (mpc == NULL) {
-				continue;
-			}
+    if (mpc->mpc_ops->mpo_audit_check_preselect != NULL) {
+      error = mpc->mpc_ops->mpo_audit_check_preselect(cred, syscode, args);
+      ret = (ret > error ? ret : error);
+    }
+  }
+  if (mac_policy_list_conditional_busy() != 0) {
+    for (; i <= mac_policy_list.maxindex; i++) {
+      mpc = mac_policy_list.entries[i].mpc;
+      if (mpc == NULL) {
+        continue;
+      }
 
-			if (mpc->mpc_ops->mpo_audit_check_preselect != NULL) {
-				error = mpc->mpc_ops->mpo_audit_check_preselect(cred,
-				    syscode, args);
-				ret = (ret > error ? ret : error);
-			}
-		}
-		mac_policy_list_unbusy();
-	}
+      if (mpc->mpc_ops->mpo_audit_check_preselect != NULL) {
+        error = mpc->mpc_ops->mpo_audit_check_preselect(cred, syscode, args);
+        ret = (ret > error ? ret : error);
+      }
+    }
+    mac_policy_list_unbusy();
+  }
 
-	return ret;
+  return ret;
 }
 
-int
-mac_audit_check_postselect(struct ucred *cred, unsigned short syscode,
-    void *args, int error, int retval, int mac_forced)
-{
-	struct mac_policy_conf *mpc;
-	int ret, mac_error;
-	u_int i;
+int mac_audit_check_postselect(struct ucred *cred, unsigned short syscode,
+                               void *args, int error, int retval,
+                               int mac_forced) {
+  struct mac_policy_conf *mpc;
+  int ret, mac_error;
+  u_int i;
 
-	/*
-	 * If the audit was forced by a MAC policy by mac_audit_check_preselect(),
-	 * echo that.
-	 */
-	if (mac_forced) {
-		return MAC_AUDIT_YES;
-	}
+  /*
+   * If the audit was forced by a MAC policy by mac_audit_check_preselect(),
+   * echo that.
+   */
+  if (mac_forced) {
+    return MAC_AUDIT_YES;
+  }
 
-	ret = MAC_AUDIT_DEFAULT;
-	for (i = 0; i < mac_policy_list.staticmax; i++) {
-		mpc = mac_policy_list.entries[i].mpc;
-		if (mpc == NULL) {
-			continue;
-		}
+  ret = MAC_AUDIT_DEFAULT;
+  for (i = 0; i < mac_policy_list.staticmax; i++) {
+    mpc = mac_policy_list.entries[i].mpc;
+    if (mpc == NULL) {
+      continue;
+    }
 
-		if (mpc->mpc_ops->mpo_audit_check_postselect != NULL) {
-			mac_error = mpc->mpc_ops->mpo_audit_check_postselect(cred,
-			    syscode, args, error, retval);
-			ret = (ret > mac_error ? ret : mac_error);
-		}
-	}
-	if (mac_policy_list_conditional_busy() != 0) {
-		for (; i <= mac_policy_list.maxindex; i++) {
-			mpc = mac_policy_list.entries[i].mpc;
-			if (mpc == NULL) {
-				continue;
-			}
+    if (mpc->mpc_ops->mpo_audit_check_postselect != NULL) {
+      mac_error = mpc->mpc_ops->mpo_audit_check_postselect(cred, syscode, args,
+                                                           error, retval);
+      ret = (ret > mac_error ? ret : mac_error);
+    }
+  }
+  if (mac_policy_list_conditional_busy() != 0) {
+    for (; i <= mac_policy_list.maxindex; i++) {
+      mpc = mac_policy_list.entries[i].mpc;
+      if (mpc == NULL) {
+        continue;
+      }
 
-			if (mpc->mpc_ops->mpo_audit_check_postselect != NULL) {
-				mac_error = mpc->mpc_ops->mpo_audit_check_postselect(cred,
-				    syscode, args, error, retval);
-				ret = (ret > mac_error ? ret : mac_error);
-			}
-		}
-		mac_policy_list_unbusy();
-	}
+      if (mpc->mpc_ops->mpo_audit_check_postselect != NULL) {
+        mac_error = mpc->mpc_ops->mpo_audit_check_postselect(
+            cred, syscode, args, error, retval);
+        ret = (ret > mac_error ? ret : mac_error);
+      }
+    }
+    mac_policy_list_unbusy();
+  }
 
-	return ret;
+  return ret;
 }
 
-#else   /* !CONFIG_AUDIT */
+#else  /* !CONFIG_AUDIT */
 
 /*
  * Function stubs for when AUDIT isn't defined.
  */
 
-int
-mac_system_check_audit(__unused struct ucred *cred, __unused void *record, __unused int length)
-{
-	return 0;
+int mac_system_check_audit(__unused struct ucred *cred, __unused void *record,
+                           __unused int length) {
+  return 0;
 }
 
-int
-mac_system_check_auditon(__unused struct ucred *cred, __unused int cmd)
-{
-	return 0;
+int mac_system_check_auditon(__unused struct ucred *cred, __unused int cmd) {
+  return 0;
 }
 
-int
-mac_system_check_auditctl(__unused struct ucred *cred, __unused struct vnode *vp)
-{
-	return 0;
+int mac_system_check_auditctl(__unused struct ucred *cred,
+                              __unused struct vnode *vp) {
+  return 0;
 }
 
-int
-mac_proc_check_getauid(__unused struct proc *curp)
-{
-	return 0;
+int mac_proc_check_getauid(__unused struct proc *curp) { return 0; }
+
+int mac_proc_check_setauid(__unused struct proc *curp, __unused uid_t auid) {
+  return 0;
 }
 
-int
-mac_proc_check_setauid(__unused struct proc *curp, __unused uid_t auid)
-{
-	return 0;
+int mac_proc_check_getaudit(__unused struct proc *curp) { return 0; }
+
+int mac_proc_check_setaudit(__unused struct proc *curp,
+                            __unused struct auditinfo_addr *ai) {
+  return 0;
 }
 
-int
-mac_proc_check_getaudit(__unused struct proc *curp)
-{
-	return 0;
+int mac_audit_check_preselect(__unused struct ucred *cred,
+                              __unused unsigned short syscode,
+                              __unused void *args) {
+  return MAC_AUDIT_DEFAULT;
 }
 
-int
-mac_proc_check_setaudit(__unused struct proc *curp,
-    __unused struct auditinfo_addr *ai)
-{
-	return 0;
+int mac_audit_check_postselect(__unused struct ucred *cred,
+                               __unused unsigned short syscode,
+                               __unused void *args, __unused int error,
+                               __unused int retval, __unused int mac_forced) {
+  return MAC_AUDIT_DEFAULT;
 }
 
-int
-mac_audit_check_preselect(__unused struct ucred *cred, __unused unsigned short syscode,
-    __unused void *args)
-{
-	return MAC_AUDIT_DEFAULT;
+int mac_audit_text(__unused char *text, __unused mac_policy_handle_t handle) {
+  return 0;
 }
-
-int
-mac_audit_check_postselect(__unused struct ucred *cred, __unused unsigned short syscode,
-    __unused void *args, __unused int error, __unused int retval, __unused int mac_forced)
-{
-	return MAC_AUDIT_DEFAULT;
-}
-
-int
-mac_audit_text(__unused char *text, __unused mac_policy_handle_t handle)
-{
-	return 0;
-}
-#endif  /* !CONFIG_AUDIT */
+#endif /* !CONFIG_AUDIT */

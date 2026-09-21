@@ -29,14 +29,14 @@
 #ifndef _KERN_SMR_H_
 #define _KERN_SMR_H_
 
-#include <sys/cdefs.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <machine/trap.h>
 #include <kern/assert.h>
 #include <kern/debug.h>
 #include <kern/smr_types.h>
+#include <machine/trap.h>
 #include <os/atomic_private.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/cdefs.h>
 #if XNU_KERNEL_PRIVATE
 #include <kern/startup.h>
 #endif
@@ -60,7 +60,6 @@ __BEGIN_DECLS
  * synchronization.
  */
 
-
 /*!
  * @macro smr_unsafe_load()
  *
@@ -70,8 +69,7 @@ __BEGIN_DECLS
  * @discussion
  * This returns an integer on purpose as dereference is generally unsafe.
  */
-#define smr_unsafe_load(ptr) \
-	({ (uintptr_t)((ptr)->__smr_ptr); })
+#define smr_unsafe_load(ptr) ({ (uintptr_t)((ptr)->__smr_ptr); })
 
 /*!
  * @macro smr_entered_load()
@@ -79,8 +77,7 @@ __BEGIN_DECLS
  * @brief
  * Read from an SMR protected pointer while in a read section.
  */
-#define smr_entered_load(ptr) \
-	({ (ptr)->__smr_ptr; })
+#define smr_entered_load(ptr) ({ (ptr)->__smr_ptr; })
 
 /*!
  * @macro smr_entered_load_assert()
@@ -88,10 +85,11 @@ __BEGIN_DECLS
  * @brief
  * Read from an SMR protected pointer while in a read section.
  */
-#define smr_entered_load_assert(ptr, smr)  ({ \
-	assert(smr_entered(smr)); \
-	(ptr)->__smr_ptr; \
-})
+#define smr_entered_load_assert(ptr, smr)                                      \
+  ({                                                                           \
+    assert(smr_entered(smr));                                                  \
+    (ptr)->__smr_ptr;                                                          \
+  })
 
 /*!
  * @macro smr_entered_load_acquire()
@@ -100,8 +98,7 @@ __BEGIN_DECLS
  * Read from an SMR protected pointer while in a read section (with acquire
  * fence).
  */
-#define smr_entered_load_acquire(ptr) \
-	os_atomic_load(&(ptr)->__smr_ptr, acquire)
+#define smr_entered_load_acquire(ptr) os_atomic_load(&(ptr)->__smr_ptr, acquire)
 
 /*!
  * @macro smr_entered_load_acquire_assert()
@@ -109,10 +106,11 @@ __BEGIN_DECLS
  * @brief
  * Read from an SMR protected pointer while in a read section.
  */
-#define smr_entered_load_acquire_assert(ptr, smr)  ({ \
-	assert(smr_entered(smr)); \
-	os_atomic_load(&(ptr)->__smr_ptr, acquire); \
-})
+#define smr_entered_load_acquire_assert(ptr, smr)                              \
+  ({                                                                           \
+    assert(smr_entered(smr));                                                  \
+    os_atomic_load(&(ptr)->__smr_ptr, acquire);                                \
+  })
 
 /*!
  * @macro smr_serialized_load_assert()
@@ -121,10 +119,11 @@ __BEGIN_DECLS
  * Read from an SMR protected pointer while serialized by an
  * external mechanism.
  */
-#define smr_serialized_load_assert(ptr, held_cond)  ({ \
-	assertf(held_cond, "smr_serialized_load: lock not held"); \
-	(ptr)->__smr_ptr; \
-})
+#define smr_serialized_load_assert(ptr, held_cond)                             \
+  ({                                                                           \
+    assertf(held_cond, "smr_serialized_load: lock not held");                  \
+    (ptr)->__smr_ptr;                                                          \
+  })
 
 /*!
  * @macro smr_serialized_load()
@@ -133,8 +132,7 @@ __BEGIN_DECLS
  * Read from an SMR protected pointer while serialized by an
  * external mechanism.
  */
-#define smr_serialized_load(ptr) \
-	smr_serialized_load_assert(ptr, true)
+#define smr_serialized_load(ptr) smr_serialized_load_assert(ptr, true)
 
 /*!
  * @macro smr_init_store()
@@ -142,8 +140,7 @@ __BEGIN_DECLS
  * @brief
  * Store @c value to an SMR protected pointer during initialization.
  */
-#define smr_init_store(ptr, value) \
-	({ (ptr)->__smr_ptr = value; })
+#define smr_init_store(ptr, value) ({ (ptr)->__smr_ptr = value; })
 
 /*!
  * @macro smr_clear_store()
@@ -151,8 +148,7 @@ __BEGIN_DECLS
  * @brief
  * Clear (sets to 0) an SMR protected pointer (this is always "allowed" to do).
  */
-#define smr_clear_store(ptr) \
-	smr_init_store(ptr, 0)
+#define smr_clear_store(ptr) smr_init_store(ptr, 0)
 
 /*!
  * @macro smr_serialized_store_assert()
@@ -165,11 +161,12 @@ __BEGIN_DECLS
  * Writers that are serialized with mutual exclusion or on a single
  * thread should use smr_serialized_store() rather than swap.
  */
-#define smr_serialized_store_assert(ptr, value, held_cond)  ({ \
-	assertf(held_cond, "smr_serialized_store: lock not held"); \
-	os_atomic_thread_fence(release); \
-	(ptr)->__smr_ptr = value; \
-})
+#define smr_serialized_store_assert(ptr, value, held_cond)                     \
+  ({                                                                           \
+    assertf(held_cond, "smr_serialized_store: lock not held");                 \
+    os_atomic_thread_fence(release);                                           \
+    (ptr)->__smr_ptr = value;                                                  \
+  })
 
 /*!
  * @macro smr_serialized_store()
@@ -182,8 +179,8 @@ __BEGIN_DECLS
  * Writers that are serialized with mutual exclusion or on a single
  * thread should use smr_serialized_store() rather than swap.
  */
-#define smr_serialized_store(ptr, value) \
-	smr_serialized_store_assert(ptr, value, true)
+#define smr_serialized_store(ptr, value)                                       \
+  smr_serialized_store_assert(ptr, value, true)
 
 /*!
  * @macro smr_serialized_store_relaxed_assert()
@@ -197,10 +194,11 @@ __BEGIN_DECLS
  * previously stored with smr_serialized_store() (for example during
  * a linked list removal).
  */
-#define smr_serialized_store_relaxed_assert(ptr, value, held_cond)  ({ \
-	assertf(held_cond, "smr_serialized_store_relaxed: lock not held"); \
-	(ptr)->__smr_ptr = value; \
-})
+#define smr_serialized_store_relaxed_assert(ptr, value, held_cond)             \
+  ({                                                                           \
+    assertf(held_cond, "smr_serialized_store_relaxed: lock not held");         \
+    (ptr)->__smr_ptr = value;                                                  \
+  })
 
 /*!
  * @macro smr_serialized_store_relaxed()
@@ -214,8 +212,8 @@ __BEGIN_DECLS
  * previously stored with smr_serialized_store() (for example during
  * a linked list removal).
  */
-#define smr_serialized_store_relaxed(ptr, value) \
-	smr_serialized_store_relaxed_assert(ptr, value, true)
+#define smr_serialized_store_relaxed(ptr, value)                               \
+  smr_serialized_store_relaxed_assert(ptr, value, true)
 
 /*!
  * @macro smr_serialized_swap_assert()
@@ -227,10 +225,11 @@ __BEGIN_DECLS
  * @discussion
  * Swap permits multiple writers to update a pointer concurrently.
  */
-#define smr_serialized_swap_assert(ptr, value, held_cond)  ({ \
-	assertf(held_cond, "smr_serialized_store: lock not held"); \
-	os_atomic_xchg(&(ptr)->__smr_ptr, value, release); \
-})
+#define smr_serialized_swap_assert(ptr, value, held_cond)                      \
+  ({                                                                           \
+    assertf(held_cond, "smr_serialized_store: lock not held");                 \
+    os_atomic_xchg(&(ptr)->__smr_ptr, value, release);                         \
+  })
 
 /*!
  * @macro smr_serialized_swap()
@@ -242,8 +241,8 @@ __BEGIN_DECLS
  * @discussion
  * Swap permits multiple writers to update a pointer concurrently.
  */
-#define smr_serialized_swap(ptr, value) \
-	smr_serialized_swap_assert(ptr, value, true)
+#define smr_serialized_swap(ptr, value)                                        \
+  smr_serialized_swap_assert(ptr, value, true)
 
 /*!
  * @macro smr_unserialized_load()
@@ -253,8 +252,7 @@ __BEGIN_DECLS
  * such as in the destructor callback or when the caller guarantees other
  * synchronization.
  */
-#define smr_unserialized_load(ptr) \
-	({ (ptr)->__smr_ptr; })
+#define smr_unserialized_load(ptr) ({ (ptr)->__smr_ptr; })
 
 /*!
  * @macro smr_unserialized_store()
@@ -264,9 +262,7 @@ __BEGIN_DECLS
  * such as in the destructor callback or when the caller guarantees other
  * synchronization.
  */
-#define smr_unserialized_store(ptr, value) \
-	({ (ptr)->__smr_ptr = value; })
-
+#define smr_unserialized_store(ptr, value) ({ (ptr)->__smr_ptr = value; })
 
 #pragma mark SMR queues
 
@@ -291,22 +287,21 @@ __BEGIN_DECLS
  * with very minimal API changes (mostly the types of list heads and fields).
  */
 
-
 /*!
  * @macro smrq_init
  *
  * @brief
  * Initializes an SMR queue head.
  */
-#define smrq_init(head)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	smr_init_store(&__head->first, NULL);                                   \
-	if (__smrq_lastp(__head)) {                                             \
-	    *__smrq_lastp(__head) = &__head->first;                             \
-	}                                                                       \
-})
-
+#define smrq_init(head)                                                        \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    smr_init_store(&__head->first, NULL);                                      \
+    if (__smrq_lastp(__head)) {                                                \
+      *__smrq_lastp(__head) = &__head->first;                                  \
+    }                                                                          \
+  })
 
 /*!
  * @macro smrq_empty
@@ -314,9 +309,7 @@ __BEGIN_DECLS
  * @brief
  * Returns whether an SMR queue is empty, can be called from any context.
  */
-#define smrq_empty(head) \
-	(smr_unsafe_load(&(head)->first) == 0)
-
+#define smrq_empty(head) (smr_unsafe_load(&(head)->first) == 0)
 
 /*!
  * @macro smrq_entered_first
@@ -324,9 +317,8 @@ __BEGIN_DECLS
  * @brief
  * Returns the first element of an SMR queue, while in a read section.
  */
-#define smrq_entered_first(head, type_t, field) \
-	__container_of_safe(smr_entered_load(&(head)->first), type_t, field)
-
+#define smrq_entered_first(head, type_t, field)                                \
+  __container_of_safe(smr_entered_load(&(head)->first), type_t, field)
 
 /*!
  * @macro smrq_entered_next
@@ -334,10 +326,9 @@ __BEGIN_DECLS
  * @brief
  * Returns the next element of an SMR queue element, while in a read section.
  */
-#define smrq_entered_next(elem, field) \
-	__container_of_safe(smr_entered_load(&(elem)->field.next), \
-	    typeof(*(elem)), field)
-
+#define smrq_entered_next(elem, field)                                         \
+  __container_of_safe(smr_entered_load(&(elem)->field.next), typeof(*(elem)),  \
+                      field)
 
 /*!
  * @macro smrq_entered_foreach
@@ -345,11 +336,10 @@ __BEGIN_DECLS
  * @brief
  * Enumerates an SMR queue, while in a read section.
  */
-#define smrq_entered_foreach(it, head, field) \
-	for (__auto_type __it = smr_entered_load(&(head)->first);               \
-	    ((it) = __container_of_safe(__it, typeof(*(it)), field));           \
-	    __it = smr_entered_load(&__it->next))
-
+#define smrq_entered_foreach(it, head, field)                                  \
+  for (__auto_type __it = smr_entered_load(&(head)->first);                    \
+       ((it) = __container_of_safe(__it, typeof(*(it)), field));               \
+       __it = smr_entered_load(&__it->next))
 
 /*!
  * @macro smrq_serialized_first
@@ -358,8 +348,8 @@ __BEGIN_DECLS
  * Returns the first element of an SMR queue, while being serialized
  * by an external mechanism.
  */
-#define smrq_serialized_first(head, type_t, link) \
-	__container_of_safe(smr_serialized_load(&(head)->first), type_t, link)
+#define smrq_serialized_first(head, type_t, link)                              \
+  __container_of_safe(smr_serialized_load(&(head)->first), type_t, link)
 
 /*!
  * @macro smrq_serialized_next
@@ -368,9 +358,9 @@ __BEGIN_DECLS
  * Returns the next element of an SMR queue element, while being serialized
  * by an external mechanism.
  */
-#define smrq_serialized_next(elem, field) \
-	__container_of_safe(smr_serialized_load(&(elem)->field.next), \
-	    typeof(*(elem)), field)
+#define smrq_serialized_next(elem, field)                                      \
+  __container_of_safe(smr_serialized_load(&(elem)->field.next),                \
+                      typeof(*(elem)), field)
 
 /*!
  * @macro smrq_serialized_foreach
@@ -379,10 +369,10 @@ __BEGIN_DECLS
  * Enumerates an SMR queue, while being serialized
  * by an external mechanism.
  */
-#define smrq_serialized_foreach(it, head, field) \
-	for (__auto_type __it = smr_serialized_load(&(head)->first);            \
-	    ((it) = __container_of_safe(__it, typeof(*(it)), field));           \
-	    __it = smr_serialized_load(&__it->next))
+#define smrq_serialized_foreach(it, head, field)                               \
+  for (__auto_type __it = smr_serialized_load(&(head)->first);                 \
+       ((it) = __container_of_safe(__it, typeof(*(it)), field));               \
+       __it = smr_serialized_load(&__it->next))
 
 /*!
  * @macro smrq_serialized_foreach_safe
@@ -394,13 +384,12 @@ __BEGIN_DECLS
  * @discussion
  * This variant supports removing the current element from the queue.
  */
-#define smrq_serialized_foreach_safe(it, head, field) \
-	for (__auto_type __it = smr_serialized_load(&(head)->first),            \
-	    __next_it = __it;                                                   \
-	    ((it) = __container_of_safe(__it, typeof(*(it)), field)) &&         \
-	    ((__next_it = smr_serialized_load(&__it->next)), 1);                \
-	    __it = __next_it)
-
+#define smrq_serialized_foreach_safe(it, head, field)                          \
+  for (__auto_type __it = smr_serialized_load(&(head)->first),                 \
+                   __next_it = __it;                                           \
+       ((it) = __container_of_safe(__it, typeof(*(it)), field)) &&             \
+       ((__next_it = smr_serialized_load(&__it->next)), 1);                    \
+       __it = __next_it)
 
 /*!
  * @macro smrq_serialized_insert_head
@@ -409,13 +398,14 @@ __BEGIN_DECLS
  * Inserts an element at the head of an SMR queue, while being serialized
  * by an external mechanism.
  */
-#define smrq_serialized_insert_head(head, elem)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	__smrq_serialized_insert(&__head->first, (elem),                        \
-	   smr_serialized_load(&__head->first), __smrq_lastp(__head));          \
-})
-
+#define smrq_serialized_insert_head(head, elem)                                \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    __smrq_serialized_insert(&__head->first, (elem),                           \
+                             smr_serialized_load(&__head->first),              \
+                             __smrq_lastp(__head));                            \
+  })
 
 /*!
  * @macro smrq_serialized_insert_tail
@@ -424,13 +414,12 @@ __BEGIN_DECLS
  * Inserts an element at the tail of an SMR queue, while being serialized
  * by an external mechanism.
  */
-#define smrq_serialized_insert_tail(head, elem)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	__smrq_serialized_insert(__head->last, (elem),                          \
-	   NULL, &__head->last);                                                \
-})
-
+#define smrq_serialized_insert_tail(head, elem)                                \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    __smrq_serialized_insert(__head->last, (elem), NULL, &__head->last);       \
+  })
 
 /*!
  * @macro smrq_serialized_insert_head_relaxed
@@ -439,13 +428,14 @@ __BEGIN_DECLS
  * Inserts an element at the head of an SMR queue, while being serialized
  * by an external mechanism, without any barrier.
  */
-#define smrq_serialized_insert_head_relaxed(head, elem)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	__smrq_serialized_insert_relaxed(&__head->first, (elem),                \
-	   smr_serialized_load(&__head->first), __smrq_lastp(__head));          \
-})
-
+#define smrq_serialized_insert_head_relaxed(head, elem)                        \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    __smrq_serialized_insert_relaxed(&__head->first, (elem),                   \
+                                     smr_serialized_load(&__head->first),      \
+                                     __smrq_lastp(__head));                    \
+  })
 
 /*!
  * @macro smrq_serialized_insert_tail_relaxed
@@ -454,13 +444,13 @@ __BEGIN_DECLS
  * Inserts an element at the tail of an SMR queue, while being serialized
  * by an external mechanism, without any barrier.
  */
-#define smrq_serialized_insert_tail_relaxed(head, elem)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	__smrq_serialized_insert_relaxed(__head->last, (elem),                  \
-	   NULL, &__head->last);                                                \
-})
-
+#define smrq_serialized_insert_tail_relaxed(head, elem)                        \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    __smrq_serialized_insert_relaxed(__head->last, (elem), NULL,               \
+                                     &__head->last);                           \
+  })
 
 /*!
  * @macro smrq_serialized_remove
@@ -474,12 +464,12 @@ __BEGIN_DECLS
  * It is still advised to pass it, the compiler should be able to optimize
  * the code away as computing a list head ought to have no side effects.
  */
-#define smrq_serialized_remove(head, elem)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	__smrq_serialized_remove(&__head->first, (elem), __smrq_lastp(__head)); \
-})
-
+#define smrq_serialized_remove(head, elem)                                     \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    __smrq_serialized_remove(&__head->first, (elem), __smrq_lastp(__head));    \
+  })
 
 /*!
  * @macro smrq_serialized_replace
@@ -488,13 +478,13 @@ __BEGIN_DECLS
  * Replaces an element on an SMR queue with another at the same spot,
  * while being serialized by an external mechanism.
  */
-#define smrq_serialized_replace(head, old_elem, new_elem)  ({ \
-	__auto_type __head = (head);                                            \
-                                                                                \
-	__smrq_serialized_replace(&__head->first,                               \
-	    (old_elem), (new_elem), __smrq_lastp(__head));                      \
-})
-
+#define smrq_serialized_replace(head, old_elem, new_elem)                      \
+  ({                                                                           \
+    __auto_type __head = (head);                                               \
+                                                                               \
+    __smrq_serialized_replace(&__head->first, (old_elem), (new_elem),          \
+                              __smrq_lastp(__head));                           \
+  })
 
 /*!
  * @macro smrq_serialized_iter
@@ -517,12 +507,12 @@ __BEGIN_DECLS
  * for singly linked lists as smrq_serialized_iter_erase()
  * is O(1) as opposed to smrq_serialized_remove().
  */
-#define smrq_serialized_iter(it, head, field) \
-	for (__smrq_slink_t *__prev_##it = &(head)->first,                      \
-	    *__chk_##it = __prev_##it;                                          \
-	    ((it) = __container_of_safe(smr_serialized_load(__prev_##it),       \
-	    typeof(*(it)), field));                                             \
-	    assert(__chk_##it), __chk_##it = __prev_##it)
+#define smrq_serialized_iter(it, head, field)                                  \
+  for (__smrq_slink_t *__prev_##it = &(head)->first,                           \
+                      *__chk_##it = __prev_##it;                               \
+       ((it) = __container_of_safe(smr_serialized_load(__prev_##it),           \
+                                   typeof(*(it)), field));                     \
+       assert(__chk_##it), __chk_##it = __prev_##it)
 
 /*!
  * @macro smrq_serialized_iter_next
@@ -530,11 +520,12 @@ __BEGIN_DECLS
  * @brief
  * Goes to the next element inside an smrq_serialied_iter() loop.
  */
-#define smrq_serialized_iter_next(it, field)  ({ \
-	assert(__chk_##it == __prev_##it);                                      \
-	__chk_##it = NULL;                                                      \
-	__prev_##it = &(it)->field.next;                                        \
-})
+#define smrq_serialized_iter_next(it, field)                                   \
+  ({                                                                           \
+    assert(__chk_##it == __prev_##it);                                         \
+    __chk_##it = NULL;                                                         \
+    __prev_##it = &(it)->field.next;                                           \
+  })
 
 /*!
  * @macro smrq_serialized_iter_erase
@@ -542,12 +533,12 @@ __BEGIN_DECLS
  * @brief
  * Erases the element pointed at by the cursor.
  */
-#define smrq_serialized_iter_erase(it, field)  ({ \
-	assert(__chk_##it == __prev_##it);                                      \
-	__chk_##it = NULL;                                                      \
-	__smrq_serialized_remove_one(__prev_##it, &(it)->field, NULL);          \
-})
-
+#define smrq_serialized_iter_erase(it, field)                                  \
+  ({                                                                           \
+    assert(__chk_##it == __prev_##it);                                         \
+    __chk_##it = NULL;                                                         \
+    __smrq_serialized_remove_one(__prev_##it, &(it)->field, NULL);             \
+  })
 
 /*!
  * @macro smrq_serialized_append
@@ -563,14 +554,14 @@ __BEGIN_DECLS
  * However, the "source" queue needs to be reset to a valid state
  * if it is to be used again.
  */
-#define smrq_serialized_append(dst, src)  ({ \
-	__auto_type __src = (src);                                              \
-	__auto_type __dst = (dst);                                              \
-                                                                                \
-	__smrq_serialized_append(&__dst->first, __smrq_lastp(__dst),            \
-	    &__src->first, __smrq_lastp(__src));                                \
-})
-
+#define smrq_serialized_append(dst, src)                                       \
+  ({                                                                           \
+    __auto_type __src = (src);                                                 \
+    __auto_type __dst = (dst);                                                 \
+                                                                               \
+    __smrq_serialized_append(&__dst->first, __smrq_lastp(__dst),               \
+                             &__src->first, __smrq_lastp(__src));              \
+  })
 
 #pragma mark SMR domains
 
@@ -588,12 +579,13 @@ __BEGIN_DECLS
  * Create a sleepable SMR domain.
  #endif
  */
-__options_closed_decl(smr_flags_t, unsigned long, {
-	SMR_NONE              = 0x00000000,
+__options_closed_decl(smr_flags_t, unsigned long,
+                      {
+                          SMR_NONE = 0x00000000,
 #if XNU_KERNEL_PRIVATE
-	SMR_SLEEPABLE         = 0x00000001,
+                          SMR_SLEEPABLE = 0x00000001,
 #endif
-});
+                      });
 
 /*!
  * @function smr_domain_create()
@@ -687,7 +679,6 @@ extern smr_t smr_domain_create(smr_flags_t flags, const char *name);
  */
 extern void smr_domain_free(smr_t smr);
 
-
 /*!
  * @function smr_entered()
  *
@@ -720,7 +711,6 @@ extern void smr_enter(smr_t smr);
  */
 extern void smr_leave(smr_t smr);
 
-
 /*!
  * @function smr_call()
  *
@@ -741,7 +731,7 @@ extern void smr_leave(smr_t smr);
  */
 extern void smr_call(smr_t smr, smr_node_t node, vm_size_t size, smr_cb_t cb);
 
-#define SMR_CALL_EXPEDITE       ((vm_size_t)~0)
+#define SMR_CALL_EXPEDITE ((vm_size_t)~0)
 
 /*!
  * @function smr_synchronize()
@@ -788,21 +778,20 @@ extern void smr_synchronize(smr_t smr);
  */
 extern void smr_barrier(smr_t smr);
 
-
 #ifdef XNU_KERNEL_PRIVATE
 #pragma GCC visibility push(hidden)
 #pragma mark - XNU only
 #pragma mark XNU only: SMR domains advanced
 
-#define SMR_SEQ_INVALID         ((smr_seq_t)0)
-#define SMR_SEQ_SLEEPABLE       ((smr_seq_t)1) /* only on smr_pcpu::rd_seq */
-#define SMR_SEQ_INIT            ((smr_seq_t)2)
-#define SMR_SEQ_INC             ((smr_seq_t)4)
+#define SMR_SEQ_INVALID ((smr_seq_t)0)
+#define SMR_SEQ_SLEEPABLE ((smr_seq_t)1) /* only on smr_pcpu::rd_seq */
+#define SMR_SEQ_INIT ((smr_seq_t)2)
+#define SMR_SEQ_INC ((smr_seq_t)4)
 
-typedef long                    smr_delta_t;
+typedef long smr_delta_t;
 
-#define SMR_SEQ_DELTA(a, b)     ((smr_delta_t)((a) - (b)))
-#define SMR_SEQ_CMP(a, op, b)   (SMR_SEQ_DELTA(a, b) op 0)
+#define SMR_SEQ_DELTA(a, b) ((smr_delta_t)((a) - (b)))
+#define SMR_SEQ_CMP(a, op, b) (SMR_SEQ_DELTA(a, b) op 0)
 
 /*!
  * @typedef smr_clock_t
@@ -811,11 +800,11 @@ typedef long                    smr_delta_t;
  * Represents an SMR domain clock, internal type not manipulated by clients.
  */
 typedef struct {
-	smr_seq_t               s_rd_seq;
-	smr_seq_t               s_wr_seq;
+  smr_seq_t s_rd_seq;
+  smr_seq_t s_wr_seq;
 } smr_clock_t;
 
-#define SMR_NAME_MAX            24
+#define SMR_NAME_MAX 24
 
 /*!
  * @typedef smr_t
@@ -824,11 +813,11 @@ typedef struct {
  * Declares an SMR domain of synchronization.
  */
 struct smr {
-	smr_clock_t             smr_clock;
-	struct smr_pcpu        *smr_pcpu;
-	unsigned long           smr_flags;
-	unsigned long           smr_early;
-	char                    smr_name[SMR_NAME_MAX];
+  smr_clock_t smr_clock;
+  struct smr_pcpu *smr_pcpu;
+  unsigned long smr_flags;
+  unsigned long smr_early;
+  char smr_name[SMR_NAME_MAX];
 } __attribute__((aligned(64)));
 
 /*!
@@ -837,15 +826,15 @@ struct smr {
  * @brief
  * Define an SMR domain with specific create flags.
  */
-#define SMR_DEFINE_FLAGS(var, name, flags) \
-	struct smr var = { \
-	        .smr_clock.s_rd_seq = SMR_SEQ_INIT, \
-	        .smr_clock.s_wr_seq = SMR_SEQ_INIT, \
-	        .smr_flags = (flags), \
-	        .smr_name  = "" name, \
-	}; \
-	STARTUP_ARG(TUNABLES, STARTUP_RANK_LAST, __smr_domain_init, &(var)); \
-	STARTUP_ARG(ZALLOC, STARTUP_RANK_LAST, __smr_domain_init, &(var))
+#define SMR_DEFINE_FLAGS(var, name, flags)                                     \
+  struct smr var = {                                                           \
+      .smr_clock.s_rd_seq = SMR_SEQ_INIT,                                      \
+      .smr_clock.s_wr_seq = SMR_SEQ_INIT,                                      \
+      .smr_flags = (flags),                                                    \
+      .smr_name = "" name,                                                     \
+  };                                                                           \
+  STARTUP_ARG(TUNABLES, STARTUP_RANK_LAST, __smr_domain_init, &(var));         \
+  STARTUP_ARG(ZALLOC, STARTUP_RANK_LAST, __smr_domain_init, &(var))
 
 /*!
  * @macro SMR_DEFINE
@@ -853,9 +842,7 @@ struct smr {
  * @brief
  * Define an SMR domain.
  */
-#define SMR_DEFINE(var, name) \
-	SMR_DEFINE_FLAGS(var, name, SMR_NONE)
-
+#define SMR_DEFINE(var, name) SMR_DEFINE_FLAGS(var, name, SMR_NONE)
 
 /*!
  * @macro SMR_DEFINE_SLEEPABLE
@@ -863,9 +850,8 @@ struct smr {
  * @brief
  * Define a sleepable SMR domain.
  */
-#define SMR_DEFINE_SLEEPABLE(var, name) \
-	SMR_DEFINE_FLAGS(var, name, SMR_SLEEPABLE)
-
+#define SMR_DEFINE_SLEEPABLE(var, name)                                        \
+  SMR_DEFINE_FLAGS(var, name, SMR_SLEEPABLE)
 
 /*!
  * @function smr_advance()
@@ -915,7 +901,6 @@ extern smr_seq_t smr_deferred_advance(smr_t smr) __result_use_check;
  */
 extern void smr_deferred_advance_commit(smr_t smr, smr_seq_t seq);
 
-
 /*!
  * @function smr_poll
  *
@@ -944,7 +929,6 @@ extern bool smr_poll(smr_t smr, smr_seq_t goal) __result_use_check;
  */
 extern void smr_wait(smr_t smr, smr_seq_t goal);
 
-
 #pragma mark XNU only: major sleepable SMR domains
 /*
  * Note: this is private for now because sleepable sections that do "bad" things
@@ -969,12 +953,12 @@ extern void smr_wait(smr_t smr, smr_seq_t goal);
  * @field smrt_cpu     (if stalled) the cpu the thread was on when stalled.
  */
 typedef struct smr_tracker {
-	smr_t                   smrt_domain;
-	smr_seq_t               smrt_seq;
-	struct smrq_link        smrt_link;
-	struct smrq_slink       smrt_stack;
-	uint32_t                smrt_ctid;
-	int                     smrt_cpu;
+  smr_t smrt_domain;
+  smr_seq_t smrt_seq;
+  struct smrq_link smrt_link;
+  struct smrq_slink smrt_stack;
+  uint32_t smrt_ctid;
+  int smrt_cpu;
 } *smr_tracker_t;
 
 /*!
@@ -1010,7 +994,6 @@ extern void smr_enter_sleepable(smr_t smr, smr_tracker_t tracker);
  */
 extern void smr_leave_sleepable(smr_t smr, smr_tracker_t tracker);
 
-
 #pragma mark XNU only: major subsystems SMR domains
 
 /*!
@@ -1041,22 +1024,20 @@ extern struct smr smr_system;
  */
 extern struct smr smr_system_sleepable;
 
-
 /*!
  * @macro smr_ipc
  *
  * @brief
  * The SMR domain for the Mach IPC subsystem.
  */
-#define smr_ipc                         smr_system
-#define smr_ipc_entered()               smr_entered(&smr_ipc)
-#define smr_ipc_enter()                 smr_enter(&smr_ipc)
-#define smr_ipc_leave()                 smr_leave(&smr_ipc)
+#define smr_ipc smr_system
+#define smr_ipc_entered() smr_entered(&smr_ipc)
+#define smr_ipc_enter() smr_enter(&smr_ipc)
+#define smr_ipc_leave() smr_leave(&smr_ipc)
 
-#define smr_ipc_call(n, sz, cb)         smr_call(&smr_ipc, n, sz, cb)
-#define smr_ipc_synchronize()           smr_synchronize(&smr_ipc)
-#define smr_ipc_barrier()               smr_barrier(&smr_ipc)
-
+#define smr_ipc_call(n, sz, cb) smr_call(&smr_ipc, n, sz, cb)
+#define smr_ipc_synchronize() smr_synchronize(&smr_ipc)
+#define smr_ipc_barrier() smr_barrier(&smr_ipc)
 
 /*!
  * @macro smr_proc_task
@@ -1064,15 +1045,14 @@ extern struct smr smr_system_sleepable;
  * @brief
  * The SMR domain for the proc/task and adjacent objects.
  */
-#define smr_proc_task                   smr_system
-#define smr_proc_task_entered()         smr_entered(&smr_proc_task)
-#define smr_proc_task_enter()           smr_enter(&smr_proc_task)
-#define smr_proc_task_leave()           smr_leave(&smr_proc_task)
+#define smr_proc_task smr_system
+#define smr_proc_task_entered() smr_entered(&smr_proc_task)
+#define smr_proc_task_enter() smr_enter(&smr_proc_task)
+#define smr_proc_task_leave() smr_leave(&smr_proc_task)
 
-#define smr_proc_task_call(n, sz, cb)   smr_call(&smr_proc_task, n, sz, cb)
-#define smr_proc_task_synchronize()     smr_synchronize(&smr_proc_task)
-#define smr_proc_task_barrier()         smr_barrier(&smr_proc_task)
-
+#define smr_proc_task_call(n, sz, cb) smr_call(&smr_proc_task, n, sz, cb)
+#define smr_proc_task_synchronize() smr_synchronize(&smr_proc_task)
+#define smr_proc_task_barrier() smr_barrier(&smr_proc_task)
 
 /*!
  * @macro smr_iokit
@@ -1080,15 +1060,14 @@ extern struct smr smr_system_sleepable;
  * @brief
  * The SMR domain for IOKit
  */
-#define smr_iokit                       smr_system
-#define smr_iokit_entered()             smr_entered(&smr_iokit)
-#define smr_iokit_enter()               smr_enter(&smr_iokit)
-#define smr_iokit_leave()               smr_leave(&smr_iokit)
+#define smr_iokit smr_system
+#define smr_iokit_entered() smr_entered(&smr_iokit)
+#define smr_iokit_enter() smr_enter(&smr_iokit)
+#define smr_iokit_leave() smr_leave(&smr_iokit)
 
-#define smr_iokit_call(n, sz, cb)       smr_call(&smr_iokit, n, sz, cb)
-#define smr_iokit_synchronize()         smr_synchronize(&smr_iokit)
-#define smr_iokit_barrier()             smr_barrier(&smr_iokit)
-
+#define smr_iokit_call(n, sz, cb) smr_call(&smr_iokit, n, sz, cb)
+#define smr_iokit_synchronize() smr_synchronize(&smr_iokit)
+#define smr_iokit_barrier() smr_barrier(&smr_iokit)
 
 /*!
  * @macro smr_oslog
@@ -1096,15 +1075,14 @@ extern struct smr smr_system_sleepable;
  * @brief
  * The SMR domain for kernel OSLog handles.
  */
-#define smr_oslog                       smr_system
-#define smr_oslog_entered()             smr_entered(&smr_oslog)
-#define smr_oslog_enter()               smr_enter(&smr_oslog)
-#define smr_oslog_leave()               smr_leave(&smr_oslog)
+#define smr_oslog smr_system
+#define smr_oslog_entered() smr_entered(&smr_oslog)
+#define smr_oslog_enter() smr_enter(&smr_oslog)
+#define smr_oslog_leave() smr_leave(&smr_oslog)
 
-#define smr_oslog_call(n, sz, cb)       smr_call(&smr_oslog, n, sz, cb)
-#define smr_oslog_synchronize()         smr_synchronize(&smr_oslog)
-#define smr_oslog_barrier()             smr_barrier(&smr_oslog)
-
+#define smr_oslog_call(n, sz, cb) smr_call(&smr_oslog, n, sz, cb)
+#define smr_oslog_synchronize() smr_synchronize(&smr_oslog)
+#define smr_oslog_barrier() smr_barrier(&smr_oslog)
 
 #pragma mark XNU only: implementation details
 
@@ -1119,12 +1097,13 @@ extern void smr_ack_ipi(void);
 
 extern void smr_mark_active_trackers_stalled(struct thread *self);
 
-__options_closed_decl(smr_cpu_reason_t, uint8_t, {
-	SMR_CPU_REASON_NONE        = 0x00,
-	SMR_CPU_REASON_OFFLINE     = 0x01,
-	SMR_CPU_REASON_IGNORED     = 0x02,
-	SMR_CPU_REASON_ALL         = 0x03,
-});
+__options_closed_decl(smr_cpu_reason_t, uint8_t,
+                      {
+                          SMR_CPU_REASON_NONE = 0x00,
+                          SMR_CPU_REASON_OFFLINE = 0x01,
+                          SMR_CPU_REASON_IGNORED = 0x02,
+                          SMR_CPU_REASON_ALL = 0x03,
+                      });
 
 extern void smr_cpu_init(struct processor *);
 extern void smr_cpu_up(struct processor *, smr_cpu_reason_t);
@@ -1152,367 +1131,295 @@ extern void smr_cpu_checkin_set_min_interval_us(uint32_t new_value);
 #pragma mark - implementation details
 #pragma mark implementation details: SMR queues
 
-__dead2
-static inline void
-__smr_linkage_invalid(__smrq_link_t *link)
-{
-	struct smrq_link *elem = __container_of(link, struct smrq_link, next);
+__dead2 static inline void __smr_linkage_invalid(__smrq_link_t *link) {
+  struct smrq_link *elem = __container_of(link, struct smrq_link, next);
 
-	ml_fatal_trap_invalid_list_linkage((unsigned long)elem);
+  ml_fatal_trap_invalid_list_linkage((unsigned long)elem);
 }
 
-__dead2
-static inline void
-__smr_stail_invalid(__smrq_slink_t *link, __smrq_slink_t *last __unused)
-{
-	struct smrq_slink *elem = __container_of(link, struct smrq_slink, next);
+__dead2 static inline void __smr_stail_invalid(__smrq_slink_t *link,
+                                               __smrq_slink_t *last __unused) {
+  struct smrq_slink *elem = __container_of(link, struct smrq_slink, next);
 
-	ml_fatal_trap_invalid_list_linkage((unsigned long)elem);
+  ml_fatal_trap_invalid_list_linkage((unsigned long)elem);
 }
 
-__dead2
-static inline void
-__smr_tail_invalid(__smrq_link_t *link, __smrq_link_t *last __unused)
-{
-	struct smrq_link *elem = __container_of(link, struct smrq_link, next);
+__dead2 static inline void __smr_tail_invalid(__smrq_link_t *link,
+                                              __smrq_link_t *last __unused) {
+  struct smrq_link *elem = __container_of(link, struct smrq_link, next);
 
-	ml_fatal_trap_invalid_list_linkage((unsigned long)elem);
+  ml_fatal_trap_invalid_list_linkage((unsigned long)elem);
 }
 
-__attribute__((always_inline, overloadable))
-static inline __smrq_slink_t **
-__smrq_lastp(struct smrq_slist_head *head __unused)
-{
-	return NULL;
+__attribute__((always_inline, overloadable)) static inline __smrq_slink_t **
+__smrq_lastp(struct smrq_slist_head *head __unused) {
+  return NULL;
 }
 
-__attribute__((always_inline, overloadable))
-static inline __smrq_link_t **
-__smrq_lastp(struct smrq_list_head *head __unused)
-{
-	return NULL;
+__attribute__((always_inline, overloadable)) static inline __smrq_link_t **
+__smrq_lastp(struct smrq_list_head *head __unused) {
+  return NULL;
 }
 
-__attribute__((always_inline, overloadable))
-static inline __smrq_slink_t **
-__smrq_lastp(struct smrq_stailq_head *head)
-{
-	__smrq_slink_t **last = &head->last;
+__attribute__((always_inline, overloadable)) static inline __smrq_slink_t **
+__smrq_lastp(struct smrq_stailq_head *head) {
+  __smrq_slink_t **last = &head->last;
 
-	__builtin_assume(last != NULL);
-	return last;
+  __builtin_assume(last != NULL);
+  return last;
 }
 
-__attribute__((always_inline, overloadable))
-static inline __smrq_link_t **
-__smrq_lastp(struct smrq_tailq_head *head)
-{
-	__smrq_link_t **last = &head->last;
+__attribute__((always_inline, overloadable)) static inline __smrq_link_t **
+__smrq_lastp(struct smrq_tailq_head *head) {
+  __smrq_link_t **last = &head->last;
 
-	__builtin_assume(last != NULL);
-	return last;
+  __builtin_assume(last != NULL);
+  return last;
 }
 
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_insert(__smrq_slink_t *prev, struct smrq_slink *elem,
+                         struct smrq_slink *next, __smrq_slink_t **lastp) {
+  if (next == NULL && lastp) {
+    if (*lastp != prev || smr_serialized_load(prev)) {
+      __smr_stail_invalid(prev, *lastp);
+    }
+  }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_insert(
-	__smrq_slink_t         *prev,
-	struct smrq_slink      *elem,
-	struct smrq_slink      *next,
-	__smrq_slink_t        **lastp)
-{
-	if (next == NULL && lastp) {
-		if (*lastp != prev || smr_serialized_load(prev)) {
-			__smr_stail_invalid(prev, *lastp);
-		}
-	}
-
-	smr_serialized_store_relaxed(&elem->next, next);
-	smr_serialized_store(prev, elem);
-	if (next == NULL && lastp) {
-		*lastp = &elem->next;
-	}
+  smr_serialized_store_relaxed(&elem->next, next);
+  smr_serialized_store(prev, elem);
+  if (next == NULL && lastp) {
+    *lastp = &elem->next;
+  }
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_insert(
-	__smrq_link_t          *prev,
-	struct smrq_link       *elem,
-	struct smrq_link       *next,
-	__smrq_link_t         **lastp)
-{
-	if (next != NULL && next->prev != prev) {
-		__smr_linkage_invalid(prev);
-	}
-	if (next == NULL && lastp) {
-		if (*lastp != prev || smr_serialized_load(prev)) {
-			__smr_tail_invalid(prev, *lastp);
-		}
-	}
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_insert(__smrq_link_t *prev, struct smrq_link *elem,
+                         struct smrq_link *next, __smrq_link_t **lastp) {
+  if (next != NULL && next->prev != prev) {
+    __smr_linkage_invalid(prev);
+  }
+  if (next == NULL && lastp) {
+    if (*lastp != prev || smr_serialized_load(prev)) {
+      __smr_tail_invalid(prev, *lastp);
+    }
+  }
 
-	smr_serialized_store_relaxed(&elem->next, next);
-	elem->prev = prev;
-	smr_serialized_store(prev, elem);
+  smr_serialized_store_relaxed(&elem->next, next);
+  elem->prev = prev;
+  smr_serialized_store(prev, elem);
 
-	if (next != NULL) {
-		next->prev = &elem->next;
-	} else if (lastp) {
-		*lastp = &elem->next;
-	}
+  if (next != NULL) {
+    next->prev = &elem->next;
+  } else if (lastp) {
+    *lastp = &elem->next;
+  }
 }
 
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_insert_relaxed(__smrq_slink_t *prev, struct smrq_slink *elem,
+                                 struct smrq_slink *next,
+                                 __smrq_slink_t **lastp) {
+  if (next == NULL && lastp) {
+    if (*lastp != prev || smr_serialized_load(prev)) {
+      __smr_stail_invalid(prev, *lastp);
+    }
+  }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_insert_relaxed(
-	__smrq_slink_t         *prev,
-	struct smrq_slink      *elem,
-	struct smrq_slink      *next,
-	__smrq_slink_t        **lastp)
-{
-	if (next == NULL && lastp) {
-		if (*lastp != prev || smr_serialized_load(prev)) {
-			__smr_stail_invalid(prev, *lastp);
-		}
-	}
-
-	smr_serialized_store_relaxed(&elem->next, next);
-	smr_serialized_store_relaxed(prev, elem);
-	if (next == NULL && lastp) {
-		*lastp = &elem->next;
-	}
+  smr_serialized_store_relaxed(&elem->next, next);
+  smr_serialized_store_relaxed(prev, elem);
+  if (next == NULL && lastp) {
+    *lastp = &elem->next;
+  }
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_insert_relaxed(
-	__smrq_link_t          *prev,
-	struct smrq_link       *elem,
-	struct smrq_link       *next,
-	__smrq_link_t         **lastp)
-{
-	if (next != NULL && next->prev != prev) {
-		__smr_linkage_invalid(prev);
-	}
-	if (next == NULL && lastp) {
-		if (*lastp != prev || smr_serialized_load(prev)) {
-			__smr_tail_invalid(prev, *lastp);
-		}
-	}
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_insert_relaxed(__smrq_link_t *prev, struct smrq_link *elem,
+                                 struct smrq_link *next,
+                                 __smrq_link_t **lastp) {
+  if (next != NULL && next->prev != prev) {
+    __smr_linkage_invalid(prev);
+  }
+  if (next == NULL && lastp) {
+    if (*lastp != prev || smr_serialized_load(prev)) {
+      __smr_tail_invalid(prev, *lastp);
+    }
+  }
 
-	smr_serialized_store_relaxed(&elem->next, next);
-	elem->prev = prev;
-	smr_serialized_store_relaxed(prev, elem);
+  smr_serialized_store_relaxed(&elem->next, next);
+  elem->prev = prev;
+  smr_serialized_store_relaxed(prev, elem);
 
-	if (next != NULL) {
-		next->prev = &elem->next;
-	} else if (lastp) {
-		*lastp = &elem->next;
-	}
+  if (next != NULL) {
+    next->prev = &elem->next;
+  } else if (lastp) {
+    *lastp = &elem->next;
+  }
 }
 
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_remove_one(__smrq_slink_t *prev, struct smrq_slink *elem,
+                             __smrq_slink_t **lastp) {
+  struct smrq_slink *next;
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_remove_one(
-	__smrq_slink_t         *prev,
-	struct smrq_slink      *elem,
-	__smrq_slink_t        **lastp)
-{
-	struct smrq_slink *next;
-
-	/*
-	 * Removal "skips" a link this way:
-	 *
-	 *     e1 ---> e2 ---> e3  becomes e1 -----------> e3
-	 *
-	 * When e3 was inserted, a release barrier was issued
-	 * by smr_serialized_store().  We do not need to issue
-	 * a release barrier upon removal because `next` carries
-	 * a dependency on that smr_serialized_store()d value.
-	 */
-	next = smr_serialized_load(&elem->next);
-	smr_serialized_store_relaxed(prev, next);
-	if (next == NULL && lastp) {
-		*lastp = prev;
-	}
+  /*
+   * Removal "skips" a link this way:
+   *
+   *     e1 ---> e2 ---> e3  becomes e1 -----------> e3
+   *
+   * When e3 was inserted, a release barrier was issued
+   * by smr_serialized_store().  We do not need to issue
+   * a release barrier upon removal because `next` carries
+   * a dependency on that smr_serialized_store()d value.
+   */
+  next = smr_serialized_load(&elem->next);
+  smr_serialized_store_relaxed(prev, next);
+  if (next == NULL && lastp) {
+    *lastp = prev;
+  }
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_remove_one(
-	__smrq_link_t          *prev,
-	struct smrq_link       *elem,
-	__smrq_link_t         **lastp)
-{
-	struct smrq_link *next;
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_remove_one(__smrq_link_t *prev, struct smrq_link *elem,
+                             __smrq_link_t **lastp) {
+  struct smrq_link *next;
 
-	next = smr_serialized_load(&elem->next);
+  next = smr_serialized_load(&elem->next);
 
-	if (smr_serialized_load(prev) != elem) {
-		__smr_linkage_invalid(prev);
-	}
-	if (next && next->prev != &elem->next) {
-		__smr_linkage_invalid(&elem->next);
-	}
+  if (smr_serialized_load(prev) != elem) {
+    __smr_linkage_invalid(prev);
+  }
+  if (next && next->prev != &elem->next) {
+    __smr_linkage_invalid(&elem->next);
+  }
 
-	/*
-	 * Removal "skips" a link this way:
-	 *
-	 *     e1 ---> e2 ---> e3  becomes e1 -----------> e3
-	 *
-	 * When e3 was inserted, a release barrier was issued
-	 * by smr_serialized_store().  We do not need to issue
-	 * a release barrier upon removal because `next` carries
-	 * a dependency on that smr_serialized_store()d value.
-	 */
-	smr_serialized_store_relaxed(prev, next);
+  /*
+   * Removal "skips" a link this way:
+   *
+   *     e1 ---> e2 ---> e3  becomes e1 -----------> e3
+   *
+   * When e3 was inserted, a release barrier was issued
+   * by smr_serialized_store().  We do not need to issue
+   * a release barrier upon removal because `next` carries
+   * a dependency on that smr_serialized_store()d value.
+   */
+  smr_serialized_store_relaxed(prev, next);
 
-	if (next != NULL) {
-		next->prev = prev;
-	} else if (lastp) {
-		*lastp = prev;
-	}
-	elem->prev = NULL;
+  if (next != NULL) {
+    next->prev = prev;
+  } else if (lastp) {
+    *lastp = prev;
+  }
+  elem->prev = NULL;
 }
 
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_remove(__smrq_slink_t *first, struct smrq_slink *elem,
+                         __smrq_slink_t **lastp) {
+  __smrq_slink_t *prev = first;
+  struct smrq_slink *cur;
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_remove(
-	__smrq_slink_t         *first,
-	struct smrq_slink      *elem,
-	__smrq_slink_t        **lastp)
-{
-	__smrq_slink_t *prev = first;
-	struct smrq_slink *cur;
+  while ((cur = smr_serialized_load(prev)) != elem) {
+    prev = &cur->next;
+  }
 
-	while ((cur = smr_serialized_load(prev)) != elem) {
-		prev = &cur->next;
-	}
-
-	__smrq_serialized_remove_one(prev, elem, lastp);
+  __smrq_serialized_remove_one(prev, elem, lastp);
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_remove(
-	__smrq_link_t          *first __unused,
-	struct smrq_link       *elem,
-	__smrq_link_t         **lastp)
-{
-	__smrq_serialized_remove_one(elem->prev, elem, lastp);
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_remove(__smrq_link_t *first __unused, struct smrq_link *elem,
+                         __smrq_link_t **lastp) {
+  __smrq_serialized_remove_one(elem->prev, elem, lastp);
 }
 
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_replace(__smrq_slink_t *first, struct smrq_slink *old_elem,
+                          struct smrq_slink *new_elem, __smrq_slink_t **lastp) {
+  __smrq_slink_t *prev = first;
+  struct smrq_slink *cur;
+  struct smrq_slink *next;
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_replace(
-	__smrq_slink_t         *first,
-	struct smrq_slink      *old_elem,
-	struct smrq_slink      *new_elem,
-	__smrq_slink_t        **lastp)
-{
-	__smrq_slink_t *prev = first;
-	struct smrq_slink *cur;
-	struct smrq_slink *next;
+  while ((cur = smr_serialized_load(prev)) != old_elem) {
+    prev = &cur->next;
+  }
 
-	while ((cur = smr_serialized_load(prev)) != old_elem) {
-		prev = &cur->next;
-	}
+  next = smr_serialized_load(&old_elem->next);
+  smr_serialized_store_relaxed(&new_elem->next, next);
+  smr_serialized_store(prev, new_elem);
 
-	next = smr_serialized_load(&old_elem->next);
-	smr_serialized_store_relaxed(&new_elem->next, next);
-	smr_serialized_store(prev, new_elem);
-
-	if (next == NULL && lastp) {
-		*lastp = &new_elem->next;
-	}
+  if (next == NULL && lastp) {
+    *lastp = &new_elem->next;
+  }
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_replace(
-	__smrq_link_t          *first __unused,
-	struct smrq_link       *old_elem,
-	struct smrq_link       *new_elem,
-	__smrq_link_t         **lastp)
-{
-	__smrq_link_t *prev;
-	struct smrq_link *next;
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_replace(__smrq_link_t *first __unused,
+                          struct smrq_link *old_elem,
+                          struct smrq_link *new_elem, __smrq_link_t **lastp) {
+  __smrq_link_t *prev;
+  struct smrq_link *next;
 
-	prev = old_elem->prev;
-	next = smr_serialized_load(&old_elem->next);
+  prev = old_elem->prev;
+  next = smr_serialized_load(&old_elem->next);
 
-	if (smr_serialized_load(prev) != old_elem) {
-		__smr_linkage_invalid(prev);
-	}
-	if (next && next->prev != &old_elem->next) {
-		__smr_linkage_invalid(&old_elem->next);
-	}
+  if (smr_serialized_load(prev) != old_elem) {
+    __smr_linkage_invalid(prev);
+  }
+  if (next && next->prev != &old_elem->next) {
+    __smr_linkage_invalid(&old_elem->next);
+  }
 
-	smr_serialized_store_relaxed(&new_elem->next, next);
-	new_elem->prev = prev;
-	smr_serialized_store(prev, new_elem);
+  smr_serialized_store_relaxed(&new_elem->next, next);
+  new_elem->prev = prev;
+  smr_serialized_store(prev, new_elem);
 
-	if (next != NULL) {
-		next->prev = &new_elem->next;
-	} else if (lastp) {
-		*lastp = &new_elem->next;
-	}
-	old_elem->prev = NULL;
+  if (next != NULL) {
+    next->prev = &new_elem->next;
+  } else if (lastp) {
+    *lastp = &new_elem->next;
+  }
+  old_elem->prev = NULL;
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_append(
-	__smrq_slink_t         *dst_first,
-	__smrq_slink_t        **dst_lastp,
-	__smrq_slink_t         *src_first,
-	__smrq_slink_t        **src_lastp)
-{
-	struct smrq_slink *src = smr_serialized_load(src_first);
-	struct smrq_slink *dst;
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_append(__smrq_slink_t *dst_first, __smrq_slink_t **dst_lastp,
+                         __smrq_slink_t *src_first,
+                         __smrq_slink_t **src_lastp) {
+  struct smrq_slink *src = smr_serialized_load(src_first);
+  struct smrq_slink *dst;
 
-	if (dst_lastp) {
-		if (src) {
-			smr_serialized_store_relaxed(*dst_lastp, src);
-			*dst_lastp = *src_lastp;
-		}
-	} else {
-		while ((dst = smr_serialized_load(dst_first))) {
-			dst_first = &dst->next;
-		}
-		smr_serialized_store_relaxed(dst_first, src);
-	}
+  if (dst_lastp) {
+    if (src) {
+      smr_serialized_store_relaxed(*dst_lastp, src);
+      *dst_lastp = *src_lastp;
+    }
+  } else {
+    while ((dst = smr_serialized_load(dst_first))) {
+      dst_first = &dst->next;
+    }
+    smr_serialized_store_relaxed(dst_first, src);
+  }
 }
 
-__attribute__((always_inline, overloadable))
-static inline void
-__smrq_serialized_append(
-	__smrq_link_t          *dst_first,
-	__smrq_link_t         **dst_lastp,
-	__smrq_link_t          *src_first,
-	__smrq_link_t         **src_lastp)
-{
-	struct smrq_link *src = smr_serialized_load(src_first);
-	struct smrq_link *dst;
+__attribute__((always_inline, overloadable)) static inline void
+__smrq_serialized_append(__smrq_link_t *dst_first, __smrq_link_t **dst_lastp,
+                         __smrq_link_t *src_first, __smrq_link_t **src_lastp) {
+  struct smrq_link *src = smr_serialized_load(src_first);
+  struct smrq_link *dst;
 
-	if (dst_lastp) {
-		if (src) {
-			smr_serialized_store_relaxed(*dst_lastp, src);
-			src->prev = *dst_lastp;
-			*dst_lastp = *src_lastp;
-		}
-	} else {
-		while ((dst = smr_serialized_load(dst_first))) {
-			dst_first = &dst->next;
-		}
-		smr_serialized_store_relaxed(dst_first, src);
-		src->prev = &dst->next;
-	}
+  if (dst_lastp) {
+    if (src) {
+      smr_serialized_store_relaxed(*dst_lastp, src);
+      src->prev = *dst_lastp;
+      *dst_lastp = *src_lastp;
+    }
+  } else {
+    while ((dst = smr_serialized_load(dst_first))) {
+      dst_first = &dst->next;
+    }
+    smr_serialized_store_relaxed(dst_first, src);
+    src->prev = &dst->next;
+  }
 }
 
 __END_DECLS

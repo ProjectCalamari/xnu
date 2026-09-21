@@ -29,23 +29,17 @@
  * syscalls.master. Instead, provide simple stubs here.
  */
 
-int
-sem_destroy(sem_t *s __unused)
-{
-	errno = ENOSYS;
-	return -1;
+int sem_destroy(sem_t *s __unused) {
+  errno = ENOSYS;
+  return -1;
 }
 
-int
-sem_getvalue(sem_t * __restrict __unused s, int * __restrict __unused x)
-{
-	errno = ENOSYS;
-	return -1;
+int sem_getvalue(sem_t *__restrict __unused s, int *__restrict __unused x) {
+  errno = ENOSYS;
+  return -1;
 }
 
-int
-sem_init(sem_t * __unused s, int __unused x, unsigned int __unused y)
-{
-	errno = ENOSYS;
-	return -1;
+int sem_init(sem_t *__unused s, int __unused x, unsigned int __unused y) {
+  errno = ENOSYS;
+  return -1;
 }

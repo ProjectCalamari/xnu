@@ -26,24 +26,24 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-
 #ifndef _IOPROVIDERPROPERTYMERGER_H_
 #define _IOPROVIDERPROPERTYMERGER_H_
 
 #include <IOKit/IOService.h>
 
 #define kIOProviderMergePropertiesKey "IOProviderMergeProperties"
-#define kIOProviderParentMergePropertiesKey  "IOProviderParentMergeProperties"
+#define kIOProviderParentMergePropertiesKey "IOProviderParentMergeProperties"
 
 #if KERNEL_PRIVATE
 
-class IOProviderPropertyMerger : public IOService
-{
-	OSDeclareDefaultStructors(IOProviderPropertyMerger);
+class IOProviderPropertyMerger : public IOService {
+  OSDeclareDefaultStructors(IOProviderPropertyMerger);
+
 public:
-	virtual bool init(OSDictionary * dictionary = NULL) APPLE_KEXT_OVERRIDE;
-	virtual bool setProperty(const OSSymbol * aKey, OSObject * anObject) APPLE_KEXT_OVERRIDE;
-	virtual void setPropertyTable( OSDictionary * dict ) APPLE_KEXT_OVERRIDE;
+  virtual bool init(OSDictionary *dictionary = NULL) APPLE_KEXT_OVERRIDE;
+  virtual bool setProperty(const OSSymbol *aKey,
+                           OSObject *anObject) APPLE_KEXT_OVERRIDE;
+  virtual void setPropertyTable(OSDictionary *dict) APPLE_KEXT_OVERRIDE;
 };
 
 #endif /* KERNEL_PRIVATE */

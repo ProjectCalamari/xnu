@@ -25,9 +25,9 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
+#include <machine/machine_routines.h>
 #include <pexpert/pexpert.h>
 #include <pexpert/protos.h>
-#include <machine/machine_routines.h>
 
 #if CONFIG_DTRACE && DEVELOPMENT
 #include <mach/sdt.h>
@@ -35,56 +35,46 @@
 
 void PE_incoming_interrupt(int);
 
-
 struct i386_interrupt_handler {
-	IOInterruptHandler      handler;
-	void                    *nub;
-	void                    *target;
-	void                    *refCon;
+  IOInterruptHandler handler;
+  void *nub;
+  void *target;
+  void *refCon;
 };
 
 typedef struct i386_interrupt_handler i386_interrupt_handler_t;
 
-i386_interrupt_handler_t        PE_interrupt_handler;
+i386_interrupt_handler_t PE_interrupt_handler;
 
+void PE_incoming_interrupt(int interrupt) {
+  i386_interrupt_handler_t *vector;
 
-
-void
-PE_incoming_interrupt(int interrupt)
-{
-	i386_interrupt_handler_t        *vector;
-
-	vector = &PE_interrupt_handler;
+  vector = &PE_interrupt_handler;
 
 #if CONFIG_DTRACE && DEVELOPMENT
-	DTRACE_INT5(interrupt_start, void *, vector->nub, int, 0,
-	    void *, vector->target, IOInterruptHandler, vector->handler,
-	    void *, vector->refCon);
+  DTRACE_INT5(interrupt_start, void *, vector->nub, int, 0, void *,
+              vector->target, IOInterruptHandler, vector->handler, void *,
+              vector->refCon);
 #endif
 
-	vector->handler(vector->target, NULL, vector->nub, interrupt);
+  vector->handler(vector->target, NULL, vector->nub, interrupt);
 
 #if CONFIG_DTRACE && DEVELOPMENT
-	DTRACE_INT5(interrupt_complete, void *, vector->nub, int, 0,
-	    void *, vector->target, IOInterruptHandler, vector->handler,
-	    void *, vector->refCon);
+  DTRACE_INT5(interrupt_complete, void *, vector->nub, int, 0, void *,
+              vector->target, IOInterruptHandler, vector->handler, void *,
+              vector->refCon);
 #endif
 }
 
-void
-PE_install_interrupt_handler(void *nub,
-    __unused int source,
-    void *target,
-    IOInterruptHandler handler,
-    void *refCon)
-{
-	i386_interrupt_handler_t        *vector;
+void PE_install_interrupt_handler(void *nub, __unused int source, void *target,
+                                  IOInterruptHandler handler, void *refCon) {
+  i386_interrupt_handler_t *vector;
 
-	vector = &PE_interrupt_handler;
+  vector = &PE_interrupt_handler;
 
-	/*vector->source = source; IGNORED */
-	vector->handler = handler;
-	vector->nub = nub;
-	vector->target = target;
-	vector->refCon = refCon;
+  /*vector->source = source; IGNORED */
+  vector->handler = handler;
+  vector->nub = nub;
+  vector->target = target;
+  vector->refCon = refCon;
 }

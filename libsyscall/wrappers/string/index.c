@@ -29,20 +29,18 @@
 
 #include "strings.h"
 
-__attribute__((visibility("hidden")))
-char *
-_libkernel_strchr(const char *p, int ch)
-{
-	char c;
+__attribute__((visibility("hidden"))) char *_libkernel_strchr(const char *p,
+                                                              int ch) {
+  char c;
 
-	c = ch;
-	for (;; ++p) {
-		if (*p == c) {
-			return (char *)p;
-		}
-		if (*p == '\0') {
-			return NULL;
-		}
-	}
-	/* NOTREACHED */
+  c = ch;
+  for (;; ++p) {
+    if (*p == c) {
+      return (char *)p;
+    }
+    if (*p == '\0') {
+      return NULL;
+    }
+  }
+  /* NOTREACHED */
 }

@@ -29,19 +29,19 @@
 #ifndef _SYS_SFI_H_
 #define _SYS_SFI_H_
 
+#include <mach/sfi_class.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <mach/sfi_class.h>
 /*
  * Selective Forced Idle (SFI) is a mechanism for doing
  * phase-aligned modulation of runnable tasks
  */
 
 /* Flags for use with sfi_process_set_flags() */
-#define SFI_PROCESS_SET_MANAGED         0x00000001
-#define SFI_PROCESS_SET_UNMANAGED       0x00000002
+#define SFI_PROCESS_SET_MANAGED 0x00000001
+#define SFI_PROCESS_SET_UNMANAGED 0x00000002
 
-#define SFI_PROCESS_SET_MANAGED_MASK    0x00000003
+#define SFI_PROCESS_SET_MANAGED_MASK 0x00000003
 
 #ifndef KERNEL
 /*
@@ -98,17 +98,19 @@ int sfi_process_get_flags(pid_t pid, uint32_t *flags);
 #if PRIVATE
 
 /* This is the private system call interface between Libsyscall and xnu */
-#define SFI_CTL_OPERATION_SFI_SET_WINDOW        0x00000001
-#define SFI_CTL_OPERATION_SFI_GET_WINDOW        0x00000002
-#define SFI_CTL_OPERATION_SET_CLASS_OFFTIME     0x00000003
-#define SFI_CTL_OPERATION_GET_CLASS_OFFTIME     0x00000004
+#define SFI_CTL_OPERATION_SFI_SET_WINDOW 0x00000001
+#define SFI_CTL_OPERATION_SFI_GET_WINDOW 0x00000002
+#define SFI_CTL_OPERATION_SET_CLASS_OFFTIME 0x00000003
+#define SFI_CTL_OPERATION_GET_CLASS_OFFTIME 0x00000004
 
-#define SFI_PIDCTL_OPERATION_PID_SET_FLAGS      0x00000001
-#define SFI_PIDCTL_OPERATION_PID_GET_FLAGS      0x00000002
+#define SFI_PIDCTL_OPERATION_PID_SET_FLAGS 0x00000001
+#define SFI_PIDCTL_OPERATION_PID_GET_FLAGS 0x00000002
 
-int __sfi_ctl(uint32_t operation, uint32_t sfi_class, uint64_t time, uint64_t *out_time);
-int __sfi_pidctl(uint32_t operation, pid_t pid, uint32_t sfi_flags, uint32_t *out_sfi_flags);
+int __sfi_ctl(uint32_t operation, uint32_t sfi_class, uint64_t time,
+              uint64_t *out_time);
+int __sfi_pidctl(uint32_t operation, pid_t pid, uint32_t sfi_flags,
+                 uint32_t *out_sfi_flags);
 
 #endif /* PRIVATE */
 
-#endif  /* _SYS_SFI_H_ */
+#endif /* _SYS_SFI_H_ */

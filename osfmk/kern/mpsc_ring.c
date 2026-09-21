@@ -27,9 +27,9 @@
  */
 
 #include "kpc.h"
-#include <kern/mpsc_ring.h>
 #include <kern/assert.h>
 #include <kern/kalloc.h>
+#include <kern/mpsc_ring.h>
 #include <os/atomic_private.h>
 
 /*
@@ -116,72 +116,60 @@
 
 #define HOLD_EMPTY (~0)
 
-void
-mpsc_ring_init(
-	struct mpsc_ring *buf,
-	uint8_t capacity_pow_2,
-	uint8_t writers_max)
-{
-	/*
-	 * Check that this ringbuffer hasn't already been initialized.
-	 */
-	assert3p(buf->mr_buffer, ==, NULL);
-	assert3u(buf->mr_capacity, ==, 0);
+void mpsc_ring_init(struct mpsc_ring *buf, uint8_t capacity_pow_2,
+                    uint8_t writers_max) {
+  /*
+   * Check that this ringbuffer hasn't already been initialized.
+   */
+  assert3p(buf->mr_buffer, ==, NULL);
+  assert3u(buf->mr_capacity, ==, 0);
 
-	/*
-	 * Check for reasonable capacity values.
-	 */
-	assert3u(capacity_pow_2, <, 30);
-	assert3u(capacity_pow_2, >, 0);
+  /*
+   * Check for reasonable capacity values.
+   */
+  assert3u(capacity_pow_2, <, 30);
+  assert3u(capacity_pow_2, >, 0);
 
-	/*
-	 * Must be more than one potential writer.
-	 */
-	assert3u(writers_max, >, 0);
+  /*
+   * Must be more than one potential writer.
+   */
+  assert3u(writers_max, >, 0);
 
-	*buf = (struct mpsc_ring){ 0 };
+  *buf = (struct mpsc_ring){0};
 
-	/*
-	 * Allocate the data buffer to the specified capacity.
-	 */
-	uint32_t capacity = 1U << capacity_pow_2;
-	buf->mr_buffer = kalloc_data_tag(
-		capacity,
-		Z_WAITOK | Z_ZERO,
-		VM_KERN_MEMORY_DIAG);
-	if (!buf->mr_buffer) {
-		panic(
-			"mpsc_ring_init: failed to allocate %u bytes for buffer",
-			capacity);
-	}
-	buf->mr_capacity = capacity;
+  /*
+   * Allocate the data buffer to the specified capacity.
+   */
+  uint32_t capacity = 1U << capacity_pow_2;
+  buf->mr_buffer =
+      kalloc_data_tag(capacity, Z_WAITOK | Z_ZERO, VM_KERN_MEMORY_DIAG);
+  if (!buf->mr_buffer) {
+    panic("mpsc_ring_init: failed to allocate %u bytes for buffer", capacity);
+  }
+  buf->mr_capacity = capacity;
 
-	/*
-	 * Allocate the per-writer holds array.
-	 */
-	size_t holds_size = writers_max * sizeof(buf->mr_writer_holds[0]);
-	buf->mr_writer_holds = kalloc_data_tag(
-		holds_size,
-		Z_WAITOK | Z_ZERO,
-		VM_KERN_MEMORY_DIAG);
-	if (!buf->mr_writer_holds) {
-		panic(
-			"mpsc_ring_init: failed to allocate %zu bytes for holds",
-			holds_size);
-	}
-	buf->mr_writer_count = writers_max;
+  /*
+   * Allocate the per-writer holds array.
+   */
+  size_t holds_size = writers_max * sizeof(buf->mr_writer_holds[0]);
+  buf->mr_writer_holds =
+      kalloc_data_tag(holds_size, Z_WAITOK | Z_ZERO, VM_KERN_MEMORY_DIAG);
+  if (!buf->mr_writer_holds) {
+    panic("mpsc_ring_init: failed to allocate %zu bytes for holds", holds_size);
+  }
+  buf->mr_writer_count = writers_max;
 
-	/*
-	 * Initialize the holds to be empty.
-	 */
-	for (uint8_t i = 0; i < writers_max; i++) {
-		buf->mr_writer_holds[i] = HOLD_EMPTY;
-	}
-	buf->mr_head_tail = (union mpsc_ring_head_tail){ 0 };
-	/*
-	 * Publish these updates.
-	 */
-	os_atomic_thread_fence(release);
+  /*
+   * Initialize the holds to be empty.
+   */
+  for (uint8_t i = 0; i < writers_max; i++) {
+    buf->mr_writer_holds[i] = HOLD_EMPTY;
+  }
+  buf->mr_head_tail = (union mpsc_ring_head_tail){0};
+  /*
+   * Publish these updates.
+   */
+  os_atomic_thread_fence(release);
 }
 
 /**
@@ -209,164 +197,134 @@ mpsc_ring_init(
  * destination and copy out of the ringbuffer.
  */
 OS_ALWAYS_INLINE
-static void
-_mpsc_ring_copy(
-	const struct mpsc_ring *buf,
-	uint32_t offset,
-	void *data,
-	uint32_t size,
-	bool in)
-{
-	/*
-	 * Find the offset into the ringbuffer's memory.
-	 */
-	uint32_t const offset_trunc = offset % buf->mr_capacity;
+static void _mpsc_ring_copy(const struct mpsc_ring *buf, uint32_t offset,
+                            void *data, uint32_t size, bool in) {
+  /*
+   * Find the offset into the ringbuffer's memory.
+   */
+  uint32_t const offset_trunc = offset % buf->mr_capacity;
 
-	/*
-	 * Determine how much contiguous space is left in the ringbuffer for a
-	 * single memcpy.
-	 */
-	uint32_t const left_contig = buf->mr_capacity - offset_trunc;
-	uint32_t const size_contig = MIN(left_contig, size);
-	memcpy(in ? &buf->mr_buffer[offset_trunc] : data,
-	    in ? data : &buf->mr_buffer[offset_trunc],
-	    size_contig);
-	if (size_contig != size) {
-		/*
-		 * If there's any leftover data uncopied, copy it at the start of the
-		 * ringbuffer.
-		 */
-		uint32_t const size_left = size - size_contig;
-		void * const data_left = (char *)data + size_contig;
-		memcpy(in ? buf->mr_buffer : data_left,
-		    in ? data_left : buf->mr_buffer,
-		    size_left);
-	}
+  /*
+   * Determine how much contiguous space is left in the ringbuffer for a
+   * single memcpy.
+   */
+  uint32_t const left_contig = buf->mr_capacity - offset_trunc;
+  uint32_t const size_contig = MIN(left_contig, size);
+  memcpy(in ? &buf->mr_buffer[offset_trunc] : data,
+         in ? data : &buf->mr_buffer[offset_trunc], size_contig);
+  if (size_contig != size) {
+    /*
+     * If there's any leftover data uncopied, copy it at the start of the
+     * ringbuffer.
+     */
+    uint32_t const size_left = size - size_contig;
+    void *const data_left = (char *)data + size_contig;
+    memcpy(in ? buf->mr_buffer : data_left, in ? data_left : buf->mr_buffer,
+           size_left);
+  }
 }
 
-uint32_t
-mpsc_ring_write(
-	struct mpsc_ring *buf,
-	uint8_t writer_id,
-	const void *data,
-	uint32_t size)
-{
-	/*
-	 * Get an initial guess at where to write.
-	 */
-	union mpsc_ring_head_tail head_tail = os_atomic_load(
-		&buf->mr_head_tail,
-		relaxed);
-	union mpsc_ring_head_tail new_head_tail = { 0 };
+uint32_t mpsc_ring_write(struct mpsc_ring *buf, uint8_t writer_id,
+                         const void *data, uint32_t size) {
+  /*
+   * Get an initial guess at where to write.
+   */
+  union mpsc_ring_head_tail head_tail =
+      os_atomic_load(&buf->mr_head_tail, relaxed);
+  union mpsc_ring_head_tail new_head_tail = {0};
 
-	os_atomic_rmw_loop(
-		&buf->mr_head_tail.mrht_head_tail,
-		head_tail.mrht_head_tail /* old */,
-		new_head_tail.mrht_head_tail /* new */,
-		release,
-	{
-		/*
-		 * Check for empty space in the buffer.
-		 */
-		uint32_t const leftover = head_tail.mrht_head + size - head_tail.mrht_tail;
-		if (leftover >= buf->mr_capacity) {
-		        /*
-		         * Not enough space available for all the data, so give up.
-		         */
-		        os_atomic_rmw_loop_give_up(goto out);
-		}
+  os_atomic_rmw_loop(&buf->mr_head_tail.mrht_head_tail,
+                     head_tail.mrht_head_tail /* old */,
+                     new_head_tail.mrht_head_tail /* new */, release, {
+                       /*
+                        * Check for empty space in the buffer.
+                        */
+                       uint32_t const leftover =
+                           head_tail.mrht_head + size - head_tail.mrht_tail;
+                       if (leftover >= buf->mr_capacity) {
+                         /*
+                          * Not enough space available for all the data, so give
+                          * up.
+                          */
+                         os_atomic_rmw_loop_give_up(goto out);
+                       }
 
-		/*
-		 * Compute a new head offset based on the size being written.
-		 */
-		new_head_tail = head_tail;
-		new_head_tail.mrht_head += size;
+                       /*
+                        * Compute a new head offset based on the size being
+                        * written.
+                        */
+                       new_head_tail = head_tail;
+                       new_head_tail.mrht_head += size;
 
-		/*
-		 * Reserve the start of the space with a hold.
-		 */
-		os_atomic_store(
-			&buf->mr_writer_holds[writer_id],
-			head_tail.mrht_head,
-			relaxed);
-	});
+                       /*
+                        * Reserve the start of the space with a hold.
+                        */
+                       os_atomic_store(&buf->mr_writer_holds[writer_id],
+                                       head_tail.mrht_head, relaxed);
+                     });
 
-	_mpsc_ring_copy(buf, head_tail.mrht_head, (void *)(uintptr_t)data, size, true);
+  _mpsc_ring_copy(buf, head_tail.mrht_head, (void *)(uintptr_t)data, size,
+                  true);
 
 out:
-	/*
-	 * Release the hold value so it can synchronize with acquires on the read
-	 * side.
-	 */
-	os_atomic_store(&buf->mr_writer_holds[writer_id], HOLD_EMPTY, release);
-	return buf->mr_capacity - (head_tail.mrht_head - head_tail.mrht_tail);
+  /*
+   * Release the hold value so it can synchronize with acquires on the read
+   * side.
+   */
+  os_atomic_store(&buf->mr_writer_holds[writer_id], HOLD_EMPTY, release);
+  return buf->mr_capacity - (head_tail.mrht_head - head_tail.mrht_tail);
 }
 
-mpsc_ring_cursor_t
-mpsc_ring_read_start(struct mpsc_ring *buf)
-{
-	/*
-	 * Acquire to ensure that any holds updated are visible.
-	 */
-	union mpsc_ring_head_tail head_tail = os_atomic_load(&buf->mr_head_tail, acquire);
-	for (uint8_t i = 0; i < buf->mr_writer_count; i++) {
-		/*
-		 * Check for any earlier holds to avoid reading past writes-in-progress.
-		 */
-		uint32_t hold = os_atomic_load(&buf->mr_writer_holds[i], relaxed);
-		if (hold != ~0) {
-			head_tail.mrht_head = MIN(head_tail.mrht_head, hold);
-		}
-	}
+mpsc_ring_cursor_t mpsc_ring_read_start(struct mpsc_ring *buf) {
+  /*
+   * Acquire to ensure that any holds updated are visible.
+   */
+  union mpsc_ring_head_tail head_tail =
+      os_atomic_load(&buf->mr_head_tail, acquire);
+  for (uint8_t i = 0; i < buf->mr_writer_count; i++) {
+    /*
+     * Check for any earlier holds to avoid reading past writes-in-progress.
+     */
+    uint32_t hold = os_atomic_load(&buf->mr_writer_holds[i], relaxed);
+    if (hold != ~0) {
+      head_tail.mrht_head = MIN(head_tail.mrht_head, hold);
+    }
+  }
 
-	return (mpsc_ring_cursor_t){
-		       .mrc_commit_pos = head_tail.mrht_tail,
-		       .mrc_pos = head_tail.mrht_tail,
-		       .mrc_limit = head_tail.mrht_head,
-	};
+  return (mpsc_ring_cursor_t){
+      .mrc_commit_pos = head_tail.mrht_tail,
+      .mrc_pos = head_tail.mrht_tail,
+      .mrc_limit = head_tail.mrht_head,
+  };
 }
 
-bool
-mpsc_ring_cursor_advance(
-	const struct mpsc_ring *buf,
-	mpsc_ring_cursor_t *cursor,
-	void *target,
-	uint32_t size)
-{
-	if (size > cursor->mrc_limit - cursor->mrc_pos) {
-		return false;
-	}
-	_mpsc_ring_copy(buf, cursor->mrc_pos, target, size, false);
-	cursor->mrc_pos += size;
-	return true;
+bool mpsc_ring_cursor_advance(const struct mpsc_ring *buf,
+                              mpsc_ring_cursor_t *cursor, void *target,
+                              uint32_t size) {
+  if (size > cursor->mrc_limit - cursor->mrc_pos) {
+    return false;
+  }
+  _mpsc_ring_copy(buf, cursor->mrc_pos, target, size, false);
+  cursor->mrc_pos += size;
+  return true;
 }
 
-void
-mpsc_ring_cursor_commit(
-	const struct mpsc_ring * __unused buf,
-	mpsc_ring_cursor_t *cursor)
-{
-	cursor->mrc_commit_pos = cursor->mrc_pos;
+void mpsc_ring_cursor_commit(const struct mpsc_ring *__unused buf,
+                             mpsc_ring_cursor_t *cursor) {
+  cursor->mrc_commit_pos = cursor->mrc_pos;
 }
 
-void
-mpsc_ring_read_finish(
-	struct mpsc_ring *buf,
-	mpsc_ring_cursor_t cursor)
-{
-	/*
-	 * Relaxed, as there's no need to synchronize with any other readers: this
-	 * ringbuffer is single-consumer.
-	 */
-	os_atomic_store(&buf->mr_head_tail.mrht_tail, cursor.mrc_commit_pos, relaxed);
+void mpsc_ring_read_finish(struct mpsc_ring *buf, mpsc_ring_cursor_t cursor) {
+  /*
+   * Relaxed, as there's no need to synchronize with any other readers: this
+   * ringbuffer is single-consumer.
+   */
+  os_atomic_store(&buf->mr_head_tail.mrht_tail, cursor.mrc_commit_pos, relaxed);
 }
 
-void
-mpsc_ring_read_cancel(
-	struct mpsc_ring * __unused buf,
-	mpsc_ring_cursor_t __unused cursor)
-{
-	/*
-	 * Nothing to do; just "consume" the cursor.
-	 */
+void mpsc_ring_read_cancel(struct mpsc_ring *__unused buf,
+                           mpsc_ring_cursor_t __unused cursor) {
+  /*
+   * Nothing to do; just "consume" the cursor.
+   */
 }

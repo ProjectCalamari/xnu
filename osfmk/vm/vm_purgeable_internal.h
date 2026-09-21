@@ -41,10 +41,10 @@
 #include <vm/vm_purgeable_xnu.h>
 
 enum purgeable_q_type {
-	PURGEABLE_Q_TYPE_OBSOLETE,
-	PURGEABLE_Q_TYPE_FIFO,
-	PURGEABLE_Q_TYPE_LIFO,
-	PURGEABLE_Q_TYPE_MAX
+  PURGEABLE_Q_TYPE_OBSOLETE,
+  PURGEABLE_Q_TYPE_FIFO,
+  PURGEABLE_Q_TYPE_LIFO,
+  PURGEABLE_Q_TYPE_MAX
 };
 
 typedef uint32_t token_idx_t;
@@ -53,19 +53,19 @@ typedef uint32_t token_cnt_t;
 
 #define NUM_VOLATILE_GROUPS 8
 struct purgeable_q {
-	token_idx_t token_q_head;    /* first token */
-	token_idx_t token_q_tail;    /* last token  */
-	token_idx_t token_q_unripe;  /* first token which is not ripe */
-	int32_t new_pages;
-	queue_head_t objq[NUM_VOLATILE_GROUPS];
-	enum purgeable_q_type type;
+  token_idx_t token_q_head;   /* first token */
+  token_idx_t token_q_tail;   /* last token  */
+  token_idx_t token_q_unripe; /* first token which is not ripe */
+  int32_t new_pages;
+  queue_head_t objq[NUM_VOLATILE_GROUPS];
+  enum purgeable_q_type type;
 #if MACH_ASSERT
-	int debug_count_tokens;
-	int debug_count_objects;
+  int debug_count_tokens;
+  int debug_count_objects;
 #endif
 };
 
-typedef struct purgeable_q * purgeable_q_t;
+typedef struct purgeable_q *purgeable_q_t;
 
 extern struct purgeable_q purgeable_queues[PURGEABLE_Q_TYPE_MAX];
 extern queue_head_t purgeable_nonvolatile_queue;
@@ -73,7 +73,6 @@ extern int purgeable_nonvolatile_count;
 extern int32_t token_new_pagecount;
 #define TOKEN_NEW_PAGECOUNT_MAX INT32_MAX
 extern int available_for_purge;
-
 
 /*
  * Locking:
@@ -103,17 +102,16 @@ void vm_purgeable_q_advance_all(void);
 void vm_purgeable_object_purge_all(void);
 
 /* insert purgeable object into queue */
-void vm_purgeable_object_add(vm_object_t object, purgeable_q_t queue, int group);
+void vm_purgeable_object_add(vm_object_t object, purgeable_q_t queue,
+                             int group);
 
 /* look for object. If found, remove from purgeable queue. */
 purgeable_q_t vm_purgeable_object_remove(vm_object_t object);
 
 void vm_purgeable_nonvolatile_enqueue(vm_object_t object, task_t task);
 void vm_purgeable_nonvolatile_dequeue(vm_object_t object);
-void vm_purgeable_accounting(vm_object_t        object,
-    vm_purgable_t      old_state);
-void vm_object_owner_compressed_update(vm_object_t      object,
-    int              delta);
+void vm_purgeable_accounting(vm_object_t object, vm_purgable_t old_state);
+void vm_object_owner_compressed_update(vm_object_t object, int delta);
 
 #define PURGEABLE_LOOP_MAX 64
 

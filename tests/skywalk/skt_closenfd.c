@@ -26,104 +26,112 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
 #include <assert.h>
 #include <errno.h>
-#include <string.h>
 #include <stdio.h>
-#include <uuid/uuid.h>
+#include <string.h>
 #include <unistd.h>
-#include "skywalk_test_driver.h"
-#include "skywalk_test_common.h"
+#include <uuid/uuid.h>
 
-static int
-skt_closenfd_main(int argc, char *argv[])
-{
-	int error;
-	nexus_controller_t ncd;
-	int nfd;
+static int skt_closenfd_main(int argc, char *argv[]) {
+  int error;
+  nexus_controller_t ncd;
+  int nfd;
 
-	ncd = os_nexus_controller_create();
-	assert(ncd);
+  ncd = os_nexus_controller_create();
+  assert(ncd);
 
-	nfd = os_nexus_controller_get_fd(ncd);
-	assert(nfd != -1);
+  nfd = os_nexus_controller_get_fd(ncd);
+  assert(nfd != -1);
 
-	error = close(nfd); // expect guarded fd fail
-	SKTC_ASSERT_ERR(!error);
+  error = close(nfd); // expect guarded fd fail
+  SKTC_ASSERT_ERR(!error);
 
-	os_nexus_controller_destroy(ncd);
+  os_nexus_controller_destroy(ncd);
 
-	return 1; // should not reach
+  return 1; // should not reach
 }
 
 struct skywalk_test skt_closenfd = {
-	"closenfd", "test closing guarded nexus fd",
-	SK_FEATURE_SKYWALK,
-	skt_closenfd_main, { NULL }, NULL, NULL,
-	0x4000000100000000, 0xFFFFFFFF,
+    "closenfd",
+    "test closing guarded nexus fd",
+    SK_FEATURE_SKYWALK,
+    skt_closenfd_main,
+    {NULL},
+    NULL,
+    NULL,
+    0x4000000100000000,
+    0xFFFFFFFF,
 };
-
 
 /****************************************************************/
 
-static int
-skt_writenfd_main(int argc, char *argv[])
-{
-	nexus_controller_t ncd;
-	int nfd;
-	char buf[100] = { 0 };
-	ssize_t ret;
+static int skt_writenfd_main(int argc, char *argv[]) {
+  nexus_controller_t ncd;
+  int nfd;
+  char buf[100] = {0};
+  ssize_t ret;
 
-	ncd = os_nexus_controller_create();
-	assert(ncd);
+  ncd = os_nexus_controller_create();
+  assert(ncd);
 
-	nfd = os_nexus_controller_get_fd(ncd);
-	assert(nfd != -1);
+  nfd = os_nexus_controller_get_fd(ncd);
+  assert(nfd != -1);
 
-	ret = write(nfd, buf, sizeof(buf));
-	assert(ret == -1);
-	assert(errno == EBADF);
+  ret = write(nfd, buf, sizeof(buf));
+  assert(ret == -1);
+  assert(errno == EBADF);
 
-	os_nexus_controller_destroy(ncd);
+  os_nexus_controller_destroy(ncd);
 
-	return 0;
+  return 0;
 }
 
 struct skywalk_test skt_writenfd = {
-	"writenfd", "test writing to a guarded nexus fd",
-	SK_FEATURE_SKYWALK,
-	skt_writenfd_main, { NULL }, NULL, NULL, 0x9c00003, 0,
+    "writenfd",
+    "test writing to a guarded nexus fd",
+    SK_FEATURE_SKYWALK,
+    skt_writenfd_main,
+    {NULL},
+    NULL,
+    NULL,
+    0x9c00003,
+    0,
 };
 
 /****************************************************************/
 
-static int
-skt_readnfd_main(int argc, char *argv[])
-{
-	nexus_controller_t ncd;
-	int nfd;
-	char buf[100];
-	ssize_t ret;
+static int skt_readnfd_main(int argc, char *argv[]) {
+  nexus_controller_t ncd;
+  int nfd;
+  char buf[100];
+  ssize_t ret;
 
-	ncd = os_nexus_controller_create();
-	assert(ncd);
+  ncd = os_nexus_controller_create();
+  assert(ncd);
 
-	nfd = os_nexus_controller_get_fd(ncd);
-	assert(nfd != -1);
+  nfd = os_nexus_controller_get_fd(ncd);
+  assert(nfd != -1);
 
-	ret = read(nfd, buf, sizeof(buf));
-	assert(ret == -1);
-	assert(errno == ENXIO);
+  ret = read(nfd, buf, sizeof(buf));
+  assert(ret == -1);
+  assert(errno == ENXIO);
 
-	os_nexus_controller_destroy(ncd);
+  os_nexus_controller_destroy(ncd);
 
-	return 0;
+  return 0;
 }
 
 struct skywalk_test skt_readnfd = {
-	"readnfd", "test reading from a guarded nexus fd",
-	SK_FEATURE_SKYWALK,
-	skt_readnfd_main, { NULL }, NULL, NULL,
+    "readnfd",
+    "test reading from a guarded nexus fd",
+    SK_FEATURE_SKYWALK,
+    skt_readnfd_main,
+    {NULL},
+    NULL,
+    NULL,
 };
 
 /****************************************************************/

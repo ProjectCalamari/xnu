@@ -26,102 +26,61 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "mock_pmap.h"
 #include "std_safe.h"
 #include "unit_test_utils.h"
-#include "mock_pmap.h"
 
 #include <vm/pmap.h>
 
-T_MOCK(void *,
-pmap_steal_memory, (vm_size_t size, vm_size_t alignment))
-{
-	return checked_alloc_align(size, alignment);
+T_MOCK(void *, pmap_steal_memory, (vm_size_t size, vm_size_t alignment)) {
+  return checked_alloc_align(size, alignment);
 }
 
-
-T_MOCK(void,
-pmap_startup, (vm_offset_t * startp, vm_offset_t * endp))
-{
-	// TODO rdar://136915968
+T_MOCK(void, pmap_startup, (vm_offset_t * startp, vm_offset_t *endp)) {
+  // TODO rdar://136915968
 }
 
-T_MOCK(boolean_t,
-pmap_virtual_region, (unsigned int region_select, vm_map_offset_t * startp, vm_map_size_t * size))
-{
-	return false; // TODO rdar://136915968
+T_MOCK(boolean_t, pmap_virtual_region,
+       (unsigned int region_select, vm_map_offset_t *startp,
+        vm_map_size_t *size)) {
+  return false; // TODO rdar://136915968
 }
 
-extern const struct page_table_attr * const native_pt_attr;
+extern const struct page_table_attr *const native_pt_attr;
 
+T_MOCK(pmap_t, pmap_create_options,
+       (ledger_t ledger, vm_map_size_t size, unsigned int flags)) {
+  pmap_t p = (pmap_t)calloc(1, sizeof(struct pmap));
+  // this is needed for pmap_shared_region_size_min()
+  p->pmap_pt_attr = native_pt_attr;
 
-T_MOCK(pmap_t,
-pmap_create_options, (
-	ledger_t ledger,
-	vm_map_size_t size,
-	unsigned int flags))
-{
-	pmap_t p = (pmap_t)calloc(1, sizeof(struct pmap));
-	// this is needed for pmap_shared_region_size_min()
-	p->pmap_pt_attr = native_pt_attr;
-
-	return p;
+  return p;
 }
 
-T_MOCK(void,
-pmap_set_nested, (
-	pmap_t pmap))
-{
+T_MOCK(void, pmap_set_nested, (pmap_t pmap)) {}
+
+T_MOCK(kern_return_t, pmap_nest,
+       (pmap_t grand, pmap_t subord, addr64_t vstart, uint64_t size)) {
+  return KERN_SUCCESS;
 }
 
-T_MOCK(kern_return_t,
-pmap_nest, (
-	pmap_t grand,
-	pmap_t subord,
-	addr64_t vstart,
-	uint64_t size))
-{
-	return KERN_SUCCESS;
+T_MOCK(kern_return_t, pmap_unnest_options,
+       (pmap_t grand, addr64_t vaddr, uint64_t size, unsigned int option)) {
+  return KERN_SUCCESS;
 }
 
-T_MOCK(kern_return_t,
-pmap_unnest_options, (
-	pmap_t grand,
-	addr64_t vaddr,
-	uint64_t size,
-	unsigned int option))
-{
-	return KERN_SUCCESS;
-}
+T_MOCK(void, pmap_remove_options,
+       (pmap_t pmap, vm_map_address_t start, vm_map_address_t end,
+        int options)) {}
 
-T_MOCK(void,
-pmap_remove_options, (
-	pmap_t pmap,
-	vm_map_address_t start,
-	vm_map_address_t end,
-	int options))
-{
-}
-
-T_MOCK(void,
-pmap_destroy, (
-	pmap_t pmap))
-{
-}
-T_MOCK_DYNAMIC(uint64_t,
-    pmap_shared_region_size_min, (pmap_t pmap), (pmap),
-{
-	// the default behaviour for arm64
-	return 0x0000000002000000ULL;
+T_MOCK(void, pmap_destroy, (pmap_t pmap)) {}
+T_MOCK_DYNAMIC(uint64_t, pmap_shared_region_size_min, (pmap_t pmap), (pmap), {
+  // the default behaviour for arm64
+  return 0x0000000002000000ULL;
 })
 
-T_MOCK_DYNAMIC(
-	unsigned int,
-	pmap_cache_attributes,
-	(ppnum_t phys), (phys),
-	{ return 0; })
+T_MOCK_DYNAMIC(unsigned int, pmap_cache_attributes, (ppnum_t phys), (phys),
+               { return 0; })
 
-T_MOCK_DYNAMIC(
-	pmap_paddr_t,
-	kvtophys,
-	(vm_offset_t offs), (offs),
-	{ return 0; })
+T_MOCK_DYNAMIC(pmap_paddr_t, kvtophys, (vm_offset_t offs), (offs),
+               { return 0; })

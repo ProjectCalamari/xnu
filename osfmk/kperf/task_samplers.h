@@ -29,29 +29,29 @@
 #ifndef KPERF_TASK_SAMPLERS_H
 #define KPERF_TASK_SAMPLERS_H
 
-#include <kperf/context.h>
 #include <kern/task.h>
+#include <kperf/context.h>
 
 struct kperf_task_snapshot {
-	uint64_t kptksn_flags;
-	uint64_t kptksn_user_time_in_terminated_threads;
-	uint64_t kptksn_system_time_in_terminated_threads;
-	int kptksn_suspend_count;
-	int kptksn_pageins;
+  uint64_t kptksn_flags;
+  uint64_t kptksn_user_time_in_terminated_threads;
+  uint64_t kptksn_system_time_in_terminated_threads;
+  int kptksn_suspend_count;
+  int kptksn_pageins;
 };
 
-#define KPERF_TASK_FLAG_DARWIN_BG               (1U << 0)
-#define KPERF_TASK_FLAG_FOREGROUND              (1U << 1)
-#define KPERF_TASK_FLAG_BOOSTED                 (1U << 2)
-#define KPERF_TASK_FLAG_DIRTY                   (1U << 3)
-#define KPERF_TASK_FLAG_WQ_FLAGS_VALID          (1U << 4)
-#define KPERF_TASK_FLAG_WQ_EXCEEDED_TOTAL       (1U << 5)
+#define KPERF_TASK_FLAG_DARWIN_BG (1U << 0)
+#define KPERF_TASK_FLAG_FOREGROUND (1U << 1)
+#define KPERF_TASK_FLAG_BOOSTED (1U << 2)
+#define KPERF_TASK_FLAG_DIRTY (1U << 3)
+#define KPERF_TASK_FLAG_WQ_FLAGS_VALID (1U << 4)
+#define KPERF_TASK_FLAG_WQ_EXCEEDED_TOTAL (1U << 5)
 #define KPERF_TASK_FLAG_WQ_EXCEEDED_CONSTRAINED (1U << 6)
-#define KPERF_TASK_FLAG_DIRTY_TRACKED           (1U << 7)
-#define KPERF_TASK_ALLOW_IDLE_EXIT              (1U << 8)
-#define KPERF_TASK_FLAG_ACTIVE                  (1U << 9)
-#define KPERF_TASK_FLAG_MANAGED                 (1U << 10)
-#define KPERF_TASK_FLAG_HAS_ASSERTION           (1U << 11)
+#define KPERF_TASK_FLAG_DIRTY_TRACKED (1U << 7)
+#define KPERF_TASK_ALLOW_IDLE_EXIT (1U << 8)
+#define KPERF_TASK_FLAG_ACTIVE (1U << 9)
+#define KPERF_TASK_FLAG_MANAGED (1U << 10)
+#define KPERF_TASK_FLAG_HAS_ASSERTION (1U << 11)
 
 void kperf_task_snapshot_sample(task_t task, struct kperf_task_snapshot *tksn);
 void kperf_task_snapshot_log(struct kperf_task_snapshot *tksn);

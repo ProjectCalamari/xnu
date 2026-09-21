@@ -245,35 +245,16 @@ OS_ASSUME_PTR_ABI_SINGLE_BEGIN
  * A convenience value representing the number of known identifiers.
  */
 IMG4_API_AVAILABLE_20200508
-OS_CLOSED_ENUM(img4_identifier, uint64_t,
-	IMG4_IDENTIFIER_CEPO,
-	IMG4_IDENTIFIER_BORD,
-	IMG4_IDENTIFIER_CHIP,
-	IMG4_IDENTIFIER_SDOM,
-	IMG4_IDENTIFIER_ECID,
-	IMG4_IDENTIFIER_CPRO,
-	IMG4_IDENTIFIER_CSEC,
-	IMG4_IDENTIFIER_EPRO,
-	IMG4_IDENTIFIER_ESEC,
-	IMG4_IDENTIFIER_IUOU,
-	IMG4_IDENTIFIER_RSCH,
-	IMG4_IDENTIFIER_CHMH,
-	IMG4_IDENTIFIER_AMNM,
-	IMG4_IDENTIFIER_EUOU,
-	IMG4_IDENTIFIER_LOVE,
-	IMG4_IDENTIFIER_ESDM,
-	IMG4_IDENTIFIER_FPGT,
-	IMG4_IDENTIFIER_UDID,
-	IMG4_IDENTIFIER_FCHP,
-	IMG4_IDENTIFIER_TYPE,
-	IMG4_IDENTIFIER_STYP,
-	IMG4_IDENTIFIER_CLAS,
-	IMG4_IDENTIFIER_SPIH,
-	IMG4_IDENTIFIER_NSPH,
-	IMG4_IDENTIFIER_STNG,
-	IMG4_IDENTIFIER_VUID,
-	_IMG4_IDENTIFIER_CNT,
-);
+OS_CLOSED_ENUM(img4_identifier, uint64_t, IMG4_IDENTIFIER_CEPO,
+               IMG4_IDENTIFIER_BORD, IMG4_IDENTIFIER_CHIP, IMG4_IDENTIFIER_SDOM,
+               IMG4_IDENTIFIER_ECID, IMG4_IDENTIFIER_CPRO, IMG4_IDENTIFIER_CSEC,
+               IMG4_IDENTIFIER_EPRO, IMG4_IDENTIFIER_ESEC, IMG4_IDENTIFIER_IUOU,
+               IMG4_IDENTIFIER_RSCH, IMG4_IDENTIFIER_CHMH, IMG4_IDENTIFIER_AMNM,
+               IMG4_IDENTIFIER_EUOU, IMG4_IDENTIFIER_LOVE, IMG4_IDENTIFIER_ESDM,
+               IMG4_IDENTIFIER_FPGT, IMG4_IDENTIFIER_UDID, IMG4_IDENTIFIER_FCHP,
+               IMG4_IDENTIFIER_TYPE, IMG4_IDENTIFIER_STYP, IMG4_IDENTIFIER_CLAS,
+               IMG4_IDENTIFIER_SPIH, IMG4_IDENTIFIER_NSPH, IMG4_IDENTIFIER_STNG,
+               IMG4_IDENTIFIER_VUID, _IMG4_IDENTIFIER_CNT, );
 
 /*!
  * @typedef img4_pmap_data_t
@@ -308,12 +289,11 @@ typedef struct _img4_pmap_data img4_pmap_data_t;
  */
 IMG4_API_AVAILABLE_20210521
 OS_CLOSED_ENUM(img4_runtime_object_spec_index, uint64_t,
-	IMG4_RUNTIME_OBJECT_SPEC_INDEX_MANIFEST,
-	IMG4_RUNTIME_OBJECT_SPEC_INDEX_SUPPLEMENTAL_ROOT,
-	IMG4_RUNTIME_OBJECT_SPEC_INDEX_SUPPLEMENTAL_OBJECT,
-	IMG4_RUNTIME_OBJECT_SPEC_INDEX_LOCAL_POLICY,
-	_IMG4_RUNTIME_OBJECT_SPEC_INDEX_CNT,
-);
+               IMG4_RUNTIME_OBJECT_SPEC_INDEX_MANIFEST,
+               IMG4_RUNTIME_OBJECT_SPEC_INDEX_SUPPLEMENTAL_ROOT,
+               IMG4_RUNTIME_OBJECT_SPEC_INDEX_SUPPLEMENTAL_OBJECT,
+               IMG4_RUNTIME_OBJECT_SPEC_INDEX_LOCAL_POLICY,
+               _IMG4_RUNTIME_OBJECT_SPEC_INDEX_CNT, );
 
 /*!
  * @typedef img4_runtime_object_spec_t
@@ -336,9 +316,7 @@ typedef struct _img4_runtime_object_spec img4_runtime_object_spec_t;
  * {@link IMG4_RUNTIME_REGISTER} macro.
  */
 IMG4_API_AVAILABLE_20200508
-typedef void (*img4_runtime_init_t)(
-	const img4_runtime_t *rt
-);
+typedef void (*img4_runtime_init_t)(const img4_runtime_t *rt);
 
 /*!
  * @typedef img4_runtime_alloc_t
@@ -356,10 +334,8 @@ typedef void (*img4_runtime_init_t)(
  * The memory returned by this function is expected to be zero-filled.
  */
 IMG4_API_AVAILABLE_20200508
-typedef void *_Nullable (*img4_runtime_alloc_t)(
-	const img4_runtime_t *rt,
-	size_t n
-);
+typedef void *_Nullable (*img4_runtime_alloc_t)(const img4_runtime_t *rt,
+                                                size_t n);
 
 /*!
  * @typedef img4_runtime_dealloc_t
@@ -377,11 +353,8 @@ typedef void *_Nullable (*img4_runtime_alloc_t)(
  * information to be specified.
  */
 IMG4_API_AVAILABLE_20200508
-typedef void (*img4_runtime_dealloc_t)(
-	const img4_runtime_t *rt,
-	void *_Nullable p,
-	size_t n
-);
+typedef void (*img4_runtime_dealloc_t)(const img4_runtime_t *rt,
+                                       void *_Nullable p, size_t n);
 
 /*!
  * @typedef img4_log_level_t
@@ -401,12 +374,9 @@ typedef void (*img4_runtime_dealloc_t)(
  * A convenience constant indicating the number of log levels.
  */
 IMG4_API_AVAILABLE_20200508
-OS_CLOSED_ENUM(img4_log_level, uint64_t,
-	IMG4_LOG_LEVEL_ERROR,
-	IMG4_LOG_LEVEL_INFO,
-	IMG4_LOG_LEVEL_DEBUG,
-	_IMG4_LOG_LEVEL_CNT,
-);
+OS_CLOSED_ENUM(img4_log_level, uint64_t, IMG4_LOG_LEVEL_ERROR,
+               IMG4_LOG_LEVEL_INFO, IMG4_LOG_LEVEL_DEBUG,
+               _IMG4_LOG_LEVEL_CNT, );
 
 /*!
  * @typedef img4_runtime_log_t
@@ -431,13 +401,10 @@ OS_CLOSED_ENUM(img4_log_level, uint64_t,
  */
 OS_FORMAT_PRINTF(4, 5)
 IMG4_API_AVAILABLE_20200508
-typedef void (*img4_runtime_log_t)(
-	const img4_runtime_t *rt,
-	void *_Nullable handle,
-	img4_log_level_t level,
-	const char *fmt,
-	...
-);
+typedef void (*img4_runtime_log_t)(const img4_runtime_t *rt,
+                                   void *_Nullable handle,
+                                   img4_log_level_t level, const char *fmt,
+                                   ...);
 
 /*!
  * @typedef img4_runtime_log_handle_t
@@ -450,9 +417,7 @@ typedef void (*img4_runtime_log_t)(
  * A runtime-specific log handle that will be passed to the logging function.
  */
 IMG4_API_AVAILABLE_20200508
-typedef void *_Nullable (*img4_runtime_log_handle_t)(
-	const img4_runtime_t *rt
-);
+typedef void *_Nullable (*img4_runtime_log_handle_t)(const img4_runtime_t *rt);
 
 /*!
  * @typedef img4_runtime_get_identifier_bool_t
@@ -481,11 +446,8 @@ typedef void *_Nullable (*img4_runtime_log_handle_t)(
  */
 IMG4_API_AVAILABLE_20200508
 typedef errno_t (*img4_runtime_get_identifier_bool_t)(
-	const img4_runtime_t *rt,
-	const img4_chip_t *chip,
-	img4_identifier_t identifier,
-	bool *value
-);
+    const img4_runtime_t *rt, const img4_chip_t *chip,
+    img4_identifier_t identifier, bool *value);
 
 /*!
  * @typedef img4_runtime_get_identifier_uint32_t
@@ -514,11 +476,8 @@ typedef errno_t (*img4_runtime_get_identifier_bool_t)(
  */
 IMG4_API_AVAILABLE_20200508
 typedef errno_t (*img4_runtime_get_identifier_uint32_t)(
-	const img4_runtime_t *rt,
-	const img4_chip_t *chip,
-	img4_identifier_t identifier,
-	uint32_t *value
-);
+    const img4_runtime_t *rt, const img4_chip_t *chip,
+    img4_identifier_t identifier, uint32_t *value);
 
 /*!
  * @typedef img4_runtime_get_identifier_uint64_t
@@ -547,11 +506,8 @@ typedef errno_t (*img4_runtime_get_identifier_uint32_t)(
  */
 IMG4_API_AVAILABLE_20200508
 typedef errno_t (*img4_runtime_get_identifier_uint64_t)(
-	const img4_runtime_t *rt,
-	const img4_chip_t *chip,
-	img4_identifier_t identifier,
-	uint64_t *value
-);
+    const img4_runtime_t *rt, const img4_chip_t *chip,
+    img4_identifier_t identifier, uint64_t *value);
 
 /*!
  * @typedef img4_runtime_get_identifier_digest_t
@@ -580,11 +536,8 @@ typedef errno_t (*img4_runtime_get_identifier_uint64_t)(
  */
 IMG4_API_AVAILABLE_20200508
 typedef errno_t (*img4_runtime_get_identifier_digest_t)(
-	const img4_runtime_t *rt,
-	const img4_chip_t *chip,
-	img4_identifier_t identifier,
-	img4_dgst_t *value
-);
+    const img4_runtime_t *rt, const img4_chip_t *chip,
+    img4_identifier_t identifier, img4_dgst_t *value);
 
 /*!
  * @typedef img4_runtime_get_identifier_cstr_t
@@ -613,11 +566,8 @@ typedef errno_t (*img4_runtime_get_identifier_digest_t)(
  */
 IMG4_API_AVAILABLE_20210113
 typedef errno_t (*img4_runtime_get_identifier_cstr_t)(
-	const img4_runtime_t *rt,
-	const img4_chip_t *chip,
-	img4_identifier_t identifier,
-	img4_cstr_t *value
-);
+    const img4_runtime_t *rt, const img4_chip_t *chip,
+    img4_identifier_t identifier, img4_cstr_t *value);
 
 /*!
  * @typedef img4_runtime_execute_object_t
@@ -648,11 +598,8 @@ typedef errno_t (*img4_runtime_get_identifier_cstr_t)(
  */
 IMG4_API_AVAILABLE_20210205
 typedef errno_t (*img4_runtime_execute_object_t)(
-	const img4_runtime_t *rt,
-	const img4_runtime_object_spec_t *obj_spec,
-	const img4_buff_t *payload,
-	const img4_buff_t *_Nullable manifest
-);
+    const img4_runtime_t *rt, const img4_runtime_object_spec_t *obj_spec,
+    const img4_buff_t *payload, const img4_buff_t *_Nullable manifest);
 
 /*!
  * @typedef img4_runtime_copy_object_t
@@ -687,11 +634,8 @@ typedef errno_t (*img4_runtime_execute_object_t)(
  */
 IMG4_API_AVAILABLE_20210205
 typedef errno_t (*img4_runtime_copy_object_t)(
-	const img4_runtime_t *rt,
-	const img4_runtime_object_spec_t *obj_spec,
-	img4_buff_t *payload,
-	size_t *_Nullable payload_len
-);
+    const img4_runtime_t *rt, const img4_runtime_object_spec_t *obj_spec,
+    img4_buff_t *payload, size_t *_Nullable payload_len);
 
 /*!
  * @typedef img4_runtime_alloc_type_t
@@ -708,10 +652,8 @@ typedef errno_t (*img4_runtime_copy_object_t)(
  * The memory returned by this function is expected to be zero-filled.
  */
 IMG4_API_AVAILABLE_20210226
-typedef void *_Nullable (*img4_runtime_alloc_type_t)(
-	const img4_runtime_t *rt,
-	void *_Nullable handle
-);
+typedef void *_Nullable (*img4_runtime_alloc_type_t)(const img4_runtime_t *rt,
+                                                     void *_Nullable handle);
 
 /*!
  * @typedef img4_runtime_dealloc_type_t
@@ -727,11 +669,8 @@ typedef void *_Nullable (*img4_runtime_alloc_type_t)(
  * The address of the object to deallocate.
  */
 IMG4_API_AVAILABLE_20210226
-typedef void (*img4_runtime_dealloc_type_t)(
-	const img4_runtime_t *rt,
-	void *_Nullable handle,
-	void *p
-);
+typedef void (*img4_runtime_dealloc_type_t)(const img4_runtime_t *rt,
+                                            void *_Nullable handle, void *p);
 
 /*!
  * @typedef img4_runtime_set_nonce_t
@@ -747,11 +686,9 @@ typedef void (*img4_runtime_dealloc_type_t)(
  * The value of the nonce indicated by {@link nd}.
  */
 IMG4_API_AVAILABLE_20210521
-typedef void (*img4_runtime_set_nonce_t)(
-	const img4_runtime_t *rt,
-	img4_nonce_domain_index_t ndi,
-	const img4_nonce_t *n
-);
+typedef void (*img4_runtime_set_nonce_t)(const img4_runtime_t *rt,
+                                         img4_nonce_domain_index_t ndi,
+                                         const img4_nonce_t *n);
 
 /*!
  * @typedef img4_runtime_roll_nonce_t
@@ -764,10 +701,8 @@ typedef void (*img4_runtime_set_nonce_t)(
  * The index of the nonce domain whose nonce should be rolled.
  */
 IMG4_API_AVAILABLE_20210521
-typedef void (*img4_runtime_roll_nonce_t)(
-	const img4_runtime_t *rt,
-	img4_nonce_domain_index_t ndi
-);
+typedef void (*img4_runtime_roll_nonce_t)(const img4_runtime_t *rt,
+                                          img4_nonce_domain_index_t ndi);
 
 /*!
  * @typedef img4_runtime_copy_nonce_t
@@ -792,11 +727,9 @@ typedef void (*img4_runtime_roll_nonce_t)(
  *                  host must reboot in order to generate a new one
  */
 IMG4_API_AVAILABLE_20210521
-typedef errno_t (*img4_runtime_copy_nonce_t)(
-	const img4_runtime_t *rt,
-	img4_nonce_domain_index_t ndi,
-	img4_nonce_t *_Nullable n
-);
+typedef errno_t (*img4_runtime_copy_nonce_t)(const img4_runtime_t *rt,
+                                             img4_nonce_domain_index_t ndi,
+                                             img4_nonce_t *_Nullable n);
 
 /*!
  * @define IMG4_BUFF_STRUCT_VERSION
@@ -825,10 +758,10 @@ typedef errno_t (*img4_runtime_copy_nonce_t)(
  * should not consult this parameter for any reason.
  */
 struct _img4_buff {
-	img4_struct_version_t i4b_version;
-	uint8_t *__counted_by(i4b_len) i4b_bytes;
-	size_t i4b_len;
-	img4_runtime_dealloc_t _Nullable i4b_dealloc;
+  img4_struct_version_t i4b_version;
+  uint8_t *__counted_by(i4b_len) i4b_bytes;
+  size_t i4b_len;
+  img4_runtime_dealloc_t _Nullable i4b_dealloc;
 } IMG4_API_AVAILABLE_20200508;
 
 /*!
@@ -836,26 +769,27 @@ struct _img4_buff {
  * A convenience initializer for the {@link img4_buff_t} structure.
  */
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-#define IMG4_BUFF_INIT (img4_buff_t){ \
-	.i4b_version = IMG4_BUFF_STRUCT_VERSION, \
-	.i4b_len = 0, \
-	.i4b_bytes = NULL, \
-	.i4b_dealloc = NULL, \
-}
+#define IMG4_BUFF_INIT                                                         \
+  (img4_buff_t) {                                                              \
+    .i4b_version = IMG4_BUFF_STRUCT_VERSION, .i4b_len = 0, .i4b_bytes = NULL,  \
+    .i4b_dealloc = NULL,                                                       \
+  }
 #elif defined(__cplusplus) && __cplusplus >= 201103L
-#define IMG4_BUFF_INIT (img4_buff_t{ \
-	IMG4_BUFF_STRUCT_VERSION, \
-	NULL, \
-	0, \
-	NULL, \
-})
+#define IMG4_BUFF_INIT                                                         \
+  (img4_buff_t{                                                                \
+      IMG4_BUFF_STRUCT_VERSION,                                                \
+      NULL,                                                                    \
+      0,                                                                       \
+      NULL,                                                                    \
+  })
 #elif defined(__cplusplus)
-#define IMG4_BUFF_INIT (img4_buff_t((img4_buff_t){ \
-	IMG4_BUFF_STRUCT_VERSION, \
-	NULL, \
-	0, \
-	NULL, \
-}))
+#define IMG4_BUFF_INIT                                                         \
+  (img4_buff_t((img4_buff_t){                                                  \
+      IMG4_BUFF_STRUCT_VERSION,                                                \
+      NULL,                                                                    \
+      0,                                                                       \
+      NULL,                                                                    \
+  }))
 #else
 #define IMG4_BUFF_INIT {IMG4_BUFF_STRUCT_VERSION}
 #endif
@@ -948,26 +882,26 @@ struct _img4_buff {
  * structure.
  */
 struct _img4_runtime {
-	img4_struct_version_t i4rt_version;
-	const char *i4rt_name;
-	img4_runtime_init_t _Nullable i4rt_init;
-	img4_runtime_alloc_t i4rt_alloc;
-	img4_runtime_dealloc_t i4rt_dealloc;
-	img4_runtime_log_t i4rt_log;
-	img4_runtime_log_handle_t i4rt_log_handle;
-	img4_runtime_get_identifier_bool_t i4rt_get_identifier_bool;
-	img4_runtime_get_identifier_uint32_t i4rt_get_identifier_uint32;
-	img4_runtime_get_identifier_uint64_t i4rt_get_identifier_uint64;
-	img4_runtime_get_identifier_digest_t i4rt_get_identifier_digest;
-	void *_Nullable i4rt_context;
-	img4_runtime_get_identifier_cstr_t i4rt_get_identifier_cstr;
-	img4_runtime_execute_object_t i4rt_execute_object;
-	img4_runtime_copy_object_t i4rt_copy_object;
-	img4_runtime_alloc_type_t i4rt_alloc_type;
-	img4_runtime_dealloc_type_t i4rt_dealloc_type;
-	img4_runtime_set_nonce_t i4rt_set_nonce;
-	img4_runtime_roll_nonce_t i4rt_roll_nonce;
-	img4_runtime_copy_nonce_t i4rt_copy_nonce;
+  img4_struct_version_t i4rt_version;
+  const char *i4rt_name;
+  img4_runtime_init_t _Nullable i4rt_init;
+  img4_runtime_alloc_t i4rt_alloc;
+  img4_runtime_dealloc_t i4rt_dealloc;
+  img4_runtime_log_t i4rt_log;
+  img4_runtime_log_handle_t i4rt_log_handle;
+  img4_runtime_get_identifier_bool_t i4rt_get_identifier_bool;
+  img4_runtime_get_identifier_uint32_t i4rt_get_identifier_uint32;
+  img4_runtime_get_identifier_uint64_t i4rt_get_identifier_uint64;
+  img4_runtime_get_identifier_digest_t i4rt_get_identifier_digest;
+  void *_Nullable i4rt_context;
+  img4_runtime_get_identifier_cstr_t i4rt_get_identifier_cstr;
+  img4_runtime_execute_object_t i4rt_execute_object;
+  img4_runtime_copy_object_t i4rt_copy_object;
+  img4_runtime_alloc_type_t i4rt_alloc_type;
+  img4_runtime_dealloc_type_t i4rt_dealloc_type;
+  img4_runtime_set_nonce_t i4rt_set_nonce;
+  img4_runtime_roll_nonce_t i4rt_roll_nonce;
+  img4_runtime_copy_nonce_t i4rt_copy_nonce;
 } IMG4_API_AVAILABLE_20200508;
 
 /*!
@@ -1035,8 +969,7 @@ const img4_runtime_t _img4_runtime_restore;
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20200508
 OS_EXPORT
-void
-img4_buff_dealloc(img4_buff_t *_Nullable buff);
+void img4_buff_dealloc(img4_buff_t *_Nullable buff);
 #else
 #define img4_buff_dealloc(...) (img4if->i4if_v7.buff_dealloc(__VA_ARGS__))
 #endif
@@ -1052,11 +985,11 @@ img4_buff_dealloc(img4_buff_t *_Nullable buff);
 IMG4_API_AVAILABLE_20210205
 OS_EXPORT
 const img4_runtime_object_spec_t _img4_runtime_object_spec_supplemental_root;
-#define IMG4_RUNTIME_OBJECT_SPEC_SUPPLEMENTAL_ROOT \
-		(&_img4_runtime_object_spec_supplemental_root)
+#define IMG4_RUNTIME_OBJECT_SPEC_SUPPLEMENTAL_ROOT                             \
+  (&_img4_runtime_object_spec_supplemental_root)
 #else
-#define IMG4_RUNTIME_OBJECT_SPEC_SUPPLEMENTAL_ROOT \
-		(img4if->i4if_v11.runtime_object_spec_supplemental_root)
+#define IMG4_RUNTIME_OBJECT_SPEC_SUPPLEMENTAL_ROOT                             \
+  (img4if->i4if_v11.runtime_object_spec_supplemental_root)
 #endif
 
 /*!
@@ -1070,11 +1003,11 @@ const img4_runtime_object_spec_t _img4_runtime_object_spec_supplemental_root;
 IMG4_API_AVAILABLE_20210205
 OS_EXPORT
 const img4_runtime_object_spec_t _img4_runtime_object_spec_local_policy;
-#define IMG4_RUNTIME_OBJECT_SPEC_LOCAL_POLICY \
-		(&_img4_runtime_object_spec_local_policy)
+#define IMG4_RUNTIME_OBJECT_SPEC_LOCAL_POLICY                                  \
+  (&_img4_runtime_object_spec_local_policy)
 #else
-#define IMG4_RUNTIME_OBJECT_SPEC_LOCAL_POLICY \
-		(img4if->i4if_v18.runtime_object_spec_local_policy)
+#define IMG4_RUNTIME_OBJECT_SPEC_LOCAL_POLICY                                  \
+  (img4if->i4if_v18.runtime_object_spec_local_policy)
 #endif
 
 #pragma mark API
@@ -1091,12 +1024,11 @@ const img4_runtime_object_spec_t _img4_runtime_object_spec_local_policy;
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20210205
-OS_EXPORT OS_WARN_RESULT
-const img4_runtime_object_spec_t *_Nullable
-img4_runtime_find_object_spec(img4_4cc_t _4cc);
+OS_EXPORT OS_WARN_RESULT const img4_runtime_object_spec_t
+    *_Nullable img4_runtime_find_object_spec(img4_4cc_t _4cc);
 #else
-#define img4_runtime_find_object_spec(...) \
-		(img4if->i4if_v11.runtime_find_object_spec(__VA_ARGS__))
+#define img4_runtime_find_object_spec(...)                                     \
+  (img4if->i4if_v11.runtime_find_object_spec(__VA_ARGS__))
 #endif
 
 /*!
@@ -1132,15 +1064,14 @@ img4_runtime_find_object_spec(img4_4cc_t _4cc);
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20210205
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3 errno_t
 img4_runtime_execute_object(const img4_runtime_t *rt,
-		const img4_runtime_object_spec_t *obj_spec,
-		const img4_buff_t *obj,
-		const img4_buff_t *_Nullable manifest);
+                            const img4_runtime_object_spec_t *obj_spec,
+                            const img4_buff_t *obj,
+                            const img4_buff_t *_Nullable manifest);
 #else
-#define img4_runtime_execute_object(...) \
-		(img4if->i4if_v11.runtime_execute_object(__VA_ARGS__))
+#define img4_runtime_execute_object(...)                                       \
+  (img4if->i4if_v11.runtime_execute_object(__VA_ARGS__))
 #endif
 
 /*!
@@ -1172,15 +1103,13 @@ img4_runtime_execute_object(const img4_runtime_t *rt,
  */
 #if !XNU_KERNEL_PRIVATE
 IMG4_API_AVAILABLE_20210205
-OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3
-errno_t
+OS_EXPORT OS_WARN_RESULT OS_NONNULL1 OS_NONNULL2 OS_NONNULL3 errno_t
 img4_runtime_copy_object(const img4_runtime_t *rt,
-		const img4_runtime_object_spec_t *obj_spec,
-		img4_buff_t *payload,
-		size_t *_Nullable payload_len);
+                         const img4_runtime_object_spec_t *obj_spec,
+                         img4_buff_t *payload, size_t *_Nullable payload_len);
 #else
-#define img4_runtime_copy_object(...) \
-		(img4if->i4if_v11.runtime_copy_object(__VA_ARGS__))
+#define img4_runtime_copy_object(...)                                          \
+  (img4if->i4if_v11.runtime_copy_object(__VA_ARGS__))
 #endif
 
 OS_ASSUME_PTR_ABI_SINGLE_END

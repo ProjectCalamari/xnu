@@ -28,18 +28,19 @@
 #include <libkern/OSBase.h>
 
 __BEGIN_DECLS
+#include <mach/kmod.h>
 #include <mach/mach_types.h>
 #include <mach/vm_types.h>
-#include <mach/kmod.h>
 
 kmod_start_func_t test1_start;
 kmod_stop_func_t test1_stop;
 __END_DECLS
 
-#include <libkern/c++/OSContainers.h>
 #include <iokit/IOLib.h>
+#include <libkern/c++/OSContainers.h>
 
-const char *testBuffer = ""
+const char *testBuffer =
+    ""
     "{ string	= \"this is a 'string' with spaces\";"
     "  string2	= 'this is also a \"string\" with spaces';"
     "  offset	= 16384:32;"
@@ -60,52 +61,49 @@ const char *testBuffer = ""
     "  dict3		= { string = asdfasdf; };"
     "}@0";
 
-kern_return_t
-test1_start(struct kmod_info *ki, void *data)
-{
-	IOLog("test buffer start:\n%s\n:test buffer end.\n", testBuffer);
+kern_return_t test1_start(struct kmod_info *ki, void *data) {
+  IOLog("test buffer start:\n%s\n:test buffer end.\n", testBuffer);
 
-	// test unserialize
-	OSString *errmsg;
-	OSObject *d = OSUnserialize(testBuffer, &errmsg);
-	if (!d) {
-		IOLog("%s\n", errmsg->getCStringNoCopy());
-		return KMOD_RETURN_SUCCESS;
-	}
+  // test unserialize
+  OSString *errmsg;
+  OSObject *d = OSUnserialize(testBuffer, &errmsg);
+  if (!d) {
+    IOLog("%s\n", errmsg->getCStringNoCopy());
+    return KMOD_RETURN_SUCCESS;
+  }
 
-	// test serialize
-	OSSerialize *s = OSSerialize::withCapacity(5);
-	if (!d->serialize(s)) {
-		IOLog("serialization failed\n");
-		return KMOD_RETURN_SUCCESS;
-	}
+  // test serialize
+  OSSerialize *s = OSSerialize::withCapacity(5);
+  if (!d->serialize(s)) {
+    IOLog("serialization failed\n");
+    return KMOD_RETURN_SUCCESS;
+  }
 
-	IOLog("serialized object's length = %d, capacity = %d\n", s->getLength(), s->getCapacity());
-	IOLog("object unformatted = %s\n", s->text());
+  IOLog("serialized object's length = %d, capacity = %d\n", s->getLength(),
+        s->getCapacity());
+  IOLog("object unformatted = %s\n", s->text());
 
-	// try second time
-	OSObject *d2 = OSUnserializeXML(s->text(), &errmsg);
-	if (!d2) {
-		IOLog("%s\n", errmsg->getCStringNoCopy());
-		return KMOD_RETURN_SUCCESS;
-	}
+  // try second time
+  OSObject *d2 = OSUnserializeXML(s->text(), &errmsg);
+  if (!d2) {
+    IOLog("%s\n", errmsg->getCStringNoCopy());
+    return KMOD_RETURN_SUCCESS;
+  }
 
-	IOLog("\nserialized objects compared %ssuccessfully objectwise\n\n",
-	    d->isEqualTo(d2) ? "":"un");
+  IOLog("\nserialized objects compared %ssuccessfully objectwise\n\n",
+        d->isEqualTo(d2) ? "" : "un");
 
-	if (d2) {
-		d2->release();
-	}
-	s->release();
-	if (d) {
-		d->release();
-	}
+  if (d2) {
+    d2->release();
+  }
+  s->release();
+  if (d) {
+    d->release();
+  }
 
-	return KMOD_RETURN_SUCCESS;
+  return KMOD_RETURN_SUCCESS;
 }
 
-kern_return_t
-test1_stop(struct kmod_info *ki, void *data)
-{
-	return KMOD_RETURN_SUCCESS;
+kern_return_t test1_stop(struct kmod_info *ki, void *data) {
+  return KMOD_RETURN_SUCCESS;
 }

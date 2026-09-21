@@ -60,13 +60,13 @@
  *	@(#)raw_cb.c	8.1 (Berkeley) 6/10/93
  */
 
-#include <sys/param.h>
+#include <kern/locks.h>
+#include <sys/domain.h>
 #include <sys/malloc.h>
+#include <sys/param.h>
+#include <sys/protosw.h>
 #include <sys/socket.h>
 #include <sys/socketvar.h>
-#include <sys/domain.h>
-#include <sys/protosw.h>
-#include <kern/locks.h>
 
 #include <net/raw_cb.h>
 
@@ -83,76 +83,70 @@ struct rawcb_list_head rawcb_list = LIST_HEAD_INITIALIZER(rawcb_list);
 
 static uint32_t raw_sendspace = RAWSNDQ;
 static uint32_t raw_recvspace = RAWRCVQ;
-extern lck_mtx_t        raw_mtx;       /*### global raw cb mutex for now */
+extern lck_mtx_t raw_mtx; /*### global raw cb mutex for now */
 
 /*
  * Allocate a control block and a nominal amount
  * of buffer space for the socket.
  */
-int
-raw_attach(struct socket *so, int proto)
-{
-	struct rawcb *rp = sotorawcb(so);
-	int error;
+int raw_attach(struct socket *so, int proto) {
+  struct rawcb *rp = sotorawcb(so);
+  int error;
 
-	/*
-	 * It is assumed that raw_attach is called
-	 * after space has been allocated for the
-	 * rawcb.
-	 */
-	if (rp == 0) {
-		return ENOBUFS;
-	}
-	error = soreserve(so, raw_sendspace, raw_recvspace);
-	if (error) {
-		return error;
-	}
-	rp->rcb_socket = so;
-	rp->rcb_proto.sp_family = (uint16_t)SOCK_DOM(so);
-	rp->rcb_proto.sp_protocol = (uint16_t)proto;
-	lck_mtx_lock(&raw_mtx);
-	LIST_INSERT_HEAD(&rawcb_list, rp, list);
-	lck_mtx_unlock(&raw_mtx);
-	return 0;
+  /*
+   * It is assumed that raw_attach is called
+   * after space has been allocated for the
+   * rawcb.
+   */
+  if (rp == 0) {
+    return ENOBUFS;
+  }
+  error = soreserve(so, raw_sendspace, raw_recvspace);
+  if (error) {
+    return error;
+  }
+  rp->rcb_socket = so;
+  rp->rcb_proto.sp_family = (uint16_t)SOCK_DOM(so);
+  rp->rcb_proto.sp_protocol = (uint16_t)proto;
+  lck_mtx_lock(&raw_mtx);
+  LIST_INSERT_HEAD(&rawcb_list, rp, list);
+  lck_mtx_unlock(&raw_mtx);
+  return 0;
 }
 
 /*
  * Detach the raw connection block and discard
  * socket resources.
  */
-void
-raw_detach_nofree(struct rawcb *rp)
-{
-	struct socket *so = rp->rcb_socket;
+void raw_detach_nofree(struct rawcb *rp) {
+  struct socket *so = rp->rcb_socket;
 
-	so->so_pcb = 0;
-	so->so_flags |= SOF_PCBCLEARING;
-	sofree(so);
-	if (!lck_mtx_try_lock(&raw_mtx)) {
-		socket_unlock(so, 0);
-		lck_mtx_lock(&raw_mtx);
-		socket_lock(so, 0);
-	}
-	LIST_REMOVE(rp, list);
-	lck_mtx_unlock(&raw_mtx);
-	rp->rcb_socket = NULL;
+  so->so_pcb = 0;
+  so->so_flags |= SOF_PCBCLEARING;
+  sofree(so);
+  if (!lck_mtx_try_lock(&raw_mtx)) {
+    socket_unlock(so, 0);
+    lck_mtx_lock(&raw_mtx);
+    socket_lock(so, 0);
+  }
+  LIST_REMOVE(rp, list);
+  lck_mtx_unlock(&raw_mtx);
+  rp->rcb_socket = NULL;
 }
 
 /*
  * Disconnect and possibly release resources.
  */
-void
-raw_disconnect(struct rawcb *rp)
-{
-	struct socket *so = rp->rcb_socket;
+void raw_disconnect(struct rawcb *rp) {
+  struct socket *so = rp->rcb_socket;
 
-	/*
-	 * A multipath subflow socket would have its SS_NOFDREF set by default,
-	 * so check for SOF_MP_SUBFLOW socket flag before detaching the PCB;
-	 * when the socket is closed for real, SOF_MP_SUBFLOW would be cleared.
-	 */
-	if (!(so->so_flags & SOF_MP_SUBFLOW) && (so->so_state & SS_NOFDREF)) {
-		raw_detach_nofree(rp);
-		kfree_type(struct rawcb, rp);
-	}
+  /*
+   * A multipath subflow socket would have its SS_NOFDREF set by default,
+   * so check for SOF_MP_SUBFLOW socket flag before detaching the PCB;
+   * when the socket is closed for real, SOF_MP_SUBFLOW would be cleared.
+   */
+  if (!(so->so_flags & SOF_MP_SUBFLOW) && (so->so_state & SS_NOFDREF)) {
+    raw_detach_nofree(rp);
+    kfree_type(struct rawcb, rp);
+  }
 }

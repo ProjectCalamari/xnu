@@ -27,11 +27,11 @@
 #include <libkern/OSAtomic.h>
 
 #define IOSharedLockData OSSpinLock
-#define ev_lock_data_t   OSSpinLock
+#define ev_lock_data_t OSSpinLock
 
 #ifdef KERNEL
-#define ev_unlock(l)     OSSpinLockUnlock(l)
-#define ev_try_lock(l)   OSSpinLockTry(l)
+#define ev_unlock(l) OSSpinLockUnlock(l)
+#define ev_try_lock(l) OSSpinLockTry(l)
 #endif
 
 #endif /* ! _IOKIT_IOSHAREDLOCK_H */

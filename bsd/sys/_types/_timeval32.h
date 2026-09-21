@@ -26,13 +26,12 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 #ifndef _STRUCT_TIMEVAL32
-#define _STRUCT_TIMEVAL32       struct timeval32
+#define _STRUCT_TIMEVAL32 struct timeval32
 
 #include <machine/types.h> /* __int32_t */
 
-_STRUCT_TIMEVAL32
-{
-	__int32_t               tv_sec;         /* seconds */
-	__int32_t               tv_usec;        /* and microseconds */
+_STRUCT_TIMEVAL32 {
+  __int32_t tv_sec;  /* seconds */
+  __int32_t tv_usec; /* and microseconds */
 };
 #endif /* _STRUCT_TIMEVAL32 */

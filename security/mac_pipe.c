@@ -59,167 +59,138 @@
 
 #include <sys/cdefs.h>
 
-#include <sys/param.h>
 #include <sys/kernel.h>
 #include <sys/lock.h>
 #include <sys/malloc.h>
+#include <sys/param.h>
+#include <sys/pipe.h>
 #include <sys/sbuf.h>
+#include <sys/sysctl.h>
 #include <sys/systm.h>
 #include <sys/vnode.h>
-#include <sys/pipe.h>
-#include <sys/sysctl.h>
 
 #include <security/mac_internal.h>
 
+static struct label *mac_pipe_label_alloc(void) {
+  struct label *label;
 
-static struct label *
-mac_pipe_label_alloc(void)
-{
-	struct label *label;
-
-	label = mac_labelzone_alloc(MAC_WAITOK);
-	if (label == NULL) {
-		return NULL;
-	}
-	MAC_PERFORM(pipe_label_init, label);
-	return label;
+  label = mac_labelzone_alloc(MAC_WAITOK);
+  if (label == NULL) {
+    return NULL;
+  }
+  MAC_PERFORM(pipe_label_init, label);
+  return label;
 }
 
-struct label *
-mac_pipe_label(struct pipe *cpipe)
-{
-	return cpipe->pipe_label;
+struct label *mac_pipe_label(struct pipe *cpipe) { return cpipe->pipe_label; }
+
+void mac_pipe_set_label(struct pipe *cpipe, struct label *label) {
+  cpipe->pipe_label = label;
 }
 
-void
-mac_pipe_set_label(struct pipe *cpipe, struct label *label)
-{
-	cpipe->pipe_label = label;
+void mac_pipe_label_init(struct pipe *cpipe) {
+  mac_pipe_set_label(cpipe, mac_pipe_label_alloc());
 }
 
-void
-mac_pipe_label_init(struct pipe *cpipe)
-{
-	mac_pipe_set_label(cpipe, mac_pipe_label_alloc());
+void mac_pipe_label_free(struct label *label) {
+  MAC_PERFORM(pipe_label_destroy, label);
+  mac_labelzone_free(label);
 }
 
-void
-mac_pipe_label_free(struct label *label)
-{
-	MAC_PERFORM(pipe_label_destroy, label);
-	mac_labelzone_free(label);
+void mac_pipe_label_destroy(struct pipe *cpipe) {
+  struct label *label = mac_pipe_label(cpipe);
+  mac_pipe_set_label(cpipe, NULL);
+  mac_pipe_label_free(label);
 }
 
-void
-mac_pipe_label_destroy(struct pipe *cpipe)
-{
-	struct label *label = mac_pipe_label(cpipe);
-	mac_pipe_set_label(cpipe, NULL);
-	mac_pipe_label_free(label);
+void mac_pipe_label_associate(kauth_cred_t cred, struct pipe *cpipe) {
+  MAC_PERFORM(pipe_label_associate, cred, cpipe, mac_pipe_label(cpipe));
 }
 
-void
-mac_pipe_label_associate(kauth_cred_t cred, struct pipe *cpipe)
-{
-	MAC_PERFORM(pipe_label_associate, cred, cpipe, mac_pipe_label(cpipe));
-}
-
-int
-mac_pipe_check_kqfilter(kauth_cred_t cred, struct knote *kn,
-    struct pipe *cpipe)
-{
-	int error;
+int mac_pipe_check_kqfilter(kauth_cred_t cred, struct knote *kn,
+                            struct pipe *cpipe) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_pipe_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_pipe_enforce) {
+    return 0;
+  }
 #endif
-	MAC_CHECK(pipe_check_kqfilter, cred, kn, cpipe, mac_pipe_label(cpipe));
-	return error;
+  MAC_CHECK(pipe_check_kqfilter, cred, kn, cpipe, mac_pipe_label(cpipe));
+  return error;
 }
-int
-mac_pipe_check_ioctl(kauth_cred_t cred, struct pipe *cpipe, u_long cmd)
-{
-	int error;
+int mac_pipe_check_ioctl(kauth_cred_t cred, struct pipe *cpipe, u_long cmd) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_pipe_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_pipe_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(pipe_check_ioctl, cred, cpipe, mac_pipe_label(cpipe), cmd);
+  MAC_CHECK(pipe_check_ioctl, cred, cpipe, mac_pipe_label(cpipe), cmd);
 
-	return error;
+  return error;
 }
 
-int
-mac_pipe_check_read(kauth_cred_t cred, struct pipe *cpipe)
-{
-	int error;
+int mac_pipe_check_read(kauth_cred_t cred, struct pipe *cpipe) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_pipe_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_pipe_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(pipe_check_read, cred, cpipe, mac_pipe_label(cpipe));
+  MAC_CHECK(pipe_check_read, cred, cpipe, mac_pipe_label(cpipe));
 
-	return error;
+  return error;
 }
 
-int
-mac_pipe_check_select(kauth_cred_t cred, struct pipe *cpipe, int which)
-{
-	int error;
+int mac_pipe_check_select(kauth_cred_t cred, struct pipe *cpipe, int which) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_pipe_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_pipe_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(pipe_check_select, cred, cpipe, mac_pipe_label(cpipe), which);
+  MAC_CHECK(pipe_check_select, cred, cpipe, mac_pipe_label(cpipe), which);
 
-	return error;
+  return error;
 }
 
-int
-mac_pipe_check_stat(kauth_cred_t cred, struct pipe *cpipe)
-{
-	int error;
+int mac_pipe_check_stat(kauth_cred_t cred, struct pipe *cpipe) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_pipe_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_pipe_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(pipe_check_stat, cred, cpipe, mac_pipe_label(cpipe));
+  MAC_CHECK(pipe_check_stat, cred, cpipe, mac_pipe_label(cpipe));
 
-	return error;
+  return error;
 }
 
-int
-mac_pipe_check_write(kauth_cred_t cred, struct pipe *cpipe)
-{
-	int error;
+int mac_pipe_check_write(kauth_cred_t cred, struct pipe *cpipe) {
+  int error;
 
 #if SECURITY_MAC_CHECK_ENFORCE
-	/* 21167099 - only check if we allow write */
-	if (!mac_pipe_enforce) {
-		return 0;
-	}
+  /* 21167099 - only check if we allow write */
+  if (!mac_pipe_enforce) {
+    return 0;
+  }
 #endif
 
-	MAC_CHECK(pipe_check_write, cred, cpipe, mac_pipe_label(cpipe));
+  MAC_CHECK(pipe_check_write, cred, cpipe, mac_pipe_label(cpipe));
 
-	return error;
+  return error;
 }

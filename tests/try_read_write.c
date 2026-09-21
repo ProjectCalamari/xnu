@@ -34,11 +34,11 @@
  */
 
 #include <assert.h>
-#include <stdbool.h>
-#include <stdatomic.h>
-#include <ptrauth.h>
 #include <darwintest.h>
 #include <dispatch/dispatch.h>
+#include <ptrauth.h>
+#include <stdatomic.h>
+#include <stdbool.h>
 
 #include "exc_helpers.h"
 #include "try_read_write.h"
@@ -94,16 +94,18 @@ static mach_port_t try_read_write_exc_port;
  * data, but we don't try to cover that case.)
  */
 typedef struct {
-	mach_port_t thread;
-	kern_return_t exception_kr;  /* EXC_BAD_ADDRESS sub-code */
-	uint64_t exception_pc;       /* PC of faulting instruction */
-	uint64_t exception_memory;   /* Memory address of faulting access */
+  mach_port_t thread;
+  kern_return_t exception_kr; /* EXC_BAD_ADDRESS sub-code */
+  uint64_t exception_pc;      /* PC of faulting instruction */
+  uint64_t exception_memory;  /* Memory address of faulting access */
 } try_read_write_thread_t;
 
 #define TRY_READ_WRITE_MAX_THREADS 128
-static pthread_mutex_t try_read_write_thread_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t try_read_write_thread_list_mutex =
+    PTHREAD_MUTEX_INITIALIZER;
 static unsigned try_read_write_thread_count = 0;
-static try_read_write_thread_t try_read_write_thread_list[TRY_READ_WRITE_MAX_THREADS];
+static try_read_write_thread_t
+    try_read_write_thread_list[TRY_READ_WRITE_MAX_THREADS];
 static __thread try_read_write_thread_t *try_read_write_thread_self;
 
 /*
@@ -111,57 +113,53 @@ static __thread try_read_write_thread_t *try_read_write_thread_self;
  * If create == true and no info was found, add it to the list.
  * Returns NULL if no info was found and create == false.
  */
-static __attribute__((overloadable))
-try_read_write_thread_t *
-thread_info_for_mach_thread(mach_port_t thread_port, bool create)
-{
-	/* first look for a cached value in real thread-local storage */
-	if (mach_thread_self() == thread_port) {
-		try_read_write_thread_t *info = try_read_write_thread_self;
-		if (info) {
-			return info;
-		}
-	}
+static __attribute__((overloadable)) try_read_write_thread_t *
+thread_info_for_mach_thread(mach_port_t thread_port, bool create) {
+  /* first look for a cached value in real thread-local storage */
+  if (mach_thread_self() == thread_port) {
+    try_read_write_thread_t *info = try_read_write_thread_self;
+    if (info) {
+      return info;
+    }
+  }
 
-	int err = pthread_mutex_lock(&try_read_write_thread_list_mutex);
-	assert(err == 0);
+  int err = pthread_mutex_lock(&try_read_write_thread_list_mutex);
+  assert(err == 0);
 
-	/* search the list */
-	for (unsigned i = 0; i < try_read_write_thread_count; i++) {
-		try_read_write_thread_t *info = &try_read_write_thread_list[i];
-		if (info->thread == thread_port) {
-			pthread_mutex_unlock(&try_read_write_thread_list_mutex);
-			if (mach_thread_self() == thread_port) {
-				try_read_write_thread_self = info;
-			}
-			return info;
-		}
-	}
+  /* search the list */
+  for (unsigned i = 0; i < try_read_write_thread_count; i++) {
+    try_read_write_thread_t *info = &try_read_write_thread_list[i];
+    if (info->thread == thread_port) {
+      pthread_mutex_unlock(&try_read_write_thread_list_mutex);
+      if (mach_thread_self() == thread_port) {
+        try_read_write_thread_self = info;
+      }
+      return info;
+    }
+  }
 
-	/* not in list - create if requested */
-	if (create) {
-		assert(try_read_write_thread_count < TRY_READ_WRITE_MAX_THREADS);
-		try_read_write_thread_t *info = &try_read_write_thread_list[try_read_write_thread_count++];
-		info->thread = thread_port;
-		info->exception_kr = 0;
-		pthread_mutex_unlock(&try_read_write_thread_list_mutex);
-		if (mach_thread_self() == thread_port) {
-			try_read_write_thread_self = info;
-		}
-		return info;
-	}
+  /* not in list - create if requested */
+  if (create) {
+    assert(try_read_write_thread_count < TRY_READ_WRITE_MAX_THREADS);
+    try_read_write_thread_t *info =
+        &try_read_write_thread_list[try_read_write_thread_count++];
+    info->thread = thread_port;
+    info->exception_kr = 0;
+    pthread_mutex_unlock(&try_read_write_thread_list_mutex);
+    if (mach_thread_self() == thread_port) {
+      try_read_write_thread_self = info;
+    }
+    return info;
+  }
 
-	pthread_mutex_unlock(&try_read_write_thread_list_mutex);
-	return NULL;
+  pthread_mutex_unlock(&try_read_write_thread_list_mutex);
+  return NULL;
 }
 
-static __attribute__((overloadable))
-try_read_write_thread_t *
-thread_info_for_mach_thread(mach_port_t thread_port)
-{
-	return thread_info_for_mach_thread(thread_port, false /* create */);
+static __attribute__((overloadable)) try_read_write_thread_t *
+thread_info_for_mach_thread(mach_port_t thread_port) {
+  return thread_info_for_mach_thread(thread_port, false /* create */);
 }
-
 
 /*
  * read_byte() and write_byte() are functions that
@@ -176,181 +174,161 @@ thread_info_for_mach_thread(mach_port_t thread_port)
  * The memory access instruction must be padded to exactly four bytes.
  */
 
-static uint64_t __attribute__((naked))
-read_byte(mach_vm_address_t addr)
-{
+static uint64_t __attribute__((naked)) read_byte(mach_vm_address_t addr) {
 #if __arm64__
-	asm("\n ldrb w0, [x0]"
-            "\n ret");
+  asm("\n ldrb w0, [x0]"
+      "\n ret");
 #elif __x86_64__
-	asm("\n movb (%rdi), %al"
-            "\n nop"  /* pad load to four bytes */
-            "\n nop"
-            "\n ret");
+  asm("\n movb (%rdi), %al"
+      "\n nop" /* pad load to four bytes */
+      "\n nop"
+      "\n ret");
 #else
-#       error unknown architecture
+#error unknown architecture
 #endif
 }
 
-static void __attribute__((naked))
-write_byte(mach_vm_address_t addr, uint8_t value)
-{
+static void __attribute__((naked)) write_byte(mach_vm_address_t addr,
+                                              uint8_t value) {
 #if __arm64__
-	asm("\n strb w1, [x0]"
-            "\n ret");
+  asm("\n strb w1, [x0]"
+      "\n ret");
 #elif __x86_64__
-	asm("\n movb %sil, (%rdi)"
-            "\n nop"  /* pad store to four bytes */
-            "\n ret");
+  asm("\n movb %sil, (%rdi)"
+      "\n nop" /* pad store to four bytes */
+      "\n ret");
 #else
-#       error unknown architecture
+#error unknown architecture
 #endif
 }
-
 
 /*
  * Mach exception handler for EXC_BAD_ACCESS called by exc_helpers.
  * Returns the number of bytes to advance the PC to resolve the exception.
  */
-static size_t
-try_read_write_exception_handler(
-	__unused mach_port_t task,
-	mach_port_t thread,
-	exception_type_t exception,
-	mach_exception_data_t codes,
-	uint64_t exception_pc)
-{
-	assert(exception == EXC_BAD_ACCESS);
-	try_read_write_thread_t *info = thread_info_for_mach_thread(thread);
-	assert(info);  /* we do not expect exceptions from other threads */
+static size_t try_read_write_exception_handler(__unused mach_port_t task,
+                                               mach_port_t thread,
+                                               exception_type_t exception,
+                                               mach_exception_data_t codes,
+                                               uint64_t exception_pc) {
+  assert(exception == EXC_BAD_ACCESS);
+  try_read_write_thread_t *info = thread_info_for_mach_thread(thread);
+  assert(info); /* we do not expect exceptions from other threads */
 
-	uint64_t read_byte_pc  = (uint64_t)ptrauth_strip(&read_byte, ptrauth_key_function_pointer);
-	uint64_t write_byte_pc = (uint64_t)ptrauth_strip(&write_byte, ptrauth_key_function_pointer);
+  uint64_t read_byte_pc =
+      (uint64_t)ptrauth_strip(&read_byte, ptrauth_key_function_pointer);
+  uint64_t write_byte_pc =
+      (uint64_t)ptrauth_strip(&write_byte, ptrauth_key_function_pointer);
 
-	if (exception_pc != read_byte_pc && exception_pc != write_byte_pc) {
-		/* this exception isn't one of ours - re-raise it */
-		if (verbose_exc_helper) {
-			T_LOG("not a try_read_write exception");
-		}
-		return EXC_HELPER_HALT;
-	}
+  if (exception_pc != read_byte_pc && exception_pc != write_byte_pc) {
+    /* this exception isn't one of ours - re-raise it */
+    if (verbose_exc_helper) {
+      T_LOG("not a try_read_write exception");
+    }
+    return EXC_HELPER_HALT;
+  }
 
-	assert(info->exception_kr == 0); /* no nested exceptions allowed */
+  assert(info->exception_kr == 0); /* no nested exceptions allowed */
 
-	info->exception_pc = exception_pc;
-	info->exception_kr = codes[0];
-	info->exception_memory = codes[1];
-	if (verbose_exc_helper) {
-		T_LOG("try_read_write exception: pc 0x%llx kr %d mem 0x%llx",
-		    info->exception_pc, info->exception_kr, info->exception_memory);
-	}
+  info->exception_pc = exception_pc;
+  info->exception_kr = codes[0];
+  info->exception_memory = codes[1];
+  if (verbose_exc_helper) {
+    T_LOG("try_read_write exception: pc 0x%llx kr %d mem 0x%llx",
+          info->exception_pc, info->exception_kr, info->exception_memory);
+  }
 
-	/* advance pc by 4 bytes to recover */
-	return 4;
+  /* advance pc by 4 bytes to recover */
+  return 4;
 }
 
 /*
  * Create an exc_helpers exception handler port and thread,
  * and install the exception handler port on this thread.
  */
-static void
-initialize_exception_handlers(void)
-{
-	try_read_write_exc_port = create_exception_port(EXC_MASK_BAD_ACCESS);
-	repeat_exception_handler(try_read_write_exc_port, try_read_write_exception_handler);
+static void initialize_exception_handlers(void) {
+  try_read_write_exc_port = create_exception_port(EXC_MASK_BAD_ACCESS);
+  repeat_exception_handler(try_read_write_exc_port,
+                           try_read_write_exception_handler);
 }
 
 /*
  * Begin try_read_write exception handling on this thread.
  */
-static void
-begin_expected_exceptions(void)
-{
-	dispatch_once(&try_read_write_initializer, ^{
-		initialize_exception_handlers();
-	});
+static void begin_expected_exceptions(void) {
+  dispatch_once(&try_read_write_initializer, ^{
+    initialize_exception_handlers();
+  });
 
-	try_read_write_thread_t *info = try_read_write_thread_self;
-	if (!info) {
-		set_thread_exception_port(try_read_write_exc_port, EXC_MASK_BAD_ACCESS);
-		info = thread_info_for_mach_thread(mach_thread_self(), true /* create */);
-	}
+  try_read_write_thread_t *info = try_read_write_thread_self;
+  if (!info) {
+    set_thread_exception_port(try_read_write_exc_port, EXC_MASK_BAD_ACCESS);
+    info = thread_info_for_mach_thread(mach_thread_self(), true /* create */);
+  }
 
-	info->exception_kr = 0;
-	info->exception_pc = 0;
-	info->exception_memory = 0;
+  info->exception_kr = 0;
+  info->exception_pc = 0;
+  info->exception_memory = 0;
 }
 
 /*
  * End try_read_write exception handling on this thread.
  * Returns the caught exception data, if any.
  */
-static void
-end_expected_exceptions(
-	kern_return_t * const out_kr,
-	uint64_t * const out_pc,
-	uint64_t * const out_memory)
-{
-	try_read_write_thread_t *info = try_read_write_thread_self;
-	assert(info);
-	*out_kr = info->exception_kr;
-	*out_pc = info->exception_pc;
-	*out_memory = info->exception_memory;
+static void end_expected_exceptions(kern_return_t *const out_kr,
+                                    uint64_t *const out_pc,
+                                    uint64_t *const out_memory) {
+  try_read_write_thread_t *info = try_read_write_thread_self;
+  assert(info);
+  *out_kr = info->exception_kr;
+  *out_pc = info->exception_pc;
+  *out_memory = info->exception_memory;
 }
 
+extern bool try_read_byte(mach_vm_address_t addr, uint8_t *const out_byte,
+                          kern_return_t *const out_error) {
+  kern_return_t exception_kr;
+  uint64_t exception_pc;
+  uint64_t exception_memory;
 
-extern bool
-try_read_byte(
-	mach_vm_address_t addr,
-	uint8_t * const out_byte,
-	kern_return_t * const out_error)
-{
-	kern_return_t exception_kr;
-	uint64_t exception_pc;
-	uint64_t exception_memory;
+  begin_expected_exceptions();
+  *out_byte = read_byte(addr);
+  end_expected_exceptions(&exception_kr, &exception_pc, &exception_memory);
 
-	begin_expected_exceptions();
-	*out_byte = read_byte(addr);
-	end_expected_exceptions(&exception_kr, &exception_pc, &exception_memory);
+  /*
+   * pc was verified inside the exception handler.
+   * kr will be verified by the caller.
+   * Verify address here.
+   */
 
-	/*
-	 * pc was verified inside the exception handler.
-	 * kr will be verified by the caller.
-	 * Verify address here.
-	 */
+  if (exception_kr != KERN_SUCCESS) {
+    assert(exception_memory == addr);
+  }
 
-	if (exception_kr != KERN_SUCCESS) {
-		assert(exception_memory == addr);
-	}
-
-	*out_error = exception_kr;
-	return exception_kr == 0;
+  *out_error = exception_kr;
+  return exception_kr == 0;
 }
 
-extern bool
-try_write_byte(
-	mach_vm_address_t addr,
-	uint8_t byte,
-	kern_return_t * const out_error)
-{
-	kern_return_t exception_kr;
-	uint64_t exception_pc;
-	uint64_t exception_memory;
+extern bool try_write_byte(mach_vm_address_t addr, uint8_t byte,
+                           kern_return_t *const out_error) {
+  kern_return_t exception_kr;
+  uint64_t exception_pc;
+  uint64_t exception_memory;
 
-	begin_expected_exceptions();
-	write_byte(addr, byte);
-	end_expected_exceptions(&exception_kr, &exception_pc, &exception_memory);
+  begin_expected_exceptions();
+  write_byte(addr, byte);
+  end_expected_exceptions(&exception_kr, &exception_pc, &exception_memory);
 
-	/*
-	 * pc was verified inside the exception handler.
-	 * kr will be verified by the caller.
-	 * Verify address here.
-	 */
+  /*
+   * pc was verified inside the exception handler.
+   * kr will be verified by the caller.
+   * Verify address here.
+   */
 
-	if (exception_kr != KERN_SUCCESS) {
-		assert(exception_memory == addr);
-	}
+  if (exception_kr != KERN_SUCCESS) {
+    assert(exception_memory == addr);
+  }
 
-	*out_error = exception_kr;
-	return exception_kr == 0;
+  *out_error = exception_kr;
+  return exception_kr == 0;
 }

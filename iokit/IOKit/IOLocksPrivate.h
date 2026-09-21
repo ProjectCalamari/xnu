@@ -40,17 +40,15 @@
 
 #include <IOKit/system.h>
 
+#include <IOKit/IOLocks.h>
 #include <IOKit/IOReturn.h>
 #include <IOKit/IOTypes.h>
-#include <IOKit/IOLocks.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-IORecursiveLock *
-IORecursiveLockAllocWithLockGroup( lck_grp_t * lockGroup );
-
+IORecursiveLock *IORecursiveLockAllocWithLockGroup(lck_grp_t *lockGroup);
 
 #ifdef __cplusplus
 } /* extern "C" */

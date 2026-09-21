@@ -34,51 +34,37 @@
 
 struct tcp_globals {};
 
-static inline struct tcp_globals *
-tcp_get_globals(struct tcpcb *tp)
-{
+static inline struct tcp_globals *tcp_get_globals(struct tcpcb *tp) {
 #pragma unused(tp)
-	return NULL;
+  return NULL;
 }
 
-static inline uint32_t
-tcp_globals_now(struct tcp_globals *globals)
-{
+static inline uint32_t tcp_globals_now(struct tcp_globals *globals) {
 #pragma unused(globals)
-	return tcp_now;
+  return tcp_now;
 }
 
 extern void tcp_ccdbg_control_register(void);
 extern void tcp_ccdbg_trace(struct tcpcb *tp, struct tcphdr *th, int32_t event);
 
-static inline void
-tcp_memacct_add(unsigned int size)
-{
-	mem_acct_add(tcp_memacct, size);
+static inline void tcp_memacct_add(unsigned int size) {
+  mem_acct_add(tcp_memacct, size);
 }
 
-static inline void
-tcp_memacct_sub(unsigned int size)
-{
-	mem_acct_sub(tcp_memacct, size);
+static inline void tcp_memacct_sub(unsigned int size) {
+  mem_acct_sub(tcp_memacct, size);
 }
 
-static inline int
-tcp_memacct_limited(void)
-{
-	return mem_acct_limited(tcp_memacct);
+static inline int tcp_memacct_limited(void) {
+  return mem_acct_limited(tcp_memacct);
 }
 
-static inline bool
-tcp_memacct_hardlimit(void)
-{
-	return mem_acct_limited(tcp_memacct) == MEMACCT_HARDLIMIT;
+static inline bool tcp_memacct_hardlimit(void) {
+  return mem_acct_limited(tcp_memacct) == MEMACCT_HARDLIMIT;
 }
 
-static inline bool
-tcp_memacct_softlimit(void)
-{
-	return mem_acct_limited(tcp_memacct) > MEMACCT_PRESOFTLIMIT;
+static inline bool tcp_memacct_softlimit(void) {
+  return mem_acct_limited(tcp_memacct) > MEMACCT_PRESOFTLIMIT;
 }
 
 #endif /* _NETINET_TCP_UTILS_H_ */

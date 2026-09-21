@@ -25,7 +25,8 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
-/*	$FreeBSD: src/sys/netinet6/dest6.c,v 1.1.2.3 2001/07/03 11:01:49 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet6/dest6.c,v 1.1.2.3 2001/07/03 11:01:49 ume Exp
+ * $	*/
 /*	$KAME: dest6.c,v 1.27 2001/03/29 05:34:30 itojun Exp $	*/
 
 /*
@@ -57,84 +58,82 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <sys/domain.h>
+#include <sys/errno.h>
+#include <sys/kernel.h>
 #include <sys/malloc.h>
 #include <sys/mbuf.h>
-#include <sys/domain.h>
+#include <sys/param.h>
 #include <sys/protosw.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
+#include <sys/systm.h>
 #include <sys/time.h>
-#include <sys/kernel.h>
 
 #include <net/droptap.h>
 #include <net/if.h>
 #include <net/route.h>
 
+#include <netinet/icmp6.h>
 #include <netinet/in.h>
 #include <netinet/in_var.h>
 #include <netinet/ip6.h>
 #include <netinet6/ip6_var.h>
-#include <netinet/icmp6.h>
 
 /*
  * Destination options header processing.
  */
-int
-dest6_input(struct mbuf **mp, int *offp, int proto)
-{
+int dest6_input(struct mbuf **mp, int *offp, int proto) {
 #pragma unused(proto)
-	struct mbuf *__single m = *mp;
-	int off = *offp, dstoptlen = 0, optlen = 0;
-	struct ip6_dest *dstopts = NULL;
-	u_int8_t *opt = NULL;
-	drop_reason_t drop_reason = DROP_REASON_UNSPECIFIED;
+  struct mbuf *__single m = *mp;
+  int off = *offp, dstoptlen = 0, optlen = 0;
+  struct ip6_dest *dstopts = NULL;
+  u_int8_t *opt = NULL;
+  drop_reason_t drop_reason = DROP_REASON_UNSPECIFIED;
 
-	/* validation of the length of the header */
-	IP6_EXTHDR_CHECK(m, off, sizeof(*dstopts), return IPPROTO_DONE);
-	dstopts = (struct ip6_dest *)(mtod(m, caddr_t) + off);
-	dstoptlen = (dstopts->ip6d_len + 1) << 3;
+  /* validation of the length of the header */
+  IP6_EXTHDR_CHECK(m, off, sizeof(*dstopts), return IPPROTO_DONE);
+  dstopts = (struct ip6_dest *)(mtod(m, caddr_t) + off);
+  dstoptlen = (dstopts->ip6d_len + 1) << 3;
 
-	IP6_EXTHDR_CHECK(m, off, dstoptlen, return IPPROTO_DONE);
-	dstopts = (struct ip6_dest *)(mtod(m, caddr_t) + off);
-	off += dstoptlen;
-	dstoptlen -= sizeof(struct ip6_dest);
-	opt = (u_int8_t *)dstopts + sizeof(struct ip6_dest);
+  IP6_EXTHDR_CHECK(m, off, dstoptlen, return IPPROTO_DONE);
+  dstopts = (struct ip6_dest *)(mtod(m, caddr_t) + off);
+  off += dstoptlen;
+  dstoptlen -= sizeof(struct ip6_dest);
+  opt = (u_int8_t *)dstopts + sizeof(struct ip6_dest);
 
-	/* search header for all options. */
-	for (optlen = 0; dstoptlen > 0; dstoptlen -= optlen, opt += optlen) {
-		if (*opt != IP6OPT_PAD1 &&
-		    (dstoptlen < IP6OPT_MINLEN || *(opt + 1) + 2 > dstoptlen)) {
-			ip6stat.ip6s_toosmall++;
-			drop_reason = DROP_REASON_IP_TOO_SMALL;
-			goto bad;
-		}
+  /* search header for all options. */
+  for (optlen = 0; dstoptlen > 0; dstoptlen -= optlen, opt += optlen) {
+    if (*opt != IP6OPT_PAD1 &&
+        (dstoptlen < IP6OPT_MINLEN || *(opt + 1) + 2 > dstoptlen)) {
+      ip6stat.ip6s_toosmall++;
+      drop_reason = DROP_REASON_IP_TOO_SMALL;
+      goto bad;
+    }
 
-		switch (*opt) {
-		case IP6OPT_PAD1:
-			optlen = 1;
-			break;
-		case IP6OPT_PADN:
-			optlen = *(opt + 1) + 2;
-			break;
+    switch (*opt) {
+    case IP6OPT_PAD1:
+      optlen = 1;
+      break;
+    case IP6OPT_PADN:
+      optlen = *(opt + 1) + 2;
+      break;
 
-		default:                /* unknown option */
-			optlen = ip6_unknown_opt(opt, dstoptlen, m,
-			    opt - mtod(m, u_int8_t *));
-			if (optlen == -1) {
-				return IPPROTO_DONE;
-			}
-			optlen += 2;
-			break;
-		}
-	}
-	*mp = m;
-	*offp = off;
-	return dstopts->ip6d_nxt;
+    default: /* unknown option */
+      optlen = ip6_unknown_opt(opt, dstoptlen, m, opt - mtod(m, u_int8_t *));
+      if (optlen == -1) {
+        return IPPROTO_DONE;
+      }
+      optlen += 2;
+      break;
+    }
+  }
+  *mp = m;
+  *offp = off;
+  return dstopts->ip6d_nxt;
 
 bad:
-	*mp = NULL;
-	m_drop(m, DROPTAP_FLAG_DIR_IN | DROPTAP_FLAG_L2_MISSING, drop_reason, NULL, 0);
-	return IPPROTO_DONE;
+  *mp = NULL;
+  m_drop(m, DROPTAP_FLAG_DIR_IN | DROPTAP_FLAG_L2_MISSING, drop_reason, NULL,
+         0);
+  return IPPROTO_DONE;
 }

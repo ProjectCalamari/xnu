@@ -26,19 +26,19 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include "std_safe.h"
 #include "dt_proxy.h"
+#include "std_safe.h"
 
-// The normal XNU executable links to libsptm_xnu.a and libTightbeam.a for platforms that require it.
-// The unit-test environment however isn't supposed to call into these libraries
-// and can't link to them anyway because they are built for arch arm64.kernel, not arm64.
-// Instead, the required symbols are discovered at build time and defined in this translation unit.
-// This is done to satisfy the linker and to show an error if one of these function
-// ends up being called.
-// These definitions ignore the real return value and arguments of
+// The normal XNU executable links to libsptm_xnu.a and libTightbeam.a for
+// platforms that require it. The unit-test environment however isn't supposed
+// to call into these libraries and can't link to them anyway because they are
+// built for arch arm64.kernel, not arm64. Instead, the required symbols are
+// discovered at build time and defined in this translation unit. This is done
+// to satisfy the linker and to show an error if one of these function ends up
+// being called. These definitions ignore the real return value and arguments of
 // the functions to keep it simple, and the linker doesn't care.
 
-
-#define UNIMPLEMENTED(name) void name(void) { PT_FAIL("unimplemented: " #name); }
+#define UNIMPLEMENTED(name)                                                    \
+  void name(void) { PT_FAIL("unimplemented: " #name); }
 #include "func_unimpl.inc"
 #undef UNIMPLEMENTED

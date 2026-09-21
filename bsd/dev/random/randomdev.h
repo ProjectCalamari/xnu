@@ -27,14 +27,16 @@
  */
 
 /*
- *       WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!
+ *       WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!
+ * WARNING!
  *
- *       THIS FILE IS NEEDED TO PASS FIPS ACCEPTANCE FOR THE RANDOM NUMBER GENERATOR.
- *       IF YOU ALTER IT IN ANY WAY, WE WILL NEED TO GO THOUGH FIPS ACCEPTANCE AGAIN,
- *       AN OPERATION THAT IS VERY EXPENSIVE AND TIME CONSUMING.  IN OTHER WORDS,
- *       DON'T MESS WITH THIS FILE.
+ *       THIS FILE IS NEEDED TO PASS FIPS ACCEPTANCE FOR THE RANDOM NUMBER
+ * GENERATOR. IF YOU ALTER IT IN ANY WAY, WE WILL NEED TO GO THOUGH FIPS
+ * ACCEPTANCE AGAIN, AN OPERATION THAT IS VERY EXPENSIVE AND TIME CONSUMING.  IN
+ * OTHER WORDS, DON'T MESS WITH THIS FILE.
  *
- *       WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!
+ *       WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!
+ * WARNING!
  */
 
 #ifndef __DEV_RANDOMDEV_H__
@@ -46,14 +48,14 @@
 
 #include <sys/random.h>
 
-void PreliminarySetup( void );
-void random_init( void );
+void PreliminarySetup(void);
+void random_init(void);
 int random_open(dev_t dev, int flags, int devtype, struct proc *pp);
 int random_close(dev_t dev, int flags, int mode, struct proc *pp);
 int random_read(dev_t dev, struct uio *uio, int ioflag);
 int random_write(dev_t dev, struct uio *uio, int ioflag);
 
-u_int32_t RandomULong( void );
+u_int32_t RandomULong(void);
 
 #endif /* __APPLE_API_PRIVATE */
 #endif /* __DEV_RANDOMDEV_H__ */

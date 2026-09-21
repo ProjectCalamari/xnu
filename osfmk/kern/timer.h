@@ -72,14 +72,14 @@
 #endif
 
 struct timer {
-	uint64_t tstamp;
+  uint64_t tstamp;
 #if defined(__LP64__)
-	uint64_t all_bits;
-#else /* defined(__LP64__) */
-	/* A check word on the high portion allows atomic updates. */
-	uint32_t low_bits;
-	uint32_t high_bits;
-	uint32_t high_bits_check;
+  uint64_t all_bits;
+#else  /* defined(__LP64__) */
+  /* A check word on the high portion allows atomic updates. */
+  uint32_t low_bits;
+  uint32_t high_bits;
+  uint32_t high_bits_check;
 #endif /* !defined(__LP64__) */
 } TIMER_ALIGNMENT;
 
@@ -109,13 +109,8 @@ void timer_update(timer_t timer, uint64_t tstamp);
  * Read the accumulated time of `timer`.
  */
 #if defined(__LP64__)
-static inline
-uint64_t
-timer_grab(timer_t timer)
-{
-	return timer->all_bits;
-}
-#else /* defined(__LP64__) */
+static inline uint64_t timer_grab(timer_t timer) { return timer->all_bits; }
+#else  /* defined(__LP64__) */
 uint64_t timer_grab(timer_t timer);
 #endif /* !defined(__LP64__) */
 

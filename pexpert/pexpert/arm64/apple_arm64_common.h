@@ -29,15 +29,15 @@
 #ifndef _PEXPERT_ARM64_APPLE_ARM64_COMMON_H
 #define _PEXPERT_ARM64_APPLE_ARM64_COMMON_H
 
-#define __ARM_ARCH__                         8
-#define __ARM_VMSA__                         8
-#define __ARM_VFP__                          4
-#define __ARM_COHERENT_CACHE__               1
-#define __ARM_COHERENT_IO__                  1
-#define __ARM_IC_NOALIAS_ICACHE__            1
-#define __ARM_DEBUG__                        7
-#define __ARM_ENABLE_SWAP__                  1
-#define __ARM_V8_CRYPTO_EXTENSIONS__         1
+#define __ARM_ARCH__ 8
+#define __ARM_VMSA__ 8
+#define __ARM_VFP__ 4
+#define __ARM_COHERENT_CACHE__ 1
+#define __ARM_COHERENT_IO__ 1
+#define __ARM_IC_NOALIAS_ICACHE__ 1
+#define __ARM_DEBUG__ 7
+#define __ARM_ENABLE_SWAP__ 1
+#define __ARM_V8_CRYPTO_EXTENSIONS__ 1
 
 /*
  * If we're using a parameterized PMAP + SPTM, we can enable kernel-only large
@@ -49,46 +49,47 @@
 #endif
 
 #if !ARM_LARGE_MEMORY
-#define __ARM64_PMAP_SUBPAGE_L1__            1
-#define __ARM64_PMAP_KERN_SUBPAGE_L1__       1
+#define __ARM64_PMAP_SUBPAGE_L1__ 1
+#define __ARM64_PMAP_KERN_SUBPAGE_L1__ 1
 #elif ARM_LARGE_MEMORY_KERNONLY && HAS_ARM_INDEPENDENT_TNSZ
 /* Kernel-only large memory */
-#define __ARM64_PMAP_SUBPAGE_L1__            1
+#define __ARM64_PMAP_SUBPAGE_L1__ 1
 #endif /* ARM_LARGE_MEMORY */
 
-#define APPLE_ARM64_ARCH_FAMILY              1
+#define APPLE_ARM64_ARCH_FAMILY 1
 #define ARM_ARCH_TIMER
 
 #if defined(HAS_CTRR3)
-#define KERNEL_INTEGRITY_CTRR                1
-#define KERNEL_CTRR_VERSION                  3
+#define KERNEL_INTEGRITY_CTRR 1
+#define KERNEL_CTRR_VERSION 3
 #elif defined(HAS_CTRR)
-#define KERNEL_INTEGRITY_CTRR                1
-#define KERNEL_CTRR_VERSION                  2
+#define KERNEL_INTEGRITY_CTRR 1
+#define KERNEL_CTRR_VERSION 2
 #elif defined(HAS_PARAVIRTUALIZED_CTRR)
-#define KERNEL_INTEGRITY_PV_CTRR             1
+#define KERNEL_INTEGRITY_PV_CTRR 1
 #elif defined(HAS_KTRR)
-#define KERNEL_INTEGRITY_KTRR                1
+#define KERNEL_INTEGRITY_KTRR 1
 #elif defined(MONITOR)
-#define KERNEL_INTEGRITY_WT                  1
+#define KERNEL_INTEGRITY_WT 1
 #endif
 
 #if defined(CPU_HAS_APPLE_PAC) && defined(__arm64e__)
-#define HAS_APPLE_PAC                        1 /* Has Apple ARMv8.3a pointer authentication */
+#define HAS_APPLE_PAC 1 /* Has Apple ARMv8.3a pointer authentication */
 #endif
 
-#include <pexpert/arm64/apple_arm64_regs.h>
-#include <pexpert/arm64/apple_arm64_cpu.h>
 #include <pexpert/arm64/AIC.h>
+#include <pexpert/arm64/apple_arm64_cpu.h>
+#include <pexpert/arm64/apple_arm64_regs.h>
 
 #ifndef ASSEMBLER
 #include <pexpert/arm/apple_uart_regs.h>
 
-#if !defined(APPLETYPHOON) && !defined(APPLETWISTER) && !defined(APPLEVIRTUALPLATFORM)
+#if !defined(APPLETYPHOON) && !defined(APPLETWISTER) &&                        \
+    !defined(APPLEVIRTUALPLATFORM)
 #include <pexpert/arm/dockchannel.h>
 
 // AOP_CLOCK frequency * 30 ms
-#define DOCKCHANNEL_DRAIN_PERIOD             (192000000 * 0.03)
+#define DOCKCHANNEL_DRAIN_PERIOD (192000000 * 0.03)
 #endif
 
 #endif /* ASSEMBLER */
@@ -97,13 +98,12 @@
  * See arm64/proc_reg.h for how these values are constructed from the MIDR.
  * The chip-revision property from EDT also uses these constants.
  */
-#define CPU_VERSION_A0                       0x00
-#define CPU_VERSION_A1                       0x01
-#define CPU_VERSION_B0                       0x10
-#define CPU_VERSION_B1                       0x11
-#define CPU_VERSION_C0                       0x20
-#define CPU_VERSION_UNKNOWN                  0xff
-
+#define CPU_VERSION_A0 0x00
+#define CPU_VERSION_A1 0x01
+#define CPU_VERSION_B0 0x10
+#define CPU_VERSION_B1 0x11
+#define CPU_VERSION_C0 0x20
+#define CPU_VERSION_UNKNOWN 0xff
 
 /*
  * Conservatively assume that BTI will be enforced.

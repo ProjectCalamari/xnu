@@ -26,9 +26,9 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include "assym.s"
 #include <arm64/proc_reg.h>
 #include <pexpert/arm64/board_config.h>
-#include "assym.s"
 
 #ifndef __ASSEMBLER__
 #error "This header should only be used in .s files"
@@ -43,7 +43,8 @@
  * x17: $x0->ss_64.x17
  * lr: $x0->ss_64.lr
  *
- * On CPUs with PAC support, this macro will auth the above values with ml_check_signed_state().
+ * On CPUs with PAC support, this macro will auth the above values with
+ * ml_check_signed_state().
  *
  * tmp1 - scratch register 1
  * tmp2 - scratch register 2
@@ -111,7 +112,8 @@
 	mov		x5, \tmp5
 	mov		x6, \tmp6
 #else
-	ldr		lr, [x0, SS64_LR]
+    ldr lr,
+    [ x0, SS64_LR ]
 #endif /* defined(HAS_APPLE_PAC) */
 .endmacro
 

@@ -29,7 +29,8 @@
  * This header file is used to store the types, prototypes, and inline functions
  * that define some of the most important data structures used in the pmap. This
  * header is only meant for sharing types within the pmap; if a type is meant to
- * be used by the rest of the kernel, then put it into osfmk/arm64/sptm/pmap/pmap.h.
+ * be used by the rest of the kernel, then put it into
+ * osfmk/arm64/sptm/pmap/pmap.h.
  */
 #pragma once
 
@@ -80,10 +81,8 @@ extern pmap_paddr_t vm_first_phys, vm_last_phys;
  *
  * @param pa The physical address to check.
  */
-static inline bool
-pa_valid(pmap_paddr_t pa)
-{
-	return (pa >= vm_first_phys) && (pa < vm_last_phys);
+static inline bool pa_valid(pmap_paddr_t pa) {
+  return (pa >= vm_first_phys) && (pa < vm_last_phys);
 }
 
 /* Sentinal value indicating an invalid physical address index. */
@@ -106,10 +105,8 @@ pa_valid(pmap_paddr_t pa)
  * @note This function is only valid for physical addresses that are
  *       kernel-managed.
  */
-static inline unsigned int
-pa_index(pmap_paddr_t pa)
-{
-	return (unsigned int)atop(pa - vm_first_phys);
+static inline unsigned int pa_index(pmap_paddr_t pa) {
+  return (unsigned int)atop(pa - vm_first_phys);
 }
 
 /**
@@ -119,17 +116,15 @@ pa_index(pmap_paddr_t pa)
  *
  * @return The page-aligned physical address corresponding to [pai].
  */
-static inline pmap_paddr_t
-pai_to_pa(unsigned int pai)
-{
-	return ptoa((pmap_paddr_t)pai) + vm_first_phys;
+static inline pmap_paddr_t pai_to_pa(unsigned int pai) {
+  return ptoa((pmap_paddr_t)pai) + vm_first_phys;
 }
 
 /* See the definition of pv_head_table for more information. */
 extern uintptr_t *pv_head_table;
 
 /* Represents a NULL entry in the pv_head_table. */
-#define PV_ENTRY_NULL ((pv_entry_t *) 0)
+#define PV_ENTRY_NULL ((pv_entry_t *)0)
 
 /**
  * Given a physical address index, return the corresponding pv_head_table entry.
@@ -141,10 +136,8 @@ extern uintptr_t *pv_head_table;
  * @param pai The index returned by pa_index() for the page whose pv_head_table
  *            entry should be retrieved.
  */
-static inline uintptr_t
-pai_to_pvh(unsigned int pai)
-{
-	return pv_head_table[pai];
+static inline uintptr_t pai_to_pvh(unsigned int pai) {
+  return pv_head_table[pai];
 }
 
 /**
@@ -174,15 +167,15 @@ pai_to_pvh(unsigned int pai)
  * type needs to be checked before dereferencing the pointer to determine which
  * pointer type to dereference as.
  */
-__enum_closed_decl(pvh_type_t, uint8_t, {
-	PVH_TYPE_NULL = 0b00,
-	PVH_TYPE_PVEP = 0b01,
-	PVH_TYPE_PTEP = 0b10,
-	PVH_TYPE_PTDP = 0b11,
-});
+__enum_closed_decl(pvh_type_t, uint8_t,
+                   {
+                       PVH_TYPE_NULL = 0b00,
+                       PVH_TYPE_PVEP = 0b01,
+                       PVH_TYPE_PTEP = 0b10,
+                       PVH_TYPE_PTDP = 0b11,
+                   });
 
 #define PVH_TYPE_MASK (0x3UL)
-
 
 /**
  * PV_HEAD_TABLE Flags.
@@ -271,7 +264,8 @@ __enum_closed_decl(pvh_type_t, uint8_t, {
  * Any change to this #define should also update the copy located in the pmap.py
  * LLDB macros file.
  */
-#define PVH_MUTABLE_FLAGS (PVH_FLAG_CPU | PVH_FLAG_EXEC | PVH_FLAG_HASHED | PVH_FLAG_RETIRED)
+#define PVH_MUTABLE_FLAGS                                                      \
+  (PVH_FLAG_CPU | PVH_FLAG_EXEC | PVH_FLAG_HASHED | PVH_FLAG_RETIRED)
 
 #define PVH_LOCK_FLAGS (PVH_FLAG_LOCK | PVH_FLAG_SLEEP)
 
@@ -280,7 +274,8 @@ __enum_closed_decl(pvh_type_t, uint8_t, {
 /* Mask used to clear out the TYPE bits from a pv_head_table entry/pointer. */
 #define PVH_LIST_MASK (~PVH_TYPE_MASK)
 
-/* Which 32-bit word in each pv_head_table entry/pointer contains the LOCK bit. */
+/* Which 32-bit word in each pv_head_table entry/pointer contains the LOCK bit.
+ */
 #define PVH_LOCK_WORD 1 /* Assumes little-endian */
 
 /**
@@ -289,12 +284,11 @@ __enum_closed_decl(pvh_type_t, uint8_t, {
  *
  * @param index The physical address index to check.
  */
-static inline void
-pvh_assert_locked(__assert_only unsigned int index)
-{
-	assertf(os_atomic_load(&pv_head_table[index], relaxed) & PVH_LOCK_FLAGS,
-	    "%s: PVH %p (=%p) for pai 0x%x not locked or in sleep mode", __func__,
-	    &pv_head_table[index], (void*)(os_atomic_load(&pv_head_table[index], relaxed)), index);
+static inline void pvh_assert_locked(__assert_only unsigned int index) {
+  assertf(os_atomic_load(&pv_head_table[index], relaxed) & PVH_LOCK_FLAGS,
+          "%s: PVH %p (=%p) for pai 0x%x not locked or in sleep mode", __func__,
+          &pv_head_table[index],
+          (void *)(os_atomic_load(&pv_head_table[index], relaxed)), index);
 }
 
 /**
@@ -305,10 +299,8 @@ pvh_assert_locked(__assert_only unsigned int index)
  *
  * @return A pointer to the 32-bit word containing the lock bit
  */
-static inline uint32_t*
-pvh_lock_word(unsigned int index)
-{
-	return (uint32_t*)(&pv_head_table[index]) + PVH_LOCK_WORD;
+static inline uint32_t *pvh_lock_word(unsigned int index) {
+  return (uint32_t *)(&pv_head_table[index]) + PVH_LOCK_WORD;
 }
 
 /**
@@ -320,44 +312,46 @@ pvh_lock_word(unsigned int index)
 #define PVH_LOCK_BIT_OFFSET (PVH_LOCK_BIT - (PVH_LOCK_WORD * 32))
 
 /**
- * Lock a pv_head_table entry, and return the value stored in the pv_head_table array.
+ * Lock a pv_head_table entry, and return the value stored in the pv_head_table
+ * array.
  *
  * @param index The physical address index of the pv_head_table entry to lock.
  *
  * @return A wrapper object with the contents of the locked pv_head_table entry.
  */
 static inline locked_pvh_t __attribute__((warn_unused_result))
-pvh_lock(unsigned int index)
-{
-	extern unsigned int not_in_kdp;
-	const bool was_preemptible = preemption_enabled();
-	assert(was_preemptible || (startup_phase < STARTUP_SUB_EARLY_BOOT) ||
-	    PMAP_IS_HIBERNATING() || !not_in_kdp);
+pvh_lock(unsigned int index) {
+  extern unsigned int not_in_kdp;
+  const bool was_preemptible = preemption_enabled();
+  assert(was_preemptible || (startup_phase < STARTUP_SUB_EARLY_BOOT) ||
+         PMAP_IS_HIBERNATING() || !not_in_kdp);
 
-	bool (^check_preemption)(void) = ^bool (void) {
-		return was_preemptible && pmap_pending_preemption();
-	};
+  bool (^check_preemption)(void) = ^bool(void) {
+    return was_preemptible && pmap_pending_preemption();
+  };
 
-	hw_lock_status_t ret;
-	locked_pvh_t locked_pvh = {.pvh = 0, .pai = index};
-	do {
-		ret = hw_lock_bit_to_b(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET,
-		    &hw_lock_bit_policy, check_preemption, &pmap_lck_grp);
+  hw_lock_status_t ret;
+  locked_pvh_t locked_pvh = {.pvh = 0, .pai = index};
+  do {
+    ret =
+        hw_lock_bit_to_b(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET,
+                         &hw_lock_bit_policy, check_preemption, &pmap_lck_grp);
 
-		if (ret == HW_LOCK_ACQUIRED) {
-			locked_pvh.pvh = os_atomic_load(&pv_head_table[index], relaxed);
-			if (__improbable(locked_pvh.pvh & PVH_FLAG_SLEEP)) {
-				wait_result_t wres;
-				wres = assert_wait(&pv_head_table[index], THREAD_UNINT);
-				hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
-				assertf(wres == THREAD_WAITING, "%s: unexpected wait result %d", __func__, wres);
-				thread_block(THREAD_CONTINUE_NULL);
-				ret = HW_LOCK_CONTENDED;
-			}
-		}
-	} while (ret != HW_LOCK_ACQUIRED);
+    if (ret == HW_LOCK_ACQUIRED) {
+      locked_pvh.pvh = os_atomic_load(&pv_head_table[index], relaxed);
+      if (__improbable(locked_pvh.pvh & PVH_FLAG_SLEEP)) {
+        wait_result_t wres;
+        wres = assert_wait(&pv_head_table[index], THREAD_UNINT);
+        hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
+        assertf(wres == THREAD_WAITING, "%s: unexpected wait result %d",
+                __func__, wres);
+        thread_block(THREAD_CONTINUE_NULL);
+        ret = HW_LOCK_CONTENDED;
+      }
+    }
+  } while (ret != HW_LOCK_ACQUIRED);
 
-	return locked_pvh;
+  return locked_pvh;
 }
 
 /**
@@ -373,97 +367,97 @@ pvh_lock(unsigned int index)
  * @return A wrapper object with the contents of the locked pv_head_table entry.
  */
 static inline locked_pvh_t __attribute__((warn_unused_result))
-pvh_lock_nopreempt(unsigned int index)
-{
-	if (__improbable(preemption_enabled())) {
-		return pvh_lock(index);
-	}
-	hw_lock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET, &pmap_lck_grp);
-	const locked_pvh_t locked_pvh = {.pvh = os_atomic_load(&pv_head_table[index], relaxed), .pai = index};
+pvh_lock_nopreempt(unsigned int index) {
+  if (__improbable(preemption_enabled())) {
+    return pvh_lock(index);
+  }
+  hw_lock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET, &pmap_lck_grp);
+  const locked_pvh_t locked_pvh = {
+      .pvh = os_atomic_load(&pv_head_table[index], relaxed), .pai = index};
 
-	if (__improbable(locked_pvh.pvh & PVH_FLAG_SLEEP)) {
-		panic("%s invoked on sleep-mode PVH %p for pai 0x%x", __func__, &pv_head_table[index], index);
-	}
+  if (__improbable(locked_pvh.pvh & PVH_FLAG_SLEEP)) {
+    panic("%s invoked on sleep-mode PVH %p for pai 0x%x", __func__,
+          &pv_head_table[index], index);
+  }
 
-	return locked_pvh;
+  return locked_pvh;
 }
 
 /**
- * Attempt to lock a pv_head_table entry, failing if the lock can't be immediately acquired.
+ * Attempt to lock a pv_head_table entry, failing if the lock can't be
+ * immediately acquired.
  *
  * @param index The physical address index of the pv_head_table entry to lock.
  *
- * @return A wrapper object with the contents of the locked pv_head_table entry if successful,
- *         0 otherwise.
+ * @return A wrapper object with the contents of the locked pv_head_table entry
+ * if successful, 0 otherwise.
  */
 static inline locked_pvh_t __attribute__((warn_unused_result))
-pvh_try_lock(unsigned int index)
-{
-	locked_pvh_t locked_pvh = {.pvh = 0, .pai = index};
-	bool locked = hw_lock_bit_try(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET, &pmap_lck_grp);
+pvh_try_lock(unsigned int index) {
+  locked_pvh_t locked_pvh = {.pvh = 0, .pai = index};
+  bool locked =
+      hw_lock_bit_try(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET, &pmap_lck_grp);
 
-	if (locked) {
-		locked_pvh.pvh = os_atomic_load(&pv_head_table[index], relaxed);
-		assert(locked_pvh.pvh != 0);
-		if (__improbable(locked_pvh.pvh & PVH_FLAG_SLEEP)) {
-			hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
-			locked_pvh.pvh = 0;
-		}
-	}
+  if (locked) {
+    locked_pvh.pvh = os_atomic_load(&pv_head_table[index], relaxed);
+    assert(locked_pvh.pvh != 0);
+    if (__improbable(locked_pvh.pvh & PVH_FLAG_SLEEP)) {
+      hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
+      locked_pvh.pvh = 0;
+    }
+  }
 
-	return locked_pvh;
+  return locked_pvh;
 }
 
 /**
  * Helper for determining whether a preceding pvh_try_lock() call succeeded.
  *
- * @param locked_pvh A wrapper representing a possibly-locked PV head table entry
- *        returned by pvh_try_lock().
+ * @param locked_pvh A wrapper representing a possibly-locked PV head table
+ * entry returned by pvh_try_lock().
  *
- * @return True if [locked_pvh] represents a successfully-locked PVH, false otherwise.
+ * @return True if [locked_pvh] represents a successfully-locked PVH, false
+ * otherwise.
  */
-static inline bool
-pvh_try_lock_success(const locked_pvh_t *locked_pvh)
-{
-	assert(locked_pvh != NULL);
-	return locked_pvh->pvh != 0;
+static inline bool pvh_try_lock_success(const locked_pvh_t *locked_pvh) {
+  assert(locked_pvh != NULL);
+  return locked_pvh->pvh != 0;
 }
 
 /**
- * Place a pv_head_table entry in sleep mode, so that other threads contending on the PVH
- * lock will sleep until this thread calls pvh_unlock().
+ * Place a pv_head_table entry in sleep mode, so that other threads contending
+ * on the PVH lock will sleep until this thread calls pvh_unlock().
  *
  * @note It is legal to call this function if the lock is already in sleep mode.
  *       In that case, the call will have no effect.
- * @note This function must not be called with preemption disabled by any other agent
- *       but [locked_pvh] itself.  Preemption must be fully re-enabled by the time
- *       this function returns, either because it was already enabled (because the
- *       lock was already in sleep mode), or because this function enabled it by placing
- *       the lock in sleep mode.
+ * @note This function must not be called with preemption disabled by any other
+ * agent but [locked_pvh] itself.  Preemption must be fully re-enabled by the
+ * time this function returns, either because it was already enabled (because
+ * the lock was already in sleep mode), or because this function enabled it by
+ * placing the lock in sleep mode.
  *
- * @param locked_pvh Pointer to a wrapper object representing the locked PV head table entry.
+ * @param locked_pvh Pointer to a wrapper object representing the locked PV head
+ * table entry.
  */
-static inline void
-pvh_lock_enter_sleep_mode(locked_pvh_t *locked_pvh)
-{
-	assert(locked_pvh != NULL);
-	assert(locked_pvh->pvh != 0);
-	unsigned int index = locked_pvh->pai;
-	pvh_assert_locked(index);
-	const uintptr_t old_pvh = os_atomic_load(&pv_head_table[index], relaxed);
-	if (!(old_pvh & PVH_FLAG_SLEEP)) {
-		assert(old_pvh & PVH_FLAG_LOCK);
-		os_atomic_store(&pv_head_table[index], old_pvh | PVH_FLAG_SLEEP, relaxed);
-		/**
-		 * Tell the scheduler that this thread may need a priority boost if it needs to go
-		 * off-core, to reduce the likelihood of priority inversion.
-		 */
-		locked_pvh->pri_token = thread_priority_floor_start();
-		hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
-	}
+static inline void pvh_lock_enter_sleep_mode(locked_pvh_t *locked_pvh) {
+  assert(locked_pvh != NULL);
+  assert(locked_pvh->pvh != 0);
+  unsigned int index = locked_pvh->pai;
+  pvh_assert_locked(index);
+  const uintptr_t old_pvh = os_atomic_load(&pv_head_table[index], relaxed);
+  if (!(old_pvh & PVH_FLAG_SLEEP)) {
+    assert(old_pvh & PVH_FLAG_LOCK);
+    os_atomic_store(&pv_head_table[index], old_pvh | PVH_FLAG_SLEEP, relaxed);
+    /**
+     * Tell the scheduler that this thread may need a priority boost if it needs
+     * to go off-core, to reduce the likelihood of priority inversion.
+     */
+    locked_pvh->pri_token = thread_priority_floor_start();
+    hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
+  }
 
-	/* Hibernation runs single-core so we can skip this check. */
-	assert(preemption_enabled() || PMAP_IS_HIBERNATING());
+  /* Hibernation runs single-core so we can skip this check. */
+  assert(preemption_enabled() || PMAP_IS_HIBERNATING());
 }
 
 /**
@@ -475,61 +469,62 @@ pvh_lock_enter_sleep_mode(locked_pvh_t *locked_pvh)
  * @return True if the pv_head_table entry is of the passed in type, false
  *         otherwise.
  */
-static inline bool
-pvh_test_type(uintptr_t pvh, pvh_type_t type)
-{
-	return (pvh & PVH_TYPE_MASK) == type;
+static inline bool pvh_test_type(uintptr_t pvh, pvh_type_t type) {
+  return (pvh & PVH_TYPE_MASK) == type;
 }
 
 /**
- * Unlock a pv_head_table entry, updating the contents of the entry with the passed-in value.
+ * Unlock a pv_head_table entry, updating the contents of the entry with the
+ * passed-in value.
  *
- * @note Only the non-lock flags, pointer, and type fields of the entry will be updated
- *       according to the passed-in value.  PVH_LOCK_FLAGS will be ignored as they are
- *       directly manipulated by this function.
+ * @note Only the non-lock flags, pointer, and type fields of the entry will be
+ * updated according to the passed-in value.  PVH_LOCK_FLAGS will be ignored as
+ * they are directly manipulated by this function.
  *
- * @param locked_pvh Pointer to a wrapper object representing the locked PV head table entry.
- *        The pvh field from this entry, except for the PVH_LOCK_FLAGS bits, will be stored
- *        in pv_head_table to reflect any updates that may have been performed on the PV list
- *        while the lock was held.
+ * @param locked_pvh Pointer to a wrapper object representing the locked PV head
+ * table entry. The pvh field from this entry, except for the PVH_LOCK_FLAGS
+ * bits, will be stored in pv_head_table to reflect any updates that may have
+ * been performed on the PV list while the lock was held.
  */
-static inline void
-pvh_unlock(locked_pvh_t *locked_pvh)
-{
-	assert(locked_pvh != NULL);
-	assert(locked_pvh->pvh != 0);
-	unsigned int index = locked_pvh->pai;
-	pvh_assert_locked(index);
-	const uintptr_t old_pvh = os_atomic_load(&pv_head_table[index], relaxed);
-	bool pri_floor_end = false;
+static inline void pvh_unlock(locked_pvh_t *locked_pvh) {
+  assert(locked_pvh != NULL);
+  assert(locked_pvh->pvh != 0);
+  unsigned int index = locked_pvh->pai;
+  pvh_assert_locked(index);
+  const uintptr_t old_pvh = os_atomic_load(&pv_head_table[index], relaxed);
+  bool pri_floor_end = false;
 
-	if (__improbable(old_pvh & PVH_FLAG_SLEEP)) {
-		pri_floor_end = true;
-		const bool was_preemptible = preemption_enabled();
-		bool (^check_preemption)(void) = ^bool (void) {
-			return was_preemptible && pmap_pending_preemption();
-		};
+  if (__improbable(old_pvh & PVH_FLAG_SLEEP)) {
+    pri_floor_end = true;
+    const bool was_preemptible = preemption_enabled();
+    bool (^check_preemption)(void) = ^bool(void) {
+      return was_preemptible && pmap_pending_preemption();
+    };
 
-		hw_lock_status_t ret;
-		do {
-			ret = hw_lock_bit_to_b(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET,
-			    &hw_lock_bit_policy, check_preemption, &pmap_lck_grp);
-		} while (ret != HW_LOCK_ACQUIRED);
+    hw_lock_status_t ret;
+    do {
+      ret = hw_lock_bit_to_b(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET,
+                             &hw_lock_bit_policy, check_preemption,
+                             &pmap_lck_grp);
+    } while (ret != HW_LOCK_ACQUIRED);
 
-		os_atomic_store(&pv_head_table[index],
-		    (locked_pvh->pvh & ~PVH_FLAG_SLEEP) | PVH_FLAG_LOCK, relaxed);
-		thread_wakeup(&pv_head_table[index]);
-	} else if ((old_pvh & ~PVH_LOCK_FLAGS) != (locked_pvh->pvh & ~PVH_LOCK_FLAGS)) {
-		os_atomic_store(&pv_head_table[index],
-		    (locked_pvh->pvh & ~PVH_FLAG_SLEEP) | PVH_FLAG_LOCK, relaxed);
-	}
-	hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
+    os_atomic_store(&pv_head_table[index],
+                    (locked_pvh->pvh & ~PVH_FLAG_SLEEP) | PVH_FLAG_LOCK,
+                    relaxed);
+    thread_wakeup(&pv_head_table[index]);
+  } else if ((old_pvh & ~PVH_LOCK_FLAGS) !=
+             (locked_pvh->pvh & ~PVH_LOCK_FLAGS)) {
+    os_atomic_store(&pv_head_table[index],
+                    (locked_pvh->pvh & ~PVH_FLAG_SLEEP) | PVH_FLAG_LOCK,
+                    relaxed);
+  }
+  hw_unlock_bit(pvh_lock_word(index), PVH_LOCK_BIT_OFFSET);
 
-	if (__improbable(pri_floor_end)) {
-		thread_priority_floor_end(&locked_pvh->pri_token);
-	}
+  if (__improbable(pri_floor_end)) {
+    thread_priority_floor_end(&locked_pvh->pri_token);
+  }
 
-	locked_pvh->pvh = 0;
+  locked_pvh->pvh = 0;
 }
 
 /**
@@ -542,11 +537,9 @@ pvh_unlock(locked_pvh_t *locked_pvh)
  *         physical page by masking off the TYPE bits and adding any missing
  *         flags to the upper portion of the pointer.
  */
-static inline pt_entry_t*
-pvh_ptep(uintptr_t pvh)
-{
-	assert(pvh_test_type(pvh, PVH_TYPE_PTEP));
-	return (pt_entry_t *)((pvh & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
+static inline pt_entry_t *pvh_ptep(uintptr_t pvh) {
+  assert(pvh_test_type(pvh, PVH_TYPE_PTEP));
+  return (pt_entry_t *)((pvh & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
 }
 
 /**
@@ -560,11 +553,9 @@ pvh_ptep(uintptr_t pvh)
  *         physical page by masking off the TYPE bits and adding any missing
  *         flags to the upper portion of the pointer.
  */
-static inline pv_entry_t*
-pvh_pve_list(uintptr_t pvh)
-{
-	assert(pvh_test_type(pvh, PVH_TYPE_PVEP));
-	return (pv_entry_t *)((pvh & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
+static inline pv_entry_t *pvh_pve_list(uintptr_t pvh) {
+  assert(pvh_test_type(pvh, PVH_TYPE_PVEP));
+  return (pv_entry_t *)((pvh & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
 }
 
 /**
@@ -574,10 +565,8 @@ pvh_pve_list(uintptr_t pvh)
  *
  * @return The mutable flags encoded in [pvh].
  */
-static inline uintptr_t
-pvh_get_flags(uintptr_t pvh)
-{
-	return pvh & PVH_MUTABLE_FLAGS;
+static inline uintptr_t pvh_get_flags(uintptr_t pvh) {
+  return pvh & PVH_MUTABLE_FLAGS;
 }
 
 /**
@@ -592,10 +581,9 @@ pvh_get_flags(uintptr_t pvh)
  *                   entry/pointer to update.
  *
  */
-static inline void
-pvh_set_flags(locked_pvh_t *locked_pvh, uintptr_t flags)
-{
-	locked_pvh->pvh = (locked_pvh->pvh & ~PVH_MUTABLE_FLAGS) | (flags & PVH_MUTABLE_FLAGS);
+static inline void pvh_set_flags(locked_pvh_t *locked_pvh, uintptr_t flags) {
+  locked_pvh->pvh =
+      (locked_pvh->pvh & ~PVH_MUTABLE_FLAGS) | (flags & PVH_MUTABLE_FLAGS);
 }
 
 /**
@@ -613,12 +601,11 @@ pvh_set_flags(locked_pvh_t *locked_pvh, uintptr_t flags)
  *             pv_entry_t*, or pt_desc_t* depending on the type.
  * @param type The type of the new entry.
  */
-static inline void
-pvh_update_head(locked_pvh_t *locked_pvh, void *pvep, unsigned int type)
-{
-	assert(!((uintptr_t)pvep & PVH_TYPE_MASK));
-	const uintptr_t pvh_flags = locked_pvh->pvh & PVH_HIGH_FLAGS;
-	locked_pvh->pvh = ((uintptr_t)pvep & ~PVH_HIGH_FLAGS) | type | pvh_flags;
+static inline void pvh_update_head(locked_pvh_t *locked_pvh, void *pvep,
+                                   unsigned int type) {
+  assert(!((uintptr_t)pvep & PVH_TYPE_MASK));
+  const uintptr_t pvh_flags = locked_pvh->pvh & PVH_HIGH_FLAGS;
+  locked_pvh->pvh = ((uintptr_t)pvep & ~PVH_HIGH_FLAGS) | type | pvh_flags;
 }
 
 /**
@@ -638,14 +625,12 @@ pvh_update_head(locked_pvh_t *locked_pvh, void *pvep, unsigned int type)
  *
  * @return True if the entry is an IOMMU mapping, false otherwise.
  */
-static inline bool
-pvh_ptep_is_iommu(const pt_entry_t *ptep)
-{
+static inline bool pvh_ptep_is_iommu(const pt_entry_t *ptep) {
 #ifdef PVH_FLAG_IOMMU
-	return (uintptr_t)ptep & PVH_FLAG_IOMMU;
+  return (uintptr_t)ptep & PVH_FLAG_IOMMU;
 #else /* PVH_FLAG_IOMMU */
-	#pragma unused(ptep)
-	return false;
+#pragma unused(ptep)
+  return false;
 #endif /* PVH_FLAG_IOMMU */
 }
 
@@ -658,14 +643,13 @@ pvh_ptep_is_iommu(const pt_entry_t *ptep)
  *
  * @return A valid dereferencable pointer to the page table entry.
  */
-static inline const pt_entry_t*
-pvh_strip_ptep(const pt_entry_t *ptep)
-{
+static inline const pt_entry_t *pvh_strip_ptep(const pt_entry_t *ptep) {
 #ifdef PVH_FLAG_IOMMU
-	const uintptr_t pte_va = (uintptr_t)ptep;
-	return (const pt_entry_t*)((pte_va & ~PVH_FLAG_IOMMU) | PVH_FLAG_IOMMU_TABLE);
-#else /* PVH_FLAG_IOMMU */
-	return ptep;
+  const uintptr_t pte_va = (uintptr_t)ptep;
+  return (const pt_entry_t *)((pte_va & ~PVH_FLAG_IOMMU) |
+                              PVH_FLAG_IOMMU_TABLE);
+#else  /* PVH_FLAG_IOMMU */
+  return ptep;
 #endif /* PVH_FLAG_IOMMU */
 }
 
@@ -684,8 +668,8 @@ pvh_strip_ptep(const pt_entry_t *ptep)
  * differently depending on whether there's a single mapping to a page
  * (PVH_TYPE_PTEP) or multiple (PVH_TYPE_PVEP). For single mappings, the bit is
  * tracked in the pp_attr_table. But when there are multiple mappings, the least
- * significant bit of the corresponding "pve_pte" pointer in each pv_entry object
- * is used as a marker for pages using alternate accounting.
+ * significant bit of the corresponding "pve_pte" pointer in each pv_entry
+ * object is used as a marker for pages using alternate accounting.
  *
  * @note See the definition for PP_ATTR_ALTACCT for a more detailed description
  *       of what "alternate accounting" actually means in respect to the
@@ -698,8 +682,8 @@ pvh_strip_ptep(const pt_entry_t *ptep)
  * When there are multiple mappings, we use the next least significant bit of
  * the corresponding "pve_pte" pointer for that.
  */
-#define PVE_PTEP_ALTACCT ((uintptr_t) 0x1)
-#define PVE_PTEP_INTERNAL ((uintptr_t) 0x2)
+#define PVE_PTEP_ALTACCT ((uintptr_t)0x1)
+#define PVE_PTEP_INTERNAL ((uintptr_t)0x2)
 #define PVE_PTEP_FLAGS (PVE_PTEP_ALTACCT | PVE_PTEP_INTERNAL)
 
 /**
@@ -709,11 +693,10 @@ pvh_strip_ptep(const pt_entry_t *ptep)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_set_altacct(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_ALTACCT);
+static inline void pve_set_altacct(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_ALTACCT);
 }
 
 /**
@@ -723,11 +706,10 @@ pve_set_altacct(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_set_internal(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_INTERNAL);
+static inline void pve_set_internal(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] | PVE_PTEP_INTERNAL);
 }
 
 /**
@@ -737,11 +719,10 @@ pve_set_internal(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_clr_altacct(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_ALTACCT);
+static inline void pve_clr_altacct(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_ALTACCT);
 }
 
 /**
@@ -751,11 +732,10 @@ pve_clr_altacct(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-pve_clr_internal(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_INTERNAL);
+static inline void pve_clr_internal(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] =
+      (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_INTERNAL);
 }
 
 /**
@@ -765,11 +745,9 @@ pve_clr_internal(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline bool
-pve_get_altacct(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_ALTACCT;
+static inline bool pve_get_altacct(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_ALTACCT;
 }
 
 /**
@@ -779,11 +757,9 @@ pve_get_altacct(pv_entry_t *pvep, unsigned idx)
  *             mappings.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline bool
-pve_get_internal(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_INTERNAL;
+static inline bool pve_get_internal(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  return (uintptr_t)pvep->pve_ptep[idx] & PVE_PTEP_INTERNAL;
 }
 
 /**
@@ -796,11 +772,7 @@ pve_get_internal(pv_entry_t *pvep, unsigned idx)
  * @return The next virtual mapping for a physical page, or PV_ENTRY_NULL if the
  *         end of the list has been reached.
  */
-static inline pv_entry_t *
-pve_next(pv_entry_t *pvep)
-{
-	return pvep->pve_next;
-}
+static inline pv_entry_t *pve_next(pv_entry_t *pvep) { return pvep->pve_next; }
 
 /**
  * Return a pointer to the pve_next field in a pv_entry. This value is used
@@ -810,10 +782,8 @@ pve_next(pv_entry_t *pvep)
  *
  * @return Pointer to the pve_next field.
  */
-static inline pv_entry_t **
-pve_next_ptr(pv_entry_t *pvep)
-{
-	return &pvep->pve_next;
+static inline pv_entry_t **pve_next_ptr(pv_entry_t *pvep) {
+  return &pvep->pve_next;
 }
 
 /**
@@ -824,11 +794,9 @@ pve_next_ptr(pv_entry_t *pvep)
  *
  * @return Pointer to the page table entry.
  */
-static inline pt_entry_t *
-pve_get_ptep(pv_entry_t *pvep, unsigned idx)
-{
-	assert(idx < PTE_PER_PVE);
-	return (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_FLAGS);
+static inline pt_entry_t *pve_get_ptep(pv_entry_t *pvep, unsigned idx) {
+  assert(idx < PTE_PER_PVE);
+  return (pt_entry_t *)((uintptr_t)pvep->pve_ptep[idx] & ~PVE_PTEP_FLAGS);
 }
 
 /**
@@ -838,11 +806,10 @@ pve_get_ptep(pv_entry_t *pvep, unsigned idx)
  * @param idx Index of the chosen PTE pointer inside the PVE.
  * @param ptep_new The new page table entry.
  */
-static inline void
-pve_set_ptep(pv_entry_t *pvep, unsigned idx, pt_entry_t *ptep_new)
-{
-	assert(idx < PTE_PER_PVE);
-	pvep->pve_ptep[idx] = ptep_new;
+static inline void pve_set_ptep(pv_entry_t *pvep, unsigned idx,
+                                pt_entry_t *ptep_new) {
+  assert(idx < PTE_PER_PVE);
+  pvep->pve_ptep[idx] = ptep_new;
 }
 
 /**
@@ -850,13 +817,11 @@ pve_set_ptep(pv_entry_t *pvep, unsigned idx, pt_entry_t *ptep_new)
  *
  * @param pvep The pv_entry to initialize.
  */
-static inline void
-pve_init(pv_entry_t *pvep)
-{
-	pvep->pve_next = PV_ENTRY_NULL;
-	for (int i = 0; i < PTE_PER_PVE; i++) {
-		pvep->pve_ptep[i] = PT_ENTRY_NULL;
-	}
+static inline void pve_init(pv_entry_t *pvep) {
+  pvep->pve_next = PV_ENTRY_NULL;
+  for (int i = 0; i < PTE_PER_PVE; i++) {
+    pvep->pve_ptep[i] = PT_ENTRY_NULL;
+  }
 }
 
 /**
@@ -867,16 +832,14 @@ pve_init(pv_entry_t *pvep)
  *
  * @return Index of the found entry, or -1 if no entry exists.
  */
-static inline int
-pve_find_ptep_index(pv_entry_t *pvep, pt_entry_t *ptep)
-{
-	for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
-		if (pve_get_ptep(pvep, i) == ptep) {
-			return (int)i;
-		}
-	}
+static inline int pve_find_ptep_index(pv_entry_t *pvep, pt_entry_t *ptep) {
+  for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
+    if (pve_get_ptep(pvep, i) == ptep) {
+      return (int)i;
+    }
+  }
 
-	return -1;
+  return -1;
 }
 
 /**
@@ -886,16 +849,14 @@ pve_find_ptep_index(pv_entry_t *pvep, pt_entry_t *ptep)
  *
  * @return True if no PTEs are currently associated with this PVE, or false.
  */
-static inline bool
-pve_is_empty(pv_entry_t *pvep)
-{
-	for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
-		if (pve_get_ptep(pvep, i) != PT_ENTRY_NULL) {
-			return false;
-		}
-	}
+static inline bool pve_is_empty(pv_entry_t *pvep) {
+  for (unsigned int i = 0; i < PTE_PER_PVE; i++) {
+    if (pve_get_ptep(pvep, i) != PT_ENTRY_NULL) {
+      return false;
+    }
+  }
 
-	return true;
+  return true;
 }
 
 /**
@@ -911,13 +872,11 @@ pve_is_empty(pv_entry_t *pvep)
  *                   the linked list of mappings to update.
  * @param pvep The new mapping to add to the linked list.
  */
-static inline void
-pve_add(locked_pvh_t *locked_pvh, pv_entry_t *pvep)
-{
-	assert(pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP));
+static inline void pve_add(locked_pvh_t *locked_pvh, pv_entry_t *pvep) {
+  assert(pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP));
 
-	pvep->pve_next = pvh_pve_list(locked_pvh->pvh);
-	pvh_update_head(locked_pvh, pvep, PVH_TYPE_PVEP);
+  pvep->pve_next = pvh_pve_list(locked_pvh->pvh);
+  pvh_update_head(locked_pvh, pvep, PVH_TYPE_PVEP);
 }
 
 /**
@@ -929,8 +888,8 @@ pve_add(locked_pvh_t *locked_pvh, pv_entry_t *pvep)
  *       entry.
  *
  * @param locked_pvh A wrapper struct containing the pv_head_table entry/pointer
- *                   to update.  This entry represents the linked list of mappings
- *                   from which to remove an entry.
+ *                   to update.  This entry represents the linked list of
+ * mappings from which to remove an entry.
  * @param pvepp A pointer to the pv_entry_t* that's being removed. If this entry
  *              is the first in the linked list of mappings, then NULL should be
  *              passed here and the removal will be reflected in the returned
@@ -939,31 +898,30 @@ pve_add(locked_pvh_t *locked_pvh, pv_entry_t *pvep)
  *             dereference of the pvepp parameter (unless it's the pv_head_table
  *             entry).
  */
-static inline void
-pve_remove(locked_pvh_t *locked_pvh, pv_entry_t **pvepp, pv_entry_t *pvep)
-{
-	assert(pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP));
+static inline void pve_remove(locked_pvh_t *locked_pvh, pv_entry_t **pvepp,
+                              pv_entry_t *pvep) {
+  assert(pvh_test_type(locked_pvh->pvh, PVH_TYPE_PVEP));
 
-	if (pvepp == NULL) {
-		assertf(pvh_pve_list(locked_pvh->pvh) == pvep, "%s: pvh %p != pvep %p",
-		    __func__, (void*)locked_pvh->pvh, pvep);
-		if (pve_next(pvep) == PV_ENTRY_NULL) {
-			/* The last mapping to this page is being removed. */
-			pvh_update_head(locked_pvh, PV_ENTRY_NULL, PVH_TYPE_NULL);
-		} else {
-			/**
-			 * There are still mappings left, make the next one the new head of
-			 * the list. This effectively removes the first entry from the list.
-			 */
-			pvh_update_head(locked_pvh, pve_next(pvep), PVH_TYPE_PVEP);
-		}
-	} else {
-		/**
-		 * Move the previous entry's next field to the entry after the one being
-		 * removed. This will clobber the ALTACCT and INTERNAL bits.
-		 */
-		*pvepp = pve_next(pvep);
-	}
+  if (pvepp == NULL) {
+    assertf(pvh_pve_list(locked_pvh->pvh) == pvep, "%s: pvh %p != pvep %p",
+            __func__, (void *)locked_pvh->pvh, pvep);
+    if (pve_next(pvep) == PV_ENTRY_NULL) {
+      /* The last mapping to this page is being removed. */
+      pvh_update_head(locked_pvh, PV_ENTRY_NULL, PVH_TYPE_NULL);
+    } else {
+      /**
+       * There are still mappings left, make the next one the new head of
+       * the list. This effectively removes the first entry from the list.
+       */
+      pvh_update_head(locked_pvh, pve_next(pvep), PVH_TYPE_PVEP);
+    }
+  } else {
+    /**
+     * Move the previous entry's next field to the entry after the one being
+     * removed. This will clobber the ALTACCT and INTERNAL bits.
+     */
+    *pvepp = pve_next(pvep);
+  }
 }
 
 /**
@@ -991,13 +949,13 @@ pve_remove(locked_pvh_t *locked_pvh, pv_entry_t **pvepp, pv_entry_t *pvep)
  * the fields were within the same structure.
  */
 typedef struct {
-	/**
-	 * For non-leaf pagetables, should be 0.
-	 * For leaf pagetables, should reflect the number of wired entries.
-	 * For IOMMU pages, may optionally reflect a driver-defined refcount (IOMMU
-	 * operations are implicitly wired).
-	 */
-	unsigned short wiredcnt;
+  /**
+   * For non-leaf pagetables, should be 0.
+   * For leaf pagetables, should reflect the number of wired entries.
+   * For IOMMU pages, may optionally reflect a driver-defined refcount (IOMMU
+   * operations are implicitly wired).
+   */
+  unsigned short wiredcnt;
 } ptd_info_t;
 
 /**
@@ -1017,9 +975,10 @@ typedef uint64_t iommu_instance_t;
 
 /* 8-bit ID of the IOMMU driver which the instance derives from. */
 #define IOMMU_ID_SHIFT 8U
-#define IOMMU_ID_MASK  0x000000000000FF00ULL
+#define IOMMU_ID_MASK 0x000000000000FF00ULL
 
-#define GET_IOMMU_ID(x) ((sptm_iommu_id_t)(((x) & IOMMU_ID_MASK) >> IOMMU_ID_SHIFT))
+#define GET_IOMMU_ID(x)                                                        \
+  ((sptm_iommu_id_t)(((x) & IOMMU_ID_MASK) >> IOMMU_ID_SHIFT))
 #define SET_IOMMU_ID(x) (((uint64_t)(x) << IOMMU_ID_SHIFT) & IOMMU_ID_MASK)
 
 /**
@@ -1031,10 +990,12 @@ typedef uint64_t iommu_instance_t;
  * ppnum_t.
  */
 #define IOMMU_TOKEN_SHIFT 16U
-#define IOMMU_TOKEN_MASK  0x0000FFFFFFFF0000ULL
+#define IOMMU_TOKEN_MASK 0x0000FFFFFFFF0000ULL
 
-#define GET_IOMMU_TOKEN(x) ((iommu_token_t)(((x) & IOMMU_TOKEN_MASK) >> IOMMU_TOKEN_SHIFT))
-#define SET_IOMMU_TOKEN(x) (((uint64_t)(x) << IOMMU_TOKEN_SHIFT) & IOMMU_TOKEN_MASK)
+#define GET_IOMMU_TOKEN(x)                                                     \
+  ((iommu_token_t)(((x) & IOMMU_TOKEN_MASK) >> IOMMU_TOKEN_SHIFT))
+#define SET_IOMMU_TOKEN(x)                                                     \
+  (((uint64_t)(x) << IOMMU_TOKEN_SHIFT) & IOMMU_TOKEN_MASK)
 
 /**
  * The default value for iommu_instance_t. See the type definition for more
@@ -1061,33 +1022,33 @@ typedef uint64_t iommu_instance_t;
  * refcnt controlled by the IOMMU driver.
  */
 typedef struct pt_desc {
-	/* Each page table is either owned by a pmap or a specific IOMMU. */
-	union {
-		struct pmap *pmap;
-	};
+  /* Each page table is either owned by a pmap or a specific IOMMU. */
+  union {
+    struct pmap *pmap;
+  };
 
-	/**
-	 * The following fields contain per-page-table properties, and as such,
-	 * might have multiple elements each. This is due to a single PTD
-	 * potentially representing multiple page tables (in address spaces where
-	 * the VM page size differs from the hardware page size). Use the
-	 * ptd_get_index() function to get the correct index for a specific page
-	 * table.
-	 */
+  /**
+   * The following fields contain per-page-table properties, and as such,
+   * might have multiple elements each. This is due to a single PTD
+   * potentially representing multiple page tables (in address spaces where
+   * the VM page size differs from the hardware page size). Use the
+   * ptd_get_index() function to get the correct index for a specific page
+   * table.
+   */
 
-	/**
-	 * The first address of the virtual address space this page table is
-	 * translating for, or a value set by an IOMMU driver if this PTD is being
-	 * used to track an IOMMU page.
-	 */
-	vm_offset_t va;
+  /**
+   * The first address of the virtual address space this page table is
+   * translating for, or a value set by an IOMMU driver if this PTD is being
+   * used to track an IOMMU page.
+   */
+  vm_offset_t va;
 
-	/**
-	 * ptd_info_t's are allocated separately so as to reduce false sharing
-	 * with the va field. This is desirable because ptd_info_t's are updated
-	 * atomically from all CPUs.
-	 */
-	ptd_info_t *ptd_info;
+  /**
+   * ptd_info_t's are allocated separately so as to reduce false sharing
+   * with the va field. This is desirable because ptd_info_t's are updated
+   * atomically from all CPUs.
+   */
+  ptd_info_t *ptd_info;
 } pt_desc_t;
 
 /**
@@ -1104,126 +1065,132 @@ typedef struct pt_desc {
  * operations will need to be purged.
  */
 typedef struct {
-	/**
-	 * Critical section sequence number of the local CPU.  A value of zero
-	 * indicates that no pmap epoch critical section is currently active on
-	 * the CPU.
-	 */
-	uint64_t local_seq;
+  /**
+   * Critical section sequence number of the local CPU.  A value of zero
+   * indicates that no pmap epoch critical section is currently active on
+   * the CPU.
+   */
+  uint64_t local_seq;
 
-	/**
-	 * The sequence number to use the next time a pmap epoch critical section
-	 * is entered on the local CPU.  This should monotonically increase.
-	 */
-	uint64_t next_seq;
+  /**
+   * The sequence number to use the next time a pmap epoch critical section
+   * is entered on the local CPU.  This should monotonically increase.
+   */
+  uint64_t next_seq;
 
-	/**
-	 * This array stores the retype sequence numbers observed on remote CPUs.
-	 * When the local CPU needs to wait for critical sections to complete on
-	 * other CPUs, this is intended to provide an initial sample of those other
-	 * CPUs' critical section state.  The caller can then wait for each remote
-	 * CPU's sequence number to return to zero or advance beyond the value
-	 * stored in its entry in this array.
-	 */
-	uint64_t remote_seq[MAX_CPUS];
+  /**
+   * This array stores the retype sequence numbers observed on remote CPUs.
+   * When the local CPU needs to wait for critical sections to complete on
+   * other CPUs, this is intended to provide an initial sample of those other
+   * CPUs' critical section state.  The caller can then wait for each remote
+   * CPU's sequence number to return to zero or advance beyond the value
+   * stored in its entry in this array.
+   */
+  uint64_t remote_seq[MAX_CPUS];
 
-	/**
-	 * Flags used to track the state of an active pmap epoch drain operation
-	 * on the local CPU.
-	 */
+/**
+ * Flags used to track the state of an active pmap epoch drain operation
+ * on the local CPU.
+ */
 
-	/**
-	 * This flag indicates that a drain operation has been prepared on the
-	 * local CPU by sampling remote CPU epoch states into the remote_seq array.
-	 * This must be set before the drain operation can be performed.
-	 */
-	#define PMAP_EPOCH_PREPARED (1 << 0)
+/**
+ * This flag indicates that a drain operation has been prepared on the
+ * local CPU by sampling remote CPU epoch states into the remote_seq array.
+ * This must be set before the drain operation can be performed.
+ */
+#define PMAP_EPOCH_PREPARED (1 << 0)
 
-	/**
-	 * This flag indicates that one or more remote CPUs had a non-zero retype
-	 * epoch value when the remote_seq array was most recently sampled.
-	 * If this flag is not set, then we already know that no remote CPUs can
-	 * be in a critical section in which prior mapping state for the page to
-	 * be retyped may have been observed, so we can skip the drain operation.
-	 */
-	#define PMAP_EPOCH_DRAIN_REQUIRED (1 << 1)
-	uint8_t flags;
+/**
+ * This flag indicates that one or more remote CPUs had a non-zero retype
+ * epoch value when the remote_seq array was most recently sampled.
+ * If this flag is not set, then we already know that no remote CPUs can
+ * be in a critical section in which prior mapping state for the page to
+ * be retyped may have been observed, so we can skip the drain operation.
+ */
+#define PMAP_EPOCH_DRAIN_REQUIRED (1 << 1)
+  uint8_t flags;
 } pmap_epoch_t;
 
 #define PMAP_SPTM_PCPU_ALIGN (8192)
 
 typedef struct {
-	/**
-	 * Per-CPU array of SPTM_MAPPING_LIMIT PTE records, obtained from SPTM
-	 * during bootstrap.
-	 */
-	sptm_pte_t *sptm_prev_ptes;
+  /**
+   * Per-CPU array of SPTM_MAPPING_LIMIT PTE records, obtained from SPTM
+   * during bootstrap.
+   */
+  sptm_pte_t *sptm_prev_ptes;
 
-	/**
-	 * A piece of per-cpu scratch memory used by IOMMU drivers when passing data
-	 * into the SPTM. The size is defined by PMAP_IOMMU_SCRATCH_SIZE.
-	 */
-	void *sptm_iommu_scratch;
+  /**
+   * A piece of per-cpu scratch memory used by IOMMU drivers when passing data
+   * into the SPTM. The size is defined by PMAP_IOMMU_SCRATCH_SIZE.
+   */
+  void *sptm_iommu_scratch;
 
-	/* Accumulator for batched user pointer SPTM ops, to avoid excessive stack usage. */
-	sptm_user_pointer_op_t sptm_user_pointer_ops[SPTM_MAPPING_LIMIT];
+  /* Accumulator for batched user pointer SPTM ops, to avoid excessive stack
+   * usage. */
+  sptm_user_pointer_op_t sptm_user_pointer_ops[SPTM_MAPPING_LIMIT];
 
-	/* Accumulator for batched disjoint SPTM ops, to avoid excessive stack usage. */
-	sptm_disjoint_op_t sptm_ops[SPTM_MAPPING_LIMIT];
+  /* Accumulator for batched disjoint SPTM ops, to avoid excessive stack usage.
+   */
+  sptm_disjoint_op_t sptm_ops[SPTM_MAPPING_LIMIT];
 
-	union {
-		/* Accumulator for batched VA-contiguous SPTM ops, to avoid excessive stack usage. */
-		sptm_pte_t sptm_templates[SPTM_MAPPING_LIMIT];
+  union {
+    /* Accumulator for batched VA-contiguous SPTM ops, to avoid excessive stack
+     * usage. */
+    sptm_pte_t sptm_templates[SPTM_MAPPING_LIMIT];
 
-		/* Accumulator for PA arrays to be passed to the SPTM, to avoid excessive stack usage. */
-		sptm_paddr_t sptm_paddrs[SPTM_MAPPING_LIMIT];
-	};
+    /* Accumulator for PA arrays to be passed to the SPTM, to avoid excessive
+     * stack usage. */
+    sptm_paddr_t sptm_paddrs[SPTM_MAPPING_LIMIT];
+  };
 
-	/* Base PA of user pointer ops array, for passing the ops into the SPTM. */
-	pmap_paddr_t sptm_user_pointer_ops_pa;
+  /* Base PA of user pointer ops array, for passing the ops into the SPTM. */
+  pmap_paddr_t sptm_user_pointer_ops_pa;
 
-	/* Base PA of ops array, for passing the ops into the SPTM. */
-	pmap_paddr_t sptm_ops_pa;
+  /* Base PA of ops array, for passing the ops into the SPTM. */
+  pmap_paddr_t sptm_ops_pa;
 
-	/* Base PA of templates array, for passing templates into the SPTM. */
-	pmap_paddr_t sptm_templates_pa;
+  /* Base PA of templates array, for passing templates into the SPTM. */
+  pmap_paddr_t sptm_templates_pa;
 
-	/* Base PA of physical address array, for passing physical address lists into the SPTM. */
-	pmap_paddr_t sptm_paddrs_pa;
+  /* Base PA of physical address array, for passing physical address lists into
+   * the SPTM. */
+  pmap_paddr_t sptm_paddrs_pa;
 
-	/* PMAP pagetable descriptors associated with each element of sptm_ops. */
-	pt_desc_t *sptm_ptds[SPTM_MAPPING_LIMIT];
+  /* PMAP pagetable descriptors associated with each element of sptm_ops. */
+  pt_desc_t *sptm_ptds[SPTM_MAPPING_LIMIT];
 
-	/* PTD info objects associated with each pmap PTE pointer. */
-	ptd_info_t *sptm_ptd_info[SPTM_MAPPING_LIMIT];
+  /* PTD info objects associated with each pmap PTE pointer. */
+  ptd_info_t *sptm_ptd_info[SPTM_MAPPING_LIMIT];
 
-	/* Accounting-related flags for each element of sptm_ops. */
-	#define PMAP_SPTM_FLAG_INTERNAL (0x1)
-	#define PMAP_SPTM_FLAG_ALTACCT (0x2)
-	uint8_t sptm_acct_flags[SPTM_MAPPING_LIMIT];
+/* Accounting-related flags for each element of sptm_ops. */
+#define PMAP_SPTM_FLAG_INTERNAL (0x1)
+#define PMAP_SPTM_FLAG_ALTACCT (0x2)
+  uint8_t sptm_acct_flags[SPTM_MAPPING_LIMIT];
 
-	/* pmap epoch tracking structure. */
-	pmap_epoch_t pmap_epoch;
+  /* pmap epoch tracking structure. */
+  pmap_epoch_t pmap_epoch;
 
-	/* Guest virtual machine dispatch structure. */
-	sptm_guest_dispatch_t sptm_guest_dispatch;
+  /* Guest virtual machine dispatch structure. */
+  sptm_guest_dispatch_t sptm_guest_dispatch;
 
-	/* Guest virtual machine dispatch structure physical address. */
-	pmap_paddr_t sptm_guest_dispatch_paddr;
+  /* Guest virtual machine dispatch structure physical address. */
+  pmap_paddr_t sptm_guest_dispatch_paddr;
 
-	/* SPTM Logical CPU ID  */
-	uint16_t sptm_cpu_id;
+  /* SPTM Logical CPU ID  */
+  uint16_t sptm_cpu_id;
 
-	/* Read index associated with this CPU's SPTM trace buffer  */
-	uint64_t sptm_trace_buffer_read_index;
+  /* Read index associated with this CPU's SPTM trace buffer  */
+  uint64_t sptm_trace_buffer_read_index;
 
-	/* Previous SPTM state for use with sptm_trace_num_new_traces */
-	uint64_t sptm_trace_prev_state;
+  /* Previous SPTM state for use with sptm_trace_num_new_traces */
+  uint64_t sptm_trace_prev_state;
 } __attribute__((aligned(PMAP_SPTM_PCPU_ALIGN))) pmap_sptm_percpu_data_t;
 
 _Static_assert((PAGE_SIZE % PMAP_SPTM_PCPU_ALIGN) == 0,
-    "SPTM per-CPU data alignment does not fit evenly within a page");
-_Static_assert(sizeof(pmap_sptm_percpu_data_t) <= PMAP_SPTM_PCPU_ALIGN,
+               "SPTM per-CPU data alignment does not fit evenly within a page");
+_Static_assert(
+    sizeof(pmap_sptm_percpu_data_t) <= PMAP_SPTM_PCPU_ALIGN,
     "sizeof(pmap_sptm_percpu_data_t) is larger than PMAP_SPTM_PCPU_ALIGN");
 
 PERCPU_DECL(pmap_sptm_percpu_data_t, pmap_sptm_percpu);
@@ -1239,10 +1206,8 @@ PERCPU_DECL(pmap_sptm_percpu_data_t, pmap_sptm_percpu);
  *         for this physical page by masking off the TYPE bits and adding any
  *         missing flags to the upper portion of the pointer.
  */
-static inline pt_desc_t*
-pvh_ptd(uintptr_t pvh)
-{
-	return (pt_desc_t *)((pvh & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
+static inline pt_desc_t *pvh_ptd(uintptr_t pvh) {
+  return (pt_desc_t *)((pvh & PVH_LIST_MASK) | PVH_HIGH_FLAGS);
 }
 
 /**
@@ -1253,19 +1218,18 @@ pvh_ptd(uintptr_t pvh)
  *
  * @return The PTD object for the passed in page table.
  */
-static inline pt_desc_t *
-ptep_get_ptd(const pt_entry_t *ptep)
-{
-	assert(ptep != NULL);
+static inline pt_desc_t *ptep_get_ptd(const pt_entry_t *ptep) {
+  assert(ptep != NULL);
 
-	const vm_offset_t pt_base_va = (vm_offset_t)ptep;
-	uintptr_t pvh = pai_to_pvh(pa_index(kvtophys(pt_base_va)));
+  const vm_offset_t pt_base_va = (vm_offset_t)ptep;
+  uintptr_t pvh = pai_to_pvh(pa_index(kvtophys(pt_base_va)));
 
-	if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
-		panic("%s: invalid PV head 0x%llx for PTE %p", __func__, (uint64_t)pvh, ptep);
-	}
+  if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
+    panic("%s: invalid PV head 0x%llx for PTE %p", __func__, (uint64_t)pvh,
+          ptep);
+  }
 
-	return pvh_ptd(pvh);
+  return pvh_ptd(pvh);
 }
 
 /**
@@ -1279,12 +1243,9 @@ ptep_get_ptd(const pt_entry_t *ptep)
  *
  * @return The pmap that owns the given page table entry.
  */
-static inline struct pmap *
-ptep_get_pmap(const pt_entry_t *ptep)
-{
-	return ptep_get_ptd(ptep)->pmap;
+static inline struct pmap *ptep_get_pmap(const pt_entry_t *ptep) {
+  return ptep_get_ptd(ptep)->pmap;
 }
-
 
 /**
  * Given an arbitrary translation table entry, get the page table descriptor
@@ -1297,17 +1258,16 @@ ptep_get_pmap(const pt_entry_t *ptep)
  * @return The page table descriptor (PTD) for the page table pointed to by this
  *         TTE.
  */
-static inline pt_desc_t *
-tte_get_ptd(const tt_entry_t tte)
-{
-	const vm_offset_t pt_base_va = (vm_offset_t)(tte & ~((tt_entry_t)PAGE_MASK));
-	uintptr_t pvh = pai_to_pvh(pa_index(pt_base_va));
+static inline pt_desc_t *tte_get_ptd(const tt_entry_t tte) {
+  const vm_offset_t pt_base_va = (vm_offset_t)(tte & ~((tt_entry_t)PAGE_MASK));
+  uintptr_t pvh = pai_to_pvh(pa_index(pt_base_va));
 
-	if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
-		panic("%s: invalid PV head 0x%llx for TTE 0x%llx", __func__, (uint64_t)pvh, (uint64_t)tte);
-	}
+  if (__improbable(!pvh_test_type(pvh, PVH_TYPE_PTDP))) {
+    panic("%s: invalid PV head 0x%llx for TTE 0x%llx", __func__, (uint64_t)pvh,
+          (uint64_t)tte);
+  }
 
-	return pvh_ptd(pvh);
+  return pvh_ptd(pvh);
 }
 
 /**
@@ -1318,11 +1278,9 @@ tte_get_ptd(const tt_entry_t tte)
  *
  * @return ptd_info_t structure associated with [ptd].
  */
-static inline ptd_info_t *
-ptd_get_info(pt_desc_t *ptd)
-{
-	assert(ptd != NULL);
-	return ptd->ptd_info;
+static inline ptd_info_t *ptd_get_info(pt_desc_t *ptd) {
+  assert(ptd != NULL);
+  return ptd->ptd_info;
 }
 
 /**
@@ -1334,10 +1292,8 @@ ptd_get_info(pt_desc_t *ptd)
  * @return The ptd_info object for the page table that contains the passed in
  *         page table entry.
  */
-static inline ptd_info_t *
-ptep_get_info(const pt_entry_t *ptep)
-{
-	return ptd_get_info(ptep_get_ptd(ptep));
+static inline ptd_info_t *ptep_get_info(const pt_entry_t *ptep) {
+  return ptd_get_info(ptep_get_ptd(ptep));
 }
 
 /**
@@ -1347,31 +1303,33 @@ ptep_get_info(const pt_entry_t *ptep)
  * @param ptdp pointer to the descriptor for the pagetable containing ptep
  * @param ptep Pointer to a PTE to parse
  */
-static inline vm_map_address_t
-ptd_get_va(const pt_desc_t *ptdp, const pt_entry_t *ptep)
-{
-	const pt_attr_t * const pt_attr = pmap_get_pt_attr(ptdp->pmap);
+static inline vm_map_address_t ptd_get_va(const pt_desc_t *ptdp,
+                                          const pt_entry_t *ptep) {
+  const pt_attr_t *const pt_attr = pmap_get_pt_attr(ptdp->pmap);
 
-	vm_map_address_t va = ptdp->va;
+  vm_map_address_t va = ptdp->va;
 
-	const uint64_t pmap_page_shift = pt_attr_leaf_shift(pmap_get_pt_attr(ptdp->pmap));
-	const vm_offset_t ptep_page = (vm_offset_t)ptep >> pmap_page_shift;
+  const uint64_t pmap_page_shift =
+      pt_attr_leaf_shift(pmap_get_pt_attr(ptdp->pmap));
+  const vm_offset_t ptep_page = (vm_offset_t)ptep >> pmap_page_shift;
 
-	/**
-	 * Use the difference between the VM page shift and the hardware page shift
-	 * to get the index of the correct page table. In practice, this equates to
-	 * masking out the bottom two bits of the L3 table index in address spaces
-	 * where the VM page size is greater than the hardware page size. In address
-	 * spaces where they're identical, the index will always be zero.
-	 */
-	const unsigned int ttep_index = ptep_page & ((1U << (PAGE_SHIFT - pmap_page_shift)) - 1);
-	va += ttep_index * pt_attr_twig_size(pt_attr);
+  /**
+   * Use the difference between the VM page shift and the hardware page shift
+   * to get the index of the correct page table. In practice, this equates to
+   * masking out the bottom two bits of the L3 table index in address spaces
+   * where the VM page size is greater than the hardware page size. In address
+   * spaces where they're identical, the index will always be zero.
+   */
+  const unsigned int ttep_index =
+      ptep_page & ((1U << (PAGE_SHIFT - pmap_page_shift)) - 1);
+  va += ttep_index * pt_attr_twig_size(pt_attr);
 
-	/* Increment VA now to target the VA space covered by this specific PTE */
-	const vm_offset_t ptep_index = ((vm_offset_t)ptep & pt_attr_leaf_offmask(pt_attr)) / sizeof(*ptep);
-	va += (ptep_index << pt_attr_leaf_shift(pt_attr));
+  /* Increment VA now to target the VA space covered by this specific PTE */
+  const vm_offset_t ptep_index =
+      ((vm_offset_t)ptep & pt_attr_leaf_offmask(pt_attr)) / sizeof(*ptep);
+  va += (ptep_index << pt_attr_leaf_shift(pt_attr));
 
-	return va;
+  return va;
 }
 
 /**
@@ -1380,10 +1338,8 @@ ptd_get_va(const pt_desc_t *ptdp, const pt_entry_t *ptep)
  *
  * @param ptep Pointer to a PTE to parse.
  */
-static inline vm_map_address_t
-ptep_get_va(const pt_entry_t *ptep)
-{
-	return ptd_get_va(ptep_get_ptd(ptep), ptep);
+static inline vm_map_address_t ptep_get_va(const pt_entry_t *ptep) {
+  return ptd_get_va(ptep_get_ptd(ptep), ptep);
 }
 
 /**
@@ -1394,7 +1350,7 @@ ptep_get_va(const pt_entry_t *ptep)
 typedef uint16_t pp_attr_t;
 
 /* See the definition of pp_attr_table for more information. */
-extern volatile pp_attr_t* pp_attr_table;
+extern volatile pp_attr_t *pp_attr_table;
 
 /**
  * Flags stored in the pp_attr_table on a per-physical-page basis.
@@ -1419,7 +1375,7 @@ extern volatile pp_attr_t* pp_attr_table;
  * enforce policy decisions in the VM layer.
  */
 #define PP_ATTR_REFERENCED 0x0040
-#define PP_ATTR_MODIFIED   0x0080
+#define PP_ATTR_MODIFIED 0x0080
 
 /**
  * This physical page is being used as anonymous memory that's internally
@@ -1464,7 +1420,8 @@ extern volatile pp_attr_t* pp_attr_table;
  * as a debugging aid on internal builds.
  *
  * TODO: This bit can probably be reclaimed:
- * rdar://70740650 (PMAP Cleanup: Potentially reclaim the PP_ATTR_NOENCRYPT bit on ARM)
+ * rdar://70740650 (PMAP Cleanup: Potentially reclaim the PP_ATTR_NOENCRYPT bit
+ * on ARM)
  */
 #define PP_ATTR_NOENCRYPT 0x0800
 
@@ -1482,11 +1439,9 @@ extern volatile pp_attr_t* pp_attr_table;
  * @param pai The physical address index for the entry to update.
  * @param bits The flags to set in the entry.
  */
-static inline void
-ppattr_set_bits(unsigned int pai, pp_attr_t bits)
-{
-	volatile pp_attr_t *ppattr = &pp_attr_table[pai];
-	os_atomic_or(ppattr, bits, relaxed);
+static inline void ppattr_set_bits(unsigned int pai, pp_attr_t bits) {
+  volatile pp_attr_t *ppattr = &pp_attr_table[pai];
+  os_atomic_or(ppattr, bits, relaxed);
 }
 
 /**
@@ -1495,15 +1450,14 @@ ppattr_set_bits(unsigned int pai, pp_attr_t bits)
  * @param pai The physical address index for the entry to update.
  * @param bits The flags to clear in the entry.
  */
-static inline void
-ppattr_clear_bits(unsigned int pai, pp_attr_t bits)
-{
-	volatile pp_attr_t *ppattr = &pp_attr_table[pai];
-	os_atomic_andnot(ppattr, bits, relaxed);
+static inline void ppattr_clear_bits(unsigned int pai, pp_attr_t bits) {
+  volatile pp_attr_t *ppattr = &pp_attr_table[pai];
+  os_atomic_andnot(ppattr, bits, relaxed);
 }
 
 /**
- * General-purpose function for atomically modifying flags in a pp_attr_table entry.
+ * General-purpose function for atomically modifying flags in a pp_attr_table
+ * entry.
  *
  * @param pai The physical address index for the entry to update.
  * @param bits_to_clear Mask of bits to atomically clear from the entry.
@@ -1511,14 +1465,13 @@ ppattr_clear_bits(unsigned int pai, pp_attr_t bits)
  *
  * @note [bits_to_clear] and [bits_to_set] must not overlap.
  */
-static inline void
-ppattr_modify_bits(unsigned int pai, pp_attr_t bits_to_clear, pp_attr_t bits_to_set)
-{
-	assert((bits_to_set & bits_to_clear) == 0);
-	pp_attr_t prev_ppattr, new_ppattr;
-	os_atomic_rmw_loop(&pp_attr_table[pai], prev_ppattr, new_ppattr, relaxed, {
-		new_ppattr = (prev_ppattr & ~bits_to_clear) | bits_to_set;
-	});
+static inline void ppattr_modify_bits(unsigned int pai, pp_attr_t bits_to_clear,
+                                      pp_attr_t bits_to_set) {
+  assert((bits_to_set & bits_to_clear) == 0);
+  pp_attr_t prev_ppattr, new_ppattr;
+  os_atomic_rmw_loop(&pp_attr_table[pai], prev_ppattr, new_ppattr, relaxed, {
+    new_ppattr = (prev_ppattr & ~bits_to_clear) | bits_to_set;
+  });
 }
 
 /**
@@ -1527,11 +1480,9 @@ ppattr_modify_bits(unsigned int pai, pp_attr_t bits_to_clear, pp_attr_t bits_to_
  * @param pai The physical address index for the entry to test.
  * @param bits The flags to check for.
  */
-static inline bool
-ppattr_test_bits(unsigned int pai, pp_attr_t bits)
-{
-	const volatile pp_attr_t *ppattr = &pp_attr_table[pai];
-	return (*ppattr & bits) == bits;
+static inline bool ppattr_test_bits(unsigned int pai, pp_attr_t bits) {
+  const volatile pp_attr_t *ppattr = &pp_attr_table[pai];
+  return (*ppattr & bits) == bits;
 }
 
 /**
@@ -1541,12 +1492,10 @@ ppattr_test_bits(unsigned int pai, pp_attr_t bits)
  * @param pa The physical address for the entry to update.
  * @param bits The flags to set in the entry.
  */
-static inline void
-ppattr_pa_set_bits(pmap_paddr_t pa, pp_attr_t bits)
-{
-	if (pa_valid(pa)) {
-		ppattr_set_bits(pa_index(pa), bits);
-	}
+static inline void ppattr_pa_set_bits(pmap_paddr_t pa, pp_attr_t bits) {
+  if (pa_valid(pa)) {
+    ppattr_set_bits(pa_index(pa), bits);
+  }
 }
 
 /**
@@ -1556,12 +1505,10 @@ ppattr_pa_set_bits(pmap_paddr_t pa, pp_attr_t bits)
  * @param pa The physical address for the entry to update.
  * @param bits The flags to clear in the entry.
  */
-static inline void
-ppattr_pa_clear_bits(pmap_paddr_t pa, pp_attr_t bits)
-{
-	if (pa_valid(pa)) {
-		ppattr_clear_bits(pa_index(pa), bits);
-	}
+static inline void ppattr_pa_clear_bits(pmap_paddr_t pa, pp_attr_t bits) {
+  if (pa_valid(pa)) {
+    ppattr_clear_bits(pa_index(pa), bits);
+  }
 }
 
 /**
@@ -1574,10 +1521,8 @@ ppattr_pa_clear_bits(pmap_paddr_t pa, pp_attr_t bits)
  * @return False if the PA isn't a kernel-managed page, otherwise true/false
  *         depending on whether the bits are set.
  */
-static inline bool
-ppattr_pa_test_bits(pmap_paddr_t pa, pp_attr_t bits)
-{
-	return pa_valid(pa) ? ppattr_test_bits(pa_index(pa), bits) : false;
+static inline bool ppattr_pa_test_bits(pmap_paddr_t pa, pp_attr_t bits) {
+  return pa_valid(pa) ? ppattr_test_bits(pa_index(pa), bits) : false;
 }
 
 /**
@@ -1586,10 +1531,8 @@ ppattr_pa_test_bits(pmap_paddr_t pa, pp_attr_t bits)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_set_modify(pmap_paddr_t pa)
-{
-	ppattr_pa_set_bits(pa, PP_ATTR_MODIFIED);
+static inline void ppattr_pa_set_modify(pmap_paddr_t pa) {
+  ppattr_pa_set_bits(pa, PP_ATTR_MODIFIED);
 }
 
 /**
@@ -1598,10 +1541,8 @@ ppattr_pa_set_modify(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_clear_modify(pmap_paddr_t pa)
-{
-	ppattr_pa_clear_bits(pa, PP_ATTR_MODIFIED);
+static inline void ppattr_pa_clear_modify(pmap_paddr_t pa) {
+  ppattr_pa_clear_bits(pa, PP_ATTR_MODIFIED);
 }
 
 /**
@@ -1610,10 +1551,8 @@ ppattr_pa_clear_modify(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_set_reference(pmap_paddr_t pa)
-{
-	ppattr_pa_set_bits(pa, PP_ATTR_REFERENCED);
+static inline void ppattr_pa_set_reference(pmap_paddr_t pa) {
+  ppattr_pa_set_bits(pa, PP_ATTR_REFERENCED);
 }
 
 /**
@@ -1622,10 +1561,8 @@ ppattr_pa_set_reference(pmap_paddr_t pa)
  *
  * @param pa The physical address for the entry to update.
  */
-static inline void
-ppattr_pa_clear_reference(pmap_paddr_t pa)
-{
-	ppattr_pa_clear_bits(pa, PP_ATTR_REFERENCED);
+static inline void ppattr_pa_clear_reference(pmap_paddr_t pa) {
+  ppattr_pa_clear_bits(pa, PP_ATTR_REFERENCED);
 }
 
 /**
@@ -1633,10 +1570,8 @@ ppattr_pa_clear_reference(pmap_paddr_t pa)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_internal(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_INTERNAL);
+static inline void ppattr_set_internal(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1644,10 +1579,8 @@ ppattr_set_internal(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_internal(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_INTERNAL);
+static inline void ppattr_clear_internal(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1655,10 +1588,8 @@ ppattr_clear_internal(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_internal(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
+static inline bool ppattr_test_internal(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1666,10 +1597,8 @@ ppattr_test_internal(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_reusable(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_REUSABLE);
+static inline void ppattr_set_reusable(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_REUSABLE);
 }
 
 /**
@@ -1677,10 +1606,8 @@ ppattr_set_reusable(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_reusable(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_REUSABLE);
+static inline void ppattr_clear_reusable(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_REUSABLE);
 }
 
 /**
@@ -1688,10 +1615,8 @@ ppattr_clear_reusable(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_reusable(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_REUSABLE);
+static inline bool ppattr_test_reusable(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_REUSABLE);
 }
 
 /**
@@ -1703,10 +1628,8 @@ ppattr_test_reusable(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_altacct(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_ALTACCT);
+static inline void ppattr_set_altacct(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_ALTACCT);
 }
 
 /**
@@ -1718,10 +1641,8 @@ ppattr_set_altacct(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_altacct(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_ALTACCT);
+static inline void ppattr_clear_altacct(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_ALTACCT);
 }
 
 /**
@@ -1736,10 +1657,8 @@ ppattr_clear_altacct(unsigned int pai)
  * @return True if the passed in page uses alternate accounting, false
  *         otherwise.
  */
-static inline bool
-ppattr_is_altacct(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_ALTACCT);
+static inline bool ppattr_is_altacct(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_ALTACCT);
 }
 
 /**
@@ -1754,10 +1673,8 @@ ppattr_is_altacct(unsigned int pai)
  * @return True if the passed in page is accounted for as "internal", false
  *         otherwise.
  */
-static inline bool
-ppattr_is_internal(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
+static inline bool ppattr_is_internal(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_INTERNAL);
 }
 
 /**
@@ -1777,10 +1694,10 @@ ppattr_is_internal(unsigned int pai)
  * @return True if the passed in page uses alternate accounting, false
  *         otherwise.
  */
-static inline bool
-ppattr_pve_is_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	return (pvep == PV_ENTRY_NULL) ? ppattr_is_altacct(pai) : pve_get_altacct(pvep, idx);
+static inline bool ppattr_pve_is_altacct(unsigned int pai, pv_entry_t *pvep,
+                                         unsigned idx) {
+  return (pvep == PV_ENTRY_NULL) ? ppattr_is_altacct(pai)
+                                 : pve_get_altacct(pvep, idx);
 }
 
 /**
@@ -1799,18 +1716,18 @@ ppattr_pve_is_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  *
  * @return True if the passed in page is "internal", false otherwise.
  */
-static inline bool
-ppattr_pve_is_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	return (pvep == PV_ENTRY_NULL) ? ppattr_is_internal(pai) : pve_get_internal(pvep, idx);
+static inline bool ppattr_pve_is_internal(unsigned int pai, pv_entry_t *pvep,
+                                          unsigned idx) {
+  return (pvep == PV_ENTRY_NULL) ? ppattr_is_internal(pai)
+                                 : pve_get_internal(pvep, idx);
 }
 
 /**
  * The "alternate accounting" (ALTACCT) status for a page is tracked differently
  * depending on whether there are one or multiple mappings to a page. This
  * function abstracts out the difference between single and multiple mappings to
- * a page and provides a single function for setting the alternate accounting status
- * for a mapping.
+ * a page and provides a single function for setting the alternate accounting
+ * status for a mapping.
  *
  * @note See the descriptions above the PVE_PTEP_ALTACCT and PP_ATTR_ALTACCT
  *       definitions for more information.
@@ -1819,14 +1736,13 @@ ppattr_pve_is_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_set_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_set_altacct(pai);
-	} else {
-		pve_set_altacct(pvep, idx);
-	}
+static inline void ppattr_pve_set_altacct(unsigned int pai, pv_entry_t *pvep,
+                                          unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_set_altacct(pai);
+  } else {
+    pve_set_altacct(pvep, idx);
+  }
 }
 
 /**
@@ -1843,22 +1759,21 @@ ppattr_pve_set_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_set_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_set_internal(pai);
-	} else {
-		pve_set_internal(pvep, idx);
-	}
+static inline void ppattr_pve_set_internal(unsigned int pai, pv_entry_t *pvep,
+                                           unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_set_internal(pai);
+  } else {
+    pve_set_internal(pvep, idx);
+  }
 }
 
 /**
  * The "alternate accounting" (ALTACCT) status for a page is tracked differently
  * depending on whether there are one or multiple mappings to a page. This
  * function abstracts out the difference between single and multiple mappings to
- * a page and provides a single function for clearing the alternate accounting status
- * for a mapping.
+ * a page and provides a single function for clearing the alternate accounting
+ * status for a mapping.
  *
  * @note See the descriptions above the PVE_PTEP_ALTACCT and PP_ATTR_ALTACCT
  *       definitions for more information.
@@ -1867,14 +1782,13 @@ ppattr_pve_set_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_clr_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_clear_altacct(pai);
-	} else {
-		pve_clr_altacct(pvep, idx);
-	}
+static inline void ppattr_pve_clr_altacct(unsigned int pai, pv_entry_t *pvep,
+                                          unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_clear_altacct(pai);
+  } else {
+    pve_clr_altacct(pvep, idx);
+  }
 }
 
 /**
@@ -1891,14 +1805,13 @@ ppattr_pve_clr_altacct(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  * @param pvep Pointer to the pv_entry_t object containing that mapping.
  * @param idx Index of the chosen PTE pointer inside the PVE.
  */
-static inline void
-ppattr_pve_clr_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
-{
-	if (pvep == PV_ENTRY_NULL) {
-		ppattr_clear_internal(pai);
-	} else {
-		pve_clr_internal(pvep, idx);
-	}
+static inline void ppattr_pve_clr_internal(unsigned int pai, pv_entry_t *pvep,
+                                           unsigned idx) {
+  if (pvep == PV_ENTRY_NULL) {
+    ppattr_clear_internal(pai);
+  } else {
+    pve_clr_internal(pvep, idx);
+  }
 }
 
 /**
@@ -1906,10 +1819,8 @@ ppattr_pve_clr_internal(unsigned int pai, pv_entry_t *pvep, unsigned idx)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_reffault(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_REFFAULT);
+static inline void ppattr_set_reffault(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_REFFAULT);
 }
 
 /**
@@ -1917,10 +1828,8 @@ ppattr_set_reffault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_reffault(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_REFFAULT);
+static inline void ppattr_clear_reffault(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_REFFAULT);
 }
 
 /**
@@ -1928,10 +1837,8 @@ ppattr_clear_reffault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_reffault(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_REFFAULT);
+static inline bool ppattr_test_reffault(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_REFFAULT);
 }
 
 /**
@@ -1939,10 +1846,8 @@ ppattr_test_reffault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_set_modfault(unsigned int pai)
-{
-	ppattr_set_bits(pai, PP_ATTR_MODFAULT);
+static inline void ppattr_set_modfault(unsigned int pai) {
+  ppattr_set_bits(pai, PP_ATTR_MODFAULT);
 }
 
 /**
@@ -1950,10 +1855,8 @@ ppattr_set_modfault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to update.
  */
-static inline void
-ppattr_clear_modfault(unsigned int pai)
-{
-	ppattr_clear_bits(pai, PP_ATTR_MODFAULT);
+static inline void ppattr_clear_modfault(unsigned int pai) {
+  ppattr_clear_bits(pai, PP_ATTR_MODFAULT);
 }
 
 /**
@@ -1961,113 +1864,117 @@ ppattr_clear_modfault(unsigned int pai)
  *
  * @param pai The physical address index for the entry to test.
  */
-static inline bool
-ppattr_test_modfault(unsigned int pai)
-{
-	return ppattr_test_bits(pai, PP_ATTR_MODFAULT);
+static inline bool ppattr_test_modfault(unsigned int pai) {
+  return ppattr_test_bits(pai, PP_ATTR_MODFAULT);
 }
 
 /**
  * pmap epoch operations:
  *
- * The pmap epoch facility provides an SMR/RCU-like mechanism by which the SPTM pmap
- * can ensure all CPUs have observed updated mapping state before performing an operation
- * such as a retype which requires that no other operations be in-flight against the
- * prior mapping state.
+ * The pmap epoch facility provides an SMR/RCU-like mechanism by which the SPTM
+ * pmap can ensure all CPUs have observed updated mapping state before
+ * performing an operation such as a retype which requires that no other
+ * operations be in-flight against the prior mapping state.
  *
- * There are certain cases in which the pmap, while issuing an SPTM call that modifies
- * mappings, cannot hold locks such as the PVH lock which would prevent the mapped page
- * from being concurrently retyped.  This is particularly true for batched operations
- * such as pmap_remove(), phys_attribute_clear_range(), and pmap_batch_set_cache_attributes().
- * In these cases, the pmap may call pmap_epoch_enter() to note that it is performing such
- * a sensitive operation on the local CPU.  It must then call pmap_epoch_exit() upon
- * completion of the sensitive operation.  While retyping is the most common case that
- * requires epoch synchronization, there are a few other cases as well, such as marking
- * a leaf page table as unnested so that all subsequent mappings in it will be non-global.
+ * There are certain cases in which the pmap, while issuing an SPTM call that
+ * modifies mappings, cannot hold locks such as the PVH lock which would prevent
+ * the mapped page from being concurrently retyped.  This is particularly true
+ * for batched operations such as pmap_remove(), phys_attribute_clear_range(),
+ * and pmap_batch_set_cache_attributes(). In these cases, the pmap may call
+ * pmap_epoch_enter() to note that it is performing such a sensitive operation
+ * on the local CPU.  It must then call pmap_epoch_exit() upon completion of the
+ * sensitive operation.  While retyping is the most common case that requires
+ * epoch synchronization, there are a few other cases as well, such as marking
+ * a leaf page table as unnested so that all subsequent mappings in it will be
+ * non-global.
  *
- * For any instance in which the pmap needs to retype a page (or otherwise alter mapping
- * policy) without being guaranteed (e.g. by VM layer locking or the existing page type)
- * that such a sensitive operation is not in progress on some other CPU, it must drain these
- * sensitive operations from other CPUs.  Specifically, it must ensure that any
- * sensitive operation which may have observed mapping state under the prior mapping policy
- * has completed.  This is accomplished by first calling pmap_epoch_prepare_drain() to
- * record the initial pmap epoch state of all CPUs, followed by pmap_epoch_drain() to ensure
- * all remote CPUs are either not in an epoch or have advanced beyond the initially recorded
- * epoch. These are exposed as two separate functions in order to allow the calling CPU to
- * do other work between calling pmap_epoch_prepare_drain() and pmap_epoch_drain(), as a
- * best-effort attempt to minimize time wasted spinning in pmap_epoch_drain().
+ * For any instance in which the pmap needs to retype a page (or otherwise alter
+ * mapping policy) without being guaranteed (e.g. by VM layer locking or the
+ * existing page type) that such a sensitive operation is not in progress on
+ * some other CPU, it must drain these sensitive operations from other CPUs.
+ * Specifically, it must ensure that any sensitive operation which may have
+ * observed mapping state under the prior mapping policy has completed.  This is
+ * accomplished by first calling pmap_epoch_prepare_drain() to record the
+ * initial pmap epoch state of all CPUs, followed by pmap_epoch_drain() to
+ * ensure all remote CPUs are either not in an epoch or have advanced beyond the
+ * initially recorded epoch. These are exposed as two separate functions in
+ * order to allow the calling CPU to do other work between calling
+ * pmap_epoch_prepare_drain() and pmap_epoch_drain(), as a best-effort attempt
+ * to minimize time wasted spinning in pmap_epoch_drain().
  *
  * When draining the epoch, the following assumptions must hold true:
  *
- * 1) The calling thread must guarantee that prior updates needed to apply the new mapping
- * policy have already been performed and made globally visible using the appropriate
- * barriers.  In the most common (retype) case, this means all existing mappings of the
- * page must have been removed.  For any alterations of mapping state, global visibility is
- * conveniently already guaranteed by the DSBs that are architecturally required to
- * synchronize PTE updates and the TLBIs that follow them.
+ * 1) The calling thread must guarantee that prior updates needed to apply the
+ * new mapping policy have already been performed and made globally visible
+ * using the appropriate barriers.  In the most common (retype) case, this means
+ * all existing mappings of the page must have been removed.  For any
+ * alterations of mapping state, global visibility is conveniently already
+ * guaranteed by the DSBs that are architecturally required to synchronize PTE
+ * updates and the TLBIs that follow them.
  *
- * 2) For operations that require exclusive in-flight page references such as retyping,
- * the calling thread must have some means of ensuring that new mappings cannot be added
- * for the page that would bring it out of the correct state for the operation, or that
- * would cause an SPTM violation due to a shared/exclusive in-flight reference conflict.
- * For retyping this is typically done by holding the PVH lock such that pmap_enter()
- * cannot concurrently execute against the page.
+ * 2) For operations that require exclusive in-flight page references such as
+ * retyping, the calling thread must have some means of ensuring that new
+ * mappings cannot be added for the page that would bring it out of the correct
+ * state for the operation, or that would cause an SPTM violation due to a
+ * shared/exclusive in-flight reference conflict. For retyping this is typically
+ * done by holding the PVH lock such that pmap_enter() cannot concurrently
+ * execute against the page.
  *
- * 3) The calling thread must not perform any operation which requires preemptibility
- * between calling pmap_epoch_prepare_drain() and pmap_epoch_drain().
+ * 3) The calling thread must not perform any operation which requires
+ * preemptibility between calling pmap_epoch_prepare_drain() and
+ * pmap_epoch_drain().
  */
 
 /**
- * Enter the pmap epoch on the local CPU to indicate an in-progress SPTM operation
- * that may be sensitive to a concurrent retype operation on another CPU.
+ * Enter the pmap epoch on the local CPU to indicate an in-progress SPTM
+ * operation that may be sensitive to a concurrent retype operation on another
+ * CPU.
  *
- * @note This function increments the thread's preemption disable count and returns
- *       with preemption disabled.
+ * @note This function increments the thread's preemption disable count and
+ * returns with preemption disabled.
  *
- * @note This function issues all required barriers to ensure correct ordering of
- *       the epoch update relative to ensuing SPTM accesses.
+ * @note This function issues all required barriers to ensure correct ordering
+ * of the epoch update relative to ensuing SPTM accesses.
  */
-static inline void
-pmap_epoch_enter(void)
-{
-	mp_disable_preemption();
-	pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
-	assert(!preemption_enabled());
+static inline void pmap_epoch_enter(void) {
+  mp_disable_preemption();
+  pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
+  assert(!preemption_enabled());
 
-	/* Must not already been in a pmap epoch on this CPU. */
-	assert(pmap_epoch->local_seq == 0);
-	pmap_epoch->local_seq = ++pmap_epoch->next_seq;
-	/* Unsigned 64-bit per-CPU integer should never overflow on any human timescale. */
-	assert(pmap_epoch->local_seq != 0);
+  /* Must not already been in a pmap epoch on this CPU. */
+  assert(pmap_epoch->local_seq == 0);
+  pmap_epoch->local_seq = ++pmap_epoch->next_seq;
+  /* Unsigned 64-bit per-CPU integer should never overflow on any human
+   * timescale. */
+  assert(pmap_epoch->local_seq != 0);
 
-	/**
-	 * Issue a store-load barrier to ensure that remote observers of any ensuing
-	 * SPTM accesses will also observe the epoch update.
-	 */
-	os_atomic_thread_fence(seq_cst);
+  /**
+   * Issue a store-load barrier to ensure that remote observers of any ensuing
+   * SPTM accesses will also observe the epoch update.
+   */
+  os_atomic_thread_fence(seq_cst);
 }
 
 /**
- * Exit the pmap epoch on the local CPU to indicate completion of an SPTM operation
- * that may be sensitive to a concurrent retype operation on another CPU.
+ * Exit the pmap epoch on the local CPU to indicate completion of an SPTM
+ * operation that may be sensitive to a concurrent retype operation on another
+ * CPU.
  *
- * @note This function must be called with preemption disabled and will decrement
- *       the current thread's preemption disable count.
+ * @note This function must be called with preemption disabled and will
+ * decrement the current thread's preemption disable count.
  */
-static inline void
-pmap_epoch_exit(void)
-{
-	pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
-	assert(!preemption_enabled());
-	assert(pmap_epoch->local_seq == pmap_epoch->next_seq);
+static inline void pmap_epoch_exit(void) {
+  pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
+  assert(!preemption_enabled());
+  assert(pmap_epoch->local_seq == pmap_epoch->next_seq);
 
-	/**
-	 * Clear the sequence using a store-release operation to ensure that prior
-	 * SPTM modifications will be visible to remote observers before the absence
-	 * of an epoch is visible.
-	 */
-	os_atomic_store(&pmap_epoch->local_seq, 0, release);
-	mp_enable_preemption();
+  /**
+   * Clear the sequence using a store-release operation to ensure that prior
+   * SPTM modifications will be visible to remote observers before the absence
+   * of an epoch is visible.
+   */
+  os_atomic_store(&pmap_epoch->local_seq, 0, release);
+  mp_enable_preemption();
 }
 
 /**
@@ -2075,114 +1982,110 @@ pmap_epoch_exit(void)
  *
  * @return true if the current CPU holds the epoch, false otherwise.
  */
-static inline bool
-pmap_in_epoch(void)
-{
-	return !preemption_enabled() && (PERCPU_GET(pmap_sptm_percpu)->pmap_epoch.local_seq != 0);
+static inline bool pmap_in_epoch(void) {
+  return !preemption_enabled() &&
+         (PERCPU_GET(pmap_sptm_percpu)->pmap_epoch.local_seq != 0);
 }
 
 /**
- * Prepare the local CPU to perform an epoch drain operation by recording the retype
- * epoch state of other CPUs.
+ * Prepare the local CPU to perform an epoch drain operation by recording the
+ * retype epoch state of other CPUs.
  *
- * @note This function increments the current thread's preemption disable count and
- *       returns with preemption disabled.
+ * @note This function increments the current thread's preemption disable count
+ * and returns with preemption disabled.
  *
- * @note This function issues all necessary barriers to ensure that the subsequent
- *       retype operation is not speculated ahead of the epoch sampling.
+ * @note This function issues all necessary barriers to ensure that the
+ * subsequent retype operation is not speculated ahead of the epoch sampling.
  *
- * @note This function does NOT issue any barriers to ensure that prior updates of
- *       mapping state are globally visible and have proper store-load ordering with
- *       respect to the scan performed here.  In the cases where this function is
- *       intended to be used, this ordering should be guaranteed automatically by
- *       the DSBs used to synchronize prior mapping updates issued by the caller.
- *       If this function is ever used in a situation where that cannot be guaranteed,
- *       the caller must issue at least the equivalent of 'dmb ish' (a.k.a. a seq_cst
- *       thread_fence) before calling this function.
+ * @note This function does NOT issue any barriers to ensure that prior updates
+ * of mapping state are globally visible and have proper store-load ordering
+ * with respect to the scan performed here.  In the cases where this function is
+ *       intended to be used, this ordering should be guaranteed automatically
+ * by the DSBs used to synchronize prior mapping updates issued by the caller.
+ *       If this function is ever used in a situation where that cannot be
+ * guaranteed, the caller must issue at least the equivalent of 'dmb ish'
+ * (a.k.a. a seq_cst thread_fence) before calling this function.
  */
-static inline void
-pmap_epoch_prepare_drain(void)
-{
-	mp_disable_preemption();
-	pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
-	assert(pmap_epoch->flags == 0);
-	unsigned int i = 0;
-	uint8_t flags = PMAP_EPOCH_PREPARED;
+static inline void pmap_epoch_prepare_drain(void) {
+  mp_disable_preemption();
+  pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
+  assert(pmap_epoch->flags == 0);
+  unsigned int i = 0;
+  uint8_t flags = PMAP_EPOCH_PREPARED;
 
-	/* Sample each CPU's epoch state. */
-	percpu_foreach(pmap_pcpu, pmap_sptm_percpu) {
-		const uint64_t remote_epoch =
-		    os_atomic_load(&pmap_pcpu->pmap_epoch.local_seq, relaxed);
-		pmap_epoch->remote_seq[i] = remote_epoch;
+  /* Sample each CPU's epoch state. */
+  percpu_foreach(pmap_pcpu, pmap_sptm_percpu) {
+    const uint64_t remote_epoch =
+        os_atomic_load(&pmap_pcpu->pmap_epoch.local_seq, relaxed);
+    pmap_epoch->remote_seq[i] = remote_epoch;
 
-		/**
-		 * If the remote CPU has an active epoch, make a note to ourselves that
-		 * we'll need to drain it.
-		 */
-		if (remote_epoch != 0) {
-			flags |= PMAP_EPOCH_DRAIN_REQUIRED;
-		}
-		++i;
-	}
-	pmap_epoch->flags = flags;
+    /**
+     * If the remote CPU has an active epoch, make a note to ourselves that
+     * we'll need to drain it.
+     */
+    if (remote_epoch != 0) {
+      flags |= PMAP_EPOCH_DRAIN_REQUIRED;
+    }
+    ++i;
+  }
+  pmap_epoch->flags = flags;
 
-	/**
-	 * Issue a load-load barrier to ensure subsequent drain or retype operations will
-	 * not be speculated ahead of the sampling we just did.
-	 */
-	os_atomic_thread_fence(acquire);
+  /**
+   * Issue a load-load barrier to ensure subsequent drain or retype operations
+   * will not be speculated ahead of the sampling we just did.
+   */
+  os_atomic_thread_fence(acquire);
 }
 
 /**
- * Ensure that all CPUs have advanced beyond any active epoch that was recorded in the
- * most recent call to pmap_epoch_prepare_drain().
+ * Ensure that all CPUs have advanced beyond any active epoch that was recorded
+ * in the most recent call to pmap_epoch_prepare_drain().
  *
- * @note This function expects to be called with preemption disabled and will decrement
- *       the current thread's preemption disable count.
+ * @note This function expects to be called with preemption disabled and will
+ * decrement the current thread's preemption disable count.
  *
  * @note pmap_epoch_prepare_drain() must have been called on the local CPU
- *       prior to calling this function.  This function will return immediately if
- *       this prior call did not observe any active epochs on remote CPUs.
+ *       prior to calling this function.  This function will return immediately
+ * if this prior call did not observe any active epochs on remote CPUs.
  *
- * @note This function issues all necessary barriers to ensure that the subsequent
- *       retype operation is not speculated ahead of the epoch sampling.
+ * @note This function issues all necessary barriers to ensure that the
+ * subsequent retype operation is not speculated ahead of the epoch sampling.
  */
-static inline void
-pmap_epoch_drain(void)
-{
-	assert(!preemption_enabled());
-	pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
-	const uint8_t flags = pmap_epoch->flags;
-	assert(flags & PMAP_EPOCH_PREPARED);
-	pmap_epoch->flags = 0;
-	if (!(flags & PMAP_EPOCH_DRAIN_REQUIRED)) {
-		mp_enable_preemption();
-		return;
-	}
-	unsigned int i = 0;
-	percpu_foreach(pmap_pcpu, pmap_sptm_percpu) {
-		if (pmap_epoch->remote_seq[i] != 0) {
-			assert((pmap_pcpu->pmap_epoch.local_seq == 0) ||
-			    (pmap_pcpu->pmap_epoch.local_seq >= pmap_epoch->remote_seq[i]));
-			/**
-			 * If the remote CPU was in an epoch, WFE-spin until it either exits the epoch
-			 * or advances to a new epoch.
-			 */
-			while ((os_atomic_load_exclusive(&pmap_pcpu->pmap_epoch.local_seq, relaxed) ==
-			    pmap_epoch->remote_seq[i])) {
-				__builtin_arm_wfe();
-			}
-			/* Clear the monitor if we exclusive-loaded a value that didn't require WFE. */
-			os_atomic_clear_exclusive();
-		}
-		++i;
-	}
-	mp_enable_preemption();
-	/**
-	 * Issue a load-load barrier to ensure subsequent accesses to sensitive state will
-	 * not be speculated ahead of the sampling we just did.
-	 */
-	os_atomic_thread_fence(acquire);
+static inline void pmap_epoch_drain(void) {
+  assert(!preemption_enabled());
+  pmap_epoch_t *pmap_epoch = &PERCPU_GET(pmap_sptm_percpu)->pmap_epoch;
+  const uint8_t flags = pmap_epoch->flags;
+  assert(flags & PMAP_EPOCH_PREPARED);
+  pmap_epoch->flags = 0;
+  if (!(flags & PMAP_EPOCH_DRAIN_REQUIRED)) {
+    mp_enable_preemption();
+    return;
+  }
+  unsigned int i = 0;
+  percpu_foreach(pmap_pcpu, pmap_sptm_percpu) {
+    if (pmap_epoch->remote_seq[i] != 0) {
+      assert((pmap_pcpu->pmap_epoch.local_seq == 0) ||
+             (pmap_pcpu->pmap_epoch.local_seq >= pmap_epoch->remote_seq[i]));
+      /**
+       * If the remote CPU was in an epoch, WFE-spin until it either exits the
+       * epoch or advances to a new epoch.
+       */
+      while ((os_atomic_load_exclusive(&pmap_pcpu->pmap_epoch.local_seq,
+                                       relaxed) == pmap_epoch->remote_seq[i])) {
+        __builtin_arm_wfe();
+      }
+      /* Clear the monitor if we exclusive-loaded a value that didn't require
+       * WFE. */
+      os_atomic_clear_exclusive();
+    }
+    ++i;
+  }
+  mp_enable_preemption();
+  /**
+   * Issue a load-load barrier to ensure subsequent accesses to sensitive state
+   * will not be speculated ahead of the sampling we just did.
+   */
+  os_atomic_thread_fence(acquire);
 }
 
 /**
@@ -2193,27 +2096,23 @@ pmap_epoch_drain(void)
  * @return true if the type requires auto-retyping, false otherwise.
  */
 static inline bool
-pmap_type_requires_retype_on_recycle(sptm_frame_type_t frame_type)
-{
-	return sptm_type_is_user_executable(frame_type) ||
-	       (frame_type == XNU_ROZONE) || (frame_type == XNU_KERNEL_RESTRICTED);
+pmap_type_requires_retype_on_recycle(sptm_frame_type_t frame_type) {
+  return sptm_type_is_user_executable(frame_type) ||
+         (frame_type == XNU_ROZONE) || (frame_type == XNU_KERNEL_RESTRICTED);
 }
 
-static inline boolean_t
-pmap_is_preemptible(void)
-{
-	return preemption_enabled() || (startup_phase < STARTUP_SUB_EARLY_BOOT) || PMAP_IS_HIBERNATING();
+static inline boolean_t pmap_is_preemptible(void) {
+  return preemption_enabled() || (startup_phase < STARTUP_SUB_EARLY_BOOT) ||
+         PMAP_IS_HIBERNATING();
 }
 
 /**
- * This helper function ensures that potentially-long-running batched operations are
- * called in preemptible context before entering the SPTM, so that the SPTM call may
- * periodically exit to allow pending urgent ASTs to be taken.
+ * This helper function ensures that potentially-long-running batched operations
+ * are called in preemptible context before entering the SPTM, so that the SPTM
+ * call may periodically exit to allow pending urgent ASTs to be taken.
  */
-static inline void
-pmap_verify_preemptible(void)
-{
-	assert(pmap_is_preemptible());
+static inline void pmap_verify_preemptible(void) {
+  assert(pmap_is_preemptible());
 }
 
 /**
@@ -2255,8 +2154,8 @@ pmap_verify_preemptible(void)
 
 /**
  * Instructs an allocation function to avoid zero-filling the newly-allocated
- * page.  This should be used only if you know the page will be fully initialized
- * by some other means on the relevant allocation path.
+ * page.  This should be used only if you know the page will be fully
+ * initialized by some other means on the relevant allocation path.
  */
 #define PMAP_PAGE_NOZEROFILL 0x4
 
@@ -2290,49 +2189,51 @@ extern void pmap_page_free(pmap_paddr_t);
  * the rest of the pmap locking code is defined so there shouldn't be any issues
  * with missing types.
  */
-OS_ENUM(pmap_lock_mode, uint8_t,
-    PMAP_LOCK_SHARED,
-    PMAP_LOCK_EXCLUSIVE,
-    PMAP_LOCK_HELD);
+OS_ENUM(pmap_lock_mode, uint8_t, PMAP_LOCK_SHARED, PMAP_LOCK_EXCLUSIVE,
+        PMAP_LOCK_HELD);
 
 /**
  * Possible return values for pv_alloc(). See the pv_alloc() function header for
  * a description of each of these values.
  */
 typedef enum {
-	PV_ALLOC_SUCCESS,
-	PV_ALLOC_RETRY,
-	PV_ALLOC_FAIL
+  PV_ALLOC_SUCCESS,
+  PV_ALLOC_RETRY,
+  PV_ALLOC_FAIL
 } pv_alloc_return_t;
 
-extern pv_alloc_return_t pv_alloc(
-	pmap_t, pmap_lock_mode_t, unsigned int, pv_entry_t **, locked_pvh_t *, volatile uint16_t *);
+extern pv_alloc_return_t pv_alloc(pmap_t, pmap_lock_mode_t, unsigned int,
+                                  pv_entry_t **, locked_pvh_t *,
+                                  volatile uint16_t *);
 extern void pv_free(pv_entry_t *);
 extern void pv_list_free(pv_entry_t *, pv_entry_t *, unsigned int);
 extern void pmap_compute_pv_targets(void);
-extern pv_alloc_return_t pmap_enter_pv(
-	pmap_t, pt_entry_t *, unsigned int, pmap_lock_mode_t, locked_pvh_t *, pv_entry_t **, int *);
+extern pv_alloc_return_t pmap_enter_pv(pmap_t, pt_entry_t *, unsigned int,
+                                       pmap_lock_mode_t, locked_pvh_t *,
+                                       pv_entry_t **, int *);
 
 typedef enum {
-	PV_REMOVE_SUCCESS, /* found a mapping */
-	PV_REMOVE_FAIL /* no mapping found */
+  PV_REMOVE_SUCCESS, /* found a mapping */
+  PV_REMOVE_FAIL     /* no mapping found */
 } pv_remove_return_t;
 
-extern pv_remove_return_t pmap_remove_pv(pmap_t, pt_entry_t *, locked_pvh_t *, bool *, bool *);
+extern pv_remove_return_t pmap_remove_pv(pmap_t, pt_entry_t *, locked_pvh_t *,
+                                         bool *, bool *);
 
 extern void ptd_bootstrap(pt_desc_t *, unsigned int);
 extern pt_desc_t *ptd_alloc_unlinked(unsigned int);
 extern pt_desc_t *ptd_alloc(pmap_t, unsigned int);
 extern void ptd_deallocate(pt_desc_t *);
-extern void ptd_info_init(
-	pt_desc_t *, pmap_t, vm_map_address_t, unsigned int, pt_entry_t *);
+extern void ptd_info_init(pt_desc_t *, pmap_t, vm_map_address_t, unsigned int,
+                          pt_entry_t *);
 extern void ptd_info_finalize(pt_desc_t *);
 
 extern kern_return_t pmap_ledger_credit(pmap_t, int, ledger_amount_t);
 extern kern_return_t pmap_ledger_debit(pmap_t, int, ledger_amount_t);
 
 extern void validate_pmap_internal(const volatile struct pmap *, const char *);
-extern void validate_pmap_mutable_internal(const volatile struct pmap *, const char *);
+extern void validate_pmap_mutable_internal(const volatile struct pmap *,
+                                           const char *);
 
 /**
  * Macro function wrappers around pmap validation so that the calling function
@@ -2358,81 +2259,86 @@ extern void validate_pmap_mutable_internal(const volatile struct pmap *, const c
  * @note These definitions are copied to SPTM and they need to be in sync.
  */
 typedef struct pmap_io_range {
-	/* Physical address of the PPL-owned I/O range. */
-	uint64_t addr;
+  /* Physical address of the PPL-owned I/O range. */
+  uint64_t addr;
 
-	/* Length (in bytes) of the PPL-owned I/O range. */
-	uint64_t len;
+  /* Length (in bytes) of the PPL-owned I/O range. */
+  uint64_t len;
 
-	/* Strong DSB required for pages in this range. */
-	#define PMAP_IO_RANGE_STRONG_SYNC (1U << 31)
+/* Strong DSB required for pages in this range. */
+#define PMAP_IO_RANGE_STRONG_SYNC (1U << 31)
 
-	/* Corresponds to memory carved out by bootloader. */
-	#define PMAP_IO_RANGE_CARVEOUT (1U << 30)
+/* Corresponds to memory carved out by bootloader. */
+#define PMAP_IO_RANGE_CARVEOUT (1U << 30)
 
-	/* Pages in this range need to be included in the hibernation image. */
-	#define PMAP_IO_RANGE_NEEDS_HIBERNATING (1U << 29)
+/* Pages in this range need to be included in the hibernation image. */
+#define PMAP_IO_RANGE_NEEDS_HIBERNATING (1U << 29)
 
-	/* Mark the range as 'owned' by a given subsystem. */
-	#define PMAP_IO_RANGE_OWNED (1U << 28)
+/* Mark the range as 'owned' by a given subsystem. */
+#define PMAP_IO_RANGE_OWNED (1U << 28)
 
-	/**
-	 * Denotes a range that is *not* to be treated as an I/O range that
-	 * needs to be mapped, but only to decorate arbitrary physical
-	 * memory ranges (including of managed memory) with extra
-	 * flags. I.e. this allows tagging of "ordinary" managed memory
-	 * pages with flags like `PMAP_IO_RANGE_PROHIBIT_HIB_WRITE`, or
-	 * informing the SPTM that some (nominally) managed memory pages are
-	 * unavailable for some reason.
-	 *
-	 * Notably, `pmap_find_io_attr()`, and anything else that uses
-	 * `pmap_io_range`s for denoting to-be-mapped I/O ranges, ignores
-	 * entries with this flag.
-	 */
-    #define PMAP_IO_RANGE_NOT_IO (1U << 27)
+  /**
+   * Denotes a range that is *not* to be treated as an I/O range that
+   * needs to be mapped, but only to decorate arbitrary physical
+   * memory ranges (including of managed memory) with extra
+   * flags. I.e. this allows tagging of "ordinary" managed memory
+   * pages with flags like `PMAP_IO_RANGE_PROHIBIT_HIB_WRITE`, or
+   * informing the SPTM that some (nominally) managed memory pages are
+   * unavailable for some reason.
+   *
+   * Notably, `pmap_find_io_attr()`, and anything else that uses
+   * `pmap_io_range`s for denoting to-be-mapped I/O ranges, ignores
+   * entries with this flag.
+   */
+#define PMAP_IO_RANGE_NOT_IO (1U << 27)
 
-	/* Pages in this range may never be written during hibernation restore. */
-	#define PMAP_IO_RANGE_PROHIBIT_HIB_WRITE (1U << 26)
+/* Pages in this range may never be written during hibernation restore. */
+#define PMAP_IO_RANGE_PROHIBIT_HIB_WRITE (1U << 26)
 
-	/**
-	 * Lower 16 bits treated as pp_attr_t, upper 16 bits contain additional
-	 * mapping flags (defined above).
-	 */
-	uint32_t wimg;
+  /**
+   * Lower 16 bits treated as pp_attr_t, upper 16 bits contain additional
+   * mapping flags (defined above).
+   */
+  uint32_t wimg;
 
-	/* 4 Character Code (4CC) describing what this range is. */
-	uint32_t signature;
+  /* 4 Character Code (4CC) describing what this range is. */
+  uint32_t signature;
 } pmap_io_range_t;
 
-/* Reminder: be sure to change all relevant device trees if you change the layout of pmap_io_range_t */
-_Static_assert(sizeof(pmap_io_range_t) == 24, "unexpected size for pmap_io_range_t");
+/* Reminder: be sure to change all relevant device trees if you change the
+ * layout of pmap_io_range_t */
+_Static_assert(sizeof(pmap_io_range_t) == 24,
+               "unexpected size for pmap_io_range_t");
 
-extern pmap_io_range_t* pmap_find_io_attr(pmap_paddr_t);
+extern pmap_io_range_t *pmap_find_io_attr(pmap_paddr_t);
 
-extern void pmap_range_iterate(bool (^step) (pmap_io_range_t const *));
+extern void pmap_range_iterate(bool (^step)(pmap_io_range_t const *));
 
 /**
- * This structure describes a sub-page-size I/O region owned by SPTM but the kernel can write to.
+ * This structure describes a sub-page-size I/O region owned by SPTM but the
+ * kernel can write to.
  *
- * @note I/O filter software will use a collection of such data structures to determine access
- *       permissions to a page owned by SPTM.
+ * @note I/O filter software will use a collection of such data structures to
+ * determine access permissions to a page owned by SPTM.
  *
- * @note The {signature, offset} key is used to index a collection of such data structures to
- *       optimize for space in the case where one page layout is repeated for many devices, such
- *       as the memory controller channels.
+ * @note The {signature, offset} key is used to index a collection of such data
+ * structures to optimize for space in the case where one page layout is
+ * repeated for many devices, such as the memory controller channels.
  */
 typedef struct pmap_io_filter_entry {
-	/* 4 Character Code (4CC) describing what this range (page) is. */
-	uint32_t signature;
+  /* 4 Character Code (4CC) describing what this range (page) is. */
+  uint32_t signature;
 
-	/* Offset within the page. It has to be within [0, PAGE_SIZE). */
-	uint16_t offset;
+  /* Offset within the page. It has to be within [0, PAGE_SIZE). */
+  uint16_t offset;
 
-	/* Length of the range, and (offset + length) has to be within [0, PAGE_SIZE). */
-	uint16_t length;
+  /* Length of the range, and (offset + length) has to be within [0, PAGE_SIZE).
+   */
+  uint16_t length;
 } pmap_io_filter_entry_t;
 
-_Static_assert(sizeof(pmap_io_filter_entry_t) == 8, "unexpected size for pmap_io_filter_entry_t");
+_Static_assert(sizeof(pmap_io_filter_entry_t) == 8,
+               "unexpected size for pmap_io_filter_entry_t");
 
 extern void pmap_cpu_data_init_internal(unsigned int);
 
@@ -2443,10 +2349,8 @@ extern void pmap_cpu_data_init_internal(unsigned int);
  *
  * @return The containing SURT page's PA.
  */
-static inline pmap_paddr_t
-surt_page_pa_from_surt_pa(pmap_paddr_t surt_pa)
-{
-	return surt_pa & ~PAGE_MASK;
+static inline pmap_paddr_t surt_page_pa_from_surt_pa(pmap_paddr_t surt_pa) {
+  return surt_pa & ~PAGE_MASK;
 }
 
 /**
@@ -2456,10 +2360,8 @@ surt_page_pa_from_surt_pa(pmap_paddr_t surt_pa)
  *
  * @return The index of the SURT in the containing SURT page.
  */
-static inline uint8_t
-surt_index_from_surt_pa(pmap_paddr_t surt_pa)
-{
-	return (uint8_t)((surt_pa & PAGE_MASK) / SUBPAGE_USER_ROOT_TABLE_SIZE);
+static inline uint8_t surt_index_from_surt_pa(pmap_paddr_t surt_pa) {
+  return (uint8_t)((surt_pa & PAGE_MASK) / SUBPAGE_USER_ROOT_TABLE_SIZE);
 }
 
 /**
@@ -2471,17 +2373,17 @@ surt_index_from_surt_pa(pmap_paddr_t surt_pa)
  * @return The computed PA of the SURT.
  */
 static inline pmap_paddr_t
-surt_pa_from_surt_page_pa_and_index(pmap_paddr_t surt_page_pa, uint8_t index)
-{
-	assert((surt_page_pa & PAGE_MASK) == 0);
-	return surt_page_pa + index * SUBPAGE_USER_ROOT_TABLE_SIZE;
+surt_pa_from_surt_page_pa_and_index(pmap_paddr_t surt_page_pa, uint8_t index) {
+  assert((surt_page_pa & PAGE_MASK) == 0);
+  return surt_page_pa + index * SUBPAGE_USER_ROOT_TABLE_SIZE;
 }
 
 #if __ARM64_PMAP_SUBPAGE_L1__
 extern void surt_init(void);
 extern pmap_paddr_t surt_try_alloc(void);
 extern bool surt_free(pmap_paddr_t surt_pa);
-extern void surt_feed_page_with_first_table_allocated(pmap_paddr_t surt_page_pa);
+extern void
+surt_feed_page_with_first_table_allocated(pmap_paddr_t surt_page_pa);
 extern unsigned int surt_list_len(void);
 #endif /* __ARM64_PMAP_SUBPAGE_L1__ */
 

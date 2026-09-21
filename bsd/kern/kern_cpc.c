@@ -28,26 +28,24 @@
 #include <sys/sysctl.h>
 
 SYSCTL_NODE(_kern, OID_AUTO, cpc, CTLFLAG_RD, 0,
-    "CPU Performance Counters subsystem");
+            "CPU Performance Counters subsystem");
 
-static int
-_cpc_sysctl_secure SYSCTL_HANDLER_ARGS
-{
-	int enforced = cpc_is_secure();
-	int changed = 0;
-	int error = sysctl_io_number(req, enforced, sizeof(enforced), &enforced,
-	    &changed);
-	if (error != 0) {
-		return error;
-	}
-	if (changed) {
+static int _cpc_sysctl_secure SYSCTL_HANDLER_ARGS {
+  int enforced = cpc_is_secure();
+  int changed = 0;
+  int error =
+      sysctl_io_number(req, enforced, sizeof(enforced), &enforced, &changed);
+  if (error != 0) {
+    return error;
+  }
+  if (changed) {
 #if CPC_INSECURE
-		cpc_change_security(enforced);
-#else // CPC_INSECURE
-		return EPERM;
+    cpc_change_security(enforced);
+#else  // CPC_INSECURE
+    return EPERM;
 #endif // !CPC_INSECURE
-	}
-	return 0;
+  }
+  return 0;
 }
 
 #if CPC_INSECURE
@@ -56,6 +54,7 @@ _cpc_sysctl_secure SYSCTL_HANDLER_ARGS
 #define CPC_SYSCTL_SECURE_PROT CTLFLAG_RD
 #endif // !CPC_INSECURE
 
-SYSCTL_PROC(_kern_cpc, OID_AUTO, secure, CPC_SYSCTL_SECURE_PROT | CTLTYPE_INT,
-    0, 0, _cpc_sysctl_secure, "I",
+SYSCTL_PROC(
+    _kern_cpc, OID_AUTO, secure, CPC_SYSCTL_SECURE_PROT | CTLTYPE_INT, 0, 0,
+    _cpc_sysctl_secure, "I",
     "Whether the CPU Performance Counters system is operating securely.");

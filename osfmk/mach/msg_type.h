@@ -114,10 +114,10 @@
 #ifndef MSG_TYPE_H_
 #define MSG_TYPE_H_
 
-#define MSG_TYPE_CAMELOT        (1 << 6)
-#define MSG_TYPE_ENCRYPTED      (1 << 7)
-#define MSG_TYPE_RPC            (1 << 8)        /* Reply expected */
+#define MSG_TYPE_CAMELOT (1 << 6)
+#define MSG_TYPE_ENCRYPTED (1 << 7)
+#define MSG_TYPE_RPC (1 << 8) /* Reply expected */
 
 #include <mach/message.h>
 
-#endif  /* MSG_TYPE_H_ */
+#endif /* MSG_TYPE_H_ */

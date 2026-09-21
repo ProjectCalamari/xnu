@@ -61,89 +61,74 @@
  * Macro definitions for routines to manipulate the
  * floating-point processor.
  */
+#include <i386/proc_reg.h>
 #include <kern/kern_types.h>
 #include <mach/i386/kern_return.h>
 #include <mach/i386/thread_status.h>
-#include <i386/proc_reg.h>
 
-#define FP_XMASK     ((uint32_t) (XFEM_X87 | XFEM_SSE))
-#define AVX_XMASK    ((uint32_t) (XFEM_X87 | XFEM_SSE | XFEM_YMM))
-#define AVX512_XMASK ((uint32_t) (XFEM_X87 | XFEM_SSE | XFEM_YMM | XFEM_ZMM_OPMASK))
+#define FP_XMASK ((uint32_t)(XFEM_X87 | XFEM_SSE))
+#define AVX_XMASK ((uint32_t)(XFEM_X87 | XFEM_SSE | XFEM_YMM))
+#define AVX512_XMASK                                                           \
+  ((uint32_t)(XFEM_X87 | XFEM_SSE | XFEM_YMM | XFEM_ZMM_OPMASK))
 
 typedef enum {
-	FXSAVE32 = 1,
-	FXSAVE64 = 2,
-	XSAVE32  = 3,
-	XSAVE64  = 4,
-	FP_UNUSED = 5
+  FXSAVE32 = 1,
+  FXSAVE64 = 2,
+  XSAVE32 = 3,
+  XSAVE64 = 4,
+  FP_UNUSED = 5
 } fp_save_layout_t;
 
 #define STATE64_FULL 0x10
 typedef enum {
-	UNDEFINED,
-	FP,
-	AVX,
-	AVX512,
-	/*
-	 * The following states are never associated with a thread or task.
-	 * They are used for array declarations of data used during signal dispatch,
-	 * but these values are never assigned to threads' (or tasks') xstate members.
-	 */
-	UNDEFINED_FULL = UNDEFINED | STATE64_FULL,
-	FP_FULL = FP | STATE64_FULL,
-	AVX_FULL = AVX | STATE64_FULL,
-	AVX512_FULL = AVX512 | STATE64_FULL,
+  UNDEFINED,
+  FP,
+  AVX,
+  AVX512,
+  /*
+   * The following states are never associated with a thread or task.
+   * They are used for array declarations of data used during signal dispatch,
+   * but these values are never assigned to threads' (or tasks') xstate members.
+   */
+  UNDEFINED_FULL = UNDEFINED | STATE64_FULL,
+  FP_FULL = FP | STATE64_FULL,
+  AVX_FULL = AVX | STATE64_FULL,
+  AVX512_FULL = AVX512 | STATE64_FULL,
 } xstate_t;
 
-static inline uint64_t
-xgetbv(uint32_t c)
-{
-	uint32_t        mask_hi, mask_lo;
-	__asm__ __volatile__ ("xgetbv" : "=a"(mask_lo), "=d"(mask_hi) : "c" (c));
-	return ((uint64_t) mask_hi << 32) + (uint64_t) mask_lo;
+static inline uint64_t xgetbv(uint32_t c) {
+  uint32_t mask_hi, mask_lo;
+  __asm__ __volatile__("xgetbv" : "=a"(mask_lo), "=d"(mask_hi) : "c"(c));
+  return ((uint64_t)mask_hi << 32) + (uint64_t)mask_lo;
 }
 
-static inline void
-xsetbv(uint32_t mask_hi, uint32_t mask_lo)
-{
-	__asm__ __volatile__ ("xsetbv" :: "a"(mask_lo), "d"(mask_hi), "c" (XCR0));
+static inline void xsetbv(uint32_t mask_hi, uint32_t mask_lo) {
+  __asm__ __volatile__("xsetbv" ::"a"(mask_lo), "d"(mask_hi), "c"(XCR0));
 }
 
-extern void             init_fpu(void);
-extern void             fpu_module_init(void);
-extern void             fpu_free(
-	thread_t        thr_act,
-	void            *fps);
-extern kern_return_t    fpu_set_fxstate(
-	thread_t        thr_act,
-	thread_state_t  state,
-	thread_flavor_t f);
-extern kern_return_t    fpu_get_fxstate(
-	thread_t        thr_act,
-	thread_state_t  state,
-	thread_flavor_t f);
-extern void             fpu_dup_fxstate(
-	thread_t        parent,
-	thread_t        child);
-extern void             fpnoextflt(void);
-extern void             fpextovrflt(void);
-extern void             fpexterrflt(void);
-extern void             fpSSEexterrflt(void);
-extern void             fpflush(thread_t);
-extern void             fp_setvalid(boolean_t);
+extern void init_fpu(void);
+extern void fpu_module_init(void);
+extern void fpu_free(thread_t thr_act, void *fps);
+extern kern_return_t fpu_set_fxstate(thread_t thr_act, thread_state_t state,
+                                     thread_flavor_t f);
+extern kern_return_t fpu_get_fxstate(thread_t thr_act, thread_state_t state,
+                                     thread_flavor_t f);
+extern void fpu_dup_fxstate(thread_t parent, thread_t child);
+extern void fpnoextflt(void);
+extern void fpextovrflt(void);
+extern void fpexterrflt(void);
+extern void fpSSEexterrflt(void);
+extern void fpflush(thread_t);
+extern void fp_setvalid(boolean_t);
 
-extern void             clear_fpu(void);
-extern void             fpu_switch_context(
-	thread_t        old,
-	thread_t        new);
-extern void             fpu_switch_addrmode(
-	thread_t        thread,
-	boolean_t       is_64bit);
+extern void clear_fpu(void);
+extern void fpu_switch_context(thread_t old, thread_t new);
+extern void fpu_switch_addrmode(thread_t thread, boolean_t is_64bit);
 
-extern xstate_t         fpu_default;
-extern xstate_t         fpu_capability;
-extern xstate_t         current_xstate(void);
-extern int              fpUDflt(user_addr_t rip);
+extern xstate_t fpu_default;
+extern xstate_t fpu_capability;
+extern xstate_t current_xstate(void);
+extern int fpUDflt(user_addr_t rip);
 #ifdef MACH_KERNEL_PRIVATE
 #if DEBUG || DEVELOPMENT
 extern uint32_t thread_fpsimd_hash(thread_t);
@@ -153,4 +138,4 @@ extern void vzeroall(void);
 extern void xmmzeroall(void);
 extern void avx512_zero(void);
 #endif /* MKP */
-#endif  /* _I386_FPU_H_ */
+#endif /* _I386_FPU_H_ */

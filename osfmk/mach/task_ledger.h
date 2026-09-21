@@ -39,13 +39,13 @@
 /*
  * Definitions for task ledger line items
  */
-#define ITEM_THREADS            0       /* number of threads	*/
-#define ITEM_TASKS              1       /* number of tasks	*/
+#define ITEM_THREADS 0 /* number of threads	*/
+#define ITEM_TASKS 1   /* number of tasks	*/
 
-#define ITEM_VM                 2       /* virtual space (bytes)*/
+#define ITEM_VM 2 /* virtual space (bytes)*/
 
-#define LEDGER_N_ITEMS          3       /* Total line items	*/
+#define LEDGER_N_ITEMS 3 /* Total line items	*/
 
-#define LEDGER_UNLIMITED        0       /* ignored item.maximum	*/
+#define LEDGER_UNLIMITED 0 /* ignored item.maximum	*/
 
-#endif  /* _MACH_TASK_LEDGER_H_ */
+#endif /* _MACH_TASK_LEDGER_H_ */

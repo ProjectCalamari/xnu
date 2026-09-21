@@ -29,9 +29,9 @@
 #ifndef _KERN_RESTARTABLE_H_
 #define _KERN_RESTARTABLE_H_
 
-#include <sys/cdefs.h>
 #include <mach/message.h>
 #include <mach/task.h>
+#include <sys/cdefs.h>
 
 __BEGIN_DECLS
 
@@ -55,10 +55,10 @@ __BEGIN_DECLS
  * Currently unused, pass 0.
  */
 typedef struct {
-	mach_vm_address_t location;
-	unsigned short    length;
-	unsigned short    recovery_offs;
-	unsigned int      flags;
+  mach_vm_address_t location;
+  unsigned short length;
+  unsigned short recovery_offs;
+  unsigned int flags;
 } task_restartable_range_t;
 
 typedef task_restartable_range_t *task_restartable_range_array_t;
@@ -86,10 +86,10 @@ typedef task_restartable_range_t *task_restartable_range_array_t;
  *   release kernels, registration when the task has gone wide)
  * - KERN_RESOURCE_SHORTAGE if not enough memory
  */
-extern kern_return_t task_restartable_ranges_register(
-	task_t                         task,
-	task_restartable_range_array_t ranges,
-	mach_msg_type_number_t         count);
+extern kern_return_t
+task_restartable_ranges_register(task_t task,
+                                 task_restartable_range_array_t ranges,
+                                 mach_msg_type_number_t count);
 
 /*!
  * @function task_restartable_ranges_synchronize
@@ -111,7 +111,7 @@ extern kern_return_t task_restartable_ranges_synchronize(task_t task);
  * @const TASK_RESTARTABLE_OFFSET_MAX
  * The maximum value length / recovery_offs can have.
  */
-#define TASK_RESTARTABLE_OFFSET_MAX  4096u
+#define TASK_RESTARTABLE_OFFSET_MAX 4096u
 
 #ifdef KERNEL_PRIVATE
 #pragma GCC visibility push(hidden)
@@ -180,4 +180,4 @@ extern void thread_reset_pcs_ack_IPI(struct thread *thread);
 
 __END_DECLS
 
-#endif  /* _KERN_RESTARTABLE_H_ */
+#endif /* _KERN_RESTARTABLE_H_ */

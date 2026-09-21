@@ -63,16 +63,16 @@
 #ifndef _SYS_LOCKF_H_
 #define _SYS_LOCKF_H_
 
-#include <sys/queue.h>
 #include <sys/cdefs.h>
+#include <sys/queue.h>
 #include <sys/types.h>
 
 struct vnop_advlock_args;
 struct vnode;
 
 #if IMPORTANCE_INHERITANCE
-#define LF_NOT_BOOSTED  0
-#define LF_BOOSTED      1
+#define LF_NOT_BOOSTED 0
+#define LF_BOOSTED 1
 #endif /* IMPORTANCE_INHERITANCE */
 
 /*
@@ -85,34 +85,34 @@ struct vnode;
 TAILQ_HEAD(locklist, lockf);
 
 struct lockf {
-	short   lf_flags;           /* Semantics: F_POSIX, F_FLOCK, F_WAIT */
-	short   lf_type;            /* Lock type: F_RDLCK, F_WRLCK */
+  short lf_flags; /* Semantics: F_POSIX, F_FLOCK, F_WAIT */
+  short lf_type;  /* Lock type: F_RDLCK, F_WRLCK */
 #if IMPORTANCE_INHERITANCE
-	int     lf_boosted;         /* Is the owner of the lock boosted */
+  int lf_boosted; /* Is the owner of the lock boosted */
 #endif
-	off_t   lf_start;           /* Byte # of the start of the lock */
-	off_t   lf_end;             /* Byte # of the end of the lock (-1=EOF) */
-	caddr_t lf_id;              /* Id of the resource holding the lock */
-	struct  lockf **lf_head;    /* Back pointer to the head of the lockf list */
-	struct  vnode *lf_vnode;    /* Back pointer to the inode */
-	struct  lockf *lf_next;     /* Pointer to the next lock on this inode */
-	struct  locklist lf_blkhd;  /* List of requests blocked on this lock */
-	TAILQ_ENTRY(lockf) lf_block;/* A request waiting for a lock */
-	struct  proc *lf_owner;     /* The proc that did the SETLK, if known */
+  off_t lf_start;              /* Byte # of the start of the lock */
+  off_t lf_end;                /* Byte # of the end of the lock (-1=EOF) */
+  caddr_t lf_id;               /* Id of the resource holding the lock */
+  struct lockf **lf_head;      /* Back pointer to the head of the lockf list */
+  struct vnode *lf_vnode;      /* Back pointer to the inode */
+  struct lockf *lf_next;       /* Pointer to the next lock on this inode */
+  struct locklist lf_blkhd;    /* List of requests blocked on this lock */
+  TAILQ_ENTRY(lockf) lf_block; /* A request waiting for a lock */
+  struct proc *lf_owner;       /* The proc that did the SETLK, if known */
 };
 
 __BEGIN_DECLS
 
 #ifdef KERNEL_PRIVATE
-void    lf_init(void);
-int     lf_advlock(struct vnop_advlock_args *);
-int     lf_assert(struct vnop_advlock_args *, void **);
-void    lf_commit(void *, int);
-void    lf_abort_advlocks(vnode_t);
+void lf_init(void);
+int lf_advlock(struct vnop_advlock_args *);
+int lf_assert(struct vnop_advlock_args *, void **);
+void lf_commit(void *, int);
+void lf_abort_advlocks(vnode_t);
 
 #ifdef LOCKF_DEBUG
-void    lf_print(char *, struct lockf *);
-void    lf_printlist(char *, struct lockf *);
+void lf_print(char *, struct lockf *);
+void lf_printlist(char *, struct lockf *);
 #endif
 #endif /* KERNEL_PRIVATE */
 

@@ -62,21 +62,20 @@
  *	Basic Mach external memory management interface declaration.
  */
 
-
 #ifndef _MACH_MEMORY_OBJECT_CONTROL_
 #define _MACH_MEMORY_OBJECT_CONTROL_
 
 /* Module memory_object_control */
 
-#include <string.h>
-#include <mach/ndr.h>
 #include <mach/boolean.h>
 #include <mach/kern_return.h>
-#include <mach/notify.h>
 #include <mach/mach_types.h>
 #include <mach/message.h>
 #include <mach/mig_errors.h>
+#include <mach/ndr.h>
+#include <mach/notify.h>
 #include <mach/port.h>
+#include <string.h>
 
 #include <vm/vm_protos.h>
 
@@ -84,58 +83,40 @@ __BEGIN_DECLS
 #pragma GCC visibility push(hidden)
 
 extern kern_return_t memory_object_change_attributes(
-	memory_object_control_t memory_control,
-	memory_object_flavor_t flavor,
-	memory_object_info_t attributes,
-	mach_msg_type_number_t attributesCnt);
+    memory_object_control_t memory_control, memory_object_flavor_t flavor,
+    memory_object_info_t attributes, mach_msg_type_number_t attributesCnt);
 
 extern kern_return_t memory_object_lock_request(
-	memory_object_control_t memory_control,
-	memory_object_offset_t offset,
-	memory_object_size_t size,
-	memory_object_offset_t *resid_offset,
-	integer_t *io_errno,
-	memory_object_return_t should_return,
-	integer_t flags,
-	vm_prot_t lock_value);
+    memory_object_control_t memory_control, memory_object_offset_t offset,
+    memory_object_size_t size, memory_object_offset_t *resid_offset,
+    integer_t *io_errno, memory_object_return_t should_return, integer_t flags,
+    vm_prot_t lock_value);
 
-extern kern_return_t memory_object_destroy(
-	memory_object_control_t                         memory_control,
-	vm_object_destroy_reason_t   reason);
+extern kern_return_t
+memory_object_destroy(memory_object_control_t memory_control,
+                      vm_object_destroy_reason_t reason);
 
 extern kern_return_t memory_object_upl_request(
-	memory_object_control_t memory_control,
-	memory_object_offset_t offset,
-	upl_size_t size,
-	upl_t *upl,
-	upl_page_info_array_t page_list,
-	mach_msg_type_number_t *page_listCnt,
-	integer_t cntrl_flags,
-	integer_t tag);
+    memory_object_control_t memory_control, memory_object_offset_t offset,
+    upl_size_t size, upl_t *upl, upl_page_info_array_t page_list,
+    mach_msg_type_number_t *page_listCnt, integer_t cntrl_flags, integer_t tag);
 
-extern kern_return_t memory_object_cluster_size(
-	memory_object_control_t control,
-	memory_object_offset_t *start,
-	vm_size_t *length,
-	uint32_t *io_streaming,
-	memory_object_fault_info_t fault_info);
+extern kern_return_t
+memory_object_cluster_size(memory_object_control_t control,
+                           memory_object_offset_t *start, vm_size_t *length,
+                           uint32_t *io_streaming,
+                           memory_object_fault_info_t fault_info);
 
-__exported
-extern kern_return_t memory_object_page_op(
-	memory_object_control_t memory_control,
-	memory_object_offset_t offset,
-	integer_t ops,
-	uint32_t *phys_entry,
-	integer_t *flags);
+__exported extern kern_return_t
+memory_object_page_op(memory_object_control_t memory_control,
+                      memory_object_offset_t offset, integer_t ops,
+                      uint32_t *phys_entry, integer_t *flags);
 
 extern kern_return_t memory_object_range_op(
-	memory_object_control_t memory_control,
-	memory_object_offset_t offset_beg,
-	memory_object_offset_t offset_end,
-	integer_t ops,
-	integer_t *range);
+    memory_object_control_t memory_control, memory_object_offset_t offset_beg,
+    memory_object_offset_t offset_end, integer_t ops, integer_t *range);
 
 #pragma GCC visibility pop
 __END_DECLS
 
-#endif   /* _MACH_MEMORY_OBJECT_CONTROL_ */
+#endif /* _MACH_MEMORY_OBJECT_CONTROL_ */

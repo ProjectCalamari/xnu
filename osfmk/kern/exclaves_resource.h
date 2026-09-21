@@ -37,13 +37,12 @@
 #include <mach/kern_return.h>
 #include <sys/event.h>
 
-#include <stdint.h>
 #include <os/base.h>
+#include <stdint.h>
 
 #include "kern/exclaves.tightbeam.h"
 
 __BEGIN_DECLS
-
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Exclaves Resources
@@ -85,18 +84,18 @@ __BEGIN_DECLS
  *                   to Conclave Manager
  */
 typedef enum {
-	CONCLAVE_S_NONE = 0,
-	CONCLAVE_S_ATTACHED = 0x1,
-	CONCLAVE_S_RUNNING = 0x2,
-	CONCLAVE_S_STOPPED = 0x3,
-	CONCLAVE_S_SUSPENDED = 0x4,
+  CONCLAVE_S_NONE = 0,
+  CONCLAVE_S_ATTACHED = 0x1,
+  CONCLAVE_S_RUNNING = 0x2,
+  CONCLAVE_S_STOPPED = 0x3,
+  CONCLAVE_S_SUSPENDED = 0x4,
 } conclave_state_t;
 
 typedef enum __attribute__((flag_enum)) {
-	CONCLAVE_R_NONE = 0,
-	CONCLAVE_R_LAUNCH_REQUESTED = 0x1,
-	CONCLAVE_R_SUSPEND_REQUESTED = 0x2,
-	CONCLAVE_R_STOP_REQUESTED = 0x4,
+  CONCLAVE_R_NONE = 0,
+  CONCLAVE_R_LAUNCH_REQUESTED = 0x1,
+  CONCLAVE_R_SUSPEND_REQUESTED = 0x2,
+  CONCLAVE_R_STOP_REQUESTED = 0x4,
 } conclave_request_t;
 
 /*
@@ -104,51 +103,51 @@ typedef enum __attribute__((flag_enum)) {
  * resource.
  */
 typedef struct {
-	uint64_t aoei_serviceid;
-	uint8_t aoei_message_count;
-	uint8_t aoei_work_count;
-	uint8_t aoei_worker_count;
-	bool aoei_associated;
-	queue_chain_t aoei_chain;
-	uint64_t aoei_assertion_id;
+  uint64_t aoei_serviceid;
+  uint8_t aoei_message_count;
+  uint8_t aoei_work_count;
+  uint8_t aoei_worker_count;
+  bool aoei_associated;
+  queue_chain_t aoei_chain;
+  uint64_t aoei_assertion_id;
 } aoe_item_t;
 
 /* The highest service identifier in any conclave. */
 #define CONCLAVE_SERVICE_MAX 256
 
 typedef struct {
-	conclave_state_t       c_state;
-	conclave_request_t     c_request;
-	bool                   c_active_downcall;
-	bool                   c_active_stopcall;
-	bool                   c_active_detach;
-	tb_client_connection_t c_control;
-	task_t XNU_PTRAUTH_SIGNED_PTR("conclave.task") c_task;
-	thread_t XNU_PTRAUTH_SIGNED_PTR("conclave.thread") c_downcall_thread;
-	bitmap_t               c_service_bitmap[BITMAP_LEN(CONCLAVE_SERVICE_MAX)];
+  conclave_state_t c_state;
+  conclave_request_t c_request;
+  bool c_active_downcall;
+  bool c_active_stopcall;
+  bool c_active_detach;
+  tb_client_connection_t c_control;
+  task_t XNU_PTRAUTH_SIGNED_PTR("conclave.task") c_task;
+  thread_t XNU_PTRAUTH_SIGNED_PTR("conclave.thread") c_downcall_thread;
+  bitmap_t c_service_bitmap[BITMAP_LEN(CONCLAVE_SERVICE_MAX)];
 
-	/*
-	 * Always-On Exclaves specific.
-	 */
-	queue_head_t           c_aoe_q;
+  /*
+   * Always-On Exclaves specific.
+   */
+  queue_head_t c_aoe_q;
 } conclave_resource_t;
 
 typedef struct {
-	size_t sm_size;
-	exclaves_buffer_perm_t sm_perm;
-	char *sm_addr;
-	sharedmemorybase_mapping_s sm_mapping;
-	sharedmemorybase_segxnuaccess_s sm_client;
+  size_t sm_size;
+  exclaves_buffer_perm_t sm_perm;
+  char *sm_addr;
+  sharedmemorybase_mapping_s sm_mapping;
+  sharedmemorybase_segxnuaccess_s sm_client;
 } shared_memory_resource_t;
 
 typedef struct {
-	/* how many times *this* sensor resource handle has been
-	 * used to call sensor_start */
-	uint64_t s_startcount;
+  /* how many times *this* sensor resource handle has been
+   * used to call sensor_start */
+  uint64_t s_startcount;
 } sensor_resource_t;
 
 typedef struct {
-	struct klist notification_klist;
+  struct klist notification_klist;
 } exclaves_notification_t;
 
 /*
@@ -157,21 +156,21 @@ typedef struct {
  */
 #define EXCLAVES_RESOURCE_NAME_MAX 128
 typedef struct exclaves_resource {
-	char                r_name[EXCLAVES_RESOURCE_NAME_MAX];
-	xnuproxy_resourcetype_s r_type;
-	uint64_t            r_id;
-	_Atomic uint32_t    r_usecnt;
-	ipc_port_t          r_port;
-	lck_mtx_t           r_mutex;
-	bool                r_active;
-	bool                r_connected;
+  char r_name[EXCLAVES_RESOURCE_NAME_MAX];
+  xnuproxy_resourcetype_s r_type;
+  uint64_t r_id;
+  _Atomic uint32_t r_usecnt;
+  ipc_port_t r_port;
+  lck_mtx_t r_mutex;
+  bool r_active;
+  bool r_connected;
 
-	union {
-		conclave_resource_t     r_conclave;
-		sensor_resource_t       r_sensor;
-		exclaves_notification_t r_notification;
-		shared_memory_resource_t r_shared_memory;
-	};
+  union {
+    conclave_resource_t r_conclave;
+    sensor_resource_t r_sensor;
+    exclaves_notification_t r_notification;
+    shared_memory_resource_t r_shared_memory;
+  };
 } exclaves_resource_t;
 
 /*!
@@ -184,8 +183,7 @@ typedef struct exclaves_resource {
  * @return
  * KERN_SUCCESS on success otherwise an error code.
  */
-extern kern_return_t
-exclaves_resource_init(void);
+extern kern_return_t exclaves_resource_init(void);
 
 /*!
  * @function exclaves_resource_name
@@ -199,8 +197,7 @@ exclaves_resource_init(void);
  * @return
  * The name of the resource or NULL.
  */
-extern const char *
-exclaves_resource_name(const exclaves_resource_t *resource);
+extern const char *exclaves_resource_name(const exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_resource_retain
@@ -214,8 +211,7 @@ exclaves_resource_name(const exclaves_resource_t *resource);
  * @return
  * The value of the use count before the retain
  */
-extern uint32_t
-exclaves_resource_retain(exclaves_resource_t *resource);
+extern uint32_t exclaves_resource_retain(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_resource_release
@@ -232,8 +228,7 @@ exclaves_resource_retain(exclaves_resource_t *resource);
  * After this function has been called, the resource should not be accessed as
  * it may be in an uninitialized state.
  */
-extern void
-exclaves_resource_release(exclaves_resource_t *resource);
+extern void exclaves_resource_release(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_resource_from_port_name
@@ -259,8 +254,7 @@ exclaves_resource_release(exclaves_resource_t *resource);
  */
 extern kern_return_t
 exclaves_resource_from_port_name(ipc_space_t space, mach_port_name_t name,
-    exclaves_resource_t **resource);
-
+                                 exclaves_resource_t **resource);
 
 /*!
  * @function exclaves_resource_create_port_name
@@ -285,9 +279,8 @@ exclaves_resource_from_port_name(ipc_space_t space, mach_port_name_t name,
  * of the newly created send right.
  */
 extern kern_return_t
-exclaves_resource_create_port_name(exclaves_resource_t *resource, ipc_space_t space,
-    mach_port_name_t *name);
-
+exclaves_resource_create_port_name(exclaves_resource_t *resource,
+                                   ipc_space_t space, mach_port_name_t *name);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Conclaves
@@ -308,8 +301,7 @@ exclaves_resource_create_port_name(exclaves_resource_t *resource, ipc_space_t sp
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_attach(const char *name, task_t task);
+extern kern_return_t exclaves_conclave_attach(const char *name, task_t task);
 
 /*!
  * @function exclaves_conclave_detach
@@ -327,8 +319,8 @@ exclaves_conclave_attach(const char *name, task_t task);
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_detach(exclaves_resource_t *resource, task_t task);
+extern kern_return_t exclaves_conclave_detach(exclaves_resource_t *resource,
+                                              task_t task);
 
 /*!
  * @function exclaves_conclave_inherit
@@ -348,10 +340,9 @@ exclaves_conclave_detach(exclaves_resource_t *resource, task_t task);
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_inherit(exclaves_resource_t *resource, task_t old_task,
-    task_t new_task);
-
+extern kern_return_t exclaves_conclave_inherit(exclaves_resource_t *resource,
+                                               task_t old_task,
+                                               task_t new_task);
 
 /*!
  * @function exclaves_conclave_is_attached
@@ -365,8 +356,7 @@ exclaves_conclave_inherit(exclaves_resource_t *resource, task_t old_task,
  * @return
  * True if conclave is attached, false otherwise
  */
-extern bool
-exclaves_conclave_is_attached(const exclaves_resource_t *resource);
+extern bool exclaves_conclave_is_attached(const exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_conclave_launch
@@ -381,8 +371,7 @@ exclaves_conclave_is_attached(const exclaves_resource_t *resource);
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_launch(exclaves_resource_t *resource);
+extern kern_return_t exclaves_conclave_launch(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_conclave_lookup_resources
@@ -403,8 +392,8 @@ exclaves_conclave_launch(exclaves_resource_t *resource);
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_lookup_resources(exclaves_resource_t *resource,
+extern kern_return_t exclaves_conclave_lookup_resources(
+    exclaves_resource_t *resource,
     struct exclaves_resource_user *conclave_resource_user, int resource_count);
 
 /*!
@@ -422,8 +411,8 @@ exclaves_conclave_lookup_resources(exclaves_resource_t *resource,
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_stop(exclaves_resource_t *resource, bool gather_crash_bt);
+extern kern_return_t exclaves_conclave_stop(exclaves_resource_t *resource,
+                                            bool gather_crash_bt);
 
 /*!
  * @function exclaves_conclave_suspend
@@ -437,8 +426,7 @@ exclaves_conclave_stop(exclaves_resource_t *resource, bool gather_crash_bt);
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_suspend(exclaves_resource_t *resource);
+extern kern_return_t exclaves_conclave_suspend(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_conclave_resume
@@ -452,8 +440,7 @@ exclaves_conclave_suspend(exclaves_resource_t *resource);
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_conclave_resume(exclaves_resource_t *resource);
+extern kern_return_t exclaves_conclave_resume(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_conclave_stop_upcall
@@ -486,7 +473,8 @@ exclaves_conclave_stop_upcall(exclaves_resource_t *resource);
  * KERN_SUCCESS on success, error code otherwise.
  */
 extern kern_return_t
-exclaves_conclave_stop_upcall_complete(exclaves_resource_t *resource, task_t task);
+exclaves_conclave_stop_upcall_complete(exclaves_resource_t *resource,
+                                       task_t task);
 
 /*!
  * @function exclaves_conclave_get_domain
@@ -501,9 +489,7 @@ exclaves_conclave_stop_upcall_complete(exclaves_resource_t *resource, task_t tas
  * @return
  * The domain of the conclave or the kernel domain.
  */
-extern const char *
-exclaves_conclave_get_domain(exclaves_resource_t *resource);
-
+extern const char *exclaves_conclave_get_domain(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_conclave_has_service
@@ -521,8 +507,8 @@ exclaves_conclave_get_domain(exclaves_resource_t *resource);
  * @return
  * true if the ID is available to conclave, false otherwise
  */
-extern bool
-exclaves_conclave_has_service(exclaves_resource_t *resource, uint64_t id);
+extern bool exclaves_conclave_has_service(exclaves_resource_t *resource,
+                                          uint64_t id);
 
 /*!
  * @function exclaves_conclave_lookup_by_aoeserviceid
@@ -536,8 +522,7 @@ exclaves_conclave_has_service(exclaves_resource_t *resource, uint64_t id);
  * @return
  * Pointer to the resource
  */
-exclaves_resource_t *
-exclaves_conclave_lookup_by_aoeserviceid(uint64_t id);
+exclaves_resource_t *exclaves_conclave_lookup_by_aoeserviceid(uint64_t id);
 
 /*!
  * @function exclaves_is_forwarding_resource
@@ -553,8 +538,7 @@ exclaves_conclave_lookup_by_aoeserviceid(uint64_t id);
  * true if resource is a forwarding conclave, false otherwise
  *
  */
-extern bool
-exclaves_is_forwarding_resource(exclaves_resource_t *resource);
+extern bool exclaves_is_forwarding_resource(exclaves_resource_t *resource);
 
 /*!
  * @function exclaves_conclave_prepare_teardown
@@ -566,10 +550,7 @@ exclaves_is_forwarding_resource(exclaves_resource_t *resource);
  * @param task is the pointer to owner of conclave resource.
  *
  */
-extern void
-exclaves_conclave_prepare_teardown(
-	task_t task);
-
+extern void exclaves_conclave_prepare_teardown(task_t task);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Sensors
@@ -598,7 +579,7 @@ exclaves_conclave_prepare_teardown(
  */
 extern kern_return_t
 exclaves_resource_sensor_open(const char *domain, const char *name,
-    exclaves_resource_t **resource);
+                              exclaves_resource_t **resource);
 
 /*!
  * @function exclaves_resource_sensor_start
@@ -618,9 +599,9 @@ exclaves_resource_sensor_open(const char *domain, const char *name,
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-kern_return_t
-exclaves_resource_sensor_start(exclaves_resource_t *resource, uint64_t flags,
-    exclaves_sensor_status_t *status);
+kern_return_t exclaves_resource_sensor_start(exclaves_resource_t *resource,
+                                             uint64_t flags,
+                                             exclaves_sensor_status_t *status);
 
 /*!
  * @function exclaves_resource_sensor_stop
@@ -640,9 +621,9 @@ exclaves_resource_sensor_start(exclaves_resource_t *resource, uint64_t flags,
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-kern_return_t
-exclaves_resource_sensor_stop(exclaves_resource_t *resource, uint64_t flags,
-    exclaves_sensor_status_t *status);
+kern_return_t exclaves_resource_sensor_stop(exclaves_resource_t *resource,
+                                            uint64_t flags,
+                                            exclaves_sensor_status_t *status);
 
 /*!
  * @function exclaves_resource_sensor_status
@@ -662,9 +643,9 @@ exclaves_resource_sensor_stop(exclaves_resource_t *resource, uint64_t flags,
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-kern_return_t
-exclaves_resource_sensor_status(exclaves_resource_t *resource, uint64_t flags,
-    exclaves_sensor_status_t *status);
+kern_return_t exclaves_resource_sensor_status(exclaves_resource_t *resource,
+                                              uint64_t flags,
+                                              exclaves_sensor_status_t *status);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Notifications
@@ -690,13 +671,14 @@ exclaves_resource_sensor_status(exclaves_resource_t *resource, uint64_t flags,
  */
 extern kern_return_t
 exclaves_notification_create(const char *domain, const char *name,
-    exclaves_resource_t **resource);
+                             exclaves_resource_t **resource);
 
 /*!
  * @function exclaves_notification_signal
  *
  * @abstract
- * To be called from upcall context when the specified notification resource is signaled.
+ * To be called from upcall context when the specified notification resource is
+ * signaled.
  *
  * @param resource
  * Notification resource.
@@ -707,9 +689,8 @@ exclaves_notification_create(const char *domain, const char *name,
  * @return
  * KERN_SUCCESS on success, error code otherwise.
  */
-extern kern_return_t
-exclaves_notification_signal(exclaves_resource_t *resource, long event_mask);
-
+extern kern_return_t exclaves_notification_signal(exclaves_resource_t *resource,
+                                                  long event_mask);
 
 /*!
  * @function exclaves_notificatione_lookup_by_id
@@ -723,16 +704,14 @@ exclaves_notification_signal(exclaves_resource_t *resource, long event_mask);
  * @return
  * Pointer to the resource
  */
-exclaves_resource_t *
-exclaves_notification_lookup_by_id(uint64_t id);
-
+exclaves_resource_t *exclaves_notification_lookup_by_id(uint64_t id);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Services
 
 /*
  * Indicates an invalid service. */
-#define  EXCLAVES_INVALID_ID UINT64_C(~0)
+#define EXCLAVES_INVALID_ID UINT64_C(~0)
 
 /*!
  * @function exclaves_service_lookup
@@ -749,9 +728,7 @@ exclaves_notification_lookup_by_id(uint64_t id);
  * @return
  * ID of service or EXCLAVES_INVALID_ID if the service cannot be found.
  */
-extern uint64_t
-exclaves_service_lookup(const char *domain, const char *name);
-
+extern uint64_t exclaves_service_lookup(const char *domain, const char *name);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Shared Memory
@@ -786,7 +763,8 @@ exclaves_service_lookup(const char *domain, const char *name);
  */
 extern kern_return_t
 exclaves_resource_shared_memory_map(const char *domain, const char *name,
-    size_t size, exclaves_buffer_perm_t perm, exclaves_resource_t **resource);
+                                    size_t size, exclaves_buffer_perm_t perm,
+                                    exclaves_resource_t **resource);
 
 /*!
  * @function exclaves_resource_shared_memory_copyin
@@ -815,10 +793,9 @@ exclaves_resource_shared_memory_map(const char *domain, const char *name,
  * @return
  * KERN_SUCCESS or error code on failure.
  */
-extern kern_return_t
-exclaves_resource_shared_memory_copyin(exclaves_resource_t *resource,
-    user_addr_t ubuffer, mach_vm_size_t usize1, mach_vm_size_t uoffset1,
-    mach_vm_size_t usize2, mach_vm_size_t uoffset2);
+extern kern_return_t exclaves_resource_shared_memory_copyin(
+    exclaves_resource_t *resource, user_addr_t ubuffer, mach_vm_size_t usize1,
+    mach_vm_size_t uoffset1, mach_vm_size_t usize2, mach_vm_size_t uoffset2);
 
 /*!
  * @function exclaves_resource_shared_memory_copyout
@@ -847,10 +824,9 @@ exclaves_resource_shared_memory_copyin(exclaves_resource_t *resource,
  * @return
  * KERN_SUCCESS or error code on failure.
  */
-extern kern_return_t
-exclaves_resource_shared_memory_copyout(exclaves_resource_t *resource,
-    user_addr_t ubuffer, mach_vm_size_t usize1, mach_vm_size_t uoffset1,
-    mach_vm_size_t usize2, mach_vm_size_t uoffset2);
+extern kern_return_t exclaves_resource_shared_memory_copyout(
+    exclaves_resource_t *resource, user_addr_t ubuffer, mach_vm_size_t usize1,
+    mach_vm_size_t uoffset1, mach_vm_size_t usize2, mach_vm_size_t uoffset2);
 
 /*!
  * @function exclaves_resource_shared_memory_get_buffer
@@ -869,7 +845,7 @@ exclaves_resource_shared_memory_copyout(exclaves_resource_t *resource,
  */
 extern char *
 exclaves_resource_shared_memory_get_buffer(exclaves_resource_t *resource,
-    size_t *buffer_len);
+                                           size_t *buffer_len);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Arbitrated Audio Memory
@@ -900,8 +876,8 @@ exclaves_resource_shared_memory_get_buffer(exclaves_resource_t *resource,
  * exclaves_resource_release().
  */
 extern kern_return_t
-exclaves_resource_audio_memory_map(const char *domain, const char *name, size_t size,
-    exclaves_resource_t **resource);
+exclaves_resource_audio_memory_map(const char *domain, const char *name,
+                                   size_t size, exclaves_resource_t **resource);
 
 /*!
  * @function exclaves_resource_audio_memory_copyout
@@ -933,11 +909,10 @@ exclaves_resource_audio_memory_map(const char *domain, const char *name, size_t 
  * @return
  * KERN_SUCCESS or error code on failure.
  */
-extern kern_return_t
-exclaves_resource_audio_memory_copyout(exclaves_resource_t *resource,
-    user_addr_t ubuffer, mach_vm_size_t usize1, mach_vm_size_t uoffset1,
-    mach_vm_size_t usize2, mach_vm_size_t uoffset2, user_addr_t ustatus);
-
+extern kern_return_t exclaves_resource_audio_memory_copyout(
+    exclaves_resource_t *resource, user_addr_t ubuffer, mach_vm_size_t usize1,
+    mach_vm_size_t uoffset1, mach_vm_size_t usize2, mach_vm_size_t uoffset2,
+    user_addr_t ustatus);
 
 /* -------------------------------------------------------------------------- */
 #pragma mark Always-On Exclaves Services
@@ -958,13 +933,12 @@ exclaves_resource_audio_memory_copyout(exclaves_resource_t *resource,
 /* BEGIN IGNORE CODESTYLE */
 extern void
 exclaves_resource_aoeservice_iterate(const char *domain,
-    bool (^cb)(exclaves_resource_t *));
+                                     bool (^cb)(exclaves_resource_t *));
 /* END IGNORE CODESTYLE */
-
 
 extern exclaves_resource_t *
 exclaves_resource_lookup_by_name(const char *domain_name, const char *name,
-    xnuproxy_resourcetype_s type);
+                                 xnuproxy_resourcetype_s type);
 
 __END_DECLS
 

@@ -31,95 +31,95 @@
 #include <IOKit/IODMAController.h>
 #include <libkern/c++/OSSharedPtr.h>
 
-
 #define super IOService
 OSDefineMetaClassAndAbstractStructors(IODMAController, IOService);
 
 OSSharedPtr<const OSSymbol>
-IODMAController::createControllerName(UInt32 phandle)
-{
+IODMAController::createControllerName(UInt32 phandle) {
 #define CREATE_BUF_LEN 48
-	char           buf[CREATE_BUF_LEN];
+  char buf[CREATE_BUF_LEN];
 
-	snprintf(buf, CREATE_BUF_LEN, "IODMAController%08X", (uint32_t)phandle);
+  snprintf(buf, CREATE_BUF_LEN, "IODMAController%08X", (uint32_t)phandle);
 
-	return OSSymbol::withCString(buf);
+  return OSSymbol::withCString(buf);
 }
 
-IODMAController *
-IODMAController::getController(IOService *provider, UInt32 dmaIndex)
-{
-	OSData          *dmaParentData;
-	OSSharedPtr<const OSSymbol> dmaParentName;
-	IODMAController *dmaController;
+IODMAController *IODMAController::getController(IOService *provider,
+                                                UInt32 dmaIndex) {
+  OSData *dmaParentData;
+  OSSharedPtr<const OSSymbol> dmaParentName;
+  IODMAController *dmaController;
 
-	// Find the name of the parent dma controller
-	OSSharedPtr<OSObject> prop = provider->copyProperty("dma-parent");
-	dmaParentData = OSDynamicCast(OSData, prop.get());
-	if (dmaParentData == NULL) {
-		return NULL;
-	}
+  // Find the name of the parent dma controller
+  OSSharedPtr<OSObject> prop = provider->copyProperty("dma-parent");
+  dmaParentData = OSDynamicCast(OSData, prop.get());
+  if (dmaParentData == NULL) {
+    return NULL;
+  }
 
-	if (dmaParentData->getLength() == sizeof(UInt32)) {
-		dmaParentName = createControllerName(*(UInt32 *)dmaParentData->getBytesNoCopy());
-	} else {
-		if (dmaIndex >= dmaParentData->getLength() / sizeof(UInt32)) {
-			panic("dmaIndex out of range");
-		}
-		dmaParentName = createControllerName(*(UInt32 *)dmaParentData->getBytesNoCopy(dmaIndex * sizeof(UInt32), sizeof(UInt32)));
-	}
-	if (dmaParentName == NULL) {
-		return NULL;
-	}
+  if (dmaParentData->getLength() == sizeof(UInt32)) {
+    dmaParentName =
+        createControllerName(*(UInt32 *)dmaParentData->getBytesNoCopy());
+  } else {
+    if (dmaIndex >= dmaParentData->getLength() / sizeof(UInt32)) {
+      panic("dmaIndex out of range");
+    }
+    dmaParentName =
+        createControllerName(*(UInt32 *)dmaParentData->getBytesNoCopy(
+            dmaIndex * sizeof(UInt32), sizeof(UInt32)));
+  }
+  if (dmaParentName == NULL) {
+    return NULL;
+  }
 
-	// Wait for the parent dma controller
-	dmaController = OSDynamicCast(IODMAController, IOService::waitForService( IOService::nameMatching(dmaParentName.get()).detach()));
+  // Wait for the parent dma controller
+  dmaController =
+      OSDynamicCast(IODMAController,
+                    IOService::waitForService(
+                        IOService::nameMatching(dmaParentName.get()).detach()));
 
-	return dmaController;
+  return dmaController;
 }
 
+bool IODMAController::start(IOService *provider) {
+  if (!super::start(provider)) {
+    return false;
+  }
 
-bool
-IODMAController::start(IOService *provider)
-{
-	if (!super::start(provider)) {
-		return false;
-	}
+  _provider = provider;
 
-	_provider = provider;
-
-	return true;
+  return true;
 }
-
 
 // protected
 
-void
-IODMAController::registerDMAController(IOOptionBits options)
-{
-	OSData *phandleData;
+void IODMAController::registerDMAController(IOOptionBits options) {
+  OSData *phandleData;
 
-	OSSharedPtr<OSObject> prop = _provider->copyProperty("AAPL,phandle");
-	phandleData = OSDynamicCast(OSData, prop.get());
+  OSSharedPtr<OSObject> prop = _provider->copyProperty("AAPL,phandle");
+  phandleData = OSDynamicCast(OSData, prop.get());
 
-	_dmaControllerName = createControllerName(*(UInt32 *)phandleData->getBytesNoCopy());
+  _dmaControllerName =
+      createControllerName(*(UInt32 *)phandleData->getBytesNoCopy());
 
-	setName(_dmaControllerName.get());
+  setName(_dmaControllerName.get());
 
-	registerService(options | ((options & kIOServiceAsynchronous) ? 0 : kIOServiceSynchronous));
+  registerService(
+      options |
+      ((options & kIOServiceAsynchronous) ? 0 : kIOServiceSynchronous));
 }
 
-void
-IODMAController::completeDMACommand(IODMAEventSource *dmaES, IODMACommand *dmaCommand)
-{
-	dmaES->completeDMACommand(dmaCommand);
+void IODMAController::completeDMACommand(IODMAEventSource *dmaES,
+                                         IODMACommand *dmaCommand) {
+  dmaES->completeDMACommand(dmaCommand);
 }
 
-void
-IODMAController::notifyDMACommand(IODMAEventSource *dmaES, IODMACommand *dmaCommand, IOReturn status, IOByteCount actualByteCount, AbsoluteTime timeStamp)
-{
-	dmaES->notifyDMACommand(dmaCommand, status, actualByteCount, timeStamp);
+void IODMAController::notifyDMACommand(IODMAEventSource *dmaES,
+                                       IODMACommand *dmaCommand,
+                                       IOReturn status,
+                                       IOByteCount actualByteCount,
+                                       AbsoluteTime timeStamp) {
+  dmaES->notifyDMACommand(dmaCommand, status, actualByteCount, timeStamp);
 }
-
 
 // private

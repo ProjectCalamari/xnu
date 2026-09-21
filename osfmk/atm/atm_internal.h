@@ -29,10 +29,10 @@
 #ifndef _ATM_ATM_INTERNAL_H_
 #define _ATM_ATM_INTERNAL_H_
 
-#include <stdint.h>
-#include <mach/mach_types.h>
 #include <atm/atm_types.h>
+#include <mach/mach_types.h>
 #include <os/refcnt.h>
+#include <stdint.h>
 
 #ifdef MACH_KERNEL_PRIVATE
 void atm_init(void);

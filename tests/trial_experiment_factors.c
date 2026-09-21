@@ -28,54 +28,53 @@
 
 #include <darwintest.h>
 #include <darwintest_posix.h>
-#include <sys/errno.h>
 #include <stdint.h>
+#include <sys/errno.h>
 #include <sys/sysctl.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.trial"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("sysctl"),
-	T_META_CHECK_LEAKS(false),
-	T_META_RUN_CONCURRENTLY(true),
-	T_META_TAG_VM_PREFERRED,
-	T_META_ASROOT(false));
-
+T_GLOBAL_META(T_META_NAMESPACE("xnu.trial"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("sysctl"),
+              T_META_CHECK_LEAKS(false), T_META_RUN_CONCURRENTLY(true),
+              T_META_TAG_VM_PREFERRED, T_META_ASROOT(false));
 
 #if defined(ENTITLED)
 T_DECL(kern_trial_sysctl_entitled,
-    "test that kern.trial sysctls can be read-from/written-to if the proper "
-    "entitlement is granted")
+       "test that kern.trial sysctls can be read-from/written-to if the proper "
+       "entitlement is granted")
 #else
 T_DECL(kern_trial_sysctl_unentitled,
-    "test that kern.trial sysctls cannot be read-from/written-to without "
-    "the proper entitlement")
+       "test that kern.trial sysctls cannot be read-from/written-to without "
+       "the proper entitlement")
 #endif
 {
-	int ret;
-	int32_t val;
-	size_t sz = sizeof(val);
+  int ret;
+  int32_t val;
+  size_t sz = sizeof(val);
 
-	ret = sysctlbyname("kern.trial.test", &val, &sz, NULL, 0);
+  ret = sysctlbyname("kern.trial.test", &val, &sz, NULL, 0);
 #if defined(ENTITLED)
-	T_ASSERT_POSIX_SUCCESS(ret, "kern.trial.test can be read from");
+  T_ASSERT_POSIX_SUCCESS(ret, "kern.trial.test can be read from");
 #else
-	T_EXPECT_POSIX_FAILURE(ret, EPERM, "kern.trial.test cannot be written to");
+  T_EXPECT_POSIX_FAILURE(ret, EPERM, "kern.trial.test cannot be written to");
 #endif
 
-	val = 1;
-	ret = sysctlbyname("kern.trial.test", NULL, 0, &val, sizeof(val));
+  val = 1;
+  ret = sysctlbyname("kern.trial.test", NULL, 0, &val, sizeof(val));
 #if !defined(ENTITLED)
-	T_EXPECT_POSIX_FAILURE(ret, EPERM, "kern.trial.test cannot be written to");
+  T_EXPECT_POSIX_FAILURE(ret, EPERM, "kern.trial.test cannot be written to");
 #else
-	T_EXPECT_POSIX_SUCCESS(ret, "kern.trial.test can be written to with a valid value");
+  T_EXPECT_POSIX_SUCCESS(
+      ret, "kern.trial.test can be written to with a valid value");
 
-	ret = sysctlbyname("kern.trial.test", &val, &sz, NULL, 0);
-	T_QUIET; T_ASSERT_POSIX_SUCCESS(ret, "kern.trial.test can be read from");
-	T_EXPECT_EQ(val, 1, "kern.trial.test written value took effect");
+  ret = sysctlbyname("kern.trial.test", &val, &sz, NULL, 0);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "kern.trial.test can be read from");
+  T_EXPECT_EQ(val, 1, "kern.trial.test written value took effect");
 
-	val = UINT32_MAX;
-	ret = sysctlbyname("kern.trial.test", NULL, 0, &val, sizeof(val));
-	T_EXPECT_POSIX_FAILURE(ret, EINVAL, "kern.trial.test cannot be written to with an invalid value");
+  val = UINT32_MAX;
+  ret = sysctlbyname("kern.trial.test", NULL, 0, &val, sizeof(val));
+  T_EXPECT_POSIX_FAILURE(
+      ret, EINVAL,
+      "kern.trial.test cannot be written to with an invalid value");
 #endif
 }

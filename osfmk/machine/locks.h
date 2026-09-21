@@ -28,9 +28,9 @@
 #ifndef _MACHINE_LOCKS_H_
 #define _MACHINE_LOCKS_H_
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/locks.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/locks.h"
 #else
 #error architecture not supported

@@ -11,11 +11,11 @@
 #define _Block_H_
 
 #if !defined(BLOCK_EXPORT)
-#   if defined(__cplusplus)
-#       define BLOCK_EXPORT extern "C"
-#   else
-#       define BLOCK_EXPORT extern
-#   endif
+#if defined(__cplusplus)
+#define BLOCK_EXPORT extern "C"
+#else
+#define BLOCK_EXPORT extern
+#endif
 #endif
 
 #include <Availability.h>
@@ -27,9 +27,9 @@
 extern "C" {
 #endif
 
-// Create a heap based copy of a Block or simply add a reference to an existing one.
-// This must be paired with Block_release to recover memory, even when running
-// under Objective-C Garbage Collection.
+// Create a heap based copy of a Block or simply add a reference to an existing
+// one. This must be paired with Block_release to recover memory, even when
+// running under Objective-C Garbage Collection.
 #ifndef KERNEL
 __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2)
 #endif
@@ -40,7 +40,6 @@ BLOCK_EXPORT void *_Block_copy(const void *aBlock);
 __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2)
 #endif
 BLOCK_EXPORT void _Block_release(const void *aBlock);
-
 
 // Used by the compiler. Do not call this function yourself.
 #ifndef KERNEL
@@ -58,13 +57,12 @@ BLOCK_EXPORT void _Block_object_dispose(const void *, const int);
 #ifndef KERNEL
 __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2)
 #endif
-BLOCK_EXPORT void * _NSConcreteGlobalBlock[32];
+BLOCK_EXPORT void *_NSConcreteGlobalBlock[32];
 
 #ifndef KERNEL
 __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_3_2)
 #endif
-BLOCK_EXPORT void * _NSConcreteStackBlock[32];
-
+BLOCK_EXPORT void *_NSConcreteStackBlock[32];
 
 #if __cplusplus
 }
@@ -72,8 +70,8 @@ BLOCK_EXPORT void * _NSConcreteStackBlock[32];
 
 // Type correct macros
 
-#define Block_copy(...) ((__typeof(__VA_ARGS__))_Block_copy((const void *)(__VA_ARGS__)))
+#define Block_copy(...)                                                        \
+  ((__typeof(__VA_ARGS__))_Block_copy((const void *)(__VA_ARGS__)))
 #define Block_release(...) _Block_release((const void *)(__VA_ARGS__))
-
 
 #endif

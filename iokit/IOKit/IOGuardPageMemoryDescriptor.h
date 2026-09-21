@@ -34,37 +34,35 @@
 
 /*!
  *   @class IOGuardPageMemoryDescriptor
- *   @abstract Provides a memory descriptor that allows for variable size guard regions. Use with
- *             IOMultiMemoryDescriptor to surround other memory descriptors with guard pages.
+ *   @abstract Provides a memory descriptor that allows for variable size guard
+ * regions. Use with IOMultiMemoryDescriptor to surround other memory
+ * descriptors with guard pages.
  */
-class IOGuardPageMemoryDescriptor : public IOGeneralMemoryDescriptor
-{
-	OSDeclareDefaultStructors(IOGuardPageMemoryDescriptor);
+class IOGuardPageMemoryDescriptor : public IOGeneralMemoryDescriptor {
+  OSDeclareDefaultStructors(IOGuardPageMemoryDescriptor);
 
 protected:
-	virtual void free() APPLE_KEXT_OVERRIDE;
+  virtual void free() APPLE_KEXT_OVERRIDE;
 
-	vm_offset_t    _buffer;
-	vm_size_t      _size;
+  vm_offset_t _buffer;
+  vm_size_t _size;
 
 public:
+  /* @function withSize
+   *  @discussion Create a IOGuardPageMemoryDescriptor with the specified size.
+   *  @param Size of the guard region. This will be rounded up to the nearest
+   * multiple of page size.
+   *  @return IOGuardPageMemoryDescriptor instance to be released by the caller,
+   * which will free the allocated virtual memory region.
+   */
+  static OSPtr<IOGuardPageMemoryDescriptor> withSize(vm_size_t size);
 
-	/* @function withSize
-	 *  @discussion Create a IOGuardPageMemoryDescriptor with the specified size.
-	 *  @param Size of the guard region. This will be rounded up to the nearest multiple of page size.
-	 *  @return IOGuardPageMemoryDescriptor instance to be released by the caller, which will free the allocated
-	 *          virtual memory region.
-	 */
-	static OSPtr<IOGuardPageMemoryDescriptor> withSize(vm_size_t size);
-
-	virtual bool initWithSize(vm_size_t size);
+  virtual bool initWithSize(vm_size_t size);
 
 private:
-	virtual IOReturn doMap(vm_map_t           addressMap,
-	    IOVirtualAddress * atAddress,
-	    IOOptionBits       options,
-	    IOByteCount        sourceOffset = 0,
-	    IOByteCount        length = 0 ) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn doMap(vm_map_t addressMap, IOVirtualAddress *atAddress,
+                         IOOptionBits options, IOByteCount sourceOffset = 0,
+                         IOByteCount length = 0) APPLE_KEXT_OVERRIDE;
 };
 
 #endif /* !_IOGUARDPAGEMEMORYDESCRIPTOR_H */

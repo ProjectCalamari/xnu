@@ -29,70 +29,62 @@
 #ifndef __STDLIB_H__
 #define __STDLIB_H__
 
-#include <sys/_types/_size_t.h>
 #include <machine/trap.h>
+#include <sys/_types/_size_t.h>
 
 typedef struct {
-	int quot;
-	int rem;
+  int quot;
+  int rem;
 } div_t;
 
 typedef struct {
-	long quot;
-	long rem;
+  long quot;
+  long rem;
 } ldiv_t;
 
 typedef struct {
-	long long quot;
-	long long rem;
+  long long quot;
+  long long rem;
 } lldiv_t;
 
-static inline div_t
-div(int numer, int denom)
-{
-	div_t retval;
+static inline div_t div(int numer, int denom) {
+  div_t retval;
 
-	retval.quot = numer / denom;
-	retval.rem = numer % denom;
-	if (numer >= 0 && retval.rem < 0) {
-		retval.quot++;
-		retval.rem -= denom;
-	}
-	return retval;
+  retval.quot = numer / denom;
+  retval.rem = numer % denom;
+  if (numer >= 0 && retval.rem < 0) {
+    retval.quot++;
+    retval.rem -= denom;
+  }
+  return retval;
 }
 
-static inline ldiv_t
-ldiv(long numer, long denom)
-{
-	ldiv_t retval;
+static inline ldiv_t ldiv(long numer, long denom) {
+  ldiv_t retval;
 
-	retval.quot = numer / denom;
-	retval.rem = numer % denom;
-	if (numer >= 0 && retval.rem < 0) {
-		retval.quot++;
-		retval.rem -= denom;
-	}
-	return retval;
+  retval.quot = numer / denom;
+  retval.rem = numer % denom;
+  if (numer >= 0 && retval.rem < 0) {
+    retval.quot++;
+    retval.rem -= denom;
+  }
+  return retval;
 }
 
-static inline lldiv_t
-lldiv(long long numer, long long denom)
-{
-	lldiv_t retval;
+static inline lldiv_t lldiv(long long numer, long long denom) {
+  lldiv_t retval;
 
-	retval.quot = numer / denom;
-	retval.rem = numer % denom;
-	if (numer >= 0 && retval.rem < 0) {
-		retval.quot++;
-		retval.rem -= denom;
-	}
-	return retval;
+  retval.quot = numer / denom;
+  retval.rem = numer % denom;
+  if (numer >= 0 && retval.rem < 0) {
+    retval.quot++;
+    retval.rem -= denom;
+  }
+  return retval;
 }
 
-static inline void __attribute__((noreturn, cold))
-abort(void)
-{
-	ml_fatal_trap(0x0800);
+static inline void __attribute__((noreturn, cold)) abort(void) {
+  ml_fatal_trap(0x0800);
 }
 
 #endif

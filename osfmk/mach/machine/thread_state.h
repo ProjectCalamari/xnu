@@ -29,26 +29,26 @@
 #ifndef _MACH_MACHINE_THREAD_STATE_H_
 #define _MACH_MACHINE_THREAD_STATE_H_
 
-#if defined (__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "mach/i386/thread_state.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
 #include "mach/arm/thread_state.h"
 #else
 #error architecture not supported
 #endif
 
 /* Size of maximum exported thread state in 32-bit words */
-#define THREAD_STATE_MAX    1296
+#define THREAD_STATE_MAX 1296
 
 #if XNU_KERNEL_PRIVATE
-#if defined (__i386__) || defined(__x86_64__)
-#   if THREAD_STATE_MAX < I386_THREAD_STATE_MAX
-#       error THREAD_STATE_MAX is too small
-#   endif
-#elif defined (__arm__) || defined (__arm64__)
-#   if THREAD_STATE_MAX < ARM_THREAD_STATE_MAX
-#       error THREAD_STATE_MAX is too small
-#   endif
+#if defined(__i386__) || defined(__x86_64__)
+#if THREAD_STATE_MAX < I386_THREAD_STATE_MAX
+#error THREAD_STATE_MAX is too small
+#endif
+#elif defined(__arm__) || defined(__arm64__) || defined(__aarch64__)
+#if THREAD_STATE_MAX < ARM_THREAD_STATE_MAX
+#error THREAD_STATE_MAX is too small
+#endif
 #else
 #error architecture not supported
 #endif

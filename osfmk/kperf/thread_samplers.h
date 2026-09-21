@@ -33,14 +33,14 @@
 
 /* legacy thread info */
 struct kperf_thread_info {
-	uint64_t kpthi_pid;
-	uint64_t kpthi_tid;
-	uint64_t kpthi_dq_addr;
-	uint64_t kpthi_runmode;
+  uint64_t kpthi_pid;
+  uint64_t kpthi_tid;
+  uint64_t kpthi_dq_addr;
+  uint64_t kpthi_runmode;
 };
 
 void kperf_thread_info_sample(struct kperf_thread_info *,
-    struct kperf_context *);
+                              struct kperf_context *);
 void kperf_thread_info_log(struct kperf_thread_info *);
 
 // legacy names
@@ -48,45 +48,43 @@ void kperf_thread_info_log(struct kperf_thread_info *);
 
 /* scheduling information */
 struct kperf_thread_scheduling {
-	uint64_t kpthsc_user_time;
-	uint64_t kpthsc_system_time;
-	uint64_t kpthsc_runnable_time;
-	unsigned int kpthsc_state;
-	uint16_t kpthsc_base_priority;
-	uint16_t kpthsc_sched_priority;
-	unsigned int kpthsc_effective_qos :3,
-	    kpthsc_requested_qos :3,
-	    kpthsc_requested_qos_override :3,
-	    kpthsc_requested_qos_promote :3,
-	    kpthsc_requested_qos_kevent_override :3,
-	    kpthsc_requested_qos_sync_ipc_override :3,             /* obsolete */
-	    kpthsc_effective_latency_qos :3;
+  uint64_t kpthsc_user_time;
+  uint64_t kpthsc_system_time;
+  uint64_t kpthsc_runnable_time;
+  unsigned int kpthsc_state;
+  uint16_t kpthsc_base_priority;
+  uint16_t kpthsc_sched_priority;
+  unsigned int kpthsc_effective_qos : 3, kpthsc_requested_qos : 3,
+      kpthsc_requested_qos_override : 3, kpthsc_requested_qos_promote : 3,
+      kpthsc_requested_qos_kevent_override : 3,
+      kpthsc_requested_qos_sync_ipc_override : 3, /* obsolete */
+      kpthsc_effective_latency_qos : 3;
 };
 
 void kperf_thread_scheduling_sample(struct kperf_thread_scheduling *,
-    struct kperf_context *);
+                                    struct kperf_context *);
 void kperf_thread_scheduling_log(struct kperf_thread_scheduling *);
 
 /* thread snapshot information */
 struct kperf_thread_snapshot {
-	uint64_t kpthsn_last_made_runnable_time;
-	int16_t kpthsn_suspend_count;
-	uint8_t kpthsn_io_tier;
-	uint8_t kpthsn_flags;
+  uint64_t kpthsn_last_made_runnable_time;
+  int16_t kpthsn_suspend_count;
+  uint8_t kpthsn_io_tier;
+  uint8_t kpthsn_flags;
 };
 
 void kperf_thread_snapshot_sample(struct kperf_thread_snapshot *,
-    struct kperf_context *);
+                                  struct kperf_context *);
 void kperf_thread_snapshot_log(struct kperf_thread_snapshot *);
 
 /* libdispatch information */
 struct kperf_thread_dispatch {
-	uint64_t kpthdi_dq_serialno;
-	char kpthdi_dq_label[64];
+  uint64_t kpthdi_dq_serialno;
+  char kpthdi_dq_label[64];
 };
 
 void kperf_thread_dispatch_sample(struct kperf_thread_dispatch *,
-    struct kperf_context *);
+                                  struct kperf_context *);
 int kperf_thread_dispatch_pend(struct kperf_context *, unsigned int actionid);
 void kperf_thread_dispatch_log(struct kperf_thread_dispatch *);
 

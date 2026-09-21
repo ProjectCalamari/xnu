@@ -32,18 +32,18 @@
 /*
  * memory functions
  */
-#define __arch_bcopy                    1
-#define __arch_bzero                    1
-#define __arch_memcmp_zero_ptr_aligned  1
-#define __arch_memcpy                   1
-#define __arch_memmove                  1
-#define __arch_memset                   1
+#define __arch_bcopy 1
+#define __arch_bzero 1
+#define __arch_memcmp_zero_ptr_aligned 1
+#define __arch_memcpy 1
+#define __arch_memmove 1
+#define __arch_memset 1
 
 /*
  * string functions
  */
-#define __arch_strlen                   1
-#define __arch_strncmp                  1
-#define __arch_strnlen                  1
+#define __arch_strlen 1
+#define __arch_strncmp 1
+#define __arch_strnlen 1
 
 #endif /* _ARM_STRING_H_ */

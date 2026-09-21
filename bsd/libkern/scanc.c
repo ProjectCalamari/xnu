@@ -62,15 +62,13 @@
 
 #include <libkern/libkern.h>
 
-size_t
-scanc(size_t size, u_char *cp, const u_char table[], u_char mask0)
-{
-	u_char *end;
-	u_char mask;
+size_t scanc(size_t size, u_char *cp, const u_char table[], u_char mask0) {
+  u_char *end;
+  u_char mask;
 
-	mask = mask0;
-	for (end = &cp[size]; cp != end && (table[*cp] & mask) == 0; ++cp) {
-		;
-	}
-	return (size_t)(end - cp);
+  mask = mask0;
+  for (end = &cp[size]; cp != end && (table[*cp] & mask) == 0; ++cp) {
+    ;
+  }
+  return (size_t)(end - cp);
 }

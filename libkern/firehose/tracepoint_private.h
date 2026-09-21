@@ -21,8 +21,8 @@
 #ifndef __FIREHOSE_ACTIVITY__
 #define __FIREHOSE_ACTIVITY__
 
-#include <machine/cpu_capabilities.h>
 #include <mach/mach_time.h>
+#include <machine/cpu_capabilities.h>
 #include <os/base.h>
 #include <stdbool.h>
 #if KERNEL
@@ -44,14 +44,14 @@ OS_ASSUME_NONNULL_BEGIN
  * Broken down tracepoint identifier.
  */
 typedef union {
-	struct {
-		firehose_tracepoint_namespace_t _namespace;
-		firehose_tracepoint_type_t _type;
-		firehose_tracepoint_flags_t _flags;
-		uint32_t _code;
-	} ftid;
-	firehose_tracepoint_id_t ftid_value;
-	os_atomic(firehose_tracepoint_id_t) ftid_atomic_value;
+  struct {
+    firehose_tracepoint_namespace_t _namespace;
+    firehose_tracepoint_type_t _type;
+    firehose_tracepoint_flags_t _flags;
+    uint32_t _code;
+  } ftid;
+  firehose_tracepoint_id_t ftid_value;
+  os_atomic(firehose_tracepoint_id_t) ftid_atomic_value;
 } firehose_tracepoint_id_u;
 
 #define FIREHOSE_STAMP_SLOP (1ULL << 36) // ~1minute
@@ -64,61 +64,63 @@ typedef union {
  *
  */
 typedef struct firehose_trace_uuid_info_s {
-	uuid_t ftui_uuid;      /* uuid of binary */
-	uint64_t ftui_address; /* load address */
-	uint64_t ftui_size;    /* load size */
-	char ftui_path[];      /* full path of binary - Unused in the kernel*/
+  uuid_t ftui_uuid;      /* uuid of binary */
+  uint64_t ftui_address; /* load address */
+  uint64_t ftui_size;    /* load size */
+  char ftui_path[];      /* full path of binary - Unused in the kernel*/
 } *firehose_trace_uuid_info_t;
 
 /*!
  * @typedef firehose_tracepoint_t
  */
 typedef struct firehose_tracepoint_s {
-	firehose_tracepoint_id_u ft_id;
-	uint64_t ft_thread;
-	union {
-		struct {
-			uint64_t ft_timestamp_delta : 48;
-			uint64_t ft_length : 16;
-		};
-		uint64_t ft_stamp_and_length;
-		os_atomic(uint64_t) ft_atomic_stamp_and_length;
-	};
-	uint8_t ft_data[];
+  firehose_tracepoint_id_u ft_id;
+  uint64_t ft_thread;
+  union {
+    struct {
+      uint64_t ft_timestamp_delta : 48;
+      uint64_t ft_length : 16;
+    };
+    uint64_t ft_stamp_and_length;
+    os_atomic(uint64_t) ft_atomic_stamp_and_length;
+  };
+  uint8_t ft_data[];
 } *firehose_tracepoint_t;
 
-#define FIREHOSE_TRACE_ID_MAKE(ns, type, flags, code) \
-	(((firehose_tracepoint_id_u){ .ftid = { \
-	        ._namespace = ns, \
-	        ._type = type, \
-	        ._flags = flags, \
-	        ._code = code, \
-	} }).ftid_value)
+#define FIREHOSE_TRACE_ID_MAKE(ns, type, flags, code)                          \
+  (((firehose_tracepoint_id_u){.ftid =                                         \
+                                   {                                           \
+                                       ._namespace = ns,                       \
+                                       ._type = type,                          \
+                                       ._flags = flags,                        \
+                                       ._code = code,                          \
+                                   }})                                         \
+       .ftid_value)
 
-#define FIREHOSE_TRACE_ID_SET_NS(tid, ns) \
-	((tid).ftid._namespace = firehose_tracepoint_namespace_##ns)
+#define FIREHOSE_TRACE_ID_SET_NS(tid, ns)                                      \
+  ((tid).ftid._namespace = firehose_tracepoint_namespace_##ns)
 
-#define FIREHOSE_TRACE_ID_SET_TYPE(tid, ns, type) \
-	((tid).ftid._type = _firehose_tracepoint_type_##ns##_##type)
+#define FIREHOSE_TRACE_ID_SET_TYPE(tid, ns, type)                              \
+  ((tid).ftid._type = _firehose_tracepoint_type_##ns##_##type)
 
-#define FIREHOSE_TRACE_ID_PC_STYLE(tid) \
-	        ((tid).ftid._flags & _firehose_tracepoint_flags_pc_style_mask)
+#define FIREHOSE_TRACE_ID_PC_STYLE(tid)                                        \
+  ((tid).ftid._flags & _firehose_tracepoint_flags_pc_style_mask)
 
-#define FIREHOSE_TRACE_ID_SET_PC_STYLE(tid, flag) ({ \
-	        firehose_tracepoint_id_u _tmp_tid = (tid); \
-	        _tmp_tid.ftid._flags &= ~_firehose_tracepoint_flags_pc_style_mask; \
-	        _tmp_tid.ftid._flags |= _firehose_tracepoint_flags_pc_style_##flag; \
-})
+#define FIREHOSE_TRACE_ID_SET_PC_STYLE(tid, flag)                              \
+  ({                                                                           \
+    firehose_tracepoint_id_u _tmp_tid = (tid);                                 \
+    _tmp_tid.ftid._flags &= ~_firehose_tracepoint_flags_pc_style_mask;         \
+    _tmp_tid.ftid._flags |= _firehose_tracepoint_flags_pc_style_##flag;        \
+  })
 
-#define FIREHOSE_TRACE_ID_HAS_FLAG(tid, ns, flag) \
-	((tid).ftid._flags & _firehose_tracepoint_flags_##ns##_##flag)
-#define FIREHOSE_TRACE_ID_SET_FLAG(tid, ns, flag) \
-	((void)((tid).ftid._flags |= _firehose_tracepoint_flags_##ns##_##flag))
-#define FIREHOSE_TRACE_ID_CLEAR_FLAG(tid, ns, flag) \
-	((void)((tid).ftid._flags &= ~_firehose_tracepoint_flags_##ns##_##flag))
+#define FIREHOSE_TRACE_ID_HAS_FLAG(tid, ns, flag)                              \
+  ((tid).ftid._flags & _firehose_tracepoint_flags_##ns##_##flag)
+#define FIREHOSE_TRACE_ID_SET_FLAG(tid, ns, flag)                              \
+  ((void)((tid).ftid._flags |= _firehose_tracepoint_flags_##ns##_##flag))
+#define FIREHOSE_TRACE_ID_CLEAR_FLAG(tid, ns, flag)                            \
+  ((void)((tid).ftid._flags &= ~_firehose_tracepoint_flags_##ns##_##flag))
 
-#define FIREHOSE_TRACE_ID_SET_CODE(tid, code) \
-	((tid).ftid._code = code)
+#define FIREHOSE_TRACE_ID_SET_CODE(tid, code) ((tid).ftid._code = code)
 
 /*!
  * @typedef firehose_loss_payload_s
@@ -128,11 +130,11 @@ typedef struct firehose_tracepoint_s {
  * itself when unreliable tracepoints are lost.
  */
 typedef struct firehose_loss_payload_s {
-	uint64_t start_stamp; /* may (rarely!) disagree with the tracepoint stamp */
-	uint64_t end_stamp;
+  uint64_t start_stamp; /* may (rarely!) disagree with the tracepoint stamp */
+  uint64_t end_stamp;
 #define FIREHOSE_LOSS_COUNT_WIDTH 6 /* as many bits as can be spared */
 #define FIREHOSE_LOSS_COUNT_MAX ((1u << FIREHOSE_LOSS_COUNT_WIDTH) - 1)
-	uint32_t count;
+  uint32_t count;
 } firehose_loss_payload_s, *firehose_loss_payload_t;
 
 __BEGIN_DECLS
@@ -140,43 +142,36 @@ __BEGIN_DECLS
 #if __has_feature(address_sanitizer)
 __attribute__((no_sanitize("address")))
 #endif
-__OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0)
-__TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0)
-OS_ALWAYS_INLINE
-static inline bool
-firehose_precise_timestamps_enabled(void)
-{
+__OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0)
+    __WATCHOS_AVAILABLE(3.0) OS_ALWAYS_INLINE
+    static inline bool firehose_precise_timestamps_enabled(void) {
 #if KERNEL
-	return (atm_get_diagnostic_config() & 0x80) == 0;
+  return (atm_get_diagnostic_config() & 0x80) == 0;
 #else
-	return (*((volatile uint32_t *)_COMM_PAGE_ATM_DIAGNOSTIC_CONFIG) & 0x80) == 0;
+  return (*((volatile uint32_t *)_COMM_PAGE_ATM_DIAGNOSTIC_CONFIG) & 0x80) == 0;
 #endif
 }
 
 #if __has_feature(address_sanitizer)
 __attribute__((no_sanitize("address")))
 #endif
-__OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0)
-__TVOS_AVAILABLE(10.0) __WATCHOS_AVAILABLE(3.0)
-OS_ALWAYS_INLINE
-static inline uint64_t
-firehose_tracepoint_time(firehose_activity_flags_t flags)
-{
-	if (firehose_precise_timestamps_enabled() ||
-	    (flags & firehose_activity_flags_precise_timestamp)) {
-		return mach_continuous_time();
-	} else {
-		return mach_continuous_approximate_time();
-	}
+__OSX_AVAILABLE(10.12) __IOS_AVAILABLE(10.0) __TVOS_AVAILABLE(10.0)
+    __WATCHOS_AVAILABLE(3.0) OS_ALWAYS_INLINE static inline uint64_t
+    firehose_tracepoint_time(firehose_activity_flags_t flags) {
+  if (firehose_precise_timestamps_enabled() ||
+      (flags & firehose_activity_flags_precise_timestamp)) {
+    return mach_continuous_time();
+  } else {
+    return mach_continuous_approximate_time();
+  }
 }
 
 #ifdef KERNEL
-bool
-os_log_encoded_metadata(firehose_tracepoint_id_u ftid, uint64_t stamp,
-    const void *pubdata, size_t publen);
+bool os_log_encoded_metadata(firehose_tracepoint_id_u ftid, uint64_t stamp,
+                             const void *pubdata, size_t publen);
 #endif
 __END_DECLS
 
-    OS_ASSUME_NONNULL_END
+OS_ASSUME_NONNULL_END
 
 #endif // __FIREHOSE_FIREHOSE__

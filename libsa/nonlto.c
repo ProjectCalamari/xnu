@@ -27,7 +27,8 @@
  */
 
 /*
- * used to make a tiny non-LTO object file to force the linker to turn bitcode to macho
+ * used to make a tiny non-LTO object file to force the linker to turn bitcode
+ * to macho
  */
 
 int __attribute__((__unused__)) __not_used_at_all__;

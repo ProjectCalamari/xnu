@@ -34,18 +34,18 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*********************************************************************
-* This file defines keys (and values) for properties in kext_request
-* collections and mkext archives used for loading in the kernel.
-* An incoming request is always a serialized XML plist with at least
-* a predicate, and optionally a dictionary of arguments.
-*
-* Some requests generate serialized XML plist responses, while others
-* return raw data. See the predicate description for more.
-*
-* All of these keys are strictly for internal run-time communication
-* between IOKitUser's OSKext module and xnu's OSKext class.
-* Keys and values may change at any time without notice.
-*********************************************************************/
+ * This file defines keys (and values) for properties in kext_request
+ * collections and mkext archives used for loading in the kernel.
+ * An incoming request is always a serialized XML plist with at least
+ * a predicate, and optionally a dictionary of arguments.
+ *
+ * Some requests generate serialized XML plist responses, while others
+ * return raw data. See the predicate description for more.
+ *
+ * All of these keys are strictly for internal run-time communication
+ * between IOKitUser's OSKext module and xnu's OSKext class.
+ * Keys and values may change at any time without notice.
+ *********************************************************************/
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -57,13 +57,13 @@ extern "C" {
  * The value of this key indicates the operation to perform or the
  * information desired.
  */
-#define kKextRequestPredicateKey                   "Kext Request Predicate"
+#define kKextRequestPredicateKey "Kext Request Predicate"
 
 /* The Arguments Key
  * The value of this key is a dictionary containing the arguments
  * for the request.
  */
-#define kKextRequestArgumentsKey                   "Kext Request Arguments"
+#define kKextRequestArgumentsKey "Kext Request Arguments"
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -86,7 +86,7 @@ extern "C" {
  * Retrieves an array of dictionaries whose properties describe every kext
  * loaded at the time of the call.
  */
-#define kKextRequestPredicateGetLoaded             "Get Loaded Kext Info"
+#define kKextRequestPredicateGetLoaded "Get Loaded Kext Info"
 
 /* Predicate: Get Loaded Kext Info By UUID
  * Argument:  (None)
@@ -96,7 +96,7 @@ extern "C" {
  * Retrieves an array of dictionaries whose properties describe every kext
  * loaded at the time of the call.
  */
-#define kKextRequestPredicateGetLoadedByUUID       "Get Loaded Kext Info By UUID"
+#define kKextRequestPredicateGetLoadedByUUID "Get Loaded Kext Info By UUID"
 
 /* Predicate: Get Loaded Kext UUID By Address
  * Argument:  An address to lookup
@@ -106,7 +106,7 @@ extern "C" {
  * Retrieves the uuid of a loaded kext in whose address range the given
  * lookup address falls into.
  */
-#define kKextRequestPredicateGetUUIDByAddress      "Get Kext UUID by Address"
+#define kKextRequestPredicateGetUUIDByAddress "Get Kext UUID by Address"
 
 /* Predicate: Get All Load Requests
  * Argument:  None
@@ -117,7 +117,7 @@ extern "C" {
  * loaded since power on.
  *
  */
-#define kKextRequestPredicateGetAllLoadRequests    "Get All Load Requests"
+#define kKextRequestPredicateGetAllLoadRequests "Get All Load Requests"
 
 /* Predicate: Get Kexts in Collection
  * Arguments: Name of the collection: All, Primary, System, Auxiliary
@@ -130,7 +130,7 @@ extern "C" {
  * present in the given kext collection type
  * loaded at the time of the call.
  */
-#define kKextRequestPredicateGetKextsInCollection   "Get Kexts in Collection"
+#define kKextRequestPredicateGetKextsInCollection "Get Kexts in Collection"
 
 /* Predicate: Get Dexts
  * Arguments: (None)
@@ -147,8 +147,7 @@ extern "C" {
  * Retrieves an array of dictionaries whose properties describe every dext
  * present in the group requested.
  */
-#define kKextRequestPredicateGetDexts   "Get Dexts"
-
+#define kKextRequestPredicateGetDexts "Get Dexts"
 
 /*********************************************************************
  * Privileged requests from user -> kernel
@@ -168,7 +167,7 @@ extern "C" {
  * This predicate is reserved for kextd, and we may be enforcing access
  * to the kextd process only.
  */
-#define kKextRequestPredicateGetKernelRequests     "Get Kernel Requests"
+#define kKextRequestPredicateGetKernelRequests "Get Kernel Requests"
 
 /* Predicate: Load
  * Argument:  kKextRequestArgumentLoadRequestsKey
@@ -178,7 +177,7 @@ extern "C" {
  * Load one or more kexts per the load requests in the arguments dict.
  * See kKextRequestArgumentLoadRequestsKey for more info.
  */
-#define kKextRequestPredicateLoad                  "Load"
+#define kKextRequestPredicateLoad "Load"
 
 /* Predicate: LoadFromKC
  * Argument:  kKextRequestPredicateLoadFromKC
@@ -189,7 +188,7 @@ extern "C" {
  * of a kext collection. By default, the kext will start and have all of its
  * personalities sent to the IOCatalogue for matching.
  */
-#define kKextRequestPredicateLoadFromKC            "LoadFromKC"
+#define kKextRequestPredicateLoadFromKC "LoadFromKC"
 
 /* Predicate: LoadCodelessKext
  * Argument:  kKextRequestPredicateLoadCodeless
@@ -202,7 +201,7 @@ extern "C" {
  *
  * See kKextRequestArgumentCodelessInfoKey for more info.
  */
-#define kKextRequestPredicateLoadCodeless          "LoadCodelessKext"
+#define kKextRequestPredicateLoadCodeless "LoadCodelessKext"
 
 /* Predicate: Start
  * Argument:  kKextRequestArgumentBundleIdentifierKey (CFBundleIdentifier)
@@ -212,7 +211,7 @@ extern "C" {
  * Start a kext by bundle id. If it's already started, returns success.
  * If a kext's dependencies need to be started, they are also started.
  */
-#define kKextRequestPredicateStart                 "Start"
+#define kKextRequestPredicateStart "Start"
 
 /* Predicate: Stop
  * Argument:  kKextRequestArgumentBundleIdentifierKey (CFBundleIdentifier)
@@ -223,7 +222,7 @@ extern "C" {
  * If it's already stopped, returns success.
  * Does not attempt to stop dependents; that will return an error.
  */
-#define kKextRequestPredicateStop                  "Stop"
+#define kKextRequestPredicateStop "Stop"
 
 /* Predicate: Unload
  * Argument:  kKextRequestArgumentBundleIdentifierKey (CFBundleIdentifier)
@@ -233,7 +232,7 @@ extern "C" {
  * Stop and unload a kext by bundle id if it can be.
  * Does not attempt to stop dependents; that will return an error.
  */
-#define kKextRequestPredicateUnload                "Unload"
+#define kKextRequestPredicateUnload "Unload"
 
 /* Predicate: LoadFileSetKC
  * Argument:  kKextRequestArgument
@@ -242,7 +241,7 @@ extern "C" {
  *
  * Load Pageable and Aux kext collection.
  */
-#define kKextRequestPredicateLoadFileSetKC        "loadfilesetkc"
+#define kKextRequestPredicateLoadFileSetKC "loadfilesetkc"
 
 /* Predicate: MissingAuxKCBundles
  * Argument:  kKextRequestArgumentMissingBundleIDs
@@ -253,7 +252,7 @@ extern "C" {
  * which are missing from disk. This list represents kexts whose
  * code exists in the AuxKC, but should not be loadable.
  */
-#define kKextRequestPredicateMissingAuxKCBundles  "MissingAuxKCBundles"
+#define kKextRequestPredicateMissingAuxKCBundles "MissingAuxKCBundles"
 
 /* Predicate: AuxKCBundleAvailable
  * Arguments: kKextRequestArgumentBundleIdentifierKey (CFBundleIdentifier)
@@ -263,7 +262,7 @@ extern "C" {
  *
  * Set the availability of an individual kext in the AuxKC.
  */
-#define kKextRequestPredicateAuxKCBundleAvailable  "AuxKCBundleAvailable"
+#define kKextRequestPredicateAuxKCBundleAvailable "AuxKCBundleAvailable"
 
 /* Predicate: DaemonReady
  * Arguments: None
@@ -291,7 +290,7 @@ extern "C" {
  * Retrieves a resource file from a kext bundle. The callback corresponding
  * to the request will be invoked.
  */
-#define kKextRequestPredicateSendResource          "Send Resource"
+#define kKextRequestPredicateSendResource "Send Resource"
 
 /*********************************************************************
  * Kernel Requests: from the kernel or loaded kexts up to kextd
@@ -310,7 +309,7 @@ extern "C" {
  * If the kext cannot be loaded, kextd or OSKext removes its personalities
  * from the kernel.
  */
-#define kKextRequestPredicateRequestLoad           "Kext Load Request"
+#define kKextRequestPredicateRequestLoad "Kext Load Request"
 
 /* Predicate: Kext Load Notification
  * Argument:  kext identifier
@@ -320,7 +319,7 @@ extern "C" {
  * Informs kextd that the kernel has successfully loaded and started
  * a kext.
  */
-#define kKextRequestPredicateLoadNotification      "Kext Load Notification"
+#define kKextRequestPredicateLoadNotification "Kext Load Notification"
 
 /* Predicate: Kext Unload Notification
  * Argument:  kext identifier
@@ -330,7 +329,7 @@ extern "C" {
  * Informs kextd that the kernel has successfully stopped and unloaded
  * a kext.
  */
-#define kKextRequestPredicateUnloadNotification    "Kext Unload Notification"
+#define kKextRequestPredicateUnloadNotification "Kext Unload Notification"
 
 /* Predicate: Prelinked Kernel Request
  * Argument:  None
@@ -340,7 +339,7 @@ extern "C" {
  * Notifies kextd that the kernel we booted from was not prelinked, therefore
  * that kextd should try to create a prelinked kernel now.
  */
-#define kKextRequestPredicateRequestPrelink        "Kext Prelinked Kernel Request"
+#define kKextRequestPredicateRequestPrelink "Kext Prelinked Kernel Request"
 
 /* Predicate: Kext Resource Request
  * Argument:  kKextRequestArgumentRequestTagKey
@@ -351,8 +350,7 @@ extern "C" {
  *
  * Requests a resource file from a kext bundle by identifier + filename.
  */
-#define kKextRequestPredicateRequestResource       "Kext Resource Request"
-
+#define kKextRequestPredicateRequestResource "Kext Resource Request"
 
 /* Predicate: IOKit Daemon Exit Request
  * Argument:  None
@@ -361,12 +359,12 @@ extern "C" {
  *
  * Requests that the IOKit daemon (kernelmanagerd) exit for system shutdown.
  */
-#define kKextRequestPredicateRequestDaemonExit     "IOKit Daemon Exit"
+#define kKextRequestPredicateRequestDaemonExit "IOKit Daemon Exit"
 
 /* For source compatibility
  */
-#define kKextRequestPredicateRequestKextdExit      kKextRequestPredicateRequestDaemonExit
-
+#define kKextRequestPredicateRequestKextdExit                                  \
+  kKextRequestPredicateRequestDaemonExit
 
 /* Predicate: Dext Daemon Launch
  * Argument: kKextRequestArgumentBundleIdentifierKey
@@ -389,8 +387,8 @@ extern "C" {
  *
  * Informs kextd of an upgrade of driver extension userspace daemon.
  */
-#define kKextRequestPredicateRequestDaemonUpgradeNotification "Dext Daemon Upgrade"
-
+#define kKextRequestPredicateRequestDaemonUpgradeNotification                  \
+  "Dext Daemon Upgrade"
 
 #if PRAGMA_MARK
 /********************************************************************/
@@ -410,7 +408,7 @@ extern "C" {
  * load requests to be rolled up into one blob. Might not be much win
  * in that, however. The nested logic makes the code difficult to read.
  */
-#define kKextRequestArgumentLoadRequestsKey        "Kext Load Requests"
+#define kKextRequestArgumentLoadRequestsKey "Kext Load Requests"
 
 /* Argument:  CFBundleIdentifier
  * Type:      String
@@ -418,7 +416,7 @@ extern "C" {
  *
  * Any request that takes a bundle identifier uses this key.
  */
-#define kKextRequestArgumentBundleIdentifierKey    "CFBundleIdentifier"
+#define kKextRequestArgumentBundleIdentifierKey "CFBundleIdentifier"
 
 /* Argument:  OSReturn
  * Type:      Dictionary
@@ -426,7 +424,7 @@ extern "C" {
  *
  * Used to specify a subset of all possible info to be returned.
  */
-#define kKextRequestArgumentInfoKeysKey          "Kext Request Info Keys"
+#define kKextRequestArgumentInfoKeysKey "Kext Request Info Keys"
 
 /* Argument:  OSReturn
  * Type:      Number (OSReturn)
@@ -434,7 +432,7 @@ extern "C" {
  *
  * Contains the OSReturn/kern_return_t result of the request.
  */
-#define kKextRequestArgumentResultKey              "Kext Request Result Code"
+#define kKextRequestArgumentResultKey "Kext Request Result Code"
 
 /* Argument:  Address
  * Type:      Number (OSReturn)
@@ -442,7 +440,7 @@ extern "C" {
  *
  * Contains the address that needs to be looked up
  */
-#define kKextRequestArgumentLookupAddressKey       "Kext Request Lookup Address"
+#define kKextRequestArgumentLookupAddressKey "Kext Request Lookup Address"
 
 /* Argument:  Value
  * Type:      Varies with the predicate
@@ -450,7 +448,7 @@ extern "C" {
  *
  * Used for all the Set-Enabled predicates, and also for Send Resource (OSData).
  */
-#define kKextRequestArgumentValueKey               "Value"
+#define kKextRequestArgumentValueKey "Value"
 
 /* Argument:  Filename
  * Type:      String
@@ -458,7 +456,7 @@ extern "C" {
  *
  * Names the resource being sent to the kext
  */
-#define kKextRequestArgumentNameKey                "Name"
+#define kKextRequestArgumentNameKey "Name"
 
 /* Argument:  Filename
  * Type:      Data
@@ -466,7 +464,7 @@ extern "C" {
  *
  * Contains the contents of the resource file being sent.
  */
-#define kKextRequestArgumentFileContentsKey        "File Contents"
+#define kKextRequestArgumentFileContentsKey "File Contents"
 
 /* Argument:  Delay Autounload
  * Type:      Boolean
@@ -487,7 +485,7 @@ extern "C" {
  * will not be unloaded. The user-space kext library uses this so that it can
  * avoid including kexts that are already loaded in a load request.
  */
-#define kKextRequestArgumentDelayAutounloadKey         "Delay Autounload"
+#define kKextRequestArgumentDelayAutounloadKey "Delay Autounload"
 
 #if PRAGMA_MARK
 #pragma mark Load Request Arguments
@@ -513,7 +511,7 @@ extern "C" {
  * either the primary kext, or the whole load list (any that weren't
  * already loaded & started).
  */
-#define kKextRequestArgumentStartExcludeKey        "Start Exclude Level"
+#define kKextRequestArgumentStartExcludeKey "Start Exclude Level"
 
 /* Argument:  Start Matching Exclude Level
  * Type:      Integer, corresponding to OSKextExcludeLevel
@@ -527,7 +525,8 @@ extern "C" {
  * either the primary kext, or the whole load list (any that didn't
  * already have personalities in the IOCatalogue).
  */
-#define kKextRequestArgumentStartMatchingExcludeKey    "Start Matching Exclude Level"
+#define kKextRequestArgumentStartMatchingExcludeKey                            \
+  "Start Matching Exclude Level"
 
 // see also Delay Autounload
 
@@ -543,7 +542,7 @@ extern "C" {
  * This property is used primarily by kextutil(8) to help debug matching
  * problems.
  */
-#define kKextRequestArgumentPersonalityNamesKey        "Personality Names"
+#define kKextRequestArgumentPersonalityNamesKey "Personality Names"
 
 /* Argument:  Codeless Kext Info
  * Type:      Dictionary (Info.plist of codeless kext)
@@ -555,8 +554,7 @@ extern "C" {
  * NOTE: One additional key should be injected into the codeless kext's
  * plist: kKextRequestArgumentCodelessInfoBundlePathKey
  */
-#define kKextRequestArgumentCodelessInfoKey            "Codeless Kext Info"
-
+#define kKextRequestArgumentCodelessInfoKey "Codeless Kext Info"
 
 /* Argument: _CodelessKextBundlePath
  * Type: String <path>
@@ -567,7 +565,7 @@ extern "C" {
  * filesystem path to the codeless kext bundle, and will be used in kext
  * diagnostic information.
  */
-#define kKextRequestArgumentCodelessInfoBundlePathKey   "_CodelessKextBundlePath"
+#define kKextRequestArgumentCodelessInfoBundlePathKey "_CodelessKextBundlePath"
 
 #if PRAGMA_MARK
 #pragma mark Unload Request Arguments
@@ -581,7 +579,7 @@ extern "C" {
  * objects are to be terminated before attempting to unload. Kexts with
  * dependents will not attempt to terminate and will return kOSKextReturnInUse.
  */
-#define kKextRequestArgumentTerminateIOServicesKey     "Terminate IOServices"
+#define kKextRequestArgumentTerminateIOServicesKey "Terminate IOServices"
 
 #if PRAGMA_MARK
 #pragma mark Daemon Launch Request Arguments
@@ -595,7 +593,8 @@ extern "C" {
  * is unique to every launch request. Userspace daemons include this
  * tag in their messages when attempting to rendez-vous with IOKit.
  */
-#define kKextRequestArgumentDriverExtensionServerTag   "Driver Extension Server Tag"
+#define kKextRequestArgumentDriverExtensionServerTag                           \
+  "Driver Extension Server Tag"
 
 /* Argument: Server name
  * Type:     String
@@ -605,16 +604,18 @@ extern "C" {
  * can be used to identify what personality the driver is matching on.
  * This name is also used for the launchd service name of the daemon.
  */
-#define kKextRequestArgumentDriverExtensionServerName  "Driver Extension Server Name"
+#define kKextRequestArgumentDriverExtensionServerName                          \
+  "Driver Extension Server Name"
 
 /* Argument: DriverKit Reslide Shared Cache
  * Type:     Boolean
  * Default:  N/A
  *
- * Set this option to reslide the DriverKit shared cache. This helps prevent ASLR circumvention
- * with brute-forcing attacks.
+ * Set this option to reslide the DriverKit shared cache. This helps prevent
+ * ASLR circumvention with brute-forcing attacks.
  */
-#define kKextRequestArgumentDriverExtensionReslideSharedCache  "DriverKit Reslide Shared Cache"
+#define kKextRequestArgumentDriverExtensionReslideSharedCache                  \
+  "DriverKit Reslide Shared Cache"
 
 /* Argument: DriverKit dext unique identifier
  * Type:     Data
@@ -623,7 +624,8 @@ extern "C" {
  * A DriverKit daemon launch request can include the dext unique identifier
  * This name is also used for the upgrade notifation.
  */
-#define kKextRequestArgumentDriverUniqueIdentifier kOSBundleDextUniqueIdentifierKey
+#define kKextRequestArgumentDriverUniqueIdentifier                             \
+  kOSBundleDextUniqueIdentifierKey
 
 #if PRAGMA_MARK
 #pragma mark Missing AuxKC Bundles Arguments
@@ -637,7 +639,7 @@ extern "C" {
  * This array of bundle IDs represents the list of kexts which have been
  * removed from disk, but still exist in the AuxKC.
  */
-#define kKextRequestArgumentMissingBundleIDs           "Missing Bundle IDs"
+#define kKextRequestArgumentMissingBundleIDs "Missing Bundle IDs"
 
 /* Argument: Bundle Availability
  * Type:     Boolean
@@ -647,7 +649,7 @@ extern "C" {
  * If present, this argument can indicate that the specified bundle ID
  * is no longer available for loading from the AuxKC
  */
-#define kKextRequestArgumentBundleAvailability         "Bundle Availability"
+#define kKextRequestArgumentBundleAvailability "Bundle Availability"
 
 #if PRAGMA_MARK
 #pragma mark Internal Tracking Properties
@@ -662,7 +664,7 @@ extern "C" {
  *
  * Most requests to get resources (files) use this.
  */
-#define kKextRequestArgumentRequestTagKey              "Request Tag"
+#define kKextRequestArgumentRequestTagKey "Request Tag"
 
 /* Argument:  Request Callback
  * Type:      Data (pointer)
@@ -670,13 +672,13 @@ extern "C" {
  *
  * Most requests to get resources (files) use this.
  */
-#define kKextRequestArgumentCallbackKey                "Request Callback"
+#define kKextRequestArgumentCallbackKey "Request Callback"
 
 /* Argument:  Request context.
  * Type:      OSData (wraps a void *)
  * Used by:   several
  */
-#define kKextRequestArgumentContextKey                 "Context"
+#define kKextRequestArgumentContextKey "Context"
 
 /* Argument:  Request Stale
  * Type:      Boolean
@@ -685,13 +687,13 @@ extern "C" {
  * _OSKextConsiderUnloads sets this on any callback record lacking
  * it, and deletes any callback record that has it.
  */
-#define kKextRequestStaleKey                           "Request Stale"
+#define kKextRequestStaleKey "Request Stale"
 
 /* Argument:  Check In Token
  * Type:      Mach Send Right
  * Used by:   DriverKit daemon launch
  */
-#define kKextRequestArgumentCheckInToken               "Check In Token"
+#define kKextRequestArgumentCheckInToken "Check In Token"
 
 #if PRAGMA_MARK
 #pragma mark fileset load request arguments
@@ -703,7 +705,7 @@ extern "C" {
  *
  * Name of the Pageable fileset kext collection
  */
-#define kKextRequestArgumentPageableKCFilename         "PageableKCName"
+#define kKextRequestArgumentPageableKCFilename "PageableKCName"
 
 /* Argument:  AuxKCName
  * Type:      String (path)
@@ -711,7 +713,7 @@ extern "C" {
  *
  * Name of the Aux fileset kext collection
  */
-#define kKextRequestArgumentAuxKCFilename              "AuxKCName"
+#define kKextRequestArgumentAuxKCFilename "AuxKCName"
 
 /* Argument:  Codeless Personalities
  * Type:      Array of Dictionaries
@@ -719,7 +721,7 @@ extern "C" {
  *
  * Any array of DriverKit driver (and codeless kext) personalities
  */
-#define kKextRequestArgumentCodelessPersonalities       "Codeless Personalities"
+#define kKextRequestArgumentCodelessPersonalities "Codeless Personalities"
 
 #if PRAGMAA_MARK
 #pragma mark kext collection request arguments
@@ -731,7 +733,7 @@ extern "C" {
  *
  * Contains a string describing the type of kext collection
  */
-#define kKextRequestArgumentCollectionTypeKey         "Collection Type"
+#define kKextRequestArgumentCollectionTypeKey "Collection Type"
 
 /* Argument:  LoadedState
  * Type:      String
@@ -744,7 +746,7 @@ extern "C" {
  *     Unloaded -- only kexts which have been unloaded
  *     Any      -- return all kexts in a collection
  */
-#define kKextRequestArgumentLoadedStateKey             "Loaded State"
+#define kKextRequestArgumentLoadedStateKey "Loaded State"
 
 #ifdef __cplusplus
 };

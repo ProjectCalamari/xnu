@@ -24,12 +24,10 @@
 void __inc_remove_counter(void);
 int __rmdir(const char *path);
 
-int
-rmdir(const char *path)
-{
-	int res = __rmdir(path);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int rmdir(const char *path) {
+  int res = __rmdir(path);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }

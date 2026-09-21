@@ -26,13 +26,11 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include "unit_test_utils.h"
 #include "mock_cpu.h"
-
+#include "unit_test_utils.h"
 
 T_MOCK_DYNAMIC(kern_return_t, cpu_signal,
-    (cpu_data_t * target, cpu_signal_t signal,
-    void *p0, void *p1),
-    (target, signal, p0, p1));
+               (cpu_data_t * target, cpu_signal_t signal, void *p0, void *p1),
+               (target, signal, p0, p1));
 
 T_MOCK_DYNAMIC(int, ml_get_max_cpu_number, (void), ());

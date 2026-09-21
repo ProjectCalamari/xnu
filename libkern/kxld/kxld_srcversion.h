@@ -39,30 +39,31 @@ struct source_version_command;
 typedef struct kxld_srcversion KXLDsrcversion;
 
 struct kxld_srcversion {
-	uint64_t    version;
-	boolean_t   has_srcversion;
+  uint64_t version;
+  boolean_t has_srcversion;
 };
 
 /*******************************************************************************
-* Constructors and destructors
-*******************************************************************************/
+ * Constructors and destructors
+ *******************************************************************************/
 
-void kxld_srcversion_init_from_macho(KXLDsrcversion *srcversion, struct source_version_command *src)
-__attribute__((nonnull, visibility("hidden")));
+void kxld_srcversion_init_from_macho(KXLDsrcversion *srcversion,
+                                     struct source_version_command *src)
+    __attribute__((nonnull, visibility("hidden")));
 
 void kxld_srcversion_clear(KXLDsrcversion *srcversion)
-__attribute__((nonnull, visibility("hidden")));
+    __attribute__((nonnull, visibility("hidden")));
 
 /*******************************************************************************
-* Accessors
-*******************************************************************************/
+ * Accessors
+ *******************************************************************************/
 
 u_long kxld_srcversion_get_macho_header_size(void)
-__attribute__((pure, visibility("hidden")));
+    __attribute__((pure, visibility("hidden")));
 
-kern_return_t
-kxld_srcversion_export_macho(const KXLDsrcversion *srcversion, u_char *buf,
-    u_long *header_offset, u_long header_size)
-__attribute__((pure, nonnull, visibility("hidden")));
+kern_return_t kxld_srcversion_export_macho(const KXLDsrcversion *srcversion,
+                                           u_char *buf, u_long *header_offset,
+                                           u_long header_size)
+    __attribute__((pure, nonnull, visibility("hidden")));
 
 #endif /* _KXLD_SRCVERSION_H_ */

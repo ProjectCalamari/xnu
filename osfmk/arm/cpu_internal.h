@@ -31,31 +31,22 @@
 #ifndef _ARM_CPU_INTERNAL_H_
 #define _ARM_CPU_INTERNAL_H_
 
-
-#include <mach/kern_return.h>
 #include <arm/cpu_data_internal.h>
+#include <mach/kern_return.h>
 
-extern void                                             cpu_bootstrap(
-	void);
+extern void cpu_bootstrap(void);
 
-extern void                                             cpu_init(
-	void);
+extern void cpu_init(void);
 
-extern void                                             cpu_timebase_init(boolean_t from_boot);
+extern void cpu_timebase_init(boolean_t from_boot);
 
-extern kern_return_t                    cpu_signal(
-	cpu_data_t              *target,
-	cpu_signal_t    signal,
-	void                    *p0,
-	void                    *p1);
+extern kern_return_t cpu_signal(cpu_data_t *target, cpu_signal_t signal,
+                                void *p0, void *p1);
 
-extern kern_return_t                    cpu_signal_deferred(
-	cpu_data_t              *target,
-	cpu_signal_t            signal);
+extern kern_return_t cpu_signal_deferred(cpu_data_t *target,
+                                         cpu_signal_t signal);
 
-extern void                     cpu_signal_cancel(
-	cpu_data_t              *target,
-	cpu_signal_t            signal);
+extern void cpu_signal_cancel(cpu_data_t *target, cpu_signal_t signal);
 
 extern bool cpu_has_SIGPdebug_pending(void);
 
@@ -72,4 +63,4 @@ enum ctrr_cluster_states { CTRR_UNLOCKED = 0, CTRR_LOCKING, CTRR_LOCKED };
 extern enum ctrr_cluster_states ctrr_cluster_locked[MAX_CPU_CLUSTERS];
 #endif /* defined(KERNEL_INTEGRITY_CTRR) */
 
-#endif  /* _ARM_CPU_INTERNAL_H_ */
+#endif /* _ARM_CPU_INTERNAL_H_ */

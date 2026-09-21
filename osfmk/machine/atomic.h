@@ -31,9 +31,9 @@
 
 #include <os/atomic_private.h>
 
-#if defined (__x86_64__)
+#if defined(__x86_64__)
 #include "i386/atomic.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/atomic.h"
 #else
 #error architecture not supported

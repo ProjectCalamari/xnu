@@ -29,23 +29,23 @@
 #ifndef __REMOTE_VIF_H__
 #define __REMOTE_VIF_H__
 
-#include <sys/proc.h>
-#include <net/if.h>
 #include <net/bpf.h>
+#include <net/if.h>
+#include <sys/proc.h>
 
 #include <net/pktap.h>
 
-#define RVI_CONTROL_NAME        "com.apple.net.rvi_control"
-#define RVI_BUFFERSZ            (64 * 1024)
-#define RVI_VERSION_1           0x1
-#define RVI_VERSION_2           0x2
-#define RVI_VERSION_CURRENT     RVI_VERSION_2
+#define RVI_CONTROL_NAME "com.apple.net.rvi_control"
+#define RVI_BUFFERSZ (64 * 1024)
+#define RVI_VERSION_1 0x1
+#define RVI_VERSION_2 0x2
+#define RVI_VERSION_CURRENT RVI_VERSION_2
 
-enum  {
-	RVI_COMMAND_OUT_PAYLOAD         = 0x01,
-	RVI_COMMAND_IN_PAYLOAD          = 0x10,
-	RVI_COMMAND_GET_INTERFACE       = 0x20,
-	RVI_COMMAND_VERSION             = 0x40
+enum {
+  RVI_COMMAND_OUT_PAYLOAD = 0x01,
+  RVI_COMMAND_IN_PAYLOAD = 0x10,
+  RVI_COMMAND_GET_INTERFACE = 0x20,
+  RVI_COMMAND_VERSION = 0x40
 };
 
 #ifdef XNU_KERNEL_PRIVATE

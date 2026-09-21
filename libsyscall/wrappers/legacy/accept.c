@@ -33,25 +33,23 @@
 #undef __DARWIN_UNIX03
 #define __DARWIN_UNIX03 1
 
-#include <sys/types.h>
-#include <sys/socket.h>
 #include "_errno.h"
+#include <sys/socket.h>
+#include <sys/types.h>
 
 int __accept_nocancel(int, struct sockaddr *, socklen_t *);
 
 /*
  * accept stub, legacy version
  */
-int
-accept(int s, struct sockaddr *addr, socklen_t *addrlen)
-{
-	int ret = __accept_nocancel(s, addr, addrlen);
+int accept(int s, struct sockaddr *addr, socklen_t *addrlen) {
+  int ret = __accept_nocancel(s, addr, addrlen);
 
-	/* use ENOTSUP for legacy behavior */
-	if (ret < 0 && errno == EOPNOTSUPP) {
-		errno = ENOTSUP;
-	}
-	return ret;
+  /* use ENOTSUP for legacy behavior */
+  if (ret < 0 && errno == EOPNOTSUPP) {
+    errno = ENOTSUP;
+  }
+  return ret;
 }
 
 #endif /* __DARWIN_ONLY_UNIX_CONFORMANCE */

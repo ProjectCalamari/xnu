@@ -33,25 +33,28 @@
 
 #include <sys/sysctl.h>
 
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_tcp_friendliness, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_cubic_tcp_friendliness, 0, "Enable TCP friendliness");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_tcp_friendliness,
+                     CTLFLAG_RW | CTLFLAG_LOCKED, int,
+                     tcp_cubic_tcp_friendliness, 0, "Enable TCP friendliness");
 
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_fast_convergence, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_cubic_fast_convergence, 0, "Enable fast convergence");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_fast_convergence,
+                     CTLFLAG_RW | CTLFLAG_LOCKED, int,
+                     tcp_cubic_fast_convergence, 0, "Enable fast convergence");
 
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_use_minrtt, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_cubic_use_minrtt, 0, "use a min of 5 sec rtt");
+                     int, tcp_cubic_use_minrtt, 0, "use a min of 5 sec rtt");
 
 /* TODO - remove once uTCP stops using it */
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_minor_fixes, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_cubic_minor_fixes, 1, "Minor fixes to TCP Cubic");
+                     int, tcp_cubic_minor_fixes, 1, "Minor fixes to TCP Cubic");
 
 /* TODO - remove once uTCP stops using it */
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, cubic_rfc_compliant, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_cubic_rfc_compliant, 1, "RFC Compliance for TCP Cubic");
+                     int, tcp_cubic_rfc_compliant, 1,
+                     "RFC Compliance for TCP Cubic");
 
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, rack, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_rack, 1, "TCP RACK");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, rack, CTLFLAG_RW | CTLFLAG_LOCKED, int, tcp_rack,
+                     1, "TCP RACK");
 /* Target queuing delay in milliseconds. This includes the processing
  * and scheduling delay on both of the end-hosts. A LEDBAT sender tries
  * to keep queuing delay below this limit. When the queuing delay
@@ -64,7 +67,7 @@ SYSCTL_SKMEM_TCP_INT(OID_AUTO, rack, CTLFLAG_RW | CTLFLAG_LOCKED,
  * queuing delay to 60ms as recommended by the draft.
  */
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, bg_target_qdelay, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, target_qdelay, 40, "Target queuing delay");
+                     int, target_qdelay, 40, "Target queuing delay");
 
 /* Allowed increase and tether are used to place an upper bound on
  * congestion window based on the amount of data that is outstanding.
@@ -83,57 +86,57 @@ SYSCTL_SKMEM_TCP_INT(OID_AUTO, bg_target_qdelay, CTLFLAG_RW | CTLFLAG_LOCKED,
  * 'Tether' is also set to 2. We do not want this to limit the growth of cwnd
  * during slow-start.
  */
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, bg_allowed_increase, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_ledbat_allowed_increase, 8,
+SYSCTL_SKMEM_TCP_INT(
+    OID_AUTO, bg_allowed_increase, CTLFLAG_RW | CTLFLAG_LOCKED, int,
+    tcp_ledbat_allowed_increase, 8,
     "Additive constant used to calculate max allowed congestion window");
 
 /* Left shift for cwnd to get tether value of 2 */
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, bg_tether_shift, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_ledbat_tether_shift, 1, "Tether shift for max allowed congestion window");
+                     int, tcp_ledbat_tether_shift, 1,
+                     "Tether shift for max allowed congestion window");
 
 /* Start with an initial window of 2. This will help to get more accurate
  * minimum RTT measurement in the beginning. It will help to probe
  * the path slowly and will not add to the existing delay if the path is
- * already congested. Using 2 packets will reduce the delay induced by delayed-ack.
+ * already congested. Using 2 packets will reduce the delay induced by
+ * delayed-ack.
  */
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, bg_ss_fltsz, CTLFLAG_RW | CTLFLAG_LOCKED,
-    uint32_t, bg_ss_fltsz, 2, "Initial congestion window for background transport");
+                     uint32_t, bg_ss_fltsz, 2,
+                     "Initial congestion window for background transport");
 
 SYSCTL_SKMEM_TCP_INT(OID_AUTO, ledbat_plus_plus, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_ledbat_plus_plus, 1, "Use LEDBAT++");
+                     int, tcp_ledbat_plus_plus, 1, "Use LEDBAT++");
 
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, rledbat, CTLFLAG_RW | CTLFLAG_LOCKED,
-    int, tcp_rledbat, 1, "Use Receive LEDBAT");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, rledbat, CTLFLAG_RW | CTLFLAG_LOCKED, int,
+                     tcp_rledbat, 1, "Use Receive LEDBAT");
 
 int tcp_cc_debug;
 SYSCTL_INT(_net_inet_tcp, OID_AUTO, cc_debug, CTLFLAG_RW | CTLFLAG_LOCKED,
-    &tcp_cc_debug, 0, "Enable debug data collection");
+           &tcp_cc_debug, 0, "Enable debug data collection");
 
 extern struct tcp_cc_algo tcp_cc_newreno;
 SYSCTL_INT(_net_inet_tcp, OID_AUTO, newreno_sockets,
-    CTLFLAG_RD | CTLFLAG_LOCKED, &tcp_cc_newreno.num_sockets,
-    0, "Number of sockets using newreno");
+           CTLFLAG_RD | CTLFLAG_LOCKED, &tcp_cc_newreno.num_sockets, 0,
+           "Number of sockets using newreno");
 
 extern struct tcp_cc_algo tcp_cc_ledbat;
 SYSCTL_INT(_net_inet_tcp, OID_AUTO, background_sockets,
-    CTLFLAG_RD | CTLFLAG_LOCKED, &tcp_cc_ledbat.num_sockets,
-    0, "Number of sockets using background transport");
+           CTLFLAG_RD | CTLFLAG_LOCKED, &tcp_cc_ledbat.num_sockets, 0,
+           "Number of sockets using background transport");
 
 #if (DEVELOPMENT || DEBUG)
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, use_ledbat,
-    CTLFLAG_RW | CTLFLAG_LOCKED, int, tcp_use_ledbat, 0,
-    "Use TCP LEDBAT for testing");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, use_ledbat, CTLFLAG_RW | CTLFLAG_LOCKED, int,
+                     tcp_use_ledbat, 0, "Use TCP LEDBAT for testing");
 #else
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, use_ledbat,
-    CTLFLAG_RD | CTLFLAG_LOCKED, int, tcp_use_ledbat, 0,
-    "Use TCP LEDBAT for testing");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, use_ledbat, CTLFLAG_RD | CTLFLAG_LOCKED, int,
+                     tcp_use_ledbat, 0, "Use TCP LEDBAT for testing");
 #endif /* (DEVELOPMENT || DEBUG) */
 
 extern struct tcp_cc_algo tcp_cc_cubic;
-SYSCTL_INT(_net_inet_tcp, OID_AUTO, cubic_sockets,
-    CTLFLAG_RD | CTLFLAG_LOCKED, &tcp_cc_cubic.num_sockets,
-    0, "Number of sockets using cubic");
+SYSCTL_INT(_net_inet_tcp, OID_AUTO, cubic_sockets, CTLFLAG_RD | CTLFLAG_LOCKED,
+           &tcp_cc_cubic.num_sockets, 0, "Number of sockets using cubic");
 
-SYSCTL_SKMEM_TCP_INT(OID_AUTO, use_newreno,
-    CTLFLAG_RW | CTLFLAG_LOCKED, int, tcp_use_newreno, 0,
-    "Use TCP NewReno by default");
+SYSCTL_SKMEM_TCP_INT(OID_AUTO, use_newreno, CTLFLAG_RW | CTLFLAG_LOCKED, int,
+                     tcp_use_newreno, 0, "Use TCP NewReno by default");

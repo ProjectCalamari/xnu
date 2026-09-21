@@ -26,58 +26,48 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <tests/ktest_internal.h>
-#include <kern/misc_protos.h>
 #include <kern/debug.h>
+#include <kern/misc_protos.h>
+#include <tests/ktest_internal.h>
 
 int vsnprintf(char *, size_t, const char *, va_list);
 
-void
-ktest_set_current_expr(const char * expr_fmt, ...)
-{
-	int ret;
-	va_list args;
+void ktest_set_current_expr(const char *expr_fmt, ...) {
+  int ret;
+  va_list args;
 
-	va_start(args, expr_fmt);
-	ret = vsnprintf(ktest_current_expr, KTEST_MAXLEN, expr_fmt, args);
-	va_end(args);
+  va_start(args, expr_fmt);
+  ret = vsnprintf(ktest_current_expr, KTEST_MAXLEN, expr_fmt, args);
+  va_end(args);
 }
 
-void
-ktest_set_current_var(const char * name, const char * value_fmt, ...)
-{
-	int ret;
-	va_list args;
+void ktest_set_current_var(const char *name, const char *value_fmt, ...) {
+  int ret;
+  va_list args;
 
-	if (ktest_current_var_index >= KTEST_MAXVARS) {
-		panic("Internal ktest error");
-	}
+  if (ktest_current_var_index >= KTEST_MAXVARS) {
+    panic("Internal ktest error");
+  }
 
-	strlcpy(ktest_current_var_names[ktest_current_var_index],
-	    name,
-	    KTEST_MAXLEN);
+  strlcpy(ktest_current_var_names[ktest_current_var_index], name, KTEST_MAXLEN);
 
-	va_start(args, value_fmt);
-	ret = vsnprintf(ktest_current_var_values[ktest_current_var_index],
-	    KTEST_MAXLEN,
-	    value_fmt,
-	    args);
-	va_end(args);
+  va_start(args, value_fmt);
+  ret = vsnprintf(ktest_current_var_values[ktest_current_var_index],
+                  KTEST_MAXLEN, value_fmt, args);
+  va_end(args);
 
-	ktest_current_var_index++;
+  ktest_current_var_index++;
 }
 
-void
-ktest_set_current_msg(const char * msg, ...)
-{
-	int ret;
-	va_list args;
+void ktest_set_current_msg(const char *msg, ...) {
+  int ret;
+  va_list args;
 
-	if (msg == NULL) {
-		return;
-	}
+  if (msg == NULL) {
+    return;
+  }
 
-	va_start(args, msg);
-	ret = vsnprintf(ktest_current_msg, KTEST_MAXLEN, msg, args);
-	va_end(args);
+  va_start(args, msg);
+  ret = vsnprintf(ktest_current_msg, KTEST_MAXLEN, msg, args);
+  va_end(args);
 }

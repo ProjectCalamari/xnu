@@ -26,13 +26,13 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
+#include <os/base_private.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <sys/cdefs.h>
-#include <stdatomic.h>
-#include <os/base_private.h>
 
-#include <IOKit/IOLib.h>
-#include <IOKit/IOBufferMemoryDescriptor.h>
 #include "IOKitKernelInternal.h"
+#include <IOKit/IOBufferMemoryDescriptor.h>
+#include <IOKit/IOLib.h>
 
 #include <IOKit/IOCircularDataQueueImplementation.h>

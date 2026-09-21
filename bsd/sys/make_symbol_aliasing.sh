@@ -1,4 +1,4 @@
-#! /bin/bash -
+#!/usr/bin/env bash
 #
 # Copyright (c) 2010 Apple Inc. All rights reserved.
 #
@@ -36,9 +36,14 @@ OUTPUT="$2"
 
 AVAILABILITY_PL="${SDKROOT}/${DRIVERKITROOT}/usr/local/libexec/availability.pl"
 
-if [ ! -x "${AVAILABILITY_PL}" ] ; then
-    echo "Unable to locate ${AVAILABILITY_PL} (or not executable)" >&2
-    exit 1
+if [ -x "${AVAILABILITY_PL}" ] ; then
+    IOS_VERSIONS="$(${AVAILABILITY_PL} --ios)"
+    MACOS_VERSIONS="$(${AVAILABILITY_PL} --macosx)"
+else
+    # Open-source/non-Darwin builds do not have the SDK helper. These are
+    # sufficient to generate the compatibility macros used by XNU headers.
+    IOS_VERSIONS="2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0 18.0"
+    MACOS_VERSIONS="10.0 10.1 10.2 10.3 10.4 10.5 10.6 10.7 10.8 10.9 10.10 10.11 10.12 10.13 10.14 10.15 11.0 12.0 13.0 14.0 15.0"
 fi
 	    
 {
@@ -76,7 +81,7 @@ cat <<EOF
 
 EOF
 
-for ver in $(${AVAILABILITY_PL} --ios) ; do
+for ver in ${IOS_VERSIONS} ; do
     set -- $(echo "$ver" | tr '.' ' ')
     ver_major=$1
     ver_minor=$2
@@ -94,7 +99,7 @@ for ver in $(${AVAILABILITY_PL} --ios) ; do
     fi
 done
 
-for ver in $(${AVAILABILITY_PL} --macosx) ; do
+for ver in ${MACOS_VERSIONS} ; do
     set -- $(echo "$ver" | tr '.' ' ')
     ver_major=$1
     ver_minor=$2
@@ -121,4 +126,3 @@ for ver in $(${AVAILABILITY_PL} --macosx) ; do
     echo ""
 done
 } > "$OUTPUT"
-

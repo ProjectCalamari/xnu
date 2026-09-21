@@ -68,11 +68,11 @@ extern "C" {
 #endif
 
 struct blue_stats {
-	int32_t                 q_pmark;
-	u_int32_t               _pad;
-	u_int64_t               drop_forced;
-	u_int64_t               drop_unforced;
-	u_int64_t               marked_packets;
+  int32_t q_pmark;
+  u_int32_t _pad;
+  u_int64_t drop_forced;
+  u_int64_t drop_unforced;
+  u_int64_t marked_packets;
 };
 
 #ifdef __cplusplus

@@ -24,12 +24,10 @@
 void __inc_remove_counter(void);
 int __delete(const char *path);
 
-int
-__carbon_delete(const char *path)
-{
-	int res = __delete(path);
-	if (res == 0) {
-		__inc_remove_counter();
-	}
-	return res;
+int __carbon_delete(const char *path) {
+  int res = __delete(path);
+  if (res == 0) {
+    __inc_remove_counter();
+  }
+  return res;
 }

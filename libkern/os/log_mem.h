@@ -33,18 +33,18 @@
  * support OS kernel logging in order to avoid dependency to VM.
  */
 typedef struct logmem_s {
-	lck_spin_t  lm_lock;
-	uint8_t     *lm_mem;
-	uint8_t     *lm_mem_map;
-	size_t      lm_mem_size;
-	size_t      lm_cap_order;
-	size_t      lm_min_order;
-	size_t      lm_max_order;
-	uint32_t    lm_cnt_allocations;
-	uint32_t    lm_cnt_failed_size;
-	uint32_t    lm_cnt_failed_full;
-	uint32_t    lm_cnt_failed_lmoff;
-	uint32_t    lm_cnt_free;
+  lck_spin_t lm_lock;
+  uint8_t *lm_mem;
+  uint8_t *lm_mem_map;
+  size_t lm_mem_size;
+  size_t lm_cap_order;
+  size_t lm_min_order;
+  size_t lm_max_order;
+  uint32_t lm_cnt_allocations;
+  uint32_t lm_cnt_failed_size;
+  uint32_t lm_cnt_failed_full;
+  uint32_t lm_cnt_failed_lmoff;
+  uint32_t lm_cnt_free;
 } logmem_t;
 
 /*

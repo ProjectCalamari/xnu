@@ -76,4 +76,4 @@ extern long tk_nout;
 extern long tk_rawcc;
 #endif
 
-#endif  /* _SYS_DKSTAT_H_ */
+#endif /* _SYS_DKSTAT_H_ */

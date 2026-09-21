@@ -36,41 +36,33 @@
  *	Created.
  */
 
+#include <arm/machdep_call.h>
 #include <kern/thread.h>
 #include <mach/mach_types.h>
-#include <arm/machdep_call.h>
 #if __arm64__
 #include <arm64/machine_machdep.h>
 #endif
 
 extern kern_return_t kern_invalid(void);
 
-uintptr_t
-get_tpidrro(void)
-{
-	uintptr_t       uthread;
-	__asm__ volatile ("mrs %0, TPIDRRO_EL0" : "=r" (uthread));
-	return uthread;
+uintptr_t get_tpidrro(void) {
+  uintptr_t uthread;
+  __asm__ volatile("mrs %0, TPIDRRO_EL0" : "=r"(uthread));
+  return uthread;
 }
 
-void
-set_tpidrro(uintptr_t uthread)
-{
-	__asm__ volatile ("msr TPIDRRO_EL0, %0" : : "r" (uthread));
+void set_tpidrro(uintptr_t uthread) {
+  __asm__ volatile("msr TPIDRRO_EL0, %0" : : "r"(uthread));
 }
 
-kern_return_t
-thread_set_cthread_self(vm_address_t self)
-{
-	return machine_thread_set_tsd_base(current_thread(), self);
+kern_return_t thread_set_cthread_self(vm_address_t self) {
+  return machine_thread_set_tsd_base(current_thread(), self);
 }
 
-vm_address_t
-thread_get_cthread_self(void)
-{
-	uintptr_t       self;
+vm_address_t thread_get_cthread_self(void) {
+  uintptr_t self;
 
-	self = get_tpidrro();
-	assert( self == current_thread()->machine.cthread_self);
-	return self;
+  self = get_tpidrro();
+  assert(self == current_thread()->machine.cthread_self);
+  return self;
 }

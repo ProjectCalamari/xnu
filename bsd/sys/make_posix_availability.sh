@@ -1,4 +1,4 @@
-#! /bin/sh -
+#!/usr/bin/env sh
 #
 # Copyright (c) 2010 Apple Inc. All rights reserved.
 #
@@ -79,4 +79,3 @@ for value in ${POSIX_VALUES} ; do
     echo
 done
 } > "$OUTPUT"
-

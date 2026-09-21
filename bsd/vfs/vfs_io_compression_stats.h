@@ -40,21 +40,22 @@ void io_compression_stats(buf_t bp);
 #define IO_COMPRESSION_STATS_MAX_BLOCK_SIZE (1024 * 1024 * 1024)
 
 #if IO_COMPRESSION_STATS_DEBUG
-#define io_compression_stats_dbg(fmt, ...) \
-	printf("%s: " fmt "\n", __func__, ## __VA_ARGS__)
+#define io_compression_stats_dbg(fmt, ...)                                     \
+  printf("%s: " fmt "\n", __func__, ##__VA_ARGS__)
 #else
 #define io_compression_stats_dbg(fmt, ...)
 #endif
 
 /* iocs_store_buffer: Buffer that captures the stats of vnode being reclaimed */
 struct iocs_store_buffer {
-	void*                   buffer;
-	uint32_t                current_position;
-	uint32_t                marked_point;
+  void *buffer;
+  uint32_t current_position;
+  uint32_t marked_point;
 };
 
 #define IOCS_STORE_BUFFER_NUM_SLOTS 10000
-#define IOCS_STORE_BUFFER_SIZE (IOCS_STORE_BUFFER_NUM_SLOTS * (sizeof(struct iocs_store_buffer_entry)))
+#define IOCS_STORE_BUFFER_SIZE                                                 \
+  (IOCS_STORE_BUFFER_NUM_SLOTS * (sizeof(struct iocs_store_buffer_entry)))
 
 /* Notify user when the buffer is 80% full */
 #define IOCS_STORE_BUFFER_NOTIFY_AT ((IOCS_STORE_BUFFER_SIZE * 8) / 10)

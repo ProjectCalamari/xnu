@@ -38,7 +38,7 @@
 #include <netinet/tcp_utils.h>
 #include <netinet/tcp_var.h>
 
-#include <sys/protosw.h>
 #include <os/atomic_private.h>
+#include <sys/protosw.h>
 
 #endif /* _NETINET_TCP_INCLUDES_H_ */

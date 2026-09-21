@@ -9,9 +9,9 @@
 #error "Please #include <img4/firmware.h> instead of this file directly"
 #endif // __IMG4_INDIRECT
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #if KERNEL
 #define IMG4_TARGET_SHIM_FOUND 1
@@ -28,7 +28,6 @@
 #endif
 #endif // KERNEL
 
-
 #if !IMG4_TARGET_SHIM_FOUND
 #if EFI
 #define IMG4_TARGET_EFI 1
@@ -37,7 +36,7 @@
 #pragma clang diagnostic ignored "-Wpragma-pack"
 #include <img4/shim_efi.h>
 #pragma clang diagnostic pop
-#endif // __has_include(<img4/shim_efi.h>)
+#endif    // __has_include(<img4/shim_efi.h>)
 #elif SEP // EFI
 #define IMG4_TARGET_SEP 1
 #include <img4/shim_sep.h>

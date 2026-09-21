@@ -30,9 +30,9 @@
 #define _KERN_PRIORITY_QUEUE_H_
 
 #if KERNEL
+#include <kern/assert.h>
 #include <kern/kern_types.h>
 #include <kern/macro_help.h>
-#include <kern/assert.h>
 #endif
 
 #include <stdbool.h>
@@ -46,7 +46,8 @@ __BEGIN_DECLS
  * A generic priorty ordered queue implementation based on pairing heaps.
  *
  * Reference Papers:
- * - A Back-to-Basics Empirical Study of Priority Queues (https://arxiv.org/abs/1403.0252)
+ * - A Back-to-Basics Empirical Study of Priority Queues
+ * (https://arxiv.org/abs/1403.0252)
  * - The Pairing Heap: A New Form of Self-Adjusting Heap
  *   (https://www.cs.cmu.edu/~sleator/papers/pairing-heaps.pdf)
  *
@@ -111,12 +112,12 @@ __BEGIN_DECLS
  *         pointers.
  */
 
-
 /*
  * Priority keys maintained by the data structure.
- * Since the priority is packed in the node itself, it restricts keys to be 16-bits only.
+ * Since the priority is packed in the node itself, it restricts keys to be
+ * 16-bits only.
  */
-#define PRIORITY_QUEUE_KEY_NONE             0
+#define PRIORITY_QUEUE_KEY_NONE 0
 typedef uint16_t priority_queue_key_t;
 
 #ifdef __LP64__
@@ -129,89 +130,89 @@ typedef uint16_t priority_queue_key_t;
  * for unpacking simply cast it to a full pointer which sign extends it.
  */
 #if CONFIG_KERNEL_TAGGING
-#define PRIORITY_QUEUE_ENTRY_CHILD_BITS     44
-#define PRIORITY_QUEUE_ENTRY_TAG_BITS       4
-#define PRIORITY_QUEUE_ENTRY_KEY_BITS       16
+#define PRIORITY_QUEUE_ENTRY_CHILD_BITS 44
+#define PRIORITY_QUEUE_ENTRY_TAG_BITS 4
+#define PRIORITY_QUEUE_ENTRY_KEY_BITS 16
 #else /* CONFIG_KERNEL_TAGGING */
-#define PRIORITY_QUEUE_ENTRY_CHILD_BITS     48
-#define PRIORITY_QUEUE_ENTRY_KEY_BITS       16
+#define PRIORITY_QUEUE_ENTRY_CHILD_BITS 48
+#define PRIORITY_QUEUE_ENTRY_KEY_BITS 16
 #endif /* CONFIG_KERNEL_TAGGING */
 
 typedef struct priority_queue_entry {
-	struct priority_queue_entry        *next;
-	struct priority_queue_entry        *prev;
-	long                                __key: PRIORITY_QUEUE_ENTRY_KEY_BITS;
+  struct priority_queue_entry *next;
+  struct priority_queue_entry *prev;
+  long __key : PRIORITY_QUEUE_ENTRY_KEY_BITS;
 #if CONFIG_KERNEL_TAGGING
-	unsigned long                       tag: PRIORITY_QUEUE_ENTRY_TAG_BITS;
+  unsigned long tag : PRIORITY_QUEUE_ENTRY_TAG_BITS;
 #endif /* CONFIG_KERNEL_TAGGING */
-	long                                child: PRIORITY_QUEUE_ENTRY_CHILD_BITS;
+  long child : PRIORITY_QUEUE_ENTRY_CHILD_BITS;
 } *priority_queue_entry_t;
 
 typedef struct priority_queue_entry_deadline {
-	struct priority_queue_entry_deadline *next;
-	struct priority_queue_entry_deadline *prev;
-	long                                  __key: PRIORITY_QUEUE_ENTRY_KEY_BITS;
+  struct priority_queue_entry_deadline *next;
+  struct priority_queue_entry_deadline *prev;
+  long __key : PRIORITY_QUEUE_ENTRY_KEY_BITS;
 #if CONFIG_KERNEL_TAGGING
-	unsigned long                         tag: PRIORITY_QUEUE_ENTRY_TAG_BITS;
+  unsigned long tag : PRIORITY_QUEUE_ENTRY_TAG_BITS;
 #endif /* CONFIG_KERNEL_TAGGING */
-	long                                  child: PRIORITY_QUEUE_ENTRY_CHILD_BITS;
-	uint64_t                              deadline;
+  long child : PRIORITY_QUEUE_ENTRY_CHILD_BITS;
+  uint64_t deadline;
 } *priority_queue_entry_deadline_t;
 
 typedef struct priority_queue_entry_sched {
-	struct priority_queue_entry_sched  *next;
-	struct priority_queue_entry_sched  *prev;
-	long                                key: PRIORITY_QUEUE_ENTRY_KEY_BITS;
+  struct priority_queue_entry_sched *next;
+  struct priority_queue_entry_sched *prev;
+  long key : PRIORITY_QUEUE_ENTRY_KEY_BITS;
 #if CONFIG_KERNEL_TAGGING
-	unsigned long                       tag: PRIORITY_QUEUE_ENTRY_TAG_BITS;
+  unsigned long tag : PRIORITY_QUEUE_ENTRY_TAG_BITS;
 #endif /* CONFIG_KERNEL_TAGGING */
-	long                                child: PRIORITY_QUEUE_ENTRY_CHILD_BITS;
+  long child : PRIORITY_QUEUE_ENTRY_CHILD_BITS;
 } *priority_queue_entry_sched_t;
 
 typedef struct priority_queue_entry_stable {
-	struct priority_queue_entry_stable *next;
-	struct priority_queue_entry_stable *prev;
-	long                                key: PRIORITY_QUEUE_ENTRY_KEY_BITS;
+  struct priority_queue_entry_stable *next;
+  struct priority_queue_entry_stable *prev;
+  long key : PRIORITY_QUEUE_ENTRY_KEY_BITS;
 #if CONFIG_KERNEL_TAGGING
-	unsigned long                       tag: PRIORITY_QUEUE_ENTRY_TAG_BITS;
+  unsigned long tag : PRIORITY_QUEUE_ENTRY_TAG_BITS;
 #endif /* CONFIG_KERNEL_TAGGING */
-	long                                child: PRIORITY_QUEUE_ENTRY_CHILD_BITS;
-	uint64_t                            stamp;
+  long child : PRIORITY_QUEUE_ENTRY_CHILD_BITS;
+  uint64_t stamp;
 } *priority_queue_entry_stable_t;
 
 #else /* __LP64__ */
 
 typedef struct priority_queue_entry {
-	struct priority_queue_entry        *next;
-	struct priority_queue_entry        *prev;
-	long                                child;
+  struct priority_queue_entry *next;
+  struct priority_queue_entry *prev;
+  long child;
 } *priority_queue_entry_t;
 
 typedef struct priority_queue_entry_deadline {
-	struct priority_queue_entry_deadline *next;
-	struct priority_queue_entry_deadline *prev;
-	long                                  child;
-	uint64_t                              deadline;
+  struct priority_queue_entry_deadline *next;
+  struct priority_queue_entry_deadline *prev;
+  long child;
+  uint64_t deadline;
 } *priority_queue_entry_deadline_t;
 
 /*
- * For 32-bit platforms, use an extra field to store the key since child pointer packing
- * is not an option. The child is maintained as a long to use the same packing/unpacking
- * routines that work for 64-bit platforms.
+ * For 32-bit platforms, use an extra field to store the key since child pointer
+ * packing is not an option. The child is maintained as a long to use the same
+ * packing/unpacking routines that work for 64-bit platforms.
  */
 typedef struct priority_queue_entry_sched {
-	struct priority_queue_entry_sched  *next;
-	struct priority_queue_entry_sched  *prev;
-	long                                child;
-	priority_queue_key_t                key;
+  struct priority_queue_entry_sched *next;
+  struct priority_queue_entry_sched *prev;
+  long child;
+  priority_queue_key_t key;
 } *priority_queue_entry_sched_t;
 
 typedef struct priority_queue_entry_stable {
-	struct priority_queue_entry_stable *next;
-	struct priority_queue_entry_stable *prev;
-	long                                child;
-	priority_queue_key_t                key;
-	uint64_t                            stamp;
+  struct priority_queue_entry_stable *next;
+  struct priority_queue_entry_stable *prev;
+  long child;
+  priority_queue_key_t key;
+  uint64_t stamp;
 } *priority_queue_entry_stable_t;
 
 #endif /* __LP64__ */
@@ -221,19 +222,20 @@ typedef struct priority_queue_entry_stable {
  * Args:
  *      - elements to compare
  * Return:
- * comparision result to indicate relative ordering of elements according to the heap type
+ * comparision result to indicate relative ordering of elements according to the
+ * heap type
  */
 typedef int (^priority_queue_compare_fn_t)(struct priority_queue_entry *e1,
-    struct priority_queue_entry *e2);
+                                           struct priority_queue_entry *e2);
 
 #define priority_heap_compare_ints(a, b) ((a) < (b) ? 1 : -1)
 
-#define priority_heap_make_comparator(name1, name2, type, field, ...) \
-	(^int(priority_queue_entry_t __e1, priority_queue_entry_t __e2){        \
-	    type *name1 = pqe_element_fast(__e1, type, field);                  \
-	    type *name2 = pqe_element_fast(__e2, type, field);                  \
-	    __VA_ARGS__;                                                        \
-	})
+#define priority_heap_make_comparator(name1, name2, type, field, ...)          \
+  (^int(priority_queue_entry_t __e1, priority_queue_entry_t __e2) {            \
+    type *name1 = pqe_element_fast(__e1, type, field);                         \
+    type *name2 = pqe_element_fast(__e2, type, field);                         \
+    __VA_ARGS__;                                                               \
+  })
 
 /*
  * Type for any priority queue, only used for documentation purposes.
@@ -244,62 +246,62 @@ struct priority_queue;
  * Type of generic heaps
  */
 struct priority_queue_min {
-	struct priority_queue_entry *pq_root;
-	priority_queue_compare_fn_t  pq_cmp_fn;
+  struct priority_queue_entry *pq_root;
+  priority_queue_compare_fn_t pq_cmp_fn;
 };
 struct priority_queue_max {
-	struct priority_queue_entry *pq_root;
-	priority_queue_compare_fn_t  pq_cmp_fn;
+  struct priority_queue_entry *pq_root;
+  priority_queue_compare_fn_t pq_cmp_fn;
 };
 
 /*
  * Type of deadline heaps
  */
 struct priority_queue_deadline_min {
-	struct priority_queue_entry_deadline *pq_root;
+  struct priority_queue_entry_deadline *pq_root;
 };
 struct priority_queue_deadline_max {
-	struct priority_queue_entry_deadline *pq_root;
+  struct priority_queue_entry_deadline *pq_root;
 };
 
 /*
  * Type of scheduler priority based heaps
  */
 struct priority_queue_sched_min {
-	struct priority_queue_entry_sched *pq_root;
+  struct priority_queue_entry_sched *pq_root;
 };
 struct priority_queue_sched_max {
-	struct priority_queue_entry_sched *pq_root;
+  struct priority_queue_entry_sched *pq_root;
 };
 
 /*
  * Type of scheduler priority based stable heaps
  */
 struct priority_queue_sched_stable_min {
-	struct priority_queue_entry_stable *pq_root;
+  struct priority_queue_entry_stable *pq_root;
 };
 struct priority_queue_sched_stable_max {
-	struct priority_queue_entry_stable *pq_root;
+  struct priority_queue_entry_stable *pq_root;
 };
 
 #pragma mark generic interface
 
-#define PRIORITY_QUEUE_INITIALIZER { .pq_root = NULL }
+#define PRIORITY_QUEUE_INITIALIZER {.pq_root = NULL}
 
-#define __pqueue_overloadable  __attribute__((overloadable))
+#define __pqueue_overloadable __attribute__((overloadable))
 
-#define priority_queue_is_min_heap(pq) _Generic(pq, \
-	struct priority_queue_min *: true, \
-	struct priority_queue_max *: false, \
-	struct priority_queue_deadline_min *: true, \
-	struct priority_queue_deadline_max *: false, \
-	struct priority_queue_sched_min *: true, \
-	struct priority_queue_sched_max *: false, \
-	struct priority_queue_sched_stable_min *: true, \
-	struct priority_queue_sched_stable_max *: false)
+#define priority_queue_is_min_heap(pq)                                         \
+  _Generic(pq,                                                                 \
+      struct priority_queue_min *: true,                                       \
+      struct priority_queue_max *: false,                                      \
+      struct priority_queue_deadline_min *: true,                              \
+      struct priority_queue_deadline_max *: false,                             \
+      struct priority_queue_sched_min *: true,                                 \
+      struct priority_queue_sched_max *: false,                                \
+      struct priority_queue_sched_stable_min *: true,                          \
+      struct priority_queue_sched_stable_max *: false)
 
-#define priority_queue_is_max_heap(pq) \
-	(!priority_queue_is_min_heap(pq))
+#define priority_queue_is_max_heap(pq) (!priority_queue_is_min_heap(pq))
 
 /*
  *      Macro:          pqe_element_fast
@@ -317,7 +319,7 @@ struct priority_queue_sched_stable_max {
  *      Returns:
  *              <type *> containing qe
  */
-#define pqe_element_fast(qe, type, field)  __container_of(qe, type, field)
+#define pqe_element_fast(qe, type, field) __container_of(qe, type, field)
 
 /*
  *      Macro:          pqe_element
@@ -335,10 +337,11 @@ struct priority_queue_sched_stable_max {
  *      Returns:
  *              <type *> containing qe
  */
-#define pqe_element(qe, type, field)  ({                                        \
-	__auto_type _tmp_entry = (qe);                                          \
-	_tmp_entry ? pqe_element_fast(_tmp_entry, type, field) : ((type *)NULL);\
-})
+#define pqe_element(qe, type, field)                                           \
+  ({                                                                           \
+    __auto_type _tmp_entry = (qe);                                             \
+    _tmp_entry ? pqe_element_fast(_tmp_entry, type, field) : ((type *)NULL);   \
+  })
 
 /*
  * Priority Queue functionality routines
@@ -352,7 +355,7 @@ struct priority_queue_sched_stable_max {
  *              boolean_t priority_queue_empty(pq)
  *                      <struct priority_queue *> pq
  */
-#define priority_queue_empty(pq)         ((pq)->pq_root == NULL)
+#define priority_queue_empty(pq) ((pq)->pq_root == NULL)
 
 /*
  *      Macro:          priority_queue_init
@@ -365,9 +368,8 @@ struct priority_queue_sched_stable_max {
  *      Returns:
  *              None
  */
-__pqueue_overloadable
-extern void
-priority_queue_init(struct priority_queue *pq, ...);
+__pqueue_overloadable extern void priority_queue_init(struct priority_queue *pq,
+                                                      ...);
 
 /*
  *      Macro:          priority_queue_entry_init
@@ -379,16 +381,15 @@ priority_queue_init(struct priority_queue *pq, ...);
  *      Returns:
  *              None
  */
-#define priority_queue_entry_init(qe) \
-	__builtin_bzero(qe, sizeof(*(qe)))
+#define priority_queue_entry_init(qe) __builtin_bzero(qe, sizeof(*(qe)))
 
 /*
  *      Macro:          priority_queue_destroy
  *      Function:
  *              Destroy a priority queue safely. This routine accepts a callback
- *              to handle any cleanup for elements in the priority queue. The queue does
- *              not maintain its invariants while getting destroyed. The priority queue and
- *              the linkage nodes need to be re-initialized before re-using them.
+ *              to handle any cleanup for elements in the priority queue. The
+ * queue does not maintain its invariants while getting destroyed. The priority
+ * queue and the linkage nodes need to be re-initialized before re-using them.
  *      Header:
  *              priority_queue_destroy(pq, type, field, callback)
  *                      <struct priority_queue *> pq
@@ -397,12 +398,12 @@ priority_queue_init(struct priority_queue *pq, ...);
  *      Returns:
  *              None
  */
-#define priority_queue_destroy(pq, type, field, callback)                       \
-MACRO_BEGIN                                                                     \
-	void (^__callback)(type *) = (callback); /* type check */               \
-	_priority_queue_destroy(pq, offsetof(type, field),                      \
-	    (void (^)(void *))(__callback));                                    \
-MACRO_END
+#define priority_queue_destroy(pq, type, field, callback)                      \
+  MACRO_BEGIN                                                                  \
+  void (^__callback)(type *) = (callback); /* type check */                    \
+  _priority_queue_destroy(pq, offsetof(type, field),                           \
+                          (void (^)(void *))(__callback));                     \
+  MACRO_END
 
 /*
  *      Macro:          priority_queue_min
@@ -417,10 +418,11 @@ MACRO_END
  *      Returns:
  *              <type *> root element
  */
-#define priority_queue_min(pq, type, field) ({                                  \
-	static_assert(priority_queue_is_min_heap(pq), "queue is min heap");     \
-	pqe_element((pq)->pq_root, type, field);                                \
-})
+#define priority_queue_min(pq, type, field)                                    \
+  ({                                                                           \
+    static_assert(priority_queue_is_min_heap(pq), "queue is min heap");        \
+    pqe_element((pq)->pq_root, type, field);                                   \
+  })
 
 /*
  *      Macro:          priority_queue_max
@@ -435,10 +437,11 @@ MACRO_END
  *      Returns:
  *              <type *> root element
  */
-#define priority_queue_max(pq, type, field) ({                                  \
-	static_assert(priority_queue_is_max_heap(pq), "queue is max heap");     \
-	pqe_element((pq)->pq_root, type, field);                                \
-})
+#define priority_queue_max(pq, type, field)                                    \
+  ({                                                                           \
+    static_assert(priority_queue_is_max_heap(pq), "queue is max heap");        \
+    pqe_element((pq)->pq_root, type, field);                                   \
+  })
 
 /*
  *      Macro:          priority_queue_insert
@@ -456,7 +459,7 @@ MACRO_END
  */
 extern bool
 priority_queue_insert(struct priority_queue *pq,
-    struct priority_queue_entry *elt) __pqueue_overloadable;
+                      struct priority_queue_entry *elt) __pqueue_overloadable;
 
 /*
  *      Macro:          priority_queue_remove_min
@@ -470,10 +473,11 @@ priority_queue_insert(struct priority_queue *pq,
  *      Returns:
  *              <type *> max element
  */
-#define priority_queue_remove_min(pq, type, field) ({                           \
-	static_assert(priority_queue_is_min_heap(pq), "queue is min heap");     \
-	pqe_element(_priority_queue_remove_root(pq), type, field);              \
-})
+#define priority_queue_remove_min(pq, type, field)                             \
+  ({                                                                           \
+    static_assert(priority_queue_is_min_heap(pq), "queue is min heap");        \
+    pqe_element(_priority_queue_remove_root(pq), type, field);                 \
+  })
 
 /*
  *      Macro:          priority_queue_remove_max
@@ -487,10 +491,11 @@ priority_queue_insert(struct priority_queue *pq,
  *      Returns:
  *              <type *> max element
  */
-#define priority_queue_remove_max(pq, type, field) ({                           \
-	static_assert(priority_queue_is_max_heap(pq), "queue is max heap");     \
-	pqe_element(_priority_queue_remove_root(pq), type, field);              \
-})
+#define priority_queue_remove_max(pq, type, field)                             \
+  ({                                                                           \
+    static_assert(priority_queue_is_max_heap(pq), "queue is max heap");        \
+    pqe_element(_priority_queue_remove_root(pq), type, field);                 \
+  })
 
 /*
  *      Macro:          priority_queue_remove
@@ -505,8 +510,7 @@ priority_queue_insert(struct priority_queue *pq,
  */
 extern bool
 priority_queue_remove(struct priority_queue *pq,
-    struct priority_queue_entry *elt) __pqueue_overloadable;
-
+                      struct priority_queue_entry *elt) __pqueue_overloadable;
 
 /*
  *      Macro:          priority_queue_entry_decreased
@@ -524,9 +528,9 @@ priority_queue_remove(struct priority_queue *pq,
  *      Returns:
  *              Whether the update caused the root or its key to change.
  */
-extern bool
-priority_queue_entry_decreased(struct priority_queue *pq,
-    struct priority_queue_entry *elt) __pqueue_overloadable;
+extern bool priority_queue_entry_decreased(struct priority_queue *pq,
+                                           struct priority_queue_entry *elt)
+    __pqueue_overloadable;
 
 /*
  *      Macro:          priority_queue_entry_increased
@@ -544,24 +548,25 @@ priority_queue_entry_decreased(struct priority_queue *pq,
  *      Returns:
  *              Whether the update caused the root or its key to change.
  */
-extern bool
-priority_queue_entry_increased(struct priority_queue *pq,
-    struct priority_queue_entry *elt) __pqueue_overloadable;
-
+extern bool priority_queue_entry_increased(struct priority_queue *pq,
+                                           struct priority_queue_entry *elt)
+    __pqueue_overloadable;
 
 #pragma mark priority_queue_sched_*
 
-__enum_decl(priority_queue_entry_sched_modifier_t, uint8_t, {
-	PRIORITY_QUEUE_ENTRY_NONE      = 0,
-	PRIORITY_QUEUE_ENTRY_PREEMPTED = 1,
-});
+__enum_decl(priority_queue_entry_sched_modifier_t, uint8_t,
+            {
+                PRIORITY_QUEUE_ENTRY_NONE = 0,
+                PRIORITY_QUEUE_ENTRY_PREEMPTED = 1,
+            });
 
-#define priority_queue_is_sched_heap(pq) _Generic(pq, \
-	struct priority_queue_sched_min *: true, \
-	struct priority_queue_sched_max *: true, \
-	struct priority_queue_sched_stable_min *: true, \
-	struct priority_queue_sched_stable_max *: true, \
-	default: false)
+#define priority_queue_is_sched_heap(pq)                                       \
+  _Generic(pq,                                                                 \
+      struct priority_queue_sched_min *: true,                                 \
+      struct priority_queue_sched_max *: true,                                 \
+      struct priority_queue_sched_stable_min *: true,                          \
+      struct priority_queue_sched_stable_max *: true,                          \
+      default: false)
 
 /*
  *      Macro:          priority_queue_entry_set_sched_pri
@@ -579,11 +584,11 @@ __enum_decl(priority_queue_entry_sched_modifier_t, uint8_t, {
  *                      <uint8_t> pri
  *                      <priority_queue_entry_sched_modifier_t> modifier
  */
-#define priority_queue_entry_set_sched_pri(pq, elt, pri, modifier)              \
-MACRO_BEGIN                                                                     \
-	static_assert(priority_queue_is_sched_heap(pq), "is a sched heap");     \
-	(elt)->key = (priority_queue_key_t)(((pri) << 8) + (modifier));         \
-MACRO_END
+#define priority_queue_entry_set_sched_pri(pq, elt, pri, modifier)             \
+  MACRO_BEGIN                                                                  \
+  static_assert(priority_queue_is_sched_heap(pq), "is a sched heap");          \
+  (elt)->key = (priority_queue_key_t)(((pri) << 8) + (modifier));              \
+  MACRO_END
 
 /*
  *      Macro:          priority_queue_entry_sched_pri
@@ -600,10 +605,11 @@ MACRO_END
  *      Returns:
  *              The scheduler priority of this entry
  */
-#define priority_queue_entry_sched_pri(pq, elt) ({                              \
-	static_assert(priority_queue_is_sched_heap(pq), "is a sched heap");     \
-	(priority_queue_key_t)((elt)->key >> 8);                                \
-})
+#define priority_queue_entry_sched_pri(pq, elt)                                \
+  ({                                                                           \
+    static_assert(priority_queue_is_sched_heap(pq), "is a sched heap");        \
+    (priority_queue_key_t)((elt)->key >> 8);                                   \
+  })
 
 /*
  *      Macro:          priority_queue_entry_sched_modifier
@@ -620,10 +626,11 @@ MACRO_END
  *      Returns:
  *              The scheduler priority of this entry
  */
-#define priority_queue_entry_sched_modifier(pq, elt) ({                         \
-	static_assert(priority_queue_is_sched_heap(pq), "is a sched heap");     \
-	(priority_queue_entry_sched_modifier_t)(elt)->key;                      \
-})
+#define priority_queue_entry_sched_modifier(pq, elt)                           \
+  ({                                                                           \
+    static_assert(priority_queue_is_sched_heap(pq), "is a sched heap");        \
+    (priority_queue_entry_sched_modifier_t)(elt)->key;                         \
+  })
 
 /*
  *      Macro:          priority_queue_min_sched_pri
@@ -639,10 +646,11 @@ MACRO_END
  *      Returns:
  *              The scheduler priority of this entry
  */
-#define priority_queue_min_sched_pri(pq) ({                                     \
-	static_assert(priority_queue_is_min_heap(pq), "queue is min heap");     \
-	priority_queue_entry_sched_pri(pq, (pq)->pq_root);                      \
-})
+#define priority_queue_min_sched_pri(pq)                                       \
+  ({                                                                           \
+    static_assert(priority_queue_is_min_heap(pq), "queue is min heap");        \
+    priority_queue_entry_sched_pri(pq, (pq)->pq_root);                         \
+  })
 
 /*
  *      Macro:          priority_queue_max_sched_pri
@@ -658,66 +666,67 @@ MACRO_END
  *      Returns:
  *              The scheduler priority of this entry
  */
-#define priority_queue_max_sched_pri(pq) ({                                     \
-	static_assert(priority_queue_is_max_heap(pq), "queue is max heap");     \
-	priority_queue_entry_sched_pri(pq, (pq)->pq_root);                      \
-})
-
+#define priority_queue_max_sched_pri(pq)                                       \
+  ({                                                                           \
+    static_assert(priority_queue_is_max_heap(pq), "queue is max heap");        \
+    priority_queue_entry_sched_pri(pq, (pq)->pq_root);                         \
+  })
 
 #pragma mark implementation details
 
-#define PRIORITY_QUEUE_MAKE_BASE(pqueue_t, pqelem_t) \
-                                                                                \
-__pqueue_overloadable extern void                                               \
-_priority_queue_destroy(pqueue_t pq, uintptr_t offset, void (^cb)(void *));     \
-                                                                                \
-__pqueue_overloadable extern bool                                               \
-priority_queue_insert(pqueue_t que, pqelem_t elt);                              \
-                                                                                \
-__pqueue_overloadable extern pqelem_t                                           \
-_priority_queue_remove_root(pqueue_t que);                                      \
-                                                                                \
-__pqueue_overloadable extern bool                                               \
-priority_queue_remove(pqueue_t que, pqelem_t elt);                              \
-                                                                                \
-__pqueue_overloadable extern bool                                               \
-priority_queue_entry_decreased(pqueue_t que, pqelem_t elt);                     \
-                                                                                \
-__pqueue_overloadable extern bool                                               \
-priority_queue_entry_increased(pqueue_t que, pqelem_t elt)
+#define PRIORITY_QUEUE_MAKE_BASE(pqueue_t, pqelem_t)                           \
+                                                                               \
+  __pqueue_overloadable extern void _priority_queue_destroy(                   \
+      pqueue_t pq, uintptr_t offset, void (^cb)(void *));                      \
+                                                                               \
+  __pqueue_overloadable extern bool priority_queue_insert(pqueue_t que,        \
+                                                          pqelem_t elt);       \
+                                                                               \
+  __pqueue_overloadable extern pqelem_t _priority_queue_remove_root(           \
+      pqueue_t que);                                                           \
+                                                                               \
+  __pqueue_overloadable extern bool priority_queue_remove(pqueue_t que,        \
+                                                          pqelem_t elt);       \
+                                                                               \
+  __pqueue_overloadable extern bool priority_queue_entry_decreased(            \
+      pqueue_t que, pqelem_t elt);                                             \
+                                                                               \
+  __pqueue_overloadable extern bool priority_queue_entry_increased(            \
+      pqueue_t que, pqelem_t elt)
 
-#define PRIORITY_QUEUE_MAKE(pqueue_t, pqelem_t) \
-__pqueue_overloadable                                                           \
-static inline void                                                              \
-priority_queue_init(pqueue_t que)                                               \
-{                                                                               \
-	__builtin_bzero(que, sizeof(*que));                                     \
-}                                                                               \
-                                                                                \
-PRIORITY_QUEUE_MAKE_BASE(pqueue_t, pqelem_t)
+#define PRIORITY_QUEUE_MAKE(pqueue_t, pqelem_t)                                \
+  __pqueue_overloadable static inline void priority_queue_init(pqueue_t que) { \
+    __builtin_bzero(que, sizeof(*que));                                        \
+  }                                                                            \
+                                                                               \
+  PRIORITY_QUEUE_MAKE_BASE(pqueue_t, pqelem_t)
 
-#define PRIORITY_QUEUE_MAKE_CB(pqueue_t, pqelem_t) \
-__pqueue_overloadable                                                           \
-static inline void                                                              \
-priority_queue_init(pqueue_t pq, priority_queue_compare_fn_t cmp_fn)            \
-{                                                                               \
-	pq->pq_root = NULL;                                                     \
-	pq->pq_cmp_fn = cmp_fn;                                                 \
-}                                                                               \
-                                                                                \
-PRIORITY_QUEUE_MAKE_BASE(pqueue_t, pqelem_t)
+#define PRIORITY_QUEUE_MAKE_CB(pqueue_t, pqelem_t)                             \
+  __pqueue_overloadable static inline void priority_queue_init(                \
+      pqueue_t pq, priority_queue_compare_fn_t cmp_fn) {                       \
+    pq->pq_root = NULL;                                                        \
+    pq->pq_cmp_fn = cmp_fn;                                                    \
+  }                                                                            \
+                                                                               \
+  PRIORITY_QUEUE_MAKE_BASE(pqueue_t, pqelem_t)
 
 PRIORITY_QUEUE_MAKE_CB(struct priority_queue_min *, priority_queue_entry_t);
 PRIORITY_QUEUE_MAKE_CB(struct priority_queue_max *, priority_queue_entry_t);
 
-PRIORITY_QUEUE_MAKE(struct priority_queue_deadline_min *, priority_queue_entry_deadline_t);
-PRIORITY_QUEUE_MAKE(struct priority_queue_deadline_max *, priority_queue_entry_deadline_t);
+PRIORITY_QUEUE_MAKE(struct priority_queue_deadline_min *,
+                    priority_queue_entry_deadline_t);
+PRIORITY_QUEUE_MAKE(struct priority_queue_deadline_max *,
+                    priority_queue_entry_deadline_t);
 
-PRIORITY_QUEUE_MAKE(struct priority_queue_sched_min *, priority_queue_entry_sched_t);
-PRIORITY_QUEUE_MAKE(struct priority_queue_sched_max *, priority_queue_entry_sched_t);
+PRIORITY_QUEUE_MAKE(struct priority_queue_sched_min *,
+                    priority_queue_entry_sched_t);
+PRIORITY_QUEUE_MAKE(struct priority_queue_sched_max *,
+                    priority_queue_entry_sched_t);
 
-PRIORITY_QUEUE_MAKE(struct priority_queue_sched_stable_min *, priority_queue_entry_stable_t);
-PRIORITY_QUEUE_MAKE(struct priority_queue_sched_stable_max *, priority_queue_entry_stable_t);
+PRIORITY_QUEUE_MAKE(struct priority_queue_sched_stable_min *,
+                    priority_queue_entry_stable_t);
+PRIORITY_QUEUE_MAKE(struct priority_queue_sched_stable_max *,
+                    priority_queue_entry_stable_t);
 
 __END_DECLS
 

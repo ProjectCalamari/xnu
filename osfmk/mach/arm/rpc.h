@@ -32,7 +32,7 @@
 #ifndef _MACH_ARM_RPC_H_
 #define _MACH_ARM_RPC_H_
 
-#if defined (__arm__) || defined (__arm64__)
+#if defined(__arm__) || defined(__arm64__)
 
 #endif /* defined (__arm__) || defined (__arm64__) */
 

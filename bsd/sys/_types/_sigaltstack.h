@@ -32,19 +32,18 @@
 #include <sys/cdefs.h> /* __DARWIN_UNIX03 */
 
 #if __DARWIN_UNIX03
-#define _STRUCT_SIGALTSTACK     struct __darwin_sigaltstack
+#define _STRUCT_SIGALTSTACK struct __darwin_sigaltstack
 #else /* !__DARWIN_UNIX03 */
-#define _STRUCT_SIGALTSTACK     struct sigaltstack
+#define _STRUCT_SIGALTSTACK struct sigaltstack
 #endif /* __DARWIN_UNIX03 */
 
 #include <machine/types.h> /* __darwin_size_t */
 
-_STRUCT_SIGALTSTACK
-{
-	void            *ss_sp;         /* signal stack base */
-	__darwin_size_t ss_size;        /* signal stack length */
-	int             ss_flags;       /* SA_DISABLE and/or SA_ONSTACK */
+_STRUCT_SIGALTSTACK {
+  void *ss_sp;             /* signal stack base */
+  __darwin_size_t ss_size; /* signal stack length */
+  int ss_flags;            /* SA_DISABLE and/or SA_ONSTACK */
 };
-typedef _STRUCT_SIGALTSTACK     stack_t; /* [???] signal stack */
+typedef _STRUCT_SIGALTSTACK stack_t; /* [???] signal stack */
 
 #endif /* _STRUCT_SIGALTSTACK */

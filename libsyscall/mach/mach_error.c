@@ -60,26 +60,25 @@
  *      or returns a descriptive string.
  */
 
-#include <mach/mach_error.h>
-#include <mach/boolean.h>
 #include "errorlib.h"
 #include "string.h"
+#include <mach/boolean.h>
+#include <mach/mach_error.h>
 
 int fprintf_stderr(const char *format, ...) __printflike(1, 2);
 
-void
-mach_error(const char *str, mach_error_t err)
-{
-	char *err_str;
-	char buf[1024];
-	boolean_t diag;
+void mach_error(const char *str, mach_error_t err) {
+  char *err_str;
+  char buf[1024];
+  boolean_t diag;
 
-	err_str = mach_error_string_int(err, &diag);
+  err_str = mach_error_string_int(err, &diag);
 
-	if (diag) {
-		_mach_snprintf(buf, sizeof(buf), "%s %s (%x)", mach_error_type(err), err_str, err);
-		err_str = buf;
-	}
+  if (diag) {
+    _mach_snprintf(buf, sizeof(buf), "%s %s (%x)", mach_error_type(err),
+                   err_str, err);
+    err_str = buf;
+  }
 
-	fprintf_stderr("%s %s\n", str, err_str);
+  fprintf_stderr("%s %s\n", str, err_str);
 }

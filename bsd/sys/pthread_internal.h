@@ -29,14 +29,14 @@
 #ifndef _SYS_PTHREAD_INTERNAL_H_
 #define _SYS_PTHREAD_INTERNAL_H_
 
-#include <sys/user.h>
 #include <kern/thread_call.h>
+#include <sys/user.h>
 
 struct ksyn_waitq_element {
 #if __LP64__
-	char opaque[48];
+  char opaque[48];
 #else
-	char opaque[32];
+  char opaque[32];
 #endif
 };
 

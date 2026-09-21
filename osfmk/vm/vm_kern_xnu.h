@@ -36,18 +36,17 @@ __BEGIN_DECLS
 __exported_push_hidden
 #ifdef XNU_KERNEL_PRIVATE
 
-
 #pragma mark - the kmem subsystem
 
-/*
- * "kmem" is a set of methods that provide interfaces suitable
- * to allocate memory from the VM in the kernel map or submaps.
- *
- * It provide leaner alternatives to some of the VM functions,
- * closer to a typical allocator.
- */
+    /*
+     * "kmem" is a set of methods that provide interfaces suitable
+     * to allocate memory from the VM in the kernel map or submaps.
+     *
+     * It provide leaner alternatives to some of the VM functions,
+     * closer to a typical allocator.
+     */
 
-struct mach_memory_info;
+    struct mach_memory_info;
 struct vm_page;
 struct vm_map_entry;
 
@@ -66,13 +65,13 @@ struct vm_map_entry;
  * of the union is always supposed to be 0.
  */
 typedef struct {
-	kern_return_t           kmr_return;
-	union {
-		vm_address_t    kmr_address;
-		vm_size_t       kmr_size;
-		void           *kmr_ptr;
-		vm_map_t        kmr_submap;
-	};
+  kern_return_t kmr_return;
+  union {
+    vm_address_t kmr_address;
+    vm_size_t kmr_size;
+    void *kmr_ptr;
+    vm_map_t kmr_submap;
+  };
 } kmem_return_t;
 
 /*!
@@ -96,15 +95,15 @@ typedef struct {
  *                              on other operations.
  */
 typedef struct {
-	uint16_t                kmg_tag;
-	uint16_t                kmg_type_hash;
-	uint32_t                kmg_atomic : 1;
-	uint32_t                kmg_submap : 1;
-	uint32_t                kmg_context : 30;
+  uint16_t kmg_tag;
+  uint16_t kmg_type_hash;
+  uint32_t kmg_atomic : 1;
+  uint32_t kmg_submap : 1;
+  uint32_t kmg_context : 30;
 } kmem_guard_t;
-#define KMEM_GUARD_NONE         (kmem_guard_t){ }
-#define KMEM_GUARD_SUBMAP       (kmem_guard_t){ .kmg_atomic = 0, .kmg_submap = 1 }
-
+#define KMEM_GUARD_NONE                                                        \
+  (kmem_guard_t) {}
+#define KMEM_GUARD_SUBMAP (kmem_guard_t){.kmg_atomic = 0, .kmg_submap = 1}
 
 /*!
  * @typedef kmem_flags_t
@@ -264,52 +263,50 @@ typedef struct {
  * @const KMEM_TAG (alloc, realloc, free)
  *	Under KASAN_TBI, this allocation is tagged non canonically.
  */
-__options_decl(kmem_flags_t, uint32_t, {
-	KMEM_NONE           = 0x00000000,
+__options_decl(kmem_flags_t, uint32_t,
+               {
+                   KMEM_NONE = 0x00000000,
 
-	/* Call behavior */
-	KMEM_NOFAIL         = 0x00000001,
-	KMEM_NOPAGEWAIT     = 0x00000002,
-	KMEM_FREEOLD        = 0x00000004,
-	KMEM_REALLOCF       = 0x00000008,
-	KMEM_NOSOFTLIMIT    = 0x00000010,
+                   /* Call behavior */
+                   KMEM_NOFAIL = 0x00000001,
+                   KMEM_NOPAGEWAIT = 0x00000002,
+                   KMEM_FREEOLD = 0x00000004,
+                   KMEM_REALLOCF = 0x00000008,
+                   KMEM_NOSOFTLIMIT = 0x00000010,
 
-	/* How the entry is populated */
-	KMEM_VAONLY         = 0x00000020,
-	KMEM_PAGEABLE       = 0x00000040,
-	KMEM_ZERO           = 0x00000080,
+                   /* How the entry is populated */
+                   KMEM_VAONLY = 0x00000020,
+                   KMEM_PAGEABLE = 0x00000040,
+                   KMEM_ZERO = 0x00000080,
 
-	/* VM object to use for the entry */
-	KMEM_KOBJECT        = 0x00000100,
-	KMEM_COMPRESSOR     = 0x00000200,
+                   /* VM object to use for the entry */
+                   KMEM_KOBJECT = 0x00000100,
+                   KMEM_COMPRESSOR = 0x00000200,
 
-	/* How to look for addresses */
-	KMEM_LOMEM          = 0x00001000,
-	KMEM_LAST_FREE      = 0x00002000,
-	KMEM_GUESS_SIZE     = 0x00004000,
-	KMEM_DATA           = 0x00008000,
-	KMEM_DATA_SHARED    = 0x00010000,
-	KMEM_SPRAYQTN       = 0x00020000,
+                   /* How to look for addresses */
+                   KMEM_LOMEM = 0x00001000,
+                   KMEM_LAST_FREE = 0x00002000,
+                   KMEM_GUESS_SIZE = 0x00004000,
+                   KMEM_DATA = 0x00008000,
+                   KMEM_DATA_SHARED = 0x00010000,
+                   KMEM_SPRAYQTN = 0x00020000,
 
-	/* Entry properties */
-	KMEM_PERMANENT      = 0x00200000,
-	KMEM_GUARD_FIRST    = 0x00400000,
-	KMEM_GUARD_LAST     = 0x00800000,
-	KMEM_KSTACK         = 0x01000000,
-	KMEM_NOENCRYPT      = 0x02000000,
-	KMEM_KASAN_GUARD    = 0x04000000,
-	KMEM_TAG            = 0x08000000,
-});
-
+                   /* Entry properties */
+                   KMEM_PERMANENT = 0x00200000,
+                   KMEM_GUARD_FIRST = 0x00400000,
+                   KMEM_GUARD_LAST = 0x00800000,
+                   KMEM_KSTACK = 0x01000000,
+                   KMEM_NOENCRYPT = 0x02000000,
+                   KMEM_KASAN_GUARD = 0x04000000,
+                   KMEM_TAG = 0x08000000,
+               });
 
 /*
  * @function kmem_range_id_size
  *
  * @abstract Return the addressable size of the memory range.
  */
-__pure2
-extern vm_map_size_t kmem_range_id_size(
-	kmem_range_id_t         range_id);
+__pure2 extern vm_map_size_t kmem_range_id_size(kmem_range_id_t range_id);
 
 /**
  * @enum kmem_claims_flags_t
@@ -327,39 +324,40 @@ extern vm_map_size_t kmem_range_id_size(
  * @const KC_NO_MOVE
  * The range shouldn't be moved once it has been placed as it has constraints.
  */
-__options_decl(kmem_claims_flags_t, uint32_t, {
-	KC_NONE         = 0x00000000,
-	KC_NO_ENTRY     = 0x00000001,
-	KC_NO_MOVE      = 0x00000002,
-});
+__options_decl(kmem_claims_flags_t, uint32_t,
+               {
+                   KC_NONE = 0x00000000,
+                   KC_NO_ENTRY = 0x00000001,
+                   KC_NO_MOVE = 0x00000002,
+               });
 
 /*
  * Security config that creates the additional splits in non data part of
  * kernel_map
  */
-#if KASAN || (__arm64__ && !defined(KERNEL_INTEGRITY_KTRR) && !defined(KERNEL_INTEGRITY_CTRR) && !defined(KERNEL_INTEGRITY_PV_CTRR))
-#   define ZSECURITY_CONFIG_KERNEL_PTR_SPLIT        OFF
+#if KASAN ||                                                                   \
+    (__arm64__ && !defined(KERNEL_INTEGRITY_KTRR) &&                           \
+     !defined(KERNEL_INTEGRITY_CTRR) && !defined(KERNEL_INTEGRITY_PV_CTRR))
+#define ZSECURITY_CONFIG_KERNEL_PTR_SPLIT OFF
 #else
-#   define ZSECURITY_CONFIG_KERNEL_PTR_SPLIT        ON
+#define ZSECURITY_CONFIG_KERNEL_PTR_SPLIT ON
 #endif
 
 #define ZSECURITY_NOT_A_COMPILE_TIME_CONFIG__OFF() 0
-#define ZSECURITY_NOT_A_COMPILE_TIME_CONFIG__ON()  1
-#define ZSECURITY_CONFIG2(v)     ZSECURITY_NOT_A_COMPILE_TIME_CONFIG__##v()
-#define ZSECURITY_CONFIG1(v)     ZSECURITY_CONFIG2(v)
-#define ZSECURITY_CONFIG(opt)    ZSECURITY_CONFIG1(ZSECURITY_CONFIG_##opt)
-
+#define ZSECURITY_NOT_A_COMPILE_TIME_CONFIG__ON() 1
+#define ZSECURITY_CONFIG2(v) ZSECURITY_NOT_A_COMPILE_TIME_CONFIG__##v()
+#define ZSECURITY_CONFIG1(v) ZSECURITY_CONFIG2(v)
+#define ZSECURITY_CONFIG(opt) ZSECURITY_CONFIG1(ZSECURITY_CONFIG_##opt)
 
 struct kmem_range_startup_spec {
-	const char             *kc_name;
-	struct mach_vm_range   *kc_range;
-	vm_map_size_t           kc_size;
-	vm_map_size_t           (^kc_calculate_sz)(void);
-	kmem_claims_flags_t     kc_flags;
+  const char *kc_name;
+  struct mach_vm_range *kc_range;
+  vm_map_size_t kc_size;
+  vm_map_size_t (^kc_calculate_sz)(void);
+  kmem_claims_flags_t kc_flags;
 };
 
-extern void kmem_range_startup_init(
-	struct kmem_range_startup_spec *sp);
+extern void kmem_range_startup_init(struct kmem_range_startup_spec *sp);
 
 /*!
  * @macro KMEM_RANGE_REGISTER_*
@@ -371,7 +369,8 @@ extern void kmem_range_startup_init(
  * Claims are shuffled during startup to randomize the layout of the kernel map.
  * Temporary entries are created in place of the claims, therefore the caller
  * must provide the start of the assigned range as a hint and
- * @c{VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE} to kmem_suballoc to replace the mapping.
+ * @c{VM_FLAGS_FIXED | VM_FLAGS_OVERWRITE} to kmem_suballoc to replace the
+ * mapping.
  *
  * Min/max constraints can be provided in the range when the claim is
  * registered.
@@ -387,19 +386,18 @@ extern void kmem_range_startup_init(
  * @param size          the size of submap/range (if known at compile time)
  * @param calculate_sz  a block that returns the computed size of submap/range
  */
-#define KMEM_RANGE_REGISTER_STATIC(name, range, size)                    \
-	static __startup_data struct kmem_range_startup_spec                       \
-	__startup_kmem_range_spec_ ## name = { #name, range, size, NULL, KC_NONE}; \
-	STARTUP_ARG(KMEM, STARTUP_RANK_SECOND, kmem_range_startup_init,            \
-	    &__startup_kmem_range_spec_ ## name)
+#define KMEM_RANGE_REGISTER_STATIC(name, range, size)                          \
+  static __startup_data struct kmem_range_startup_spec                         \
+      __startup_kmem_range_spec_##name = {#name, range, size, NULL, KC_NONE};  \
+  STARTUP_ARG(KMEM, STARTUP_RANK_SECOND, kmem_range_startup_init,              \
+              &__startup_kmem_range_spec_##name)
 
-#define KMEM_RANGE_REGISTER_DYNAMIC(name, range, calculate_sz)           \
-	static __startup_data struct kmem_range_startup_spec                       \
-	__startup_kmem_range_spec_ ## name = { #name, range, 0, calculate_sz,      \
-	    KC_NONE};                                                              \
-	STARTUP_ARG(KMEM, STARTUP_RANK_SECOND, kmem_range_startup_init,            \
-	    &__startup_kmem_range_spec_ ## name)
-
+#define KMEM_RANGE_REGISTER_DYNAMIC(name, range, calculate_sz)                 \
+  static __startup_data struct kmem_range_startup_spec                         \
+      __startup_kmem_range_spec_##name = {#name, range, 0, calculate_sz,       \
+                                          KC_NONE};                            \
+  STARTUP_ARG(KMEM, STARTUP_RANK_SECOND, kmem_range_startup_init,              \
+              &__startup_kmem_range_spec_##name)
 
 #pragma mark kmem entry parameters
 
@@ -422,12 +420,9 @@ extern void kmem_range_startup_init(
  * @param size          the supposed size of the entry
  * @param guard         the guard to use to "authenticate" the allocation.
  */
-extern void kmem_entry_validate_guard(
-	vm_map_t                map,
-	struct vm_map_entry    *entry,
-	vm_offset_t             addr,
-	vm_size_t               size,
-	kmem_guard_t            guard);
+extern void kmem_entry_validate_guard(vm_map_t map, struct vm_map_entry *entry,
+                                      vm_offset_t addr, vm_size_t size,
+                                      kmem_guard_t guard);
 
 /*!
  * @function kmem_size_guard()
@@ -440,11 +435,8 @@ extern void kmem_entry_validate_guard(
  * @param addr          the kernel address to lookup.
  * @param guard         the guard to use to "authenticate" the allocation.
  */
-extern vm_size_t kmem_size_guard(
-	vm_map_t                map,
-	vm_offset_t             addr,
-	kmem_guard_t            guard);
-
+extern vm_size_t kmem_size_guard(vm_map_t map, vm_offset_t addr,
+                                 kmem_guard_t guard);
 
 #pragma mark kmem allocations
 
@@ -454,40 +446,40 @@ extern vm_size_t kmem_size_guard(
  * @brief
  * Flags used by the @c kmem_alloc* family of flags.
  */
-__options_decl(kma_flags_t, uint32_t, {
-	KMA_NONE            = KMEM_NONE,
+__options_decl(kma_flags_t, uint32_t,
+               {
+                   KMA_NONE = KMEM_NONE,
 
-	/* Call behavior */
-	KMA_NOFAIL          = KMEM_NOFAIL,
-	KMA_NOPAGEWAIT      = KMEM_NOPAGEWAIT,
+                   /* Call behavior */
+                   KMA_NOFAIL = KMEM_NOFAIL,
+                   KMA_NOPAGEWAIT = KMEM_NOPAGEWAIT,
 
-	/* How the entry is populated */
-	KMA_VAONLY          = KMEM_VAONLY,
-	KMA_PAGEABLE        = KMEM_PAGEABLE,
-	KMA_ZERO            = KMEM_ZERO,
-	KMA_NOSOFTLIMIT     = KMEM_NOSOFTLIMIT,
+                   /* How the entry is populated */
+                   KMA_VAONLY = KMEM_VAONLY,
+                   KMA_PAGEABLE = KMEM_PAGEABLE,
+                   KMA_ZERO = KMEM_ZERO,
+                   KMA_NOSOFTLIMIT = KMEM_NOSOFTLIMIT,
 
-	/* VM object to use for the entry */
-	KMA_KOBJECT         = KMEM_KOBJECT,
-	KMA_COMPRESSOR      = KMEM_COMPRESSOR,
+                   /* VM object to use for the entry */
+                   KMA_KOBJECT = KMEM_KOBJECT,
+                   KMA_COMPRESSOR = KMEM_COMPRESSOR,
 
-	/* How to look for addresses */
-	KMA_LOMEM           = KMEM_LOMEM,
-	KMA_LAST_FREE       = KMEM_LAST_FREE,
-	KMA_DATA            = KMEM_DATA,
-	KMA_DATA_SHARED     = KMEM_DATA_SHARED,
-	KMA_SPRAYQTN        = KMEM_SPRAYQTN,
+                   /* How to look for addresses */
+                   KMA_LOMEM = KMEM_LOMEM,
+                   KMA_LAST_FREE = KMEM_LAST_FREE,
+                   KMA_DATA = KMEM_DATA,
+                   KMA_DATA_SHARED = KMEM_DATA_SHARED,
+                   KMA_SPRAYQTN = KMEM_SPRAYQTN,
 
-	/* Entry properties */
-	KMA_PERMANENT       = KMEM_PERMANENT,
-	KMA_GUARD_FIRST     = KMEM_GUARD_FIRST,
-	KMA_GUARD_LAST      = KMEM_GUARD_LAST,
-	KMA_KSTACK          = KMEM_KSTACK,
-	KMA_NOENCRYPT       = KMEM_NOENCRYPT,
-	KMA_KASAN_GUARD     = KMEM_KASAN_GUARD,
-	KMA_TAG             = KMEM_TAG,
-});
-
+                   /* Entry properties */
+                   KMA_PERMANENT = KMEM_PERMANENT,
+                   KMA_GUARD_FIRST = KMEM_GUARD_FIRST,
+                   KMA_GUARD_LAST = KMEM_GUARD_LAST,
+                   KMA_KSTACK = KMEM_KSTACK,
+                   KMA_NOENCRYPT = KMEM_NOENCRYPT,
+                   KMA_KASAN_GUARD = KMEM_KASAN_GUARD,
+                   KMA_TAG = KMEM_TAG,
+               });
 
 /*!
  * @function kmem_alloc_guard()
@@ -508,46 +500,32 @@ __options_decl(kma_flags_t, uint32_t, {
  *     - @c KERN_NO_SPACE if the target map is out of address space.
  *     - @c KERN_RESOURCE_SHORTAGE if the kernel is out of pages.
  */
-extern kmem_return_t kmem_alloc_guard(
-	vm_map_t                map,
-	vm_size_t               size,
-	vm_offset_t             mask,
-	kma_flags_t             flags,
-	kmem_guard_t            guard) __result_use_check;
+extern kmem_return_t kmem_alloc_guard(vm_map_t map, vm_size_t size,
+                                      vm_offset_t mask, kma_flags_t flags,
+                                      kmem_guard_t guard) __result_use_check;
 
 static inline kern_return_t
-kernel_memory_allocate(
-	vm_map_t                map,
-	vm_offset_t            *addrp,
-	vm_size_t               size,
-	vm_offset_t             mask,
-	kma_flags_t             flags,
-	vm_tag_t                tag)
-{
-	kmem_guard_t guard = {
-		.kmg_tag = tag,
-	};
-	kmem_return_t kmr;
+kernel_memory_allocate(vm_map_t map, vm_offset_t *addrp, vm_size_t size,
+                       vm_offset_t mask, kma_flags_t flags, vm_tag_t tag) {
+  kmem_guard_t guard = {
+      .kmg_tag = tag,
+  };
+  kmem_return_t kmr;
 
-	kmr = kmem_alloc_guard(map, size, mask, flags, guard);
-	if (kmr.kmr_return == KERN_SUCCESS) {
-		__builtin_assume(kmr.kmr_address != 0);
-	} else {
-		__builtin_assume(kmr.kmr_address == 0);
-	}
-	*addrp = kmr.kmr_address;
-	return kmr.kmr_return;
+  kmr = kmem_alloc_guard(map, size, mask, flags, guard);
+  if (kmr.kmr_return == KERN_SUCCESS) {
+    __builtin_assume(kmr.kmr_address != 0);
+  } else {
+    __builtin_assume(kmr.kmr_address == 0);
+  }
+  *addrp = kmr.kmr_address;
+  return kmr.kmr_return;
 }
 
-static inline kern_return_t
-kmem_alloc(
-	vm_map_t                map,
-	vm_offset_t            *addrp,
-	vm_size_t               size,
-	kma_flags_t             flags,
-	vm_tag_t                tag)
-{
-	return kernel_memory_allocate(map, addrp, size, 0, flags, tag);
+static inline kern_return_t kmem_alloc(vm_map_t map, vm_offset_t *addrp,
+                                       vm_size_t size, kma_flags_t flags,
+                                       vm_tag_t tag) {
+  return kernel_memory_allocate(map, addrp, size, 0, flags, tag);
 }
 
 /*!
@@ -573,42 +551,32 @@ kmem_alloc(
  *     - @c KERN_NO_SPACE if the target map is out of address space.
  *     - @c KERN_RESOURCE_SHORTAGE if the kernel is out of pages.
  */
-extern kmem_return_t kmem_alloc_contig_guard(
-	vm_map_t                map,
-	vm_size_t               size,
-	vm_offset_t             mask,
-	ppnum_t                 max_pnum,
-	ppnum_t                 pnum_mask,
-	kma_flags_t             flags,
-	kmem_guard_t            guard);
+extern kmem_return_t kmem_alloc_contig_guard(vm_map_t map, vm_size_t size,
+                                             vm_offset_t mask, ppnum_t max_pnum,
+                                             ppnum_t pnum_mask,
+                                             kma_flags_t flags,
+                                             kmem_guard_t guard);
 
-static inline kern_return_t
-kmem_alloc_contig(
-	vm_map_t                map,
-	vm_offset_t            *addrp,
-	vm_size_t               size,
-	vm_offset_t             mask,
-	ppnum_t                 max_pnum,
-	ppnum_t                 pnum_mask,
-	kma_flags_t             flags,
-	vm_tag_t                tag)
-{
-	kmem_guard_t guard = {
-		.kmg_tag = tag,
-	};
-	kmem_return_t kmr;
+static inline kern_return_t kmem_alloc_contig(vm_map_t map, vm_offset_t *addrp,
+                                              vm_size_t size, vm_offset_t mask,
+                                              ppnum_t max_pnum,
+                                              ppnum_t pnum_mask,
+                                              kma_flags_t flags, vm_tag_t tag) {
+  kmem_guard_t guard = {
+      .kmg_tag = tag,
+  };
+  kmem_return_t kmr;
 
-	kmr = kmem_alloc_contig_guard(map, size, mask,
-	    max_pnum, pnum_mask, flags, guard);
-	if (kmr.kmr_return == KERN_SUCCESS) {
-		__builtin_assume(kmr.kmr_address != 0);
-	} else {
-		__builtin_assume(kmr.kmr_address == 0);
-	}
-	*addrp = kmr.kmr_address;
-	return kmr.kmr_return;
+  kmr = kmem_alloc_contig_guard(map, size, mask, max_pnum, pnum_mask, flags,
+                                guard);
+  if (kmr.kmr_return == KERN_SUCCESS) {
+    __builtin_assume(kmr.kmr_address != 0);
+  } else {
+    __builtin_assume(kmr.kmr_address == 0);
+  }
+  *addrp = kmr.kmr_address;
+  return kmr.kmr_return;
 }
-
 
 /*!
  * @typedef kms_flags_t
@@ -616,21 +584,22 @@ kmem_alloc_contig(
  * @brief
  * Flags used by @c kmem_suballoc.
  */
-__options_decl(kms_flags_t, uint32_t, {
-	KMS_NONE            = KMEM_NONE,
+__options_decl(kms_flags_t, uint32_t,
+               {
+                   KMS_NONE = KMEM_NONE,
 
-	/* Call behavior */
-	KMS_NOFAIL          = KMEM_NOFAIL,
-	KMS_NOSOFTLIMIT     = KMEM_NOSOFTLIMIT,
+                   /* Call behavior */
+                   KMS_NOFAIL = KMEM_NOFAIL,
+                   KMS_NOSOFTLIMIT = KMEM_NOSOFTLIMIT,
 
-	/* How to look for addresses */
-	KMS_LAST_FREE       = KMEM_LAST_FREE,
-	KMS_DATA            = KMEM_DATA,
-	KMS_DATA_SHARED     = KMEM_DATA_SHARED,
+                   /* How to look for addresses */
+                   KMS_LAST_FREE = KMEM_LAST_FREE,
+                   KMS_DATA = KMEM_DATA,
+                   KMS_DATA_SHARED = KMEM_DATA_SHARED,
 
-	/* Entry properties */
-	KMS_PERMANENT       = KMEM_PERMANENT,
-});
+                   /* Entry properties */
+                   KMS_PERMANENT = KMEM_PERMANENT,
+               });
 
 /*!
  * @function kmem_suballoc()
@@ -646,15 +615,11 @@ __options_decl(kms_flags_t, uint32_t, {
  * @param flags         a set of @c KMS_* flags, (@see @c kmem_flags_t)
  * @param tag           the tag for this submap's entry.
  */
-extern kmem_return_t kmem_suballoc(
-	vm_map_t                parent,
-	mach_vm_offset_t       *addr,
-	vm_size_t               size,
-	vm_map_create_options_t vmc_options,
-	int                     vm_flags,
-	kms_flags_t             flags,
-	vm_tag_t                tag);
-
+extern kmem_return_t kmem_suballoc(vm_map_t parent, mach_vm_offset_t *addr,
+                                   vm_size_t size,
+                                   vm_map_create_options_t vmc_options,
+                                   int vm_flags, kms_flags_t flags,
+                                   vm_tag_t tag);
 
 #pragma mark kmem reallocation
 
@@ -664,41 +629,44 @@ extern kmem_return_t kmem_suballoc(
  * @brief
  * Flags used by the @c kmem_realloc* family of flags.
  */
-__options_decl(kmr_flags_t, uint32_t, {
-	KMR_NONE            = KMEM_NONE,
+__options_decl(kmr_flags_t, uint32_t,
+               {
+                   KMR_NONE = KMEM_NONE,
 
-	/* Call behavior */
-	KMR_NOPAGEWAIT      = KMEM_NOPAGEWAIT,
-	KMR_FREEOLD         = KMEM_FREEOLD,
-	KMR_REALLOCF        = KMEM_REALLOCF,
+                   /* Call behavior */
+                   KMR_NOPAGEWAIT = KMEM_NOPAGEWAIT,
+                   KMR_FREEOLD = KMEM_FREEOLD,
+                   KMR_REALLOCF = KMEM_REALLOCF,
 
-	/* How the entry is populated */
-	KMR_ZERO            = KMEM_ZERO,
+                   /* How the entry is populated */
+                   KMR_ZERO = KMEM_ZERO,
 
-	/* VM object to use for the entry */
-	KMR_KOBJECT         = KMEM_KOBJECT,
+                   /* VM object to use for the entry */
+                   KMR_KOBJECT = KMEM_KOBJECT,
 
-	/* How to look for addresses */
-	KMR_LOMEM           = KMEM_LOMEM,
-	KMR_LAST_FREE       = KMEM_LAST_FREE,
-	KMR_DATA            = KMEM_DATA,
-	KMR_DATA_SHARED     = KMEM_DATA_SHARED,
-	KMR_SPRAYQTN        = KMEM_SPRAYQTN,
+                   /* How to look for addresses */
+                   KMR_LOMEM = KMEM_LOMEM,
+                   KMR_LAST_FREE = KMEM_LAST_FREE,
+                   KMR_DATA = KMEM_DATA,
+                   KMR_DATA_SHARED = KMEM_DATA_SHARED,
+                   KMR_SPRAYQTN = KMEM_SPRAYQTN,
 
-	/* Entry properties */
-	KMR_GUARD_FIRST     = KMEM_GUARD_FIRST,
-	KMR_GUARD_LAST      = KMEM_GUARD_LAST,
-	KMR_KASAN_GUARD     = KMEM_KASAN_GUARD,
-	KMR_TAG             = KMEM_TAG,
-});
+                   /* Entry properties */
+                   KMR_GUARD_FIRST = KMEM_GUARD_FIRST,
+                   KMR_GUARD_LAST = KMEM_GUARD_LAST,
+                   KMR_KASAN_GUARD = KMEM_KASAN_GUARD,
+                   KMR_TAG = KMEM_TAG,
+               });
 
-#define KMEM_REALLOC_FLAGS_VALID(flags) \
-	(((flags) & (KMR_KOBJECT | KMEM_GUARD_LAST | KMEM_KASAN_GUARD | KMR_DATA)) == KMR_DATA \
-	|| ((flags) & (KMR_KOBJECT | KMEM_GUARD_LAST | KMEM_KASAN_GUARD | KMR_DATA_SHARED)) == KMR_DATA_SHARED \
-	|| ((flags) & KMR_FREEOLD) \
-	&& (((flags) & (KMR_DATA | KMR_DATA_SHARED)) != (KMR_DATA | KMR_DATA_SHARED)) \
-	&& (((flags) & (KMA_PAGEABLE | KMA_DATA)) != (KMA_PAGEABLE | KMA_DATA)))
-
+#define KMEM_REALLOC_FLAGS_VALID(flags)                                        \
+  (((flags) & (KMR_KOBJECT | KMEM_GUARD_LAST | KMEM_KASAN_GUARD |              \
+               KMR_DATA)) == KMR_DATA ||                                       \
+   ((flags) & (KMR_KOBJECT | KMEM_GUARD_LAST | KMEM_KASAN_GUARD |              \
+               KMR_DATA_SHARED)) == KMR_DATA_SHARED ||                         \
+   ((flags) & KMR_FREEOLD) &&                                                  \
+       (((flags) & (KMR_DATA | KMR_DATA_SHARED)) !=                            \
+        (KMR_DATA | KMR_DATA_SHARED)) &&                                       \
+       (((flags) & (KMA_PAGEABLE | KMA_DATA)) != (KMA_PAGEABLE | KMA_DATA)))
 
 /*!
  * @function kmem_realloc_guard()
@@ -739,15 +707,12 @@ __options_decl(kmr_flags_t, uint32_t, {
  *     - @c KERN_NO_SPACE if the target map is out of address space.
  *     - @c KERN_RESOURCE_SHORTAGE if the kernel is out of pages.
  */
-extern kmem_return_t kmem_realloc_guard(
-	vm_map_t                map,
-	vm_offset_t             oldaddr,
-	vm_size_t               oldsize,
-	vm_size_t               newsize,
-	kmr_flags_t             flags,
-	kmem_guard_t            guard) __result_use_check
-__attribute__((diagnose_if(!KMEM_REALLOC_FLAGS_VALID(flags),
-    "invalid realloc flags passed", "error")));
+extern kmem_return_t kmem_realloc_guard(vm_map_t map, vm_offset_t oldaddr,
+                                        vm_size_t oldsize, vm_size_t newsize,
+                                        kmr_flags_t flags,
+                                        kmem_guard_t guard) __result_use_check
+    __attribute__((diagnose_if(!KMEM_REALLOC_FLAGS_VALID(flags),
+                               "invalid realloc flags passed", "error")));
 
 /*!
  * @function kmem_realloc_should_free()
@@ -759,14 +724,10 @@ __attribute__((diagnose_if(!KMEM_REALLOC_FLAGS_VALID(flags),
  * @param oldaddr       the "oldaddr" passed to @c kmem_realloc_guard().
  * @param kmr           the result of that @c kmem_realloc_should_free() call.
  */
-static inline bool
-kmem_realloc_should_free(
-	vm_offset_t             oldaddr,
-	kmem_return_t           kmr)
-{
-	return oldaddr && oldaddr != kmr.kmr_address;
+static inline bool kmem_realloc_should_free(vm_offset_t oldaddr,
+                                            kmem_return_t kmr) {
+  return oldaddr && oldaddr != kmr.kmr_address;
 }
-
 
 #pragma mark kmem free
 
@@ -776,23 +737,23 @@ kmem_realloc_should_free(
  * @brief
  * Flags used by the @c kmem_free* family of flags.
  */
-__options_decl(kmf_flags_t, uint32_t, {
-	KMF_NONE            = KMEM_NONE,
+__options_decl(kmf_flags_t, uint32_t,
+               {
+                   KMF_NONE = KMEM_NONE,
 
-	/* Call behavior */
+                   /* Call behavior */
 
-	/* How the entry is populated */
+                   /* How the entry is populated */
 
-	/* How to look for addresses */
-	KMF_GUESS_SIZE      = KMEM_GUESS_SIZE,
+                   /* How to look for addresses */
+                   KMF_GUESS_SIZE = KMEM_GUESS_SIZE,
 
-	/* Entry properties */
-	KMF_GUARD_FIRST     = KMEM_GUARD_FIRST,
-	KMF_GUARD_LAST      = KMEM_GUARD_LAST,
-	KMF_KASAN_GUARD     = KMEM_KASAN_GUARD,
-	KMF_TAG             = KMEM_TAG,
-});
-
+                   /* Entry properties */
+                   KMF_GUARD_FIRST = KMEM_GUARD_FIRST,
+                   KMF_GUARD_LAST = KMEM_GUARD_LAST,
+                   KMF_KASAN_GUARD = KMEM_KASAN_GUARD,
+                   KMF_TAG = KMEM_TAG,
+               });
 
 /*!
  * @function kmem_free_guard()
@@ -809,34 +770,18 @@ __options_decl(kmf_flags_t, uint32_t, {
  * @returns             the size of the entry that was deleted.
  *                      (useful when @c KMF_GUESS_SIZE was used)
  */
-extern vm_size_t kmem_free_guard(
-	vm_map_t                map,
-	vm_offset_t             addr,
-	vm_size_t               size,
-	kmf_flags_t             flags,
-	kmem_guard_t            guard);
+extern vm_size_t kmem_free_guard(vm_map_t map, vm_offset_t addr, vm_size_t size,
+                                 kmf_flags_t flags, kmem_guard_t guard);
 
-__attribute__((overloadable))
-static inline void
-kmem_free(
-	vm_map_t                map,
-	vm_offset_t             addr,
-	vm_size_t               size,
-	kmf_flags_t             flags)
-{
-	kmem_free_guard(map, addr, size, flags, KMEM_GUARD_NONE);
+__attribute__((overloadable)) static inline void
+kmem_free(vm_map_t map, vm_offset_t addr, vm_size_t size, kmf_flags_t flags) {
+  kmem_free_guard(map, addr, size, flags, KMEM_GUARD_NONE);
 }
 
-__attribute__((overloadable))
-static inline void
-kmem_free(
-	vm_map_t                map,
-	vm_offset_t             addr,
-	vm_size_t               size)
-{
-	kmem_free(map, addr, size, KMF_NONE);
+__attribute__((overloadable)) static inline void
+kmem_free(vm_map_t map, vm_offset_t addr, vm_size_t size) {
+  kmem_free(map, addr, size, KMF_NONE);
 }
-
 
 #pragma mark kmem population
 
@@ -867,12 +812,8 @@ kmem_free(
  * - KERN_RESOURCE_SHORTAGE
  *                      the kernel was out of physical pages.
  */
-extern kern_return_t kernel_memory_populate(
-	vm_offset_t             addr,
-	vm_size_t               size,
-	kma_flags_t             flags,
-	vm_tag_t                tag);
-
+extern kern_return_t kernel_memory_populate(vm_offset_t addr, vm_size_t size,
+                                            kma_flags_t flags, vm_tag_t tag);
 
 /*!
  * @function kernel_memory_depopulate()
@@ -903,12 +844,8 @@ extern kern_return_t kernel_memory_populate(
  * @param tag           the kernel memory tag to use for accounting purposes,
  *                      which must match the tag used for population.
  */
-extern void kernel_memory_depopulate(
-	vm_offset_t             addr,
-	vm_size_t               size,
-	kma_flags_t             flags,
-	vm_tag_t                tag);
-
+extern void kernel_memory_depopulate(vm_offset_t addr, vm_size_t size,
+                                     kma_flags_t flags, vm_tag_t tag);
 
 #pragma mark - VM_FLAGS_* / vm_map_kernel_flags_t conversions
 
@@ -917,8 +854,7 @@ extern void kernel_memory_depopulate(
  *
  * @return The vmflags set in the specified @c vmk_flags.
  */
-extern int vm_map_kernel_flags_vmflags(
-	vm_map_kernel_flags_t    vmk_flags);
+extern int vm_map_kernel_flags_vmflags(vm_map_kernel_flags_t vmk_flags);
 
 /*!
  * @function vm_map_kernel_flags_set_vmflags()
@@ -927,11 +863,9 @@ extern int vm_map_kernel_flags_vmflags(
  * Populates the @c vmf_* and @c vm_tag fields of the vmk flags,
  * with the specified vm flags (@c VM_FLAG_* from <mach/vm_statistics.h>).
  */
-__attribute__((overloadable))
-extern void vm_map_kernel_flags_set_vmflags(
-	vm_map_kernel_flags_t  *vmk_flags,
-	int                     vm_flags,
-	vm_tag_t                vm_tag);
+__attribute__((overloadable)) extern void
+vm_map_kernel_flags_set_vmflags(vm_map_kernel_flags_t *vmk_flags, int vm_flags,
+                                vm_tag_t vm_tag);
 
 /*!
  * @function vm_map_kernel_flags_set_vmflags()
@@ -943,10 +877,9 @@ extern void vm_map_kernel_flags_set_vmflags(
  * @discussion
  * This variant takes the tag from the top byte of the flags.
  */
-__attribute__((overloadable))
-extern void vm_map_kernel_flags_set_vmflags(
-	vm_map_kernel_flags_t  *vmk_flags,
-	int                     vm_flags_and_tag);
+__attribute__((overloadable)) extern void
+vm_map_kernel_flags_set_vmflags(vm_map_kernel_flags_t *vmk_flags,
+                                int vm_flags_and_tag);
 
 /*!
  * @function vm_map_kernel_flags_and_vmflags()
@@ -954,9 +887,8 @@ extern void vm_map_kernel_flags_set_vmflags(
  * @brief
  * Apply a mask to the vmflags.
  */
-extern void vm_map_kernel_flags_and_vmflags(
-	vm_map_kernel_flags_t   *vmk_flags,
-	int                      vm_flags_mask);
+extern void vm_map_kernel_flags_and_vmflags(vm_map_kernel_flags_t *vmk_flags,
+                                            int vm_flags_mask);
 
 /*!
  * @function vm_map_kernel_flags_check_vmflags()
@@ -965,9 +897,8 @@ extern void vm_map_kernel_flags_and_vmflags(
  * Whether the @c vmk_flags @c vmf_* fields
  * are limited to the specified mask.
  */
-extern bool vm_map_kernel_flags_check_vmflags(
-	vm_map_kernel_flags_t   vmk_flags,
-	int                     vm_flags_mask);
+extern bool vm_map_kernel_flags_check_vmflags(vm_map_kernel_flags_t vmk_flags,
+                                              int vm_flags_mask);
 
 /*!
  * @function vm_map_kernel_flags_check_vm_and_kflags()
@@ -976,10 +907,9 @@ extern bool vm_map_kernel_flags_check_vmflags(
  * Whether the @c vmk_flags @c vmf_* fields
  * are limited to the specified mask.
  */
-extern bool vm_map_kernel_flags_check_vm_and_kflags(
-	vm_map_kernel_flags_t   vmk_flags,
-	int                     vm_flags_mask);
-
+extern bool
+vm_map_kernel_flags_check_vm_and_kflags(vm_map_kernel_flags_t vmk_flags,
+                                        int vm_flags_mask);
 
 #pragma mark - kernel variants of the Mach VM interfaces
 
@@ -1033,12 +963,10 @@ extern bool vm_map_kernel_flags_check_vm_and_kflags(
  * @returns             KERN_SUCCESS when the operation succeeds,
  *                      or an error denoting the reason for failure.
  */
-extern kern_return_t    mach_vm_allocate_kernel(
-	vm_map_t                map,
-	mach_vm_offset_ut      *addr_u,
-	mach_vm_size_ut         size_u,
-	vm_map_kernel_flags_t   vmk_flags);
-
+extern kern_return_t mach_vm_allocate_kernel(vm_map_t map,
+                                             mach_vm_offset_ut *addr_u,
+                                             mach_vm_size_ut size_u,
+                                             vm_map_kernel_flags_t vmk_flags);
 
 /*!
  * @function mach_vm_map_kernel()
@@ -1061,8 +989,8 @@ extern kern_return_t    mach_vm_allocate_kernel(
  *
  *                            when @c vmk_flags.vmf_fixed is not set,
  *                            the value of @c *address is used as a starting
- *                            point from which to scan for memory in the direction
- *                            specified by @c vmk_flags.vmkf_last_free.
+ *                            point from which to scan for memory in the
+ * direction specified by @c vmk_flags.vmkf_last_free.
  *
  *                      [out] filled with the address at which the allocation
  *                            was made on success, unmodified otherwise.
@@ -1109,19 +1037,11 @@ extern kern_return_t    mach_vm_allocate_kernel(
  * @returns             KERN_SUCCESS when the operation succeeds,
  *                      or an error denoting the reason for failure.
  */
-extern kern_return_t    mach_vm_map_kernel(
-	vm_map_t                target_map,
-	mach_vm_offset_ut      *address,
-	mach_vm_size_ut         size,
-	mach_vm_offset_ut       mask,
-	vm_map_kernel_flags_t   vmk_flags,
-	ipc_port_t              port,
-	memory_object_offset_ut offset,
-	boolean_t               copy,
-	vm_prot_ut              cur_prot,
-	vm_prot_ut              max_prot,
-	vm_inherit_ut           inheritance);
-
+extern kern_return_t mach_vm_map_kernel(
+    vm_map_t target_map, mach_vm_offset_ut *address, mach_vm_size_ut size,
+    mach_vm_offset_ut mask, vm_map_kernel_flags_t vmk_flags, ipc_port_t port,
+    memory_object_offset_ut offset, boolean_t copy, vm_prot_ut cur_prot,
+    vm_prot_ut max_prot, vm_inherit_ut inheritance);
 
 /*!
  * @function mach_vm_remap_new_kernel()
@@ -1147,8 +1067,8 @@ extern kern_return_t    mach_vm_map_kernel(
  *
  *                            when @c vmk_flags.vmf_fixed is not set,
  *                            the value of @c *address is used as a starting
- *                            point from which to scan for memory in the direction
- *                            specified by @c vmk_flags.vmkf_last_free.
+ *                            point from which to scan for memory in the
+ * direction specified by @c vmk_flags.vmkf_last_free.
  *
  *                      [out] filled with the address at which the allocation
  *                            was made on success, unmodified otherwise.
@@ -1177,7 +1097,8 @@ extern kern_return_t    mach_vm_map_kernel(
  * @param cur_prot      [in]  for shared mappings, the minimum set of effective
  *                            permissions the source mapping must have
  *
- *                      [out] the resulting effective permissions for the mapping
+ *                      [out] the resulting effective permissions for the
+ * mapping
  *
  * @param max_prot      [in]  for shared mappings, the minimum set of maximum
  *                            permissions the source mappings must have.
@@ -1189,18 +1110,11 @@ extern kern_return_t    mach_vm_map_kernel(
  * @returns             KERN_SUCCESS when the operation succeeds,
  *                      or an error denoting the reason for failure.
  */
-extern kern_return_t    mach_vm_remap_new_kernel(
-	vm_map_t                target_map,
-	mach_vm_offset_ut      *address,
-	mach_vm_size_ut         size,
-	mach_vm_offset_ut       mask,
-	vm_map_kernel_flags_t   vmk_flags,
-	vm_map_t                src_map,
-	mach_vm_offset_ut       src_address,
-	boolean_t               copy,
-	vm_prot_ut             *cur_prot,
-	vm_prot_ut             *max_prot,
-	vm_inherit_ut           inheritance);
+extern kern_return_t mach_vm_remap_new_kernel(
+    vm_map_t target_map, mach_vm_offset_ut *address, mach_vm_size_ut size,
+    mach_vm_offset_ut mask, vm_map_kernel_flags_t vmk_flags, vm_map_t src_map,
+    mach_vm_offset_ut src_address, boolean_t copy, vm_prot_ut *cur_prot,
+    vm_prot_ut *max_prot, vm_inherit_ut inheritance);
 
 /*!
  * @function vm_map_wire_kernel()
@@ -1214,15 +1128,13 @@ extern kern_return_t    mach_vm_remap_new_kernel(
  * is that the caller must specify a valid @c VM_KERN_MEMORY_* tag for kernel
  * wirings, or a valid @c VM_MEMORY_* tag for user wirings.
  *
- * Consult the documentation of @c vm_map_wire() in @c <vm/vm_map.h> for details.
+ * Consult the documentation of @c vm_map_wire() in @c <vm/vm_map.h> for
+ * details.
  */
-extern kern_return_t    vm_map_wire_kernel(
-	vm_map_t                map,
-	vm_map_offset_ut        start_u,
-	vm_map_offset_ut        end_u,
-	vm_prot_ut              prot_u,
-	vm_tag_t                tag,
-	boolean_t               user_wire);
+extern kern_return_t vm_map_wire_kernel(vm_map_t map, vm_map_offset_ut start_u,
+                                        vm_map_offset_ut end_u,
+                                        vm_prot_ut prot_u, vm_tag_t tag,
+                                        boolean_t user_wire);
 
 /*!
  * @function vm_map_purgable_control()
@@ -1245,22 +1157,17 @@ extern kern_return_t    vm_map_wire_kernel(
  * @param control       a purgeability operation to perform.
  * @param state         an in/out parameter that is operation dependent.
  */
-extern kern_return_t vm_map_purgable_control(
-	vm_map_t                map,
-	vm_map_offset_ut        address,
-	vm_purgable_t           control,
-	int                    *state);
+extern kern_return_t vm_map_purgable_control(vm_map_t map,
+                                             vm_map_offset_ut address,
+                                             vm_purgable_t control, int *state);
 
-extern kern_return_t mach_vm_purgable_control(
-	vm_map_t                map,
-	mach_vm_offset_ut       address_u,
-	vm_purgable_t           control,
-	int                    *state);
-
+extern kern_return_t mach_vm_purgable_control(vm_map_t map,
+                                              mach_vm_offset_ut address_u,
+                                              vm_purgable_t control,
+                                              int *state);
 
 #ifdef MACH_KERNEL_PRIVATE
 #pragma mark - map copyio
-
 
 /*!
  * @function copyinmap()
@@ -1278,12 +1185,9 @@ extern kern_return_t mach_vm_purgable_control(
  *                      a fault occurred during copyio and couldn't be resolved
  *                      (similar to copyin returning EFAULT).
  */
-extern kern_return_t     copyinmap(
-	vm_map_t                map,
-	vm_map_offset_t         fromaddr,
-	void                   *todata __sized_by(length),
-	vm_size_t               length);
-
+extern kern_return_t copyinmap(vm_map_t map, vm_map_offset_t fromaddr,
+                               void *todata __sized_by(length),
+                               vm_size_t length);
 
 /*!
  * @function copyoutmap()
@@ -1301,12 +1205,8 @@ extern kern_return_t     copyinmap(
  *                      a fault occurred during copyio and couldn't be resolved
  *                      (similar to copyin returning EFAULT).
  */
-extern kern_return_t     copyoutmap(
-	vm_map_t                map,
-	void                   *fromdata __sized_by(length),
-	vm_map_offset_t         toaddr,
-	vm_size_t               length);
-
+extern kern_return_t copyoutmap(vm_map_t map, void *fromdata __sized_by(length),
+                                vm_map_offset_t toaddr, vm_size_t length);
 
 /*!
  * @function copyoutmap_atomic32()
@@ -1323,11 +1223,8 @@ extern kern_return_t     copyoutmap(
  *                      a fault occurred during copyio and couldn't be resolved
  *                      (similar to copyin returning EFAULT).
  */
-extern kern_return_t     copyoutmap_atomic32(
-	vm_map_t                map,
-	uint32_t                value,
-	vm_map_offset_t         toaddr);
-
+extern kern_return_t copyoutmap_atomic32(vm_map_t map, uint32_t value,
+                                         vm_map_offset_t toaddr);
 
 /*!
  * @function copyoutmap_atomic64()
@@ -1344,11 +1241,8 @@ extern kern_return_t     copyoutmap_atomic32(
  *                      a fault occurred during copyio and couldn't be resolved
  *                      (similar to copyin returning EFAULT).
  */
-extern kern_return_t     copyoutmap_atomic64(
-	vm_map_t                map,
-	uint64_t                value,
-	vm_map_offset_t         toaddr);
-
+extern kern_return_t copyoutmap_atomic64(vm_map_t map, uint64_t value,
+                                         vm_map_offset_t toaddr);
 
 #endif /* MACH_KERNEL_PRIVATE */
 #pragma mark - accounting
@@ -1377,11 +1271,8 @@ extern kern_return_t     copyoutmap_atomic64(
  *                      negative values decrement.
  * @param object        an optional object this wiring/unwiring applies to.
  */
-extern void             kern_allocation_update_size(
-	kern_allocation_name_t  allocation,
-	int64_t                 delta,
-	vm_object_t             object);
-
+extern void kern_allocation_update_size(kern_allocation_name_t allocation,
+                                        int64_t delta, vm_object_t object);
 
 /*!
  * @function kern_allocation_update_subtotal()
@@ -1402,11 +1293,8 @@ extern void             kern_allocation_update_size(
  *                      positive values increment,
  *                      negative values decrement.
  */
-extern void             kern_allocation_update_subtotal(
-	kern_allocation_name_t  allocation,
-	vm_tag_t                subtag,
-	int64_t                 delta);
-
+extern void kern_allocation_update_subtotal(kern_allocation_name_t allocation,
+                                            vm_tag_t subtag, int64_t delta);
 
 #pragma mark accounting: vm tags
 
@@ -1474,8 +1362,7 @@ extern void             kern_allocation_update_subtotal(
  * @brief
  * Lock used to serialize the @c vm_tag_alloc() operation, used by IOKit.
  */
-extern lck_ticket_t     vm_allocation_sites_lock;
-
+extern lck_ticket_t vm_allocation_sites_lock;
 
 /*!
  * @function vm_tag_bt()
@@ -1496,8 +1383,7 @@ extern lck_ticket_t     vm_allocation_sites_lock;
  *                      from a kernel extension, or allocating a dynamic tag
  *                      for it failed.
  */
-extern vm_tag_t         vm_tag_bt(void);
-
+extern vm_tag_t vm_tag_bt(void);
 
 /*!
  * @function vm_tag_alloc()
@@ -1517,8 +1403,7 @@ extern vm_tag_t         vm_tag_bt(void);
  *                      or @c VM_KERN_MEMORY_NONE if the kernel
  *                      is out of dynamic tags.
  */
-extern vm_tag_t         vm_tag_alloc(
-	vm_allocation_site_t   *site);
+extern vm_tag_t vm_tag_alloc(vm_allocation_site_t *site);
 
 /*!
  * @function vm_tag_alloc_locked()
@@ -1537,10 +1422,8 @@ extern vm_tag_t         vm_tag_alloc(
  *                      that the caller is responsible for releasing
  *                      with @c kern_allocation_name_release().
  */
-extern void             vm_tag_alloc_locked(
-	vm_allocation_site_t   *site,
-	vm_allocation_site_t  **releasesiteP);
-
+extern void vm_tag_alloc_locked(vm_allocation_site_t *site,
+                                vm_allocation_site_t **releasesiteP);
 
 /*!
  * @function vm_tag_update_size()
@@ -1563,11 +1446,7 @@ extern void             vm_tag_alloc_locked(
  *                      negative values decrement.
  * @param object        an optional object this wiring/unwiring applies to.
  */
-extern void             vm_tag_update_size(
-	vm_tag_t                tag,
-	int64_t                 delta,
-	vm_object_t             object);
-
+extern void vm_tag_update_size(vm_tag_t tag, int64_t delta, vm_object_t object);
 
 /*!
  * @function vm_tag_get_size()
@@ -1579,8 +1458,7 @@ extern void             vm_tag_update_size(
  * @param tag           A non @c VM_KERN_MEMORY_NONE VM kernel tag.
  * @returns             the amount of wired memory for the specified tag.
  */
-extern uint64_t         vm_tag_get_size(
-	vm_tag_t                tag);
+extern uint64_t vm_tag_get_size(vm_tag_t tag);
 
 #if VM_TAG_SIZECLASSES
 
@@ -1620,10 +1498,7 @@ extern uint64_t         vm_tag_get_size(
  *                      @c VM_KERN_MEMORY_NONE if the accounting
  *                      data structure couldn't be allocated.
  */
-extern vm_tag_t         vm_tag_will_update_zone(
-	vm_tag_t                tag,
-	uint32_t                zflags);
-
+extern vm_tag_t vm_tag_will_update_zone(vm_tag_t tag, uint32_t zflags);
 
 /*!
  * @function vm_tag_update_zone_size()
@@ -1641,10 +1516,8 @@ extern vm_tag_t         vm_tag_will_update_zone(
  *                      positive values increment,
  *                      negative values decrement.
  */
-extern void             vm_tag_update_zone_size(
-	vm_tag_t                tag,
-	uint32_t                size_class,
-	long                    delta);
+extern void vm_tag_update_zone_size(vm_tag_t tag, uint32_t size_class,
+                                    long delta);
 
 #endif /* VM_TAG_SIZECLASSES */
 
@@ -1658,8 +1531,7 @@ extern void             vm_tag_update_zone_size(
  * are needed in order to return information about VM kernel tags,
  * and per size class zone level accounting when enabled.
  */
-extern uint32_t         vm_page_diagnose_estimate(void);
-
+extern uint32_t vm_page_diagnose_estimate(void);
 
 /*!
  * @function vm_page_diagnose()
@@ -1681,11 +1553,10 @@ extern uint32_t         vm_page_diagnose_estimate(void);
  * - KERN_SUCCESS       the call was successful.
  * - KERN_ABORTED       the accounting subsytem isn't inititalized yet.
  */
-extern kern_return_t    vm_page_diagnose(
-	struct mach_memory_info *info __counted_by(num_info),
-	unsigned int            num_info,
-	uint64_t                zones_collectable_bytes,
-	bool                    redact_info);
+extern kern_return_t
+vm_page_diagnose(struct mach_memory_info *info __counted_by(num_info),
+                 unsigned int num_info, uint64_t zones_collectable_bytes,
+                 bool redact_info);
 
 #if DEBUG || DEVELOPMENT
 
@@ -1697,12 +1568,11 @@ extern kern_return_t    vm_page_diagnose(
  * of kmem.
  */
 typedef struct {
-	vm_map_size_t meta_sz;        /**< total faulted size of metadata */
-	vm_map_size_t pte_sz;         /**< total faulted leaf PTE size    */
-	vm_map_size_t total_va;       /**< total amount of VA ever used   */
-	vm_map_size_t total_used;     /**< current amount of VA allocated */
+  vm_map_size_t meta_sz;    /**< total faulted size of metadata */
+  vm_map_size_t pte_sz;     /**< total faulted leaf PTE size    */
+  vm_map_size_t total_va;   /**< total amount of VA ever used   */
+  vm_map_size_t total_used; /**< current amount of VA allocated */
 } kmem_gobj_stats;
-
 
 /*!
  * @function kmem_get_gobj_stats()
@@ -1713,8 +1583,7 @@ typedef struct {
  * @description
  * This is the backend of the @c vm.kmem_gobj_stats sysctl.
  */
-extern kmem_gobj_stats  kmem_get_gobj_stats(void);
-
+extern kmem_gobj_stats kmem_get_gobj_stats(void);
 
 /*!
  * @function vm_kern_allocation_info()
@@ -1737,11 +1606,9 @@ extern kmem_gobj_stats  kmem_get_gobj_stats(void);
  * - KERN_INVALID_ADDRESS
  *                      if the address couldn't be resolved in the kernel heap.
  */
-extern kern_return_t    vm_kern_allocation_info(
-	uintptr_t               addr,
-	vm_size_t              *size,
-	vm_tag_t               *tag,
-	vm_size_t              *zone_size);
+extern kern_return_t vm_kern_allocation_info(uintptr_t addr, vm_size_t *size,
+                                             vm_tag_t *tag,
+                                             vm_size_t *zone_size);
 
 #endif /* DEBUG || DEVELOPMENT */
 
@@ -1757,13 +1624,13 @@ extern kern_return_t    vm_kern_allocation_info(
  * The captured number can be seen as the @c VM_KERN_COUNT_WIRED_BOOT value
  * in the output of @c zprint(1).
  */
-extern void             vm_init_before_launchd(void);
+extern void vm_init_before_launchd(void);
 
 #if DEVELOPMENT || DEBUG
 
-extern kern_return_t    vm_tag_reset_peak(vm_tag_t tag);
+extern kern_return_t vm_tag_reset_peak(vm_tag_t tag);
 
-extern void             vm_tag_reset_all_peaks(void);
+extern void vm_tag_reset_all_peaks(void);
 
 #endif /* DEVELOPMENT || DEBUG */
 
@@ -1776,17 +1643,19 @@ extern void             vm_tag_reset_all_peaks(void);
  * Initialize the per-zone accounting tags subsystem
  * if the "-zt" boot-arg is present.
  */
-extern void             vm_allocation_zones_init(void);
+extern void vm_allocation_zones_init(void);
 
 #endif /* VM_TAG_SIZECLASSES */
 
-extern memory_object_t device_pager_setup(memory_object_t, uintptr_t, vm_size_t, int);
+extern memory_object_t device_pager_setup(memory_object_t, uintptr_t, vm_size_t,
+                                          int);
 
-extern kern_return_t device_pager_populate_object( memory_object_t device,
-    memory_object_offset_t offset, ppnum_t page_num, vm_size_t size);
+extern kern_return_t device_pager_populate_object(memory_object_t device,
+                                                  memory_object_offset_t offset,
+                                                  ppnum_t page_num,
+                                                  vm_size_t size);
 
 #endif /* XNU_KERNEL_PRIVATE */
-__exported_pop
-__END_DECLS
+__exported_pop __END_DECLS
 
-#endif  /* _VM_VM_KERN_XNU_H_ */
+#endif /* _VM_VM_KERN_XNU_H_ */

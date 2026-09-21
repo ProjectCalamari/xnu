@@ -42,7 +42,7 @@ __BEGIN_DECLS
 /*
  * Query if this process is state-managed by RunningBoard.
  */
-typedef struct proc * proc_t;
+typedef struct proc *proc_t;
 extern bool memorystatus_get_proc_is_managed(proc_t proc);
 
 /*
@@ -91,8 +91,9 @@ extern void memorystatus_update_available_page_count(uint32_t available_pages);
 extern void memorystatus_fast_jetsam_override(bool enable_override);
 
 /*
- * Callout to jetsam. If pid is -1, we wake up the memorystatus thread to do asynchronous kills.
- * For any other pid we try to kill that process synchronously.
+ * Callout to jetsam. If pid is -1, we wake up the memorystatus thread to do
+ * asynchronous kills. For any other pid we try to kill that process
+ * synchronously.
  */
 extern bool memorystatus_kill_on_zone_map_exhaustion(pid_t pid);
 

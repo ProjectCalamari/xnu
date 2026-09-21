@@ -46,8 +46,8 @@
 __BEGIN_DECLS
 
 typedef struct {
-	uint32_t gpu_id;
-	uint32_t gpu_max_domains;
+  uint32_t gpu_id;
+  uint32_t gpu_max_domains;
 } gpu_descriptor;
 
 typedef gpu_descriptor *gpu_descriptor_t;
@@ -60,8 +60,9 @@ void gpu_describe(gpu_descriptor_t);
 #define GPU_SCOPE_MISC (0x2)
 
 /* GPU utilisation update for the current thread. */
-uint64_t gpu_accumulate_time(uint32_t scope, uint32_t gpu_id, uint32_t gpu_domain, uint64_t gpu_accumulated_ns, uint64_t gpu_tstamp_ns);
-
+uint64_t gpu_accumulate_time(uint32_t scope, uint32_t gpu_id,
+                             uint32_t gpu_domain, uint64_t gpu_accumulated_ns,
+                             uint64_t gpu_tstamp_ns);
 
 #ifdef KERNEL_PRIVATE
 
@@ -90,10 +91,10 @@ typedef uint64_t energy_id_t;
  * @param energy_id energy id for the current context
  *
  * @returns        KERN_SUCCESS     An energy id is produced
- *                 KERN_FAILURE     The current task is kernel_task or doesn't support accounting.
+ *                 KERN_FAILURE     The current task is kernel_task or doesn't
+ * support accounting.
  */
-extern kern_return_t
-current_energy_id(energy_id_t *energy_id);
+extern kern_return_t current_energy_id(energy_id_t *energy_id);
 
 /*!
  * @function task_id_token_to_energy_id()
@@ -112,14 +113,15 @@ current_energy_id(energy_id_t *energy_id);
  *                 KERN_INVALID_ARGUMENT  Passed identity token is invalid
  *                 KERN_NOT_FOUND         Cannot find task represented by token
  */
-extern kern_return_t
-task_id_token_to_energy_id(mach_port_name_t name, energy_id_t *energy_id);
+extern kern_return_t task_id_token_to_energy_id(mach_port_name_t name,
+                                                energy_id_t *energy_id);
 
 #define ENERGY_ID_NONE (0x0)
 
-__enum_decl(energy_id_source_t, uint32_t, {
-	ENERGY_ID_SOURCE_GPU = 1,
-});
+__enum_decl(energy_id_source_t, uint32_t,
+            {
+                ENERGY_ID_SOURCE_GPU = 1,
+            });
 
 /*!
  * @function energy_id_report_energy()
@@ -135,29 +137,32 @@ __enum_decl(energy_id_source_t, uint32_t, {
  * will be reported as work it did on behalf of itself (it will not be double
  * counted)
  *
- * If the provided primary ID is no longer valid, energy use will either be ignored
- * or accounted to a global 'dead' accounting bucket.
- * If the secondary ID is no longer valid, energy use will still be reported
- * in the 'on behalf of' field of the primary, and will either be ignored or
- * accounted to the global 'dead' bucket's on behalf of field.
+ * If the provided primary ID is no longer valid, energy use will either be
+ * ignored or accounted to a global 'dead' accounting bucket. If the secondary
+ * ID is no longer valid, energy use will still be reported in the 'on behalf
+ * of' field of the primary, and will either be ignored or accounted to the
+ * global 'dead' bucket's on behalf of field.
  *
- * Note that the energy ID may still be valid temporarily after energy data has been
- * snapshotted by launchd for reporting to powerlog, so energy accounted during
- * this window may be lost.
+ * Note that the energy ID may still be valid temporarily after energy data has
+ * been snapshotted by launchd for reporting to powerlog, so energy accounted
+ * during this window may be lost.
  *
  * @param energy_source     what HW entity used the energy
- * @param self_id           energy ID for the entity directly responsible for this work
- * @param on_behalf_of_id   energy ID for the entity that this work was done on behalf of
+ * @param self_id           energy ID for the entity directly responsible for
+ * this work
+ * @param on_behalf_of_id   energy ID for the entity that this work was done on
+ * behalf of
  * @param energy            energy to report in nanojoules
  *
  * @returns        KERN_SUCCESS                 Energy accounting accepted
- *                 KERN_INVALID_ARGUMENT        The entity identified by self_id is invalid
- *                 KERN_NOT_FOUND               The entity identified by self_id doesn't exist
- *                 KERN_NOT_SUPPORTED           Unknown type of energy_source
+ *                 KERN_INVALID_ARGUMENT        The entity identified by self_id
+ * is invalid KERN_NOT_FOUND               The entity identified by self_id
+ * doesn't exist KERN_NOT_SUPPORTED           Unknown type of energy_source
  */
-extern kern_return_t
-energy_id_report_energy(energy_id_source_t energy_source, energy_id_t self_id,
-    energy_id_t on_behalf_of_id, uint64_t energy);
+extern kern_return_t energy_id_report_energy(energy_id_source_t energy_source,
+                                             energy_id_t self_id,
+                                             energy_id_t on_behalf_of_id,
+                                             uint64_t energy);
 
 #endif /* KERNEL_PRIVATE */
 
@@ -187,14 +192,13 @@ energy_id_report_energy(energy_id_source_t energy_source, energy_id_t self_id,
  */
 #define IO_PRIORITY_PREDICTIVE (0x1ULL << 16)
 
-uint64_t io_rate_update(
-	uint64_t io_rate_flags, /* Rotating/NAND, IO priority level */
-	uint64_t read_ops_delta,
-	uint64_t write_ops_delta,
-	uint64_t read_bytes_delta,
-	uint64_t write_bytes_delta);
+uint64_t
+io_rate_update(uint64_t io_rate_flags, /* Rotating/NAND, IO priority level */
+               uint64_t read_ops_delta, uint64_t write_ops_delta,
+               uint64_t read_bytes_delta, uint64_t write_bytes_delta);
 
-typedef uint64_t (*io_rate_update_callback_t) (uint64_t, uint64_t, uint64_t, uint64_t, uint64_t);
+typedef uint64_t (*io_rate_update_callback_t)(uint64_t, uint64_t, uint64_t,
+                                              uint64_t, uint64_t);
 
 void io_rate_update_register(io_rate_update_callback_t);
 
@@ -207,15 +211,14 @@ void io_rate_update_register(io_rate_update_callback_t);
 #define GPU_CYCLE_COUNT_VALID (0x8)
 #define GPU_MISC_VALID (0x10)
 
-void gpu_submission_telemetry(
-	uint64_t gpu_ncmds_total,
-	uint64_t gpu_noutstanding,
-	uint64_t gpu_busy_ns_total,
-	uint64_t gpu_cycles,
-	uint64_t gpu_telemetry_valid_flags,
-	uint64_t gpu_telemetry_misc);
+void gpu_submission_telemetry(uint64_t gpu_ncmds_total,
+                              uint64_t gpu_noutstanding,
+                              uint64_t gpu_busy_ns_total, uint64_t gpu_cycles,
+                              uint64_t gpu_telemetry_valid_flags,
+                              uint64_t gpu_telemetry_misc);
 
-typedef uint64_t (*gpu_set_fceiling_t) (uint32_t gpu_fceiling_ratio, uint64_t gpu_fceiling_param);
+typedef uint64_t (*gpu_set_fceiling_t)(uint32_t gpu_fceiling_ratio,
+                                       uint64_t gpu_fceiling_param);
 
 void gpu_fceiling_cb_register(gpu_set_fceiling_t);
 

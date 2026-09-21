@@ -30,25 +30,21 @@
 
 #include <darwintest.h>
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.net"),
-	T_META_ASROOT(true),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("networking"),
-	T_META_CHECK_LEAKS(false));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.net"), T_META_ASROOT(true),
+              T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("networking"),
+              T_META_CHECK_LEAKS(false));
 
+T_DECL(mbuf_tag_test, "test mbuf packet tags ", T_META_TAG_VM_PREFERRED) {
+  size_t len;
+  int val;
 
-T_DECL(mbuf_tag_test, "test mbuf packet tags ", T_META_TAG_VM_PREFERRED)
-{
-	size_t len;
-	int val;
-
-	if (sysctlbyname("kern.ipc.mb_tag_test", NULL, &len, NULL, 0) != 0) {
-		T_SKIP("sysctl variable kern.ipc.mb_tag_test does not exist");
-		return;
-	}
-	val = 1;
-	T_ASSERT_POSIX_SUCCESS(
-		sysctlbyname("kern.ipc.mb_tag_test", NULL, NULL, &val, sizeof(val)),
-		"sysctlbyname(kern.ipc.mb_tag_test)");
+  if (sysctlbyname("kern.ipc.mb_tag_test", NULL, &len, NULL, 0) != 0) {
+    T_SKIP("sysctl variable kern.ipc.mb_tag_test does not exist");
+    return;
+  }
+  val = 1;
+  T_ASSERT_POSIX_SUCCESS(
+      sysctlbyname("kern.ipc.mb_tag_test", NULL, NULL, &val, sizeof(val)),
+      "sysctlbyname(kern.ipc.mb_tag_test)");
 }

@@ -28,5 +28,5 @@
 #ifndef _FSBLKCNT_T
 #define _FSBLKCNT_T
 #include <sys/_types.h> /* __darwin_fsblkcnt_t */
-typedef __darwin_fsblkcnt_t             fsblkcnt_t;
+typedef __darwin_fsblkcnt_t fsblkcnt_t;
 #endif /* _FSBLKCNT_T */

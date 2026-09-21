@@ -29,14 +29,14 @@
 #ifndef __KPERF_MEMINFO_H__
 #define __KPERF_MEMINFO_H__
 
-#include <mach/mach_types.h>
 #include <kern/ledger.h>
 #include <kern/task.h>
+#include <mach/mach_types.h>
 
 struct meminfo {
-	uint64_t phys_footprint;
-	uint64_t purgeable_volatile;
-	uint64_t purgeable_volatile_compressed;
+  uint64_t phys_footprint;
+  uint64_t purgeable_volatile;
+  uint64_t purgeable_volatile_compressed;
 };
 
 struct kperf_context;

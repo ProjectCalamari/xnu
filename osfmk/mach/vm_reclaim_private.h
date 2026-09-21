@@ -32,70 +32,71 @@
 #include <ptrcheck.h>
 
 #define VM_RECLAIM_MAX_BUFFER_SIZE (128ull << 20)
-#define VM_RECLAIM_MAX_CAPACITY ((VM_RECLAIM_MAX_BUFFER_SIZE - \
-	offsetof(struct mach_vm_reclaim_ring_s, entries)) / \
-	sizeof(struct mach_vm_reclaim_entry_s))
+#define VM_RECLAIM_MAX_CAPACITY                                                \
+  ((VM_RECLAIM_MAX_BUFFER_SIZE -                                               \
+    offsetof(struct mach_vm_reclaim_ring_s, entries)) /                        \
+   sizeof(struct mach_vm_reclaim_entry_s))
 
 __BEGIN_DECLS
 
 typedef struct mach_vm_reclaim_entry_s {
-	mach_vm_address_t address;
-	uint32_t size;
-	mach_vm_reclaim_action_t behavior;
-	uint8_t _unused[3];
+  mach_vm_address_t address;
+  uint32_t size;
+  mach_vm_reclaim_action_t behavior;
+  uint8_t _unused[3];
 } *mach_vm_reclaim_entry_t;
 
 /* This struct is no longer used () */
 typedef struct mach_vm_reclaim_indices_s {
-	_Atomic mach_vm_reclaim_id_t head;
-	_Atomic mach_vm_reclaim_id_t tail;
-	_Atomic mach_vm_reclaim_id_t busy;
+  _Atomic mach_vm_reclaim_id_t head;
+  _Atomic mach_vm_reclaim_id_t tail;
+  _Atomic mach_vm_reclaim_id_t busy;
 } *mach_vm_reclaim_indices_t;
 
 /*
  * Contains the data used for synchronization with the kernel
  */
 struct mach_vm_reclaim_ring_s {
-	/* no longer used () */
-	mach_vm_size_t va_in_buffer;
-	/* no longer used () */
-	mach_vm_size_t last_accounting_given_to_kernel;
-	/* The current length of the ringbuffer */
-	mach_vm_reclaim_count_t len;
-	/* The maximum length of the ringbuffer */
-	mach_vm_reclaim_count_t max_len;
-	/* no longer used () */
-	struct mach_vm_reclaim_indices_s indices;
-	/* The minimum period of time between kernel accounting updates */
-	uint64_t sampling_period_abs;
-	/* timestamp (MAS) of the last kernel accounting update */
-	uint64_t last_sample_abs;
-	/*
-	 * An estimate for the number of reclaimable bytes currently in the ring. This
-	 * is updating atomically after entering a new reclaimable region, after
-	 * successfully cancelling a region, and after reclaiming regions.
-	 */
-	_Atomic uint64_t reclaimable_bytes;
-	/*
-	 * The minimum amount of reclaimable memory in this buffer for the current
-	 * sampling interval.
-	 */
-	_Atomic uint64_t reclaimable_bytes_min;
-	/* Marks IDs which have been reclaimed */
-	_Atomic mach_vm_reclaim_id_t head;
-	/* Marks IDs which are in the process of being reclaimed */
-	_Atomic mach_vm_reclaim_id_t busy;
-	/* The ID of the most recent entry */
-	_Atomic mach_vm_reclaim_id_t tail;
-	/* Pad to a multiple of the entry size */
-	uint64_t _unused;
-	/*
-	 * The ringbuffer entries themselves populate the remainder of this
-	 * buffer's vm allocation.
-	 * NB: the fields preceding `entries` should be aligned to a multiple of
-	 * the entry size.
-	 */
-	struct mach_vm_reclaim_entry_s entries[] __counted_by(len);
+  /* no longer used () */
+  mach_vm_size_t va_in_buffer;
+  /* no longer used () */
+  mach_vm_size_t last_accounting_given_to_kernel;
+  /* The current length of the ringbuffer */
+  mach_vm_reclaim_count_t len;
+  /* The maximum length of the ringbuffer */
+  mach_vm_reclaim_count_t max_len;
+  /* no longer used () */
+  struct mach_vm_reclaim_indices_s indices;
+  /* The minimum period of time between kernel accounting updates */
+  uint64_t sampling_period_abs;
+  /* timestamp (MAS) of the last kernel accounting update */
+  uint64_t last_sample_abs;
+  /*
+   * An estimate for the number of reclaimable bytes currently in the ring. This
+   * is updating atomically after entering a new reclaimable region, after
+   * successfully cancelling a region, and after reclaiming regions.
+   */
+  _Atomic uint64_t reclaimable_bytes;
+  /*
+   * The minimum amount of reclaimable memory in this buffer for the current
+   * sampling interval.
+   */
+  _Atomic uint64_t reclaimable_bytes_min;
+  /* Marks IDs which have been reclaimed */
+  _Atomic mach_vm_reclaim_id_t head;
+  /* Marks IDs which are in the process of being reclaimed */
+  _Atomic mach_vm_reclaim_id_t busy;
+  /* The ID of the most recent entry */
+  _Atomic mach_vm_reclaim_id_t tail;
+  /* Pad to a multiple of the entry size */
+  uint64_t _unused;
+  /*
+   * The ringbuffer entries themselves populate the remainder of this
+   * buffer's vm allocation.
+   * NB: the fields preceding `entries` should be aligned to a multiple of
+   * the entry size.
+   */
+  struct mach_vm_reclaim_entry_s entries[] __counted_by(len);
 };
 
 /*
@@ -122,16 +123,16 @@ struct mach_vm_reclaim_ring_s {
 
 /// A descriptor for a reclaimable region
 typedef struct mach_vm_reclaim_region_s {
-	mach_vm_address_t        vmrr_addr;
-	mach_vm_size_t           vmrr_size;
-	mach_vm_reclaim_action_t vmrr_behavior;
-	uint8_t                  _vmrr_unused[3];
+  mach_vm_address_t vmrr_addr;
+  mach_vm_size_t vmrr_size;
+  mach_vm_reclaim_action_t vmrr_behavior;
+  uint8_t _vmrr_unused[3];
 } *mach_vm_reclaim_region_t;
 
 /// A reference to a task's reclaim ring
 typedef struct mach_vm_reclaim_ring_ref_s {
-	mach_vm_address_t addr;
-	mach_vm_size_t size;
+  mach_vm_address_t addr;
+  mach_vm_size_t size;
 } *mach_vm_reclaim_ring_ref_t;
 
 /// A reclaim ring copied from another task
@@ -148,10 +149,10 @@ typedef void *mach_vm_reclaim_ring_copy_t;
 ///
 /// - Returns: `VM_RECLAIM_SUCCESS` upon success.
 __SPI_AVAILABLE(macos(16.0), ios(19.0), tvos(19.0), visionos(3.0))
-mach_vm_reclaim_error_t mach_vm_reclaim_get_rings_for_task(
-	task_read_t task,
-	mach_vm_reclaim_ring_ref_t refs_out,
-	mach_vm_reclaim_count_t *count_inout);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_get_rings_for_task(task_read_t task,
+                                   mach_vm_reclaim_ring_ref_t refs_out,
+                                   mach_vm_reclaim_count_t *count_inout);
 
 /// Copy another task's reclaim ring into this task's VA.
 ///
@@ -163,10 +164,9 @@ mach_vm_reclaim_error_t mach_vm_reclaim_get_rings_for_task(
 ///
 /// - Returns: `VM_RECLAIM_SUCCESS` upon success.
 __SPI_AVAILABLE(macos(16.0), ios(19.0), tvos(19.0), visionos(3.0))
-mach_vm_reclaim_error_t mach_vm_reclaim_ring_copy(
-	task_read_t task,
-	mach_vm_reclaim_ring_ref_t ref,
-	mach_vm_reclaim_ring_copy_t *ring_out);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_ring_copy(task_read_t task, mach_vm_reclaim_ring_ref_t ref,
+                          mach_vm_reclaim_ring_copy_t *ring_out);
 
 /// Free a reclaim ring copied from another task.
 ///
@@ -175,8 +175,8 @@ mach_vm_reclaim_error_t mach_vm_reclaim_ring_copy(
 ///
 /// - Returns: `VM_RECLAIM_SUCCESS` upon success.
 __SPI_AVAILABLE(macos(16.0), ios(19.0), tvos(19.0), visionos(3.0))
-mach_vm_reclaim_error_t mach_vm_reclaim_copied_ring_free(
-	mach_vm_reclaim_ring_copy_t *ring);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_copied_ring_free(mach_vm_reclaim_ring_copy_t *ring);
 
 /// Query the reclaimable regions in a copied reclaim ring.
 ///
@@ -194,10 +194,10 @@ mach_vm_reclaim_error_t mach_vm_reclaim_copied_ring_free(
 ///   and had a buffer too small for its reported size. The entries that were
 ///   able to be queried and the count will still be written out.
 __SPI_AVAILABLE(macos(16.0), ios(19.0), tvos(19.0), visionos(3.0))
-mach_vm_reclaim_error_t mach_vm_reclaim_copied_ring_query(
-	mach_vm_reclaim_ring_copy_t *ring,
-	mach_vm_reclaim_region_t regions_out,
-	mach_vm_reclaim_count_t *count_inout);
+mach_vm_reclaim_error_t
+mach_vm_reclaim_copied_ring_query(mach_vm_reclaim_ring_copy_t *ring,
+                                  mach_vm_reclaim_region_t regions_out,
+                                  mach_vm_reclaim_count_t *count_inout);
 
 #endif /* !KERNEL */
 

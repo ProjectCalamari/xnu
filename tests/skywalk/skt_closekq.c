@@ -26,83 +26,81 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-/* <rdar://problem/25158037> [N56 14A207] BTServer crash during BT off/on in  Watchdog_TimerSettings
- * verify that closing the kqueue fd causes select/poll/kevent to return
+/* <rdar://problem/25158037> [N56 14A207] BTServer crash during BT off/on in
+ * Watchdog_TimerSettings verify that closing the kqueue fd causes
+ * select/poll/kevent to return
  */
 
+#include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
 #include <assert.h>
+#include <darwintest.h>
 #include <errno.h>
+#include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <sys/event.h>
-#include <darwintest.h>
-#include "skywalk_test_driver.h"
-#include "skywalk_test_common.h"
+#include <unistd.h>
 
 static int kq;
 
-static void *
-threadk(void *unused)
-{
-	struct kevent kev, refkev;
-	int error;
+static void *threadk(void *unused) {
+  struct kevent kev, refkev;
+  int error;
 
-	T_LOG("entering kevent in thread\n");
+  T_LOG("entering kevent in thread\n");
 
-	memset(&kev, 0, sizeof(kev));
-	refkev = kev;
-	error = kevent(kq, NULL, 0, &kev, 1, NULL);
-	SKTC_ASSERT_ERR(error == -1);
-	SKTC_ASSERT_ERR(errno == EBADF || errno == EINTR);
-	assert(!memcmp(&kev, &refkev, sizeof(refkev)));
+  memset(&kev, 0, sizeof(kev));
+  refkev = kev;
+  error = kevent(kq, NULL, 0, &kev, 1, NULL);
+  SKTC_ASSERT_ERR(error == -1);
+  SKTC_ASSERT_ERR(errno == EBADF || errno == EINTR);
+  assert(!memcmp(&kev, &refkev, sizeof(refkev)));
 
-	T_LOG("exiting thread\n");
+  T_LOG("exiting thread\n");
 
-	return NULL;
+  return NULL;
 }
 
-static int
-skt_closekq_main_common(int argc, char *argv[], void * (*threadfunc)(void *unused))
-{
-	int error;
-	pthread_t thread;
+static int skt_closekq_main_common(int argc, char *argv[],
+                                   void *(*threadfunc)(void *unused)) {
+  int error;
+  pthread_t thread;
 
-	kq = kqueue();
-	assert(kq != -1);
+  kq = kqueue();
+  assert(kq != -1);
 
-	error = pthread_create(&thread, NULL, threadfunc, NULL);
-	SKTC_ASSERT_ERR(!error);
+  error = pthread_create(&thread, NULL, threadfunc, NULL);
+  SKTC_ASSERT_ERR(!error);
 
-	error = usleep(1000); // to make sure thread gets into select/poll/kevent
-	SKTC_ASSERT_ERR(!error);
+  error = usleep(1000); // to make sure thread gets into select/poll/kevent
+  SKTC_ASSERT_ERR(!error);
 
-	T_LOG("closing kqueue in main\n");
+  T_LOG("closing kqueue in main\n");
 
-	error = close(kq);
-	SKTC_ASSERT_ERR(!error);
+  error = close(kq);
+  SKTC_ASSERT_ERR(!error);
 
-	T_LOG("joining thread in main\n");
+  T_LOG("joining thread in main\n");
 
-	error = pthread_join(thread, NULL);
-	SKTC_ASSERT_ERR(!error);
+  error = pthread_join(thread, NULL);
+  SKTC_ASSERT_ERR(!error);
 
-	T_LOG("exiting main\n");
+  T_LOG("exiting main\n");
 
-	return 0;
+  return 0;
 }
 
-static int
-skt_closekqk_main(int argc, char *argv[])
-{
-	return skt_closekq_main_common(argc, argv, threadk);
+static int skt_closekqk_main(int argc, char *argv[]) {
+  return skt_closekq_main_common(argc, argv, threadk);
 }
 
 struct skywalk_test skt_closekqk = {
-	"closekqk", "test closing kqueue in kqueue",
-	0, skt_closekqk_main, { NULL }, NULL, NULL,
+    "closekqk", "test closing kqueue in kqueue",
+    0,          skt_closekqk_main,
+    {NULL},     NULL,
+    NULL,
 };
 
 /****************************************************************/

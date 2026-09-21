@@ -27,5 +27,5 @@
  */
 #ifndef _U_SHORT
 #define _U_SHORT
-typedef unsigned short  u_short;
+typedef unsigned short u_short;
 #endif /* _U_SHORT */

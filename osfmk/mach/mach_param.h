@@ -68,7 +68,7 @@
 
 /* Number of "registered" ports */
 
-#define TASK_PORT_REGISTER_MAX  3
+#define TASK_PORT_REGISTER_MAX 3
 
 /* Number of watchport for task */
 #define TASK_MAX_WATCHPORT_COUNT 128
@@ -83,6 +83,6 @@
 #define THREAD_SELF_PORT_COUNT 3
 
 /* Max length of conclave name */
-#define MAXCONCLAVENAME    128
+#define MAXCONCLAVENAME 128
 
-#endif  /* _MACH_MACH_PARAM_H_ */
+#endif /* _MACH_MACH_PARAM_H_ */

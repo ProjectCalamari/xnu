@@ -38,39 +38,44 @@
 #include <mach/mach_vm_server.h>
 #endif /* BSD_KERNEL_PRIVATE */
 
-typedef struct vm_deferred_reclamation_metadata_s *vm_deferred_reclamation_metadata_t;
+typedef struct vm_deferred_reclamation_metadata_s
+    *vm_deferred_reclamation_metadata_t;
 
-__enum_closed_decl(vm_deferred_reclamation_gc_action_t, uint8_t, {
-	/* Trim all buffers */
-	RECLAIM_GC_TRIM = 0,
-	/* Fully drain all buffers */
-	RECLAIM_GC_DRAIN = 1,
-	/* Drain any buffers belonging to suspended tasks */
-	RECLAIM_GC_SCAVENGE = 2,
-});
+__enum_closed_decl(vm_deferred_reclamation_gc_action_t, uint8_t,
+                   {
+                       /* Trim all buffers */
+                       RECLAIM_GC_TRIM = 0,
+                       /* Fully drain all buffers */
+                       RECLAIM_GC_DRAIN = 1,
+                       /* Drain any buffers belonging to suspended tasks */
+                       RECLAIM_GC_SCAVENGE = 2,
+                   });
 
-__options_closed_decl(vm_deferred_reclamation_options_t, uint8_t, {
-	RECLAIM_OPTIONS_NONE = 0x00,
-	/* Do not fault on the reclaim buffer if it is not resident */
-	RECLAIM_NO_FAULT     = 0x01,
-	/* Do not wait to acquire the buffer if it is owned by another thread */
-	RECLAIM_NO_WAIT      = 0x02,
-});
+__options_closed_decl(
+    vm_deferred_reclamation_options_t, uint8_t,
+    {
+        RECLAIM_OPTIONS_NONE = 0x00,
+        /* Do not fault on the reclaim buffer if it is not resident */
+        RECLAIM_NO_FAULT = 0x01,
+        /* Do not wait to acquire the buffer if it is owned by another thread */
+        RECLAIM_NO_WAIT = 0x02,
+    });
 
 /*
  * Deallocate the kernel metadata associated with this reclamation buffer
  * Note that this does NOT free the memory in the buffer.
- * This is called from the task_destroy path, so we're about to reclaim all of the task's memory
- * anyways.
+ * This is called from the task_destroy path, so we're about to reclaim all of
+ * the task's memory anyways.
  */
-void vm_deferred_reclamation_buffer_deallocate(vm_deferred_reclamation_metadata_t metadata);
+void vm_deferred_reclamation_buffer_deallocate(
+    vm_deferred_reclamation_metadata_t metadata);
 
 /*
  * Synchronously drain all reclamation ring's belonging to a task.
  */
-kern_return_t vm_deferred_reclamation_task_drain(
-	task_t                            task,
-	vm_deferred_reclamation_options_t options);
+kern_return_t
+vm_deferred_reclamation_task_drain(task_t task,
+                                   vm_deferred_reclamation_options_t options);
 
 /*
  * Return true if this task has a reclamation ring
@@ -90,9 +95,9 @@ bool vm_deferred_reclamation_task_has_ring(task_t task);
  * in between the map fork and the buffer fork causing the child's
  * data strucutres to be out of sync.
  */
-vm_deferred_reclamation_metadata_t vm_deferred_reclamation_task_fork(
-	task_t task,
-	vm_deferred_reclamation_metadata_t parent);
+vm_deferred_reclamation_metadata_t
+vm_deferred_reclamation_task_fork(task_t task,
+                                  vm_deferred_reclamation_metadata_t parent);
 
 /*
  * Add a reclamation buffer returned by vm_deferred_reclamation_task_fork to
@@ -102,20 +107,22 @@ vm_deferred_reclamation_metadata_t vm_deferred_reclamation_task_fork(
  * reclamation buffer. This must happen after the child's address space is
  * fully initialized and able to recieve VM API calls.
  */
-void
-vm_deferred_reclamation_task_fork_register(vm_deferred_reclamation_metadata_t metadata);
+void vm_deferred_reclamation_task_fork_register(
+    vm_deferred_reclamation_metadata_t metadata);
 
 /*
  * Set the current thread as the owner of a reclaim buffer. May block. Will
  * propagate priority. Should be called before forking the owning task.
  */
-void vm_deferred_reclamation_ring_own(vm_deferred_reclamation_metadata_t metadata);
+void vm_deferred_reclamation_ring_own(
+    vm_deferred_reclamation_metadata_t metadata);
 
 /*
  * Release ownership of a reclaim buffer and wakeup any threads waiting for
  * ownership. Must be called from the thread that acquired ownership.
  */
-void vm_deferred_reclamation_ring_disown(vm_deferred_reclamation_metadata_t metadata);
+void vm_deferred_reclamation_ring_disown(
+    vm_deferred_reclamation_metadata_t metadata);
 
 /*
  * Should be called when a task is suspended -- will trigger asynchronous
@@ -127,8 +134,8 @@ void vm_deferred_reclamation_task_suspend(task_t task);
  * Perform Garbage Collection on all reclaim rings
  */
 void vm_deferred_reclamation_gc(vm_deferred_reclamation_gc_action_t action,
-    mach_vm_size_t *total_bytes_reclaimed_out,
-    vm_deferred_reclamation_options_t options);
+                                mach_vm_size_t *total_bytes_reclaimed_out,
+                                vm_deferred_reclamation_options_t options);
 
 /*
  * Settle ledger entry for reclaimable memory
@@ -137,4 +144,4 @@ void vm_deferred_reclamation_settle_ledger(task_t task);
 
 #endif /* CONFIG_DEFERRED_RECLAIM */
 #endif /* XNU_KERNEL_PRIVATE */
-#endif  /* __VM_RECLAIM_XNU__ */
+#endif /* __VM_RECLAIM_XNU__ */

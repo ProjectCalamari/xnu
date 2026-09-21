@@ -1,24 +1,25 @@
 /* Copyright (c) (2018-2022) Apple Inc. All rights reserved.
  *
- * corecrypto is licensed under Apple Inc.’s Internal Use License Agreement (which
- * is contained in the License.txt file distributed with corecrypto) and only to
- * people who accept that license. IMPORTANT:  Any license rights granted to you by
- * Apple Inc. (if any) are limited to internal use within your organization only on
- * devices and computers you own or control, for the sole purpose of verifying the
- * security characteristics and correct functioning of the Apple Software.  You may
- * not, directly or indirectly, redistribute the Apple Software or any portions thereof.
+ * corecrypto is licensed under Apple Inc.’s Internal Use License Agreement
+ * (which is contained in the License.txt file distributed with corecrypto) and
+ * only to people who accept that license. IMPORTANT:  Any license rights
+ * granted to you by Apple Inc. (if any) are limited to internal use within your
+ * organization only on devices and computers you own or control, for the sole
+ * purpose of verifying the security characteristics and correct functioning of
+ * the Apple Software.  You may not, directly or indirectly, redistribute the
+ * Apple Software or any portions thereof.
  */
 
 #ifndef _CORECRYPTO_CCKPRNG_H_
 #define _CORECRYPTO_CCKPRNG_H_
 
-#include <corecrypto/cc.h>
-#include "ccrng_fortuna.h"
-#include "ccrng_crypto.h"
-#include <corecrypto/ccrng_schedule.h>
-#include <corecrypto/ccentropy.h>
-#include <corecrypto/ccdrbg.h>
 #include "cc_lock.h"
+#include "ccrng_crypto.h"
+#include "ccrng_fortuna.h"
+#include <corecrypto/cc.h>
+#include <corecrypto/ccdrbg.h>
+#include <corecrypto/ccentropy.h>
+#include <corecrypto/ccrng_schedule.h>
 
 // This is a Fortuna-inspired PRNG. While it differs from Fortuna in
 // many minor details, the biggest difference is its support for
@@ -93,47 +94,45 @@ typedef ccrng_fortuna_getentropy cckprng_getentropy;
 #define CCKPRNG_MAX_REQUEST_SIZE ((size_t)4096)
 
 struct cckprng_ctx {
-    // A flag set every time Fortuna reseeds itself
-    ccrng_schedule_atomic_flag_ctx_t schedule_ctx;
+  // A flag set every time Fortuna reseeds itself
+  ccrng_schedule_atomic_flag_ctx_t schedule_ctx;
 
-    ccentropy_rng_ctx_t entropy_ctx;
+  ccentropy_rng_ctx_t entropy_ctx;
 
-    cc_lock_ctx_t lock_ctx;
+  cc_lock_ctx_t lock_ctx;
 
-    struct ccdrbg_info drbg_info;
-    uint8_t drbg_state[CCKPRNG_DRBG_STATE_MAX_SIZE];
+  struct ccdrbg_info drbg_info;
+  uint8_t drbg_state[CCKPRNG_DRBG_STATE_MAX_SIZE];
 
-    ccdrbg_df_bc_ctx_t drbg_df_ctx;
+  ccdrbg_df_bc_ctx_t drbg_df_ctx;
 
-    uint8_t cache[CCKPRNG_CACHED_BUF_SIZE];
+  uint8_t cache[CCKPRNG_CACHED_BUF_SIZE];
 
-    ccrng_crypto_ctx_t rng_ctx;
+  ccrng_crypto_ctx_t rng_ctx;
 
-    struct ccrng_fortuna_ctx fortuna_ctx;
+  struct ccrng_fortuna_ctx fortuna_ctx;
 };
 
 // This collection of function pointers is just a convenience for
 // registering the PRNG with xnu
 struct cckprng_funcs {
-    void (*CC_SPTR(cckprng_funcs, init))(struct cckprng_ctx *ctx,
-                                         size_t seed_nbytes,
-                                         const void *seed,
-                                         size_t nonce_nbytes,
-                                         const void *nonce,
-                                         cckprng_getentropy getentropy,
-                                         void *getentropy_arg);
-    void (*CC_SPTR(cckprng_funcs, initgen))(struct cckprng_ctx *ctx, unsigned gen_idx);
-    void (*CC_SPTR(cckprng_funcs, reseed))(struct cckprng_ctx *ctx, size_t nbytes, const void *seed);
-    void (*CC_SPTR(cckprng_funcs, refresh))(struct cckprng_ctx *ctx);
-    void (*CC_SPTR(cckprng_funcs, generate))(struct cckprng_ctx *ctx, unsigned gen_idx, size_t nbytes, void *out);
-    void (*CC_SPTR(cckprng_funcs, init_with_getentropy))(struct cckprng_ctx *ctx,
-                                                         unsigned max_ngens,
-                                                         size_t seed_nbytes,
-                                                         const void *seed,
-                                                         size_t nonce_nbytes,
-                                                         const void *nonce,
-                                                         cckprng_getentropy getentropy,
-                                                         void *getentropy_arg);
+  void (*CC_SPTR(cckprng_funcs, init))(struct cckprng_ctx *ctx,
+                                       size_t seed_nbytes, const void *seed,
+                                       size_t nonce_nbytes, const void *nonce,
+                                       cckprng_getentropy getentropy,
+                                       void *getentropy_arg);
+  void (*CC_SPTR(cckprng_funcs, initgen))(struct cckprng_ctx *ctx,
+                                          unsigned gen_idx);
+  void (*CC_SPTR(cckprng_funcs, reseed))(struct cckprng_ctx *ctx, size_t nbytes,
+                                         const void *seed);
+  void (*CC_SPTR(cckprng_funcs, refresh))(struct cckprng_ctx *ctx);
+  void (*CC_SPTR(cckprng_funcs, generate))(struct cckprng_ctx *ctx,
+                                           unsigned gen_idx, size_t nbytes,
+                                           void *out);
+  void (*CC_SPTR(cckprng_funcs, init_with_getentropy))(
+      struct cckprng_ctx *ctx, unsigned max_ngens, size_t seed_nbytes,
+      const void *seed, size_t nonce_nbytes, const void *nonce,
+      cckprng_getentropy getentropy, void *getentropy_arg);
 };
 
 /*
@@ -148,16 +147,13 @@ struct cckprng_funcs {
   @param getentropy A function pointer to fill an entropy buffer
   @param getentropy_arg State provided to the entropy function
 
-  @discussion See the @p cckprng_getentropy type definition for discussion on its semantics.
+  @discussion See the @p cckprng_getentropy type definition for discussion on
+  its semantics.
 
 */
-void cckprng_init(struct cckprng_ctx *ctx,
-                  size_t seed_nbytes,
-                  const void *seed,
-                  size_t nonce_nbytes,
-                  const void *nonce,
-                  cckprng_getentropy getentropy,
-                  void *getentropy_arg);
+void cckprng_init(struct cckprng_ctx *ctx, size_t seed_nbytes, const void *seed,
+                  size_t nonce_nbytes, const void *nonce,
+                  cckprng_getentropy getentropy, void *getentropy_arg);
 
 /*
   @function cckprng_init_with_getentropy
@@ -172,14 +168,13 @@ void cckprng_init(struct cckprng_ctx *ctx,
   @param getentropy A function pointer to fill an entropy buffer
   @param getentropy_arg State provided to the entropy function
 
-  @discussion @p max_ngens should be set based on an upper bound of CPUs available on the device. See the @p cckprng_getentropy type definition for discussion on its semantics.
+  @discussion @p max_ngens should be set based on an upper bound of CPUs
+  available on the device. See the @p cckprng_getentropy type definition for
+  discussion on its semantics.
 */
-void cckprng_init_with_getentropy(struct cckprng_ctx *ctx,
-                                  unsigned max_ngens,
-                                  size_t seed_nbytes,
-                                  const void *seed,
-                                  size_t nonce_nbytes,
-                                  const void *nonce,
+void cckprng_init_with_getentropy(struct cckprng_ctx *ctx, unsigned max_ngens,
+                                  size_t seed_nbytes, const void *seed,
+                                  size_t nonce_nbytes, const void *nonce,
                                   cckprng_getentropy getentropy,
                                   void *getentropy_arg);
 
@@ -190,7 +185,9 @@ void cckprng_init_with_getentropy(struct cckprng_ctx *ctx,
   @param ctx Context for this instance
   @param gen_idx Index of the generator
 
-  @discussion @p gen_idx must be less than @p max_ngens provided to @cckprng_init and must be unique within the lifetime of a PRNG context. This function will abort if these contracts are violated.
+  @discussion @p gen_idx must be less than @p max_ngens provided to
+  @cckprng_init and must be unique within the lifetime of a PRNG context. This
+  function will abort if these contracts are violated.
 */
 void cckprng_initgen(struct cckprng_ctx *ctx, unsigned gen_idx);
 
@@ -202,7 +199,8 @@ void cckprng_initgen(struct cckprng_ctx *ctx, unsigned gen_idx);
   @param nbytes Length of the seed in bytes
   @param seed Pointer to a high-entropy seed
 
-  @discussion It is safe to expose this function to attacker-controlled requests (e.g. writes to /dev/random).
+  @discussion It is safe to expose this function to attacker-controlled requests
+  (e.g. writes to /dev/random).
 */
 void cckprng_reseed(struct cckprng_ctx *ctx, size_t nbytes, const void *seed);
 
@@ -212,7 +210,11 @@ void cckprng_reseed(struct cckprng_ctx *ctx, size_t nbytes, const void *seed);
 
   @param ctx Context for this instance
 
-  @discussion This function should be called on a regular basis. (For example, it is reasonable to call this inline before a call to @p cckprng_generate.) This function will not necessarily consume entropy or reseed the internal state on any given invocation. To force an immediate reseed, call @p cckprng_reseed.
+  @discussion This function should be called on a regular basis. (For example,
+  it is reasonable to call this inline before a call to @p cckprng_generate.)
+  This function will not necessarily consume entropy or reseed the internal
+  state on any given invocation. To force an immediate reseed, call @p
+  cckprng_reseed.
 */
 void cckprng_refresh(struct cckprng_ctx *ctx);
 
@@ -227,8 +229,12 @@ void cckprng_refresh(struct cckprng_ctx *ctx);
   @param nbytes Length of the desired output in bytes
   @param out Pointer to the output buffer
 
-  @discussion @p gen_idx must be a previous argument to @p cckprng_initgen. @p nbytes must be less than or equal to @p CCKPRNG_GENERATE_MAX_NBYTES. (Callers may invoke this function in a loop to generate larger outputs.) This function will abort if these contracts are violated.
+  @discussion @p gen_idx must be a previous argument to @p cckprng_initgen. @p
+  nbytes must be less than or equal to @p CCKPRNG_GENERATE_MAX_NBYTES. (Callers
+  may invoke this function in a loop to generate larger outputs.) This function
+  will abort if these contracts are violated.
 */
-void cckprng_generate(struct cckprng_ctx *ctx, unsigned gen_idx, size_t nbytes, void *out);
+void cckprng_generate(struct cckprng_ctx *ctx, unsigned gen_idx, size_t nbytes,
+                      void *out);
 
 #endif /* _CORECRYPTO_CCKPRNG_H_ */

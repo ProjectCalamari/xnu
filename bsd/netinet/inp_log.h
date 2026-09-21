@@ -36,8 +36,8 @@
 extern int inp_log_privacy;
 
 void inp_log_addresses(struct inpcb *inp, char *__sized_by(lbuflen) lbuf,
-    socklen_t lbuflen, char *__sized_by(fbuflen) fbuf,
-    socklen_t fbuflen);
+                       socklen_t lbuflen, char *__sized_by(fbuflen) fbuf,
+                       socklen_t fbuflen);
 
 #endif /* BSD_KERNEL_PRIVATE */
 

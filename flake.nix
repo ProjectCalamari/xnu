@@ -6,6 +6,26 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flakever.url = "github:numinit/flakever";
+    dtrace = {
+      url = "github:ProjectCalamari/dtrace";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        treefmt-nix.follows = "treefmt-nix";
+        flakever.follows = "flakever";
+      };
+    };
+    cctools = {
+      url = "github:ProjectCalamari/cctools";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        treefmt-nix.follows = "treefmt-nix";
+        flakever.follows = "flakever";
+      };
+    };
+    llvm = {
+      url = "github:ProjectCalamari/llvm-project/calamari/lld-macho-static-layout";
+      flake = false;
+    };
   };
 
   outputs =
@@ -14,6 +34,9 @@
       nixpkgs,
       treefmt-nix,
       flakever,
+      dtrace,
+      cctools,
+      llvm,
       ...
     }@inputs:
     let
@@ -45,13 +68,12 @@
           f {
             inherit system;
             pkgs = import nixpkgs {
-              localSystem = system;
-              crossSystem = {
-                inherit system;
-                useLLVM = true;
-                linker = "lld";
-              };
-              overlays = [ self.overlays.default ];
+              inherit system;
+              overlays = [
+                dtrace.overlays.default
+                cctools.overlays.default
+                self.overlays.default
+              ];
             };
           }
         );
@@ -62,8 +84,34 @@
       versionTemplate = "12377.1.9-<lastModifiedDate>-<rev>";
 
       overlays.default = final: prev: {
-        xnu = final.callPackage ./pkgs/xnu { flakever = flakeverConfig; };
+        llvmPackages_calamari =
+          (final.mkLLVMPackages {
+            gitRelease = {
+              rev-version = "24.0.0-unstable-2026-09-20";
+            };
+            version = "24.0.0";
+            monorepoSrc = llvm // {
+              passthru = { };
+            };
+            name = "calamari";
+          }).value;
+        xnu = final.callPackage ./pkgs/xnu {
+          flakever = flakeverConfig;
+          ctfconvert =
+            if builtins.hasAttr "ctfconvert" final then
+              final.ctfconvert
+            else
+              dtrace.packages.${final.stdenv.hostPlatform.system}.ctfconvert;
+          cctools =
+            if builtins.hasAttr "cctools" final then
+              final.cctools
+            else
+              cctools.packages.${final.stdenv.hostPlatform.system}.cctools;
+          llvmPackages = final.llvmPackages_calamari;
+        };
       };
+
+      legacyPackages = forAllSystems ({ pkgs, ... }: pkgs);
 
       devShells = forAllSystems (
         { pkgs, ... }:

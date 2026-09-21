@@ -29,26 +29,27 @@
 #ifndef __DEVFS_DEVFS_PROTO_H__
 #define __DEVFS_DEVFS_PROTO_H__
 
-#include  <sys/appleapiopts.h>
+#include <sys/appleapiopts.h>
 
 __BEGIN_DECLS
 #ifdef __APPLE_API_PRIVATE
-int     devfs_sinit(void);
-devdirent_t *   dev_findname(devnode_t * dir, const char *name);
-int     dev_add_name(const char * name, devnode_t * dirnode, devdirent_t * back,
-    devnode_t * dnp, devdirent_t * *dirent_pp);
-int     dev_add_node(int entrytype, devnode_type_t * typeinfo, devnode_t * proto,
-    devnode_t * *dn_pp, struct devfsmount *dvm);
-void    devnode_free(devnode_t * dnp);
-int     dev_dup_plane(struct devfsmount *devfs_mp_p);
-void    devfs_free_plane(struct devfsmount *devfs_mp_p);
-int     dev_free_name(devdirent_t * dirent_p);
-int     devfs_dntovn(devnode_t * dnp, struct vnode **vn_pp, struct proc * p);
-int     dev_add_entry(const char *name, devnode_t * parent, int type, devnode_type_t * typeinfo,
-    devnode_t * proto, struct devfsmount *dvm, devdirent_t * *nm_pp);
-int     devfs_mount(struct mount *mp, vnode_t devvp, user_addr_t data,
-    vfs_context_t context);
-int     devfs_kernel_mount(char * mntname);
+int devfs_sinit(void);
+devdirent_t *dev_findname(devnode_t *dir, const char *name);
+int dev_add_name(const char *name, devnode_t *dirnode, devdirent_t *back,
+                 devnode_t *dnp, devdirent_t **dirent_pp);
+int dev_add_node(int entrytype, devnode_type_t *typeinfo, devnode_t *proto,
+                 devnode_t **dn_pp, struct devfsmount *dvm);
+void devnode_free(devnode_t *dnp);
+int dev_dup_plane(struct devfsmount *devfs_mp_p);
+void devfs_free_plane(struct devfsmount *devfs_mp_p);
+int dev_free_name(devdirent_t *dirent_p);
+int devfs_dntovn(devnode_t *dnp, struct vnode **vn_pp, struct proc *p);
+int dev_add_entry(const char *name, devnode_t *parent, int type,
+                  devnode_type_t *typeinfo, devnode_t *proto,
+                  struct devfsmount *dvm, devdirent_t **nm_pp);
+int devfs_mount(struct mount *mp, vnode_t devvp, user_addr_t data,
+                vfs_context_t context);
+int devfs_kernel_mount(char *mntname);
 #endif /* __APPLE_API_PRIVATE */
 __END_DECLS
 

@@ -30,13 +30,12 @@
 
 #ifdef PEXPERT_KERNEL_PRIVATE
 
-
+#include <kern/assert.h>
+#include <mach/boolean.h>
 #include <mach/mach_types.h>
 #include <mach/vm_types.h>
-#include <mach/boolean.h>
 #include <stdarg.h>
 #include <string.h>
-#include <kern/assert.h>
 
 #include <pexpert/machine/protos.h>
 
@@ -49,36 +48,28 @@ extern void interrupt_disable(void);
 #define bcopy_nc bcopy
 
 //------------------------------------------------------------------------
-//from kern/misc_protos.h
-extern void
-_doprnt(
-	const char     *fmt,
-	va_list                 *argp,
-	void                    (*putc)(char),
-	int                     radix);
+// from kern/misc_protos.h
+extern void _doprnt(const char *fmt, va_list *argp, void (*putc)(char),
+                    int radix);
 
-extern void
-_doprnt_log(
-	const char     *fmt,
-	va_list                 *argp,
-	void                    (*putc)(char),
-	int                     radix);
+extern void _doprnt_log(const char *fmt, va_list *argp, void (*putc)(char),
+                        int radix);
 
 //------------------------------------------------------------------------
 // ??
-//typedef int kern_return_t;
+// typedef int kern_return_t;
 void Debugger(const char *message);
 
-#include <kern/cpu_number.h>
 #include <kern/cpu_data.h>
+#include <kern/cpu_number.h>
 
 //------------------------------------------------------------------------
 // from kgdb/kgdb_defs.h
 #define kgdb_printf printf
 
-#include <mach/machine/vm_types.h>
 #include <device/device_types.h>
 #include <kern/kalloc.h>
+#include <mach/machine/vm_types.h>
 
 //------------------------------------------------------------------------
 
@@ -89,7 +80,6 @@ extern void StartIOKitMatching(void);
 
 // from iokit/Families/IOFramebuffer.cpp
 extern unsigned char appleClut8[256 * 3];
-
 
 #endif /* PEXPERT_KERNEL_PRIVATE */
 

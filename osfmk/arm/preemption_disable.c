@@ -43,8 +43,7 @@
 #include <sys/kdebug.h>
 
 #if SCHED_HYGIENE_DEBUG
-static void
-_do_disable_preemption_without_measurements(void);
+static void _do_disable_preemption_without_measurements(void);
 #endif
 
 /*
@@ -62,47 +61,43 @@ _do_disable_preemption_without_measurements(void);
  * to avoid fiddling with interrupt state for the vast majority of cases
  * when the check will actually be negative.
  */
-static OS_NOINLINE
-void
-kernel_preempt_check(void)
-{
-	uint64_t state;
+static OS_NOINLINE void kernel_preempt_check(void) {
+  uint64_t state;
 
-	/* If interrupts are masked, we can't take an AST here */
-	state = __builtin_arm_rsr64("DAIF");
-	if (state & DAIF_IRQF) {
-		return;
-	}
+  /* If interrupts are masked, we can't take an AST here */
+  state = __builtin_arm_rsr64("DAIF");
+  if (state & DAIF_IRQF) {
+    return;
+  }
 
-	/* disable interrupts (IRQ FIQ ASYNCF) */
-	__builtin_arm_wsr64("DAIFSet", DAIFSC_STANDARD_DISABLE);
+  /* disable interrupts (IRQ FIQ ASYNCF) */
+  __builtin_arm_wsr64("DAIFSet", DAIFSC_STANDARD_DISABLE);
 
-	/*
-	 * Reload cpu_pending_ast: a context switch would cause it to change.
-	 * Now that interrupts are disabled, this will debounce false positives.
-	 */
-	if (current_thread()->machine.CpuDatap->cpu_pending_ast & AST_URGENT) {
-		ast_taken_kernel();
-	}
+  /*
+   * Reload cpu_pending_ast: a context switch would cause it to change.
+   * Now that interrupts are disabled, this will debounce false positives.
+   */
+  if (current_thread()->machine.CpuDatap->cpu_pending_ast & AST_URGENT) {
+    ast_taken_kernel();
+  }
 
-	/* restore the original interrupt mask */
-	__builtin_arm_wsr64("DAIF", state);
+  /* restore the original interrupt mask */
+  __builtin_arm_wsr64("DAIF", state);
 }
 
-static inline void
-_enable_preemption_write_count(thread_t thread, unsigned int count)
-{
-	os_atomic_store(&thread->machine.preemption_count, count, compiler_acq_rel);
+static inline void _enable_preemption_write_count(thread_t thread,
+                                                  unsigned int count) {
+  os_atomic_store(&thread->machine.preemption_count, count, compiler_acq_rel);
 
-	/*
-	 * This check is racy and could load from another CPU's pending_ast mask,
-	 * but as described above, this can't have false negatives.
-	 */
-	if (count == 0) {
-		if (__improbable(thread->machine.CpuDatap->cpu_pending_ast & AST_URGENT)) {
-			return kernel_preempt_check();
-		}
-	}
+  /*
+   * This check is racy and could load from another CPU's pending_ast mask,
+   * but as described above, this can't have false negatives.
+   */
+  if (count == 0) {
+    if (__improbable(thread->machine.CpuDatap->cpu_pending_ast & AST_URGENT)) {
+      return kernel_preempt_check();
+    }
+  }
 }
 
 /*
@@ -113,31 +108,27 @@ _enable_preemption_write_count(thread_t thread, unsigned int count)
  *
  * /!\ Breaking inlining causes zalloc to be roughly 10% slower /!\
  */
-OS_ALWAYS_INLINE __mockable
-void
-_disable_preemption(void)
-{
-	thread_t thread = current_thread();
-	unsigned int count = thread->machine.preemption_count;
+OS_ALWAYS_INLINE __mockable void _disable_preemption(void) {
+  thread_t thread = current_thread();
+  unsigned int count = thread->machine.preemption_count;
 
-	os_atomic_store(&thread->machine.preemption_count,
-	    count + 1, compiler_acq_rel);
+  os_atomic_store(&thread->machine.preemption_count, count + 1,
+                  compiler_acq_rel);
 
 #if SCHED_HYGIENE_DEBUG
-	/*
-	 * Note that this is not the only place preemption gets disabled,
-	 * it also gets modified on ISR and PPL entry/exit. Both of those
-	 * events will be treated specially however, and
-	 * increment/decrement being paired around their entry/exit means
-	 * that collection here is not desynced otherwise.
-	 */
-	if (improbable_static_if(sched_debug_preemption_disable)) {
-		if (__improbable(count == 0 &&
-		    sched_preemption_disable_debug_mode)) {
-			__attribute__((musttail))
-			return _prepare_preemption_disable_measurement();
-		}
-	}
+  /*
+   * Note that this is not the only place preemption gets disabled,
+   * it also gets modified on ISR and PPL entry/exit. Both of those
+   * events will be treated specially however, and
+   * increment/decrement being paired around their entry/exit means
+   * that collection here is not desynced otherwise.
+   */
+  if (improbable_static_if(sched_debug_preemption_disable)) {
+    if (__improbable(count == 0 && sched_preemption_disable_debug_mode)) {
+      __attribute__((
+          musttail)) return _prepare_preemption_disable_measurement();
+    }
+  }
 #endif /* SCHED_HYGIENE_DEBUG */
 }
 
@@ -146,19 +137,17 @@ _disable_preemption(void)
  * without taking measurements (and later potentially triggering
  * actions on those).
  */
-OS_ALWAYS_INLINE __mockable
-void
-_disable_preemption_without_measurements(void)
-{
-	thread_t thread = current_thread();
-	unsigned int count = thread->machine.preemption_count;
+OS_ALWAYS_INLINE __mockable void
+_disable_preemption_without_measurements(void) {
+  thread_t thread = current_thread();
+  unsigned int count = thread->machine.preemption_count;
 
 #if SCHED_HYGIENE_DEBUG
-	_do_disable_preemption_without_measurements();
+  _do_disable_preemption_without_measurements();
 #endif /* SCHED_HYGIENE_DEBUG */
 
-	os_atomic_store(&thread->machine.preemption_count,
-	    count + 1, compiler_acq_rel);
+  os_atomic_store(&thread->machine.preemption_count, count + 1,
+                  compiler_acq_rel);
 }
 
 /*
@@ -166,11 +155,8 @@ _disable_preemption_without_measurements(void)
  * we keep these nice non inlineable functions as the panic()
  * codegen setup is quite large and for weird reasons causes a frame.
  */
-__abortlike
-static void
-_enable_preemption_underflow(void)
-{
-	panic("Preemption count underflow");
+__abortlike static void _enable_preemption_underflow(void) {
+  panic("Preemption count underflow");
 }
 
 /*
@@ -184,50 +170,43 @@ _enable_preemption_underflow(void)
  *
  * /!\ Breaking inlining causes zalloc to be roughly 10% slower /!\
  */
-OS_ALWAYS_INLINE __mockable
-void
-_enable_preemption(void)
-{
-	thread_t thread = current_thread();
-	unsigned int count  = thread->machine.preemption_count;
+OS_ALWAYS_INLINE __mockable void _enable_preemption(void) {
+  thread_t thread = current_thread();
+  unsigned int count = thread->machine.preemption_count;
 
-	if (__improbable(count == 0)) {
-		_enable_preemption_underflow();
-	}
+  if (__improbable(count == 0)) {
+    _enable_preemption_underflow();
+  }
 
 #if SCHED_HYGIENE_DEBUG
-	if (improbable_static_if(sched_debug_preemption_disable)) {
-		if (__improbable(count == SCHED_HYGIENE_MARKER + 1)) {
-			return _collect_preemption_disable_measurement();
-		}
-	}
+  if (improbable_static_if(sched_debug_preemption_disable)) {
+    if (__improbable(count == SCHED_HYGIENE_MARKER + 1)) {
+      return _collect_preemption_disable_measurement();
+    }
+  }
 #endif /* SCHED_HYGIENE_DEBUG */
 
-	_enable_preemption_write_count(thread, count - 1);
+  _enable_preemption_write_count(thread, count - 1);
 }
 
 OS_ALWAYS_INLINE
-unsigned int
-get_preemption_level_for_thread(thread_t thread)
-{
-	unsigned int count = thread->machine.preemption_count;
+unsigned int get_preemption_level_for_thread(thread_t thread) {
+  unsigned int count = thread->machine.preemption_count;
 
 #if SCHED_HYGIENE_DEBUG
-	/*
-	 * hide this "flag" from callers,
-	 * and it would make the count look negative anyway
-	 * which some people dislike
-	 */
-	count &= ~SCHED_HYGIENE_MARKER;
+  /*
+   * hide this "flag" from callers,
+   * and it would make the count look negative anyway
+   * which some people dislike
+   */
+  count &= ~SCHED_HYGIENE_MARKER;
 #endif
-	return (int)count;
+  return (int)count;
 }
 
 OS_ALWAYS_INLINE
-int
-get_preemption_level(void)
-{
-	return get_preemption_level_for_thread(current_thread());
+int get_preemption_level(void) {
+  return get_preemption_level_for_thread(current_thread());
 }
 
 #if SCHED_HYGIENE_DEBUG
@@ -238,21 +217,23 @@ uint64_t _Atomic PERCPU_DATA_HACK_78750602(preemption_disable_max_mt);
 #define DEFAULT_PREEMPTION_TIMEOUT 120000 /* 5ms */
 #define DEFAULT_PREEMPTION_MODE SCHED_HYGIENE_MODE_PANIC
 #elif XNU_PLATFORM_XROS
-#define DEFAULT_PREEMPTION_TIMEOUT 24000  /* 1ms */
+#define DEFAULT_PREEMPTION_TIMEOUT 24000 /* 1ms */
 #define DEFAULT_PREEMPTION_MODE SCHED_HYGIENE_MODE_PANIC
 #else
-#define DEFAULT_PREEMPTION_TIMEOUT 0      /* Disabled */
+#define DEFAULT_PREEMPTION_TIMEOUT 0 /* Disabled */
 #define DEFAULT_PREEMPTION_MODE SCHED_HYGIENE_MODE_OFF
 #endif /* XNU_PLATFORM_iPhoneOS */
 
-MACHINE_TIMEOUT_DEV_WRITEABLE(sched_preemption_disable_threshold_mt, "sched-preemption",
-    DEFAULT_PREEMPTION_TIMEOUT, MACHINE_TIMEOUT_UNIT_TIMEBASE, kprintf_spam_mt_pred);
+MACHINE_TIMEOUT_DEV_WRITEABLE(sched_preemption_disable_threshold_mt,
+                              "sched-preemption", DEFAULT_PREEMPTION_TIMEOUT,
+                              MACHINE_TIMEOUT_UNIT_TIMEBASE,
+                              kprintf_spam_mt_pred);
 TUNABLE_DT_WRITEABLE(sched_hygiene_mode_t, sched_preemption_disable_debug_mode,
-    "machine-timeouts",
-    "sched-preemption-disable-mode", /* DT property names have to be 31 chars max */
-    "sched_preemption_disable_debug_mode",
-    DEFAULT_PREEMPTION_MODE,
-    TUNABLE_DT_CHECK_CHOSEN);
+                     "machine-timeouts",
+                     "sched-preemption-disable-mode", /* DT property names have
+                                                         to be 31 chars max */
+                     "sched_preemption_disable_debug_mode",
+                     DEFAULT_PREEMPTION_MODE, TUNABLE_DT_CHECK_CHOSEN);
 
 struct _preemption_disable_pcpu PERCPU_DATA(_preemption_disable_pcpu_data);
 
@@ -263,13 +244,14 @@ struct _preemption_disable_pcpu PERCPU_DATA(_preemption_disable_pcpu_data);
 * but the assertion has been elided as this is on the fast path.
 */
 OS_ALWAYS_INLINE
-static void
-_preemption_disable_snap_start(void)
-{
-	struct _preemption_disable_pcpu *pcpu = PERCPU_GET(_preemption_disable_pcpu_data);
-	const timeout_flags_t flags = ML_TIMEOUT_TIMEBASE_FLAGS | ML_TIMEOUT_PMC_FLAGS | TF_SAMPLE_INTERRUPT_TIME | TF_BACKTRACE;
+static void _preemption_disable_snap_start(void) {
+  struct _preemption_disable_pcpu *pcpu =
+      PERCPU_GET(_preemption_disable_pcpu_data);
+  const timeout_flags_t flags = ML_TIMEOUT_TIMEBASE_FLAGS |
+                                ML_TIMEOUT_PMC_FLAGS |
+                                TF_SAMPLE_INTERRUPT_TIME | TF_BACKTRACE;
 
-	kern_timeout_start(&pcpu->pdp_timeout, flags);
+  kern_timeout_start(&pcpu->pdp_timeout, flags);
 }
 
 /*
@@ -282,121 +264,127 @@ _preemption_disable_snap_start(void)
 *
 * This is meant for computing a delta.
 * Even with @link sched_hygiene_debug_pmc , the PMCs will not be read.
-* This allows their (relatively expensive) reads to happen only if the time threshold has been violated.
+* This allows their (relatively expensive) reads to happen only if the time
+* threshold has been violated.
 *
-* @return Whether to abandon the current measurement due to a call to abandon_preemption_disable_measurement().
+* @return Whether to abandon the current measurement due to a call to
+* abandon_preemption_disable_measurement().
 */
 OS_ALWAYS_INLINE
-static bool
-_preemption_disable_snap_end(kern_timeout_t *top)
-{
-	struct _preemption_disable_pcpu *pcpu = PERCPU_GET(_preemption_disable_pcpu_data);
-	const timeout_flags_t flags = ML_TIMEOUT_TIMEBASE_FLAGS | TF_SAMPLE_INTERRUPT_TIME;
-	const bool int_masked_debug = false;
-	const bool istate = ml_set_interrupts_enabled_with_debug(false, int_masked_debug);
-	/*
-	 * Collect start time and current time with interrupts disabled.
-	 * Otherwise an interrupt coming in after grabbing the timestamp
-	 * could spuriously inflate the measurement, because it will
-	 * adjust preemption_disable_mt only after we already grabbed
-	 * it.
-	 *
-	 * (Even worse if we collected the current time first: Then a
-	 * subsequent interrupt could adjust preemption_disable_mt to
-	 * make the duration go negative after subtracting the already
-	 * grabbed time. With interrupts disabled we don't care much about
-	 * the order.)
-	 */
-	kern_timeout_end(&pcpu->pdp_timeout, flags);
+static bool _preemption_disable_snap_end(kern_timeout_t *top) {
+  struct _preemption_disable_pcpu *pcpu =
+      PERCPU_GET(_preemption_disable_pcpu_data);
+  const timeout_flags_t flags =
+      ML_TIMEOUT_TIMEBASE_FLAGS | TF_SAMPLE_INTERRUPT_TIME;
+  const bool int_masked_debug = false;
+  const bool istate =
+      ml_set_interrupts_enabled_with_debug(false, int_masked_debug);
+  /*
+   * Collect start time and current time with interrupts disabled.
+   * Otherwise an interrupt coming in after grabbing the timestamp
+   * could spuriously inflate the measurement, because it will
+   * adjust preemption_disable_mt only after we already grabbed
+   * it.
+   *
+   * (Even worse if we collected the current time first: Then a
+   * subsequent interrupt could adjust preemption_disable_mt to
+   * make the duration go negative after subtracting the already
+   * grabbed time. With interrupts disabled we don't care much about
+   * the order.)
+   */
+  kern_timeout_end(&pcpu->pdp_timeout, flags);
 
-	const uint64_t max_duration = os_atomic_load(&pcpu->pdp_max_mach_duration, relaxed);
-	const uint64_t gross_duration = kern_timeout_gross_duration(&pcpu->pdp_timeout);
-	if (__improbable(gross_duration > max_duration)) {
-		os_atomic_store(&pcpu->pdp_max_mach_duration, gross_duration, relaxed);
-	}
+  const uint64_t max_duration =
+      os_atomic_load(&pcpu->pdp_max_mach_duration, relaxed);
+  const uint64_t gross_duration =
+      kern_timeout_gross_duration(&pcpu->pdp_timeout);
+  if (__improbable(gross_duration > max_duration)) {
+    os_atomic_store(&pcpu->pdp_max_mach_duration, gross_duration, relaxed);
+  }
 
-	*top = pcpu->pdp_timeout;
-	ml_set_interrupts_enabled_with_debug(istate, int_masked_debug);
+  *top = pcpu->pdp_timeout;
+  ml_set_interrupts_enabled_with_debug(istate, int_masked_debug);
 
-	return gross_duration == 0;
+  return gross_duration == 0;
 }
 
 OS_NOINLINE
-void
-_prepare_preemption_disable_measurement(void)
-{
-	thread_t thread = current_thread();
+void _prepare_preemption_disable_measurement(void) {
+  thread_t thread = current_thread();
 
-	if (thread->machine.int_handler_addr == 0) {
-		/*
-		 * Only prepare a measurement if not currently in an interrupt
-		 * handler.
-		 *
-		 * We are only interested in the net duration of disabled
-		 * preemption, that is: The time in which preemption was
-		 * disabled, minus the intervals in which any (likely
-		 * unrelated) interrupts were handled.
-		 * recount_current_thread_interrupt_time_mach() will remove those
-		 * intervals, however we also do not even start measuring
-		 * preemption disablement if we are already within handling of
-		 * an interrupt when preemption was disabled (the resulting
-		 * net time would be 0).
-		 *
-		 * Interrupt handling duration is handled separately, and any
-		 * long intervals of preemption disablement are counted
-		 * towards that.
-		 */
+  if (thread->machine.int_handler_addr == 0) {
+    /*
+     * Only prepare a measurement if not currently in an interrupt
+     * handler.
+     *
+     * We are only interested in the net duration of disabled
+     * preemption, that is: The time in which preemption was
+     * disabled, minus the intervals in which any (likely
+     * unrelated) interrupts were handled.
+     * recount_current_thread_interrupt_time_mach() will remove those
+     * intervals, however we also do not even start measuring
+     * preemption disablement if we are already within handling of
+     * an interrupt when preemption was disabled (the resulting
+     * net time would be 0).
+     *
+     * Interrupt handling duration is handled separately, and any
+     * long intervals of preemption disablement are counted
+     * towards that.
+     */
 
-		bool const int_masked_debug = false;
-		bool istate = ml_set_interrupts_enabled_with_debug(false, int_masked_debug);
-		thread->machine.preemption_count |= SCHED_HYGIENE_MARKER;
-		_preemption_disable_snap_start();
-		ml_set_interrupts_enabled_with_debug(istate, int_masked_debug);
-	}
+    bool const int_masked_debug = false;
+    bool istate = ml_set_interrupts_enabled_with_debug(false, int_masked_debug);
+    thread->machine.preemption_count |= SCHED_HYGIENE_MARKER;
+    _preemption_disable_snap_start();
+    ml_set_interrupts_enabled_with_debug(istate, int_masked_debug);
+  }
 }
 
 OS_NOINLINE
-void
-_collect_preemption_disable_measurement(void)
-{
-	kern_timeout_t to;
-	const bool abandon = _preemption_disable_snap_end(&to);
+void _collect_preemption_disable_measurement(void) {
+  kern_timeout_t to;
+  const bool abandon = _preemption_disable_snap_end(&to);
 
-	if (__improbable(abandon)) {
-		goto out;
-	}
+  if (__improbable(abandon)) {
+    goto out;
+  }
 
-	const uint64_t gross_duration = kern_timeout_gross_duration(&to);
-	const uint64_t threshold = os_atomic_load(&sched_preemption_disable_threshold_mt, relaxed);
-	if (__improbable(threshold > 0 && gross_duration >= threshold)) {
-		/*
-		 * Double check that the time spent not handling interrupts is over the threshold.
-		 */
-		const int64_t net_duration = kern_timeout_net_duration(&to);
-		uint64_t average_cpi_whole, average_cpi_fractional;
+  const uint64_t gross_duration = kern_timeout_gross_duration(&to);
+  const uint64_t threshold =
+      os_atomic_load(&sched_preemption_disable_threshold_mt, relaxed);
+  if (__improbable(threshold > 0 && gross_duration >= threshold)) {
+    /*
+     * Double check that the time spent not handling interrupts is over the
+     * threshold.
+     */
+    const int64_t net_duration = kern_timeout_net_duration(&to);
+    uint64_t average_cpi_whole, average_cpi_fractional;
 
-		assert3u(net_duration, >=, 0);
-		if (net_duration < threshold) {
-			goto out;
-		}
+    assert3u(net_duration, >=, 0);
+    if (net_duration < threshold) {
+      goto out;
+    }
 
-		if (__probable(sched_preemption_disable_debug_mode == SCHED_HYGIENE_MODE_PANIC)) {
-			kern_timeout_try_panic(KERN_TIMEOUT_PREEMPTION, 0, &to,
-			    "preemption disable timeout exceeded:", threshold);
-		}
+    if (__probable(sched_preemption_disable_debug_mode ==
+                   SCHED_HYGIENE_MODE_PANIC)) {
+      kern_timeout_try_panic(KERN_TIMEOUT_PREEMPTION, 0, &to,
+                             "preemption disable timeout exceeded:", threshold);
+    }
 
-		kern_timeout_cpi(&to, &average_cpi_whole, &average_cpi_fractional);
+    kern_timeout_cpi(&to, &average_cpi_whole, &average_cpi_fractional);
 
-		DTRACE_SCHED4(mach_preemption_expired, uint64_t, net_duration, uint64_t, gross_duration,
-		    uint64_t, average_cpi_whole, uint64_t, average_cpi_fractional);
-		KDBG(MACHDBG_CODE(DBG_MACH_SCHED, MACH_PREEMPTION_EXPIRED), net_duration, gross_duration, average_cpi_whole, average_cpi_fractional);
-	}
+    DTRACE_SCHED4(mach_preemption_expired, uint64_t, net_duration, uint64_t,
+                  gross_duration, uint64_t, average_cpi_whole, uint64_t,
+                  average_cpi_fractional);
+    KDBG(MACHDBG_CODE(DBG_MACH_SCHED, MACH_PREEMPTION_EXPIRED), net_duration,
+         gross_duration, average_cpi_whole, average_cpi_fractional);
+  }
 
 out:
-	/*
-	 * the preemption count is SCHED_HYGIENE_MARKER, we need to clear it.
-	 */
-	_enable_preemption_write_count(current_thread(), 0);
+  /*
+   * the preemption count is SCHED_HYGIENE_MARKER, we need to clear it.
+   */
+  _enable_preemption_write_count(current_thread(), 0);
 }
 
 /*
@@ -405,61 +393,56 @@ out:
  * trigger the threshold while actually idling, which we don't
  * care about.
  */
-void
-abandon_preemption_disable_measurement(void)
-{
-	struct _preemption_disable_pcpu *pcpu = PERCPU_GET(_preemption_disable_pcpu_data);
+void abandon_preemption_disable_measurement(void) {
+  struct _preemption_disable_pcpu *pcpu =
+      PERCPU_GET(_preemption_disable_pcpu_data);
 
-	kern_timeout_override(&pcpu->pdp_timeout);
+  kern_timeout_override(&pcpu->pdp_timeout);
 }
 
 /* Inner part of disable_preemption_without_measuerments() */
 OS_ALWAYS_INLINE
-static void
-_do_disable_preemption_without_measurements(void)
-{
-	/*
-	 * Inform _collect_preemption_disable_measurement()
-	 * that we didn't really care.
-	 */
-	struct _preemption_disable_pcpu *pcpu = PERCPU_GET(_preemption_disable_pcpu_data);
-	kern_timeout_override(&pcpu->pdp_timeout);
+static void _do_disable_preemption_without_measurements(void) {
+  /*
+   * Inform _collect_preemption_disable_measurement()
+   * that we didn't really care.
+   */
+  struct _preemption_disable_pcpu *pcpu =
+      PERCPU_GET(_preemption_disable_pcpu_data);
+  kern_timeout_override(&pcpu->pdp_timeout);
 }
 
 /**
  * Reset the max interrupt durations of all CPUs.
  */
 void preemption_disable_reset_max_durations(void);
-void
-preemption_disable_reset_max_durations(void)
-{
-	percpu_foreach(pcpu, _preemption_disable_pcpu_data) {
-		os_atomic_store(&pcpu->pdp_max_mach_duration, 0, relaxed);
-	}
+void preemption_disable_reset_max_durations(void) {
+  percpu_foreach(pcpu, _preemption_disable_pcpu_data) {
+    os_atomic_store(&pcpu->pdp_max_mach_duration, 0, relaxed);
+  }
 }
 
-unsigned int preemption_disable_get_max_durations(uint64_t *durations, size_t count);
-unsigned int
-preemption_disable_get_max_durations(uint64_t *durations, size_t count)
-{
-	int cpu = 0;
-	percpu_foreach(pcpu, _preemption_disable_pcpu_data) {
-		if (cpu < count) {
-			durations[cpu++] = os_atomic_load(&pcpu->pdp_max_mach_duration, relaxed);
-		}
-	}
-	return cpu;
+unsigned int preemption_disable_get_max_durations(uint64_t *durations,
+                                                  size_t count);
+unsigned int preemption_disable_get_max_durations(uint64_t *durations,
+                                                  size_t count) {
+  int cpu = 0;
+  percpu_foreach(pcpu, _preemption_disable_pcpu_data) {
+    if (cpu < count) {
+      durations[cpu++] = os_atomic_load(&pcpu->pdp_max_mach_duration, relaxed);
+    }
+  }
+  return cpu;
 }
 
 /*
  * Skip predicate for sched_preemption_disable, which would trigger
  * spuriously when kprintf spam is enabled.
  */
-bool
-kprintf_spam_mt_pred(struct machine_timeout_spec const __unused *spec)
-{
-	bool const kprintf_spam_enabled = !(disable_kprintf_output || disable_serial_output);
-	return kprintf_spam_enabled;
+bool kprintf_spam_mt_pred(struct machine_timeout_spec const __unused *spec) {
+  bool const kprintf_spam_enabled =
+      !(disable_kprintf_output || disable_serial_output);
+  return kprintf_spam_enabled;
 }
 
 /*
@@ -467,24 +450,18 @@ kprintf_spam_mt_pred(struct machine_timeout_spec const __unused *spec)
  *
  * Only for AppleCLPC!
  */
-void
-sched_perfcontrol_abandon_preemption_disable_measurement(void)
-{
-	abandon_preemption_disable_measurement();
+void sched_perfcontrol_abandon_preemption_disable_measurement(void) {
+  abandon_preemption_disable_measurement();
 }
 
 #else /* SCHED_HYGIENE_DEBUG */
 
-void
-abandon_preemption_disable_measurement(void)
-{
-	// No-op. Function is exported, so needs to be defined
+void abandon_preemption_disable_measurement(void) {
+  // No-op. Function is exported, so needs to be defined
 }
 
-void
-sched_perfcontrol_abandon_preemption_disable_measurement(void)
-{
-	// No-op. Function is exported, so needs to be defined
+void sched_perfcontrol_abandon_preemption_disable_measurement(void) {
+  // No-op. Function is exported, so needs to be defined
 }
 
 #endif /* SCHED_HYGIENE_DEBUG */

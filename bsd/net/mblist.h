@@ -33,8 +33,8 @@
 #ifndef _NET_MBLIST_H
 #define _NET_MBLIST_H
 
-#include <sys/kpi_mbuf.h>
 #include <stdint.h>
+#include <sys/kpi_mbuf.h>
 
 /*
  * Type: mblist
@@ -42,44 +42,36 @@
  *   Simple type to store head, tail pointers for a list of mbuf packets.
  */
 typedef struct {
-	mbuf_t          head;
-	mbuf_t          tail;
-	uint32_t        bytes;
-	uint32_t        count;
-} mblist, * mblist_t;
+  mbuf_t head;
+  mbuf_t tail;
+  uint32_t bytes;
+  uint32_t count;
+} mblist, *mblist_t;
 
-static inline void
-mblist_init(mblist_t list)
-{
-	bzero(list, sizeof(*list));
+static inline void mblist_init(mblist_t list) { bzero(list, sizeof(*list)); }
+
+static inline void mblist_append(mblist_t list, mbuf_t m) {
+  if (list->head == NULL) {
+    list->head = m;
+  } else {
+    list->tail->m_nextpkt = m;
+  }
+  list->tail = m;
+  list->count++;
+  list->bytes += mbuf_pkthdr_len(m);
 }
 
-static inline void
-mblist_append(mblist_t list, mbuf_t m)
-{
-	if (list->head == NULL) {
-		list->head = m;
-	} else {
-		list->tail->m_nextpkt = m;
-	}
-	list->tail = m;
-	list->count++;
-	list->bytes += mbuf_pkthdr_len(m);
-}
-
-static inline void
-mblist_append_list(mblist_t list, mblist append)
-{
-	VERIFY(append.head != NULL);
-	if (list->head == NULL) {
-		*list = append;
-	} else {
-		VERIFY(list->tail != NULL);
-		list->tail->m_nextpkt = append.head;
-		list->tail = append.tail;
-		list->count += append.count;
-		list->bytes += append.bytes;
-	}
+static inline void mblist_append_list(mblist_t list, mblist append) {
+  VERIFY(append.head != NULL);
+  if (list->head == NULL) {
+    *list = append;
+  } else {
+    VERIFY(list->tail != NULL);
+    list->tail->m_nextpkt = append.head;
+    list->tail = append.tail;
+    list->count += append.count;
+    list->bytes += append.bytes;
+  }
 }
 
 #endif /* _NET_MBLIST_H */

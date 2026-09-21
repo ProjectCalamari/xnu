@@ -74,10 +74,10 @@
 #ifdef BSD_KERNEL_PRIVATE
 
 /* Machine specific config stuff */
-#if     defined(KERNEL) && !defined(MACH_USER_API)
-#include <sys/vmmeter.h>
-#include <sys/queue.h>
+#if defined(KERNEL) && !defined(MACH_USER_API)
 #include <mach/vm_param.h>
+#include <sys/queue.h>
+#include <sys/vmmeter.h>
 #endif
 
 /*
@@ -86,18 +86,18 @@
  * Several fields are temporary (text, data stuff).
  */
 struct vmspace {
-	int     vm_refcnt;      /* number of references */
-	caddr_t vm_shm;         /* SYS5 shared memory private data XXX */
+  int vm_refcnt;  /* number of references */
+  caddr_t vm_shm; /* SYS5 shared memory private data XXX */
 /* we copy from vm_startcopy to the end of the structure on fork */
 #define vm_startcopy vm_rssize
-	segsz_t vm_rssize;      /* current resident set size in pages */
-	segsz_t vm_swrss;       /* resident set size before last swap */
-	segsz_t vm_tsize;       /* text size (pages) XXX */
-	segsz_t vm_dsize;       /* data size (pages) XXX */
-	segsz_t vm_ssize;       /* stack size (pages) */
-	caddr_t vm_taddr;       /* user virtual address of text XXX */
-	caddr_t vm_daddr;       /* user virtual address of data XXX */
-	caddr_t vm_maxsaddr;    /* user VA at max stack growth */
+  segsz_t vm_rssize;   /* current resident set size in pages */
+  segsz_t vm_swrss;    /* resident set size before last swap */
+  segsz_t vm_tsize;    /* text size (pages) XXX */
+  segsz_t vm_dsize;    /* data size (pages) XXX */
+  segsz_t vm_ssize;    /* stack size (pages) */
+  caddr_t vm_taddr;    /* user virtual address of text XXX */
+  caddr_t vm_daddr;    /* user virtual address of data XXX */
+  caddr_t vm_maxsaddr; /* user VA at max stack growth */
 };
 
 #ifdef KERNEL
@@ -107,28 +107,30 @@ struct vmspace {
  */
 
 struct user32_vmspace {
-	int             vm_refcnt;      /* number of references */
-	uint32_t        vm_shm;                 /* SYS5 shared memory private data XXX */
-	segsz_t         vm_rssize;              /* current resident set size in pages */
-	segsz_t         vm_swrss;               /* resident set size before last swap */
-	segsz_t         vm_tsize;               /* text size (pages) XXX */
-	segsz_t         vm_dsize;               /* data size (pages) XXX */
-	segsz_t         vm_ssize;               /* stack size (pages) */
-	uint32_t        vm_taddr;       /* user virtual address of text XXX */
-	uint32_t        vm_daddr;       /* user virtual address of data XXX */
-	uint32_t vm_maxsaddr;   /* user VA at max stack growth */
+  int vm_refcnt;        /* number of references */
+  uint32_t vm_shm;      /* SYS5 shared memory private data XXX */
+  segsz_t vm_rssize;    /* current resident set size in pages */
+  segsz_t vm_swrss;     /* resident set size before last swap */
+  segsz_t vm_tsize;     /* text size (pages) XXX */
+  segsz_t vm_dsize;     /* data size (pages) XXX */
+  segsz_t vm_ssize;     /* stack size (pages) */
+  uint32_t vm_taddr;    /* user virtual address of text XXX */
+  uint32_t vm_daddr;    /* user virtual address of data XXX */
+  uint32_t vm_maxsaddr; /* user VA at max stack growth */
 };
 struct user_vmspace {
-	int             vm_refcnt;      /* number of references */
-	user_addr_t     vm_shm __attribute((aligned(8)));                       /* SYS5 shared memory private data XXX */
-	segsz_t         vm_rssize;              /* current resident set size in pages */
-	segsz_t         vm_swrss;               /* resident set size before last swap */
-	segsz_t         vm_tsize;               /* text size (pages) XXX */
-	segsz_t         vm_dsize;               /* data size (pages) XXX */
-	segsz_t         vm_ssize;               /* stack size (pages) */
-	user_addr_t     vm_taddr __attribute((aligned(8)));       /* user virtual address of text XXX */
-	user_addr_t     vm_daddr;       /* user virtual address of data XXX */
-	user_addr_t vm_maxsaddr;        /* user VA at max stack growth */
+  int vm_refcnt; /* number of references */
+  user_addr_t vm_shm
+      __attribute((aligned(8))); /* SYS5 shared memory private data XXX */
+  segsz_t vm_rssize;             /* current resident set size in pages */
+  segsz_t vm_swrss;              /* resident set size before last swap */
+  segsz_t vm_tsize;              /* text size (pages) XXX */
+  segsz_t vm_dsize;              /* data size (pages) XXX */
+  segsz_t vm_ssize;              /* stack size (pages) */
+  user_addr_t vm_taddr
+      __attribute((aligned(8))); /* user virtual address of text XXX */
+  user_addr_t vm_daddr;          /* user virtual address of data XXX */
+  user_addr_t vm_maxsaddr;       /* user VA at max stack growth */
 };
 
 #endif /* KERNEL */
@@ -143,10 +145,10 @@ struct user_vmspace {
 /* just to keep kinfo_proc happy */
 /* NOTE: Pointer fields are size variant for LP64 */
 struct vmspace {
-	int32_t dummy;
-	caddr_t dummy2;
-	int32_t dummy3[5];
-	caddr_t dummy4[3];
+  int32_t dummy;
+  caddr_t dummy2;
+  int32_t dummy3[5];
+  caddr_t dummy4[3];
 };
 
 #endif /* BSD_KERNEL_PRIVATE */

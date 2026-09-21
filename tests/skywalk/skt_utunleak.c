@@ -34,81 +34,80 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
 
-#include <uuid/uuid.h>
 #include <sys/types.h>
+#include <uuid/uuid.h>
 
-#include <skywalk/os_skywalk.h>
 #include <darwintest.h>
+#include <skywalk/os_skywalk.h>
 
-#include "skywalk_test_driver.h"
 #include "skywalk_test_common.h"
+#include "skywalk_test_driver.h"
 #include "skywalk_test_utils.h"
 
-static int
-skt_utunleak_main(int argc, char *argv[])
-{
-	int nchannels = 500;
-	int utuns[nchannels];
-	int error;
+static int skt_utunleak_main(int argc, char *argv[]) {
+  int nchannels = 500;
+  int utuns[nchannels];
+  int error;
 
-	sktc_raise_file_limit(nchannels + 10);
+  sktc_raise_file_limit(nchannels + 10);
 
-	for (int i = 0; i < nchannels; i++) {
-		utuns[i] = -1;
-	}
+  for (int i = 0; i < nchannels; i++) {
+    utuns[i] = -1;
+  }
 
-	for (int i = 0; i < nchannels; i++) {
-		utuns[i] = sktu_create_interface(SKTU_IFT_UTUN, SKTU_IFF_ENABLE_NETIF);
-		if (utuns[i] == -1) {
-			SKT_LOG("Expected: Failed on count %d errno %d\n", i + 1, errno);
-			assert(errno != EBUSY);
-			assert(errno == ENOMEM);
-			break;
-		}
-	}
-	for (int i = 0; i < nchannels; i++) {
-		if (utuns[i] != -1) {
-			error = close(utuns[i]);
-			SKTC_ASSERT_ERR(!error);
-			utuns[i] = -1;
-		}
-	}
+  for (int i = 0; i < nchannels; i++) {
+    utuns[i] = sktu_create_interface(SKTU_IFT_UTUN, SKTU_IFF_ENABLE_NETIF);
+    if (utuns[i] == -1) {
+      SKT_LOG("Expected: Failed on count %d errno %d\n", i + 1, errno);
+      assert(errno != EBUSY);
+      assert(errno == ENOMEM);
+      break;
+    }
+  }
+  for (int i = 0; i < nchannels; i++) {
+    if (utuns[i] != -1) {
+      error = close(utuns[i]);
+      SKTC_ASSERT_ERR(!error);
+      utuns[i] = -1;
+    }
+  }
 
-	/* Now try it a second time and verify it works the same */
+  /* Now try it a second time and verify it works the same */
 
-	for (int i = 0; i < nchannels; i++) {
-		utuns[i] = -1;
-	}
+  for (int i = 0; i < nchannels; i++) {
+    utuns[i] = -1;
+  }
 
-	for (int i = 0; i < nchannels; i++) {
-		utuns[i] = sktu_create_interface(SKTU_IFT_UTUN, SKTU_IFF_ENABLE_NETIF);
-		if (utuns[i] == -1) {
-			SKT_LOG("Expected: Failed on count %d errno %d\n", i + 1, errno);
-			assert(errno != EBUSY);
-			assert(errno == ENOMEM);
-			break;
-		}
-	}
+  for (int i = 0; i < nchannels; i++) {
+    utuns[i] = sktu_create_interface(SKTU_IFT_UTUN, SKTU_IFF_ENABLE_NETIF);
+    if (utuns[i] == -1) {
+      SKT_LOG("Expected: Failed on count %d errno %d\n", i + 1, errno);
+      assert(errno != EBUSY);
+      assert(errno == ENOMEM);
+      break;
+    }
+  }
 
-	for (int i = 0; i < nchannels; i++) {
-		if (utuns[i] != -1) {
-			error = close(utuns[i]);
-			SKTC_ASSERT_ERR(!error);
-			utuns[i] = -1;
-		}
-	}
+  for (int i = 0; i < nchannels; i++) {
+    if (utuns[i] != -1) {
+      error = close(utuns[i]);
+      SKTC_ASSERT_ERR(!error);
+      utuns[i] = -1;
+    }
+  }
 
-	return 0;
+  return 0;
 }
 
 struct skywalk_test skt_utunleak = {
-	"utunleak", "allocate utuns until failure to reproduce a leak",
-	SK_FEATURE_SKYWALK | SK_FEATURE_NEXUS_KERNEL_PIPE,
-	skt_utunleak_main,
+    "utunleak",
+    "allocate utuns until failure to reproduce a leak",
+    SK_FEATURE_SKYWALK | SK_FEATURE_NEXUS_KERNEL_PIPE,
+    skt_utunleak_main,
 };

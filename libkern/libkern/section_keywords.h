@@ -29,30 +29,33 @@
 #ifndef _SECTION_KEYWORDS_H
 #define _SECTION_KEYWORDS_H
 
-#define __PLACE_IN_SECTION(__segment__section) \
-	__attribute__((used, section(__segment__section)))
+#define __PLACE_IN_SECTION(__segment__section)                                 \
+  __attribute__((used, section(__segment__section)))
 
-#define __SEGMENT_START_SYM(seg)       asm("segment$start$" seg)
-#define __SEGMENT_END_SYM(seg)         asm("segment$end$" seg)
+#define __SEGMENT_START_SYM(seg) asm("segment$start$" seg)
+#define __SEGMENT_END_SYM(seg) asm("segment$end$" seg)
 
 #define __SECTION_START_SYM(seg, sect) asm("section$start$" seg "$" sect)
-#define __SECTION_END_SYM(seg, sect)   asm("section$end$" seg "$" sect)
+#define __SECTION_END_SYM(seg, sect) asm("section$end$" seg "$" sect)
 
-#if defined(__arm64__) || defined (__x86_64__)
+#if defined(__arm64__) || defined(__x86_64__)
 
-#define SECURITY_SEGMENT_NAME           "__DATA"
-#define SECURITY_SECTION_NAME           "__const"
-#define SECURITY_SEGMENT_SECTION_NAME   "__DATA,__const"
+#define SECURITY_SEGMENT_NAME "__DATA"
+#define SECURITY_SECTION_NAME "__const"
+#define SECURITY_SEGMENT_SECTION_NAME "__DATA,__const"
 
 #ifndef __BUILDING_XNU_LIBRARY__
 #define __security_const_early const
-#define __security_const_late __attribute__((section(SECURITY_SEGMENT_SECTION_NAME)))
+#define __security_const_late                                                  \
+  __attribute__((section(SECURITY_SEGMENT_SECTION_NAME)))
 #define __security_read_write
 
 #if HIBERNATION
-#define MARK_AS_HIBERNATE_TEXT __attribute__((section("__HIB, __text, regular, pure_instructions")))
+#define MARK_AS_HIBERNATE_TEXT                                                 \
+  __attribute__((section("__HIB, __text, regular, pure_instructions")))
 #define MARK_AS_HIBERNATE_DATA __attribute__((section("__HIB, __data")))
-#define MARK_AS_HIBERNATE_DATA_CONST_LATE __attribute__((section("__HIB, __const")))
+#define MARK_AS_HIBERNATE_DATA_CONST_LATE                                      \
+  __attribute__((section("__HIB, __const")))
 #endif /* HIBERNATION */
 
 #else /* __BUILDING_XNU_LIBRARY__ */
@@ -86,19 +89,23 @@
 #define MARK_AS_HIBERNATE_DATA_CONST_LATE
 #endif
 
-#define SECURITY_READ_ONLY_EARLY(_t) _t __security_const_early __attribute__((used))
-#define SECURITY_READ_ONLY_LATE(_t)  _t __security_const_late  __attribute__((used))
-#define SECURITY_READ_WRITE(_t)      _t __security_read_write  __attribute__((used))
+#define SECURITY_READ_ONLY_EARLY(_t)                                           \
+  _t __security_const_early __attribute__((used))
+#define SECURITY_READ_ONLY_LATE(_t)                                            \
+  _t __security_const_late __attribute__((used))
+#define SECURITY_READ_WRITE(_t) _t __security_read_write __attribute__((used))
 
 #if CONFIG_SPTM
 /*
  * Place a function in a special segment, __TEXT_BOOT_EXEC. Code placed
  * in this segment will be allowed by the SPTM to execute during the fixups
- * phase; the rest of the code will be mapped as RW, so that it can be overwritten.
- * Code that is required to execute in order to apply fixups MUST be contained
- * in this special segment.
+ * phase; the rest of the code will be mapped as RW, so that it can be
+ * overwritten. Code that is required to execute in order to apply fixups MUST
+ * be contained in this special segment.
  */
-#define MARK_AS_FIXUP_TEXT __attribute__((used, section("__TEXT_BOOT_EXEC,__bootcode,regular,pure_instructions")))
+#define MARK_AS_FIXUP_TEXT                                                     \
+  __attribute__((                                                              \
+      used, section("__TEXT_BOOT_EXEC,__bootcode,regular,pure_instructions")))
 #else
 #define MARK_AS_FIXUP_TEXT
 #endif

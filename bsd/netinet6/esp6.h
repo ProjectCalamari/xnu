@@ -26,7 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-/*	$FreeBSD: src/sys/netinet6/esp6.h,v 1.2.2.2 2001/07/03 11:01:49 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet6/esp6.h,v 1.2.2.2 2001/07/03 11:01:49 ume Exp
+ * $	*/
 /*	$KAME: esp.h,v 1.16 2000/10/18 21:28:00 itojun Exp $	*/
 
 /*
@@ -68,9 +69,10 @@
 
 #ifdef BSD_KERNEL_PRIVATE
 extern int esp6_output(struct mbuf *, u_char *, struct mbuf *,
-    struct secasvar *);
+                       struct secasvar *);
 extern int esp6_input(struct mbuf **, int *, int);
-extern int esp6_input_extended(struct mbuf **mp, int *offp, int proto, ifnet_t interface);
+extern int esp6_input_extended(struct mbuf **mp, int *offp, int proto,
+                               ifnet_t interface);
 
 extern void esp6_ctlinput(int, struct sockaddr *, void *, struct ifnet *);
 #endif /* BSD_KERNEL_PRIVATE */

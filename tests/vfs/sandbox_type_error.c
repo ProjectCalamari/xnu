@@ -26,144 +26,143 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-/* compile: xcrun -sdk macosx.internal clang -ldarwintest -lsandbox -o sandbox_type_error sandbox_type_error.c -g -Weverything */
+/* compile: xcrun -sdk macosx.internal clang -ldarwintest -lsandbox -o
+ * sandbox_type_error sandbox_type_error.c -g -Weverything */
 
-#include <sandbox/libsandbox.h>
 #include <TargetConditionals.h>
+#include <sandbox/libsandbox.h>
 
 #include <darwintest.h>
 #include <darwintest/utils.h>
 
-#define RUN_TEST     TARGET_OS_OSX
+#define RUN_TEST TARGET_OS_OSX
 
 static sandbox_params_t params = NULL;
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.vfs"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("vfs"),
-	T_META_ASROOT(false),
-	T_META_ENABLED(RUN_TEST),
-	T_META_CHECK_LEAKS(false));
+T_GLOBAL_META(T_META_NAMESPACE("xnu.vfs"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("vfs"), T_META_ASROOT(false),
+              T_META_ENABLED(RUN_TEST), T_META_CHECK_LEAKS(false));
 
-static void
-cleanup(void)
-{
-	if (params) {
-		sandbox_free_params(params);
-	}
+static void cleanup(void) {
+  if (params) {
+    sandbox_free_params(params);
+  }
 }
 
-static void
-create_profile_string(char *buff, size_t size, char *path)
-{
-	snprintf(buff, size, "(version 1) \n\
+static void create_profile_string(char *buff, size_t size, char *path) {
+  snprintf(buff, size, "(version 1) \n\
                           (allow default) \n\
                           (deny file-read-metadata (path \"%s\")) \n",
-	    path);
+           path);
 }
 
-static void
-test_path(char *deny_path, char *stat_path, int expected_err)
-{
-	struct stat sb;
-	pid_t pid, res;
-	char *sberror = NULL;
-	char profile_string[1000];
-	sandbox_profile_t profile = NULL;
-	int status, error, ret;
+static void test_path(char *deny_path, char *stat_path, int expected_err) {
+  struct stat sb;
+  pid_t pid, res;
+  char *sberror = NULL;
+  char profile_string[1000];
+  sandbox_profile_t profile = NULL;
+  int status, error, ret;
 
-	/* Fork */
-	pid = fork();
-	if (pid < -1) {
-		T_FAIL("Failed to fork");
-		return;
-	}
+  /* Fork */
+  pid = fork();
+  if (pid < -1) {
+    T_FAIL("Failed to fork");
+    return;
+  }
 
-	switch (pid) {
-	case 0:
-		/* Create sandbox variables */
-		create_profile_string(profile_string, sizeof(profile_string), deny_path);
-		if ((profile = sandbox_compile_string(profile_string, params, &sberror)) == NULL) {
-			T_FAIL("Creating Sandbox profile object");
-			exit(EINVAL);
-		}
+  switch (pid) {
+  case 0:
+    /* Create sandbox variables */
+    create_profile_string(profile_string, sizeof(profile_string), deny_path);
+    if ((profile = sandbox_compile_string(profile_string, params, &sberror)) ==
+        NULL) {
+      T_FAIL("Creating Sandbox profile object");
+      exit(EINVAL);
+    }
 
-		error = sandbox_apply(profile);
-		if (error) {
-			T_FAIL("Applying Sandbox profile FAILED");
-			sandbox_free_profile(profile);
-			exit(EINVAL);
-		}
+    error = sandbox_apply(profile);
+    if (error) {
+      T_FAIL("Applying Sandbox profile FAILED");
+      sandbox_free_profile(profile);
+      exit(EINVAL);
+    }
 
-		/* Query stat */
-		error = stat(stat_path, &sb);
+    /* Query stat */
+    error = stat(stat_path, &sb);
 
-		/* Validate error */
-		if ((!error && !expected_err) || (error == -1 && errno == expected_err)) {
-			ret = 0;
-		} else {
-			ret = errno;
-		}
+    /* Validate error */
+    if ((!error && !expected_err) || (error == -1 && errno == expected_err)) {
+      ret = 0;
+    } else {
+      ret = errno;
+    }
 
-		if (profile) {
-			sandbox_free_profile(profile);
-		}
-		exit(ret);
-	default:
-		do {
-			res = waitpid(pid, &status, WUNTRACED);
-		} while (res == -1 && errno == EINTR);
+    if (profile) {
+      sandbox_free_profile(profile);
+    }
+    exit(ret);
+  default:
+    do {
+      res = waitpid(pid, &status, WUNTRACED);
+    } while (res == -1 && errno == EINTR);
 
-		if (res != pid) {
-			T_FAIL("(res != pid");
-			break;
-		}
+    if (res != pid) {
+      T_FAIL("(res != pid");
+      break;
+    }
 
-		if (!WIFEXITED(status)) {
-			T_FAIL("Stat of '%s' with deny path of '%s' FAILED", stat_path, deny_path);
-			break;
-		}
+    if (!WIFEXITED(status)) {
+      T_FAIL("Stat of '%s' with deny path of '%s' FAILED", stat_path,
+             deny_path);
+      break;
+    }
 
-		if (WEXITSTATUS(status)) {
-			T_FAIL("Stat of '%s' with deny path of '%s' should FAIL with '%s', got '%s'", stat_path, deny_path, strerror(expected_err), strerror(WEXITSTATUS(status)));
-			break;
-		}
+    if (WEXITSTATUS(status)) {
+      T_FAIL(
+          "Stat of '%s' with deny path of '%s' should FAIL with '%s', got '%s'",
+          stat_path, deny_path, strerror(expected_err),
+          strerror(WEXITSTATUS(status)));
+      break;
+    }
 
-		if (expected_err) {
-			T_PASS("Stat of '%s' with deny path of '%s' should FAIL with '%s'", stat_path, deny_path, strerror(expected_err));
-		} else {
-			T_PASS("Stat of '%s' with deny path of '%s' should PASS", stat_path, deny_path);
-		}
-	}
+    if (expected_err) {
+      T_PASS("Stat of '%s' with deny path of '%s' should FAIL with '%s'",
+             stat_path, deny_path, strerror(expected_err));
+    } else {
+      T_PASS("Stat of '%s' with deny path of '%s' should PASS", stat_path,
+             deny_path);
+    }
+  }
 }
 
-T_DECL(sandbox_type_error,
-    "Prevent the information disclosure on resource type File/Directory/Symlink")
-{
+T_DECL(sandbox_type_error, "Prevent the information disclosure on resource "
+                           "type File/Directory/Symlink") {
 #if (!RUN_TEST)
-	T_SKIP("Not macOS");
+  T_SKIP("Not macOS");
 #endif
 
-	T_ATEND(cleanup);
-	T_SETUPBEGIN;
+  T_ATEND(cleanup);
+  T_SETUPBEGIN;
 
-	T_ASSERT_POSIX_NOTNULL(params = sandbox_create_params(), "Creating Sandbox params object");
+  T_ASSERT_POSIX_NOTNULL(params = sandbox_create_params(),
+                         "Creating Sandbox params object");
 
-	T_SETUPEND;
+  T_SETUPEND;
 
-	/* Verify handling of non-existent files */
-	test_path("/.file", "/.nofollow/notexist/", ENOENT);
+  /* Verify handling of non-existent files */
+  test_path("/.file", "/.nofollow/notexist/", ENOENT);
 
-	/* Prevent the information disclosure on the resource type for file */
-	test_path("/.file", "/.nofollow/.file/", EPERM);
+  /* Prevent the information disclosure on the resource type for file */
+  test_path("/.file", "/.nofollow/.file/", EPERM);
 
-	/* Prevent the information disclosure on the resource type for directory */
-	test_path("/private", "/.nofollow/private/", EPERM);
+  /* Prevent the information disclosure on the resource type for directory */
+  test_path("/private", "/.nofollow/private/", EPERM);
 
-	/* Prevent the information disclosure on the resource type for symlink */
-	test_path("/tmp", "/.nofollow/tmp/", EPERM);
+  /* Prevent the information disclosure on the resource type for symlink */
+  test_path("/tmp", "/.nofollow/tmp/", EPERM);
 
-	/* Prevent the information disclosure on the resource type for symlink child */
-	test_path("/tmp", "/.nofollow/tmp/notexist", EPERM);
+  /* Prevent the information disclosure on the resource type for symlink child
+   */
+  test_path("/tmp", "/.nofollow/tmp/notexist", EPERM);
 }

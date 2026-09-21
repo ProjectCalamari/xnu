@@ -25,9 +25,9 @@
 
 #if __DARWIN_UNIX03
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "_errno.h"
+#include <sys/stat.h>
+#include <sys/types.h>
 
 extern int __chmod(const char *path, mode_t mode);
 
@@ -37,30 +37,28 @@ extern int __chmod(const char *path, mode_t mode);
  *
  * This is for UNIX03 only.
  */
-int
-chmod(const char *path, mode_t mode)
-{
-	int res = __chmod(path, mode);
+int chmod(const char *path, mode_t mode) {
+  int res = __chmod(path, mode);
 
-	if (res >= 0 || errno != EPERM || (mode & (S_ISUID | S_ISGID)) == 0) {
-		return res;
-	}
-	if (mode & S_ISGID) {
-		res = __chmod(path, mode ^ S_ISGID);
-		if (res >= 0 || errno != EPERM) {
-			return res;
-		}
-	}
-	if (mode & S_ISUID) {
-		res = __chmod(path, mode ^ S_ISUID);
-		if (res >= 0 || errno != EPERM) {
-			return res;
-		}
-	}
-	if ((mode & (S_ISUID | S_ISGID)) == (S_ISUID | S_ISGID)) {
-		res = __chmod(path, mode ^ (S_ISUID | S_ISGID));
-	}
-	return res;
+  if (res >= 0 || errno != EPERM || (mode & (S_ISUID | S_ISGID)) == 0) {
+    return res;
+  }
+  if (mode & S_ISGID) {
+    res = __chmod(path, mode ^ S_ISGID);
+    if (res >= 0 || errno != EPERM) {
+      return res;
+    }
+  }
+  if (mode & S_ISUID) {
+    res = __chmod(path, mode ^ S_ISUID);
+    if (res >= 0 || errno != EPERM) {
+      return res;
+    }
+  }
+  if ((mode & (S_ISUID | S_ISGID)) == (S_ISUID | S_ISGID)) {
+    res = __chmod(path, mode ^ (S_ISUID | S_ISGID));
+  }
+  return res;
 }
 
 #endif /* __DARWIN_UNIX03 */

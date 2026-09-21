@@ -29,73 +29,47 @@
 #include "dt_proxy.h"
 #include <mach/mach_types.h>
 
-#define NOT_MOCKED(name) PT_FAIL(#name ": this function should never be called since it is mocked by the mocks dylib")
+#define NOT_MOCKED(name)                                                       \
+  PT_FAIL(#name ": this function should never be called since it is mocked "   \
+                "by the mocks dylib")
 
-void
-data_race_checker_atomic_begin(void)
-{
-}
+void data_race_checker_atomic_begin(void) {}
 
-void
-data_race_checker_atomic_end(void)
-{
-}
+void data_race_checker_atomic_end(void) {}
 
-__mockable void
-__sanitizer_cov_trace_pc_guard(uint32_t *guard)
-{
-	// do nothing
+__mockable void __sanitizer_cov_trace_pc_guard(uint32_t *guard) {
+  // do nothing
 }
 
 // Called before a load of appropriate size. Addr is the address of the load.
-__mockable void
-__sanitizer_cov_load1(uint8_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_load1);
+__mockable void __sanitizer_cov_load1(uint8_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_load1);
 }
-__mockable void
-__sanitizer_cov_load2(uint16_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_load2);
+__mockable void __sanitizer_cov_load2(uint16_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_load2);
 }
-__mockable void
-__sanitizer_cov_load4(uint32_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_load4);
+__mockable void __sanitizer_cov_load4(uint32_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_load4);
 }
-__mockable void
-__sanitizer_cov_load8(uint64_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_load8);
+__mockable void __sanitizer_cov_load8(uint64_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_load8);
 }
-__mockable void
-__sanitizer_cov_load16(__int128 *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_load16);
+__mockable void __sanitizer_cov_load16(__int128 *addr) {
+  NOT_MOCKED(__sanitizer_cov_load16);
 }
 // Called before a store of appropriate size. Addr is the address of the store.
-void
-__sanitizer_cov_store1(uint8_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_store1);
+void __sanitizer_cov_store1(uint8_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_store1);
 }
-void
-__sanitizer_cov_store2(uint16_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_store2);
+void __sanitizer_cov_store2(uint16_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_store2);
 }
-void
-__sanitizer_cov_store4(uint32_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_store4);
+void __sanitizer_cov_store4(uint32_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_store4);
 }
-void
-__sanitizer_cov_store8(uint64_t *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_store8);
+void __sanitizer_cov_store8(uint64_t *addr) {
+  NOT_MOCKED(__sanitizer_cov_store8);
 }
-void
-__sanitizer_cov_store16(__int128 *addr)
-{
-	NOT_MOCKED(__sanitizer_cov_store16);
+void __sanitizer_cov_store16(__int128 *addr) {
+  NOT_MOCKED(__sanitizer_cov_store16);
 }

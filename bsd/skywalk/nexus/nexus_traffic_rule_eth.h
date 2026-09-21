@@ -34,17 +34,16 @@
 __BEGIN_DECLS
 void eth_traffic_rule_init(kern_allocation_name_t rule_tag);
 
-int eth_traffic_rule_validate(
-	const char *ifname,
-	struct ifnet_traffic_descriptor_common *td,
-	struct ifnet_traffic_rule_action *ra);
+int eth_traffic_rule_validate(const char *ifname,
+                              struct ifnet_traffic_descriptor_common *td,
+                              struct ifnet_traffic_rule_action *ra);
 
 int eth_traffic_rule_find(const char *ifname,
-    struct ifnet_traffic_descriptor_common *td, uint32_t flags,
-    struct nxctl_traffic_rule **ntrp);
+                          struct ifnet_traffic_descriptor_common *td,
+                          uint32_t flags, struct nxctl_traffic_rule **ntrp);
 
-int eth_traffic_rule_find_by_uuid(
-	uuid_t uuid, struct nxctl_traffic_rule **ntrp);
+int eth_traffic_rule_find_by_uuid(uuid_t uuid,
+                                  struct nxctl_traffic_rule **ntrp);
 
 void eth_traffic_rule_link(struct nxctl_traffic_rule *ntr);
 
@@ -54,15 +53,14 @@ int eth_traffic_rule_notify(struct nxctl_traffic_rule *ntr, uint32_t flags);
 
 int eth_traffic_rule_get_count(const char *ifname, uint32_t *count);
 
-int eth_traffic_rule_create(
-	const char *ifname, struct ifnet_traffic_descriptor_common *td,
-	struct ifnet_traffic_rule_action *ra, uint32_t flags,
-	struct nxctl_traffic_rule **ntrp);
+int eth_traffic_rule_create(const char *ifname,
+                            struct ifnet_traffic_descriptor_common *td,
+                            struct ifnet_traffic_rule_action *ra,
+                            uint32_t flags, struct nxctl_traffic_rule **ntrp);
 
 void eth_traffic_rule_destroy(struct nxctl_traffic_rule *ntr);
 
-int eth_traffic_rule_get_all(uint32_t size,
-    uint32_t *count, user_addr_t uaddr);
+int eth_traffic_rule_get_all(uint32_t size, uint32_t *count, user_addr_t uaddr);
 
 __END_DECLS
 

@@ -32,11 +32,9 @@
 #include <kern/testpoints.h>
 
 #if DEBUG || DEVELOPMENT
-void
-    tp_call_stackshot_long_upcall(tp_id_t testpoint, tp_val_t __unused val);
+void tp_call_stackshot_long_upcall(tp_id_t testpoint, tp_val_t __unused val);
 
-void
-    tp_call_stackshot_upcall(tp_id_t testpoint, tp_val_t __unused val);
+void tp_call_stackshot_upcall(tp_id_t testpoint, tp_val_t __unused val);
 #endif /* DEBUG || DEVELOPMENT */
 
 #if STACKSHOT_EXCLAVES_TESTING

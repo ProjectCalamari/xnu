@@ -27,7 +27,7 @@
  */
 
 #ifndef _NET_IF_REDIRECT_VAR_H_
-#define _NET_IF_REDIRECT_VAR_H_     1
+#define _NET_IF_REDIRECT_VAR_H_ 1
 
 #ifdef KERNEL_PRIVATE
 __private_extern__ void if_redirect_init(void);
@@ -44,25 +44,25 @@ __private_extern__ void if_redirect_init(void);
 #define RD_CREATE_PARAMS_TYPE_NOATTACH 0x2D28
 
 struct if_redirect_create_params {
-	uint16_t ircp_type;
-	uint16_t ircp_len;
-	uint32_t ircp_ftype;
+  uint16_t ircp_type;
+  uint16_t ircp_len;
+  uint32_t ircp_ftype;
 };
 
 /*
  * SIOCSDRVSPEC
  */
 enum {
-	RD_S_CMD_NONE              = 0,
-	RD_S_CMD_SET_DELEGATE      = 1,
+  RD_S_CMD_NONE = 0,
+  RD_S_CMD_SET_DELEGATE = 1,
 };
 
 struct if_redirect_request {
-	uint64_t ifrr_reserved[4];
-	union {
-		char ifrru_buf[128];                /* stable size */
-		char ifrru_delegate_name[IFNAMSIZ]; /* if name */
-	} ifrr_u;
+  uint64_t ifrr_reserved[4];
+  union {
+    char ifrru_buf[128];                /* stable size */
+    char ifrru_delegate_name[IFNAMSIZ]; /* if name */
+  } ifrr_u;
 #define ifrr_delegate_name ifrr_u.ifrru_delegate_name
 };
 

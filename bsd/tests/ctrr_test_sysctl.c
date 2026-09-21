@@ -30,26 +30,28 @@
 #include <sys/sysctl.h>
 #include <tests/ktest.h>
 
-#if (defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR)) && defined(CONFIG_XNUPOST)
+#if (defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR)) &&   \
+    defined(CONFIG_XNUPOST)
 extern kern_return_t ctrr_test(void);
 
-static int
-sysctl_run_ctrr_test(__unused struct sysctl_oid *oidp, __unused void *arg1, __unused int arg2, struct sysctl_req *req)
-{
-	unsigned int dummy;
-	int error, changed;
-	error = sysctl_io_number(req, 0, sizeof(dummy), &dummy, &changed);
-	if (error || !changed) {
-		return error;
-	}
-	kern_return_t kr = ctrr_test();
-	if (kr != KERN_SUCCESS || T_TESTRESULT != T_STATE_PASS) {
-		return EDEVERR;
-	}
-	return 0;
+static int sysctl_run_ctrr_test(__unused struct sysctl_oid *oidp,
+                                __unused void *arg1, __unused int arg2,
+                                struct sysctl_req *req) {
+  unsigned int dummy;
+  int error, changed;
+  error = sysctl_io_number(req, 0, sizeof(dummy), &dummy, &changed);
+  if (error || !changed) {
+    return error;
+  }
+  kern_return_t kr = ctrr_test();
+  if (kr != KERN_SUCCESS || T_TESTRESULT != T_STATE_PASS) {
+    return EDEVERR;
+  }
+  return 0;
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, run_ctrr_test,
-    CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_LOCKED,
-    0, 0, sysctl_run_ctrr_test, "I", "");
-#endif /* (defined(KERNEL_INTEGRITY_CTRR) || defined(KERNEL_INTEGRITY_PV_CTRR)) && defined(CONFIG_XNUPOST) */
+            CTLTYPE_INT | CTLFLAG_RW | CTLFLAG_LOCKED, 0, 0,
+            sysctl_run_ctrr_test, "I", "");
+#endif /* (defined(KERNEL_INTEGRITY_CTRR) ||                                   \
+          defined(KERNEL_INTEGRITY_PV_CTRR)) && defined(CONFIG_XNUPOST) */

@@ -44,9 +44,9 @@
 #include <libkern/c++/OSSymbol.h>
 
 /* Global IOExclaveProxyState lookup table */
-extern OSDictionary     *gExclaveProxyStates;
-extern IORecursiveLock  *gExclaveProxyStateLock;
-extern const OSSymbol * gDARTMapperFunctionSetActive;
+extern OSDictionary *gExclaveProxyStates;
+extern IORecursiveLock *gExclaveProxyStateLock;
+extern const OSSymbol *gDARTMapperFunctionSetActive;
 
 extern "C" {
 #endif /* __cplusplus */
@@ -54,107 +54,107 @@ extern "C" {
 /* Exclave upcall handler arguments */
 
 enum IOExclaveInterruptUpcallType {
-	kIOExclaveInterruptUpcallTypeRegister,
-	kIOExclaveInterruptUpcallTypeRemove,
-	kIOExclaveInterruptUpcallTypeEnable
+  kIOExclaveInterruptUpcallTypeRegister,
+  kIOExclaveInterruptUpcallTypeRemove,
+  kIOExclaveInterruptUpcallTypeEnable
 };
 
 struct IOExclaveInterruptUpcallArgs {
-	int index;
-	enum IOExclaveInterruptUpcallType type;
-	union {
-		struct {
-			// Register an IOIES with no provider for testing purposes
-			bool test_irq;
-		} register_args;
-		struct {
-			bool enable;
-		} enable_args;
-	} data;
+  int index;
+  enum IOExclaveInterruptUpcallType type;
+  union {
+    struct {
+      // Register an IOIES with no provider for testing purposes
+      bool test_irq;
+    } register_args;
+    struct {
+      bool enable;
+    } enable_args;
+  } data;
 };
 
 enum IOExclaveTimerUpcallType {
-	kIOExclaveTimerUpcallTypeRegister,
-	kIOExclaveTimerUpcallTypeRemove,
-	kIOExclaveTimerUpcallTypeEnable,
-	kIOExclaveTimerUpcallTypeSetTimeout,
-	kIOExclaveTimerUpcallTypeCancelTimeout
+  kIOExclaveTimerUpcallTypeRegister,
+  kIOExclaveTimerUpcallTypeRemove,
+  kIOExclaveTimerUpcallTypeEnable,
+  kIOExclaveTimerUpcallTypeSetTimeout,
+  kIOExclaveTimerUpcallTypeCancelTimeout
 };
 
 struct IOExclaveTimerUpcallArgs {
-	uint32_t timer_id;
-	enum IOExclaveTimerUpcallType type;
-	union {
-		struct {
-			bool enable;
-		} enable_args;
-		struct {
-			bool clock_continuous;
-			AbsoluteTime duration;
-			kern_return_t kr;
-		} set_timeout_args;
-	} data;
+  uint32_t timer_id;
+  enum IOExclaveTimerUpcallType type;
+  union {
+    struct {
+      bool enable;
+    } enable_args;
+    struct {
+      bool clock_continuous;
+      AbsoluteTime duration;
+      kern_return_t kr;
+    } set_timeout_args;
+  } data;
 };
 
 enum IOExclaveAsyncNotificationUpcallType {
-	AsyncNotificationUpcallTypeSignal,
+  AsyncNotificationUpcallTypeSignal,
 };
 
 struct IOExclaveAsyncNotificationUpcallArgs {
-	enum IOExclaveAsyncNotificationUpcallType type;
-	uint32_t notificationID;
+  enum IOExclaveAsyncNotificationUpcallType type;
+  uint32_t notificationID;
 };
 
 enum IOExclaveMapperOperationUpcallType {
-	MapperActivate,
-	MapperDeactivate,
+  MapperActivate,
+  MapperDeactivate,
 };
 
 struct IOExclaveMapperOperationUpcallArgs {
-	enum IOExclaveMapperOperationUpcallType type;
-	uint32_t mapperIndex;
+  enum IOExclaveMapperOperationUpcallType type;
+  uint32_t mapperIndex;
 };
 
 enum IOExclaveANEUpcallType {
-	kIOExclaveANEUpcallTypeSetPowerState,
-	kIOExclaveANEUpcallTypeWorkSubmit,
-	kIOExclaveANEUpcallTypeWorkBegin,
-	kIOExclaveANEUpcallTypeWorkEnd,
+  kIOExclaveANEUpcallTypeSetPowerState,
+  kIOExclaveANEUpcallTypeWorkSubmit,
+  kIOExclaveANEUpcallTypeWorkBegin,
+  kIOExclaveANEUpcallTypeWorkEnd,
 };
 
 struct IOExclaveANEUpcallArgs {
-	enum IOExclaveANEUpcallType type;
-	union {
-		struct {
-			uint32_t desired_state;
-		} setpowerstate_args;
-		struct {
-			uint64_t arg0;
-			uint64_t arg1;
-			uint64_t arg2;
-		} work_args;
-	};
+  enum IOExclaveANEUpcallType type;
+  union {
+    struct {
+      uint32_t desired_state;
+    } setpowerstate_args;
+    struct {
+      uint64_t arg0;
+      uint64_t arg1;
+      uint64_t arg2;
+    } work_args;
+  };
 };
 
 enum IOExclaveLPWUpcallType {
-	kIOExclaveLPWUpcallTypeCreateAssertion,
-	kIOExclaveLPWUpcallTypeReleaseAssertion,
-	kIOExclaveLPWUpcallTypeRequestRunMode,
+  kIOExclaveLPWUpcallTypeCreateAssertion,
+  kIOExclaveLPWUpcallTypeReleaseAssertion,
+  kIOExclaveLPWUpcallTypeRequestRunMode,
 };
 
 struct IOExclaveLPWUpcallArgs {
-	enum IOExclaveLPWUpcallType type;
-	union {
-		struct {
-			uint64_t id_out;
-		} createassertion;
-		struct {
-			uint64_t id;
-		} releaseassertion;
-		struct {
-			uint64_t runmode_mask;
-		} requestrunmode;
-	} data;
+  enum IOExclaveLPWUpcallType type;
+  union {
+    struct {
+      uint64_t id_out;
+    } createassertion;
+    struct {
+      uint64_t id;
+    } releaseassertion;
+    struct {
+      uint64_t runmode_mask;
+    } requestrunmode;
+  } data;
 };
 
 /*
@@ -162,12 +162,17 @@ struct IOExclaveLPWUpcallArgs {
  *
  * id is the registry ID of the proxy IOService.
  */
-bool IOExclaveInterruptUpcallHandler(uint64_t id, struct IOExclaveInterruptUpcallArgs *args);
-bool IOExclaveTimerUpcallHandler(uint64_t id, struct IOExclaveTimerUpcallArgs *args);
+bool IOExclaveInterruptUpcallHandler(uint64_t id,
+                                     struct IOExclaveInterruptUpcallArgs *args);
+bool IOExclaveTimerUpcallHandler(uint64_t id,
+                                 struct IOExclaveTimerUpcallArgs *args);
 bool IOExclaveLockWorkloop(uint64_t id, bool lock);
-bool IOExclaveAsyncNotificationUpcallHandler(uint64_t id, struct IOExclaveAsyncNotificationUpcallArgs *args);
-bool IOExclaveMapperOperationUpcallHandler(uint64_t id, struct IOExclaveMapperOperationUpcallArgs *args);
-bool IOExclaveANEUpcallHandler(uint64_t id, struct IOExclaveANEUpcallArgs *args, bool *result);
+bool IOExclaveAsyncNotificationUpcallHandler(
+    uint64_t id, struct IOExclaveAsyncNotificationUpcallArgs *args);
+bool IOExclaveMapperOperationUpcallHandler(
+    uint64_t id, struct IOExclaveMapperOperationUpcallArgs *args);
+bool IOExclaveANEUpcallHandler(uint64_t id, struct IOExclaveANEUpcallArgs *args,
+                               bool *result);
 IOReturn IOExclaveLPWUpcallHandler(struct IOExclaveLPWUpcallArgs *args);
 
 IOReturn IOExclaveLPWCreateAssertion(uint64_t *id_out, const char *desc);
@@ -176,8 +181,8 @@ IOReturn IOExclaveLPWReleaseAssertion(uint64_t id);
 /* Test support */
 
 struct IOExclaveTestSignalInterruptParam {
-	uint64_t id;
-	uint64_t index;
+  uint64_t id;
+  uint64_t index;
 };
 void IOExclaveTestSignalInterrupt(thread_call_param_t, thread_call_param_t);
 

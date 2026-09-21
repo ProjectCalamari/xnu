@@ -32,46 +32,46 @@
 #define __STDC_LIMIT_MACROS
 #endif
 
-#include <sys/cdefs.h>
 #include <kern/thread.h>
+#include <sys/cdefs.h>
 
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <IOKit/assert.h>  /* Must be before other includes of kern/assert.h */
+#include <IOKit/assert.h> /* Must be before other includes of kern/assert.h */
 
 #include <kern/debug.h>
-#include <kern/task.h>
-#include <kern/sched_prim.h>
+#include <kern/ipc_mig.h>
 #include <kern/locks.h>
 #include <kern/queue.h>
-#include <kern/ipc_mig.h>
+#include <kern/sched_prim.h>
+#include <kern/task.h>
 #ifndef MACH_KERNEL_PRIVATE
 #include <libkern/libkern.h>
 #endif
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 #include <kern/kalloc.h>
 #endif /* KERNEL_PRIVATE */
 
 __BEGIN_DECLS
 
-#include <mach/mach_types.h>
 #include <mach/mach_interface.h>
+#include <mach/mach_types.h>
 #include <mach/memory_object_types.h>
 
 #include <kern/kern_types.h>
 
-#ifdef  KERNEL_PRIVATE
+#ifdef KERNEL_PRIVATE
 #include <vm/pmap.h>
-#include <vm/vm_map.h>
 #include <vm/vm_kern.h>
+#include <vm/vm_map.h>
 #endif /* KERNEL_PRIVATE */
 
 #ifndef _MISC_PROTOS_H_
-extern void     _doprnt( const char *format, va_list *arg,
-    void (*lputc)(char), int radix );
+extern void _doprnt(const char *format, va_list *arg, void (*lputc)(char),
+                    int radix);
 #endif
 
 __END_DECLS

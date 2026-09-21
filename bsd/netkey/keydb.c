@@ -57,14 +57,14 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/param.h>
-#include <sys/systm.h>
+#include <sys/errno.h>
 #include <sys/kernel.h>
 #include <sys/malloc.h>
-#include <sys/errno.h>
+#include <sys/param.h>
 #include <sys/queue.h>
+#include <sys/socket.h>
+#include <sys/systm.h>
+#include <sys/types.h>
 
 #include <net/if.h>
 #include <net/route.h>
@@ -72,9 +72,9 @@
 #include <netinet/in.h>
 
 #include <net/pfkeyv2.h>
+#include <netinet6/ipsec.h>
 #include <netkey/key.h>
 #include <netkey/keydb.h>
-#include <netinet6/ipsec.h>
 
 #include <net/net_osdep.h>
 
@@ -83,79 +83,69 @@
 /*
  * secpolicy management
  */
-struct secpolicy *
-keydb_newsecpolicy(void)
-{
-	LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_NOTOWNED);
+struct secpolicy *keydb_newsecpolicy(void) {
+  LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_NOTOWNED);
 
-	return kalloc_type(struct secpolicy, Z_WAITOK | Z_ZERO);
+  return kalloc_type(struct secpolicy, Z_WAITOK | Z_ZERO);
 }
 
-void
-keydb_delsecpolicy(struct secpolicy *p)
-{
-	kfree_type(struct secpolicy, p);
+void keydb_delsecpolicy(struct secpolicy *p) {
+  kfree_type(struct secpolicy, p);
 }
 
 /*
  * secashead management
  */
-struct secashead *
-keydb_newsecashead(void)
-{
-	struct secashead *p;
+struct secashead *keydb_newsecashead(void) {
+  struct secashead *p;
 
-	LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_OWNED);
+  LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_OWNED);
 
-	p = kalloc_type(struct secashead, Z_NOWAIT | Z_ZERO);
-	if (!p) {
-		lck_mtx_unlock(sadb_mutex);
-		p = kalloc_type(struct secashead, Z_WAITOK | Z_ZERO | Z_NOFAIL);
-		lck_mtx_lock(sadb_mutex);
-	}
-	for (size_t i = 0; i < ARRAY_COUNT(p->savtree); i++) {
-		LIST_INIT(&p->savtree[i]);
-	}
-	return p;
+  p = kalloc_type(struct secashead, Z_NOWAIT | Z_ZERO);
+  if (!p) {
+    lck_mtx_unlock(sadb_mutex);
+    p = kalloc_type(struct secashead, Z_WAITOK | Z_ZERO | Z_NOFAIL);
+    lck_mtx_lock(sadb_mutex);
+  }
+  for (size_t i = 0; i < ARRAY_COUNT(p->savtree); i++) {
+    LIST_INIT(&p->savtree[i]);
+  }
+  return p;
 }
 
 /*
  * secreplay management
  */
-struct secreplay *
-keydb_newsecreplay(u_int8_t wsize)
-{
-	struct secreplay *p;
-	caddr_t tmp_bitmap = NULL;
+struct secreplay *keydb_newsecreplay(u_int8_t wsize) {
+  struct secreplay *p;
+  caddr_t tmp_bitmap = NULL;
 
-	LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_OWNED);
+  LCK_MTX_ASSERT(sadb_mutex, LCK_MTX_ASSERT_OWNED);
 
-	p = kalloc_type(struct secreplay, Z_NOWAIT | Z_ZERO);
-	if (!p) {
-		lck_mtx_unlock(sadb_mutex);
-		p = kalloc_type(struct secreplay, Z_WAITOK | Z_ZERO | Z_NOFAIL);
-		lck_mtx_lock(sadb_mutex);
-	}
+  p = kalloc_type(struct secreplay, Z_NOWAIT | Z_ZERO);
+  if (!p) {
+    lck_mtx_unlock(sadb_mutex);
+    p = kalloc_type(struct secreplay, Z_WAITOK | Z_ZERO | Z_NOFAIL);
+    lck_mtx_lock(sadb_mutex);
+  }
 
-	if (wsize != 0) {
-		tmp_bitmap = (caddr_t)kalloc_data(wsize, Z_NOWAIT | Z_ZERO);
-		if (!tmp_bitmap) {
-			lck_mtx_unlock(sadb_mutex);
-			tmp_bitmap = (caddr_t)kalloc_data(wsize, Z_WAITOK | Z_ZERO | Z_NOFAIL);
-			lck_mtx_lock(sadb_mutex);
-		}
+  if (wsize != 0) {
+    tmp_bitmap = (caddr_t)kalloc_data(wsize, Z_NOWAIT | Z_ZERO);
+    if (!tmp_bitmap) {
+      lck_mtx_unlock(sadb_mutex);
+      tmp_bitmap = (caddr_t)kalloc_data(wsize, Z_WAITOK | Z_ZERO | Z_NOFAIL);
+      lck_mtx_lock(sadb_mutex);
+    }
 
-		p->bitmap = tmp_bitmap;
-		p->wsize = wsize;
-	}
-	return p;
+    p->bitmap = tmp_bitmap;
+    p->wsize = wsize;
+  }
+  return p;
 }
 
-void
-keydb_delsecreplay(struct secreplay *p)
-{
-	if (p->bitmap) {
-		kfree_data_sized_by(p->bitmap, p->wsize);
-	}
-	kfree_type(struct secreplay, p);
+void keydb_delsecreplay(struct secreplay *p) {
+  if (p->bitmap) {
+    kfree_data_sized_by(p->bitmap, p->wsize);
+  }
+  kfree_type(struct secreplay, p);
 }

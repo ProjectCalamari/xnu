@@ -29,155 +29,148 @@
 #include <kern/energy_perf.h>
 
 #include <libsa/types.h>
-#include <sys/kdebug.h>
-#include <stddef.h>
 #include <machine/machine_routines.h>
+#include <stddef.h>
+#include <sys/kdebug.h>
 
 #include <kern/coalition.h>
 #include <kern/task.h>
 #include <kern/task_ident.h>
 
-void
-gpu_describe(__unused gpu_descriptor_t gdesc)
-{
-	KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_ENERGY_PERF, 1), gdesc->gpu_id, gdesc->gpu_max_domains, 0, 0, 0);
+void gpu_describe(__unused gpu_descriptor_t gdesc) {
+  KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_ENERGY_PERF, 1), gdesc->gpu_id,
+                        gdesc->gpu_max_domains, 0, 0, 0);
 }
 
-uint64_t
-gpu_accumulate_time(__unused uint32_t scope, __unused uint32_t gpu_id, __unused uint32_t gpu_domain, __unused uint64_t gpu_accumulated_ns, __unused uint64_t gpu_tstamp_ns)
-{
-	KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_ENERGY_PERF, 2), scope, gpu_id, gpu_domain, gpu_accumulated_ns, gpu_tstamp_ns);
-	ml_gpu_stat_update(gpu_accumulated_ns);
-	return 0;
+uint64_t gpu_accumulate_time(__unused uint32_t scope, __unused uint32_t gpu_id,
+                             __unused uint32_t gpu_domain,
+                             __unused uint64_t gpu_accumulated_ns,
+                             __unused uint64_t gpu_tstamp_ns) {
+  KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_ENERGY_PERF, 2), scope, gpu_id,
+                        gpu_domain, gpu_accumulated_ns, gpu_tstamp_ns);
+  ml_gpu_stat_update(gpu_accumulated_ns);
+  return 0;
 }
 
-static uint64_t
-io_rate_update_cb_default(__unused uint64_t io_rate_flags, __unused uint64_t read_ops_delta, __unused uint64_t write_ops_delta, __unused uint64_t read_bytes_delta, __unused uint64_t write_bytes_delta)
-{
-	KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_ENERGY_PERF, 3), io_rate_flags, read_ops_delta, write_ops_delta, read_bytes_delta, write_bytes_delta);
-	return 0;
+static uint64_t io_rate_update_cb_default(__unused uint64_t io_rate_flags,
+                                          __unused uint64_t read_ops_delta,
+                                          __unused uint64_t write_ops_delta,
+                                          __unused uint64_t read_bytes_delta,
+                                          __unused uint64_t write_bytes_delta) {
+  KERNEL_DEBUG_CONSTANT(MACHDBG_CODE(DBG_MACH_ENERGY_PERF, 3), io_rate_flags,
+                        read_ops_delta, write_ops_delta, read_bytes_delta,
+                        write_bytes_delta);
+  return 0;
 }
 
 io_rate_update_callback_t io_rate_update_cb = io_rate_update_cb_default;
 
-void
-io_rate_update_register(io_rate_update_callback_t io_rate_update_cb_new)
-{
-	if (io_rate_update_cb_new != NULL) {
-		io_rate_update_cb = io_rate_update_cb_new;
-	} else {
-		io_rate_update_cb = io_rate_update_cb_default;
-	}
+void io_rate_update_register(io_rate_update_callback_t io_rate_update_cb_new) {
+  if (io_rate_update_cb_new != NULL) {
+    io_rate_update_cb = io_rate_update_cb_new;
+  } else {
+    io_rate_update_cb = io_rate_update_cb_default;
+  }
 }
 
-uint64_t
-io_rate_update(uint64_t io_rate_flags, uint64_t read_ops_delta, uint64_t write_ops_delta, uint64_t read_bytes_delta, uint64_t write_bytes_delta)
-{
-	return io_rate_update_cb(io_rate_flags, read_ops_delta, write_ops_delta, read_bytes_delta, write_bytes_delta);
+uint64_t io_rate_update(uint64_t io_rate_flags, uint64_t read_ops_delta,
+                        uint64_t write_ops_delta, uint64_t read_bytes_delta,
+                        uint64_t write_bytes_delta) {
+  return io_rate_update_cb(io_rate_flags, read_ops_delta, write_ops_delta,
+                           read_bytes_delta, write_bytes_delta);
 }
 
-static uint64_t
-gpu_set_fceiling_cb_default(__unused uint32_t gfr, __unused uint64_t gfp)
-{
-	return 0ULL;
+static uint64_t gpu_set_fceiling_cb_default(__unused uint32_t gfr,
+                                            __unused uint64_t gfp) {
+  return 0ULL;
 }
 
 gpu_set_fceiling_t gpu_set_fceiling_cb = gpu_set_fceiling_cb_default;
 
-void
-gpu_fceiling_cb_register(gpu_set_fceiling_t gnewcb)
-{
-	if (gnewcb != NULL) {
-		gpu_set_fceiling_cb = gnewcb;
-	} else {
-		gpu_set_fceiling_cb = gpu_set_fceiling_cb_default;
-	}
+void gpu_fceiling_cb_register(gpu_set_fceiling_t gnewcb) {
+  if (gnewcb != NULL) {
+    gpu_set_fceiling_cb = gnewcb;
+  } else {
+    gpu_set_fceiling_cb = gpu_set_fceiling_cb_default;
+  }
 }
 
-void
-gpu_submission_telemetry(
-	__unused uint64_t gpu_ncmds,
-	__unused uint64_t gpu_noutstanding_avg,
-	__unused uint64_t gpu_busy_ns_total,
-	__unused uint64_t gpu_cycles,
-	__unused uint64_t gpu_telemetry_valid_flags,
-	__unused uint64_t gpu_telemetry_misc)
-{
+void gpu_submission_telemetry(__unused uint64_t gpu_ncmds,
+                              __unused uint64_t gpu_noutstanding_avg,
+                              __unused uint64_t gpu_busy_ns_total,
+                              __unused uint64_t gpu_cycles,
+                              __unused uint64_t gpu_telemetry_valid_flags,
+                              __unused uint64_t gpu_telemetry_misc) {}
+
+kern_return_t current_energy_id(energy_id_t *energy_id) {
+  coalition_t coalition =
+      task_get_coalition(current_task(), COALITION_TYPE_RESOURCE);
+
+  if (coalition == COALITION_NULL) {
+    *energy_id = ENERGY_ID_NONE;
+    return KERN_FAILURE;
+  }
+
+  uint64_t cid = coalition_id(coalition);
+
+  *energy_id = cid;
+
+  return KERN_SUCCESS;
 }
 
-kern_return_t
-current_energy_id(energy_id_t *energy_id)
-{
-	coalition_t coalition = task_get_coalition(current_task(),
-	    COALITION_TYPE_RESOURCE);
+kern_return_t task_id_token_to_energy_id(mach_port_name_t name,
+                                         energy_id_t *energy_id) {
+  if (current_task() == kernel_task) {
+    panic("cannot translate task id token from a kernel thread");
+  }
 
-	if (coalition == COALITION_NULL) {
-		*energy_id = ENERGY_ID_NONE;
-		return KERN_FAILURE;
-	}
+  task_t task = TASK_NULL;
+  kern_return_t kr = task_id_token_port_name_to_task(name, &task);
+  /* holds task reference upon success */
 
-	uint64_t cid = coalition_id(coalition);
+  if (kr != KERN_SUCCESS) {
+    assert(task == TASK_NULL);
+    return kr;
+  }
 
-	*energy_id = cid;
+  coalition_t coalition = task_get_coalition(task, COALITION_TYPE_RESOURCE);
 
-	return KERN_SUCCESS;
+  assert(coalition != COALITION_NULL);
+
+  uint64_t cid = coalition_id(coalition);
+
+  *energy_id = cid;
+
+  task_deallocate(task);
+
+  return KERN_SUCCESS;
 }
 
-kern_return_t
-task_id_token_to_energy_id(mach_port_name_t name, energy_id_t *energy_id)
-{
-	if (current_task() == kernel_task) {
-		panic("cannot translate task id token from a kernel thread");
-	}
+kern_return_t energy_id_report_energy(energy_id_source_t energy_source,
+                                      energy_id_t self_id,
+                                      energy_id_t on_behalf_of_id,
+                                      uint64_t energy) {
+  if (energy_source != ENERGY_ID_SOURCE_GPU) {
+    return KERN_NOT_SUPPORTED;
+  }
 
-	task_t task = TASK_NULL;
-	kern_return_t kr = task_id_token_port_name_to_task(name, &task);
-	/* holds task reference upon success */
+  if (self_id == ENERGY_ID_NONE) {
+    return KERN_INVALID_ARGUMENT;
+  }
 
-	if (kr != KERN_SUCCESS) {
-		assert(task == TASK_NULL);
-		return kr;
-	}
+  bool exists;
 
-	coalition_t coalition = task_get_coalition(task, COALITION_TYPE_RESOURCE);
+  if (on_behalf_of_id == ENERGY_ID_NONE) {
+    exists = coalition_add_to_gpu_energy(self_id, CGE_SELF, energy);
+  } else {
+    exists =
+        coalition_add_to_gpu_energy(self_id, CGE_SELF | CGE_OTHERS, energy);
+    coalition_add_to_gpu_energy(on_behalf_of_id, CGE_BILLED, energy);
+  }
 
-	assert(coalition != COALITION_NULL);
-
-	uint64_t cid = coalition_id(coalition);
-
-	*energy_id = cid;
-
-	task_deallocate(task);
-
-	return KERN_SUCCESS;
-}
-
-kern_return_t
-energy_id_report_energy(energy_id_source_t energy_source, energy_id_t self_id,
-    energy_id_t on_behalf_of_id, uint64_t energy)
-{
-	if (energy_source != ENERGY_ID_SOURCE_GPU) {
-		return KERN_NOT_SUPPORTED;
-	}
-
-	if (self_id == ENERGY_ID_NONE) {
-		return KERN_INVALID_ARGUMENT;
-	}
-
-	bool exists;
-
-	if (on_behalf_of_id == ENERGY_ID_NONE) {
-		exists = coalition_add_to_gpu_energy(self_id, CGE_SELF, energy);
-	} else {
-		exists = coalition_add_to_gpu_energy(self_id, CGE_SELF | CGE_OTHERS,
-		    energy);
-		coalition_add_to_gpu_energy(on_behalf_of_id, CGE_BILLED,
-		    energy);
-	}
-
-	if (exists) {
-		return KERN_SUCCESS;
-	} else {
-		return KERN_NOT_FOUND;
-	}
+  if (exists) {
+    return KERN_SUCCESS;
+  } else {
+    return KERN_NOT_FOUND;
+  }
 }

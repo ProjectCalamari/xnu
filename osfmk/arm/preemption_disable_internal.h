@@ -35,8 +35,8 @@
 #pragma once
 
 /*
- * This header is only meant for the PPL and SPTM pmap to access the preemption disable data
- * structure directly for the purposes of managing timeouts.
+ * This header is only meant for the PPL and SPTM pmap to access the preemption
+ * disable data structure directly for the purposes of managing timeouts.
  */
 
 /**
@@ -44,11 +44,11 @@
  * when `SCHED_HYGIENE` is configured.
  */
 struct _preemption_disable_pcpu {
-	/* Timeout structure to track this preemption disable. */
-	kern_timeout_t pdp_timeout;
+  /* Timeout structure to track this preemption disable. */
+  kern_timeout_t pdp_timeout;
 
-	/* The maximum duration seen by this CPU, in Mach time units. */
-	_Atomic uint64_t pdp_max_mach_duration;
+  /* The maximum duration seen by this CPU, in Mach time units. */
+  _Atomic uint64_t pdp_max_mach_duration;
 };
 
 PERCPU_DECL(struct _preemption_disable_pcpu, _preemption_disable_pcpu_data);

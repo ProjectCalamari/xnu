@@ -26,29 +26,30 @@
  */
 
 #define CONFIG_MEMORYSTATUS 1 // <rdar://problem/13604997>
-#include <sys/types.h> /* for user_size_t */
+#include <errno.h>
+#include <limits.h>         /* for OPEN_MAX, PATH_MAX */
+#include <mach/coalition.h> /* for COALITION_TYPE_MAX */
+#include <mach/exception_types.h>
+#include <mach/mach_param.h> /* for TASK_PORT_REGISTER_MAX */
+#include <mach/port.h>
 #include <spawn.h>
 #include <spawn_private.h>
-#include <sys/spawn_internal.h>
-#include <sys/process_policy.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <limits.h>     /* for OPEN_MAX, PATH_MAX */
 #include <string.h>
 #include <strings.h>
-#include <mach/port.h>
-#include <mach/mach_param.h> /* for TASK_PORT_REGISTER_MAX */
-#include <mach/exception_types.h>
-#include <mach/coalition.h> /* for COALITION_TYPE_MAX */
 #include <sys/kern_memorystatus.h>
+#include <sys/process_policy.h>
+#include <sys/spawn_internal.h>
+#include <sys/types.h> /* for user_size_t */
 
 /*
  * Actual syscall wrappers.
  */
-extern int __posix_spawn(pid_t * __restrict, const char * __restrict,
-    struct _posix_spawn_args_desc *, char *const argv[__restrict],
-    char *const envp[__restrict]);
-extern int __execve(const char *fname, char * const *argp, char * const *envp);
+extern int __posix_spawn(pid_t *__restrict, const char *__restrict,
+                         struct _posix_spawn_args_desc *,
+                         char *const argv[__restrict],
+                         char *const envp[__restrict]);
+extern int __execve(const char *fname, char *const *argp, char *const *envp);
 
 /*
  * Function pointers that are NULL in Libsyscall_static, and get populated with
@@ -61,141 +62,136 @@ extern int __execve(const char *fname, char * const *argp, char * const *envp);
  *
  * Usually NULL. Always NULL on customer installs.
  */
-__attribute__((visibility("hidden")))
-bool (*posix_spawn_with_filter)(pid_t *pid, const char *fname,
-    char * const *argp, char * const *envp, struct _posix_spawn_args_desc *adp,
-    int *ret);
+__attribute__((visibility("hidden"))) bool (*posix_spawn_with_filter)(
+    pid_t *pid, const char *fname, char *const *argp, char *const *envp,
+    struct _posix_spawn_args_desc *adp, int *ret);
 
-__attribute__((visibility("hidden")))
-int (*execve_with_filter)(const char *fname, char * const *argp,
-    char * const *envp);
+__attribute__((visibility("hidden"))) int (*execve_with_filter)(
+    const char *fname, char *const *argp, char *const *envp);
 
-__attribute__((visibility("hidden")))
-void
-__posix_spawnattr_init(struct _posix_spawnattr *psattrp)
-{
-	/*
-	 * The default value of this attribute shall be as if no
-	 * flags were set
-	 */
-	psattrp->psa_flags = 0;
+__attribute__((visibility("hidden"))) void
+__posix_spawnattr_init(struct _posix_spawnattr *psattrp) {
+  /*
+   * The default value of this attribute shall be as if no
+   * flags were set
+   */
+  psattrp->psa_flags = 0;
 
-	/*
-	 * The default value of this attribute shall be an empty
-	 * signal set
-	 */
-	psattrp->psa_sigdefault = 0;
+  /*
+   * The default value of this attribute shall be an empty
+   * signal set
+   */
+  psattrp->psa_sigdefault = 0;
 
-	/* The default value of this attribute is unspecified */
-	psattrp->psa_sigmask = 0;
+  /* The default value of this attribute is unspecified */
+  psattrp->psa_sigmask = 0;
 
-	/* The default value of this attribute shall be zero */
-	psattrp->psa_pgroup = 0;     /* doesn't matter */
+  /* The default value of this attribute shall be zero */
+  psattrp->psa_pgroup = 0; /* doesn't matter */
 
-	/* Default is no binary preferences, i.e. use normal grading */
-	memset(psattrp->psa_binprefs, 0,
-	    sizeof(psattrp->psa_binprefs));
-	memset(psattrp->psa_subcpuprefs, 0xff /* CPU_SUBTYPE_ANY */,
-	    sizeof(psattrp->psa_subcpuprefs));
+  /* Default is no binary preferences, i.e. use normal grading */
+  memset(psattrp->psa_binprefs, 0, sizeof(psattrp->psa_binprefs));
+  memset(psattrp->psa_subcpuprefs, 0xff /* CPU_SUBTYPE_ANY */,
+         sizeof(psattrp->psa_subcpuprefs));
 
-	/* Default is no port actions to take */
-	psattrp->psa_ports = NULL;
+  /* Default is no port actions to take */
+  psattrp->psa_ports = NULL;
 
-	/*
-	 * The default value of this attribute shall be an no
-	 * process control on resource starvation
-	 */
-	psattrp->psa_pcontrol = 0;
+  /*
+   * The default value of this attribute shall be an no
+   * process control on resource starvation
+   */
+  psattrp->psa_pcontrol = 0;
 
-	/*
-	 * Initializing the alignment paddings.
-	 */
+  /*
+   * Initializing the alignment paddings.
+   */
 
-	psattrp->short_padding = 0;
-	psattrp->flags_padding = 0;
+  psattrp->short_padding = 0;
+  psattrp->flags_padding = 0;
 
-	/* Default is no new apptype requested */
-	psattrp->psa_apptype = POSIX_SPAWN_PROCESS_TYPE_DEFAULT;
+  /* Default is no new apptype requested */
+  psattrp->psa_apptype = POSIX_SPAWN_PROCESS_TYPE_DEFAULT;
 
-	/* Jetsam related */
-	psattrp->psa_jetsam_flags = 0;
-	psattrp->psa_priority = -1;
-	psattrp->psa_memlimit_active = -1;
-	psattrp->psa_memlimit_inactive = -1;
+  /* Jetsam related */
+  psattrp->psa_jetsam_flags = 0;
+  psattrp->psa_priority = -1;
+  psattrp->psa_memlimit_active = -1;
+  psattrp->psa_memlimit_inactive = -1;
 
-	/* Default is no thread limit */
-	psattrp->psa_thread_limit = 0;
+  /* Default is no thread limit */
+  psattrp->psa_thread_limit = 0;
 
-	/* Default is no CPU usage monitor active. */
-	psattrp->psa_cpumonitor_percent = 0;
-	psattrp->psa_cpumonitor_interval = 0;
+  /* Default is no CPU usage monitor active. */
+  psattrp->psa_cpumonitor_percent = 0;
+  psattrp->psa_cpumonitor_interval = 0;
 
-	/* Default is no MAC policy extensions. */
-	psattrp->psa_mac_extensions = NULL;
+  /* Default is no MAC policy extensions. */
+  psattrp->psa_mac_extensions = NULL;
 
-	/* Default is to inherit parent's coalition(s) */
-	psattrp->psa_coalition_info = NULL;
+  /* Default is to inherit parent's coalition(s) */
+  psattrp->psa_coalition_info = NULL;
 
-	psattrp->psa_persona_info = NULL;
+  psattrp->psa_persona_info = NULL;
 
-	psattrp->psa_posix_cred_info = NULL;
+  psattrp->psa_posix_cred_info = NULL;
 
-	/*
-	 * old coalition field
-	 * For backwards compatibility reasons, we set this to 1
-	 * which is the first valid coalition id. This will allow
-	 * newer user space code to properly spawn processes on
-	 * older kernels
-	 * (they will just all end up in the same coalition).
-	 */
-	psattrp->psa_reserved = 1;
+  /*
+   * old coalition field
+   * For backwards compatibility reasons, we set this to 1
+   * which is the first valid coalition id. This will allow
+   * newer user space code to properly spawn processes on
+   * older kernels
+   * (they will just all end up in the same coalition).
+   */
+  psattrp->psa_reserved = 1;
 
-	/* Default is no new clamp */
-	psattrp->psa_qos_clamp = POSIX_SPAWN_PROC_CLAMP_NONE;
+  /* Default is no new clamp */
+  psattrp->psa_qos_clamp = POSIX_SPAWN_PROC_CLAMP_NONE;
 
-	/* Default is no change to role */
-	psattrp->psa_darwin_role = POSIX_SPAWN_DARWIN_ROLE_NONE;
+  /* Default is no change to role */
+  psattrp->psa_darwin_role = POSIX_SPAWN_DARWIN_ROLE_NONE;
 
-	psattrp->psa_max_addr = 0;
+  psattrp->psa_max_addr = 0;
 
-	psattrp->psa_no_smt = false;
-	psattrp->psa_tecs = false;
+  psattrp->psa_no_smt = false;
+  psattrp->psa_tecs = false;
 
-	psattrp->psa_crash_count = 0;
-	psattrp->psa_throttle_timeout = 0;
+  psattrp->psa_crash_count = 0;
+  psattrp->psa_throttle_timeout = 0;
 
-	/* Default is no subsystem root path */
-	psattrp->psa_subsystem_root_path = NULL;
+  /* Default is no subsystem root path */
+  psattrp->psa_subsystem_root_path = NULL;
 
-	/* Default is no platform given */
-	psattrp->psa_platform = 0;
+  /* Default is no platform given */
+  psattrp->psa_platform = 0;
 
-	/* Default is no option */
-	psattrp->psa_options = PSA_OPTION_NONE;
+  /* Default is no option */
+  psattrp->psa_options = PSA_OPTION_NONE;
 
-	/* Default is no port limit */
-	psattrp->psa_port_soft_limit = 0;
-	psattrp->psa_port_hard_limit = 0;
+  /* Default is no port limit */
+  psattrp->psa_port_soft_limit = 0;
+  psattrp->psa_port_hard_limit = 0;
 
-	/* Default is no file descriptor limit */
-	psattrp->psa_filedesc_soft_limit = 0;
-	psattrp->psa_filedesc_hard_limit = 0;
+  /* Default is no file descriptor limit */
+  psattrp->psa_filedesc_soft_limit = 0;
+  psattrp->psa_filedesc_hard_limit = 0;
 
-	/* Default is no kqworkloop limit */
-	psattrp->psa_kqworkloop_soft_limit = 0;
-	psattrp->psa_kqworkloop_hard_limit = 0;
+  /* Default is no kqworkloop limit */
+  psattrp->psa_kqworkloop_soft_limit = 0;
+  psattrp->psa_kqworkloop_hard_limit = 0;
 
-	/* Default is no conclave memory limit */
-	psattrp->psa_conclave_mem_limit = 0;
+  /* Default is no conclave memory limit */
+  psattrp->psa_conclave_mem_limit = 0;
 
-	psattrp->psa_crash_behavior = 0;
-	psattrp->psa_crash_behavior_deadline = 0;
-	psattrp->psa_launch_type = 0;
-	psattrp->psa_dataless_iopolicy = 0;
+  psattrp->psa_crash_behavior = 0;
+  psattrp->psa_crash_behavior_deadline = 0;
+  psattrp->psa_launch_type = 0;
+  psattrp->psa_dataless_iopolicy = 0;
 
-	psattrp->psa_conclave_id = NULL;
+  psattrp->psa_conclave_id = NULL;
 
-	psattrp->psa_sec_flags = 0;
+  psattrp->psa_sec_flags = 0;
 }
 
 /*
@@ -223,21 +219,19 @@ __posix_spawnattr_init(struct _posix_spawnattr *psattrp)
  *		attribute with stack garbage from one that's been initialized.
  *		This is arguably an API design error.
  */
-int
-posix_spawnattr_init(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t *psattrp = (_posix_spawnattr_t *)attr;
-	int     err = 0;
+int posix_spawnattr_init(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t *psattrp = (_posix_spawnattr_t *)attr;
+  int err = 0;
 
-	if ((*psattrp = (_posix_spawnattr_t)malloc(sizeof(struct _posix_spawnattr))) == NULL) {
-		err = ENOMEM;
-	} else {
-		__posix_spawnattr_init(*psattrp);
-	}
+  if ((*psattrp = (_posix_spawnattr_t)malloc(
+           sizeof(struct _posix_spawnattr))) == NULL) {
+    err = ENOMEM;
+  } else {
+    __posix_spawnattr_init(*psattrp);
+  }
 
-	return err;
+  return err;
 }
-
 
 /*
  * posix_spawnattr_destroy
@@ -267,30 +261,27 @@ static int posix_spawn_destroymacpolicy_info_np(posix_spawnattr_t *);
 static int posix_spawn_destroysubsystem_root_path_np(posix_spawnattr_t *);
 static int posix_spawn_destroyconclave_id_np(posix_spawnattr_t *);
 
-int
-posix_spawnattr_destroy(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_destroy(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	posix_spawn_destroyportactions_np(attr);
-	posix_spawn_destroycoalition_info_np(attr);
-	posix_spawn_destroypersona_info_np(attr);
-	posix_spawn_destroyposix_cred_info_np(attr);
-	posix_spawn_destroymacpolicy_info_np(attr);
-	posix_spawn_destroysubsystem_root_path_np(attr);
-	posix_spawn_destroyconclave_id_np(attr);
+  psattr = *(_posix_spawnattr_t *)attr;
+  posix_spawn_destroyportactions_np(attr);
+  posix_spawn_destroycoalition_info_np(attr);
+  posix_spawn_destroypersona_info_np(attr);
+  posix_spawn_destroyposix_cred_info_np(attr);
+  posix_spawn_destroymacpolicy_info_np(attr);
+  posix_spawn_destroysubsystem_root_path_np(attr);
+  posix_spawn_destroyconclave_id_np(attr);
 
-	free(psattr);
-	*attr = NULL;
+  free(psattr);
+  *attr = NULL;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_setflags
@@ -308,21 +299,18 @@ posix_spawnattr_destroy(posix_spawnattr_t *attr)
  *		EINVAL	The value specified by attr is invalid.
  *		EINVAL	The value of the attribute being set is not valid.
  */
-int
-posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_flags = flags;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_flags = flags;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_getflags
@@ -346,22 +334,19 @@ posix_spawnattr_setflags(posix_spawnattr_t *attr, short flags)
  *		EINVAL	The value specified by attr is invalid.
  *		EINVAL	The value of the attribute being set is not valid.
  */
-int
-posix_spawnattr_getflags(const posix_spawnattr_t * __restrict attr,
-    short * __restrict flagsp)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getflags(const posix_spawnattr_t *__restrict attr,
+                             short *__restrict flagsp) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*flagsp = psattr->psa_flags;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *flagsp = psattr->psa_flags;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_getsigdefault
@@ -383,22 +368,19 @@ posix_spawnattr_getflags(const posix_spawnattr_t * __restrict attr,
  *		*sigdefault (modified)	The signal set of signals to default
  *					from the spawn attributes object
  */
-int
-posix_spawnattr_getsigdefault(const posix_spawnattr_t * __restrict attr,
-    sigset_t * __restrict sigdefault)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getsigdefault(const posix_spawnattr_t *__restrict attr,
+                                  sigset_t *__restrict sigdefault) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*sigdefault = psattr->psa_sigdefault;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *sigdefault = psattr->psa_sigdefault;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_getpgroup
@@ -419,22 +401,19 @@ posix_spawnattr_getsigdefault(const posix_spawnattr_t * __restrict attr,
  *		*pgroup (modified)	The process group information from the
  *					spawn attributes object
  */
-int
-posix_spawnattr_getpgroup(const posix_spawnattr_t * __restrict attr,
-    pid_t * __restrict pgroup)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getpgroup(const posix_spawnattr_t *__restrict attr,
+                              pid_t *__restrict pgroup) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*pgroup = psattr->psa_pgroup;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *pgroup = psattr->psa_pgroup;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_getsigmask
@@ -456,20 +435,18 @@ posix_spawnattr_getpgroup(const posix_spawnattr_t * __restrict attr,
  *		*sigmask (modified)	The signal set of signals to mask
  *					from the spawn attributes object
  */
-int
-posix_spawnattr_getsigmask(const posix_spawnattr_t * __restrict attr,
-    sigset_t * __restrict sigmask)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getsigmask(const posix_spawnattr_t *__restrict attr,
+                               sigset_t *__restrict sigmask) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*sigmask = psattr->psa_sigmask;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *sigmask = psattr->psa_sigmask;
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -493,26 +470,25 @@ posix_spawnattr_getsigmask(const posix_spawnattr_t * __restrict attr,
  *		*pref (modified)	The binary preferences array
  *					from the spawn attributes object
  */
-int
-posix_spawnattr_getbinpref_np(const posix_spawnattr_t * __restrict attr,
-    size_t count, cpu_type_t *pref, size_t * __restrict ocount)
-{
-	_posix_spawnattr_t psattr;
-	int i = 0;
+int posix_spawnattr_getbinpref_np(const posix_spawnattr_t *__restrict attr,
+                                  size_t count, cpu_type_t *pref,
+                                  size_t *__restrict ocount) {
+  _posix_spawnattr_t psattr;
+  int i = 0;
 
-	if (attr == NULL || *attr == NULL || pref == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || pref == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	for (i = 0; i < count && i < NBINPREFS; i++) {
-		pref[i] = psattr->psa_binprefs[i];
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  for (i = 0; i < count && i < NBINPREFS; i++) {
+    pref[i] = psattr->psa_binprefs[i];
+  }
 
-	if (ocount) {
-		*ocount = i;
-	}
-	return 0;
+  if (ocount) {
+    *ocount = i;
+  }
+  return 0;
 }
 
 /*
@@ -539,29 +515,28 @@ posix_spawnattr_getbinpref_np(const posix_spawnattr_t * __restrict attr,
  *		*subpref (modified)	The subcpu preferences array
  *					from the spawn attributes object
  */
-int
-posix_spawnattr_getarchpref_np(const posix_spawnattr_t * __restrict attr,
-    size_t count, cpu_type_t *pref, cpu_subtype_t *subpref, size_t * __restrict ocount)
-{
-	_posix_spawnattr_t psattr;
-	int i = 0;
+int posix_spawnattr_getarchpref_np(const posix_spawnattr_t *__restrict attr,
+                                   size_t count, cpu_type_t *pref,
+                                   cpu_subtype_t *subpref,
+                                   size_t *__restrict ocount) {
+  _posix_spawnattr_t psattr;
+  int i = 0;
 
-	if (attr == NULL || *attr == NULL || pref == NULL || subpref == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || pref == NULL || subpref == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	for (i = 0; i < count && i < NBINPREFS; i++) {
-		pref[i] = psattr->psa_binprefs[i];
-		subpref[i] = psattr->psa_subcpuprefs[i];
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  for (i = 0; i < count && i < NBINPREFS; i++) {
+    pref[i] = psattr->psa_binprefs[i];
+    subpref[i] = psattr->psa_subcpuprefs[i];
+  }
 
-	if (ocount) {
-		*ocount = i;
-	}
-	return 0;
+  if (ocount) {
+    *ocount = i;
+  }
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_getpcontrol_np
@@ -583,20 +558,18 @@ posix_spawnattr_getarchpref_np(const posix_spawnattr_t * __restrict attr,
  *		*pcontrol (modified)	The signal set of signals to default
  *					from the spawn attributes object
  */
-int
-posix_spawnattr_getpcontrol_np(const posix_spawnattr_t * __restrict attr,
-    int * __restrict pcontrol)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getpcontrol_np(const posix_spawnattr_t *__restrict attr,
+                                   int *__restrict pcontrol) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*pcontrol = psattr->psa_pcontrol;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *pcontrol = psattr->psa_pcontrol;
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -619,20 +592,18 @@ posix_spawnattr_getpcontrol_np(const posix_spawnattr_t * __restrict attr,
  *		*proctype (modified)	The process type set to value
  *					from the spawn attributes object
  */
-int
-posix_spawnattr_getprocesstype_np(const posix_spawnattr_t * __restrict attr,
-    int * __restrict proctype)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getprocesstype_np(const posix_spawnattr_t *__restrict attr,
+                                      int *__restrict proctype) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*proctype = psattr->psa_apptype;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *proctype = psattr->psa_apptype;
 
-	return 0;
+  return 0;
 }
 /*
  * posix_spawnattr_setsigdefault
@@ -649,22 +620,19 @@ posix_spawnattr_getprocesstype_np(const posix_spawnattr_t * __restrict attr,
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setsigdefault(posix_spawnattr_t * __restrict attr,
-    const sigset_t * __restrict sigdefault)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setsigdefault(posix_spawnattr_t *__restrict attr,
+                                  const sigset_t *__restrict sigdefault) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_sigdefault = *sigdefault;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_sigdefault = *sigdefault;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_setpgroup
@@ -680,21 +648,18 @@ posix_spawnattr_setsigdefault(posix_spawnattr_t * __restrict attr,
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setpgroup(posix_spawnattr_t * attr, pid_t pgroup)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setpgroup(posix_spawnattr_t *attr, pid_t pgroup) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_pgroup = pgroup;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_pgroup = pgroup;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_setsigmask
@@ -711,22 +676,19 @@ posix_spawnattr_setpgroup(posix_spawnattr_t * attr, pid_t pgroup)
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setsigmask(posix_spawnattr_t * __restrict attr,
-    const sigset_t * __restrict sigmask)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setsigmask(posix_spawnattr_t *__restrict attr,
+                               const sigset_t *__restrict sigmask) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_sigmask = *sigmask;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_sigmask = *sigmask;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_setbinpref_np
@@ -748,34 +710,33 @@ posix_spawnattr_setsigmask(posix_spawnattr_t * __restrict attr,
  *              If the caller provides more preferences than this limit, they
  *              will be ignored, as reflected in the return value.
  */
-int
-posix_spawnattr_setbinpref_np(posix_spawnattr_t * __restrict attr,
-    size_t count, cpu_type_t *pref, size_t * __restrict ocount)
-{
-	_posix_spawnattr_t psattr;
-	int i = 0;
+int posix_spawnattr_setbinpref_np(posix_spawnattr_t *__restrict attr,
+                                  size_t count, cpu_type_t *pref,
+                                  size_t *__restrict ocount) {
+  _posix_spawnattr_t psattr;
+  int i = 0;
 
-	if (attr == NULL || *attr == NULL || pref == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || pref == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	for (i = 0; i < count && i < NBINPREFS; i++) {
-		psattr->psa_binprefs[i] = pref[i];
-		psattr->psa_subcpuprefs[i] = CPU_SUBTYPE_ANY;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  for (i = 0; i < count && i < NBINPREFS; i++) {
+    psattr->psa_binprefs[i] = pref[i];
+    psattr->psa_subcpuprefs[i] = CPU_SUBTYPE_ANY;
+  }
 
-	/* return number of binprefs copied over */
-	if (ocount) {
-		*ocount = i;
-	}
+  /* return number of binprefs copied over */
+  if (ocount) {
+    *ocount = i;
+  }
 
-	for (; i < NBINPREFS; i++) {
-		psattr->psa_binprefs[i] = 0;
-		psattr->psa_subcpuprefs[i] = CPU_SUBTYPE_ANY;
-	}
+  for (; i < NBINPREFS; i++) {
+    psattr->psa_binprefs[i] = 0;
+    psattr->psa_subcpuprefs[i] = CPU_SUBTYPE_ANY;
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -789,9 +750,9 @@ posix_spawnattr_setbinpref_np(posix_spawnattr_t * __restrict attr,
  * Parameters:	attr			The spawn attributes object whose
  *                                      binary preferences are to be set
  *              count			Size of the array pointed to by 'pref'
- *              pref			cpu_type_t array of cpu binary preferences
- *              subpref			cpu_subtype_t array of subcpu binary preferences
- *		ocount			The actual number copied
+ *              pref			cpu_type_t array of cpu binary
+ * preferences subpref			cpu_subtype_t array of subcpu binary
+ * preferences ocount			The actual number copied
  *
  * Returns:	0			No preferences copied
  *              > 0			Number of preferences copied
@@ -801,35 +762,34 @@ posix_spawnattr_setbinpref_np(posix_spawnattr_t * __restrict attr,
  *              If the caller provides more preferences than this limit, they
  *              will be ignored, as reflected in the return value.
  */
-int
-posix_spawnattr_setarchpref_np(posix_spawnattr_t * __restrict attr,
-    size_t count, cpu_type_t *pref, cpu_subtype_t *subpref,
-    size_t * __restrict ocount)
-{
-	_posix_spawnattr_t psattr;
-	int i = 0;
+int posix_spawnattr_setarchpref_np(posix_spawnattr_t *__restrict attr,
+                                   size_t count, cpu_type_t *pref,
+                                   cpu_subtype_t *subpref,
+                                   size_t *__restrict ocount) {
+  _posix_spawnattr_t psattr;
+  int i = 0;
 
-	if (attr == NULL || *attr == NULL || pref == NULL || subpref == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || pref == NULL || subpref == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	for (i = 0; i < count && i < NBINPREFS; i++) {
-		psattr->psa_binprefs[i] = pref[i];
-		psattr->psa_subcpuprefs[i] = subpref[i];
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  for (i = 0; i < count && i < NBINPREFS; i++) {
+    psattr->psa_binprefs[i] = pref[i];
+    psattr->psa_subcpuprefs[i] = subpref[i];
+  }
 
-	/* return number of binprefs copied over */
-	if (ocount) {
-		*ocount = i;
-	}
+  /* return number of binprefs copied over */
+  if (ocount) {
+    *ocount = i;
+  }
 
-	for (; i < NBINPREFS; i++) {
-		psattr->psa_binprefs[i] = 0;
-		psattr->psa_subcpuprefs[i] = CPU_SUBTYPE_ANY;
-	}
+  for (; i < NBINPREFS; i++) {
+    psattr->psa_binprefs[i] = 0;
+    psattr->psa_subcpuprefs[i] = CPU_SUBTYPE_ANY;
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -846,22 +806,19 @@ posix_spawnattr_setarchpref_np(posix_spawnattr_t * __restrict attr,
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setpcontrol_np(posix_spawnattr_t * __restrict attr,
-    const int pcontrol)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setpcontrol_np(posix_spawnattr_t *__restrict attr,
+                                   const int pcontrol) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_pcontrol = pcontrol;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_pcontrol = pcontrol;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_setprocesstype_np
@@ -877,22 +834,19 @@ posix_spawnattr_setpcontrol_np(posix_spawnattr_t * __restrict attr,
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setprocesstype_np(posix_spawnattr_t * __restrict attr,
-    const int proctype)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setprocesstype_np(posix_spawnattr_t *__restrict attr,
+                                      const int proctype) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_apptype = proctype;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_apptype = proctype;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_setdataless_iopolicy_np
@@ -907,328 +861,307 @@ posix_spawnattr_setprocesstype_np(posix_spawnattr_t * __restrict attr,
  * Returns:	0			Success
  *		EINVAL			Invalid Input
  */
-int
-posix_spawnattr_setdataless_iopolicy_np(posix_spawnattr_t * __restrict attr,
-    const int policy)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setdataless_iopolicy_np(posix_spawnattr_t *__restrict attr,
+                                            const int policy) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_options |= PSA_OPTION_DATALESS_IOPOLICY;
-	psattr->psa_dataless_iopolicy = policy;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_options |= PSA_OPTION_DATALESS_IOPOLICY;
+  psattr->psa_dataless_iopolicy = policy;
 
-	return 0;
+  return 0;
 }
 
 /*
  * posix_spawnattr_set_use_sec_transition_shims_np
  * Description: Set flag to enable security shims on the spawned process.
  */
-int
-posix_spawnattr_set_use_sec_transition_shims_np(posix_spawnattr_t *attr, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
-	posix_spawn_secflag_options sec_flags;
+int posix_spawnattr_set_use_sec_transition_shims_np(posix_spawnattr_t *attr,
+                                                    uint32_t flags) {
+  _posix_spawnattr_t psattr;
+  posix_spawn_secflag_options sec_flags;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	sec_flags = (posix_spawn_secflag_options)(flags);
+  psattr = *(_posix_spawnattr_t *)attr;
+  sec_flags = (posix_spawn_secflag_options)(flags);
 
-	if (!(sec_flags & POSIX_SPAWN_SECFLAG_EXPLICIT_DISABLE) &&
-	    !(sec_flags & POSIX_SPAWN_SECFLAG_EXPLICIT_REQUIRE_ENABLE)) {
-		/*
-		 * For a long time we've had this unconditional setting
-		 * of POSIX_SPAWN_SECFLAG_EXPLICIT_ENABLE whenever this
-		 * function is called. This setting makes little sense
-		 * in face of a request to explicitly disable (in fact, that's
-		 * a combo that is explicitly refused by the kernel) and
-		 * completely defeats the purpose of EXPLICIT_REQUIRE_ENABLE.
-		 * To not risk breaking test environments that may incorrectly
-		 * rely on this behavior, we single out the DISABLE and EXPLICIT_REQUIRE cases
-		 * and proceed otherwise setting the flag.
-		 */
-		sec_flags |= POSIX_SPAWN_SECFLAG_EXPLICIT_ENABLE;
-	}
+  if (!(sec_flags & POSIX_SPAWN_SECFLAG_EXPLICIT_DISABLE) &&
+      !(sec_flags & POSIX_SPAWN_SECFLAG_EXPLICIT_REQUIRE_ENABLE)) {
+    /*
+     * For a long time we've had this unconditional setting
+     * of POSIX_SPAWN_SECFLAG_EXPLICIT_ENABLE whenever this
+     * function is called. This setting makes little sense
+     * in face of a request to explicitly disable (in fact, that's
+     * a combo that is explicitly refused by the kernel) and
+     * completely defeats the purpose of EXPLICIT_REQUIRE_ENABLE.
+     * To not risk breaking test environments that may incorrectly
+     * rely on this behavior, we single out the DISABLE and EXPLICIT_REQUIRE
+     * cases and proceed otherwise setting the flag.
+     */
+    sec_flags |= POSIX_SPAWN_SECFLAG_EXPLICIT_ENABLE;
+  }
 
-	/*
-	 * Inheritance used to be the internal default, so we maintain legacy
-	 * behavior in this API, as Xcode and internal tests expect.
-	 */
-	if (!(sec_flags & POSIX_SPAWN_SECFLAG_EXPLICIT_DISABLE_INHERIT)) {
-		sec_flags |= POSIX_SPAWN_SECFLAG_EXPLICIT_ENABLE_INHERIT;
-	}
+  /*
+   * Inheritance used to be the internal default, so we maintain legacy
+   * behavior in this API, as Xcode and internal tests expect.
+   */
+  if (!(sec_flags & POSIX_SPAWN_SECFLAG_EXPLICIT_DISABLE_INHERIT)) {
+    sec_flags |= POSIX_SPAWN_SECFLAG_EXPLICIT_ENABLE_INHERIT;
+  }
 
-	psattr->psa_sec_flags = (uint16_t)sec_flags;
+  psattr->psa_sec_flags = (uint16_t)sec_flags;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawn_createportactions_np
  * Description: create a new posix_spawn_port_actions struct and link
  *      it into the posix_spawnattr.
  */
-static int
-posix_spawn_createportactions_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	_posix_spawn_port_actions_t acts;
+static int posix_spawn_createportactions_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  _posix_spawn_port_actions_t acts;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	acts = (_posix_spawn_port_actions_t)malloc(PS_PORT_ACTIONS_SIZE(2));
-	if (acts == NULL) {
-		return ENOMEM;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  acts = (_posix_spawn_port_actions_t)malloc(PS_PORT_ACTIONS_SIZE(2));
+  if (acts == NULL) {
+    return ENOMEM;
+  }
 
-	acts->pspa_alloc = 2;
-	acts->pspa_count = 0;
+  acts->pspa_alloc = 2;
+  acts->pspa_count = 0;
 
-	psattr->psa_ports = acts;
-	return 0;
+  psattr->psa_ports = acts;
+  return 0;
 }
 
 /*
  * posix_spawn_growportactions_np
  * Description: Enlarge the size of portactions if necessary
  */
-static int
-posix_spawn_growportactions_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	_posix_spawn_port_actions_t acts;
+static int posix_spawn_growportactions_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  _posix_spawn_port_actions_t acts;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	acts = psattr->psa_ports;
-	if (acts == NULL) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  acts = psattr->psa_ports;
+  if (acts == NULL) {
+    return EINVAL;
+  }
 
-	/* Double number of port actions allocated for */
-	int newnum = 0;
-	if (os_mul_overflow(acts->pspa_alloc, 2, &newnum)) {
-		return ENOMEM;
-	}
-	size_t newsize = PS_PORT_ACTIONS_SIZE(newnum);
-	if (newsize == 0) {
-		return ENOMEM;
-	}
+  /* Double number of port actions allocated for */
+  int newnum = 0;
+  if (os_mul_overflow(acts->pspa_alloc, 2, &newnum)) {
+    return ENOMEM;
+  }
+  size_t newsize = PS_PORT_ACTIONS_SIZE(newnum);
+  if (newsize == 0) {
+    return ENOMEM;
+  }
 
-	acts = realloc(acts, newsize);
-	if (acts == NULL) {
-		return ENOMEM;
-	}
+  acts = realloc(acts, newsize);
+  if (acts == NULL) {
+    return ENOMEM;
+  }
 
-	acts->pspa_alloc = newnum;
-	psattr->psa_ports = acts;
-	return 0;
+  acts->pspa_alloc = newnum;
+  psattr->psa_ports = acts;
+  return 0;
 }
 
 /*
  * posix_spawn_destroyportactions_np
  * Description: clean up portactions struct in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroyportactions_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	_posix_spawn_port_actions_t acts;
+static int posix_spawn_destroyportactions_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  _posix_spawn_port_actions_t acts;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	acts = psattr->psa_ports;
-	if (acts == NULL) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  acts = psattr->psa_ports;
+  if (acts == NULL) {
+    return EINVAL;
+  }
 
-	free(acts);
-	return 0;
+  free(acts);
+  return 0;
 }
 
 /*
  * posix_spawn_destroycoalition_info_np
  * Description: clean up coalition_info struct in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroycoalition_info_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_coalition_info *coal_info;
+static int posix_spawn_destroycoalition_info_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_coalition_info *coal_info;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	coal_info = psattr->psa_coalition_info;
-	if (coal_info == NULL) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  coal_info = psattr->psa_coalition_info;
+  if (coal_info == NULL) {
+    return EINVAL;
+  }
 
-	psattr->psa_coalition_info = NULL;
-	free(coal_info);
-	return 0;
+  psattr->psa_coalition_info = NULL;
+  free(coal_info);
+  return 0;
 }
 
 /*
  * posix_spawn_destroypersona_info_np
  * Description: clean up persona_info struct in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroypersona_info_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_persona_info *persona;
+static int posix_spawn_destroypersona_info_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_persona_info *persona;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	persona = psattr->psa_persona_info;
-	if (persona == NULL) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  persona = psattr->psa_persona_info;
+  if (persona == NULL) {
+    return EINVAL;
+  }
 
-	psattr->psa_persona_info = NULL;
-	free(persona);
-	return 0;
+  psattr->psa_persona_info = NULL;
+  free(persona);
+  return 0;
 }
 
 /*
  * posix_spawn_destroyposix_cred_info_np
  * Description: clean up posix_cred_info struct in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroyposix_cred_info_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_posix_cred_info *pspci;
+static int posix_spawn_destroyposix_cred_info_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_posix_cred_info *pspci;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	pspci = psattr->psa_posix_cred_info;
-	if (pspci == NULL) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  pspci = psattr->psa_posix_cred_info;
+  if (pspci == NULL) {
+    return EINVAL;
+  }
 
-	psattr->psa_posix_cred_info = NULL;
-	free(pspci);
-	return 0;
+  psattr->psa_posix_cred_info = NULL;
+  free(pspci);
+  return 0;
 }
 
 /*
  * posix_spawn_set_subsystem_root_path
  * Description: Set path as the subsystem root path for attr; clears if NULL
  */
-int
-posix_spawnattr_set_subsystem_root_path_np(posix_spawnattr_t *attr, char *path)
-{
-	_posix_spawnattr_t psattr;
-	char * buf = NULL;
-	char * old_buf;
-	size_t bytes;
+int posix_spawnattr_set_subsystem_root_path_np(posix_spawnattr_t *attr,
+                                               char *path) {
+  _posix_spawnattr_t psattr;
+  char *buf = NULL;
+  char *old_buf;
+  size_t bytes;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	if (path) {
-		buf = malloc(MAXPATHLEN);
+  if (path) {
+    buf = malloc(MAXPATHLEN);
 
-		if (buf == NULL) {
-			return ENOMEM;
-		}
+    if (buf == NULL) {
+      return ENOMEM;
+    }
 
-		bytes = strlcpy(buf, path, MAXPATHLEN);
+    bytes = strlcpy(buf, path, MAXPATHLEN);
 
-		if (bytes >= MAXPATHLEN) {
-			free(buf);
-			return ENAMETOOLONG;
-		}
-	}
+    if (bytes >= MAXPATHLEN) {
+      free(buf);
+      return ENAMETOOLONG;
+    }
+  }
 
-	old_buf = psattr->psa_subsystem_root_path;
-	psattr->psa_subsystem_root_path = buf;
+  old_buf = psattr->psa_subsystem_root_path;
+  psattr->psa_subsystem_root_path = buf;
 
-	free(old_buf);
+  free(old_buf);
 
-	return 0;
+  return 0;
 }
 
 /*
  * posix_spawn_destroy_subsystem_root_path_np
  * Description: clean up subsystem_root_path string in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroysubsystem_root_path_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	char * subsystem_root_path;
+static int posix_spawn_destroysubsystem_root_path_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  char *subsystem_root_path;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	subsystem_root_path = psattr->psa_subsystem_root_path;
+  psattr = *(_posix_spawnattr_t *)attr;
+  subsystem_root_path = psattr->psa_subsystem_root_path;
 
-	if (subsystem_root_path == NULL) {
-		return EINVAL;
-	}
+  if (subsystem_root_path == NULL) {
+    return EINVAL;
+  }
 
-	psattr->psa_subsystem_root_path = NULL;
-	free(subsystem_root_path);
-	return 0;
+  psattr->psa_subsystem_root_path = NULL;
+  free(subsystem_root_path);
+  return 0;
 }
 
 /*
  * posix_spawn_destroyconclave_id_np
  * Description: clean up conclave_id string in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroyconclave_id_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	char *conclave_id;
+static int posix_spawn_destroyconclave_id_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  char *conclave_id;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	conclave_id = psattr->psa_conclave_id;
+  psattr = *(_posix_spawnattr_t *)attr;
+  conclave_id = psattr->psa_conclave_id;
 
-	if (conclave_id == NULL) {
-		return EINVAL;
-	}
+  if (conclave_id == NULL) {
+    return EINVAL;
+  }
 
-	psattr->psa_conclave_id = NULL;
-	free(conclave_id);
-	return 0;
+  psattr->psa_conclave_id = NULL;
+  free(conclave_id);
+  return 0;
 }
 
 /*
@@ -1237,79 +1170,75 @@ posix_spawn_destroyconclave_id_np(posix_spawnattr_t *attr)
  *
  * To be implemented.
  */
-int
-posix_spawnattr_set_platform_np(posix_spawnattr_t *attr, int platform, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_platform_np(posix_spawnattr_t *attr, int platform,
+                                    uint32_t flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_platform = platform;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_platform = platform;
 
-	(void)flags;
-	return 0;
+  (void)flags;
+  return 0;
 }
 
 /*
  * posix_spawnattr_disable_ptr_auth_a_keys_np
  * Description: Set flag to disable A keys for Ptr Auth
  */
-int
-posix_spawnattr_disable_ptr_auth_a_keys_np(posix_spawnattr_t *attr, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_disable_ptr_auth_a_keys_np(posix_spawnattr_t *attr,
+                                               uint32_t flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_options |= PSA_OPTION_PLUGIN_HOST_DISABLE_A_KEYS;
-	(void)flags;
-	return 0;
+  psattr->psa_options |= PSA_OPTION_PLUGIN_HOST_DISABLE_A_KEYS;
+  (void)flags;
+  return 0;
 }
 
 /*
  * posix_spawnattr_set_alt_rosetta_np
  * Description: Set flag to use alternative Rosetta runtime
  */
-int
-posix_spawnattr_set_alt_rosetta_np(posix_spawnattr_t *attr, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_alt_rosetta_np(posix_spawnattr_t *attr,
+                                       uint32_t flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_options |= PSA_OPTION_ALT_ROSETTA;
-	(void)flags;
-	return 0;
+  psattr->psa_options |= PSA_OPTION_ALT_ROSETTA;
+  (void)flags;
+  return 0;
 }
 
 /*
  * posix_spawnattr_set_crash_behavior_np
  * Description: Set flags to control behavior of the process on crash
  */
-int
-posix_spawnattr_set_crash_behavior_np(posix_spawnattr_t *attr, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_crash_behavior_np(posix_spawnattr_t *attr,
+                                          uint32_t flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_crash_behavior = flags;
-	return 0;
+  psattr->psa_crash_behavior = flags;
+  return 0;
 }
 
 /*
@@ -1320,20 +1249,20 @@ posix_spawnattr_set_crash_behavior_np(posix_spawnattr_t *attr, uint32_t flags)
  *   until the deadline. After the deadline the crash behavior field will
  *   be ignored.
  */
-int
-posix_spawnattr_set_crash_behavior_deadline_np(posix_spawnattr_t *attr, uint64_t deadline, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_crash_behavior_deadline_np(posix_spawnattr_t *attr,
+                                                   uint64_t deadline,
+                                                   uint32_t flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_crash_behavior_deadline = deadline;
-	(void)flags;
-	return 0;
+  psattr->psa_crash_behavior_deadline = deadline;
+  (void)flags;
+  return 0;
 }
 
 /*
@@ -1350,63 +1279,60 @@ posix_spawnattr_set_crash_behavior_deadline_np(posix_spawnattr_t *attr, uint64_t
  * Returns:	0			Success
  *		EINVAL			Invalid Input
  */
-int
-posix_spawnattr_set_crash_count_np(posix_spawnattr_t * __restrict attr,
-    uint32_t crash_count, uint32_t timeout)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_crash_count_np(posix_spawnattr_t *__restrict attr,
+                                       uint32_t crash_count, uint32_t timeout) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_crash_count = crash_count;
-	psattr->psa_throttle_timeout = timeout;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_crash_count = crash_count;
+  psattr->psa_throttle_timeout = timeout;
 
-	return 0;
+  return 0;
 }
 
 /*
  * posix_spawn_appendportaction_np
  * Description: append a port action, grow the array if necessary
  */
-static int
-posix_spawn_appendportaction_np(posix_spawnattr_t *attr, _ps_port_action_t *act)
-{
-	_posix_spawnattr_t psattr;
-	_posix_spawn_port_actions_t acts;
+static int posix_spawn_appendportaction_np(posix_spawnattr_t *attr,
+                                           _ps_port_action_t *act) {
+  _posix_spawnattr_t psattr;
+  _posix_spawn_port_actions_t acts;
 
-	if (attr == NULL || *attr == NULL || act == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || act == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	acts = psattr->psa_ports;
+  psattr = *(_posix_spawnattr_t *)attr;
+  acts = psattr->psa_ports;
 
-	// Have any port actions been created yet?
-	if (acts == NULL) {
-		int err = posix_spawn_createportactions_np(attr);
-		if (err) {
-			return err;
-		}
-		acts = psattr->psa_ports;
-	}
+  // Have any port actions been created yet?
+  if (acts == NULL) {
+    int err = posix_spawn_createportactions_np(attr);
+    if (err) {
+      return err;
+    }
+    acts = psattr->psa_ports;
+  }
 
-	// Is there enough room?
-	if (acts->pspa_alloc == acts->pspa_count) {
-		int err = posix_spawn_growportactions_np(attr);
-		if (err) {
-			return err;
-		}
-		acts = psattr->psa_ports;
-	}
+  // Is there enough room?
+  if (acts->pspa_alloc == acts->pspa_count) {
+    int err = posix_spawn_growportactions_np(attr);
+    if (err) {
+      return err;
+    }
+    acts = psattr->psa_ports;
+  }
 
-	// Add this action to next spot in array
-	acts->pspa_actions[acts->pspa_count] = *act;
-	acts->pspa_count++;
+  // Add this action to next spot in array
+  acts->pspa_actions[acts->pspa_count] = *act;
+  acts->pspa_count++;
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -1423,18 +1349,14 @@ posix_spawn_appendportaction_np(posix_spawnattr_t *attr, _ps_port_action_t *act)
  * Returns:	0			Success
  *              ENOMEM			Couldn't allocate memory
  */
-int
-posix_spawnattr_setspecialport_np(
-	posix_spawnattr_t *attr,
-	mach_port_t      new_port,
-	int             which)
-{
-	_ps_port_action_t action = {
-		.port_type = PSPA_SPECIAL,
-		.new_port = new_port,
-		.which = which,
-	};
-	return posix_spawn_appendportaction_np(attr, &action);
+int posix_spawnattr_setspecialport_np(posix_spawnattr_t *attr,
+                                      mach_port_t new_port, int which) {
+  _ps_port_action_t action = {
+      .port_type = PSPA_SPECIAL,
+      .new_port = new_port,
+      .which = which,
+  };
+  return posix_spawn_appendportaction_np(attr, &action);
 }
 
 /*
@@ -1453,22 +1375,19 @@ posix_spawnattr_setspecialport_np(
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setexceptionports_np(
-	posix_spawnattr_t       *attr,
-	exception_mask_t        mask,
-	mach_port_t              new_port,
-	exception_behavior_t    behavior,
-	thread_state_flavor_t   flavor)
-{
-	_ps_port_action_t action = {
-		.port_type = PSPA_EXCEPTION,
-		.mask = mask,
-		.new_port = new_port,
-		.behavior = behavior,
-		.flavor = flavor,
-	};
-	return posix_spawn_appendportaction_np(attr, &action);
+int posix_spawnattr_setexceptionports_np(posix_spawnattr_t *attr,
+                                         exception_mask_t mask,
+                                         mach_port_t new_port,
+                                         exception_behavior_t behavior,
+                                         thread_state_flavor_t flavor) {
+  _ps_port_action_t action = {
+      .port_type = PSPA_EXCEPTION,
+      .mask = mask,
+      .new_port = new_port,
+      .behavior = behavior,
+      .flavor = flavor,
+  };
+  return posix_spawn_appendportaction_np(attr, &action);
 }
 
 /*
@@ -1484,18 +1403,14 @@ posix_spawnattr_setexceptionports_np(
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setauditsessionport_np(
-	posix_spawnattr_t       *attr,
-	mach_port_t              au_sessionport)
-{
-	_ps_port_action_t action = {
-		.port_type = PSPA_AU_SESSION,
-		.new_port = au_sessionport,
-	};
-	return posix_spawn_appendportaction_np(attr, &action);
+int posix_spawnattr_setauditsessionport_np(posix_spawnattr_t *attr,
+                                           mach_port_t au_sessionport) {
+  _ps_port_action_t action = {
+      .port_type = PSPA_AU_SESSION,
+      .new_port = au_sessionport,
+  };
+  return posix_spawn_appendportaction_np(attr, &action);
 }
-
 
 /*
  * posix_spawn_file_actions_init
@@ -1523,22 +1438,21 @@ posix_spawnattr_setauditsessionport_np(
  *		file actions with stack garbage from one that's been
  *		initialized.  This is arguably an API design error.
  */
-int
-posix_spawn_file_actions_init(posix_spawn_file_actions_t *file_actions)
-{
-	_posix_spawn_file_actions_t *psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	int     err = 0;
+int posix_spawn_file_actions_init(posix_spawn_file_actions_t *file_actions) {
+  _posix_spawn_file_actions_t *psactsp =
+      (_posix_spawn_file_actions_t *)file_actions;
+  int err = 0;
 
-	if ((*psactsp = (_posix_spawn_file_actions_t)malloc(PSF_ACTIONS_SIZE(PSF_ACTIONS_INIT_COUNT))) == NULL) {
-		err = ENOMEM;
-	} else {
-		(*psactsp)->psfa_act_alloc = PSF_ACTIONS_INIT_COUNT;
-		(*psactsp)->psfa_act_count = 0;
-	}
+  if ((*psactsp = (_posix_spawn_file_actions_t)malloc(
+           PSF_ACTIONS_SIZE(PSF_ACTIONS_INIT_COUNT))) == NULL) {
+    err = ENOMEM;
+  } else {
+    (*psactsp)->psfa_act_alloc = PSF_ACTIONS_INIT_COUNT;
+    (*psactsp)->psfa_act_count = 0;
+  }
 
-	return err;
+  return err;
 }
-
 
 /*
  * posix_spawn_file_actions_destroy
@@ -1560,22 +1474,19 @@ posix_spawn_file_actions_init(posix_spawn_file_actions_t *file_actions)
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions)
-{
-	_posix_spawn_file_actions_t psacts;
+int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions) {
+  _posix_spawn_file_actions_t psacts;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psacts = *(_posix_spawn_file_actions_t *)file_actions;
-	free(psacts);
-	*file_actions = NULL;
+  psacts = *(_posix_spawn_file_actions_t *)file_actions;
+  free(psacts);
+  *file_actions = NULL;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * _posix_spawn_file_actions_grow
@@ -1595,34 +1506,33 @@ posix_spawn_file_actions_destroy(posix_spawn_file_actions_t *file_actions)
  *		at present.  Future optimization will likely change this.
  */
 static int
-_posix_spawn_file_actions_grow(_posix_spawn_file_actions_t *psactsp)
-{
-	int newnum = 0;
-	if (os_mul_overflow((*psactsp)->psfa_act_alloc, 2, &newnum)) {
-		return ENOMEM;
-	}
+_posix_spawn_file_actions_grow(_posix_spawn_file_actions_t *psactsp) {
+  int newnum = 0;
+  if (os_mul_overflow((*psactsp)->psfa_act_alloc, 2, &newnum)) {
+    return ENOMEM;
+  }
 
-	size_t newsize = PSF_ACTIONS_SIZE(newnum);
-	if (newsize == 0) {
-		return ENOMEM;
-	}
+  size_t newsize = PSF_ACTIONS_SIZE(newnum);
+  if (newsize == 0) {
+    return ENOMEM;
+  }
 
-	/*
-	 * XXX may want to impose an administrative limit here; POSIX does
-	 * XXX not provide for an administrative error return in this case,
-	 * XXX so it's probably acceptable to just fail catastrophically
-	 * XXX instead of implementing one.
-	 */
-	_posix_spawn_file_actions_t new_psacts;
-	if ((new_psacts = (_posix_spawn_file_actions_t)realloc((*psactsp), newsize)) == NULL) {
-		return ENOMEM;
-	}
-	new_psacts->psfa_act_alloc = newnum;
-	*psactsp = new_psacts;
+  /*
+   * XXX may want to impose an administrative limit here; POSIX does
+   * XXX not provide for an administrative error return in this case,
+   * XXX so it's probably acceptable to just fail catastrophically
+   * XXX instead of implementing one.
+   */
+  _posix_spawn_file_actions_t new_psacts;
+  if ((new_psacts =
+           (_posix_spawn_file_actions_t)realloc((*psactsp), newsize)) == NULL) {
+    return ENOMEM;
+  }
+  new_psacts->psfa_act_alloc = newnum;
+  *psactsp = new_psacts;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawn_file_actions_addopen
@@ -1648,47 +1558,43 @@ _posix_spawn_file_actions_grow(_posix_spawn_file_actions_t *psactsp)
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_addopen(
-	posix_spawn_file_actions_t * __restrict file_actions,
-	int filedes, const char * __restrict path, int oflag,
-	mode_t mode)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_addopen(
+    posix_spawn_file_actions_t *__restrict file_actions, int filedes,
+    const char *__restrict path, int oflag, mode_t mode) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	/* Range check; required by POSIX */
-	if (filedes < 0 || filedes >= OPEN_MAX) {
-		return EBADF;
-	}
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  /* Range check; required by POSIX */
+  if (filedes < 0 || filedes >= OPEN_MAX) {
+    return EBADF;
+  }
 
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_OPEN;
-	psfileact->psfaa_filedes = filedes;
-	psfileact->psfaa_openargs.psfao_oflag = oflag;
-	psfileact->psfaa_openargs.psfao_mode = mode;
-	strlcpy(psfileact->psfaa_openargs.psfao_path, path, PATH_MAX);
+  psfileact->psfaa_type = PSFA_OPEN;
+  psfileact->psfaa_filedes = filedes;
+  psfileact->psfaa_openargs.psfao_oflag = oflag;
+  psfileact->psfaa_openargs.psfao_mode = mode;
+  strlcpy(psfileact->psfaa_openargs.psfao_path, path, PATH_MAX);
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawn_file_actions_addclose
@@ -1710,42 +1616,39 @@ posix_spawn_file_actions_addopen(
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
-    int filedes)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
+                                      int filedes) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	/* Range check; required by POSIX */
-	if (filedes < 0 || filedes >= OPEN_MAX) {
-		return EBADF;
-	}
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  /* Range check; required by POSIX */
+  if (filedes < 0 || filedes >= OPEN_MAX) {
+    return EBADF;
+  }
 
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_CLOSE;
-	psfileact->psfaa_filedes = filedes;
+  psfileact->psfaa_type = PSFA_CLOSE;
+  psfileact->psfaa_filedes = filedes;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawn_file_actions_adddup2
@@ -1769,42 +1672,40 @@ posix_spawn_file_actions_addclose(posix_spawn_file_actions_t *file_actions,
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
-    int filedes, int newfiledes)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
+                                     int filedes, int newfiledes) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	/* Range check; required by POSIX */
-	if (filedes < 0 || filedes >= OPEN_MAX ||
-	    newfiledes < 0 || newfiledes >= OPEN_MAX) {
-		return EBADF;
-	}
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  /* Range check; required by POSIX */
+  if (filedes < 0 || filedes >= OPEN_MAX || newfiledes < 0 ||
+      newfiledes >= OPEN_MAX) {
+    return EBADF;
+  }
 
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_DUP2;
-	psfileact->psfaa_filedes = filedes;
-	psfileact->psfaa_dup2args.psfad_newfiledes = newfiledes;
+  psfileact->psfaa_type = PSFA_DUP2;
+  psfileact->psfaa_filedes = filedes;
+  psfileact->psfaa_dup2args.psfad_newfiledes = newfiledes;
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -1830,43 +1731,40 @@ posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t *file_actions,
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_add_fileportdup2_np(
-	posix_spawn_file_actions_t *file_actions,
-	mach_port_t fileport, int newfiledes)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_add_fileportdup2_np(
+    posix_spawn_file_actions_t *file_actions, mach_port_t fileport,
+    int newfiledes) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	/* Range check; required by POSIX */
-	if (!MACH_PORT_VALID(fileport) ||
-	    newfiledes < 0 || newfiledes >= OPEN_MAX) {
-		return EBADF;
-	}
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  /* Range check; required by POSIX */
+  if (!MACH_PORT_VALID(fileport) || newfiledes < 0 || newfiledes >= OPEN_MAX) {
+    return EBADF;
+  }
 
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_FILEPORT_DUP2;
-	psfileact->psfaa_fileport = fileport;
-	psfileact->psfaa_dup2args.psfad_newfiledes = newfiledes;
+  psfileact->psfaa_type = PSFA_FILEPORT_DUP2;
+  psfileact->psfaa_fileport = fileport;
+  psfileact->psfaa_dup2args.psfad_newfiledes = newfiledes;
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -1902,60 +1800,56 @@ posix_spawn_file_actions_add_fileportdup2_np(
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_addinherit_np(posix_spawn_file_actions_t *file_actions,
-    int filedes)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_addinherit_np(
+    posix_spawn_file_actions_t *file_actions, int filedes) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	/* Range check; required by POSIX */
-	if (filedes < 0 || filedes >= OPEN_MAX) {
-		return EBADF;
-	}
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  /* Range check; required by POSIX */
+  if (filedes < 0 || filedes >= OPEN_MAX) {
+    return EBADF;
+  }
 
-#if defined(POSIX_SPAWN_CLOEXEC_DEFAULT)        // TODO: delete this check
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+#if defined(POSIX_SPAWN_CLOEXEC_DEFAULT) // TODO: delete this check
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_INHERIT;
-	psfileact->psfaa_filedes = filedes;
+  psfileact->psfaa_type = PSFA_INHERIT;
+  psfileact->psfaa_filedes = filedes;
 #endif
-	return 0;
+  return 0;
 }
 
 /*
  * Deprecated alias of posix_spawn_file_actions_addchdir
  */
-int
-posix_spawn_file_actions_addchdir_np(
-	posix_spawn_file_actions_t * __restrict file_actions,
-	const char * __restrict path)
-{
-	return posix_spawn_file_actions_addchdir(file_actions, path);
+int posix_spawn_file_actions_addchdir_np(
+    posix_spawn_file_actions_t *__restrict file_actions,
+    const char *__restrict path) {
+  return posix_spawn_file_actions_addchdir(file_actions, path);
 }
 
 /*
  * posix_spawn_file_actions_addchdir
  *
  * Description:	Add a chdir action to the object referenced by 'file_actions'
- *		that will cause the current working directory to attempt to be changed
- *      to that referenced by 'path' in the spawned process.
+ *		that will cause the current working directory to attempt to be
+ * changed to that referenced by 'path' in the spawned process.
  *
  * Parameters:	file_actions		File action object to augment
  *		path			path of the desired working directory
@@ -1968,147 +1862,136 @@ posix_spawn_file_actions_addchdir_np(
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_addchdir(
-	posix_spawn_file_actions_t * __restrict file_actions,
-	const char * __restrict path)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_addchdir(
+    posix_spawn_file_actions_t *__restrict file_actions,
+    const char *__restrict path) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
 
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_CHDIR;
-	if (strlcpy(psfileact->psfaa_chdirargs.psfac_path, path, PATH_MAX) >= PATH_MAX) {
-		(*psactsp)->psfa_act_count--;
-		return ENAMETOOLONG;
-	}
+  psfileact->psfaa_type = PSFA_CHDIR;
+  if (strlcpy(psfileact->psfaa_chdirargs.psfac_path, path, PATH_MAX) >=
+      PATH_MAX) {
+    (*psactsp)->psfa_act_count--;
+    return ENAMETOOLONG;
+  }
 
-	return 0;
+  return 0;
 }
 
 /*
  * Deprecated alias for posix_spawn_file_actions_addfchdir
  */
-int
-posix_spawn_file_actions_addfchdir_np(posix_spawn_file_actions_t *file_actions,
-    int filedes)
-{
-	return posix_spawn_file_actions_addfchdir(file_actions, filedes);
+int posix_spawn_file_actions_addfchdir_np(
+    posix_spawn_file_actions_t *file_actions, int filedes) {
+  return posix_spawn_file_actions_addfchdir(file_actions, filedes);
 }
 
 /*
  * posix_spawn_file_actions_addfchdir
  *
  * Description:	Add a fchdir action to the object referenced by 'file_actions'
- *		that will cause the current working directory to attempt to be changed
- *      to that referenced by the descriptor 'filedes' in the spawned process.
+ *		that will cause the current working directory to attempt to be
+ * changed to that referenced by the descriptor 'filedes' in the spawned
+ * process.
  *
  * Parameters:	file_actions		File action object to augment
  *		filedes			fd to chdir to
  *
  * Returns:	0			Success
- *		EBADF			The value specified by either fildes is negative or
- *                              greater than or equal to {OPEN_MAX}.
- *		ENOMEM			Insufficient memory exists to add to
- *					the spawn file actions object.
+ *		EBADF			The value specified by either fildes is
+ * negative or greater than or equal to {OPEN_MAX}. ENOMEM
+ *	Insufficient memory exists to add to the spawn file actions object.
  *
  * NOTIMP:	Allowed failures (checking NOT required):
  *		EINVAL	The value specified by file_actions is invalid.
  */
-int
-posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t *file_actions,
-    int filedes)
-{
-	_posix_spawn_file_actions_t *psactsp;
-	_psfa_action_t *psfileact;
+int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t *file_actions,
+                                       int filedes) {
+  _posix_spawn_file_actions_t *psactsp;
+  _psfa_action_t *psfileact;
 
-	if (file_actions == NULL || *file_actions == NULL) {
-		return EINVAL;
-	}
+  if (file_actions == NULL || *file_actions == NULL) {
+    return EINVAL;
+  }
 
-	psactsp = (_posix_spawn_file_actions_t *)file_actions;
-	/* Range check; in spirit of POSIX */
-	if (filedes < 0 || filedes >= OPEN_MAX) {
-		return EBADF;
-	}
+  psactsp = (_posix_spawn_file_actions_t *)file_actions;
+  /* Range check; in spirit of POSIX */
+  if (filedes < 0 || filedes >= OPEN_MAX) {
+    return EBADF;
+  }
 
-	/* If we do not have enough slots, grow the structure */
-	if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
-		/* need to grow file actions structure */
-		if (_posix_spawn_file_actions_grow(psactsp)) {
-			return ENOMEM;
-		}
-	}
+  /* If we do not have enough slots, grow the structure */
+  if ((*psactsp)->psfa_act_count == (*psactsp)->psfa_act_alloc) {
+    /* need to grow file actions structure */
+    if (_posix_spawn_file_actions_grow(psactsp)) {
+      return ENOMEM;
+    }
+  }
 
-	/*
-	 * Allocate next available slot and fill it out
-	 */
-	psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
+  /*
+   * Allocate next available slot and fill it out
+   */
+  psfileact = &(*psactsp)->psfa_act_acts[(*psactsp)->psfa_act_count++];
 
-	psfileact->psfaa_type = PSFA_FCHDIR;
-	psfileact->psfaa_filedes = filedes;
+  psfileact->psfaa_type = PSFA_FCHDIR;
+  psfileact->psfaa_filedes = filedes;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_setcpumonitor_default(posix_spawnattr_t * __restrict attr)
-{
-	return posix_spawnattr_setcpumonitor(attr, PROC_POLICY_CPUMON_DEFAULTS, 0);
+int posix_spawnattr_setcpumonitor_default(posix_spawnattr_t *__restrict attr) {
+  return posix_spawnattr_setcpumonitor(attr, PROC_POLICY_CPUMON_DEFAULTS, 0);
 }
 
-int
-posix_spawnattr_setcpumonitor(posix_spawnattr_t * __restrict attr,
-    uint64_t percent, uint64_t interval)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setcpumonitor(posix_spawnattr_t *__restrict attr,
+                                  uint64_t percent, uint64_t interval) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_cpumonitor_percent = percent;
-	psattr->psa_cpumonitor_interval = interval;
+  psattr->psa_cpumonitor_percent = percent;
+  psattr->psa_cpumonitor_interval = interval;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_getcpumonitor(posix_spawnattr_t * __restrict attr,
-    uint64_t *percent, uint64_t *interval)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_getcpumonitor(posix_spawnattr_t *__restrict attr,
+                                  uint64_t *percent, uint64_t *interval) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	*percent = psattr->psa_cpumonitor_percent;
-	*interval = psattr->psa_cpumonitor_interval;
+  *percent = psattr->psa_cpumonitor_percent;
+  *interval = psattr->psa_cpumonitor_interval;
 
-	return 0;
+  return 0;
 }
 
 #if (TARGET_OS_IPHONE && !TARGET_OS_SIMULATOR)
@@ -2121,29 +2004,28 @@ posix_spawnattr_getcpumonitor(posix_spawnattr_t * __restrict attr,
  * Parameters:	flags			The flags value to set
  *		priority		Relative jetsam priority
  *		memlimit		Value in megabytes; a memory footprint
- *					above this level may result in termination.
- *					Implies both active and inactive limits.
+ *					above this level may result in
+ * termination. Implies both active and inactive limits.
  *
  * Returns:	0			Success
  *
  * Note: to be deprecated (not available on desktop)
  *
  */
-int
-posix_spawnattr_setjetsam(posix_spawnattr_t * __restrict attr,
-    short flags, int priority, int memlimit)
-{
-	short flags_ext = flags;
+int posix_spawnattr_setjetsam(posix_spawnattr_t *__restrict attr, short flags,
+                              int priority, int memlimit) {
+  short flags_ext = flags;
 
-	if (flags & POSIX_SPAWN_JETSAM_MEMLIMIT_FATAL) {
-		flags_ext |= POSIX_SPAWN_JETSAM_MEMLIMIT_ACTIVE_FATAL;
-		flags_ext |= POSIX_SPAWN_JETSAM_MEMLIMIT_INACTIVE_FATAL;
-	} else {
-		flags_ext &= ~POSIX_SPAWN_JETSAM_MEMLIMIT_ACTIVE_FATAL;
-		flags_ext &= ~POSIX_SPAWN_JETSAM_MEMLIMIT_INACTIVE_FATAL;
-	}
+  if (flags & POSIX_SPAWN_JETSAM_MEMLIMIT_FATAL) {
+    flags_ext |= POSIX_SPAWN_JETSAM_MEMLIMIT_ACTIVE_FATAL;
+    flags_ext |= POSIX_SPAWN_JETSAM_MEMLIMIT_INACTIVE_FATAL;
+  } else {
+    flags_ext &= ~POSIX_SPAWN_JETSAM_MEMLIMIT_ACTIVE_FATAL;
+    flags_ext &= ~POSIX_SPAWN_JETSAM_MEMLIMIT_INACTIVE_FATAL;
+  }
 
-	return posix_spawnattr_setjetsam_ext(attr, flags_ext, priority, memlimit, memlimit);
+  return posix_spawnattr_setjetsam_ext(attr, flags_ext, priority, memlimit,
+                                       memlimit);
 }
 #endif /* (TARGET_OS_IPHONE && !TARGET_OS_SIMULATOR) */
 
@@ -2164,44 +2046,40 @@ posix_spawnattr_setjetsam(posix_spawnattr_t * __restrict attr,
  *
  * Returns:	0			Success
  */
-int
-posix_spawnattr_setjetsam_ext(posix_spawnattr_t * __restrict attr,
-    short flags, int priority, int memlimit_active, int memlimit_inactive)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setjetsam_ext(posix_spawnattr_t *__restrict attr,
+                                  short flags, int priority,
+                                  int memlimit_active, int memlimit_inactive) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_jetsam_flags = flags;
-	psattr->psa_jetsam_flags |= POSIX_SPAWN_JETSAM_SET;
-	psattr->psa_priority = priority;
-	psattr->psa_memlimit_active = memlimit_active;
-	psattr->psa_memlimit_inactive = memlimit_inactive;
+  psattr->psa_jetsam_flags = flags;
+  psattr->psa_jetsam_flags |= POSIX_SPAWN_JETSAM_SET;
+  psattr->psa_priority = priority;
+  psattr->psa_memlimit_active = memlimit_active;
+  psattr->psa_memlimit_inactive = memlimit_inactive;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_threadlimit_ext(posix_spawnattr_t * __restrict attr,
-    int thread_limit)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_threadlimit_ext(posix_spawnattr_t *__restrict attr,
+                                        int thread_limit) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_thread_limit = thread_limit;
+  psattr->psa_thread_limit = thread_limit;
 
-	return 0;
+  return 0;
 }
-
 
 /*
  * posix_spawnattr_set_importancewatch_port_np
@@ -2210,10 +2088,12 @@ posix_spawnattr_set_threadlimit_ext(posix_spawnattr_t * __restrict attr,
  *              to boost the new task instead of their current task
  *              for the spawn attribute object referred to by 'attr'.
  *              Ports must be valid at posix_spawn time.  They will NOT be
- *              consumed by the kernel, so they must be deallocated after the spawn returns.
- *              (If you are SETEXEC-ing, they are cleaned up by the exec operation).
+ *              consumed by the kernel, so they must be deallocated after the
+ * spawn returns. (If you are SETEXEC-ing, they are cleaned up by the exec
+ * operation).
  *
- *              The maximum number of watch ports allowed is defined by POSIX_SPAWN_IMPORTANCE_PORT_COUNT.
+ *              The maximum number of watch ports allowed is defined by
+ * POSIX_SPAWN_IMPORTANCE_PORT_COUNT.
  *
  * Parameters:	count           Number of ports in portarray
  *              portarray       Array of rights
@@ -2223,682 +2103,648 @@ posix_spawnattr_set_threadlimit_ext(posix_spawnattr_t * __restrict attr,
  *              ENOMEM  Insufficient memory exists to add to
  *                      the spawn port actions object.
  */
-int
-posix_spawnattr_set_importancewatch_port_np(posix_spawnattr_t * __restrict attr,
-    int count, mach_port_t portarray[])
-{
-	int err = 0, i;
+int posix_spawnattr_set_importancewatch_port_np(
+    posix_spawnattr_t *__restrict attr, int count, mach_port_t portarray[]) {
+  int err = 0, i;
 
-	if (count < 0 || count > POSIX_SPAWN_IMPORTANCE_PORT_COUNT) {
-		return EINVAL;
-	}
+  if (count < 0 || count > POSIX_SPAWN_IMPORTANCE_PORT_COUNT) {
+    return EINVAL;
+  }
 
-	for (i = 0; i < count; i++) {
-		_ps_port_action_t action = {
-			.port_type = PSPA_IMP_WATCHPORTS,
-			.new_port = portarray[i],
-		};
-		err = posix_spawn_appendportaction_np(attr, &action);
-		if (err) {
-			break;
-		}
-	}
-	return err;
+  for (i = 0; i < count; i++) {
+    _ps_port_action_t action = {
+        .port_type = PSPA_IMP_WATCHPORTS,
+        .new_port = portarray[i],
+    };
+    err = posix_spawn_appendportaction_np(attr, &action);
+    if (err) {
+      break;
+    }
+  }
+  return err;
 }
 
-int
-posix_spawnattr_set_registered_ports_np(posix_spawnattr_t * __restrict attr,
-    mach_port_t portarray[], uint32_t count)
-{
-	int err = 0;
+int posix_spawnattr_set_registered_ports_np(posix_spawnattr_t *__restrict attr,
+                                            mach_port_t portarray[],
+                                            uint32_t count) {
+  int err = 0;
 
-	if (count > TASK_PORT_REGISTER_MAX) {
-		return EINVAL;
-	}
+  if (count > TASK_PORT_REGISTER_MAX) {
+    return EINVAL;
+  }
 
-	for (uint32_t i = 0; i < count; i++) {
-		_ps_port_action_t action = {
-			.port_type = PSPA_REGISTERED_PORTS,
-			.new_port = portarray[i],
-		};
-		err = posix_spawn_appendportaction_np(attr, &action);
-		if (err) {
-			break;
-		}
-	}
-	return err;
+  for (uint32_t i = 0; i < count; i++) {
+    _ps_port_action_t action = {
+        .port_type = PSPA_REGISTERED_PORTS,
+        .new_port = portarray[i],
+    };
+    err = posix_spawn_appendportaction_np(attr, &action);
+    if (err) {
+      break;
+    }
+  }
+  return err;
 }
 
-int
-posix_spawnattr_set_ptrauth_task_port_np(posix_spawnattr_t * __restrict attr,
-    mach_port_t port)
-{
-	int err = 0;
+int posix_spawnattr_set_ptrauth_task_port_np(posix_spawnattr_t *__restrict attr,
+                                             mach_port_t port) {
+  int err = 0;
 
-	_ps_port_action_t action = {
-		.port_type = PSPA_PTRAUTH_TASK_PORT,
-		.new_port = port,
-	};
+  _ps_port_action_t action = {
+      .port_type = PSPA_PTRAUTH_TASK_PORT,
+      .new_port = port,
+  };
 
-	err = posix_spawn_appendportaction_np(attr, &action);
-	return err;
+  err = posix_spawn_appendportaction_np(attr, &action);
+  return err;
 }
 
-static
-_ps_mac_policy_extension_t *
-posix_spawnattr_macpolicyinfo_lookup(_posix_spawn_mac_policy_extensions_t psmx, const char *policyname)
-{
-	int i;
+static _ps_mac_policy_extension_t *
+posix_spawnattr_macpolicyinfo_lookup(_posix_spawn_mac_policy_extensions_t psmx,
+                                     const char *policyname) {
+  int i;
 
-	if (psmx == NULL) {
-		return NULL;
-	}
+  if (psmx == NULL) {
+    return NULL;
+  }
 
-	for (i = 0; i < psmx->psmx_count; i++) {
-		_ps_mac_policy_extension_t *extension = &psmx->psmx_extensions[i];
-		if (strcmp(extension->policyname, policyname) == 0) {
-			return extension;
-		}
-	}
-	return NULL;
+  for (i = 0; i < psmx->psmx_count; i++) {
+    _ps_mac_policy_extension_t *extension = &psmx->psmx_extensions[i];
+    if (strcmp(extension->policyname, policyname) == 0) {
+      return extension;
+    }
+  }
+  return NULL;
 }
 
-int
-posix_spawnattr_getmacpolicyinfo_np(const posix_spawnattr_t * __restrict attr,
-    const char *policyname, void **datap, size_t *datalenp)
-{
-	_posix_spawnattr_t psattr;
-	_ps_mac_policy_extension_t *extension;
+int posix_spawnattr_getmacpolicyinfo_np(
+    const posix_spawnattr_t *__restrict attr, const char *policyname,
+    void **datap, size_t *datalenp) {
+  _posix_spawnattr_t psattr;
+  _ps_mac_policy_extension_t *extension;
 
-	if (attr == NULL || *attr == NULL || policyname == NULL || datap == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || policyname == NULL || datap == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	extension = posix_spawnattr_macpolicyinfo_lookup(psattr->psa_mac_extensions, policyname);
-	if (extension == NULL) {
-		return ESRCH;
-	}
-	*datap = (void *)(uintptr_t)extension->data;
-	if (datalenp != NULL) {
-		*datalenp = (size_t)extension->datalen;
-	}
-	return 0;
+  psattr = *(_posix_spawnattr_t *)attr;
+  extension = posix_spawnattr_macpolicyinfo_lookup(psattr->psa_mac_extensions,
+                                                   policyname);
+  if (extension == NULL) {
+    return ESRCH;
+  }
+  *datap = (void *)(uintptr_t)extension->data;
+  if (datalenp != NULL) {
+    *datalenp = (size_t)extension->datalen;
+  }
+  return 0;
 }
 
-int
-posix_spawnattr_setmacpolicyinfo_np(posix_spawnattr_t * __restrict attr,
-    const char *policyname, void *data, size_t datalen)
-{
-	_posix_spawnattr_t psattr;
-	_posix_spawn_mac_policy_extensions_t psmx;
-	_ps_mac_policy_extension_t *extension;
+int posix_spawnattr_setmacpolicyinfo_np(posix_spawnattr_t *__restrict attr,
+                                        const char *policyname, void *data,
+                                        size_t datalen) {
+  _posix_spawnattr_t psattr;
+  _posix_spawn_mac_policy_extensions_t psmx;
+  _ps_mac_policy_extension_t *extension;
 
-	if (attr == NULL || *attr == NULL || policyname == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL || policyname == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psmx = psattr->psa_mac_extensions;
-	extension = posix_spawnattr_macpolicyinfo_lookup(psattr->psa_mac_extensions, policyname);
-	if (extension != NULL) {
-		extension->data = (uintptr_t)data;
-		extension->datalen = datalen;
-		return 0;
-	} else if (psmx == NULL) {
-		psmx = psattr->psa_mac_extensions = malloc(PS_MAC_EXTENSIONS_SIZE(PS_MAC_EXTENSIONS_INIT_COUNT));
-		if (psmx == NULL) {
-			return ENOMEM;
-		}
-		psmx->psmx_alloc = PS_MAC_EXTENSIONS_INIT_COUNT;
-		psmx->psmx_count = 0;
-	} else if (psmx->psmx_count == psmx->psmx_alloc) {
-		int newnum = 0;
-		if (os_mul_overflow(psmx->psmx_alloc, 2, &newnum)) {
-			return ENOMEM;
-		}
-		size_t extsize = PS_MAC_EXTENSIONS_SIZE(newnum);
-		if (extsize == 0) {
-			return ENOMEM;
-		}
-		psmx = psattr->psa_mac_extensions = reallocf(psmx, extsize);
-		if (psmx == NULL) {
-			return ENOMEM;
-		}
-		psmx->psmx_alloc = newnum;
-	}
-	extension = &psmx->psmx_extensions[psmx->psmx_count];
-	strlcpy(extension->policyname, policyname, sizeof(extension->policyname));
-	extension->data = (uintptr_t)data;
-	extension->datalen = datalen;
-	psmx->psmx_count += 1;
-	return 0;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psmx = psattr->psa_mac_extensions;
+  extension = posix_spawnattr_macpolicyinfo_lookup(psattr->psa_mac_extensions,
+                                                   policyname);
+  if (extension != NULL) {
+    extension->data = (uintptr_t)data;
+    extension->datalen = datalen;
+    return 0;
+  } else if (psmx == NULL) {
+    psmx = psattr->psa_mac_extensions =
+        malloc(PS_MAC_EXTENSIONS_SIZE(PS_MAC_EXTENSIONS_INIT_COUNT));
+    if (psmx == NULL) {
+      return ENOMEM;
+    }
+    psmx->psmx_alloc = PS_MAC_EXTENSIONS_INIT_COUNT;
+    psmx->psmx_count = 0;
+  } else if (psmx->psmx_count == psmx->psmx_alloc) {
+    int newnum = 0;
+    if (os_mul_overflow(psmx->psmx_alloc, 2, &newnum)) {
+      return ENOMEM;
+    }
+    size_t extsize = PS_MAC_EXTENSIONS_SIZE(newnum);
+    if (extsize == 0) {
+      return ENOMEM;
+    }
+    psmx = psattr->psa_mac_extensions = reallocf(psmx, extsize);
+    if (psmx == NULL) {
+      return ENOMEM;
+    }
+    psmx->psmx_alloc = newnum;
+  }
+  extension = &psmx->psmx_extensions[psmx->psmx_count];
+  strlcpy(extension->policyname, policyname, sizeof(extension->policyname));
+  extension->data = (uintptr_t)data;
+  extension->datalen = datalen;
+  psmx->psmx_count += 1;
+  return 0;
 }
 
 /*
  * posix_spawn_destroymacpolicy_info_np
  * Description: cleanup the macpolicy struct in posix_spawnattr_t attr
  */
-static int
-posix_spawn_destroymacpolicy_info_np(posix_spawnattr_t *attr)
-{
-	_posix_spawnattr_t psattr;
-	_posix_spawn_mac_policy_extensions_t psmx;
+static int posix_spawn_destroymacpolicy_info_np(posix_spawnattr_t *attr) {
+  _posix_spawnattr_t psattr;
+  _posix_spawn_mac_policy_extensions_t psmx;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psmx = psattr->psa_mac_extensions;
-	if (psmx == NULL) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  psmx = psattr->psa_mac_extensions;
+  if (psmx == NULL) {
+    return EINVAL;
+  }
 
-	psattr->psa_mac_extensions = NULL;
-	free(psmx);
-	return 0;
+  psattr->psa_mac_extensions = NULL;
+  free(psmx);
+  return 0;
 }
 
-int
-posix_spawnattr_setcoalition_np(const posix_spawnattr_t * __restrict attr,
-    uint64_t coalitionid, int type, int role)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_coalition_info *coal_info;
+int posix_spawnattr_setcoalition_np(const posix_spawnattr_t *__restrict attr,
+                                    uint64_t coalitionid, int type, int role) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_coalition_info *coal_info;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
-	if (type < 0 || type > COALITION_TYPE_MAX) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
+  if (type < 0 || type > COALITION_TYPE_MAX) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	coal_info = psattr->psa_coalition_info;
-	if (!coal_info) {
-		coal_info = (struct _posix_spawn_coalition_info *)malloc(sizeof(*coal_info));
-		if (!coal_info) {
-			return ENOMEM;
-		}
-		memset(coal_info, 0, sizeof(*coal_info));
-		psattr->psa_coalition_info = coal_info;
-	}
+  coal_info = psattr->psa_coalition_info;
+  if (!coal_info) {
+    coal_info =
+        (struct _posix_spawn_coalition_info *)malloc(sizeof(*coal_info));
+    if (!coal_info) {
+      return ENOMEM;
+    }
+    memset(coal_info, 0, sizeof(*coal_info));
+    psattr->psa_coalition_info = coal_info;
+  }
 
-	coal_info->psci_info[type].psci_id   = coalitionid;
-	coal_info->psci_info[type].psci_role = role;
+  coal_info->psci_info[type].psci_id = coalitionid;
+  coal_info->psci_info[type].psci_role = role;
 
-	return 0;
+  return 0;
 }
 
+int posix_spawnattr_set_qos_clamp_np(const posix_spawnattr_t *__restrict attr,
+                                     uint64_t qos_clamp) {
+  _posix_spawnattr_t psattr;
 
-int
-posix_spawnattr_set_qos_clamp_np(const posix_spawnattr_t * __restrict attr, uint64_t qos_clamp)
-{
-	_posix_spawnattr_t psattr;
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (qos_clamp >= POSIX_SPAWN_PROC_CLAMP_LAST) {
+    return EINVAL;
+  }
 
-	if (qos_clamp >= POSIX_SPAWN_PROC_CLAMP_LAST) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_qos_clamp = qos_clamp;
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_qos_clamp = qos_clamp;
-
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_get_qos_clamp_np(const posix_spawnattr_t * __restrict attr, uint64_t * __restrict qos_clampp)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_get_qos_clamp_np(const posix_spawnattr_t *__restrict attr,
+                                     uint64_t *__restrict qos_clampp) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*qos_clampp = psattr->psa_qos_clamp;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *qos_clampp = psattr->psa_qos_clamp;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_darwin_role_np(const posix_spawnattr_t * __restrict attr, uint64_t darwin_role)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_darwin_role_np(const posix_spawnattr_t *__restrict attr,
+                                       uint64_t darwin_role) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_darwin_role = darwin_role;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_darwin_role = darwin_role;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_get_darwin_role_np(const posix_spawnattr_t * __restrict attr, uint64_t * __restrict darwin_rolep)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_get_darwin_role_np(const posix_spawnattr_t *__restrict attr,
+                                       uint64_t *__restrict darwin_rolep) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	*darwin_rolep = psattr->psa_darwin_role;
+  psattr = *(_posix_spawnattr_t *)attr;
+  *darwin_rolep = psattr->psa_darwin_role;
 
-	return 0;
+  return 0;
 }
 
+int posix_spawnattr_set_persona_np(const posix_spawnattr_t *__restrict attr,
+                                   uid_t persona_id, uint32_t flags) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_persona_info *persona;
 
-int
-posix_spawnattr_set_persona_np(const posix_spawnattr_t * __restrict attr, uid_t persona_id, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_persona_info *persona;
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (flags & ~POSIX_SPAWN_PERSONA_ALL_FLAGS) {
+    return EINVAL;
+  }
 
-	if (flags & ~POSIX_SPAWN_PERSONA_ALL_FLAGS) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  persona = psattr->psa_persona_info;
+  if (!persona) {
+    persona = (struct _posix_spawn_persona_info *)malloc(sizeof(*persona));
+    if (!persona) {
+      return ENOMEM;
+    }
+    persona->pspi_uid = 0;
+    persona->pspi_gid = 0;
+    persona->pspi_ngroups = 0;
+    persona->pspi_groups[0] = 0;
+    persona->pspi_gmuid = 0;
 
-	persona = psattr->psa_persona_info;
-	if (!persona) {
-		persona = (struct _posix_spawn_persona_info *)malloc(sizeof(*persona));
-		if (!persona) {
-			return ENOMEM;
-		}
-		persona->pspi_uid = 0;
-		persona->pspi_gid = 0;
-		persona->pspi_ngroups = 0;
-		persona->pspi_groups[0] = 0;
-		persona->pspi_gmuid = 0;
+    psattr->psa_persona_info = persona;
+  }
 
-		psattr->psa_persona_info = persona;
-	}
+  persona->pspi_id = persona_id;
+  persona->pspi_flags = flags;
 
-	persona->pspi_id = persona_id;
-	persona->pspi_flags = flags;
-
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_persona_uid_np(const posix_spawnattr_t * __restrict attr, uid_t uid)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_persona_info *persona;
+int posix_spawnattr_set_persona_uid_np(const posix_spawnattr_t *__restrict attr,
+                                       uid_t uid) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_persona_info *persona;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	persona = psattr->psa_persona_info;
-	if (!persona) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  persona = psattr->psa_persona_info;
+  if (!persona) {
+    return EINVAL;
+  }
 
-	persona->pspi_uid = uid;
+  persona->pspi_uid = uid;
 
-	persona->pspi_flags |= POSIX_SPAWN_PERSONA_UID;
+  persona->pspi_flags |= POSIX_SPAWN_PERSONA_UID;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_persona_gid_np(const posix_spawnattr_t * __restrict attr, gid_t gid)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_persona_info *persona;
+int posix_spawnattr_set_persona_gid_np(const posix_spawnattr_t *__restrict attr,
+                                       gid_t gid) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_persona_info *persona;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	persona = psattr->psa_persona_info;
-	if (!persona) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  persona = psattr->psa_persona_info;
+  if (!persona) {
+    return EINVAL;
+  }
 
-	persona->pspi_gid = gid;
+  persona->pspi_gid = gid;
 
-	persona->pspi_flags |= POSIX_SPAWN_PERSONA_GID;
+  persona->pspi_flags |= POSIX_SPAWN_PERSONA_GID;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_persona_groups_np(const posix_spawnattr_t * __restrict attr, int ngroups, gid_t *gidarray, uid_t gmuid)
-{
-	_posix_spawnattr_t psattr;
-	struct _posix_spawn_persona_info *persona;
+int posix_spawnattr_set_persona_groups_np(
+    const posix_spawnattr_t *__restrict attr, int ngroups, gid_t *gidarray,
+    uid_t gmuid) {
+  _posix_spawnattr_t psattr;
+  struct _posix_spawn_persona_info *persona;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	if (gidarray == NULL) {
-		return EINVAL;
-	}
+  if (gidarray == NULL) {
+    return EINVAL;
+  }
 
-	if (ngroups > NGROUPS || ngroups < 0) {
-		return EINVAL;
-	}
+  if (ngroups > NGROUPS || ngroups < 0) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	persona = psattr->psa_persona_info;
-	if (!persona) {
-		return EINVAL;
-	}
+  psattr = *(_posix_spawnattr_t *)attr;
+  persona = psattr->psa_persona_info;
+  if (!persona) {
+    return EINVAL;
+  }
 
-	persona->pspi_ngroups = ngroups;
-	for (int i = 0; i < ngroups; i++) {
-		persona->pspi_groups[i] = gidarray[i];
-	}
+  persona->pspi_ngroups = ngroups;
+  for (int i = 0; i < ngroups; i++) {
+    persona->pspi_groups[i] = gidarray[i];
+  }
 
-	persona->pspi_gmuid = gmuid;
+  persona->pspi_gmuid = gmuid;
 
-	persona->pspi_flags |= POSIX_SPAWN_PERSONA_GROUPS;
+  persona->pspi_flags |= POSIX_SPAWN_PERSONA_GROUPS;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_max_addr_np(const posix_spawnattr_t * __restrict attr, uint64_t max_addr)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_max_addr_np(const posix_spawnattr_t *__restrict attr,
+                                    uint64_t max_addr) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_max_addr = max_addr;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_max_addr = max_addr;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_setnosmt_np(const posix_spawnattr_t * __restrict attr)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_setnosmt_np(const posix_spawnattr_t *__restrict attr) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_no_smt = true;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_no_smt = true;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_csm_np(const posix_spawnattr_t * __restrict attr, uint32_t flags)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_csm_np(const posix_spawnattr_t *__restrict attr,
+                               uint32_t flags) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	const uint32_t mask = POSIX_SPAWN_NP_CSM_ALL | POSIX_SPAWN_NP_CSM_TECS | POSIX_SPAWN_NP_CSM_NOSMT;
-	if ((flags & ~mask) != 0) {
-		return EINVAL;
-	}
+  const uint32_t mask = POSIX_SPAWN_NP_CSM_ALL | POSIX_SPAWN_NP_CSM_TECS |
+                        POSIX_SPAWN_NP_CSM_NOSMT;
+  if ((flags & ~mask) != 0) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	if (flags & (POSIX_SPAWN_NP_CSM_TECS | POSIX_SPAWN_NP_CSM_ALL)) {
-		psattr->psa_tecs = true;
-	}
-	if (flags & (POSIX_SPAWN_NP_CSM_NOSMT | POSIX_SPAWN_NP_CSM_ALL)) {
-		psattr->psa_no_smt = true;
-	}
+  if (flags & (POSIX_SPAWN_NP_CSM_TECS | POSIX_SPAWN_NP_CSM_ALL)) {
+    psattr->psa_tecs = true;
+  }
+  if (flags & (POSIX_SPAWN_NP_CSM_NOSMT | POSIX_SPAWN_NP_CSM_ALL)) {
+    psattr->psa_no_smt = true;
+  }
 
-	return 0;
+  return 0;
 }
 
 static struct _posix_spawn_posix_cred_info *
-_posix_spawnattr_get_posix_creds_info(_posix_spawnattr_t psattr)
-{
-	struct _posix_spawn_posix_cred_info *pspci = psattr->psa_posix_cred_info;
+_posix_spawnattr_get_posix_creds_info(_posix_spawnattr_t psattr) {
+  struct _posix_spawn_posix_cred_info *pspci = psattr->psa_posix_cred_info;
 
-	if (pspci == NULL) {
-		pspci = malloc(sizeof(struct _posix_spawn_posix_cred_info));
-		if (pspci != NULL) {
-			pspci->pspci_flags = 0;
-			pspci->pspci_uid = 0;
-			pspci->pspci_gid = 0;
-			pspci->pspci_ngroups = 0;
-			pspci->pspci_groups[0] = 0;
-			pspci->pspci_gmuid = 0;
-			pspci->pspci_login[0] = '\0';
-			psattr->psa_posix_cred_info = pspci;
-		}
-	}
-	return pspci;
+  if (pspci == NULL) {
+    pspci = malloc(sizeof(struct _posix_spawn_posix_cred_info));
+    if (pspci != NULL) {
+      pspci->pspci_flags = 0;
+      pspci->pspci_uid = 0;
+      pspci->pspci_gid = 0;
+      pspci->pspci_ngroups = 0;
+      pspci->pspci_groups[0] = 0;
+      pspci->pspci_gmuid = 0;
+      pspci->pspci_login[0] = '\0';
+      psattr->psa_posix_cred_info = pspci;
+    }
+  }
+  return pspci;
 }
 
-int
-posix_spawnattr_set_uid_np(const posix_spawnattr_t *attr, uid_t uid)
-{
-	struct _posix_spawn_posix_cred_info *pspci;
+int posix_spawnattr_set_uid_np(const posix_spawnattr_t *attr, uid_t uid) {
+  struct _posix_spawn_posix_cred_info *pspci;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
-	if (pspci == NULL) {
-		return ENOMEM;
-	}
+  pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
+  if (pspci == NULL) {
+    return ENOMEM;
+  }
 
-	pspci->pspci_uid = uid;
+  pspci->pspci_uid = uid;
 
-	pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_UID;
+  pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_UID;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_gid_np(const posix_spawnattr_t *attr, gid_t gid)
-{
-	struct _posix_spawn_posix_cred_info *pspci;
+int posix_spawnattr_set_gid_np(const posix_spawnattr_t *attr, gid_t gid) {
+  struct _posix_spawn_posix_cred_info *pspci;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
-	if (pspci == NULL) {
-		return ENOMEM;
-	}
+  pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
+  if (pspci == NULL) {
+    return ENOMEM;
+  }
 
-	pspci->pspci_gid = gid;
+  pspci->pspci_gid = gid;
 
-	pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_GID;
+  pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_GID;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_groups_np(const posix_spawnattr_t *attr,
-    int ngroups, gid_t *gidarray, uid_t gmuid)
-{
-	struct _posix_spawn_posix_cred_info *pspci;
+int posix_spawnattr_set_groups_np(const posix_spawnattr_t *attr, int ngroups,
+                                  gid_t *gidarray, uid_t gmuid) {
+  struct _posix_spawn_posix_cred_info *pspci;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	if (gidarray == NULL) {
-		return EINVAL;
-	}
+  if (gidarray == NULL) {
+    return EINVAL;
+  }
 
-	if (ngroups > NGROUPS || ngroups < 0) {
-		return EINVAL;
-	}
+  if (ngroups > NGROUPS || ngroups < 0) {
+    return EINVAL;
+  }
 
-	pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
-	if (pspci == NULL) {
-		return ENOMEM;
-	}
+  pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
+  if (pspci == NULL) {
+    return ENOMEM;
+  }
 
-	pspci->pspci_ngroups = ngroups;
-	for (int i = 0; i < ngroups; i++) {
-		pspci->pspci_groups[i] = gidarray[i];
-	}
+  pspci->pspci_ngroups = ngroups;
+  for (int i = 0; i < ngroups; i++) {
+    pspci->pspci_groups[i] = gidarray[i];
+  }
 
-	pspci->pspci_gmuid = gmuid;
+  pspci->pspci_gmuid = gmuid;
 
-	pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_GROUPS;
+  pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_GROUPS;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_login_np(const posix_spawnattr_t *attr, const char *login)
-{
-	struct _posix_spawn_posix_cred_info *pspci;
+int posix_spawnattr_set_login_np(const posix_spawnattr_t *attr,
+                                 const char *login) {
+  struct _posix_spawn_posix_cred_info *pspci;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	if (strlen(login) > MAXLOGNAME) {
-		return ERANGE;
-	}
+  if (strlen(login) > MAXLOGNAME) {
+    return ERANGE;
+  }
 
-	pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
-	if (pspci == NULL) {
-		return ENOMEM;
-	}
+  pspci = _posix_spawnattr_get_posix_creds_info(*(_posix_spawnattr_t *)attr);
+  if (pspci == NULL) {
+    return ENOMEM;
+  }
 
-	strlcpy(pspci->pspci_login, login, sizeof(pspci->pspci_login));
+  strlcpy(pspci->pspci_login, login, sizeof(pspci->pspci_login));
 
-	pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_LOGIN;
+  pspci->pspci_flags |= POSIX_SPAWN_POSIX_CRED_LOGIN;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_conclave_id_np(const posix_spawnattr_t *attr, const char *conclave_id)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_conclave_id_np(const posix_spawnattr_t *attr,
+                                       const char *conclave_id) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	if (strlen(conclave_id) > MAXCONCLAVENAME - 1) {
-		return ERANGE;
-	}
+  if (strlen(conclave_id) > MAXCONCLAVENAME - 1) {
+    return ERANGE;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	if (psattr->psa_conclave_id == NULL) {
-		void *buf = malloc(MAXCONCLAVENAME);
-		if (buf == NULL) {
-			return ENOMEM;
-		}
-		psattr->psa_conclave_id = buf;
-	}
-	strlcpy(psattr->psa_conclave_id, conclave_id, MAXCONCLAVENAME);
-	return 0;
+  psattr = *(_posix_spawnattr_t *)attr;
+  if (psattr->psa_conclave_id == NULL) {
+    void *buf = malloc(MAXCONCLAVENAME);
+    if (buf == NULL) {
+      return ENOMEM;
+    }
+    psattr->psa_conclave_id = buf;
+  }
+  strlcpy(psattr->psa_conclave_id, conclave_id, MAXCONCLAVENAME);
+  return 0;
 }
 
-int
-posix_spawnattr_set_portlimits_ext(posix_spawnattr_t * __restrict attr,
-    uint32_t port_soft_limit, uint32_t port_hard_limit)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_portlimits_ext(posix_spawnattr_t *__restrict attr,
+                                       uint32_t port_soft_limit,
+                                       uint32_t port_hard_limit) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_port_soft_limit = port_soft_limit;
-	psattr->psa_port_hard_limit = port_hard_limit;
+  psattr->psa_port_soft_limit = port_soft_limit;
+  psattr->psa_port_hard_limit = port_hard_limit;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_filedesclimit_ext(posix_spawnattr_t * __restrict attr,
-    uint32_t filedesc_soft_limit, uint32_t filedesc_hard_limit)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_filedesclimit_ext(posix_spawnattr_t *__restrict attr,
+                                          uint32_t filedesc_soft_limit,
+                                          uint32_t filedesc_hard_limit) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_filedesc_soft_limit = filedesc_soft_limit;
-	psattr->psa_filedesc_hard_limit = filedesc_hard_limit;
+  psattr->psa_filedesc_soft_limit = filedesc_soft_limit;
+  psattr->psa_filedesc_hard_limit = filedesc_hard_limit;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_kqworklooplimit_ext(posix_spawnattr_t * __restrict attr,
-    uint32_t kqworkloop_soft_limit, uint32_t kqworkloop_hard_limit)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_kqworklooplimit_ext(posix_spawnattr_t *__restrict attr,
+                                            uint32_t kqworkloop_soft_limit,
+                                            uint32_t kqworkloop_hard_limit) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_kqworkloop_soft_limit = kqworkloop_soft_limit;
-	psattr->psa_kqworkloop_hard_limit = kqworkloop_hard_limit;
+  psattr->psa_kqworkloop_soft_limit = kqworkloop_soft_limit;
+  psattr->psa_kqworkloop_hard_limit = kqworkloop_hard_limit;
 
-	return 0;
+  return 0;
 }
 
-int
-posix_spawnattr_set_conclavememlimit_ext(posix_spawnattr_t * __restrict attr,
-    uint32_t conclave_limit)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_conclavememlimit_ext(posix_spawnattr_t *__restrict attr,
+                                             uint32_t conclave_limit) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	psattr->psa_conclave_mem_limit = conclave_limit;
+  psattr->psa_conclave_mem_limit = conclave_limit;
 
-	return 0;
+  return 0;
 }
 
 /*
  * posix_spawnattr_set_jetsam_ttr_np
  *
- * Description: Pass data regarding recent relaunch behavior when jetsammed for the process.
- *              The recent history is effectively converted into a histogram and the highest
- *              frequency bucket defines the "type" of the process. The type is passed along
- *              to the jetsam code as part of psa_jetsam_flags.
+ * Description: Pass data regarding recent relaunch behavior when jetsammed for
+ * the process. The recent history is effectively converted into a histogram and
+ * the highest frequency bucket defines the "type" of the process. The type is
+ * passed along to the jetsam code as part of psa_jetsam_flags.
  *
  * Parameters:	count           Number of entries in the ttrs_millis array
  *              ttrs_millis     Array of raw data for relaunch behavior
@@ -2906,79 +2752,78 @@ posix_spawnattr_set_conclavememlimit_ext(posix_spawnattr_t * __restrict attr,
  * Returns:     0       Success
  *              EINVAL  Bad attr pointer or empty data array
  */
-int
-posix_spawnattr_set_jetsam_ttr_np(const posix_spawnattr_t * __restrict attr, uint32_t count, uint32_t *ttrs_millis)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_jetsam_ttr_np(const posix_spawnattr_t *__restrict attr,
+                                      uint32_t count, uint32_t *ttrs_millis) {
+  _posix_spawnattr_t psattr;
 
-	/*
-	 * Define the bucketizing policy which would be used to generate the histogram. These
-	 * values are based on looking at data from various Avg. Joanna runs.
-	 */
-	static const uint32_t relaunch_buckets_msecs[POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS] = {
-		5000,
-		10000,
-		UINT32_MAX
-	};
-	static const uint32_t relaunch_jetsam_flags[POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS] = {
-		POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_HIGH,
-		POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_MED,
-		POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_LOW
-	};
+  /*
+   * Define the bucketizing policy which would be used to generate the
+   * histogram. These values are based on looking at data from various Avg.
+   * Joanna runs.
+   */
+  static const uint32_t
+      relaunch_buckets_msecs[POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS] = {
+          5000, 10000, UINT32_MAX};
+  static const uint32_t
+      relaunch_jetsam_flags[POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS] = {
+          POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_HIGH,
+          POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_MED,
+          POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_LOW};
 
-	/* Make sure the attr pointer is valid */
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  /* Make sure the attr pointer is valid */
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	/* Make sure the count of entries is non-zero */
-	if (count == 0) {
-		return EINVAL;
-	}
+  /* Make sure the count of entries is non-zero */
+  if (count == 0) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
+  psattr = *(_posix_spawnattr_t *)attr;
 
-	/* Generate a histogram based on the relaunch data while maintaining highest frequency bucket info */
-	int relaunch_histogram[POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS] = {0};
-	int max_frequency = -1;
-	int highest_frequency_bucket = -1;
+  /* Generate a histogram based on the relaunch data while maintaining highest
+   * frequency bucket info */
+  int relaunch_histogram[POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS] = {0};
+  int max_frequency = -1;
+  int highest_frequency_bucket = -1;
 
-	for (uint32_t i = 0; i < count; i++) {
-		/* For each data point passed in via launchd, find the bucket it lands in */
-		for (uint32_t bucket = 0; bucket < POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS; bucket++) {
-			if (ttrs_millis[i] <= relaunch_buckets_msecs[bucket]) {
-				relaunch_histogram[bucket]++;
+  for (uint32_t i = 0; i < count; i++) {
+    /* For each data point passed in via launchd, find the bucket it lands in */
+    for (uint32_t bucket = 0;
+         bucket < POSIX_SPAWN_JETSAM_RELAUNCH_BEHAVIOR_BUCKETS; bucket++) {
+      if (ttrs_millis[i] <= relaunch_buckets_msecs[bucket]) {
+        relaunch_histogram[bucket]++;
 
-				/* Check if the bucket is the highest frequency bucket now */
-				if (relaunch_histogram[bucket] > max_frequency) {
-					max_frequency = relaunch_histogram[bucket];
-					highest_frequency_bucket = bucket;
-				}
-				break;
-			}
-		}
-	}
-	psattr->psa_jetsam_flags |= relaunch_jetsam_flags[highest_frequency_bucket];
-	return 0;
+        /* Check if the bucket is the highest frequency bucket now */
+        if (relaunch_histogram[bucket] > max_frequency) {
+          max_frequency = relaunch_histogram[bucket];
+          highest_frequency_bucket = bucket;
+        }
+        break;
+      }
+    }
+  }
+  psattr->psa_jetsam_flags |= relaunch_jetsam_flags[highest_frequency_bucket];
+  return 0;
 }
 
 /*
  * posix_spawnattr_set_launch_type_np
  * Description: sets the launch type in posix_spawnattr_t attr
  */
-int
-posix_spawnattr_set_launch_type_np(posix_spawnattr_t *attr, uint8_t launch_type)
-{
-	_posix_spawnattr_t psattr;
+int posix_spawnattr_set_launch_type_np(posix_spawnattr_t *attr,
+                                       uint8_t launch_type) {
+  _posix_spawnattr_t psattr;
 
-	if (attr == NULL || *attr == NULL) {
-		return EINVAL;
-	}
+  if (attr == NULL || *attr == NULL) {
+    return EINVAL;
+  }
 
-	psattr = *(_posix_spawnattr_t *)attr;
-	psattr->psa_launch_type = launch_type;
+  psattr = *(_posix_spawnattr_t *)attr;
+  psattr->psa_launch_type = launch_type;
 
-	return 0;
+  return 0;
 }
 
 /*
@@ -3010,117 +2855,116 @@ posix_spawnattr_set_launch_type_np(posix_spawnattr_t *attr, uint8_t launch_type)
  *		call is expected to either be a 0 or an errno, rather than a
  *		0 or a -1, with the 'errno' variable being set.
  */
-int
-posix_spawn(pid_t * __restrict pid, const char * __restrict path,
-    const posix_spawn_file_actions_t *file_actions,
-    const posix_spawnattr_t * __restrict attrp,
-    char *const argv[__restrict], char *const envp[__restrict])
-{
-	int saveerrno = errno;
-	int ret = 0;
-	struct _posix_spawn_args_desc ad;
-	struct _posix_spawn_args_desc *adp = NULL;
-	/*
-	 * Only do extra work if we have file actions or attributes to push
-	 * down.  We use a descriptor to push this information down, since we
-	 * want to have size information, which will let us (1) preallocate a
-	 * single chunk of memory for the copyin(), and (2) allow us to do a
-	 * single copyin() per attributes or file actions as a monlithic block.
-	 *
-	 * Note:	A future implementation may attempt to do the same
-	 *		thing for the argv/envp data, which could potentially
-	 *		result in a performance improvement due to increased
-	 *		kernel efficiency, even though it would mean copying
-	 *		the data in user space.
-	 */
-	if ((file_actions != NULL && (*file_actions != NULL) && (*(_posix_spawn_file_actions_t *)file_actions)->psfa_act_count > 0) || attrp != NULL) {
-		memset(&ad, 0, sizeof(ad));
-		adp = &ad;
-		if (attrp != NULL && *attrp != NULL) {
-			_posix_spawnattr_t psattr = *(_posix_spawnattr_t *)attrp;
-			ad.attr_size = sizeof(struct _posix_spawnattr);
-			ad.attrp = psattr;
+int posix_spawn(pid_t *__restrict pid, const char *__restrict path,
+                const posix_spawn_file_actions_t *file_actions,
+                const posix_spawnattr_t *__restrict attrp,
+                char *const argv[__restrict], char *const envp[__restrict]) {
+  int saveerrno = errno;
+  int ret = 0;
+  struct _posix_spawn_args_desc ad;
+  struct _posix_spawn_args_desc *adp = NULL;
+  /*
+   * Only do extra work if we have file actions or attributes to push
+   * down.  We use a descriptor to push this information down, since we
+   * want to have size information, which will let us (1) preallocate a
+   * single chunk of memory for the copyin(), and (2) allow us to do a
+   * single copyin() per attributes or file actions as a monlithic block.
+   *
+   * Note:	A future implementation may attempt to do the same
+   *		thing for the argv/envp data, which could potentially
+   *		result in a performance improvement due to increased
+   *		kernel efficiency, even though it would mean copying
+   *		the data in user space.
+   */
+  if ((file_actions != NULL && (*file_actions != NULL) &&
+       (*(_posix_spawn_file_actions_t *)file_actions)->psfa_act_count > 0) ||
+      attrp != NULL) {
+    memset(&ad, 0, sizeof(ad));
+    adp = &ad;
+    if (attrp != NULL && *attrp != NULL) {
+      _posix_spawnattr_t psattr = *(_posix_spawnattr_t *)attrp;
+      ad.attr_size = sizeof(struct _posix_spawnattr);
+      ad.attrp = psattr;
 
-			if (psattr->psa_ports != NULL) {
-				size_t psact_size = PS_PORT_ACTIONS_SIZE(psattr->psa_ports->pspa_count);
-				if (psact_size == 0 && psattr->psa_ports->pspa_count != 0) {
-					errno = EINVAL;
-					ret = -1;
-					goto out;
-				}
-				ad.port_actions = psattr->psa_ports;
-				ad.port_actions_size = psact_size;
-			}
-			if (psattr->psa_mac_extensions != NULL) {
-				size_t macext_size = PS_MAC_EXTENSIONS_SIZE(psattr->psa_mac_extensions->psmx_count);
-				if (macext_size == 0 && psattr->psa_mac_extensions->psmx_count != 0) {
-					errno = EINVAL;
-					ret = -1;
-					goto out;
-				}
-				ad.mac_extensions = psattr->psa_mac_extensions;
-				ad.mac_extensions_size = macext_size;
-			}
-			if (psattr->psa_coalition_info != NULL) {
-				ad.coal_info_size = sizeof(struct _posix_spawn_coalition_info);
-				ad.coal_info = psattr->psa_coalition_info;
-			}
-			if (psattr->psa_persona_info != NULL) {
-				ad.persona_info_size = sizeof(struct _posix_spawn_persona_info);
-				ad.persona_info = psattr->psa_persona_info;
-			}
-			if (psattr->psa_posix_cred_info != NULL) {
-				ad.posix_cred_info_size = sizeof(struct _posix_spawn_posix_cred_info);
-				ad.posix_cred_info = psattr->psa_posix_cred_info;
-			}
-			if (psattr->psa_subsystem_root_path != NULL) {
-				ad.subsystem_root_path_size = MAXPATHLEN;
-				ad.subsystem_root_path = psattr->psa_subsystem_root_path;
-			}
-			if (psattr->psa_conclave_id != NULL) {
-				ad.conclave_id_size = MAXCONCLAVENAME;
-				ad.conclave_id = psattr->psa_conclave_id;
-			}
-		}
-		if (file_actions != NULL && *file_actions != NULL) {
-			_posix_spawn_file_actions_t psactsp =
-			    *(_posix_spawn_file_actions_t *)file_actions;
+      if (psattr->psa_ports != NULL) {
+        size_t psact_size = PS_PORT_ACTIONS_SIZE(psattr->psa_ports->pspa_count);
+        if (psact_size == 0 && psattr->psa_ports->pspa_count != 0) {
+          errno = EINVAL;
+          ret = -1;
+          goto out;
+        }
+        ad.port_actions = psattr->psa_ports;
+        ad.port_actions_size = psact_size;
+      }
+      if (psattr->psa_mac_extensions != NULL) {
+        size_t macext_size =
+            PS_MAC_EXTENSIONS_SIZE(psattr->psa_mac_extensions->psmx_count);
+        if (macext_size == 0 && psattr->psa_mac_extensions->psmx_count != 0) {
+          errno = EINVAL;
+          ret = -1;
+          goto out;
+        }
+        ad.mac_extensions = psattr->psa_mac_extensions;
+        ad.mac_extensions_size = macext_size;
+      }
+      if (psattr->psa_coalition_info != NULL) {
+        ad.coal_info_size = sizeof(struct _posix_spawn_coalition_info);
+        ad.coal_info = psattr->psa_coalition_info;
+      }
+      if (psattr->psa_persona_info != NULL) {
+        ad.persona_info_size = sizeof(struct _posix_spawn_persona_info);
+        ad.persona_info = psattr->psa_persona_info;
+      }
+      if (psattr->psa_posix_cred_info != NULL) {
+        ad.posix_cred_info_size = sizeof(struct _posix_spawn_posix_cred_info);
+        ad.posix_cred_info = psattr->psa_posix_cred_info;
+      }
+      if (psattr->psa_subsystem_root_path != NULL) {
+        ad.subsystem_root_path_size = MAXPATHLEN;
+        ad.subsystem_root_path = psattr->psa_subsystem_root_path;
+      }
+      if (psattr->psa_conclave_id != NULL) {
+        ad.conclave_id_size = MAXCONCLAVENAME;
+        ad.conclave_id = psattr->psa_conclave_id;
+      }
+    }
+    if (file_actions != NULL && *file_actions != NULL) {
+      _posix_spawn_file_actions_t psactsp =
+          *(_posix_spawn_file_actions_t *)file_actions;
 
-			if (psactsp->psfa_act_count > 0) {
-				size_t fa_size = PSF_ACTIONS_SIZE(psactsp->psfa_act_count);
-				if (fa_size == 0 && psactsp->psfa_act_count != 0) {
-					errno = EINVAL;
-					ret = -1;
-					goto out;
-				}
-				ad.file_actions_size = fa_size;
-				ad.file_actions = psactsp;
-			}
-		}
-	}
+      if (psactsp->psfa_act_count > 0) {
+        size_t fa_size = PSF_ACTIONS_SIZE(psactsp->psfa_act_count);
+        if (fa_size == 0 && psactsp->psfa_act_count != 0) {
+          errno = EINVAL;
+          ret = -1;
+          goto out;
+        }
+        ad.file_actions_size = fa_size;
+        ad.file_actions = psactsp;
+      }
+    }
+  }
 
-	if (!posix_spawn_with_filter ||
-	    !posix_spawn_with_filter(pid, path, argv, envp, adp, &ret)) {
-		ret = __posix_spawn(pid, path, adp, argv, envp);
-	}
+  if (!posix_spawn_with_filter ||
+      !posix_spawn_with_filter(pid, path, argv, envp, adp, &ret)) {
+    ret = __posix_spawn(pid, path, adp, argv, envp);
+  }
 
 out:
-	if (ret < 0) {
-		ret = errno;
-	}
-	errno = saveerrno;
-	return ret;
+  if (ret < 0) {
+    ret = errno;
+  }
+  errno = saveerrno;
+  return ret;
 }
 
-int
-execve(const char *fname, char * const *argp, char * const *envp)
-{
-	int ret;
-	if (execve_with_filter) {
-		/* Noinline slow path to avoid a large stack frame in the common case */
-		return execve_with_filter(fname, argp, envp);
-	}
+int execve(const char *fname, char *const *argp, char *const *envp) {
+  int ret;
+  if (execve_with_filter) {
+    /* Noinline slow path to avoid a large stack frame in the common case */
+    return execve_with_filter(fname, argp, envp);
+  }
 
-	ret = __execve(fname, argp, envp);
-	return ret;
+  ret = __execve(fname, argp, envp);
+  return ret;
 }

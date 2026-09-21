@@ -31,105 +31,91 @@
  * - test ndrv socket
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/errno.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <net/if_media.h>
-#include <net/if_types.h>
-#include <net/if_dl.h>
-#include <net/dlil.h>
-#include <net/ndrv.h>
-#include <net/ethernet.h>
-#include <sys/sockio.h>
-#include <fcntl.h>
-#include <stdbool.h>
 #include <TargetConditionals.h>
 #include <darwintest_utils.h>
+#include <fcntl.h>
+#include <net/dlil.h>
+#include <net/ethernet.h>
+#include <net/if.h>
+#include <net/if_dl.h>
+#include <net/if_media.h>
+#include <net/if_types.h>
+#include <net/ndrv.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/errno.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/sockio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 static const struct ether_addr multicast_one = {
-	{ 0x01, 0x80, 0xc2, 0x00, 0x00, 0x01 }
-};
+    {0x01, 0x80, 0xc2, 0x00, 0x00, 0x01}};
 
 static const struct ether_addr multicast_two = {
-	{ 0x01, 0x80, 0xc2, 0x00, 0x00, 0x02 }
-};
+    {0x01, 0x80, 0xc2, 0x00, 0x00, 0x02}};
 
-static void
-ndrv_socket_do_multicast(int s, const struct ether_addr * multiaddr,
-    bool add)
-{
-	struct sockaddr_dl      dl;
-	int                     status;
+static void ndrv_socket_do_multicast(int s, const struct ether_addr *multiaddr,
+                                     bool add) {
+  struct sockaddr_dl dl;
+  int status;
 
-
-	bzero(&dl, sizeof(dl));
-	dl.sdl_len = sizeof(dl);
-	dl.sdl_family = AF_LINK;
-	dl.sdl_type = IFT_ETHER;
-	dl.sdl_nlen = 0;
-	dl.sdl_alen = sizeof(*multiaddr);
-	bcopy(multiaddr, dl.sdl_data, sizeof(*multiaddr));
-	status = setsockopt(s, SOL_NDRVPROTO,
-	    add ? NDRV_ADDMULTICAST : NDRV_DELMULTICAST,
-	    &dl, dl.sdl_len);
-	T_ASSERT_POSIX_SUCCESS(status,
-	    "setsockopt(NDRV_%sMULTICAST)",
-	    add ? "ADD" : "DEL");
+  bzero(&dl, sizeof(dl));
+  dl.sdl_len = sizeof(dl);
+  dl.sdl_family = AF_LINK;
+  dl.sdl_type = IFT_ETHER;
+  dl.sdl_nlen = 0;
+  dl.sdl_alen = sizeof(*multiaddr);
+  bcopy(multiaddr, dl.sdl_data, sizeof(*multiaddr));
+  status =
+      setsockopt(s, SOL_NDRVPROTO, add ? NDRV_ADDMULTICAST : NDRV_DELMULTICAST,
+                 &dl, dl.sdl_len);
+  T_ASSERT_POSIX_SUCCESS(status, "setsockopt(NDRV_%sMULTICAST)",
+                         add ? "ADD" : "DEL");
 }
 
-static void
-ndrv_socket_add_multicast(int s, const struct ether_addr * multiaddr)
-{
-	ndrv_socket_do_multicast(s, multiaddr, true);
+static void ndrv_socket_add_multicast(int s,
+                                      const struct ether_addr *multiaddr) {
+  ndrv_socket_do_multicast(s, multiaddr, true);
 }
 
-static void
-ndrv_socket_remove_multicast(int s, const struct ether_addr * multiaddr)
-{
-	ndrv_socket_do_multicast(s, multiaddr, false);
+static void ndrv_socket_remove_multicast(int s,
+                                         const struct ether_addr *multiaddr) {
+  ndrv_socket_do_multicast(s, multiaddr, false);
 }
 
-static int
-ndrv_socket_open(const char * ifname)
-{
-	struct sockaddr_ndrv    ndrv;
-	int                     s;
-	int                     status;
+static int ndrv_socket_open(const char *ifname) {
+  struct sockaddr_ndrv ndrv;
+  int s;
+  int status;
 
-	s = socket(AF_NDRV, SOCK_RAW, 0);
-	T_ASSERT_POSIX_SUCCESS(s, "socket(AF_NDRV, SOCK_RAW, 0)");
-	bzero(&ndrv, sizeof(ndrv));
-	strlcpy((char *)ndrv.snd_name, ifname, sizeof(ndrv.snd_name));
-	ndrv.snd_len = sizeof(ndrv);
-	ndrv.snd_family = AF_NDRV;
-	status = bind(s, (struct sockaddr *)&ndrv, sizeof(ndrv));
-	T_ASSERT_POSIX_SUCCESS(status, "bind ndrv socket");
-	return s;
+  s = socket(AF_NDRV, SOCK_RAW, 0);
+  T_ASSERT_POSIX_SUCCESS(s, "socket(AF_NDRV, SOCK_RAW, 0)");
+  bzero(&ndrv, sizeof(ndrv));
+  strlcpy((char *)ndrv.snd_name, ifname, sizeof(ndrv.snd_name));
+  ndrv.snd_len = sizeof(ndrv);
+  ndrv.snd_family = AF_NDRV;
+  status = bind(s, (struct sockaddr *)&ndrv, sizeof(ndrv));
+  T_ASSERT_POSIX_SUCCESS(status, "bind ndrv socket");
+  return s;
 }
 
-static void
-ndrv_socket_multicast_add_remove(const char * ifname)
-{
-	int                     s;
+static void ndrv_socket_multicast_add_remove(const char *ifname) {
+  int s;
 
-	/* test for rdar://99667160 */
-	s = ndrv_socket_open(ifname);
-	ndrv_socket_add_multicast(s, &multicast_one);
-	ndrv_socket_add_multicast(s, &multicast_two);
-	ndrv_socket_remove_multicast(s, &multicast_one);
-	close(s);
+  /* test for rdar://99667160 */
+  s = ndrv_socket_open(ifname);
+  ndrv_socket_add_multicast(s, &multicast_one);
+  ndrv_socket_add_multicast(s, &multicast_two);
+  ndrv_socket_remove_multicast(s, &multicast_one);
+  close(s);
 }
 
-T_DECL(ndrv_socket_multicast_add_remove,
-    "ndrv socket multicast add remove",
-    T_META_ASROOT(true), T_META_TAG_VM_PREFERRED)
-{
-	ndrv_socket_multicast_add_remove("lo0");
+T_DECL(ndrv_socket_multicast_add_remove, "ndrv socket multicast add remove",
+       T_META_ASROOT(true), T_META_TAG_VM_PREFERRED) {
+  ndrv_socket_multicast_add_remove("lo0");
 }

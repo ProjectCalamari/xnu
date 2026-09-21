@@ -35,79 +35,78 @@ extern "C" {
 #define APFS_VOLUME_OBJECT "AppleAPFSVolume"
 #define kAPFSVolGroupUUIDKey "VolGroupUUID"
 
-extern "C"
-int
-vfs_exclave_fs_query_volume_group(const uuid_string_t vguuid_str, bool *exists)
-{
+extern "C" int vfs_exclave_fs_query_volume_group(const uuid_string_t vguuid_str,
+                                                 bool *exists) {
 #if XNU_TARGET_OS_OSX
-	OSDictionary *target = NULL, *filter = NULL;
-	OSString *string = NULL;
-	IOService *service = NULL;
-	int error = 0;
-	uuid_t vguuid;
+  OSDictionary *target = NULL, *filter = NULL;
+  OSString *string = NULL;
+  IOService *service = NULL;
+  int error = 0;
+  uuid_t vguuid;
 
-	*exists = false;
+  *exists = false;
 
-	// Verify input uuid is a valid uuid
-	error = uuid_parse(vguuid_str, vguuid);
-	if (error) {
-		return EINVAL;
-	}
+  // Verify input uuid is a valid uuid
+  error = uuid_parse(vguuid_str, vguuid);
+  if (error) {
+    return EINVAL;
+  }
 
-	// Look for APFS volume object that has Volume Group that matches the one we're looking for
-	target = IOService::serviceMatching(APFS_VOLUME_OBJECT);
-	if (!target) {
-		// No APFS volumes found?
-		return ENXIO;
-	}
+  // Look for APFS volume object that has Volume Group that matches the one
+  // we're looking for
+  target = IOService::serviceMatching(APFS_VOLUME_OBJECT);
+  if (!target) {
+    // No APFS volumes found?
+    return ENXIO;
+  }
 
-	filter = OSDictionary::withCapacity(1);
-	if (!filter) {
-		error = ENOMEM;
-		goto out;
-	}
+  filter = OSDictionary::withCapacity(1);
+  if (!filter) {
+    error = ENOMEM;
+    goto out;
+  }
 
-	string = OSString::withCStringNoCopy(vguuid_str);
-	if (!string) {
-		error = ENOMEM;
-		goto out;
-	}
+  string = OSString::withCStringNoCopy(vguuid_str);
+  if (!string) {
+    error = ENOMEM;
+    goto out;
+  }
 
-	if (!filter->setObject(kAPFSVolGroupUUIDKey, string)) {
-		error = ENXIO;
-		goto out;
-	}
+  if (!filter->setObject(kAPFSVolGroupUUIDKey, string)) {
+    error = ENXIO;
+    goto out;
+  }
 
-	if (!target->setObject(gIOPropertyMatchKey, filter)) {
-		error = ENXIO;
-		goto out;
-	}
+  if (!target->setObject(gIOPropertyMatchKey, filter)) {
+    error = ENXIO;
+    goto out;
+  }
 
-	if ((service = IOService::copyMatchingService(target)) != NULL) {
-		*exists = true;
-	}
+  if ((service = IOService::copyMatchingService(target)) != NULL) {
+    *exists = true;
+  }
 
 out:
-	if (target) {
-		target->release();
-	}
+  if (target) {
+    target->release();
+  }
 
-	if (filter) {
-		filter->release();
-	}
+  if (filter) {
+    filter->release();
+  }
 
-	if (string) {
-		string->release();
-	}
+  if (string) {
+    string->release();
+  }
 
-	if (service) {
-		service->release();
-	}
+  if (service) {
+    service->release();
+  }
 
-	return error;
+  return error;
 #else
 #pragma unused(vguuid_str)
 #pragma unused(exists)
-	return ENOTSUP;
+  return ENOTSUP;
 #endif
 }

@@ -44,50 +44,46 @@
 
 class IOCommandQueue;
 
-typedef void (*IOCommandQueueAction)
-(OSObject *, void *field0, void *field1, void *field2, void *field3);
+typedef void (*IOCommandQueueAction)(OSObject *, void *field0, void *field1,
+                                     void *field2, void *field3);
 
-class IOCommandQueue : public IOEventSource
-{
-	OSDeclareDefaultStructors(IOCommandQueue);
+class IOCommandQueue : public IOEventSource {
+  OSDeclareDefaultStructors(IOCommandQueue);
 
 protected:
-	static const int kIOCQDefaultSize = 128;
+  static const int kIOCQDefaultSize = 128;
 
-	void *queue;
-	IOLock *producerLock;
-	semaphore_port_t producerSema;
-	int producerIndex, consumerIndex;
-	int size;
+  void *queue;
+  IOLock *producerLock;
+  semaphore_port_t producerSema;
+  int producerIndex, consumerIndex;
+  int size;
 
-	virtual void free() APPLE_KEXT_OVERRIDE;
+  virtual void free() APPLE_KEXT_OVERRIDE;
 
-	virtual bool checkForWork() APPLE_KEXT_OVERRIDE;
+  virtual bool checkForWork() APPLE_KEXT_OVERRIDE;
 
 public:
-	static OSPtr<IOCommandQueue> commandQueue(OSObject *inOwner,
-	    IOCommandQueueAction inAction = NULL,
-	    int inSize = kIOCQDefaultSize)
-	APPLE_KEXT_DEPRECATED;
-	virtual bool init(OSObject *inOwner,
-	    IOCommandQueueAction inAction = NULL,
-	    int inSize = kIOCQDefaultSize)
-	APPLE_KEXT_DEPRECATED;
+  static OSPtr<IOCommandQueue>
+  commandQueue(OSObject *inOwner, IOCommandQueueAction inAction = NULL,
+               int inSize = kIOCQDefaultSize) APPLE_KEXT_DEPRECATED;
+  virtual bool init(OSObject *inOwner, IOCommandQueueAction inAction = NULL,
+                    int inSize = kIOCQDefaultSize) APPLE_KEXT_DEPRECATED;
 
-	virtual kern_return_t enqueueCommand(bool gotoSleep = true,
-	    void *field0 = NULL, void *field1 = NULL,
-	    void *field2 = NULL, void *field3 = NULL)
-	APPLE_KEXT_DEPRECATED;
+  virtual kern_return_t
+  enqueueCommand(bool gotoSleep = true, void *field0 = NULL,
+                 void *field1 = NULL, void *field2 = NULL,
+                 void *field3 = NULL) APPLE_KEXT_DEPRECATED;
 
-// WARNING:  This function can only be safely called from the appropriate
-// work loop context.  You should check IOWorkLoop::onThread is true.
-//
-// For each entry in the commandQueue call the target/action.
-// Lockout all new entries to the queue while iterating.
-// If the input fields are zero then the queue's owner/action will be used.
-	virtual int performAndFlush(OSObject *target = NULL,
-	    IOCommandQueueAction inAction = NULL)
-	APPLE_KEXT_DEPRECATED;
+  // WARNING:  This function can only be safely called from the appropriate
+  // work loop context.  You should check IOWorkLoop::onThread is true.
+  //
+  // For each entry in the commandQueue call the target/action.
+  // Lockout all new entries to the queue while iterating.
+  // If the input fields are zero then the queue's owner/action will be used.
+  virtual int
+  performAndFlush(OSObject *target = NULL,
+                  IOCommandQueueAction inAction = NULL) APPLE_KEXT_DEPRECATED;
 };
 
 #endif /* !_IOKIT_IOCOMMANDQUEUE_H */

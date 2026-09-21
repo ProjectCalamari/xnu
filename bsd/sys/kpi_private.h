@@ -41,12 +41,12 @@ __BEGIN_DECLS
 #ifdef KERNEL_PRIVATE
 
 /* kernel-exported qsort */
-void kx_qsort(void* array, size_t nm, size_t member_size, int (*)(const void *, const void *));
+void kx_qsort(void *array, size_t nm, size_t member_size,
+              int (*)(const void *, const void *));
 
-#endif  /* KERNEL_PRIVATE */
+#endif /* KERNEL_PRIVATE */
 
 __END_DECLS
 
-
-#endif  /* KERNEL  */
+#endif /* KERNEL  */
 #endif /* !_SYS_KPI_PRIVATE_H */

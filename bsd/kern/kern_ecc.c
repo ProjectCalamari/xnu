@@ -25,43 +25,41 @@
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
+#include <kern/assert.h>
 #include <kern/debug.h>
-#include <sys/param.h>
+#include <kern/ecc.h>
+#include <libkern/libkern.h>
+#include <mach/machine.h>
+#include <pexpert/pexpert.h>
 #include <sys/mman.h>
+#include <sys/param.h>
+#include <sys/priv.h>
 #include <sys/stat.h>
 #include <sys/sysctl.h>
-#include <sys/priv.h>
-#include <mach/machine.h>
-#include <libkern/libkern.h>
-#include <kern/assert.h>
-#include <pexpert/pexpert.h>
-#include <kern/ecc.h>
 
-static int
-get_ecc_data_handler(__unused struct sysctl_oid *oidp, __unused void *arg1, __unused int arg2,
-    struct sysctl_req *req)
-{
-	struct ecc_event ev;
-	int changed, retval;
+static int get_ecc_data_handler(__unused struct sysctl_oid *oidp,
+                                __unused void *arg1, __unused int arg2,
+                                struct sysctl_req *req) {
+  struct ecc_event ev;
+  int changed, retval;
 
-	if (priv_check_cred(kauth_cred_get(), PRIV_HW_DEBUG_DATA, 0) != 0) {
-		return EPERM;
-	}
+  if (priv_check_cred(kauth_cred_get(), PRIV_HW_DEBUG_DATA, 0) != 0) {
+    return EPERM;
+  }
 
-	if (KERN_SUCCESS != ecc_log_get_next_event(&ev)) {
-		/*
-		 * EAGAIN would be better, but sysctl infrastructure
-		 * interprets that */
-		return EBUSY;
-	}
+  if (KERN_SUCCESS != ecc_log_get_next_event(&ev)) {
+    /*
+     * EAGAIN would be better, but sysctl infrastructure
+     * interprets that */
+    return EBUSY;
+  }
 
-	retval = sysctl_io_opaque(req, &ev, sizeof(ev), &changed);
-	assert(!changed);
+  retval = sysctl_io_opaque(req, &ev, sizeof(ev), &changed);
+  assert(!changed);
 
-	return retval;
+  return retval;
 }
 
 SYSCTL_PROC(_kern, OID_AUTO, next_ecc_event,
-    CTLFLAG_RD | CTLFLAG_ANYBODY | CTLFLAG_MASKED | CTLTYPE_STRUCT,
-    0, 0, get_ecc_data_handler,
-    "-", "");
+            CTLFLAG_RD | CTLFLAG_ANYBODY | CTLFLAG_MASKED | CTLTYPE_STRUCT, 0,
+            0, get_ecc_data_handler, "-", "");

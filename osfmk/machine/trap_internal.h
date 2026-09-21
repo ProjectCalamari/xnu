@@ -28,9 +28,9 @@
 #ifndef _MACHINE_TRAP_INTERNAL_H
 #define _MACHINE_TRAP_INTERNAL_H
 
-#if defined (__i386__) || defined (__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/trap_internal.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/trap_internal.h"
 #else
 #error architecture not supported

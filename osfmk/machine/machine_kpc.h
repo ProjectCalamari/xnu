@@ -28,11 +28,11 @@
 #ifndef _MACHINE_MACHINE_KPC_H
 #define _MACHINE_MACHINE_KPC_H
 
-#if defined (__x86_64__)
+#if defined(__x86_64__)
 #include "x86_64/machine_kpc.h"
-#elif defined (__arm64__)
+#elif defined(__arm64__)
 #include "arm64/machine_kpc.h"
-#elif defined (__arm__)
+#elif defined(__arm__)
 #include "arm/machine_kpc.h"
 #else
 #error architecture not supported

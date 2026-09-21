@@ -39,5 +39,4 @@
 #define os_unlikely(x) OS_EXPECT(!!(x), 0)
 #endif
 
-
 #endif // __OS_BASE_PRIVATE__

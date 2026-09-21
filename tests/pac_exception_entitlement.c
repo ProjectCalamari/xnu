@@ -27,33 +27,29 @@
  */
 
 #include <darwintest.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <mach/exception_types.h>
-#include <sys/wait.h>
-#include <sys/sysctl.h>
+#include <stdlib.h>
 #include <sys/code_signing.h>
+#include <sys/sysctl.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include "exc_helpers.h"
 #include "test_utils.h"
 
-T_GLOBAL_META(
-	T_META_NAMESPACE("xnu.arm"),
-	T_META_RADAR_COMPONENT_NAME("xnu"),
-	T_META_RADAR_COMPONENT_VERSION("arm"),
-	T_META_OWNER("ghackmann"),
-	T_META_REQUIRES_SYSCTL_EQ("hw.optional.ptrauth", 1),
-	T_META_IGNORECRASHES(".*pac_exception_entitlement.*"),
-	XNU_T_META_SOC_SPECIFIC
-	);
+T_GLOBAL_META(T_META_NAMESPACE("xnu.arm"), T_META_RADAR_COMPONENT_NAME("xnu"),
+              T_META_RADAR_COMPONENT_VERSION("arm"), T_META_OWNER("ghackmann"),
+              T_META_REQUIRES_SYSCTL_EQ("hw.optional.ptrauth", 1),
+              T_META_IGNORECRASHES(".*pac_exception_entitlement.*"),
+              XNU_T_META_SOC_SPECIFIC);
 
 #if __arm64e__
-static size_t
-exception_handler(mach_port_t task __unused, mach_port_t thread __unused,
-    exception_type_t type __unused, mach_exception_data_t codes __unused,
-    uint64_t exception_pc __unused)
-{
-	T_ASSERT_FAIL("kernel ran exception handler instead of terminating process");
+static size_t exception_handler(mach_port_t task __unused,
+                                mach_port_t thread __unused,
+                                exception_type_t type __unused,
+                                mach_exception_data_t codes __unused,
+                                uint64_t exception_pc __unused) {
+  T_ASSERT_FAIL("kernel ran exception handler instead of terminating process");
 }
 
 /*
@@ -84,118 +80,117 @@ exception_handler(mach_port_t task __unused, mach_port_t thread __unused,
  * real-world software.)
  */
 
-static void
-naked_auth(void)
-{
-	asm volatile (
-                "mov	x0, #0"                 "\n"
-                "paciza	x0"                     "\n"
-                "eor	x0, x0, (1 << 63)"      "\n"
-                "autiza	x0"
-                :
-                :
-                : "x0"
-        );
+static void naked_auth(void) {
+  asm volatile("mov	x0, #0"
+               "\n"
+               "paciza	x0"
+               "\n"
+               "eor	x0, x0, (1 << 63)"
+               "\n"
+               "autiza	x0"
+               :
+               :
+               : "x0");
 }
 
-static void
-ptrauth_brk(void)
-{
-	asm volatile ("brk 0xc470");
+static void ptrauth_brk(void) { asm volatile("brk 0xc470"); }
+
+static void combined_branch_auth(void) {
+  asm volatile("adr	x0, 1f"
+               "\n"
+               "paciza	x0"
+               "\n"
+               "eor	x0, x0, (1 << 63)"
+               "\n"
+               "braaz	x0"
+               "\n"
+               "1:"
+               :
+               :
+               : "x0");
 }
 
-static void
-combined_branch_auth(void)
-{
-	asm volatile (
-                "adr	x0, 1f"                 "\n"
-                "paciza	x0"                     "\n"
-                "eor	x0, x0, (1 << 63)"      "\n"
-                "braaz	x0"                     "\n"
-        "1:"
-                :
-                :
-                : "x0"
-        );
+static void combined_load_auth(void) {
+  asm volatile("mov	x0, sp"
+               "\n"
+               "pacdza	x0"
+               "\n"
+               "eor	x0, x0, (1 << 54)"
+               "\n"
+               "ldraa	x0, [x0]"
+               "\n"
+               :
+               :
+               : "x0");
 }
 
-static void
-combined_load_auth(void)
-{
-	asm volatile (
-                "mov	x0, sp"                 "\n"
-                "pacdza	x0"                     "\n"
-                "eor	x0, x0, (1 << 54)"      "\n"
-                "ldraa	x0, [x0]"               "\n"
-                :
-                :
-                : "x0"
-        );
-}
+static void run_pac_exception_test(void (*ptrauth_failure_fn)(void)) {
 
-static void
-run_pac_exception_test(void (*ptrauth_failure_fn)(void))
-{
+  pid_t pid = fork();
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(pid, "fork");
 
-	pid_t pid = fork();
-	T_QUIET; T_ASSERT_POSIX_SUCCESS(pid, "fork");
+  if (pid == 0) {
+    mach_port_t exc_port =
+        create_exception_port(EXC_MASK_BAD_ACCESS | EXC_MASK_BREAKPOINT);
+    run_exception_handler(exc_port, exception_handler);
 
-	if (pid == 0) {
-		mach_port_t exc_port = create_exception_port(EXC_MASK_BAD_ACCESS | EXC_MASK_BREAKPOINT);
-		run_exception_handler(exc_port, exception_handler);
+    ptrauth_failure_fn();
+    /* ptrauth_failure_fn() should have raised an uncatchable exception */
+    T_FAIL("child ran to completion");
+  } else {
+    int status;
+    int err = waitpid(pid, &status, 0);
+    T_QUIET;
+    T_ASSERT_POSIX_SUCCESS(err, "waitpid");
 
-		ptrauth_failure_fn();
-		/* ptrauth_failure_fn() should have raised an uncatchable exception */
-		T_FAIL("child ran to completion");
-	} else {
-		int status;
-		int err = waitpid(pid, &status, 0);
-		T_QUIET; T_ASSERT_POSIX_SUCCESS(err, "waitpid");
-
-		T_EXPECT_TRUE(WIFSIGNALED(status), "child terminated due to signal");
-		T_EXPECT_EQ(SIGKILL, WTERMSIG(status), "child terminated due to SIGKILL");
-	}
+    T_EXPECT_TRUE(WIFSIGNALED(status), "child terminated due to signal");
+    T_EXPECT_EQ(SIGKILL, WTERMSIG(status), "child terminated due to SIGKILL");
+  }
 }
 #endif //__arm64e__
 
-T_DECL(pac_exception_naked_auth,
+T_DECL(
+    pac_exception_naked_auth,
     "Test the com.apple.private.pac.exception entitlement (naked auth failure)",
-    T_META_REQUIRES_SYSCTL_EQ("hw.optional.arm.FEAT_FPAC", 1), T_META_TAG_VM_NOT_ELIGIBLE)
-{
+    T_META_REQUIRES_SYSCTL_EQ("hw.optional.arm.FEAT_FPAC", 1),
+    T_META_TAG_VM_NOT_ELIGIBLE) {
 #if __arm64e__
-	run_pac_exception_test(naked_auth);
+  run_pac_exception_test(naked_auth);
 #else
-	T_SKIP("Running on non-arm64e target, skipping...");
+  T_SKIP("Running on non-arm64e target, skipping...");
 #endif
 }
 
-
 T_DECL(pac_exception_ptrauth_brk,
-    "Test the com.apple.private.pac.exception entitlement (brk with comment indicating ptrauth failure)", T_META_TAG_VM_NOT_ELIGIBLE)
-{
+       "Test the com.apple.private.pac.exception entitlement (brk with comment "
+       "indicating ptrauth failure)",
+       T_META_TAG_VM_NOT_ELIGIBLE) {
 #if __arm64e__
-	run_pac_exception_test(ptrauth_brk);
+  run_pac_exception_test(ptrauth_brk);
 #else
-	T_SKIP("Running on non-arm64e target, skipping...");
+  T_SKIP("Running on non-arm64e target, skipping...");
 #endif
 }
 
 T_DECL(pac_exception_combined_branch_auth,
-    "Test the com.apple.private.pac.exception entitlement (combined branch + auth failure)", T_META_TAG_VM_NOT_ELIGIBLE)
-{
+       "Test the com.apple.private.pac.exception entitlement (combined branch "
+       "+ auth failure)",
+       T_META_TAG_VM_NOT_ELIGIBLE) {
 #if __arm64e__
-	run_pac_exception_test(combined_branch_auth);
+  run_pac_exception_test(combined_branch_auth);
 #else
-	T_SKIP("Running on non-arm64e target, skipping...");
+  T_SKIP("Running on non-arm64e target, skipping...");
 #endif
 }
 
 T_DECL(pac_exception_combined_load_auth,
-    "Test the com.apple.private.pac.exception entitlement (combined branch + auth failure)", T_META_TAG_VM_NOT_ELIGIBLE)
-{
+       "Test the com.apple.private.pac.exception entitlement (combined branch "
+       "+ auth failure)",
+       T_META_TAG_VM_NOT_ELIGIBLE) {
 #if __arm64e__
-	run_pac_exception_test(combined_load_auth);
+  run_pac_exception_test(combined_load_auth);
 #else
-	T_SKIP("Running on non-arm64e target, skipping...");
+  T_SKIP("Running on non-arm64e target, skipping...");
 #endif
 }

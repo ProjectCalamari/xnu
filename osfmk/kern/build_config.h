@@ -29,8 +29,8 @@
 #ifndef _KERN_BUILD_CONFIG_H
 #define _KERN_BUILD_CONFIG_H
 
-#include <stdbool.h>
 #include <os/base.h>
+#include <stdbool.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS

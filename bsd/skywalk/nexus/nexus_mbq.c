@@ -51,86 +51,63 @@
  * SUCH DAMAGE.
  */
 
-
+#include <skywalk/nexus/nexus_mbq.h>
 #include <stdint.h>
 #include <sys/cdefs.h> /* prerequisite */
-#include <sys/types.h>
 #include <sys/param.h>
 #include <sys/systm.h>
-#include <skywalk/nexus/nexus_mbq.h>
+#include <sys/types.h>
 
 static void __nx_mbq_init(struct nx_mbq *q, uint32_t, lck_grp_t *lck_grp);
 
-__attribute__((always_inline))
-static inline void
-__nx_mbq_init(struct nx_mbq *q, uint32_t lim, lck_grp_t *lck_grp)
-{
-	bzero(q, sizeof(*q));
-	_qinit(&q->nx_mbq_q, Q_DROPTAIL, lim, QP_MBUF);
-	q->nx_mbq_grp = lck_grp;
+__attribute__((always_inline)) static inline void
+__nx_mbq_init(struct nx_mbq *q, uint32_t lim, lck_grp_t *lck_grp) {
+  bzero(q, sizeof(*q));
+  _qinit(&q->nx_mbq_q, Q_DROPTAIL, lim, QP_MBUF);
+  q->nx_mbq_grp = lck_grp;
 }
 
-void
-nx_mbq_safe_init(struct __kern_channel_ring *kr, struct nx_mbq *q,
-    uint32_t lim, lck_grp_t *lck_grp, lck_attr_t *lck_attr)
-{
-	q->nx_mbq_kring = kr;
-	__nx_mbq_init(q, lim, lck_grp);
-	lck_mtx_init(&q->nx_mbq_lock, lck_grp, lck_attr);
+void nx_mbq_safe_init(struct __kern_channel_ring *kr, struct nx_mbq *q,
+                      uint32_t lim, lck_grp_t *lck_grp, lck_attr_t *lck_attr) {
+  q->nx_mbq_kring = kr;
+  __nx_mbq_init(q, lim, lck_grp);
+  lck_mtx_init(&q->nx_mbq_lock, lck_grp, lck_attr);
 }
 
-void
-nx_mbq_init(struct nx_mbq *q, uint32_t lim)
-{
-	__nx_mbq_init(q, lim, NULL);
+void nx_mbq_init(struct nx_mbq *q, uint32_t lim) {
+  __nx_mbq_init(q, lim, NULL);
 }
 
-void
-nx_mbq_concat(struct nx_mbq *q1, struct nx_mbq *q2)
-{
-	uint32_t qlen;
-	uint64_t qsize;
-	classq_pkt_t first = CLASSQ_PKT_INITIALIZER(first);
-	classq_pkt_t last = CLASSQ_PKT_INITIALIZER(last);
+void nx_mbq_concat(struct nx_mbq *q1, struct nx_mbq *q2) {
+  uint32_t qlen;
+  uint64_t qsize;
+  classq_pkt_t first = CLASSQ_PKT_INITIALIZER(first);
+  classq_pkt_t last = CLASSQ_PKT_INITIALIZER(last);
 
-	/* caller is responsible for locking */
-	if (!nx_mbq_empty(q2)) {
-		_getq_all(&q2->nx_mbq_q, &first, &last, &qlen, &qsize);
-		ASSERT(first.cp_mbuf != NULL && last.cp_mbuf != NULL);
-		_addq_multi(&q1->nx_mbq_q, &first, &last, qlen, qsize);
-		ASSERT(nx_mbq_empty(q2));
-	}
+  /* caller is responsible for locking */
+  if (!nx_mbq_empty(q2)) {
+    _getq_all(&q2->nx_mbq_q, &first, &last, &qlen, &qsize);
+    ASSERT(first.cp_mbuf != NULL && last.cp_mbuf != NULL);
+    _addq_multi(&q1->nx_mbq_q, &first, &last, qlen, qsize);
+    ASSERT(nx_mbq_empty(q2));
+  }
 }
 
-boolean_t
-nx_mbq_empty(struct nx_mbq *q)
-{
-	return qempty(&q->nx_mbq_q) && qhead(&q->nx_mbq_q) == NULL;
+boolean_t nx_mbq_empty(struct nx_mbq *q) {
+  return qempty(&q->nx_mbq_q) && qhead(&q->nx_mbq_q) == NULL;
 }
 
-void
-nx_mbq_purge(struct nx_mbq *q)
-{
-	_flushq(&q->nx_mbq_q);
+void nx_mbq_purge(struct nx_mbq *q) { _flushq(&q->nx_mbq_q); }
+
+void nx_mbq_safe_purge(struct nx_mbq *q) {
+  nx_mbq_lock(q);
+  _flushq(&q->nx_mbq_q);
+  nx_mbq_unlock(q);
 }
 
-void
-nx_mbq_safe_purge(struct nx_mbq *q)
-{
-	nx_mbq_lock(q);
-	_flushq(&q->nx_mbq_q);
-	nx_mbq_unlock(q);
+void nx_mbq_safe_destroy(struct nx_mbq *q) {
+  VERIFY(nx_mbq_empty(q));
+  lck_mtx_destroy(&q->nx_mbq_lock, q->nx_mbq_grp);
 }
 
-void
-nx_mbq_safe_destroy(struct nx_mbq *q)
-{
-	VERIFY(nx_mbq_empty(q));
-	lck_mtx_destroy(&q->nx_mbq_lock, q->nx_mbq_grp);
-}
-
-void
-nx_mbq_destroy(struct nx_mbq *q)
-{
-	VERIFY(nx_mbq_empty(q));
-}
+void nx_mbq_destroy(struct nx_mbq *q) { VERIFY(nx_mbq_empty(q)); }

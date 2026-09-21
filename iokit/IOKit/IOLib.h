@@ -39,28 +39,28 @@
 #error IOLib.h is for kernel use only
 #endif
 
+#include <os/alloc_util.h>
+#include <os/overflow.h>
 #include <stdarg.h>
 #include <sys/cdefs.h>
-#include <os/overflow.h>
-#include <os/alloc_util.h>
 
 #include <sys/appleapiopts.h>
 
 #include <IOKit/system.h>
 
+#include <IOKit/IOLocks.h>
 #include <IOKit/IOReturn.h>
 #include <IOKit/IOTypes.h>
-#include <IOKit/IOLocks.h>
 
 #include <libkern/OSAtomic.h>
 
 __BEGIN_DECLS
 
-#include <kern/thread_call.h>
 #include <kern/clock.h>
+#include <kern/thread_call.h>
 #ifdef KERNEL_PRIVATE
-#include <kern/kalloc.h>
 #include <kern/assert.h>
+#include <kern/kalloc.h>
 #endif
 
 /*
@@ -75,26 +75,26 @@ __BEGIN_DECLS
  * allocated ever and will cause the allocation to return NULL always).
  */
 
-static inline vm_size_t
-IOMallocArraySize(vm_size_t hdr_size, vm_size_t elem_size, vm_size_t elem_count)
-{
-	/* IOMalloc() will reject this size before even asking the VM  */
-	const vm_size_t limit = 1ull << (8 * sizeof(vm_size_t) - 1);
-	vm_size_t s = hdr_size;
+static inline vm_size_t IOMallocArraySize(vm_size_t hdr_size,
+                                          vm_size_t elem_size,
+                                          vm_size_t elem_count) {
+  /* IOMalloc() will reject this size before even asking the VM  */
+  const vm_size_t limit = 1ull << (8 * sizeof(vm_size_t) - 1);
+  vm_size_t s = hdr_size;
 
-	if (os_mul_and_add_overflow(elem_size, elem_count, s, &s) || (s & limit)) {
-		return limit;
-	}
-	return s;
+  if (os_mul_and_add_overflow(elem_size, elem_count, s, &s) || (s & limit)) {
+    return limit;
+  }
+  return s;
 }
 
-#define IOKIT_TYPE_IS_COMPATIBLE_PTR(ptr, type) \
-	(__builtin_xnu_types_compatible(os_get_pointee_type(ptr), type) ||   \
-	    __builtin_xnu_types_compatible(os_get_pointee_type(ptr), void))  \
+#define IOKIT_TYPE_IS_COMPATIBLE_PTR(ptr, type)                                \
+  (os_xnu_types_compatible(os_get_pointee_type(ptr), type) ||                  \
+   os_xnu_types_compatible(os_get_pointee_type(ptr), void))
 
-#define IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type) \
-	_Static_assert(IOKIT_TYPE_IS_COMPATIBLE_PTR(ptr, type), \
-	    "Pointer type is not compatible with specified type")
+#define IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type)                        \
+  _Static_assert(IOKIT_TYPE_IS_COMPATIBLE_PTR(ptr, type),                      \
+                 "Pointer type is not compatible with specified type")
 
 /*
  * These are opaque to the user.
@@ -108,50 +108,50 @@ typedef void (*IOThreadFunc)(void *argument);
 #if XNU_KERNEL_PRIVATE
 
 /*
- * IOMalloc_internal allocates memory from the specifed kalloc heap, which can be:
+ * IOMalloc_internal allocates memory from the specifed kalloc heap, which can
+ * be:
  * - KHEAP_DATA_BUFFERS: Should be used for data buffers
  * - KHEAP_DEFAULT: Should be used for allocations that aren't data buffers.
  *
  * For more details on kalloc_heaps see kalloc.h
  */
 
-extern void *
-IOMalloc_internal(
-	struct kalloc_heap * kalloc_heap_cfg,
-	vm_size_t            size,
-	zalloc_flags_t       flags);
+extern void *IOMalloc_internal(struct kalloc_heap *kalloc_heap_cfg,
+                               vm_size_t size, zalloc_flags_t flags);
 
-__attribute__((alloc_size(2)))
-static inline void *
-__IOMalloc_internal(
-	struct kalloc_heap * kalloc_heap_cfg,
-	vm_size_t            size,
-	zalloc_flags_t       flags)
-{
-	void *addr = (IOMalloc_internal)(kalloc_heap_cfg, size, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__attribute__((alloc_size(2))) static inline void *
+__IOMalloc_internal(struct kalloc_heap *kalloc_heap_cfg, vm_size_t size,
+                    zalloc_flags_t flags) {
+  void *addr = (IOMalloc_internal)(kalloc_heap_cfg, size, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
-#define IOMalloc(size)     __IOMalloc_internal(KHEAP_DEFAULT, size, Z_WAITOK)
+#define IOMalloc(size) __IOMalloc_internal(KHEAP_DEFAULT, size, Z_WAITOK)
 #define IOMallocZero(size) __IOMalloc_internal(KHEAP_DEFAULT, size, Z_ZERO)
 
 #else /* XNU_KERNEL_PRIVATE */
 
 /*! @function IOMalloc
  *   @abstract Allocates general purpose, wired memory in the kernel map.
- *   @discussion This is a general purpose utility to allocate memory in the kernel. There are no alignment guarantees given on the returned memory, and alignment may vary depending on the kernel configuration. This function may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @discussion This is a general purpose utility to allocate memory in the
+ * kernel. There are no alignment guarantees given on the returned memory, and
+ * alignment may vary depending on the kernel configuration. This function may
+ * block and so should not be called from interrupt level or while a simple lock
+ * is held.
  *   @param size Size of the memory requested.
  *   @result Pointer to the allocated memory, or zero on failure. */
 
-void * IOMalloc(vm_size_t size)      __attribute__((alloc_size(1)));
-void * IOMallocZero(vm_size_t size)  __attribute__((alloc_size(1)));
+void *IOMalloc(vm_size_t size) __attribute__((alloc_size(1)));
+void *IOMallocZero(vm_size_t size) __attribute__((alloc_size(1)));
 
 /*! @function IOFree
  *   @abstract Frees memory allocated with IOMalloc.
- *   @discussion This function frees memory allocated with IOMalloc, it may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @discussion This function frees memory allocated with IOMalloc, it may
+ * block and so should not be called from interrupt level or while a simple lock
+ * is held.
  *   @param address Pointer to the allocated memory. Must be identical to result
  *   @of a prior IOMalloc.
  *   @param size Size of the memory allocated. Must be identical to size of
@@ -166,60 +166,57 @@ void * IOMallocZero(vm_size_t size)  __attribute__((alloc_size(1)));
  * to
  */
 
-extern void
-IOFree_internal(
-	struct kalloc_heap * kalloc_heap_cfg,
-	void               * inAddress,
-	vm_size_t            size);
+extern void IOFree_internal(struct kalloc_heap *kalloc_heap_cfg,
+                            void *inAddress, vm_size_t size);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-void   IOFree(void * address, vm_size_t size);
+void IOFree(void *address, vm_size_t size);
 
 /*! @function IOMallocAligned
- *   @abstract Allocates wired memory in the kernel map, with an alignment restriction.
- *   @discussion This is a utility to allocate memory in the kernel, with an alignment restriction which is specified as a byte count. This function may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @abstract Allocates wired memory in the kernel map, with an alignment
+ * restriction.
+ *   @discussion This is a utility to allocate memory in the kernel, with an
+ * alignment restriction which is specified as a byte count. This function may
+ * block and so should not be called from interrupt level or while a simple lock
+ * is held.
  *   @param size Size of the memory requested.
- *   @param alignment Byte count of the alignment for the memory. For example, pass 256 to get memory allocated at an address with bit 0-7 zero.
+ *   @param alignment Byte count of the alignment for the memory. For example,
+ * pass 256 to get memory allocated at an address with bit 0-7 zero.
  *   @result Pointer to the allocated memory, or zero on failure. */
 
 #if XNU_KERNEL_PRIVATE
 
-extern void *
-IOMallocAligned_internal(
-	struct kalloc_heap * kalloc_heap_cfg,
-	vm_size_t            size,
-	vm_size_t            alignment,
-	zalloc_flags_t       flags);
+extern void *IOMallocAligned_internal(struct kalloc_heap *kalloc_heap_cfg,
+                                      vm_size_t size, vm_size_t alignment,
+                                      zalloc_flags_t flags);
 
-__attribute__((alloc_size(2)))
-static inline void *
-__IOMallocAligned_internal(
-	struct kalloc_heap * kalloc_heap_cfg,
-	vm_size_t            size,
-	vm_size_t            alignment,
-	zalloc_flags_t       flags)
-{
-	void *addr = (IOMallocAligned_internal)(kalloc_heap_cfg, size, alignment, flags);
-	if (flags & Z_NOFAIL) {
-		__builtin_assume(addr != NULL);
-	}
-	return addr;
+__attribute__((alloc_size(2))) static inline void *
+__IOMallocAligned_internal(struct kalloc_heap *kalloc_heap_cfg, vm_size_t size,
+                           vm_size_t alignment, zalloc_flags_t flags) {
+  void *addr =
+      (IOMallocAligned_internal)(kalloc_heap_cfg, size, alignment, flags);
+  if (flags & Z_NOFAIL) {
+    __builtin_assume(addr != NULL);
+  }
+  return addr;
 }
 
-#define IOMallocAligned(size, alignment) \
-	__IOMallocAligned_internal(GET_KEXT_KHEAP_DATA(), size, alignment, Z_WAITOK)
+#define IOMallocAligned(size, alignment)                                       \
+  __IOMallocAligned_internal(GET_KEXT_KHEAP_DATA(), size, alignment, Z_WAITOK)
 
 #else /* XNU_KERNEL_PRIVATE */
 
-void * IOMallocAligned(vm_size_t size, vm_offset_t alignment) __attribute__((alloc_size(1)));
+void *IOMallocAligned(vm_size_t size, vm_offset_t alignment)
+    __attribute__((alloc_size(1)));
 
 #endif /* !XNU_KERNEL_PRIVATE */
 
-
 /*! @function IOFreeAligned
  *   @abstract Frees memory allocated with IOMallocAligned.
- *   @discussion This function frees memory allocated with IOMallocAligned, it may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @discussion This function frees memory allocated with IOMallocAligned, it
+ * may block and so should not be called from interrupt level or while a simple
+ * lock is held.
  *   @param address Pointer to the allocated memory.
  *   @param size Size of the memory allocated. */
 
@@ -230,128 +227,171 @@ void * IOMallocAligned(vm_size_t size, vm_offset_t alignment) __attribute__((all
  * allocation to
  */
 
-extern void
-IOFreeAligned_internal(
-	struct kalloc_heap * kalloc_heap_cfg,
-	void               * address,
-	vm_size_t            size);
+extern void IOFreeAligned_internal(struct kalloc_heap *kalloc_heap_cfg,
+                                   void *address, vm_size_t size);
 
 #endif /* XNU_KERNEL_PRIVATE */
 
-void   IOFreeAligned(void * address, vm_size_t size);
+void IOFreeAligned(void *address, vm_size_t size);
 
 /*! @function IOMallocContiguous
- *   @abstract Deprecated - use IOBufferMemoryDescriptor. Allocates wired memory in the kernel map, with an alignment restriction and physically contiguous.
- *   @discussion This is a utility to allocate memory in the kernel, with an alignment restriction which is specified as a byte count, and will allocate only physically contiguous memory. The request may fail if memory is fragmented, and may cause large amounts of paging activity. This function may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @abstract Deprecated - use IOBufferMemoryDescriptor. Allocates wired memory
+ * in the kernel map, with an alignment restriction and physically contiguous.
+ *   @discussion This is a utility to allocate memory in the kernel, with an
+ * alignment restriction which is specified as a byte count, and will allocate
+ * only physically contiguous memory. The request may fail if memory is
+ * fragmented, and may cause large amounts of paging activity. This function may
+ * block and so should not be called from interrupt level or while a simple lock
+ * is held.
  *   @param size Size of the memory requested.
- *   @param alignment Byte count of the alignment for the memory. For example, pass 256 to get memory allocated at an address with bits 0-7 zero.
- *   @param physicalAddress IOMallocContiguous returns the physical address of the allocated memory here, if physicalAddress is a non-zero pointer. The physicalAddress argument is deprecated and should be passed as NULL. To obtain the physical address for a memory buffer, use the IODMACommand class in conjunction with the IOMemoryDescriptor or IOBufferMemoryDescriptor classes.
+ *   @param alignment Byte count of the alignment for the memory. For example,
+ * pass 256 to get memory allocated at an address with bits 0-7 zero.
+ *   @param physicalAddress IOMallocContiguous returns the physical address of
+ * the allocated memory here, if physicalAddress is a non-zero pointer. The
+ * physicalAddress argument is deprecated and should be passed as NULL. To
+ * obtain the physical address for a memory buffer, use the IODMACommand class
+ * in conjunction with the IOMemoryDescriptor or IOBufferMemoryDescriptor
+ * classes.
  *   @result Virtual address of the allocated memory, or zero on failure. */
 
-void * IOMallocContiguous(vm_size_t size, vm_size_t alignment,
-    IOPhysicalAddress * physicalAddress) __attribute__((deprecated)) __attribute__((alloc_size(1)));
+void *IOMallocContiguous(vm_size_t size, vm_size_t alignment,
+                         IOPhysicalAddress *physicalAddress)
+    __attribute__((deprecated)) __attribute__((alloc_size(1)));
 
 /*! @function IOFreeContiguous
- *   @abstract Deprecated - use IOBufferMemoryDescriptor. Frees memory allocated with IOMallocContiguous.
- *   @discussion This function frees memory allocated with IOMallocContiguous, it may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @abstract Deprecated - use IOBufferMemoryDescriptor. Frees memory allocated
+ * with IOMallocContiguous.
+ *   @discussion This function frees memory allocated with IOMallocContiguous,
+ * it may block and so should not be called from interrupt level or while a
+ * simple lock is held.
  *   @param address Virtual address of the allocated memory.
  *   @param size Size of the memory allocated. */
 
-void   IOFreeContiguous(void * address, vm_size_t size) __attribute__((deprecated));
-
+void IOFreeContiguous(void *address, vm_size_t size)
+    __attribute__((deprecated));
 
 /*! @function IOMallocPageable
  *   @abstract Allocates pageable memory in the kernel map.
- *   @discussion This is a utility to allocate pageable memory in the kernel. This function may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @discussion This is a utility to allocate pageable memory in the kernel.
+ * This function may block and so should not be called from interrupt level or
+ * while a simple lock is held.
  *   @param size Size of the memory requested.
- *   @param alignment Byte count of the alignment for the memory. For example, pass 256 to get memory allocated at an address with bits 0-7 zero.
+ *   @param alignment Byte count of the alignment for the memory. For example,
+ * pass 256 to get memory allocated at an address with bits 0-7 zero.
  *   @result Pointer to the allocated memory, or zero on failure. */
 
-void * IOMallocPageable(vm_size_t size, vm_size_t alignment) __attribute__((alloc_size(1)));
+void *IOMallocPageable(vm_size_t size, vm_size_t alignment)
+    __attribute__((alloc_size(1)));
 
 /*! @function IOMallocPageableZero
  *   @abstract Allocates pageable, zeroed memory in the kernel map.
- *   @discussion Same as IOMallocPageable but guarantees the returned memory will be zeroed.
+ *   @discussion Same as IOMallocPageable but guarantees the returned memory
+ * will be zeroed.
  *   @param size Size of the memory requested.
- *   @param alignment Byte count of the alignment for the memory. For example, pass 256 to get memory allocated at an address with bits 0-7 zero.
+ *   @param alignment Byte count of the alignment for the memory. For example,
+ * pass 256 to get memory allocated at an address with bits 0-7 zero.
  *   @result Pointer to the allocated memory, or zero on failure. */
 
-void * IOMallocPageableZero(vm_size_t size, vm_size_t alignment) __attribute__((alloc_size(1)));
+void *IOMallocPageableZero(vm_size_t size, vm_size_t alignment)
+    __attribute__((alloc_size(1)));
 
 /*! @function IOFreePageable
  *   @abstract Frees memory allocated with IOMallocPageable.
- *   @discussion This function frees memory allocated with IOMallocPageable, it may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @discussion This function frees memory allocated with IOMallocPageable, it
+ * may block and so should not be called from interrupt level or while a simple
+ * lock is held.
  *   @param address Virtual address of the allocated memory.
  *   @param size Size of the memory allocated. */
 
-void IOFreePageable(void * address, vm_size_t size);
+void IOFreePageable(void *address, vm_size_t size);
 
 #if XNU_KERNEL_PRIVATE
 
-#define IOMallocData(size) __IOMalloc_internal(GET_KEXT_KHEAP_DATA(), size, Z_WAITOK)
-#define IOMallocZeroData(size) __IOMalloc_internal(GET_KEXT_KHEAP_DATA(), size, Z_ZERO)
+#define IOMallocData(size)                                                     \
+  __IOMalloc_internal(GET_KEXT_KHEAP_DATA(), size, Z_WAITOK)
+#define IOMallocZeroData(size)                                                 \
+  __IOMalloc_internal(GET_KEXT_KHEAP_DATA(), size, Z_ZERO)
 
-#define IOMallocDataSharable(size) __IOMalloc_internal(KHEAP_DATA_SHARED, size, Z_WAITOK)
-#define IOMallocZeroDataSharable() __IOMalloc_internal(KHEAP_DATA_SHARED, size, Z_ZERO)
+#define IOMallocDataSharable(size)                                             \
+  __IOMalloc_internal(KHEAP_DATA_SHARED, size, Z_WAITOK)
+#define IOMallocZeroDataSharable()                                             \
+  __IOMalloc_internal(KHEAP_DATA_SHARED, size, Z_ZERO)
 
 #else /* XNU_KERNEL_PRIVATE */
 
 /*! @function IOMallocData
- *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data.
- *   @discussion Same as IOMalloc except that this function should be used for allocating pure data.
+ *   @abstract Allocates wired memory in the kernel map, from a separate section
+ * meant for pure data.
+ *   @discussion Same as IOMalloc except that this function should be used for
+ * allocating pure data.
  *   @param size Size of the memory requested.
  *   @result Pointer to the allocated memory, or zero on failure. */
-void * IOMallocData(vm_size_t size) __attribute__((alloc_size(1)));
+void *IOMallocData(vm_size_t size) __attribute__((alloc_size(1)));
 
 /*! @function IOMallocZeroData
- *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data bytes that don't contain pointers.
+ *   @abstract Allocates wired memory in the kernel map, from a separate section
+ * meant for pure data bytes that don't contain pointers.
  *   @discussion Same as IOMallocData except that the memory returned is zeroed.
  *   @param size Size of the memory requested.
  *   @result Pointer to the allocated memory, or zero on failure. */
-void * IOMallocZeroData(vm_size_t size) __attribute__((alloc_size(1)));
+void *IOMallocZeroData(vm_size_t size) __attribute__((alloc_size(1)));
 
 /*! @function IOMallocDataSharable
- *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data that meant to be shared.
- *   @discussion Same as IOMalloc except that this function should be used for allocating pure data.
+ *   @abstract Allocates wired memory in the kernel map, from a separate section
+ * meant for pure data that meant to be shared.
+ *   @discussion Same as IOMalloc except that this function should be used for
+ * allocating pure data.
  *   @param size Size of the memory requested.
  *   @result Pointer to the allocated memory, or zero on failure. */
-void * IOMallocDataSharable(vm_size_t size) __attribute__((alloc_size(1)));
+void *IOMallocDataSharable(vm_size_t size) __attribute__((alloc_size(1)));
 
 /*! @function IOMallocZeroDataSharable
- *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data bytes that don't contain pointers and meant to be shared.
- *   @discussion Same as IOMallocDataSharable except that the memory returned is zeroed.
+ *   @abstract Allocates wired memory in the kernel map, from a separate section
+ * meant for pure data bytes that don't contain pointers and meant to be shared.
+ *   @discussion Same as IOMallocDataSharable except that the memory returned is
+ * zeroed.
  *   @param size Size of the memory requested.
  *   @result Pointer to the allocated memory, or zero on failure. */
-void * IOMallocZeroDataSharable(vm_size_t size) __attribute__((alloc_size(1)));
+void *IOMallocZeroDataSharable(vm_size_t size) __attribute__((alloc_size(1)));
 
 #endif /* !XNU_KERNEL_PRIVATE */
 
 /*! @function IOFreeData
  *   @abstract Frees memory allocated with IOMallocData or IOMallocZeroData.
- *   @discussion This function frees memory allocated with IOMallocData/IOMallocZeroData, it may block and so should not be called from interrupt level or while a simple lock is held.
- *   @param address Virtual address of the allocated memory. Passing NULL here is acceptable.
- *   @param size Size of the memory allocated. It is acceptable to pass 0 size for a NULL address. */
-void IOFreeData(void * address, vm_size_t size);
+ *   @discussion This function frees memory allocated with
+ * IOMallocData/IOMallocZeroData, it may block and so should not be called from
+ * interrupt level or while a simple lock is held.
+ *   @param address Virtual address of the allocated memory. Passing NULL here
+ * is acceptable.
+ *   @param size Size of the memory allocated. It is acceptable to pass 0 size
+ * for a NULL address. */
+void IOFreeData(void *address, vm_size_t size);
 
 /*! @function IOFreeDataSharable
- *   @abstract Frees memory allocated with IOMallocDataSharable or IOMallocZeroDataSharable.
- *   @discussion This function frees memory allocated with IOMallocDataSharable/IOMallocZeroDataSharable, it may block and so should not be called from interrupt level or while a simple lock is held.
- *   @param address Virtual address of the allocated memory. Passing NULL here is acceptable.
- *   @param size Size of the memory allocated. It is acceptable to pass 0 size for a NULL address. */
-void IOFreeDataSharable(void * address, vm_size_t size);
+ *   @abstract Frees memory allocated with IOMallocDataSharable or
+ * IOMallocZeroDataSharable.
+ *   @discussion This function frees memory allocated with
+ * IOMallocDataSharable/IOMallocZeroDataSharable, it may block and so should not
+ * be called from interrupt level or while a simple lock is held.
+ *   @param address Virtual address of the allocated memory. Passing NULL here
+ * is acceptable.
+ *   @param size Size of the memory allocated. It is acceptable to pass 0 size
+ * for a NULL address. */
+void IOFreeDataSharable(void *address, vm_size_t size);
 
-#define IONewData(type, count) \
-	((type *)IOMallocData(IOMallocArraySize(0, sizeof(type), count)))
+#define IONewData(type, count)                                                 \
+  ((type *)IOMallocData(IOMallocArraySize(0, sizeof(type), count)))
 
-#define IONewZeroData(type, count) \
-	((type *)IOMallocZeroData(IOMallocArraySize(0, sizeof(type), count)))
+#define IONewZeroData(type, count)                                             \
+  ((type *)IOMallocZeroData(IOMallocArraySize(0, sizeof(type), count)))
 
-#define IODeleteData(ptr, type, count) ({ \
-	vm_size_t  __count = (vm_size_t)(count);             \
-	IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type);     \
-	IOFreeData(os_ptr_load_and_erase(ptr),               \
-	    IOMallocArraySize(0, sizeof(type), __count));    \
-})
+#define IODeleteData(ptr, type, count)                                         \
+  ({                                                                           \
+    vm_size_t __count = (vm_size_t)(count);                                    \
+    IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type);                           \
+    IOFreeData(os_ptr_load_and_erase(ptr),                                     \
+               IOMallocArraySize(0, sizeof(type), __count));                   \
+  })
 
 #if KERNEL_PRIVATE
 
@@ -371,24 +411,23 @@ void IOFreeDataSharable(void * address, vm_size_t size);
  * - 8K  (embedded 32-bit)
  * - 32K (embedded 64-bit)
  */
-#define IOMallocType(type) ({                           \
-	static _KALLOC_TYPE_DEFINE(kt_view_var, type,       \
-	    KT_SHARED_ACCT);                                \
-	(type *) IOMallocTypeImpl(kt_view_var);             \
-})
+#define IOMallocType(type)                                                     \
+  ({                                                                           \
+    static _KALLOC_TYPE_DEFINE(kt_view_var, type, KT_SHARED_ACCT);             \
+    (type *)IOMallocTypeImpl(kt_view_var);                                     \
+  })
 
-#define IOFreeType(elem, type) ({                       \
-	static _KALLOC_TYPE_DEFINE(kt_view_var, type,       \
-	   KT_SHARED_ACCT);                                 \
-	IOFREETYPE_ASSERT_COMPATIBLE_POINTER(elem, type);   \
-	IOFreeTypeImpl(kt_view_var,                         \
-	    os_ptr_load_and_erase(elem));                   \
-})
+#define IOFreeType(elem, type)                                                 \
+  ({                                                                           \
+    static _KALLOC_TYPE_DEFINE(kt_view_var, type, KT_SHARED_ACCT);             \
+    IOFREETYPE_ASSERT_COMPATIBLE_POINTER(elem, type);                          \
+    IOFreeTypeImpl(kt_view_var, os_ptr_load_and_erase(elem));                  \
+  })
 
 /*
  * Versioning macro for the typed allocator APIs.
  */
-#define IO_TYPED_ALLOCATOR_VERSION    1
+#define IO_TYPED_ALLOCATOR_VERSION 1
 
 #endif /* KERNEL_PRIVATE */
 
@@ -415,79 +454,83 @@ void IOFreeDataSharable(void * address, vm_size_t size);
  * Those perform safe math with the sizes, checking for overflow.
  * An overflow in the sizes will cause the allocation to return NULL.
  */
-#define IONew(...)             __IOKIT_DISPATCH(IONew, ##__VA_ARGS__)
-#define IONewZero(...)         __IOKIT_DISPATCH(IONewZero, ##__VA_ARGS__)
-#define IODelete(...)          __IOKIT_DISPATCH(IODelete, ##__VA_ARGS__)
+#define IONew(...) __IOKIT_DISPATCH(IONew, ##__VA_ARGS__)
+#define IONewZero(...) __IOKIT_DISPATCH(IONewZero, ##__VA_ARGS__)
+#define IODelete(...) __IOKIT_DISPATCH(IODelete, ##__VA_ARGS__)
 #if KERNEL_PRIVATE
-#define IOSafeDeleteNULL(...)  __IOKIT_DISPATCH(IODelete, ##__VA_ARGS__)
+#define IOSafeDeleteNULL(...) __IOKIT_DISPATCH(IODelete, ##__VA_ARGS__)
 #else
-#define IOSafeDeleteNULL(...)  __IOKIT_DISPATCH(IOSafeDeleteNULL, ##__VA_ARGS__)
+#define IOSafeDeleteNULL(...) __IOKIT_DISPATCH(IOSafeDeleteNULL, ##__VA_ARGS__)
 #endif
 
 #if KERNEL_PRIVATE
-#define IONew_2(e_ty, count) ({                                             \
-	static KALLOC_TYPE_VAR_DEFINE(kt_view_var, e_ty, KT_SHARED_ACCT);       \
-	(e_ty *) IOMallocTypeVarImpl(kt_view_var,                               \
-	    IOMallocArraySize(0, sizeof(e_ty), count));                         \
-})
+#define IONew_2(e_ty, count)                                                   \
+  ({                                                                           \
+    static KALLOC_TYPE_VAR_DEFINE(kt_view_var, e_ty, KT_SHARED_ACCT);          \
+    (e_ty *)IOMallocTypeVarImpl(kt_view_var,                                   \
+                                IOMallocArraySize(0, sizeof(e_ty), count));    \
+  })
 
-#define IONew_3(h_ty, e_ty, count) ({                                       \
-	static KALLOC_TYPE_VAR_DEFINE(kt_view_var, h_ty, e_ty, KT_SHARED_ACCT); \
-	(h_ty *) IOMallocTypeVarImpl(kt_view_var,                               \
-	    IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count));              \
-})
+#define IONew_3(h_ty, e_ty, count)                                             \
+  ({                                                                           \
+    static KALLOC_TYPE_VAR_DEFINE(kt_view_var, h_ty, e_ty, KT_SHARED_ACCT);    \
+    (h_ty *)IOMallocTypeVarImpl(                                               \
+        kt_view_var, IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count));    \
+  })
 
-#define IONewZero_2(e_ty, count) \
-	IONew_2(e_ty, count)
+#define IONewZero_2(e_ty, count) IONew_2(e_ty, count)
 
-#define IONewZero_3(h_ty, e_ty, count) \
-	IONew_3(h_ty, e_ty, count)
+#define IONewZero_3(h_ty, e_ty, count) IONew_3(h_ty, e_ty, count)
 
 #else /* KERNEL_PRIVATE */
-#define IONew_2(e_ty, count) \
-	((e_ty *)IOMalloc(IOMallocArraySize(0, sizeof(e_ty), count)))
+#define IONew_2(e_ty, count)                                                   \
+  ((e_ty *)IOMalloc(IOMallocArraySize(0, sizeof(e_ty), count)))
 
-#define IONew_3(h_ty, e_ty, count) \
-	((h_ty *)IOMalloc(IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count)))
+#define IONew_3(h_ty, e_ty, count)                                             \
+  ((h_ty *)IOMalloc(IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count)))
 
-#define IONewZero_2(e_ty, count) \
-	((e_ty *)IOMallocZero(IOMallocArraySize(0, sizeof(e_ty), count)))
+#define IONewZero_2(e_ty, count)                                               \
+  ((e_ty *)IOMallocZero(IOMallocArraySize(0, sizeof(e_ty), count)))
 
-#define IONewZero_3(h_ty, e_ty, count) \
-	((h_ty *)IOMallocZero(IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count)))
+#define IONewZero_3(h_ty, e_ty, count)                                         \
+  ((h_ty *)IOMallocZero(IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count)))
 #endif /* !KERNEL_PRIVATE */
 
 #if KERNEL_PRIVATE
-#define IODelete_3(ptr, e_ty, count) ({                                     \
-	vm_size_t __s = IOMallocArraySize(0, sizeof(e_ty), count);              \
-	KALLOC_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, e_ty);                       \
-	static KALLOC_TYPE_VAR_DEFINE(kt_view_var, e_ty, KT_SHARED_ACCT);       \
-	IOFreeTypeVarImpl(kt_view_var, os_ptr_load_and_erase(ptr), __s);        \
-})
+#define IODelete_3(ptr, e_ty, count)                                           \
+  ({                                                                           \
+    vm_size_t __s = IOMallocArraySize(0, sizeof(e_ty), count);                 \
+    KALLOC_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, e_ty);                          \
+    static KALLOC_TYPE_VAR_DEFINE(kt_view_var, e_ty, KT_SHARED_ACCT);          \
+    IOFreeTypeVarImpl(kt_view_var, os_ptr_load_and_erase(ptr), __s);           \
+  })
 
-#define IODelete_4(ptr, h_ty, e_ty, count) ({                               \
-	vm_size_t __s = IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count);   \
-	KALLOC_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, h_ty);                       \
-	static KALLOC_TYPE_VAR_DEFINE(kt_view_var, h_ty, e_ty, KT_SHARED_ACCT); \
-	IOFreeTypeVarImpl(kt_view_var, os_ptr_load_and_erase(ptr), __s);        \
-})
+#define IODelete_4(ptr, h_ty, e_ty, count)                                     \
+  ({                                                                           \
+    vm_size_t __s = IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count);      \
+    KALLOC_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, h_ty);                          \
+    static KALLOC_TYPE_VAR_DEFINE(kt_view_var, h_ty, e_ty, KT_SHARED_ACCT);    \
+    IOFreeTypeVarImpl(kt_view_var, os_ptr_load_and_erase(ptr), __s);           \
+  })
 
 #else /* KERNEL_PRIVATE */
-#define IODelete_3(ptr, e_ty, count) \
-	IOFree(ptr, IOMallocArraySize(0, sizeof(e_ty), count));
+#define IODelete_3(ptr, e_ty, count)                                           \
+  IOFree(ptr, IOMallocArraySize(0, sizeof(e_ty), count));
 
-#define IODelete_4(ptr, h_ty, e_ty, count) \
-	IOFree(ptr, IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count));
+#define IODelete_4(ptr, h_ty, e_ty, count)                                     \
+  IOFree(ptr, IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count));
 
-#define IOSafeDeleteNULL_3(ptr, e_ty, count)  ({                           \
-	vm_size_t __s = IOMallocArraySize(0, sizeof(e_ty), count);             \
-	IOFree(os_ptr_load_and_erase(ptr), __s);                               \
-})
+#define IOSafeDeleteNULL_3(ptr, e_ty, count)                                   \
+  ({                                                                           \
+    vm_size_t __s = IOMallocArraySize(0, sizeof(e_ty), count);                 \
+    IOFree(os_ptr_load_and_erase(ptr), __s);                                   \
+  })
 
-#define IOSafeDeleteNULL_4(ptr, h_ty, e_ty, count)  ({                     \
-	vm_size_t __s = IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count);  \
-	IOFree(os_ptr_load_and_erase(ptr), __s);                               \
-})
+#define IOSafeDeleteNULL_4(ptr, h_ty, e_ty, count)                             \
+  ({                                                                           \
+    vm_size_t __s = IOMallocArraySize(sizeof(h_ty), sizeof(e_ty), count);      \
+    IOFree(os_ptr_load_and_erase(ptr), __s);                                   \
+  })
 #endif /* !KERNEL_PRIVATE */
 
 /////////////////////////////////////////////////////////////////////////////
@@ -500,151 +543,219 @@ void IOFreeDataSharable(void * address, vm_size_t size);
 
 /*! @function IOMappedRead8
  *   @abstract Read one byte from the desired "Physical" IOSpace address.
- *   @discussion Read one byte from the desired "Physical" IOSpace address.  This function allows the developer to read an address returned from any memory descriptor's getPhysicalSegment routine.  It can then be used by segmenting a physical page slightly to tag the physical page with its kernel space virtual address.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Read one byte from the desired "Physical" IOSpace address. This
+ * function allows the developer to read an address returned from any memory
+ * descriptor's getPhysicalSegment routine.  It can then be used by segmenting a
+ * physical page slightly to tag the physical page with its kernel space virtual
+ * address.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @result Data contained at that location */
 
 UInt8 IOMappedRead8(IOPhysicalAddress address);
 
 /*! @function IOMappedRead16
  *   @abstract Read two bytes from the desired "Physical" IOSpace address.
- *   @discussion Read two bytes from the desired "Physical" IOSpace address.  This function allows the developer to read an address returned from any memory descriptor's getPhysicalSegment routine.  It can then be used by segmenting a physical page slightly to tag the physical page with its kernel space virtual address.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Read two bytes from the desired "Physical" IOSpace address.
+ * This function allows the developer to read an address returned from any
+ * memory descriptor's getPhysicalSegment routine.  It can then be used by
+ * segmenting a physical page slightly to tag the physical page with its kernel
+ * space virtual address.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @result Data contained at that location */
 
 UInt16 IOMappedRead16(IOPhysicalAddress address);
 
 /*! @function IOMappedRead32
  *   @abstract Read four bytes from the desired "Physical" IOSpace address.
- *   @discussion Read four bytes from the desired "Physical" IOSpace address.  This function allows the developer to read an address returned from any memory descriptor's getPhysicalSegment routine.  It can then be used by segmenting a physical page slightly to tag the physical page with its kernel space virtual address.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Read four bytes from the desired "Physical" IOSpace address.
+ * This function allows the developer to read an address returned from any
+ * memory descriptor's getPhysicalSegment routine.  It can then be used by
+ * segmenting a physical page slightly to tag the physical page with its kernel
+ * space virtual address.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @result Data contained at that location */
 
 UInt32 IOMappedRead32(IOPhysicalAddress address);
 
 /*! @function IOMappedRead64
  *   @abstract Read eight bytes from the desired "Physical" IOSpace address.
- *   @discussion Read eight bytes from the desired "Physical" IOSpace address.  This function allows the developer to read an address returned from any memory descriptor's getPhysicalSegment routine.  It can then be used by segmenting a physical page slightly to tag the physical page with its kernel space virtual address.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Read eight bytes from the desired "Physical" IOSpace address.
+ * This function allows the developer to read an address returned from any
+ * memory descriptor's getPhysicalSegment routine.  It can then be used by
+ * segmenting a physical page slightly to tag the physical page with its kernel
+ * space virtual address.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @result Data contained at that location */
 
 UInt64 IOMappedRead64(IOPhysicalAddress address);
 
 /*! @function IOMappedWrite8
  *   @abstract Write one byte to the desired "Physical" IOSpace address.
- *   @discussion Write one byte to the desired "Physical" IOSpace address.  This function allows the developer to write to an address returned from any memory descriptor's getPhysicalSegment routine.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Write one byte to the desired "Physical" IOSpace address.  This
+ * function allows the developer to write to an address returned from any memory
+ * descriptor's getPhysicalSegment routine.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @param value Data to be writen to the desired location */
 
 void IOMappedWrite8(IOPhysicalAddress address, UInt8 value);
 
 /*! @function IOMappedWrite16
  *   @abstract Write two bytes to the desired "Physical" IOSpace address.
- *   @discussion Write two bytes to the desired "Physical" IOSpace address.  This function allows the developer to write to an address returned from any memory descriptor's getPhysicalSegment routine.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Write two bytes to the desired "Physical" IOSpace address. This
+ * function allows the developer to write to an address returned from any memory
+ * descriptor's getPhysicalSegment routine.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @param value Data to be writen to the desired location */
 
 void IOMappedWrite16(IOPhysicalAddress address, UInt16 value);
 
 /*! @function IOMappedWrite32
  *   @abstract Write four bytes to the desired "Physical" IOSpace address.
- *   @discussion Write four bytes to the desired "Physical" IOSpace address.  This function allows the developer to write to an address returned from any memory descriptor's getPhysicalSegment routine.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Write four bytes to the desired "Physical" IOSpace address.
+ * This function allows the developer to write to an address returned from any
+ * memory descriptor's getPhysicalSegment routine.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @param value Data to be writen to the desired location */
 
 void IOMappedWrite32(IOPhysicalAddress address, UInt32 value);
 
 /*! @function IOMappedWrite64
  *   @abstract Write eight bytes to the desired "Physical" IOSpace address.
- *   @discussion Write eight bytes to the desired "Physical" IOSpace address.  This function allows the developer to write to an address returned from any memory descriptor's getPhysicalSegment routine.
- *   @param address The desired address, as returned by IOMemoryDescriptor::getPhysicalSegment.
+ *   @discussion Write eight bytes to the desired "Physical" IOSpace address.
+ * This function allows the developer to write to an address returned from any
+ * memory descriptor's getPhysicalSegment routine.
+ *   @param address The desired address, as returned by
+ * IOMemoryDescriptor::getPhysicalSegment.
  *   @param value Data to be writen to the desired location */
 
 void IOMappedWrite64(IOPhysicalAddress address, UInt64 value);
 
-/* This function is deprecated. Cache settings may be set for allocated memory with the IOBufferMemoryDescriptor api. */
+/* This function is deprecated. Cache settings may be set for allocated memory
+ * with the IOBufferMemoryDescriptor api. */
 
-IOReturn IOSetProcessorCacheMode( task_t task, IOVirtualAddress address,
-    IOByteCount length, IOOptionBits cacheMode ) __attribute__((deprecated));
+IOReturn IOSetProcessorCacheMode(task_t task, IOVirtualAddress address,
+                                 IOByteCount length, IOOptionBits cacheMode)
+    __attribute__((deprecated));
 
 /*! @function IOFlushProcessorCache
  *   @abstract Flushes the processor cache for mapped memory.
- *   @discussion This function flushes the processor cache of an already mapped memory range. Note in most cases it is preferable to use IOMemoryDescriptor::prepare and complete to manage cache coherency since they are aware of the architecture's requirements. Flushing the processor cache is not required for coherency in most situations.
+ *   @discussion This function flushes the processor cache of an already mapped
+ * memory range. Note in most cases it is preferable to use
+ * IOMemoryDescriptor::prepare and complete to manage cache coherency since they
+ * are aware of the architecture's requirements. Flushing the processor cache is
+ * not required for coherency in most situations.
  *   @param task Task the memory is mapped into.
  *   @param address Virtual address of the memory.
  *   @param length Length of the range to set.
  *   @result An IOReturn code. */
 
-IOReturn IOFlushProcessorCache( task_t task, IOVirtualAddress address,
-    IOByteCount length );
+IOReturn IOFlushProcessorCache(task_t task, IOVirtualAddress address,
+                               IOByteCount length);
 
 /*! @function IOThreadSelf
  *   @abstract Returns the osfmk identifier for the currently running thread.
- *   @discussion This function returns the current thread (a pointer to the currently active osfmk thread_shuttle). */
+ *   @discussion This function returns the current thread (a pointer to the
+ * currently active osfmk thread_shuttle). */
 
 #define IOThreadSelf() (current_thread())
 
 /*! @function IOCreateThread
- *   @abstract Deprecated function - use kernel_thread_start(). Create a kernel thread.
- *   @discussion This function creates a kernel thread, and passes the caller supplied argument to the new thread.  Warning: the value returned by this function is not 100% reliable.  There is a race condition where it is possible that the new thread has already terminated before this call returns.  Under that circumstance the IOThread returned will be invalid.  In general there is little that can be done with this value except compare it against 0.  The thread itself can call IOThreadSelf() 100% reliably and that is the prefered mechanism to manipulate the IOThreads state.
+ *   @abstract Deprecated function - use kernel_thread_start(). Create a kernel
+ * thread.
+ *   @discussion This function creates a kernel thread, and passes the caller
+ * supplied argument to the new thread.  Warning: the value returned by this
+ * function is not 100% reliable.  There is a race condition where it is
+ * possible that the new thread has already terminated before this call returns.
+ * Under that circumstance the IOThread returned will be invalid.  In general
+ * there is little that can be done with this value except compare it against 0.
+ * The thread itself can call IOThreadSelf() 100% reliably and that is the
+ * prefered mechanism to manipulate the IOThreads state.
  *   @param function A C-function pointer where the thread will begin execution.
  *   @param argument Caller specified data to be passed to the new thread.
- *   @result An IOThread identifier for the new thread, equivalent to an osfmk thread_t. */
+ *   @result An IOThread identifier for the new thread, equivalent to an osfmk
+ * thread_t. */
 
-IOThread IOCreateThread(IOThreadFunc function, void *argument) __attribute__((deprecated));
+IOThread IOCreateThread(IOThreadFunc function, void *argument)
+    __attribute__((deprecated));
 
 /*! @function IOExitThread
- *   @abstract Deprecated function - use thread_terminate(). Terminate execution of current thread.
- *   @discussion This function destroys the currently running thread, and does not return. */
+ *   @abstract Deprecated function - use thread_terminate(). Terminate execution
+ * of current thread.
+ *   @discussion This function destroys the currently running thread, and does
+ * not return. */
 
 void IOExitThread(void) __attribute__((deprecated));
 
 /*! @function IOSleep
  *   @abstract Sleep the calling thread for a number of milliseconds.
- *   @discussion This function blocks the calling thread for at least the number of specified milliseconds, giving time to other processes.
+ *   @discussion This function blocks the calling thread for at least the number
+ * of specified milliseconds, giving time to other processes.
  *   @param milliseconds The integer number of milliseconds to wait. */
 
 void IOSleep(unsigned milliseconds);
 
 /*! @function IOSleepWithLeeway
- *   @abstract Sleep the calling thread for a number of milliseconds, with a specified leeway the kernel may use for timer coalescing.
- *   @discussion This function blocks the calling thread for at least the number of specified milliseconds, giving time to other processes.  The kernel may also coalesce any timers involved in the delay, using the leeway given as a guideline.
+ *   @abstract Sleep the calling thread for a number of milliseconds, with a
+ * specified leeway the kernel may use for timer coalescing.
+ *   @discussion This function blocks the calling thread for at least the number
+ * of specified milliseconds, giving time to other processes.  The kernel may
+ * also coalesce any timers involved in the delay, using the leeway given as a
+ * guideline.
  *   @param intervalMilliseconds The integer number of milliseconds to wait.
- *   @param leewayMilliseconds The integer number of milliseconds to use as a timer coalescing guideline. */
+ *   @param leewayMilliseconds The integer number of milliseconds to use as a
+ * timer coalescing guideline. */
 
-void IOSleepWithLeeway(unsigned intervalMilliseconds, unsigned leewayMilliseconds);
+void IOSleepWithLeeway(unsigned intervalMilliseconds,
+                       unsigned leewayMilliseconds);
 
 /*! @function IODelay
  *   @abstract Spin delay for a number of microseconds.
- *   @discussion This function spins to delay for at least the number of specified microseconds. Since the CPU is busy spinning no time is made available to other processes; this method of delay should be used only for short periods. Also, the AbsoluteTime based APIs of kern/clock.h provide finer grained and lower cost delays.
+ *   @discussion This function spins to delay for at least the number of
+ * specified microseconds. Since the CPU is busy spinning no time is made
+ * available to other processes; this method of delay should be used only for
+ * short periods. Also, the AbsoluteTime based APIs of kern/clock.h provide
+ * finer grained and lower cost delays.
  *   @param microseconds The integer number of microseconds to spin wait. */
 
 void IODelay(unsigned microseconds);
 
 /*! @function IOPause
  *   @abstract Spin delay for a number of nanoseconds.
- *   @discussion This function spins to delay for at least the number of specified nanoseconds. Since the CPU is busy spinning no time is made available to other processes; this method of delay should be used only for short periods.
+ *   @discussion This function spins to delay for at least the number of
+ * specified nanoseconds. Since the CPU is busy spinning no time is made
+ * available to other processes; this method of delay should be used only for
+ * short periods.
  *   @param nanoseconds The integer number of nanoseconds to spin wait. */
 
 void IOPause(unsigned nanoseconds);
 
 /*! @function IOLog
  *   @abstract Log a message to console in text mode, and /var/log/system.log.
- *   @discussion This function allows a driver to log diagnostic information to the screen during verbose boots, and to a log file found at /var/log/system.log. IOLog should not be called from interrupt context.
+ *   @discussion This function allows a driver to log diagnostic information to
+ * the screen during verbose boots, and to a log file found at
+ * /var/log/system.log. IOLog should not be called from interrupt context.
  *   @param format A printf() style format string (see printf(3) documentation).
  */
 
-void IOLog(const char *format, ...)
-__attribute__((format(printf, 1, 2)));
+void IOLog(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
 /*! @function IOLogv
  *   @abstract Log a message to console in text mode, and /var/log/system.log.
- *   @discussion This function allows a driver to log diagnostic information to the screen during verbose boots, and to a log file found at /var/log/system.log. IOLogv should not be called from interrupt context.
+ *   @discussion This function allows a driver to log diagnostic information to
+ * the screen during verbose boots, and to a log file found at
+ * /var/log/system.log. IOLogv should not be called from interrupt context.
  *   @param format A printf() style format string (see printf(3) documentation).
  *   @param ap stdarg(3) style variable arguments. */
 
 void IOLogv(const char *format, va_list ap)
-__attribute__((format(printf, 1, 0)));
+    __attribute__((format(printf, 1, 0)));
 
 #ifndef _FN_KPRINTF
 #define _FN_KPRINTF
@@ -658,23 +769,24 @@ void kprintf(const char *format, ...) __printflike(1, 2);
  * Convert a integer constant (typically a #define or enum) to a string
  * via an array of IONamedValue.
  */
-const char *IOFindNameForValue(int value,
-    const IONamedValue *namedValueArray);
+const char *IOFindNameForValue(int value, const IONamedValue *namedValueArray);
 
 /*
  * Convert a string to an int via an array of IONamedValue. Returns
  * kIOReturnSuccess of string found, else returns kIOReturnBadArgument.
  */
 IOReturn IOFindValueForName(const char *string,
-    const IONamedValue *regValueArray,
-    int *value);                                /* RETURNED */
+                            const IONamedValue *regValueArray,
+                            int *value); /* RETURNED */
 
 /*! @function Debugger
  *   @abstract Enter the kernel debugger.
- *   @discussion This function freezes the kernel and enters the builtin debugger. It may not be possible to exit the debugger without a second machine.
+ *   @discussion This function freezes the kernel and enters the builtin
+ * debugger. It may not be possible to exit the debugger without a second
+ * machine.
  *   @param reason A C-string to describe why the debugger is being entered. */
 
-void Debugger(const char * reason);
+void Debugger(const char *reason);
 #if __LP64__
 #define IOPanic(reason) panic("%s", reason)
 #else
@@ -690,14 +802,15 @@ OSDictionary *
 #else
 struct OSDictionary *
 #endif
-IOBSDNameMatching( const char * name );
+IOBSDNameMatching(const char *name);
 
 #ifdef __cplusplus
 OSDictionary *
 #else
 struct OSDictionary *
 #endif
-IOOFPathMatching( const char * path, char * buf, int maxLen ) __attribute__((deprecated));
+IOOFPathMatching(const char *path, char *buf, int maxLen)
+    __attribute__((deprecated));
 
 /*
  * Convert between size and a power-of-two alignment.
@@ -709,28 +822,22 @@ unsigned int IOAlignmentToSize(IOAlignment align);
  * Multiply and divide routines for IOFixed datatype.
  */
 
-static inline IOFixed
-IOFixedMultiply(IOFixed a, IOFixed b)
-{
-	return (IOFixed)((((SInt64) a) * ((SInt64) b)) >> 16);
+static inline IOFixed IOFixedMultiply(IOFixed a, IOFixed b) {
+  return (IOFixed)((((SInt64)a) * ((SInt64)b)) >> 16);
 }
 
-static inline IOFixed
-IOFixedDivide(IOFixed a, IOFixed b)
-{
-	return (IOFixed)((((SInt64) a) << 16) / ((SInt64) b));
+static inline IOFixed IOFixedDivide(IOFixed a, IOFixed b) {
+  return (IOFixed)((((SInt64)a) << 16) / ((SInt64)b));
 }
 
 /*
  * IORound and IOTrunc convenience functions, in the spirit
  * of vm's round_page() and trunc_page().
  */
-#define IORound(value, multiple) \
-	((((value) + (multiple) - 1) / (multiple)) * (multiple))
+#define IORound(value, multiple)                                               \
+  ((((value) + (multiple) - 1) / (multiple)) * (multiple))
 
-#define IOTrunc(value, multiple) \
-	(((value) / (multiple)) * (multiple));
-
+#define IOTrunc(value, multiple) (((value) / (multiple)) * (multiple));
 
 #if defined(__APPLE_API_OBSOLETE)
 
@@ -739,13 +846,12 @@ IOFixedDivide(IOFixed a, IOFixed b)
 /* The API exported by kern/clock.h
  *  should be used for high resolution timing. */
 
-void IOGetTime( mach_timespec_t * clock_time) __attribute__((deprecated));
+void IOGetTime(mach_timespec_t *clock_time) __attribute__((deprecated));
 
 #if !defined(__LP64__)
 
 #undef eieio
-#define eieio() \
-    OSSynchronizeIO()
+#define eieio() OSSynchronizeIO()
 
 extern mach_timespec_t IOZeroTvalspec;
 
@@ -754,32 +860,31 @@ extern mach_timespec_t IOZeroTvalspec;
 #endif /* __APPLE_API_OBSOLETE */
 
 #if XNU_KERNEL_PRIVATE
-vm_tag_t
-IOMemoryTag(vm_map_t map);
+vm_tag_t IOMemoryTag(vm_map_t map);
 
-vm_size_t
-log2up(vm_size_t size);
+vm_size_t log2up(vm_size_t size);
 #endif
 
 /*
  * Implementation details
  */
 #define __IOKIT_COUNT_ARGS1(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, N, ...) N
-#define __IOKIT_COUNT_ARGS(...) \
-	__IOKIT_COUNT_ARGS1(, ##__VA_ARGS__, _9, _8, _7, _6, _5, _4, _3, _2, _1, _0)
+#define __IOKIT_COUNT_ARGS(...)                                                \
+  __IOKIT_COUNT_ARGS1(, ##__VA_ARGS__, _9, _8, _7, _6, _5, _4, _3, _2, _1, _0)
 #define __IOKIT_DISPATCH1(base, N, ...) __CONCAT(base, N)(__VA_ARGS__)
-#define __IOKIT_DISPATCH(base, ...) \
-	__IOKIT_DISPATCH1(base, __IOKIT_COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
-
+#define __IOKIT_DISPATCH(base, ...)                                            \
+  __IOKIT_DISPATCH1(base, __IOKIT_COUNT_ARGS(__VA_ARGS__), ##__VA_ARGS__)
 
 #ifdef XNU_KERNEL_PRIVATE
 
-#define IOFREETYPE_ASSERT_COMPATIBLE_POINTER(ptr, type) \
-    KALLOC_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type)
+#define IOFREETYPE_ASSERT_COMPATIBLE_POINTER(ptr, type)                        \
+  KALLOC_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type)
 
-#else  /* XNU_KERNEL_PRIVATE */
+#else /* XNU_KERNEL_PRIVATE */
 
-#define IOFREETYPE_ASSERT_COMPATIBLE_POINTER(ptr, type) do {} while (0)
+#define IOFREETYPE_ASSERT_COMPATIBLE_POINTER(ptr, type)                        \
+  do {                                                                         \
+  } while (0)
 
 #endif /* XNU_KERNEL_PRIVATE */
 
@@ -788,126 +893,107 @@ log2up(vm_size_t size);
  * Implementation functions for IOMallocType/IOFreeType.
  * Not intended to be used on their own.
  */
-void *
-IOMallocTypeImpl(kalloc_type_view_t kt_view);
+void *IOMallocTypeImpl(kalloc_type_view_t kt_view);
 
-void
-IOFreeTypeImpl(kalloc_type_view_t kt_view, void * address);
+void IOFreeTypeImpl(kalloc_type_view_t kt_view, void *address);
 
-void *
-IOMallocTypeVarImpl(kalloc_type_var_view_t kt_view, vm_size_t size);
+void *IOMallocTypeVarImpl(kalloc_type_var_view_t kt_view, vm_size_t size);
 
-void
-IOFreeTypeVarImpl(kalloc_type_var_view_t kt_view, void * address, vm_size_t size);
+void IOFreeTypeVarImpl(kalloc_type_var_view_t kt_view, void *address,
+                       vm_size_t size);
 #endif
 
 #if KERNEL_PRIVATE
 #if __cplusplus
 
 #if __has_feature(cxx_deleted_functions)
-#define __IODeleteArrayOperators()                         \
-	_Pragma("clang diagnostic push")                       \
-	_Pragma("clang diagnostic ignored \"-Wc++98-compat\"") \
-	void *operator new[](size_t) = delete;                 \
-	void operator delete[](void *) = delete;               \
-	void operator delete[](void *, size_t) = delete;       \
-	_Pragma("clang diagnostic pop")
-#else  /* __has_feature(cxx_deleted_functions) */
+#define __IODeleteArrayOperators()                                             \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Wc++98-compat\"") void *            \
+      operator new[](size_t) = delete;                                         \
+  void operator delete[](void *) = delete;                                     \
+  void operator delete[](void *, size_t) = delete;                             \
+  _Pragma("clang diagnostic pop")
+#else /* __has_feature(cxx_deleted_functions) */
 #define __IODeleteArrayOperators()
 #endif /* __has_feature(cxx_deleted_functions) */
 
-#define __IOAddOperatorsSentinel(name, type) \
-	static void __CONCAT(name, type) (void) __unused
+#define __IOAddOperatorsSentinel(name, type)                                   \
+  static void __CONCAT(name, type)(void) __unused
 
-#define __IOAddTypedOperatorsSentinel(type) \
-	__IOAddOperatorsSentinel(__kt_typed_operators_, type)
+#define __IOAddTypedOperatorsSentinel(type)                                    \
+  __IOAddOperatorsSentinel(__kt_typed_operators_, type)
 
-#define __IOAddTypedArrayOperatorsSentinel(type) \
-	__IOAddOperatorsSentinel(__kt_typed_array_operators_, type)
+#define __IOAddTypedArrayOperatorsSentinel(type)                               \
+  __IOAddOperatorsSentinel(__kt_typed_array_operators_, type)
 
-#define __IODeclareTypedOperators(type)                    \
-	void *operator new(size_t size __unused);              \
-	void operator delete(void *mem, size_t size __unused); \
-	__IOAddTypedOperatorsSentinel(type)
+#define __IODeclareTypedOperators(type)                                        \
+  void *operator new(size_t size __unused);                                    \
+  void operator delete(void *mem, size_t size __unused);                       \
+  __IOAddTypedOperatorsSentinel(type)
 
-#define __IODeclareTypedArrayOperators(type) \
-	void *operator new[](size_t __unused);   \
-	void operator delete[](void *ptr);       \
-	__IOAddTypedArrayOperatorsSentinel(type)
+#define __IODeclareTypedArrayOperators(type)                                   \
+  void *operator new[](size_t __unused);                                       \
+  void operator delete[](void *ptr);                                           \
+  __IOAddTypedArrayOperatorsSentinel(type)
 
-
-#define __IODefineTypedOperators(type)                          \
-	void *type::operator new(size_t size __unused)              \
-	{                                                           \
-	        return IOMallocType(type);                                \
-	}                                                           \
-	void type::operator delete(void *mem, size_t size __unused) \
-	{                                                           \
-	        IOFreeType(mem, type);                                    \
-	}
-
+#define __IODefineTypedOperators(type)                                         \
+  void *type::operator new(size_t size __unused) {                             \
+    return IOMallocType(type);                                                 \
+  }                                                                            \
+  void type::operator delete(void *mem, size_t size __unused) {                \
+    IOFreeType(mem, type);                                                     \
+  }
 
 extern "C++" {
-template<typename T>
-struct __IOTypedOperatorsArrayHeader {
-	size_t alloc_size;
-	_Alignas(T) char array[];
+template <typename T> struct __IOTypedOperatorsArrayHeader {
+  size_t alloc_size;
+  _Alignas(T) char array[];
 };
 
-#define __IOTypedOperatorNewArrayImpl(type, count)                        \
-	{                                                                  \
-	        typedef __IOTypedOperatorsArrayHeader<type> hdr_ty;        \
-	        static KALLOC_TYPE_VAR_DEFINE(kt_view_var,                 \
-	            hdr_ty, type, KT_SHARED_ACCT);                         \
-	        hdr_ty *hdr;                                               \
-	        const size_t __s = sizeof(hdr_ty) + count;                 \
-	        hdr = reinterpret_cast<hdr_ty *>(                          \
-	            IOMallocTypeVarImpl(kt_view_var, __s));                \
-	        if (hdr) {                                                 \
-	                hdr->alloc_size = __s;                             \
-	                return reinterpret_cast<void *>(&hdr->array);      \
-	        }                                                          \
-	        _Pragma("clang diagnostic push")                           \
-	        _Pragma("clang diagnostic ignored \"-Wnew-returns-null\"") \
-	        return NULL;                                               \
-	        _Pragma("clang diagnostic pop")                            \
-	}
+#define __IOTypedOperatorNewArrayImpl(type, count)                             \
+  {                                                                            \
+    typedef __IOTypedOperatorsArrayHeader<type> hdr_ty;                        \
+    static KALLOC_TYPE_VAR_DEFINE(kt_view_var, hdr_ty, type, KT_SHARED_ACCT);  \
+    hdr_ty *hdr;                                                               \
+    const size_t __s = sizeof(hdr_ty) + count;                                 \
+    hdr = reinterpret_cast<hdr_ty *>(IOMallocTypeVarImpl(kt_view_var, __s));   \
+    if (hdr) {                                                                 \
+      hdr->alloc_size = __s;                                                   \
+      return reinterpret_cast<void *>(&hdr->array);                            \
+    }                                                                          \
+    _Pragma("clang diagnostic push") _Pragma(                                  \
+        "clang diagnostic ignored \"-Wnew-returns-null\"") return NULL;        \
+    _Pragma("clang diagnostic pop")                                            \
+  }
 
-#define __IOTypedOperatorDeleteArrayImpl(type, ptr)                  \
-	{                                                             \
-	        typedef __IOTypedOperatorsArrayHeader<type> hdr_ty;   \
-	        static KALLOC_TYPE_VAR_DEFINE(kt_view_var,            \
-	            hdr_ty, type, KT_SHARED_ACCT);                    \
-	        hdr_ty *hdr = reinterpret_cast<hdr_ty *>(             \
-	            reinterpret_cast<uintptr_t>(ptr) - sizeof(*hdr)); \
-	        IOFreeTypeVarImpl(kt_view_var,                        \
-	        reinterpret_cast<void *>(hdr), hdr->alloc_size);  \
-	}
+#define __IOTypedOperatorDeleteArrayImpl(type, ptr)                            \
+  {                                                                            \
+    typedef __IOTypedOperatorsArrayHeader<type> hdr_ty;                        \
+    static KALLOC_TYPE_VAR_DEFINE(kt_view_var, hdr_ty, type, KT_SHARED_ACCT);  \
+    hdr_ty *hdr = reinterpret_cast<hdr_ty *>(                                  \
+        reinterpret_cast<uintptr_t>(ptr) - sizeof(*hdr));                      \
+    IOFreeTypeVarImpl(kt_view_var, reinterpret_cast<void *>(hdr),              \
+                      hdr->alloc_size);                                        \
+  }
 
-#define __IODefineTypedArrayOperators(type)        \
-	void *type::operator new[](size_t count)       \
-	__IOTypedOperatorNewArrayImpl(type, count)  \
-	void type::operator delete[](void *ptr)        \
-	__IOTypedOperatorDeleteArrayImpl(type, ptr)
+#define __IODefineTypedArrayOperators(type)                                    \
+  void *type::operator new[](size_t count) __IOTypedOperatorNewArrayImpl(      \
+      type, count) void type::operator delete[](void *ptr)                     \
+      __IOTypedOperatorDeleteArrayImpl(type, ptr)
 
+#define __IOOverrideTypedOperators(type)                                       \
+  void *operator new(size_t size __unused) { return IOMallocType(type); }      \
+  void operator delete(void *mem, size_t size __unused) {                      \
+    IOFreeType(mem, type);                                                     \
+  }                                                                            \
+  __IOAddTypedOperatorsSentinel(type)
 
-#define __IOOverrideTypedOperators(type)                  \
-	void *operator new(size_t size __unused)              \
-	{                                                     \
-	        return IOMallocType(type);                        \
-	}                                                     \
-	void operator delete(void *mem, size_t size __unused) \
-	{                                                     \
-	        IOFreeType(mem, type);                            \
-	} \
-	__IOAddTypedOperatorsSentinel(type)
-
-#define __IOOverrideTypedArrayOperators(type)       \
-	void *operator new[](size_t count)              \
-	__IOTypedOperatorNewArrayImpl(type, count)   \
-	void operator delete[](void *ptr)               \
-	__IOTypedOperatorDeleteArrayImpl(type, ptr)  \
-	__IOAddTypedArrayOperatorsSentinel(type)
+#define __IOOverrideTypedArrayOperators(type)                                  \
+  void *operator new[](size_t count) __IOTypedOperatorNewArrayImpl(            \
+      type, count) void operator delete[](void *ptr)                           \
+      __IOTypedOperatorDeleteArrayImpl(type, ptr)                              \
+          __IOAddTypedArrayOperatorsSentinel(type)
 
 /*!
  * @macro IODeclareTypedOperators
@@ -928,12 +1014,11 @@ struct __IOTypedOperatorsArrayHeader {
  *
  * @param type The type which the declarations are being provided for.
  */
-#define IODeclareTypedOperatorsSupportingArrayOperators(type) \
-	__IODeclareTypedArrayOperators(type);                     \
-	__IODeclareTypedOperators(type)
-#define IODeclareTypedOperators(type) \
-	__IODeleteArrayOperators()        \
-	__IODeclareTypedOperators(type)
+#define IODeclareTypedOperatorsSupportingArrayOperators(type)                  \
+  __IODeclareTypedArrayOperators(type);                                        \
+  __IODeclareTypedOperators(type)
+#define IODeclareTypedOperators(type)                                          \
+  __IODeleteArrayOperators() __IODeclareTypedOperators(type)
 
 /*!
  * @macro IODefineTypedOperators
@@ -950,11 +1035,9 @@ struct __IOTypedOperatorsArrayHeader {
  *
  * @param type The type which the overrides are being provided for.
  */
-#define IODefineTypedOperatorsSupportingArrayOperators(type) \
-	__IODefineTypedOperators(type)                           \
-	__IODefineTypedArrayOperators(type)
-#define IODefineTypedOperators(type) \
-	__IODefineTypedOperators(type)
+#define IODefineTypedOperatorsSupportingArrayOperators(type)                   \
+  __IODefineTypedOperators(type) __IODefineTypedArrayOperators(type)
+#define IODefineTypedOperators(type) __IODefineTypedOperators(type)
 
 /*!
  * @macro IOOverrideTypedOperators
@@ -973,14 +1056,12 @@ struct __IOTypedOperatorsArrayHeader {
  *
  * @param type The type which the overrides are being provided for.
  */
-#define IOOverrideTypedOperators(type) \
-	__IODeleteArrayOperators()         \
-	__IOOverrideTypedOperators(type)
+#define IOOverrideTypedOperators(type)                                         \
+  __IODeleteArrayOperators() __IOOverrideTypedOperators(type)
 
-#define IOOverrideTypedOperatorsSupportingArrayOperators(type) \
-	__IOOverrideTypedArrayOperators(type);                     \
-	__IOOverrideTypedOperators(type)
-
+#define IOOverrideTypedOperatorsSupportingArrayOperators(type)                 \
+  __IOOverrideTypedArrayOperators(type);                                       \
+  __IOOverrideTypedOperators(type)
 
 /*!
  * @template IOTypedOperatorsMixin
@@ -1007,17 +1088,14 @@ struct __IOTypedOperatorsArrayHeader {
  *     C *obj = new C;
  *
  */
-template<class T>
-struct IOTypedOperatorsMixin {
-	IOOverrideTypedOperators(T);
+template <class T> struct IOTypedOperatorsMixin {
+  IOOverrideTypedOperators(T);
 };
 
-template<class T>
-struct IOTypedOperatorsMixinSupportingArrayOperators {
-	IOOverrideTypedOperatorsSupportingArrayOperators(T);
+template <class T> struct IOTypedOperatorsMixinSupportingArrayOperators {
+  IOOverrideTypedOperatorsSupportingArrayOperators(T);
 };
 } // extern "C++"
-
 
 #endif /* __cplusplus */
 #endif /* KERNEL_PRIVATE */

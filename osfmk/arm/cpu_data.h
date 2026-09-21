@@ -33,46 +33,42 @@
 #ifndef ARM_CPU_DATA
 #define ARM_CPU_DATA
 
-#ifdef  MACH_KERNEL_PRIVATE
+#ifdef MACH_KERNEL_PRIVATE
 
-#include <mach_assert.h>
+#include <arm/thread.h>
+#include <arm64/proc_reg.h>
 #include <kern/assert.h>
 #include <kern/kern_types.h>
 #include <kern/processor.h>
+#include <mach_assert.h>
 #include <pexpert/pexpert.h>
-#include <arm/thread.h>
-#include <arm64/proc_reg.h>
 
 #include <mach/mach_types.h>
 #include <machine/thread.h>
 
 __ASSUME_PTR_ABI_SINGLE_BEGIN
 
-
 #ifndef __BUILDING_XNU_LIB_UNITTEST__
-static inline __attribute__((const)) thread_t
-current_thread_fast(void)
-{
+static inline __attribute__((const)) thread_t current_thread_fast(void) {
 #if defined(__arm64__)
-	/*
-	 * rdar://73762648 clang nowadays insists that this is not constant
-	 *
-	 *     __builtin_arm_rsr64("TPIDR_EL1")
-	 *
-	 * and ignores the "attribute const", so do it the "dumb" way.
-	 */
-	unsigned long result;
-	__asm__ ("mrs %0, TPIDR_EL1" : "=r" (result));
-	return __unsafe_forge_single(thread_t, result);
+  /*
+   * rdar://73762648 clang nowadays insists that this is not constant
+   *
+   *     __builtin_arm_rsr64("TPIDR_EL1")
+   *
+   * and ignores the "attribute const", so do it the "dumb" way.
+   */
+  unsigned long result;
+  __asm__("mrs %0, TPIDR_EL1" : "=r"(result));
+  return __unsafe_forge_single(thread_t, result);
 #else
-	// TPIDRPRW
-	return __unsafe_forge_single(thread_t, __builtin_arm_mrc(15, 0, 13, 0, 4));
+  // TPIDRPRW
+  return __unsafe_forge_single(thread_t, __builtin_arm_mrc(15, 0, 13, 0, 4));
 #endif
 }
-#else /* __BUILDING_XNU_LIB_UNITTEST__ */
+#else  /* __BUILDING_XNU_LIB_UNITTEST__ */
 __attribute__((const)) thread_t current_thread_fast(void);
 #endif /* __BUILDING_XNU_LIB_UNITTEST__ */
-
 
 /*
  * The "volatile" flavor of current_thread() is intended for use by
@@ -89,54 +85,49 @@ __attribute__((const)) thread_t current_thread_fast(void);
  * the window between the thread pointer update and the branch to
  * the new pc.
  */
-static inline thread_t
-current_thread_volatile(void)
-{
-	/*
-	 * The compiler might decide to treat rsr64 as const (comes and goes),
-	 * which can allow it to eliminate redundant calls, which we don't want
-	 * here. Thus we use volatile asm. Which gives us control on semantics.
-	 *
-	 * The mrc used for arm32 should be treated as volatile however.
-	 */
+static inline thread_t current_thread_volatile(void) {
+  /*
+   * The compiler might decide to treat rsr64 as const (comes and goes),
+   * which can allow it to eliminate redundant calls, which we don't want
+   * here. Thus we use volatile asm. Which gives us control on semantics.
+   *
+   * The mrc used for arm32 should be treated as volatile however.
+   */
 #if defined(__arm64__)
-	unsigned long result;
-	__asm__ volatile ("mrs %0, TPIDR_EL1" : "=r" (result));
-	return __unsafe_forge_single(thread_t, result);
+  unsigned long result;
+  __asm__ volatile("mrs %0, TPIDR_EL1" : "=r"(result));
+  return __unsafe_forge_single(thread_t, result);
 #else
-	// TPIDRPRW
-	return __unsafe_forge_single(thread_t, __builtin_arm_mrc(15, 0, 13, 0, 4));
+  // TPIDRPRW
+  return __unsafe_forge_single(thread_t, __builtin_arm_mrc(15, 0, 13, 0, 4));
 #endif
 }
 
 #if defined(__arm64__)
 
-static inline vm_offset_t
-exception_stack_pointer(void)
-{
-	vm_offset_t result = 0;
-	__asm__ volatile (
-                 "msr		SPSel, #1  \n"
-                 "mov		%0, sp     \n"
-                 "msr		SPSel, #0  \n"
-                 : "=r" (result));
+static inline vm_offset_t exception_stack_pointer(void) {
+  vm_offset_t result = 0;
+  __asm__ volatile("msr		SPSel, #1  \n"
+                   "mov		%0, sp     \n"
+                   "msr		SPSel, #0  \n"
+                   : "=r"(result));
 
-	return result;
+  return result;
 }
 
 #endif /* defined(__arm64__) */
 
-#define getCpuDatap()            current_thread()->machine.CpuDatap
-#define current_cpu_datap()      getCpuDatap()
+#define getCpuDatap() current_thread()->machine.CpuDatap
+#define current_cpu_datap() getCpuDatap()
 
-extern int                       get_preemption_level(void);
-extern unsigned int              get_preemption_level_for_thread(thread_t);
+extern int get_preemption_level(void);
+extern unsigned int get_preemption_level_for_thread(thread_t);
 
-#define mp_disable_preemption()  _disable_preemption()
-#define mp_enable_preemption()   _enable_preemption()
+#define mp_disable_preemption() _disable_preemption()
+#define mp_enable_preemption() _enable_preemption()
 
 __ASSUME_PTR_ABI_SINGLE_END
 
-#endif  /* MACH_KERNEL_PRIVATE */
+#endif /* MACH_KERNEL_PRIVATE */
 
-#endif  /* ARM_CPU_DATA */
+#endif /* ARM_CPU_DATA */

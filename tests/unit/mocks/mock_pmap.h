@@ -28,26 +28,17 @@
 
 #pragma once
 
-#include <vm/pmap.h>
-#include <arm/pmap_public.h>
 #include "mock_dynamic.h"
+#include <arm/pmap_public.h>
+#include <vm/pmap.h>
 
-T_MOCK_DYNAMIC_DECLARE(
-	unsigned int,
-	pmap_cache_attributes,
-	(ppnum_t phys));
+T_MOCK_DYNAMIC_DECLARE(unsigned int, pmap_cache_attributes, (ppnum_t phys));
 
-T_MOCK_DYNAMIC_DECLARE(
-	pmap_paddr_t,
-	kvtophys,
-	(vm_offset_t offs));
+T_MOCK_DYNAMIC_DECLARE(pmap_paddr_t, kvtophys, (vm_offset_t offs));
 
-T_MOCK_DYNAMIC_DECLARE(
-	uint64_t,
-	pmap_shared_region_size_min,
-	(pmap_t pmap));
+T_MOCK_DYNAMIC_DECLARE(uint64_t, pmap_shared_region_size_min, (pmap_t pmap));
 
-// This is a useful override for some tests that don't want to deal with huge sizes
-// due to the pmap min region size
-#define T_MOCK_pmap_shared_region_size_min_RET_PAGE_SIZE() \
-	T_MOCK_SET_RETVAL(pmap_shared_region_size_min, uint64_t, PAGE_SIZE)
+// This is a useful override for some tests that don't want to deal with huge
+// sizes due to the pmap min region size
+#define T_MOCK_pmap_shared_region_size_min_RET_PAGE_SIZE()                     \
+  T_MOCK_SET_RETVAL(pmap_shared_region_size_min, uint64_t, PAGE_SIZE)

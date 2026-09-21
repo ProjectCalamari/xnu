@@ -26,21 +26,18 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-#include <IOKit/IOUserClient.h>
 #include <IOKit/IOMessage.h>
-#include <IOKit/system_management/IOWatchDogTimer.h>
+#include <IOKit/IOUserClient.h>
 #include <IOKit/pwr_mgt/RootDomain.h>
-
+#include <IOKit/system_management/IOWatchDogTimer.h>
 
 static IOReturn IOWatchDogTimerSleepHandler(void *target, void *refCon,
-    UInt32 messageType,
-    IOService *provider,
-    void *messageArgument,
-    vm_size_t argSize);
+                                            UInt32 messageType,
+                                            IOService *provider,
+                                            void *messageArgument,
+                                            vm_size_t argSize);
 
-
-#define kWatchDogEnabledProperty     "IOWatchDogEnabled"
-
+#define kWatchDogEnabledProperty "IOWatchDogEnabled"
 
 #define super IOService
 
@@ -51,82 +48,74 @@ OSMetaClassDefineReservedUnused(IOWatchDogTimer, 1);
 OSMetaClassDefineReservedUnused(IOWatchDogTimer, 2);
 OSMetaClassDefineReservedUnused(IOWatchDogTimer, 3);
 
-bool
-IOWatchDogTimer::start(IOService *provider)
-{
-	if (!super::start(provider)) {
-		return false;
-	}
+bool IOWatchDogTimer::start(IOService *provider) {
+  if (!super::start(provider)) {
+    return false;
+  }
 
-	notifier = registerSleepWakeInterest(IOWatchDogTimerSleepHandler, this);
-	if (notifier == NULL) {
-		return false;
-	}
+  notifier = registerSleepWakeInterest(IOWatchDogTimerSleepHandler, this);
+  if (notifier == NULL) {
+    return false;
+  }
 
-	setProperty(kWatchDogEnabledProperty, kOSBooleanFalse);
-	setWatchDogTimer(0);
+  setProperty(kWatchDogEnabledProperty, kOSBooleanFalse);
+  setWatchDogTimer(0);
 
-	registerService();
+  registerService();
 
-	return true;
+  return true;
 }
 
-void
-IOWatchDogTimer::stop(IOService *provider)
-{
-	setWatchDogTimer(0);
-	notifier->remove();
+void IOWatchDogTimer::stop(IOService *provider) {
+  setWatchDogTimer(0);
+  notifier->remove();
 }
 
-IOReturn
-IOWatchDogTimer::setProperties(OSObject *properties)
-{
-	OSNumber *theNumber;
-	UInt32   theValue;
-	IOReturn result;
+IOReturn IOWatchDogTimer::setProperties(OSObject *properties) {
+  OSNumber *theNumber;
+  UInt32 theValue;
+  IOReturn result;
 
-	result = IOUserClient::clientHasPrivilege(current_task(),
-	    kIOClientPrivilegeAdministrator);
-	if (result != kIOReturnSuccess) {
-		return kIOReturnNotPrivileged;
-	}
+  result = IOUserClient::clientHasPrivilege(current_task(),
+                                            kIOClientPrivilegeAdministrator);
+  if (result != kIOReturnSuccess) {
+    return kIOReturnNotPrivileged;
+  }
 
-	theNumber = OSDynamicCast(OSNumber, properties);
-	if (theNumber == NULL) {
-		return kIOReturnBadArgument;
-	}
+  theNumber = OSDynamicCast(OSNumber, properties);
+  if (theNumber == NULL) {
+    return kIOReturnBadArgument;
+  }
 
-	theValue = theNumber->unsigned32BitValue();
-	if (theValue == 0) {
-		setProperty(kWatchDogEnabledProperty, kOSBooleanFalse);
-	} else {
-		setProperty(kWatchDogEnabledProperty, kOSBooleanTrue);
-	}
+  theValue = theNumber->unsigned32BitValue();
+  if (theValue == 0) {
+    setProperty(kWatchDogEnabledProperty, kOSBooleanFalse);
+  } else {
+    setProperty(kWatchDogEnabledProperty, kOSBooleanTrue);
+  }
 
-	setWatchDogTimer(theValue);
+  setWatchDogTimer(theValue);
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }
 
-static IOReturn
-IOWatchDogTimerSleepHandler(void *target, void */*refCon*/,
-    UInt32 messageType,
-    IOService */*provider*/,
-    void *messageArgument,
-    vm_size_t /*argSize*/)
-{
-	IOWatchDogTimer *watchDogTimer = (IOWatchDogTimer *)target;
-	sleepWakeNote *swNote = (sleepWakeNote *)messageArgument;
+static IOReturn IOWatchDogTimerSleepHandler(void *target, void * /*refCon*/,
+                                            UInt32 messageType,
+                                            IOService * /*provider*/,
+                                            void *messageArgument,
+                                            vm_size_t /*argSize*/) {
+  IOWatchDogTimer *watchDogTimer = (IOWatchDogTimer *)target;
+  sleepWakeNote *swNote = (sleepWakeNote *)messageArgument;
 
-	if (messageType != kIOMessageSystemWillSleep) {
-		return kIOReturnUnsupported;
-	}
+  if (messageType != kIOMessageSystemWillSleep) {
+    return kIOReturnUnsupported;
+  }
 
-	watchDogTimer->setProperty(kWatchDogEnabledProperty, kOSBooleanFalse);
-	watchDogTimer->setWatchDogTimer(0);
+  watchDogTimer->setProperty(kWatchDogEnabledProperty, kOSBooleanFalse);
+  watchDogTimer->setWatchDogTimer(0);
 
-	swNote->returnValue = 0;
-	acknowledgeSleepWakeNotification(swNote->powerRef);
+  swNote->returnValue = 0;
+  acknowledgeSleepWakeNotification(swNote->powerRef);
 
-	return kIOReturnSuccess;
+  return kIOReturnSuccess;
 }

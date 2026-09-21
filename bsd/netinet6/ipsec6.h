@@ -1,4 +1,5 @@
-/*	$FreeBSD: src/sys/netinet6/ipsec6.h,v 1.3.2.2 2001/07/03 11:01:54 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet6/ipsec6.h,v 1.3.2.2 2001/07/03 11:01:54 ume
+ * Exp $	*/
 /*	$KAME: ipsec.h,v 1.44 2001/03/23 08:08:47 itojun Exp $	*/
 
 /*
@@ -54,18 +55,20 @@ extern int ip6_esp_randpad;
 struct ip6_out_args;
 
 extern struct secpolicy *ipsec6_getpolicybysock(struct mbuf *, u_int8_t,
-    struct socket *, int *);
+                                                struct socket *, int *);
 extern struct secpolicy *ipsec6_getpolicybyaddr(struct mbuf *, u_int8_t, int,
-    int *);
-extern int ipsec6_getpolicybyinterface(struct mbuf *,
-    u_int8_t, int, struct ip6_out_args *, int *, struct secpolicy **);
+                                                int *);
+extern int ipsec6_getpolicybyinterface(struct mbuf *, u_int8_t, int,
+                                       struct ip6_out_args *, int *,
+                                       struct secpolicy **);
 
 struct inpcb;
 
 extern int ipsec6_in_reject_so(struct mbuf *, struct socket *);
 extern int ipsec6_delete_pcbpolicy(struct inpcb *);
 extern int ipsec6_set_policy(struct inpcb *inp, int optname,
-    caddr_t __sized_by(len)request, size_t len, int priv);
+                             caddr_t __sized_by(len) request, size_t len,
+                             int priv);
 extern int ipsec6_in_reject(struct mbuf *, struct inpcb *);
 
 struct tcp6cb;
@@ -75,12 +78,13 @@ extern size_t ipsec6_hdrsiz(struct mbuf *, u_int8_t, struct inpcb *);
 struct ip6_hdr;
 extern const char *ipsec6_logpacketstr(struct ip6_hdr *, u_int32_t);
 
-extern int ipsec6_interface_output(struct ipsec_output_state *, ifnet_t, u_char *, struct mbuf *);
+extern int ipsec6_interface_output(struct ipsec_output_state *, ifnet_t,
+                                   u_char *, struct mbuf *);
 extern int ipsec6_output_trans(struct ipsec_output_state *, u_char *,
-    struct mbuf *, struct secpolicy *, int, int *);
-extern int ipsec6_output_tunnel(struct ipsec_output_state *,
-    struct secpolicy *, int);
-extern int ipsec6_tunnel_validate(struct mbuf *, int, u_int,
-    struct secasvar *, sa_family_t *);
+                               struct mbuf *, struct secpolicy *, int, int *);
+extern int ipsec6_output_tunnel(struct ipsec_output_state *, struct secpolicy *,
+                                int);
+extern int ipsec6_tunnel_validate(struct mbuf *, int, u_int, struct secasvar *,
+                                  sa_family_t *);
 #endif /* BSD_KERNEL_PRIVATE */
 #endif /* _NETINET6_IPSEC6_H_ */

@@ -31,27 +31,26 @@
 
 #include <IOKit/IOService.h>
 
-class IOWatchDogTimer : public IOService
-{
-	OSDeclareAbstractStructors(IOWatchDogTimer);
+class IOWatchDogTimer : public IOService {
+  OSDeclareAbstractStructors(IOWatchDogTimer);
 
 protected:
-	IONotifier *notifier;
-	struct ExpansionData { };
-	APPLE_KEXT_WSHADOW_PUSH;
-	ExpansionData *reserved;
-	APPLE_KEXT_WSHADOW_POP;
+  IONotifier *notifier;
+  struct ExpansionData {};
+  APPLE_KEXT_WSHADOW_PUSH;
+  ExpansionData *reserved;
+  APPLE_KEXT_WSHADOW_POP;
 
 public:
-	virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
-	virtual void stop(IOService *provider) APPLE_KEXT_OVERRIDE;
-	virtual IOReturn setProperties(OSObject *properties) APPLE_KEXT_OVERRIDE;
-	virtual void setWatchDogTimer(UInt32 timeOut) = 0;
+  virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
+  virtual void stop(IOService *provider) APPLE_KEXT_OVERRIDE;
+  virtual IOReturn setProperties(OSObject *properties) APPLE_KEXT_OVERRIDE;
+  virtual void setWatchDogTimer(UInt32 timeOut) = 0;
 
-	OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 0);
-	OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 1);
-	OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 2);
-	OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 3);
+  OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 0);
+  OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 1);
+  OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 2);
+  OSMetaClassDeclareReservedUnused(IOWatchDogTimer, 3);
 };
 
 #endif /* !_IOWATCHDOGTIMER_H */

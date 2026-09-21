@@ -36,12 +36,14 @@
 
 #ifndef __KPI_PROTOCOL__
 #define __KPI_PROTOCOL__
-#include <sys/kernel_types.h>
 #include <net/kpi_interface.h>
+#include <sys/kernel_types.h>
 
 #ifndef PRIVATE
 #include <Availability.h>
-#define __NKE_API_DEPRECATED __API_DEPRECATED("Network Kernel Extension KPI is deprecated", macos(10.4, 10.15.4))
+#define __NKE_API_DEPRECATED                                                   \
+  __API_DEPRECATED("Network Kernel Extension KPI is deprecated",               \
+                   macos(10.4, 10.15.4))
 #else
 #define __NKE_API_DEPRECATED
 #endif /* PRIVATE */
@@ -56,8 +58,8 @@ __BEGIN_DECLS
 /*!
  *       @typedef protocol_input_handler
  *       @discussion protocol_input_handler is called to input a packet. If
- *               your protocol has specified a global lock, the lock will be held
- *               when this funciton is called.
+ *               your protocol has specified a global lock, the lock will be
+ * held when this funciton is called.
  *       @pararm protocol The protocol this packet is intended for.
  *       @param packet The packet that should be input.
  */
@@ -67,8 +69,8 @@ typedef void (*proto_input_handler)(protocol_family_t protocol, mbuf_t packet);
  *       @typedef proto_input_detached_handler
  *       @discussion proto_input_detached_handler is called to notify the
  *               protocol that it has been detached. When this function is
- *               called, the proto_input_handler will not be called again, making
- *               it safe to unload.
+ *               called, the proto_input_handler will not be called again,
+ * making it safe to unload.
  *       @pararm protocol The protocol detached.
  */
 typedef void (*proto_input_detached_handler)(protocol_family_t protocol);
@@ -84,17 +86,18 @@ typedef void (*proto_input_detached_handler)(protocol_family_t protocol);
  *       @result A errno error on failure.
  */
 extern errno_t proto_register_input(protocol_family_t protocol,
-    proto_input_handler input, proto_input_detached_handler detached,
-    int chains);
+                                    proto_input_handler input,
+                                    proto_input_detached_handler detached,
+                                    int chains);
 
 /*!
  *       @function proto_unregister_input
  *       @discussion Allows the caller to unregister the input and inject
  *               functions for a protocol. The input/inject functions may not be
  *               unregistered immediately if there is a chance they are in use.
- *               To notify the owner when the functions are no longer in use, the
- *               proto_detached_handler function will be called. It is not safe
- *               to unload until the proto_detached_handler is called.
+ *               To notify the owner when the functions are no longer in use,
+ * the proto_detached_handler function will be called. It is not safe to unload
+ * until the proto_detached_handler is called.
  *       @param protocol The protocol family these functions will receive
  *               packets for.
  */
@@ -110,22 +113,21 @@ extern void proto_unregister_input(protocol_family_t protocol);
  *       @result A errno error on failure. Unless proto_input returns zero,
  *               the caller is responsible for freeing the mbuf.
  */
-extern errno_t proto_input(protocol_family_t protocol, mbuf_t packet)
-__NKE_API_DEPRECATED;
+extern errno_t proto_input(protocol_family_t protocol,
+                           mbuf_t packet) __NKE_API_DEPRECATED;
 
 /*!
  *       @function proto_inject
  *       @discussion Injects a packet on the specified protocol from
- *               anywhere. To avoid recursion, the protocol may need to queue the
- *               packet to be handled later.
+ *               anywhere. To avoid recursion, the protocol may need to queue
+ * the packet to be handled later.
  *       @param protocol The protocol of the packet.
  *       @param packet The first packet in a chain of packets to be injected.
  *       @result A errno error on failure. Unless proto_inject returns zero,
  *               the caller is responsible for freeing the mbuf.
  */
-extern errno_t proto_inject(protocol_family_t protocol, mbuf_t packet)
-__NKE_API_DEPRECATED;
-
+extern errno_t proto_inject(protocol_family_t protocol,
+                            mbuf_t packet) __NKE_API_DEPRECATED;
 
 /******************************************************************************/
 /* Protocol plumbing                                                          */
@@ -171,10 +173,10 @@ typedef void (*proto_unplumb_handler)(ifnet_t ifp, protocol_family_t protocol);
  *               be used to detach the protocol.
  *       @result A non-zero value of the attach failed.
  */
-extern errno_t proto_register_plumber(protocol_family_t proto_fam,
-    ifnet_family_t if_fam, proto_plumb_handler plumb,
-    proto_unplumb_handler unplumb)
-__NKE_API_DEPRECATED;
+extern errno_t
+proto_register_plumber(protocol_family_t proto_fam, ifnet_family_t if_fam,
+                       proto_plumb_handler plumb,
+                       proto_unplumb_handler unplumb) __NKE_API_DEPRECATED;
 
 /*!
  *       @function proto_unregister_plumber
@@ -183,9 +185,9 @@ __NKE_API_DEPRECATED;
  *               handle.
  *       @param if_fam The interface family these plumbing functions handle.
  */
-extern void proto_unregister_plumber(protocol_family_t proto_fam,
-    ifnet_family_t if_fam)
-__NKE_API_DEPRECATED;
+extern void
+proto_unregister_plumber(protocol_family_t proto_fam,
+                         ifnet_family_t if_fam) __NKE_API_DEPRECATED;
 
 #ifdef BSD_KERNEL_PRIVATE
 /*
@@ -217,8 +219,7 @@ extern errno_t proto_plumb(protocol_family_t protocol_family, ifnet_t ifp);
  */
 extern errno_t proto_unplumb(protocol_family_t protocol_family, ifnet_t ifp);
 
-__private_extern__ void
-proto_kpi_init(void);
+__private_extern__ void proto_kpi_init(void);
 
 #endif /* BSD_KERNEL_PRIVATE */
 __END_DECLS

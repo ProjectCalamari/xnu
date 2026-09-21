@@ -77,26 +77,25 @@
 #include <sys/kernel_types.h>
 #include <sys/namei.h>
 #endif
-#include <sys/_types/_graftdmg_un.h>
-#include <sys/queue.h>
-#include <sys/lock.h>
 #include <net/radix.h>
-#include <sys/socket.h>         /* XXX for AF_MAX */
-#include <sys/vfs_context.h>            /* XXX for AF_MAX */
-#include <sys/mount.h>
+#include <sys/_types/_graftdmg_un.h>
 #include <sys/cdefs.h>
+#include <sys/lock.h>
+#include <sys/mount.h>
+#include <sys/queue.h>
+#include <sys/socket.h> /* XXX for AF_MAX */
 #include <sys/sysctl.h>
+#include <sys/vfs_context.h> /* XXX for AF_MAX */
 
 struct label;
 
 #if defined(__i386__) || defined(__x86_64__)
-typedef uint64_t  pending_io_t;
+typedef uint64_t pending_io_t;
 #define INCR_PENDING_IO(a, b) OSAddAtomic64((int64_t)(a), (int64_t *)&(b));
 #else
-typedef uint32_t  pending_io_t;
+typedef uint32_t pending_io_t;
 #define INCR_PENDING_IO(a, b) OSAddAtomic((int32_t)(a), (int32_t *)&(b));
 #endif
-
 
 /*
  * Structure per mounted file system.  Each mounted file system has an
@@ -106,133 +105,148 @@ typedef uint32_t  pending_io_t;
 TAILQ_HEAD(vnodelst, vnode);
 
 struct mount {
-	TAILQ_ENTRY(mount)      mnt_list;                   /* mount list */
-	int32_t                 mnt_count;                  /* reference on the mount */
-	lck_mtx_t               mnt_mlock;                  /* mutex that protects mount point */
-	const struct vfsops     * XNU_PTRAUTH_SIGNED_PTR("mount.vfsops") mnt_op;        /* operations on fs */
-	struct vfstable         * XNU_PTRAUTH_SIGNED_PTR("mount.mnt_vtable") mnt_vtable;        /* configuration info */
-	struct vnode            * XNU_PTRAUTH_SIGNED_PTR("mount.mnt_vnodecovered") mnt_vnodecovered;    /* vnode we mounted on */
-	struct vnodelst         mnt_vnodelist;              /* list of vnodes this mount */
-	struct vnodelst         mnt_workerqueue;            /* list of vnodes this mount */
-	struct vnodelst         mnt_newvnodes;              /* list of vnodes this mount */
-	uint32_t                mnt_flag;                   /* flags */
-	uint32_t                mnt_kern_flag;              /* kernel only flags.  NOTE: See mnt_supl_kern_flags below! */
-	uint32_t                mnt_compound_ops;           /* Available compound operations */
-	uint32_t                mnt_lflag;                  /* mount life cycle flags */
-	uint32_t                mnt_maxsymlinklen;          /* max size of short symlink */
-	struct vfsstatfs        mnt_vfsstat;                /* cache of filesystem stats */
-	qaddr_t                 mnt_data;                   /* private data */
-	/* Cached values of the IO constraints for the device */
-	uint32_t                mnt_maxreadcnt;             /* Max. byte count for read */
-	uint32_t                mnt_maxwritecnt;            /* Max. byte count for write */
-	uint32_t                mnt_segreadcnt;             /* Max. segment count for read */
-	uint32_t                mnt_segwritecnt;            /* Max. segment count for write */
-	uint32_t                mnt_maxsegreadsize;         /* Max. segment read size  */
-	uint32_t                mnt_maxsegwritesize;        /* Max. segment write size */
-	uint32_t                mnt_alignmentmask;          /* Mask of bits that aren't addressable via DMA */
-	uint32_t                mnt_devblocksize;           /* the underlying device block size */
-	uint32_t                mnt_ioqueue_depth;          /* the maxiumum number of commands a device can accept */
-	uint32_t                mnt_ioscale;                /* scale the various throttles/limits imposed on the amount of I/O in flight */
-	uint32_t                mnt_ioflags;                /* flags for  underlying device */
-	uint32_t                mnt_minsaturationbytecount; /* if non-zero, mininum amount of writes (in bytes) needed to max out throughput */
-	pending_io_t            mnt_pending_write_size __attribute__((aligned(sizeof(pending_io_t))));  /* byte count of pending writes */
-	pending_io_t            mnt_pending_read_size  __attribute__((aligned(sizeof(pending_io_t))));  /* byte count of pending reads */
-	struct timeval          mnt_last_write_issued_timestamp;
-	struct timeval          mnt_last_write_completed_timestamp;
-	int64_t                 mnt_max_swappin_available;
+  TAILQ_ENTRY(mount) mnt_list; /* mount list */
+  int32_t mnt_count;           /* reference on the mount */
+  lck_mtx_t mnt_mlock;         /* mutex that protects mount point */
+  const struct vfsops *
+      XNU_PTRAUTH_SIGNED_PTR("mount.vfsops") mnt_op; /* operations on fs */
+  struct vfstable *XNU_PTRAUTH_SIGNED_PTR("mount.mnt_vtable")
+      mnt_vtable; /* configuration info */
+  struct vnode *XNU_PTRAUTH_SIGNED_PTR("mount.mnt_vnodecovered")
+      mnt_vnodecovered;            /* vnode we mounted on */
+  struct vnodelst mnt_vnodelist;   /* list of vnodes this mount */
+  struct vnodelst mnt_workerqueue; /* list of vnodes this mount */
+  struct vnodelst mnt_newvnodes;   /* list of vnodes this mount */
+  uint32_t mnt_flag;               /* flags */
+  uint32_t mnt_kern_flag; /* kernel only flags.  NOTE: See mnt_supl_kern_flags
+                             below! */
+  uint32_t mnt_compound_ops;    /* Available compound operations */
+  uint32_t mnt_lflag;           /* mount life cycle flags */
+  uint32_t mnt_maxsymlinklen;   /* max size of short symlink */
+  struct vfsstatfs mnt_vfsstat; /* cache of filesystem stats */
+  qaddr_t mnt_data;             /* private data */
+  /* Cached values of the IO constraints for the device */
+  uint32_t mnt_maxreadcnt;      /* Max. byte count for read */
+  uint32_t mnt_maxwritecnt;     /* Max. byte count for write */
+  uint32_t mnt_segreadcnt;      /* Max. segment count for read */
+  uint32_t mnt_segwritecnt;     /* Max. segment count for write */
+  uint32_t mnt_maxsegreadsize;  /* Max. segment read size  */
+  uint32_t mnt_maxsegwritesize; /* Max. segment write size */
+  uint32_t mnt_alignmentmask; /* Mask of bits that aren't addressable via DMA */
+  uint32_t mnt_devblocksize;  /* the underlying device block size */
+  uint32_t mnt_ioqueue_depth; /* the maxiumum number of commands a device can
+                                 accept */
+  uint32_t mnt_ioscale; /* scale the various throttles/limits imposed on the
+                           amount of I/O in flight */
+  uint32_t mnt_ioflags; /* flags for  underlying device */
+  uint32_t
+      mnt_minsaturationbytecount; /* if non-zero, mininum amount of writes (in
+                                     bytes) needed to max out throughput */
+  pending_io_t mnt_pending_write_size __attribute__((
+      aligned(sizeof(pending_io_t)))); /* byte count of pending writes */
+  pending_io_t mnt_pending_read_size __attribute__((
+      aligned(sizeof(pending_io_t)))); /* byte count of pending reads */
+  struct timeval mnt_last_write_issued_timestamp;
+  struct timeval mnt_last_write_completed_timestamp;
+  int64_t mnt_max_swappin_available;
 
-	lck_rw_t                mnt_rwlock;                 /* mutex readwrite lock */
-	lck_mtx_t               mnt_renamelock;             /* mutex that serializes renames that change shape of tree */
-	vnode_t                 mnt_devvp;                  /* the device mounted on for local file systems */
-	uint32_t                mnt_devbsdunit;             /* the BSD unit number of the device */
-	uint64_t                mnt_throttle_mask;          /* the throttle mask of what devices will be affected by I/O from this mnt */
-	void                    *mnt_throttle_info;         /* used by the throttle code */
-	int32_t                 mnt_crossref;               /* refernces to cover lookups  crossing into mp */
-	int32_t                 mnt_iterref;                /* refernces to cover iterations; drained makes it -ve  */
+  lck_rw_t mnt_rwlock;        /* mutex readwrite lock */
+  lck_mtx_t mnt_renamelock;   /* mutex that serializes renames that change shape
+                                 of tree */
+  vnode_t mnt_devvp;          /* the device mounted on for local file systems */
+  uint32_t mnt_devbsdunit;    /* the BSD unit number of the device */
+  uint64_t mnt_throttle_mask; /* the throttle mask of what devices will be
+                                 affected by I/O from this mnt */
+  void *mnt_throttle_info;    /* used by the throttle code */
+  int32_t mnt_crossref;       /* refernces to cover lookups  crossing into mp */
+  int32_t mnt_iterref; /* refernces to cover iterations; drained makes it -ve */
 #if CONFIG_TRIGGERS
-	int32_t                 mnt_numtriggers;            /* num of trigger vnodes for this mount */
-	vfs_trigger_callback_t  *mnt_triggercallback;
-	void                    *mnt_triggerdata;
+  int32_t mnt_numtriggers; /* num of trigger vnodes for this mount */
+  vfs_trigger_callback_t *mnt_triggercallback;
+  void *mnt_triggerdata;
 #endif
-	/* XXX 3762912 hack to support HFS filesystem 'owner' */
-	uid_t                   mnt_fsowner;
-	gid_t                   mnt_fsgroup;
+  /* XXX 3762912 hack to support HFS filesystem 'owner' */
+  uid_t mnt_fsowner;
+  gid_t mnt_fsgroup;
 
-	struct label            *mnt_mntlabel;              /* MAC mount label */
+  struct label *mnt_mntlabel; /* MAC mount label */
 
-	/*
-	 * cache the rootvp of the last mount point
-	 * in the chain in the mount struct pointed
-	 * to by the vnode sitting in '/'
-	 * this cache is used to shortcircuit the
-	 * mount chain traversal and allows us
-	 * to traverse to the true underlying rootvp
-	 * in 1 easy step inside of 'cache_lookup_path'
-	 *
-	 * make sure to validate against the cached vid
-	 * in case the rootvp gets stolen away since
-	 * we don't take an explicit long term reference
-	 * on it when we mount it
-	 */
-	vnode_t                 mnt_realrootvp;
-	uint32_t                mnt_realrootvp_vid;
-	/*
-	 * bumped each time a mount or unmount
-	 * occurs... its used to invalidate
-	 * 'mnt_realrootvp' from the cache
-	 */
-	uint32_t                mnt_generation;
-	/*
-	 * if 'MNTK_AUTH_CACHE_TIMEOUT' is
-	 * set, then 'mnt_authcache_ttl' is
-	 * the time-to-live for the per-vnode authentication cache
-	 * on this mount... if zero, no cache is maintained...
-	 * if 'MNTK_AUTH_CACHE_TIMEOUT' isn't set, its the
-	 * time-to-live for the cached lookup right for
-	 * volumes marked 'MNTK_AUTH_OPAQUE'.
-	 */
-	int                     mnt_authcache_ttl;
-	char                    fstypename_override[MFSTYPENAMELEN];
+  /*
+   * cache the rootvp of the last mount point
+   * in the chain in the mount struct pointed
+   * to by the vnode sitting in '/'
+   * this cache is used to shortcircuit the
+   * mount chain traversal and allows us
+   * to traverse to the true underlying rootvp
+   * in 1 easy step inside of 'cache_lookup_path'
+   *
+   * make sure to validate against the cached vid
+   * in case the rootvp gets stolen away since
+   * we don't take an explicit long term reference
+   * on it when we mount it
+   */
+  vnode_t mnt_realrootvp;
+  uint32_t mnt_realrootvp_vid;
+  /*
+   * bumped each time a mount or unmount
+   * occurs... its used to invalidate
+   * 'mnt_realrootvp' from the cache
+   */
+  uint32_t mnt_generation;
+  /*
+   * if 'MNTK_AUTH_CACHE_TIMEOUT' is
+   * set, then 'mnt_authcache_ttl' is
+   * the time-to-live for the per-vnode authentication cache
+   * on this mount... if zero, no cache is maintained...
+   * if 'MNTK_AUTH_CACHE_TIMEOUT' isn't set, its the
+   * time-to-live for the cached lookup right for
+   * volumes marked 'MNTK_AUTH_OPAQUE'.
+   */
+  int mnt_authcache_ttl;
+  char fstypename_override[MFSTYPENAMELEN];
 
-	uint32_t                mnt_iobufinuse;
+  uint32_t mnt_iobufinuse;
 
-	void                    *mnt_disk_conditioner_info;
+  void *mnt_disk_conditioner_info;
 
-	lck_mtx_t               mnt_iter_lock;              /* mutex that protects iteration of vnodes */
+  lck_mtx_t mnt_iter_lock; /* mutex that protects iteration of vnodes */
 
-	uint64_t                mnt_mount_id;               /* system-wide unique mount ID */
-	uint32_t                mnt_supl_kern_flag;         /* Supplemental kernel-only mount flags */
+  uint64_t mnt_mount_id;       /* system-wide unique mount ID */
+  uint32_t mnt_supl_kern_flag; /* Supplemental kernel-only mount flags */
 };
 
 /*
  * default number of seconds to keep cached lookup
  * rights valid on mounts marked MNTK_AUTH_OPAQUE
  */
-#define CACHED_LOOKUP_RIGHT_TTL         2
+#define CACHED_LOOKUP_RIGHT_TTL 2
 
 /*
  * ioflags
  */
-#define MNT_IOFLAGS_FUA_SUPPORTED       0x00000001
-#define MNT_IOFLAGS_UNMAP_SUPPORTED     0x00000002
-#define MNT_IOFLAGS_IOSCHED_SUPPORTED   0x00000004
-#define MNT_IOFLAGS_CSUNMAP_SUPPORTED   0x00000008
-#define MNT_IOFLAGS_SWAPPIN_SUPPORTED   0x00000010
-#define MNT_IOFLAGS_FUSION_DRIVE        0x00000020
-#define MNT_IOFLAGS_PERIPHERAL_DRIVE    0x00000040 /* External: Attached directly to the system (USB,TBT,FW,etc.) */
+#define MNT_IOFLAGS_FUA_SUPPORTED 0x00000001
+#define MNT_IOFLAGS_UNMAP_SUPPORTED 0x00000002
+#define MNT_IOFLAGS_IOSCHED_SUPPORTED 0x00000004
+#define MNT_IOFLAGS_CSUNMAP_SUPPORTED 0x00000008
+#define MNT_IOFLAGS_SWAPPIN_SUPPORTED 0x00000010
+#define MNT_IOFLAGS_FUSION_DRIVE 0x00000020
+#define MNT_IOFLAGS_PERIPHERAL_DRIVE                                           \
+  0x00000040 /* External: Attached directly to the system (USB,TBT,FW,etc.) */
 
 /*
  * ioqueue depth for devices that don't report one
  */
-#define MNT_DEFAULT_IOQUEUE_DEPTH       32
+#define MNT_DEFAULT_IOQUEUE_DEPTH 32
 
 /*
  * mnt_ioscale value for the given ioqueue depth
  */
-#define MNT_IOSCALE(ioqueue_depth)      ((ioqueue_depth + (MNT_DEFAULT_IOQUEUE_DEPTH - 1)) / MNT_DEFAULT_IOQUEUE_DEPTH)
+#define MNT_IOSCALE(ioqueue_depth)                                             \
+  ((ioqueue_depth + (MNT_DEFAULT_IOQUEUE_DEPTH - 1)) /                         \
+   MNT_DEFAULT_IOQUEUE_DEPTH)
 
 /* mount point to which dead vps point to */
-extern struct mount * const dead_mountp;
+extern struct mount *const dead_mountp;
 
 /*
  * Internal filesystem control flags stored in mnt_kern_flag.
@@ -245,59 +259,81 @@ extern struct mount * const dead_mountp;
  *		because the bits here were broken out from the high bits
  *		of the mount flags.
  */
-#define MNTK_FSKIT              0x00000020      /* Volume is a FSKit mount */
-#define MNTK_SYSTEM             0x00000040      /* Volume associated with system volume (do not allow unmount) */
-#define MNTK_NOSWAP             0x00000080      /* swap files cannot be used on this mount */
-#define MNTK_SWAP_MOUNT         0x00000100      /* we are swapping to this mount */
-#define MNTK_DENY_READDIREXT    0x00000200      /* Deny Extended-style readdir's for this volume */
-#define MNTK_PERMIT_UNMOUNT     0x00000400      /* Allow (non-forced) unmounts by UIDs other than the one that mounted the volume */
-#define MNTK_TYPENAME_OVERRIDE  0x00000800      /* override the fstypename for statfs() */
-#define MNTK_KERNEL_MOUNT       0x00001000      /* mount came from kernel side */
+#define MNTK_FSKIT 0x00000020 /* Volume is a FSKit mount */
+#define MNTK_SYSTEM                                                            \
+  0x00000040 /* Volume associated with system volume (do not allow unmount) */
+#define MNTK_NOSWAP 0x00000080     /* swap files cannot be used on this mount */
+#define MNTK_SWAP_MOUNT 0x00000100 /* we are swapping to this mount */
+#define MNTK_DENY_READDIREXT                                                   \
+  0x00000200 /* Deny Extended-style readdir's for this volume */
+#define MNTK_PERMIT_UNMOUNT                                                    \
+  0x00000400 /* Allow (non-forced) unmounts by UIDs other than the one that    \
+                mounted the volume */
+#define MNTK_TYPENAME_OVERRIDE                                                 \
+  0x00000800                         /* override the fstypename for statfs() */
+#define MNTK_KERNEL_MOUNT 0x00001000 /* mount came from kernel side */
 #ifdef CONFIG_IMGSRC_ACCESS
-#define MNTK_HAS_MOVED          0x00002000
+#define MNTK_HAS_MOVED 0x00002000
 #endif /* CONFIG_IMGSRC_ACCESS */
-#define MNTK_BACKS_ROOT         0x00004000      /* mount contains a disk image backing the root filesystem - therefore it mustn't be unmounted */
-#define MNTK_AUTH_CACHE_TTL     0x00008000      /* rights cache has TTL - TTL of 0 disables cache */
-#define MNTK_PATH_FROM_ID       0x00010000      /* mounted file system supports id-to-path lookups */
-#define MNTK_UNMOUNT_PREFLIGHT  0x00020000      /* mounted file system wants preflight check during unmount */
-#define MNTK_NAMED_STREAMS      0x00040000      /* mounted file system supports Named Streams VNOPs */
-#define MNTK_EXTENDED_ATTRS     0x00080000      /* mounted file system supports Extended Attributes VNOPs */
-#define MNTK_LOCK_LOCAL         0x00100000      /* advisory locking is done above the VFS itself */
-#define MNTK_VIRTUALDEV         0x00200000      /* mounted on a virtual device i.e. a disk image */
-#define MNTK_ROOTDEV            0x00400000      /* this filesystem resides on the same device as the root - appears unused as of 2020 */
-#define MNTK_SSD                0x00800000      /* underlying device is of the solid state variety */
-#define MNTK_UNMOUNT            0x01000000      /* unmount in progress */
-#define MNTK_MWAIT              0x02000000      /* waiting for unmount to finish - appears unused as of 2020 */
-#define MNTK_WANTRDWR           0x04000000      /* upgrade to read/write requested */
-#define MNTK_SYSTEMDATA         0x08000000      /* volume is a Data volume tightly linked with System root volume. Firmlinks, etc */
-#define MNTK_DIR_HARDLINKS      0x10000000      /* mounted file system supports directory hard links */
-#define MNTK_AUTH_OPAQUE        0x20000000      /* authorisation decisions are not made locally */
-#define MNTK_AUTH_OPAQUE_ACCESS 0x40000000      /* VNOP_ACCESS is reliable for remote auth */
-#define MNTK_EXTENDED_SECURITY  0x80000000      /* extended security supported */
-
+#define MNTK_BACKS_ROOT                                                        \
+  0x00004000 /* mount contains a disk image backing the root filesystem -      \
+                therefore it mustn't be unmounted */
+#define MNTK_AUTH_CACHE_TTL                                                    \
+  0x00008000 /* rights cache has TTL - TTL of 0 disables cache */
+#define MNTK_PATH_FROM_ID                                                      \
+  0x00010000 /* mounted file system supports id-to-path lookups */
+#define MNTK_UNMOUNT_PREFLIGHT                                                 \
+  0x00020000 /* mounted file system wants preflight check during unmount */
+#define MNTK_NAMED_STREAMS                                                     \
+  0x00040000 /* mounted file system supports Named Streams VNOPs */
+#define MNTK_EXTENDED_ATTRS                                                    \
+  0x00080000 /* mounted file system supports Extended Attributes VNOPs */
+#define MNTK_LOCK_LOCAL                                                        \
+  0x00100000 /* advisory locking is done above the VFS itself */
+#define MNTK_VIRTUALDEV                                                        \
+  0x00200000 /* mounted on a virtual device i.e. a disk image */
+#define MNTK_ROOTDEV                                                           \
+  0x00400000 /* this filesystem resides on the same device as the root -       \
+                appears unused as of 2020 */
+#define MNTK_SSD                                                               \
+  0x00800000 /* underlying device is of the solid state variety */
+#define MNTK_UNMOUNT 0x01000000 /* unmount in progress */
+#define MNTK_MWAIT                                                             \
+  0x02000000 /* waiting for unmount to finish - appears unused as of 2020 */
+#define MNTK_WANTRDWR 0x04000000 /* upgrade to read/write requested */
+#define MNTK_SYSTEMDATA                                                        \
+  0x08000000 /* volume is a Data volume tightly linked with System root        \
+                volume. Firmlinks, etc */
+#define MNTK_DIR_HARDLINKS                                                     \
+  0x10000000 /* mounted file system supports directory hard links */
+#define MNTK_AUTH_OPAQUE                                                       \
+  0x20000000 /* authorisation decisions are not made locally */
+#define MNTK_AUTH_OPAQUE_ACCESS                                                \
+  0x40000000 /* VNOP_ACCESS is reliable for remote auth */
+#define MNTK_EXTENDED_SECURITY 0x80000000 /* extended security supported */
 
 /*
  * Internal supplemental FS control flags stored in mnt_supl_kern_flag
  *
- * NOTE: The 32 bits in the above-mentioned 32bit flag word (mnt_kern_flag) have been
- * exhausted, so this is intended as a supplement.
+ * NOTE: The 32 bits in the above-mentioned 32bit flag word (mnt_kern_flag) have
+ * been exhausted, so this is intended as a supplement.
  */
-#define MNTK_SUPL_BASESYSTEM    0x00000001
-#define MNTK_SUPL_USE_FULLSYNC  0x00000002
+#define MNTK_SUPL_BASESYSTEM 0x00000001
+#define MNTK_SUPL_USE_FULLSYNC 0x00000002
 
 /*
  * Mount Lifecycle Flags (stored in mnt_lflag)
  */
-#define MNT_LNOTRESP            0x00000001      /* mount not responding */
-#define MNT_LUNMOUNT            0x00000002      /* mount in unmount */
-#define MNT_LFORCE              0x00000004      /* mount in forced unmount */
-#define MNT_LDRAIN              0x00000008      /* mount in drain */
-#define MNT_LITER               0x00000010      /* mount in iteration */
-#define MNT_LNEWVN              0x00000020      /* mount has new vnodes created */
-#define MNT_LWAIT               0x00000040      /* wait for unmount op */
-#define MNT_LMOUNT              0x00000080      /* not finished mounting */
-#define MNT_LDEAD               0x00000100      /* mount already unmounted*/
-#define MNT_LNOSUB              0x00000200      /* submount - no recursion */
+#define MNT_LNOTRESP 0x00000001 /* mount not responding */
+#define MNT_LUNMOUNT 0x00000002 /* mount in unmount */
+#define MNT_LFORCE 0x00000004   /* mount in forced unmount */
+#define MNT_LDRAIN 0x00000008   /* mount in drain */
+#define MNT_LITER 0x00000010    /* mount in iteration */
+#define MNT_LNEWVN 0x00000020   /* mount has new vnodes created */
+#define MNT_LWAIT 0x00000040    /* wait for unmount op */
+#define MNT_LMOUNT 0x00000080   /* not finished mounting */
+#define MNT_LDEAD 0x00000100    /* mount already unmounted*/
+#define MNT_LNOSUB 0x00000200   /* submount - no recursion */
 
 /*
  * Filesystem configuration information. One of these exists for each
@@ -305,84 +341,85 @@ extern struct mount * const dead_mountp;
  * mount time to identify the requested filesystem.
  */
 struct vfstable {
-	const struct vfsops *vfc_vfsops;/* filesystem operations vector */
-	char        vfc_name[MFSNAMELEN];   /* filesystem type name */
-	int         vfc_typenum;            /* historic filesystem type number */
-	int         vfc_refcount;           /* number mounted of this type */
-	int         vfc_flags;              /* permanent flags */
-	int         (*vfc_mountroot)(mount_t, vnode_t, vfs_context_t);      /* if != NULL, routine to mount root */
-	struct      vfstable *vfc_next;     /* next in list */
-	int32_t     vfc_reserved1;
-	int32_t     vfc_reserved2;
-	int         vfc_vfsflags;           /* for optional types */
-	void       *vfc_descptr;            /* desc table allocated address */
-	uint32_t    vfc_descsize;           /* number of elements in desc table */
-	struct sysctl_oid       *vfc_sysctl;    /* dynamically registered sysctl node */
+  const struct vfsops *vfc_vfsops; /* filesystem operations vector */
+  char vfc_name[MFSNAMELEN];       /* filesystem type name */
+  int vfc_typenum;                 /* historic filesystem type number */
+  int vfc_refcount;                /* number mounted of this type */
+  int vfc_flags;                   /* permanent flags */
+  int (*vfc_mountroot)(mount_t, vnode_t,
+                       vfs_context_t); /* if != NULL, routine to mount root */
+  struct vfstable *vfc_next;           /* next in list */
+  int32_t vfc_reserved1;
+  int32_t vfc_reserved2;
+  int vfc_vfsflags;              /* for optional types */
+  void *vfc_descptr;             /* desc table allocated address */
+  uint32_t vfc_descsize;         /* number of elements in desc table */
+  struct sysctl_oid *vfc_sysctl; /* dynamically registered sysctl node */
 };
 
 /* vfc_vfsflags: */
-#define VFC_VFSLOCALARGS        0x002
-#define VFC_VFSGENERICARGS      0x004
-#define VFC_VFSNATIVEXATTR      0x010
+#define VFC_VFSLOCALARGS 0x002
+#define VFC_VFSGENERICARGS 0x004
+#define VFC_VFSNATIVEXATTR 0x010
 #define VFC_VFSCANMOUNTROOT 0x020
-#define VFC_VFSPREFLIGHT        0x040
+#define VFC_VFSPREFLIGHT 0x040
 #define VFC_VFSREADDIR_EXTENDED 0x080
-#define VFC_VFS64BITREADY       0x100
-#define VFC_VFSNOMACLABEL       0x1000
-#define VFC_VFSVNOP_PAGEINV2    0x2000
-#define VFC_VFSVNOP_PAGEOUTV2   0x4000
-#define VFC_VFSVNOP_NOUPDATEID_RENAME   0x8000
-#define VFC_VFSVNOP_SECLUDE_RENAME      0x10000
+#define VFC_VFS64BITREADY 0x100
+#define VFC_VFSNOMACLABEL 0x1000
+#define VFC_VFSVNOP_PAGEINV2 0x2000
+#define VFC_VFSVNOP_PAGEOUTV2 0x4000
+#define VFC_VFSVNOP_NOUPDATEID_RENAME 0x8000
+#define VFC_VFSVNOP_SECLUDE_RENAME 0x10000
 
-extern int maxvfstypenum;               /* highest defined filesystem type */
-extern struct vfstable  *vfsconf;       /* head of list of filesystem types */
-extern const int maxvfsslots;           /* Maximum statically allocated slots available to be used */
-extern int numused_vfsslots;    /* number of statically allocated slots already used */
-extern int numregistered_fses;  /* number of total registered filesystems */
+extern int maxvfstypenum;        /* highest defined filesystem type */
+extern struct vfstable *vfsconf; /* head of list of filesystem types */
+extern const int
+    maxvfsslots; /* Maximum statically allocated slots available to be used */
+extern int
+    numused_vfsslots; /* number of statically allocated slots already used */
+extern int numregistered_fses; /* number of total registered filesystems */
 
 /* the following two are xnu private */
-struct vfstable *       vfstable_add(struct     vfstable *);
-int     vfstable_del(struct vfstable *);
-
+struct vfstable *vfstable_add(struct vfstable *);
+int vfstable_del(struct vfstable *);
 
 struct vfsmount_args {
-	union {
-		struct {
-			char * mnt_fspec;
-			void * mnt_fsdata;
-		} mnt_localfs_args;
-		struct {
-			void *  mnt_fsdata;             /* FS specific */
-		} mnt_remotefs_args;
-	} mountfs_args;
+  union {
+    struct {
+      char *mnt_fspec;
+      void *mnt_fsdata;
+    } mnt_localfs_args;
+    struct {
+      void *mnt_fsdata; /* FS specific */
+    } mnt_remotefs_args;
+  } mountfs_args;
 };
-
 
 /*
  * LP64 *user* version of statfs structure.
  * NOTE - must be kept in sync with struct statfs in mount.h
  */
 struct user64_statfs {
-	short           f_otype;                /* TEMPORARY SHADOW COPY OF f_type */
-	short           f_oflags;               /* TEMPORARY SHADOW COPY OF f_flags */
-	user64_long_t   f_bsize;                /* fundamental file system block size */
-	user64_long_t   f_iosize;               /* optimal transfer block size */
-	user64_long_t   f_blocks;               /* total data blocks in file system */
-	user64_long_t   f_bfree;                /* free blocks in fs */
-	user64_long_t   f_bavail;               /* free blocks avail to non-superuser */
-	user64_long_t   f_files;                /* total file nodes in file system */
-	user64_long_t   f_ffree;                /* free file nodes in fs */
-	fsid_t          f_fsid;                 /* file system id */
-	uid_t           f_owner;                /* user that mounted the filesystem */
-	short           f_reserved1;            /* spare for later */
-	short           f_type;                 /* type of filesystem */
-	user64_long_t   f_flags;                /* copy of mount exported flags */
-	user64_long_t   f_reserved2[2];         /* reserved for future use */
-	char            f_fstypename[MFSNAMELEN]; /* fs type name */
-	char            f_mntonname[MNAMELEN];  /* directory on which mounted */
-	char            f_mntfromname[MNAMELEN];/* mounted filesystem */
-	char            f_reserved3;    /* For alignment */
-	user64_long_t   f_reserved4[4]; /* For future use */
+  short f_otype;                 /* TEMPORARY SHADOW COPY OF f_type */
+  short f_oflags;                /* TEMPORARY SHADOW COPY OF f_flags */
+  user64_long_t f_bsize;         /* fundamental file system block size */
+  user64_long_t f_iosize;        /* optimal transfer block size */
+  user64_long_t f_blocks;        /* total data blocks in file system */
+  user64_long_t f_bfree;         /* free blocks in fs */
+  user64_long_t f_bavail;        /* free blocks avail to non-superuser */
+  user64_long_t f_files;         /* total file nodes in file system */
+  user64_long_t f_ffree;         /* free file nodes in fs */
+  fsid_t f_fsid;                 /* file system id */
+  uid_t f_owner;                 /* user that mounted the filesystem */
+  short f_reserved1;             /* spare for later */
+  short f_type;                  /* type of filesystem */
+  user64_long_t f_flags;         /* copy of mount exported flags */
+  user64_long_t f_reserved2[2];  /* reserved for future use */
+  char f_fstypename[MFSNAMELEN]; /* fs type name */
+  char f_mntonname[MNAMELEN];    /* directory on which mounted */
+  char f_mntfromname[MNAMELEN];  /* mounted filesystem */
+  char f_reserved3;              /* For alignment */
+  user64_long_t f_reserved4[4];  /* For future use */
 };
 
 /*
@@ -390,32 +427,33 @@ struct user64_statfs {
  * NOTE - must be kept in sync with struct statfs in mount.h
  */
 struct user32_statfs {
-	short           f_otype;                /* TEMPORARY SHADOW COPY OF f_type */
-	short           f_oflags;               /* TEMPORARY SHADOW COPY OF f_flags */
-	user32_long_t   f_bsize;                /* fundamental file system block size */
-	user32_long_t   f_iosize;               /* optimal transfer block size */
-	user32_long_t   f_blocks;               /* total data blocks in file system */
-	user32_long_t   f_bfree;                /* free blocks in fs */
-	user32_long_t   f_bavail;               /* free blocks avail to non-superuser */
-	user32_long_t   f_files;                /* total file nodes in file system */
-	user32_long_t   f_ffree;                /* free file nodes in fs */
-	fsid_t          f_fsid;                 /* file system id */
-	uid_t           f_owner;                /* user that mounted the filesystem */
-	short           f_reserved1;    /* spare for later */
-	short           f_type;                 /* type of filesystem */
-	user32_long_t       f_flags;            /* copy of mount exported flags */
-	user32_long_t f_reserved2[2];   /* reserved for future use */
-	char            f_fstypename[MFSNAMELEN]; /* fs type name */
-	char            f_mntonname[MNAMELEN];  /* directory on which mounted */
-	char            f_mntfromname[MNAMELEN];/* mounted filesystem */
-	char            f_reserved3;    /* For alignment */
-	user32_long_t   f_reserved4[4]; /* For future use */
+  short f_otype;                 /* TEMPORARY SHADOW COPY OF f_type */
+  short f_oflags;                /* TEMPORARY SHADOW COPY OF f_flags */
+  user32_long_t f_bsize;         /* fundamental file system block size */
+  user32_long_t f_iosize;        /* optimal transfer block size */
+  user32_long_t f_blocks;        /* total data blocks in file system */
+  user32_long_t f_bfree;         /* free blocks in fs */
+  user32_long_t f_bavail;        /* free blocks avail to non-superuser */
+  user32_long_t f_files;         /* total file nodes in file system */
+  user32_long_t f_ffree;         /* free file nodes in fs */
+  fsid_t f_fsid;                 /* file system id */
+  uid_t f_owner;                 /* user that mounted the filesystem */
+  short f_reserved1;             /* spare for later */
+  short f_type;                  /* type of filesystem */
+  user32_long_t f_flags;         /* copy of mount exported flags */
+  user32_long_t f_reserved2[2];  /* reserved for future use */
+  char f_fstypename[MFSNAMELEN]; /* fs type name */
+  char f_mntonname[MNAMELEN];    /* directory on which mounted */
+  char f_mntfromname[MNAMELEN];  /* mounted filesystem */
+  char f_reserved3;              /* For alignment */
+  user32_long_t f_reserved4[4];  /* For future use */
 };
 
 /*
- * throttle I/Os are affected only by normal I/Os happening on the same spindle.  Currently we use a 64-bit integer to
- * represent what devices are affected, so we can handle at most 64 different spindles.  Since
- * throttled I/O is usually useful in non-server environment only, this number is enough in most cases.
+ * throttle I/Os are affected only by normal I/Os happening on the same spindle.
+ * Currently we use a 64-bit integer to represent what devices are affected, so
+ * we can handle at most 64 different spindles.  Since throttled I/O is usually
+ * useful in non-server environment only, this number is enough in most cases.
  */
 #define LOWPRI_MAX_NUM_DEV 64
 
@@ -436,7 +474,7 @@ void mount_lock_renames(mount_t);
 void mount_unlock_renames(mount_t);
 void mount_ref(mount_t, int);
 void mount_drop(mount_t, int);
-int  mount_refdrain(mount_t);
+int mount_refdrain(mount_t);
 
 /* vfs_rootmountalloc should be kept as a private api */
 errno_t vfs_rootmountalloc(const char *, const char *, mount_t *mpp);
@@ -444,70 +482,79 @@ errno_t vfs_rootmountalloc(const char *, const char *, mount_t *mpp);
 int vfs_mount_recovery(void);
 
 typedef uint32_t vfs_switch_root_flags_t;
-#define VFSSR_VIRTUALDEV_PROHIBITED     0x01 /* Not allowed to pivot into virtual devices (disk images).
-	                                      * This is really just because we don't have a great way to find
-	                                      * the filesystem that backs the image in order to set
-	                                      * MNTK_BACKS_ROOT on it, which would prevent even forced-unmounts.
-	                                      * Also, lots of disk images are backed by userspace processes,
-	                                      * which also seems like a bad idea for the root filesystem. */
+#define VFSSR_VIRTUALDEV_PROHIBITED                                            \
+  0x01 /* Not allowed to pivot into virtual devices (disk images).             \
+        * This is really just because we don't have a great way to find        \
+        * the filesystem that backs the image in order to set                  \
+        * MNTK_BACKS_ROOT on it, which would prevent even forced-unmounts.     \
+        * Also, lots of disk images are backed by userspace processes,         \
+        * which also seems like a bad idea for the root filesystem. */
 
 int vfs_switch_root(const char *, const char *, vfs_switch_root_flags_t);
 
-int     vfs_mountroot(void);
-void    vfs_unmountall(int only_non_system);
-int     safedounmount(struct mount *, int, vfs_context_t);
-int     dounmount(struct mount *, int, int, vfs_context_t);
-void    dounmount_submounts(struct mount *, int, vfs_context_t);
-int     vfs_setmounting(vnode_t);
-void    vfs_clearmounting(vnode_t);
-void    vfs_setmountedon(vnode_t);
+int vfs_mountroot(void);
+void vfs_unmountall(int only_non_system);
+int safedounmount(struct mount *, int, vfs_context_t);
+int dounmount(struct mount *, int, int, vfs_context_t);
+void dounmount_submounts(struct mount *, int, vfs_context_t);
+int vfs_setmounting(vnode_t);
+void vfs_clearmounting(vnode_t);
+void vfs_setmountedon(vnode_t);
 
 /* xnu internal api */
-void  mount_dropcrossref(mount_t, vnode_t, int);
+void mount_dropcrossref(mount_t, vnode_t, int);
 mount_t mount_lookupby_volfsid(int, int);
 mount_t mount_list_lookupby_fsid(fsid_t *, int, int);
-int  mount_list_add(mount_t);
+int mount_list_add(mount_t);
 void mount_list_remove(mount_t);
-int  mount_iterref(mount_t, int);
-int  mount_isdrained(mount_t, int);
+int mount_iterref(mount_t, int);
+int mount_isdrained(mount_t, int);
 void mount_iterdrop(mount_t);
 void mount_iterdrain(mount_t);
 void mount_iterreset(mount_t);
 
-/* These flags are used as flag bits in the `internal_flags` argument to mount_common */
+/* These flags are used as flag bits in the `internal_flags` argument to
+ * mount_common */
 /* Private NFS spi */
-#define KERNEL_MOUNT_NOAUTH             0x01 /* Don't check the UID of the directory we are mounting on */
-#define KERNEL_MOUNT_PERMIT_UNMOUNT     0x02 /* Allow (non-forced) unmounts by users other the one who mounted the volume */
+#define KERNEL_MOUNT_NOAUTH                                                    \
+  0x01 /* Don't check the UID of the directory we are mounting on */
+#define KERNEL_MOUNT_PERMIT_UNMOUNT                                            \
+  0x02 /* Allow (non-forced) unmounts by users other the one who mounted the   \
+          volume */
 /* used by snapshot mounting SPI */
-#define KERNEL_MOUNT_SNAPSHOT           0x04 /* Mounting a snapshot */
-#define KERNEL_MOUNT_DATAVOL            0x08 /* mount the data volume */
-#define KERNEL_MOUNT_VMVOL              0x10 /* mount the VM volume */
-#define KERNEL_MOUNT_PREBOOTVOL         0x20 /* mount the Preboot volume */
-#define KERNEL_MOUNT_RECOVERYVOL        0x40 /* mount the Recovery volume */
-#define KERNEL_MOUNT_BASESYSTEMROOT     0x80 /* mount a base root volume "instead of" the full root volume (only used during bsd_init) */
-#define KERNEL_MOUNT_DEVFS             0x100 /* kernel startup mount of devfs */
-#define KERNEL_MOUNT_FMOUNT            0x200 /* is fmount() system call */
-#define KERNEL_MOUNT_KMOUNT            0x400 /* is kernel_mount() call */
+#define KERNEL_MOUNT_SNAPSHOT 0x04    /* Mounting a snapshot */
+#define KERNEL_MOUNT_DATAVOL 0x08     /* mount the data volume */
+#define KERNEL_MOUNT_VMVOL 0x10       /* mount the VM volume */
+#define KERNEL_MOUNT_PREBOOTVOL 0x20  /* mount the Preboot volume */
+#define KERNEL_MOUNT_RECOVERYVOL 0x40 /* mount the Recovery volume */
+#define KERNEL_MOUNT_BASESYSTEMROOT                                            \
+  0x80 /* mount a base root volume "instead of" the full root volume (only     \
+          used during bsd_init) */
+#define KERNEL_MOUNT_DEVFS 0x100  /* kernel startup mount of devfs */
+#define KERNEL_MOUNT_FMOUNT 0x200 /* is fmount() system call */
+#define KERNEL_MOUNT_KMOUNT 0x400 /* is kernel_mount() call */
 
 /* mask for checking if any of the "mount volume by role" flags are set */
-#define KERNEL_MOUNT_VOLBYROLE_MASK (KERNEL_MOUNT_DATAVOL | KERNEL_MOUNT_VMVOL | KERNEL_MOUNT_PREBOOTVOL | KERNEL_MOUNT_RECOVERYVOL)
+#define KERNEL_MOUNT_VOLBYROLE_MASK                                            \
+  (KERNEL_MOUNT_DATAVOL | KERNEL_MOUNT_VMVOL | KERNEL_MOUNT_PREBOOTVOL |       \
+   KERNEL_MOUNT_RECOVERYVOL)
 
 /* mask for sanitizing inputs to kernel_mount() */
 #define KERNEL_MOUNT_SANITIZE_MASK (~(KERNEL_MOUNT_FMOUNT))
 
 /*
- * NOTE: kernel_mount() does not force MNT_NOSUID, MNT_NOEXEC, or MNT_NODEC for non-privileged
- * mounting credentials, as the mount(2) system call does.
+ * NOTE: kernel_mount() does not force MNT_NOSUID, MNT_NOEXEC, or MNT_NODEC for
+ * non-privileged mounting credentials, as the mount(2) system call does.
  */
-int kernel_mount(const char *, vnode_t, vnode_t, const char *, void *, size_t, int, uint32_t, vfs_context_t);
+int kernel_mount(const char *, vnode_t, vnode_t, const char *, void *, size_t,
+                 int, uint32_t, vfs_context_t);
 
 /* Throttled I/O API.  KPI/SPI is in systm.h. */
 
-int  throttle_get_io_policy(struct uthread **ut);
-int  throttle_get_passive_io_policy(struct uthread **ut);
+int throttle_get_io_policy(struct uthread **ut);
+int throttle_get_passive_io_policy(struct uthread **ut);
 void *throttle_info_update_by_mount(mount_t mp);
 void rethrottle_thread(uthread_t ut);
-
 
 /* throttled I/O helper function */
 /* convert the lowest bit to a device index */

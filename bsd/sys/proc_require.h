@@ -29,13 +29,15 @@
 #ifndef _SYS_PROC_REQUIRE_H_
 #define _SYS_PROC_REQUIRE_H_
 
-typedef struct proc *   proc_t;
+typedef struct proc *proc_t;
 
 /* Used by proc_require for validation of proc zone */
-__options_closed_decl(proc_require_flags_t, unsigned int, {
-	PROC_REQUIRE_ALLOW_ALL = 0x0, //always on, allow non null proc
-	PROC_REQUIRE_ALLOW_NULL = 0x1,
-});
+__options_closed_decl(
+    proc_require_flags_t, unsigned int,
+    {
+        PROC_REQUIRE_ALLOW_ALL = 0x0, // always on, allow non null proc
+        PROC_REQUIRE_ALLOW_NULL = 0x1,
+    });
 
 /* validates that 'proc' comes from within the proc zone */
 void proc_require(proc_t proc, proc_require_flags_t flags);

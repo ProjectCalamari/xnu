@@ -28,12 +28,12 @@
 #ifndef _MACHINE_MACHINE_ROUTINES_H
 #define _MACHINE_MACHINE_ROUTINES_H
 
-#include <sys/cdefs.h>
 #include <stdint.h>
+#include <sys/cdefs.h>
 
-#if defined (__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__)
 #include "i386/machine_routines.h"
-#elif defined (__arm__) || defined (__arm64__)
+#elif defined(__arm__) || defined(__arm64__)
 #include "arm/machine_routines.h"
 #else
 #error architecture not supported
@@ -110,7 +110,8 @@ int ml_early_cpu_max_number(void);
  *                  CPU_BOOT_REQUESTED broadcast.  This does not boot the
  *                  CPU and it may be a no-op on some platforms.  This must be
  *                  called from a schedulable context.
- * @param cpu_id    The logical CPU ID (from the topology) of the CPU to be booted
+ * @param cpu_id    The logical CPU ID (from the topology) of the CPU to be
+ * booted
  */
 void ml_cpu_power_enable(int cpu_id);
 
@@ -133,62 +134,69 @@ void ml_cpu_power_disable(int cpu_id);
  * @enum     cpu_event
  * @abstract Broadcast events allowing clients to hook CPU state transitions.
  * @constant CPU_BOOT_REQUESTED      Called from processor_start(); may block.
- * @constant CPU_BOOTED              Called from platform code on the newly-booted CPU; may not block.
+ * @constant CPU_BOOTED              Called from platform code on the
+ * newly-booted CPU; may not block.
  * @constant CPU_ACTIVE              Called from scheduler code; may block.
  * @constant CLUSTER_ACTIVE          Called from platform code; may block.
  * @constant CPU_EXIT_REQUESTED      Called from processor_exit(); may block.
- * @constant CPU_DOWN                Called from platform code on the disabled CPU; may not block.
+ * @constant CPU_DOWN                Called from platform code on the disabled
+ * CPU; may not block.
  * @constant CLUSTER_EXIT_REQUESTED  Called from platform code; may block.
  * @constant CPU_EXITED              Called after CPU is stopped; may block.
  */
 enum cpu_event {
-	CPU_BOOT_REQUESTED = 0,
-	CPU_BOOTED,
-	CPU_ACTIVE,
-	CLUSTER_ACTIVE,
-	CPU_EXIT_REQUESTED,
-	CPU_DOWN,
-	CLUSTER_EXIT_REQUESTED,
-	CPU_EXITED,
-	PLATFORM_QUIESCE,
-	PLATFORM_ACTIVE,
-	PLATFORM_HALT_RESTART,
-	PLATFORM_PANIC,
-	PLATFORM_PANIC_SYNC,
-	PLATFORM_PRE_SLEEP,
-	PLATFORM_POST_RESUME,
+  CPU_BOOT_REQUESTED = 0,
+  CPU_BOOTED,
+  CPU_ACTIVE,
+  CLUSTER_ACTIVE,
+  CPU_EXIT_REQUESTED,
+  CPU_DOWN,
+  CLUSTER_EXIT_REQUESTED,
+  CPU_EXITED,
+  PLATFORM_QUIESCE,
+  PLATFORM_ACTIVE,
+  PLATFORM_HALT_RESTART,
+  PLATFORM_PANIC,
+  PLATFORM_PANIC_SYNC,
+  PLATFORM_PRE_SLEEP,
+  PLATFORM_POST_RESUME,
 };
 
-typedef bool (*cpu_callback_t)(void *param, enum cpu_event event, unsigned int cpu_or_cluster);
+typedef bool (*cpu_callback_t)(void *param, enum cpu_event event,
+                               unsigned int cpu_or_cluster);
 
 /*!
  * @function              cpu_event_register_callback
  * @abstract              Register a function to be called on CPU state changes.
  * @param fn              Function to call on state change events.
- * @param param           Optional argument to be passed to the callback (e.g. object pointer).
+ * @param param           Optional argument to be passed to the callback (e.g.
+ * object pointer).
  */
 void cpu_event_register_callback(cpu_callback_t fn, void *param);
 
 /*!
  * @function              cpu_event_unregister_callback
  * @abstract              Unregister a previously-registered callback function.
- * @param fn              Function pointer previously passed to cpu_event_register_callback().
+ * @param fn              Function pointer previously passed to
+ * cpu_event_register_callback().
  */
 void cpu_event_unregister_callback(cpu_callback_t fn);
 
 #if XNU_KERNEL_PRIVATE
 /*!
  * @function              ml_broadcast_cpu_event
- * @abstract              Internal XNU function used to broadcast CPU state changes to callers.
+ * @abstract              Internal XNU function used to broadcast CPU state
+ * changes to callers.
  * @param event           CPU event that is occurring.
- * @param cpu_or_cluster  Logical CPU ID of the core (or cluster) affected by the event.
+ * @param cpu_or_cluster  Logical CPU ID of the core (or cluster) affected by
+ * the event.
  */
 void ml_broadcast_cpu_event(enum cpu_event event, unsigned int cpu_or_cluster);
 #endif
 
 void cpu_event_debug_log(enum cpu_event event, unsigned int cpu_or_cluster);
 
-void dump_cpu_event_log(int (*printf_func)(const char * fmt, ...));
+void dump_cpu_event_log(int (*printf_func)(const char *fmt, ...));
 
 /*!
  * @function      ml_io_read()
@@ -204,7 +212,6 @@ unsigned int ml_io_read32(uintptr_t iovaddr);
 unsigned long long ml_io_read64(uintptr_t iovaddr);
 
 uint64_t ml_io_read_cpu_reg(uintptr_t io_vaddr, int io_sz, int logical_cpu);
-
 
 /*!
  * @function      ml_io_write()
@@ -228,7 +235,7 @@ void ml_io_write64(uintptr_t vaddr, uint64_t val);
 
 /* ml_io_read/write timeouts are generally enabled on macOS, because
  * they may help developers. */
-#if  (XNU_TARGET_OS_OSX || DEVELOPMENT || DEBUG)
+#if (XNU_TARGET_OS_OSX || DEVELOPMENT || DEBUG)
 
 #define ML_IO_TIMEOUTS_ENABLED 1
 
@@ -258,17 +265,19 @@ void ml_io_write64(uintptr_t vaddr, uint64_t val);
  *                              1 and 4096 inclusive, and the VA range must not
  *                              overlap with any ranges previously passed to
  *                              ml_io_increase_timeouts().
- * @note                        This function has no effect when the new timeouts are
- *                              shorter than the global timeouts.
+ * @note                        This function has no effect when the new
+ * timeouts are shorter than the global timeouts.
  * @param iovaddr_base          Base VA of the target region
  * @param size                  Size of the target region, in bytes
  * @param read_timeout_us       New read timeout, in microseconds
  * @param write_timeout_us      New write timeout, in microseconds
- * @return                      0 if successful, or KERN_INVALID_ARGUMENT if either
- *                              the VA range or timeout is invalid.
+ * @return                      0 if successful, or KERN_INVALID_ARGUMENT if
+ * either the VA range or timeout is invalid.
  */
 OS_WARN_RESULT
-int ml_io_increase_timeouts(uintptr_t iovaddr_base, unsigned int size, uint32_t read_timeout_us, uint32_t write_timeout_us);
+int ml_io_increase_timeouts(uintptr_t iovaddr_base, unsigned int size,
+                            uint32_t read_timeout_us,
+                            uint32_t write_timeout_us);
 
 /*!
  * @function            ml_io_reset_timeouts
@@ -297,34 +306,33 @@ int ml_io_reset_timeouts(uintptr_t iovaddr_base, unsigned int size);
  *                              1 and 4096 inclusive, and the PA range must not
  *                              overlap with any ranges previously passed to
  *                              ml_io_increase_timeouts().
- * @note                        This function has no effect when the new timeouts are
- *                              shorter than the global timeouts. In addition to
- *                              global timeouts a larger timeout may be applied
- *                              to regions of memory which may be susceptible to
- *                              PCIe CTOs.
- *                              For IOs performed through virtual addresses, the
- *                              larger of the VA timeout (if one is set) and
- *                              this timeout is used.
+ * @note                        This function has no effect when the new
+ * timeouts are shorter than the global timeouts. In addition to global timeouts
+ * a larger timeout may be applied to regions of memory which may be susceptible
+ * to PCIe CTOs. For IOs performed through virtual addresses, the larger of the
+ * VA timeout (if one is set) and this timeout is used.
  * @param iopaddr_base          Base PA of the target region
  * @param size                  Size of the target region, in bytes
  * @param read_timeout_us       New read timeout, in microseconds
  * @param write_timeout_us      New write timeout, in microseconds
- * @return                      0 if successful, or KERN_INVALID_ARGUMENT if either
- *                              the PA range or timeout is invalid.
+ * @return                      0 if successful, or KERN_INVALID_ARGUMENT if
+ * either the PA range or timeout is invalid.
  */
 OS_WARN_RESULT
 int ml_io_increase_timeouts_phys(vm_offset_t iopaddr_base, unsigned int size,
-    uint32_t read_timeout_us, uint32_t write_timeout_us);
+                                 uint32_t read_timeout_us,
+                                 uint32_t write_timeout_us);
 
 /*!
  * @function            ml_io_reset_timeouts_phys
  * @brief               Unregister custom timeouts previously registered by
  *                      ml_io_increase_timeouts_phys().
  * @discussion          The caller must use the exact `iopaddr_base' and `size'
- *                      range passed to a previous ml_io_increase_timeouts_phys()
- *                      call.  Unregistering a smaller subrange is unsupported
- *                      and will return an error.
- * @param iopaddr_base  Base PA previously passed to ml_io_increase_timeouts_phys()
+ *                      range passed to a previous
+ * ml_io_increase_timeouts_phys() call.  Unregistering a smaller subrange is
+ * unsupported and will return an error.
+ * @param iopaddr_base  Base PA previously passed to
+ * ml_io_increase_timeouts_phys()
  * @param size          Size previously passed to ml_io_increase_timeouts_phys()
  * @return              0 if successful, or KERN_NOT_FOUND if the specfied range
  *                      does not match a previously-registered timeout.
@@ -348,12 +356,13 @@ extern machine_timeout_t trace_phy_read_delay_to;
 extern machine_timeout_t trace_phy_write_delay_to;
 #endif /* !defined(__x86_64__) */
 extern void override_io_timeouts(uintptr_t vaddr, uint64_t paddr,
-    uint64_t *read_timeout, uint64_t *write_timeout);
+                                 uint64_t *read_timeout,
+                                 uint64_t *write_timeout);
 
 typedef struct {
-	uint64_t mmio_start_mt;
-	uint64_t mmio_paddr;
-	uintptr_t mmio_vaddr;
+  uint64_t mmio_start_mt;
+  uint64_t mmio_paddr;
+  uintptr_t mmio_vaddr;
 } mmio_track_t;
 PERCPU_DECL(mmio_track_t, mmio_tracker);
 
@@ -362,7 +371,7 @@ extern boolean_t ml_io_check_for_mmio_overrides(uint64_t mt);
 #endif /* ML_IO_TIMEOUTS_ENABLED */
 
 void ml_get_cluster_type_name(cluster_type_t cluster_type, char *name,
-    size_t name_size);
+                              size_t name_size);
 
 unsigned int ml_get_cluster_count(void);
 
@@ -385,7 +394,8 @@ bool ml_addr_in_non_xnu_stack(uintptr_t addr);
 
 /*!
  * @func          ml_map_cpus_to_clusters
- * @brief         Populate the logical CPU -> logical cluster ID table at address addr.
+ * @brief         Populate the logical CPU -> logical cluster ID table at
+ * address addr.
  *
  * @param table   array to write to
  */
@@ -397,8 +407,8 @@ void ml_map_cpus_to_clusters(uint8_t *table);
 /*!
  * @func          ml_task_post_signature_processing_hook
  * @brief         Platform-specific hook called on the main thread of a new task
- *                after process_signature() is completed by the parent and before
- *                the main thread returns to EL0.
+ *                after process_signature() is completed by the parent and
+ * before the main thread returns to EL0.
  *
  * @param task    The new task whose signature has been processed
  */

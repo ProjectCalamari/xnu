@@ -30,187 +30,60 @@
  * Private functions for kdp.c
  */
 
-static boolean_t
-kdp_unknown(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_unknown(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_connect(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_connect(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_disconnect(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_disconnect(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_reattach(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_reattach(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_hostinfo(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_hostinfo(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_suspend(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_suspend(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_readregs(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_readregs(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_writeregs(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_writeregs(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_version(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_version(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_kernelversion(
-	kdp_pkt_t             *,
-	int                   *,
-	unsigned short        *
-	);
+static boolean_t kdp_kernelversion(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_regions(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_regions(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_maxbytes(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_maxbytes(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_readmem(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_readmem(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_readmem64(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_readmem64(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_readphysmem64(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_readphysmem64(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_writemem(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_writemem(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_writemem64(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_writemem64(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_writephysmem64(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_writephysmem64(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_resumecpus(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_resumecpus(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_breakpoint_set(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *t
-	);
+static boolean_t kdp_breakpoint_set(kdp_pkt_t *, int *, unsigned short *t);
 
-static boolean_t
-kdp_breakpoint64_set(
-	kdp_pkt_t *,
-	int  *,
-	unsigned short *t
-	);
+static boolean_t kdp_breakpoint64_set(kdp_pkt_t *, int *, unsigned short *t);
 
+static boolean_t kdp_breakpoint_remove(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_breakpoint_remove(
-	kdp_pkt_t *,
-	int *,
-	unsigned short *
-	);
+static boolean_t kdp_breakpoint64_remove(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_breakpoint64_remove(
-	kdp_pkt_t *,
-	int   *,
-	unsigned short *
-	);
+static boolean_t kdp_reboot(kdp_pkt_t *, int *, unsigned short *);
 
+static boolean_t kdp_readioport(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_reboot(
-	kdp_pkt_t *,
-	int   *,
-	unsigned short *
-	);
+static boolean_t kdp_writeioport(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_readioport(kdp_pkt_t *, int *, unsigned short *);
+static boolean_t kdp_readmsr64(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_writeioport(kdp_pkt_t *, int *, unsigned short *);
+static boolean_t kdp_writemsr64(kdp_pkt_t *, int *, unsigned short *);
 
-static boolean_t
-kdp_readmsr64(kdp_pkt_t *, int *, unsigned short *);
-
-static boolean_t
-kdp_writemsr64(kdp_pkt_t *, int *, unsigned short *);
-
-static boolean_t
-kdp_dumpinfo(kdp_pkt_t *, int *, unsigned short *);
+static boolean_t kdp_dumpinfo(kdp_pkt_t *, int *, unsigned short *);

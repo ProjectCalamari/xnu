@@ -26,7 +26,8 @@
  * @APPLE_OSREFERENCE_LICENSE_HEADER_END@
  */
 
-/*	$FreeBSD: src/sys/netinet6/ip6_ecn.h,v 1.2.2.2 2001/07/03 11:01:53 ume Exp $	*/
+/*	$FreeBSD: src/sys/netinet6/ip6_ecn.h,v 1.2.2.2 2001/07/03 11:01:53 ume
+ * Exp $	*/
 /*	$KAME: ip_ecn.h,v 1.5 2000/03/27 04:58:38 sumikawa Exp $	*/
 
 /*

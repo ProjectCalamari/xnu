@@ -39,11 +39,11 @@
  * 1999 Mar 29 rsulack created.
  */
 
-#include <mach/mach_types.h>
-#include <mach/vm_types.h>
-#include <mach/kern_return.h>
 #include <mach/host_priv_server.h>
+#include <mach/kern_return.h>
+#include <mach/mach_types.h>
 #include <mach/vm_map.h>
+#include <mach/vm_types.h>
 
 #include <kern/kern_types.h>
 #include <kern/thread.h>
@@ -67,39 +67,34 @@
  **********************************************************************/
 
 // bsd/sys/proc.h
-extern void proc_selfname(char * buf, int size);
+extern void proc_selfname(char *buf, int size);
 
-#define NOT_SUPPORTED_USER64()    \
-    do { \
-	char procname[64] = "unknown";  \
-	proc_selfname(procname, sizeof(procname));  \
-	printf("%s is not supported for 64-bit clients (called from %s)\n",  \
-	    __FUNCTION__, procname);  \
-    } while (0)
+#define NOT_SUPPORTED_USER64()                                                 \
+  do {                                                                         \
+    char procname[64] = "unknown";                                             \
+    proc_selfname(procname, sizeof(procname));                                 \
+    printf("%s is not supported for 64-bit clients (called from %s)\n",        \
+           __FUNCTION__, procname);                                            \
+  } while (0)
 
-#define NOT_SUPPORTED_KERNEL()    \
-    do { \
-	char procname[64] = "unknown";  \
-	proc_selfname(procname, sizeof(procname));  \
-	printf("%s is not supported on this kernel architecture (called from %s)\n",  \
-	    __FUNCTION__, procname);  \
-    } while (0)
+#define NOT_SUPPORTED_KERNEL()                                                 \
+  do {                                                                         \
+    char procname[64] = "unknown";                                             \
+    proc_selfname(procname, sizeof(procname));                                 \
+    printf(                                                                    \
+        "%s is not supported on this kernel architecture (called from %s)\n",  \
+        __FUNCTION__, procname);                                               \
+  } while (0)
 
 #define KMOD_MIG_UNUSED __unused
 
-
 /********************************************************************/
-kern_return_t
-kmod_get_info(
-	host_t host __unused,
-	kmod_info_array_t * kmod_list KMOD_MIG_UNUSED,
-	mach_msg_type_number_t * kmodCount KMOD_MIG_UNUSED);
-kern_return_t
-kmod_get_info(
-	host_t host __unused,
-	kmod_info_array_t * kmod_list KMOD_MIG_UNUSED,
-	mach_msg_type_number_t * kmodCount KMOD_MIG_UNUSED)
-{
-	NOT_SUPPORTED_KERNEL();
-	return KERN_NOT_SUPPORTED;
+kern_return_t kmod_get_info(host_t host __unused,
+                            kmod_info_array_t *kmod_list KMOD_MIG_UNUSED,
+                            mach_msg_type_number_t *kmodCount KMOD_MIG_UNUSED);
+kern_return_t kmod_get_info(host_t host __unused,
+                            kmod_info_array_t *kmod_list KMOD_MIG_UNUSED,
+                            mach_msg_type_number_t *kmodCount KMOD_MIG_UNUSED) {
+  NOT_SUPPORTED_KERNEL();
+  return KERN_NOT_SUPPORTED;
 }

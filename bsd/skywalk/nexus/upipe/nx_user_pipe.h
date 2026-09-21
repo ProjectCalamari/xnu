@@ -58,33 +58,33 @@
 #include <skywalk/os_skywalk_private.h>
 
 #if CONFIG_NEXUS_USER_PIPE
-#define NX_UPIPE_MAXPIPES       64      /* max number of pipes per adapter */
+#define NX_UPIPE_MAXPIPES 64 /* max number of pipes per adapter */
 
 struct nexus_upipe_adapter {
-	/*
-	 * This is an overlay structure on nexus_adapter;
-	 * make sure it contains 'up' as the first member.
-	 */
-	struct nexus_adapter pna_up;
+  /*
+   * This is an overlay structure on nexus_adapter;
+   * make sure it contains 'up' as the first member.
+   */
+  struct nexus_adapter pna_up;
 
-	uint32_t        pna_id;                 /* pipe identifier */
-	ch_endpoint_t   pna_role;               /* master or slave */
+  uint32_t pna_id;        /* pipe identifier */
+  ch_endpoint_t pna_role; /* master or slave */
 
-	struct nexus_adapter *pna_parent; /* adapter that owns the memory */
-	struct nexus_upipe_adapter *pna_peer; /* the other end of the pipe */
-	boolean_t pna_peer_ref; /* 1 iff we are holding a ref to the peer */
+  struct nexus_adapter *pna_parent;     /* adapter that owns the memory */
+  struct nexus_upipe_adapter *pna_peer; /* the other end of the pipe */
+  boolean_t pna_peer_ref; /* 1 iff we are holding a ref to the peer */
 
-	uint32_t pna_parent_slot; /* index in the parent pipe array */
+  uint32_t pna_parent_slot; /* index in the parent pipe array */
 };
 
 /*
  * nx_upipe is a descriptor for a user pipe nexus instance.
  */
 struct nx_upipe {
-	struct nexus_adapter    *nup_pna;
-	uint32_t                nup_pna_users;
-	struct nxbind           *nup_cli_nxb;
-	struct nxbind           *nup_srv_nxb;
+  struct nexus_adapter *nup_pna;
+  uint32_t nup_pna_users;
+  struct nxbind *nup_cli_nxb;
+  struct nxbind *nup_srv_nxb;
 };
 
 #define NX_UPIPE_PRIVATE(_nx) ((struct nx_upipe *)(_nx)->nx_arg)
@@ -96,10 +96,10 @@ extern struct nxdom nx_upipe_dom_s;
 __BEGIN_DECLS
 extern void nx_upipe_na_dealloc(struct nexus_adapter *);
 extern int nx_upipe_na_find(struct kern_nexus *, struct kern_channel *,
-    struct chreq *, struct nxbind *, struct proc *, struct nexus_adapter **,
-    boolean_t);
+                            struct chreq *, struct nxbind *, struct proc *,
+                            struct nexus_adapter **, boolean_t);
 __END_DECLS
 #else /* !CONFIG_NEXUS_USER_PIPE */
-#define NM_MAXPIPES     0
+#define NM_MAXPIPES 0
 #endif /* !CONFIG_NEXUS_USER_PIPE */
 #endif /* _SKYWALK_NEXUS_USER_PIPE_H_ */

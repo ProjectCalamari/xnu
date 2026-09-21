@@ -9,8 +9,8 @@
 
 extern char g_target_path[PATH_MAX];
 
-int create_random_name( char *the_pathp, int do_open );
-void create_target_directory( const char * the_targetp );
-void remove_target_directory( void );
+int create_random_name(char *the_pathp, int do_open);
+void create_target_directory(const char *the_targetp);
+void remove_target_directory(void);
 
 #endif

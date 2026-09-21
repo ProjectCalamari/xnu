@@ -23,73 +23,85 @@
 
 #include <darwintest.h>
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <mach/mach_vm.h>
-#include <mach/mach_init.h>
-#include <sys/resource.h>
+#include <TargetConditionals.h>
 #include <libproc.h>
 #include <libproc_internal.h>
-#include <TargetConditionals.h>
+#include <mach/mach_init.h>
+#include <mach/mach_vm.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/resource.h>
+#include <unistd.h>
 
 T_GLOBAL_META(T_META_RUN_CONCURRENTLY(true));
 
-#define ALLOC_SIZE_LARGE 5*1024*1024
-#define ALLOC_SIZE_SMALL 2*1024*1024
+#define ALLOC_SIZE_LARGE 5 * 1024 * 1024
+#define ALLOC_SIZE_SMALL 2 * 1024 * 1024
 
 int proc_rlimit_control(pid_t pid, int flavor, void *arg);
 
 T_DECL(phys_footprint_interval_max,
-    "Validate physical footprint interval tracking", T_META_TAG_VM_PREFERRED)
-{
-	int ret;
-	struct rusage_info_v4 ru;
-	mach_vm_address_t addr = (mach_vm_address_t)NULL;
+       "Validate physical footprint interval tracking",
+       T_META_TAG_VM_PREFERRED) {
+  int ret;
+  struct rusage_info_v4 ru;
+  mach_vm_address_t addr = (mach_vm_address_t)NULL;
 
-	ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
-	T_QUIET;
-	T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
-	T_ASSERT_EQ(ru.ri_lifetime_max_phys_footprint, ru.ri_interval_max_phys_footprint,
-	    "Max footprint and interval footprint are equal prior to dirtying memory");
+  ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
+  T_ASSERT_EQ(ru.ri_lifetime_max_phys_footprint,
+              ru.ri_interval_max_phys_footprint,
+              "Max footprint and interval footprint are equal prior to "
+              "dirtying memory");
 
-	ret = mach_vm_allocate(mach_task_self(), &addr, (mach_vm_size_t)ALLOC_SIZE_LARGE, VM_FLAGS_ANYWHERE);
-	T_QUIET;
-	T_ASSERT_MACH_SUCCESS(ret, "mach_vm_allocate(ALLOC_SIZE_LARGE)");
+  ret = mach_vm_allocate(mach_task_self(), &addr,
+                         (mach_vm_size_t)ALLOC_SIZE_LARGE, VM_FLAGS_ANYWHERE);
+  T_QUIET;
+  T_ASSERT_MACH_SUCCESS(ret, "mach_vm_allocate(ALLOC_SIZE_LARGE)");
 
-	memset((void *)addr, 0xab, ALLOC_SIZE_LARGE);
+  memset((void *)addr, 0xab, ALLOC_SIZE_LARGE);
 
-	ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
-	T_QUIET;
-	T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
-	T_ASSERT_EQ(ru.ri_lifetime_max_phys_footprint, ru.ri_interval_max_phys_footprint,
-	    "Max footprint and interval footprint are equal after dirtying large memory region");
+  ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
+  T_ASSERT_EQ(ru.ri_lifetime_max_phys_footprint,
+              ru.ri_interval_max_phys_footprint,
+              "Max footprint and interval footprint are equal after dirtying "
+              "large memory region");
 
-	mach_vm_deallocate(mach_task_self(), addr, (mach_vm_size_t)ALLOC_SIZE_LARGE);
+  mach_vm_deallocate(mach_task_self(), addr, (mach_vm_size_t)ALLOC_SIZE_LARGE);
 
-	ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
-	T_QUIET;
-	T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
-	T_ASSERT_EQ(ru.ri_lifetime_max_phys_footprint, ru.ri_interval_max_phys_footprint,
-	    "Max footprint and interval footprint are still equal after freeing large memory region");
+  ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
+  T_ASSERT_EQ(ru.ri_lifetime_max_phys_footprint,
+              ru.ri_interval_max_phys_footprint,
+              "Max footprint and interval footprint are still equal after "
+              "freeing large memory region");
 
-	ret = proc_reset_footprint_interval(getpid());
-	T_ASSERT_POSIX_SUCCESS(ret, "proc_reset_footprint_interval()");
+  ret = proc_reset_footprint_interval(getpid());
+  T_ASSERT_POSIX_SUCCESS(ret, "proc_reset_footprint_interval()");
 
-	ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
-	T_QUIET;
-	T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
-	T_ASSERT_GT(ru.ri_lifetime_max_phys_footprint, ru.ri_interval_max_phys_footprint,
-	    "Max footprint is greater than interval footprint after resetting interval");
+  ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
+  T_ASSERT_GT(ru.ri_lifetime_max_phys_footprint,
+              ru.ri_interval_max_phys_footprint,
+              "Max footprint is greater than interval footprint after "
+              "resetting interval");
 
-	ret = mach_vm_allocate(mach_task_self(), &addr, (mach_vm_size_t)ALLOC_SIZE_SMALL, VM_FLAGS_ANYWHERE);
-	T_QUIET;
-	T_ASSERT_MACH_SUCCESS(ret, "mach_vm_allocate(ALLOC_SIZE_SMALL)");
-	memset((void *)addr, 0xab, ALLOC_SIZE_SMALL);
+  ret = mach_vm_allocate(mach_task_self(), &addr,
+                         (mach_vm_size_t)ALLOC_SIZE_SMALL, VM_FLAGS_ANYWHERE);
+  T_QUIET;
+  T_ASSERT_MACH_SUCCESS(ret, "mach_vm_allocate(ALLOC_SIZE_SMALL)");
+  memset((void *)addr, 0xab, ALLOC_SIZE_SMALL);
 
-	ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
-	T_QUIET;
-	T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
-	T_ASSERT_GT(ru.ri_lifetime_max_phys_footprint, ru.ri_interval_max_phys_footprint,
-	    "Max footprint is still greater than interval footprint after dirtying small memory region");
+  ret = proc_pid_rusage(getpid(), RUSAGE_INFO_V4, (rusage_info_t *)&ru);
+  T_QUIET;
+  T_ASSERT_POSIX_SUCCESS(ret, "proc_pid_rusage");
+  T_ASSERT_GT(ru.ri_lifetime_max_phys_footprint,
+              ru.ri_interval_max_phys_footprint,
+              "Max footprint is still greater than interval footprint after "
+              "dirtying small memory region");
 }

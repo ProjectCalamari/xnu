@@ -56,14 +56,9 @@
  */
 #include <mach/mach.h>
 
-void
-mig_allocate(vm_address_t *addr_p, vm_size_t size)
-{
-	if (vm_allocate(mach_task_self_,
-	    addr_p,
-	    size,
-	    VM_MAKE_TAG(VM_MEMORY_MACH_MSG) | TRUE)
-	    != KERN_SUCCESS) {
-		*addr_p = 0;
-	}
+void mig_allocate(vm_address_t *addr_p, vm_size_t size) {
+  if (vm_allocate(mach_task_self_, addr_p, size,
+                  VM_MAKE_TAG(VM_MEMORY_MACH_MSG) | TRUE) != KERN_SUCCESS) {
+    *addr_p = 0;
+  }
 }

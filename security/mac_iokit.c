@@ -51,69 +51,63 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/vnode.h>
-#include <sys/vnode_internal.h>
-#include <sys/queue.h>
 #include <bsd/bsm/audit.h>
 #include <bsd/security/audit/audit.h>
 #include <bsd/sys/malloc.h>
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/types.h>
+#include <sys/vnode.h>
+#include <sys/vnode_internal.h>
 #include <vm/vm_kern.h>
 
 #include <security/mac_framework.h>
 #include <security/mac_internal.h>
 
-int
-mac_iokit_check_open_service(kauth_cred_t cred, io_object_t service, unsigned int user_client_type)
-{
-	int error;
+int mac_iokit_check_open_service(kauth_cred_t cred, io_object_t service,
+                                 unsigned int user_client_type) {
+  int error;
 
-	MAC_CHECK(iokit_check_open_service, cred, service, user_client_type);
-	return error;
+  MAC_CHECK(iokit_check_open_service, cred, service, user_client_type);
+  return error;
 }
 
-int
-mac_iokit_check_open(kauth_cred_t cred, io_object_t user_client, unsigned int user_client_type)
-{
-	int error;
+int mac_iokit_check_open(kauth_cred_t cred, io_object_t user_client,
+                         unsigned int user_client_type) {
+  int error;
 
-	MAC_CHECK(iokit_check_open, cred, user_client, user_client_type);
-	return error;
+  MAC_CHECK(iokit_check_open, cred, user_client, user_client_type);
+  return error;
 }
 
-int
-mac_iokit_check_set_properties(kauth_cred_t cred, io_object_t registry_entry, io_object_t properties)
-{
-	int error;
+int mac_iokit_check_set_properties(kauth_cred_t cred,
+                                   io_object_t registry_entry,
+                                   io_object_t properties) {
+  int error;
 
-	MAC_CHECK(iokit_check_set_properties, cred, registry_entry, properties);
-	return error;
+  MAC_CHECK(iokit_check_set_properties, cred, registry_entry, properties);
+  return error;
 }
 
-int
-mac_iokit_check_filter_properties(kauth_cred_t cred, io_object_t registry_entry)
-{
-	int error;
+int mac_iokit_check_filter_properties(kauth_cred_t cred,
+                                      io_object_t registry_entry) {
+  int error;
 
-	MAC_CHECK(iokit_check_filter_properties, cred, registry_entry);
-	return error;
+  MAC_CHECK(iokit_check_filter_properties, cred, registry_entry);
+  return error;
 }
 
-int
-mac_iokit_check_get_property(kauth_cred_t cred, io_object_t registry_entry, const char *name)
-{
-	int error;
+int mac_iokit_check_get_property(kauth_cred_t cred, io_object_t registry_entry,
+                                 const char *name) {
+  int error;
 
-	MAC_CHECK(iokit_check_get_property, cred, registry_entry, name);
-	return error;
+  MAC_CHECK(iokit_check_get_property, cred, registry_entry, name);
+  return error;
 }
 
-int
-mac_iokit_check_hid_control(kauth_cred_t cred)
-{
-	int error;
+int mac_iokit_check_hid_control(kauth_cred_t cred) {
+  int error;
 
-	MAC_CHECK(iokit_check_hid_control, cred);
-	return error;
+  MAC_CHECK(iokit_check_hid_control, cred);
+  return error;
 }

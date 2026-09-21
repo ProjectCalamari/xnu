@@ -8,12 +8,13 @@
 #define CORE_ENTITLEMENTS_RUNTIME_H
 
 #ifndef _CE_INDIRECT
-#error "Please include <CoreEntitlements/CoreEntitlements.h> instead of this file"
+#error                                                                         \
+    "Please include <CoreEntitlements/CoreEntitlements.h> instead of this file"
 #endif
 
-#include <stdint.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 __ptrcheck_abi_assume_single();
 
@@ -32,11 +33,12 @@ __ptrcheck_abi_assume_single();
  * Strings and blobs used and returned by CoreEntitlements always use CEBuffer
  *
  * @note
- * If a DER string is returned to you via a CEBuffer, you cannot assume it is null-terminated.
+ * If a DER string is returned to you via a CEBuffer, you cannot assume it is
+ * null-terminated.
  */
 typedef struct {
-    const uint8_t *__counted_by(length) data;
-    size_t length;
+  const uint8_t *__counted_by(length) data;
+  size_t length;
 } CEBuffer;
 
 /*!
@@ -44,32 +46,42 @@ typedef struct {
  * Represents a sized chunk of data that is stored inline
  */
 typedef struct {
-    uint8_t data[CE_MAX_KEY_SIZE];
-    size_t length;
+  uint8_t data[CE_MAX_KEY_SIZE];
+  size_t length;
 } CEStaticBuffer;
 
-#define CEBuffStr(str) (CEBuffer){.data = (const uint8_t*)str, .length = sizeof(str) - 1}
+#define CEBuffStr(str)                                                         \
+  (CEBuffer){.data = (const uint8_t *)str, .length = sizeof(str) - 1}
 
 /*!
  * @typedef CERuntimeMalloc
  * Function prototype that the CERuntime may ues to allocate data (e.g.. malloc)
  */
-typedef void* __unsafe_indexable (*CERuntimeMalloc)(const CERuntime_t rt, size_t size) __result_use_check;
+typedef void *
+    __unsafe_indexable (*CERuntimeMalloc)(const CERuntime_t rt,
+                                          size_t size) __result_use_check;
 /*!
  * @typedef CERuntimeFree
- * Function prototype that the CERuntime may ues to free allocated data (e.g. free)
+ * Function prototype that the CERuntime may ues to free allocated data (e.g.
+ * free)
  */
-typedef void (*CERuntimeFree)(const CERuntime_t rt, void* address);
+typedef void (*CERuntimeFree)(const CERuntime_t rt, void *address);
 /*!
  * @typedef CERuntimeLog
- * Function prototype that the CERuntime may use to log helpful information (e.g. printf)
+ * Function prototype that the CERuntime may use to log helpful information
+ * (e.g. printf)
  */
-typedef void (*CERuntimeLog)(const CERuntime_t rt, const char* __unsafe_indexable fmt, ...) __printflike(2, 3);
+typedef void (*CERuntimeLog)(const CERuntime_t rt,
+                             const char *__unsafe_indexable fmt, ...)
+    __printflike(2, 3);
 /*!
  * @typedef CERuntimeAbort
- * Function prototype that the CERuntime will use if it encounters a condition which may compromise the integrity of the system (e.g. abort, panic)
+ * Function prototype that the CERuntime will use if it encounters a condition
+ * which may compromise the integrity of the system (e.g. abort, panic)
  */
-typedef void (*CERuntimeAbort)(const CERuntime_t rt, const char* __unsafe_indexable fmt, ...) __printflike(2, 3) __attribute__((noreturn));
+typedef void (*CERuntimeAbort)(const CERuntime_t rt,
+                               const char *__unsafe_indexable fmt, ...)
+    __printflike(2, 3) __attribute__((noreturn));
 /*!
  * @typedef CERuntimeInternalStatus
  * Function prototype that the CERuntime may use to query AppleInternal status
@@ -78,33 +90,39 @@ typedef bool (*CERuntimeInternalStatus)(const CERuntime_t rt);
 
 /*!
  * @typedef CERuntimeAllocIndex
- * Function prototype that the CERuntime may ues to allocate an index of the specified size
+ * Function prototype that the CERuntime may ues to allocate an index of the
+ * specified size
  */
-typedef void* __unsafe_indexable (*CERuntimeAllocIndex)(const CERuntime_t rt, size_t size) __result_use_check;
+typedef void *
+    __unsafe_indexable (*CERuntimeAllocIndex)(const CERuntime_t rt,
+                                              size_t size) __result_use_check;
 
 /*!
  * @typedef CERuntimeFreeIndex
- * Function prototype that the CERuntime may ues to free an index of the specified size
+ * Function prototype that the CERuntime may ues to free an index of the
+ * specified size
  */
-typedef void (*CERuntimeFreeIndex)(const CERuntime_t rt, void* index, size_t size);
+typedef void (*CERuntimeFreeIndex)(const CERuntime_t rt, void *index,
+                                   size_t size);
 
 /*!
  * @struct CERuntime
- * This structure represents the interface that CoreEntitlements uses to communicate with the outside world.
- * The presense or absence of function pointers in this structure may degrade certain functionality.
+ * This structure represents the interface that CoreEntitlements uses to
+ * communicate with the outside world. The presense or absence of function
+ * pointers in this structure may degrade certain functionality.
  *
  * @note
  * The only prototype that MUST be implemented is CERuntimeAbort abort.
  */
 struct CERuntime {
-    const uint64_t                  version;
-    const CERuntimeMalloc           alloc;
-    const CERuntimeFree             free;
-    const CERuntimeLog              log;
-    const CERuntimeAbort            abort;
-    const CERuntimeInternalStatus   internalStatus;
-    const CERuntimeAllocIndex       allocIndex;
-    const CERuntimeFreeIndex        freeIndex;
-} ;
+  const uint64_t version;
+  const CERuntimeMalloc alloc;
+  const CERuntimeFree free;
+  const CERuntimeLog log;
+  const CERuntimeAbort abort;
+  const CERuntimeInternalStatus internalStatus;
+  const CERuntimeAllocIndex allocIndex;
+  const CERuntimeFreeIndex freeIndex;
+};
 
 #endif
